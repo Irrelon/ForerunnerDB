@@ -96,6 +96,11 @@ The database includes a useful data-binding system that allows your HTML to be a
 collection changes. Here is a simple example of a data-bind that will keep the list of items up-to-date if you modify
 the collection:
 
+### Prerequisites
+* Data-binding requires jQuery to be present on the page.
+* Your items must include an id="" attribute that matches the primary key of the document it represents.
+* Binding is against an entire collection at present. In the future you will be able to define distinct "views" and bind against them as well.
+
 ### HTML
 	<ul id="myList">
 	</ul>
@@ -114,4 +119,49 @@ the collection:
 Now if you execute any insert, update or remove on the collection, the HTML will automatically update to reflect the
 changes in the data.
 
-*Please note, jQuery is REQUIRED to be loaded on the page before data-binding will work.*
+## Binding Events
+Data binding also has some extra features that allow your app to respond to changes to the data. For instance, if a
+document is removed, perhaps you would like to fade out the item in the HTML instead of it being instantly removed from
+the DOM?
+
+	collection.bind('#myList', {
+		template: function (data, callback) {
+			// Here is where we pass a rendered HTML version of the data back
+			// to the database. You can use your favourite client-side templating
+			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
+			// We have used a simple string concatenation to visibly show the process.
+			callback('<li>' + data.price + '</li>');
+		},
+		beforeRemove: function (elem, data, allData, callback) {
+			// Use jQuery to animate the element's opacity before removing it from the DOM
+			elem.animate({
+				opacity: 0
+			}, 600, function () {
+				// Now that the animation is complete, call the callback which informs the
+				// data-binding system it can proceed with removing the element
+				callback();
+			});
+		}
+	});
+
+The full list of events that can be used are:
+
+	beforeRemove: function (jqSelector elem, array elemData, array allData, function callback);
+	afterRemove: function (jqSelector elem, array elemData, array allData);
+	afterInsert: function (jqSelector elem, array inserted, array failed, array allData);
+	afterUpdate: function (jqSelector elem, array elemData, array allData);
+
+Where the parameters are:
+
+	elem: The jQuery selector object representing the element in the DOM that has changed
+	elemData: The document in the collection the DOM element relates to
+	allData: The entire collection's data array
+	callback: The callback to use once you have finished processing
+	inserted: An array of documents that were inserted
+	failed: An array of documents that failed to insert
+
+# Future Updates
+More features are being actively worked on for this project:
+
+* Views that can join multiple documents together and data-bind - sort of like virtual collections
+* More support for MongoDB operators (currently support $push, $pull, $gt(e), $lt(e), $exists, $or, $and
