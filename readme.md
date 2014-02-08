@@ -1,12 +1,12 @@
-# MongoCS Client-Side Mongo-Like Database
+# ForerunnerDB Client-Side Mongo-Like Database
 ## Setup
-Include the MongoCS.js file in your HTML:
+Include the ForerunnerDB.js file in your HTML:
 
-	<script src="MongoCS.js" type="text/javascript"></script>
+	<script src="ForerunnerDB.js" type="text/javascript"></script>
 
 ## Create a Database
 
-	var db = new MongoCS();
+	var db = new ForerunnerDB();
 
 ## Collections (Tables)
 To create or get a reference to a collection object call (where collectionName is the name of your collection):
@@ -51,8 +51,8 @@ is greater than 90 but less than 150, you can do this:
 Which will return an array with all matching documents. If no documents match your search, an empty array is returned.
 
 ## Updating the Collection
-This is where MongoCS and MongoDB are different. By default MongoCS updates only the keys you specify in your update
-document instead of outright *replacing* the matching documents like MongoDB does. In this sense MongoCS behaves more
+This is where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update
+document instead of outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more
 like MySQL. In the call below the update will find all documents where the price is greater than 90 and less than 150
 and then update the documents' key "moo" with the value true.
 
