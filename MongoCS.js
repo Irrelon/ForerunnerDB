@@ -25,8 +25,8 @@
  Source: https://github.com/coolbloke1324/MongoCS
 
  Changelog:
- Version 1.0.0:
- First commit
+	 Version 1.0.0:
+	 	First commit
  */
 var MongoCS = (function () {
 	var idCounter = 0;
@@ -53,8 +53,8 @@ var MongoCS = (function () {
 	 */
 	Path.prototype.path = function (path) {
 		if (path !== undefined) {
-			this._path = path;
-			this._pathParts = path.split('.');
+			this._path = this.clean(path);
+			this._pathParts = this._path.split('.');
 			return this;
 		}
 
@@ -130,6 +130,19 @@ var MongoCS = (function () {
 		}
 
 		return objPart;
+	};
+
+	/**
+	 * Removes leading period (.) from string and returns it.
+	 * @param {String} str The string to clean.
+	 * @returns {*}
+	 */
+	Path.prototype.clean = function (str) {
+		if (str.substr(0, 1) === '.') {
+			str = str.substr(1, str.length -1);
+		}
+		
+		return str;
 	};
 
 	/**
@@ -400,7 +413,7 @@ var MongoCS = (function () {
 			dataSet = this.find(query),
 			updated,
 			updateCall = function (doc) {
-				return self._updateObject(doc, update);
+				return self._updateObject(doc, update, query);
 			};
 
 		if (dataSet.length) {
@@ -430,14 +443,26 @@ var MongoCS = (function () {
 	 * Internal method for document updating.
 	 * @param {Object} doc The document to update.
 	 * @param {Object} update The object with key/value pairs to update the document with.
+	 * @param query
+	 * @param path
 	 * @returns {Boolean} True if the document was updated with new / changed data or
 	 * false if it was not updated because the data was the same.
 	 * @private
 	 */
-	Collection.prototype._updateObject = function (doc, update) {
+	Collection.prototype._updateObject = function (doc, update, query, path) {
+		// Clear leading dots from path
+		path = path || '';
+		if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
+		
 		var updated = false,
 			recurseUpdated = false,
 			operation,
+			tmpArray,
+			tmpIndex,
+			tmpCount,
+			pathInstance,
+			sourceIsArray,
+			updateIsArray,
 			i, k;
 
 		for (i in update) {
@@ -467,15 +492,25 @@ var MongoCS = (function () {
 
 						case '$pull':
 							operation = true;
-
+							
 							// Do a pull operation
 							for (k in update[i]) {
 								if (update[i].hasOwnProperty(k)) {
 									if (doc[k] instanceof Array) {
-										var index = doc[k].indexOf(update[i][k]);
-
-										if (index > -1) {
-											doc[k].splice(index, 1);
+										tmpArray = [];
+										
+										// Loop the array and find matches to our search
+										for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
+											if (this._match(doc[k][tmpIndex], update[i][k])) {
+												tmpArray.push(tmpIndex);
+											}
+										}
+										
+										tmpCount = tmpArray.length;
+										
+										// Now loop the pull array and remove items to be pulled
+										while (tmpCount--) {
+											doc[k].splice(tmpArray[tmpCount], 1);
 											updated = true;
 										}
 									} else {
@@ -486,28 +521,69 @@ var MongoCS = (function () {
 							break;
 					}
 				}
+				
+				// Check if the key has a .$ at the end, denoting an array lookup
+				if (i.substr(i.length - 2, 2) === '.$') {
+					operation = true;
+					
+					// Modify i to be the name of the field
+					i = i.substr(0, i.length - 2);
+					
+					pathInstance = new Path(path + '.' + i);
+					
+					// Check if the key is an array and has items
+					if (doc[i] && doc[i] instanceof Array && doc[i].length) {
+						tmpArray = [];
+						
+						// Loop the array and find matches to our search
+						for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
+							if (this._match(doc[i][tmpIndex], pathInstance.value(query))) {
+								tmpArray.push(tmpIndex);
+							}
+						}
+						
+						// Loop the items that matched and update them
+						for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
+							recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, path + '.' + i);
+							if (recurseUpdated) {
+								updated = true;
+							}
+						}
+					}
+				}
 
 				if (!operation) {
 					if (typeof(update[i]) === 'object') {
 						if (doc[i] !== null && typeof(doc[i]) === 'object') {
-							if (typeof(doc[i]) !== 'object') {
-								// The doc key is not already an object
-								// so overwrite it with this object
-								doc[i] = update[i];
-								updated = true;
-							} else {
-								// Check if we are dealing with arrays
-								if (update[i] instanceof Array || doc[i] instanceof Array) {
-									// One of the objects is an array so overwrite
+							// Check if we are dealing with arrays
+							sourceIsArray = doc[i] instanceof Array;
+							updateIsArray = update[i] instanceof Array;
+							
+							if (sourceIsArray || updateIsArray) {
+								// Check if the update is an object and the doc is an array
+								if (!updateIsArray && sourceIsArray) {
+									// Update is an object, source is an array so match the array items
+									// with our query object to find the one to update inside this array
+									
+									// Loop the array and find matches to our search
+									for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
+										recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, path + '.' + i);
+										if (recurseUpdated) {
+											updated = true;
+										}
+									}
+								} else {
+									// Either both source and update are arrays or the update is
+									// an array and the source is not, so set source to update
 									doc[i] = update[i];
 									updated = true;
-								} else {
-									// The doc key is an object so traverse the
-									// update further
-									recurseUpdated = this._updateObject(doc[i], update[i]);
-									if (recurseUpdated) {
-										updated = true;
-									}
+								}
+							} else {
+								// The doc key is an object so traverse the
+								// update further
+								recurseUpdated = this._updateObject(doc[i], update[i], query, path + '.' + i);
+								if (recurseUpdated) {
+									updated = true;
 								}
 							}
 						} else {
@@ -948,6 +1024,9 @@ var MongoCS = (function () {
 		var operation,
 			applyOp,
 			recurseVal,
+			tmpArray,
+			tmpIndex,
+			tmpCount,
 			matchedAll = true,
 			i;
 
@@ -1055,7 +1134,7 @@ var MongoCS = (function () {
 				}
 
 				// Check for regex
-				if (test[i] instanceof RegExp) {
+				if (!operation && test[i] instanceof RegExp) {
 					operation = true;
 
 					if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
