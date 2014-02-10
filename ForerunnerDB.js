@@ -22,13 +22,13 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 
- Source: https://github.com/coolbloke1324/MongoCS
+ Source: https://github.com/coolbloke1324/ForerunnerDB
 
  Changelog:
 	 Version 1.0.0:
 	 	First commit
  */
-var MongoCS = (function () {
+var ForerunnerDB = (function () {
 	var idCounter = 0;
 
 	var escapeSelector = function (selector) {
