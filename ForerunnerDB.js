@@ -25,8 +25,8 @@
  Source: https://github.com/coolbloke1324/ForerunnerDB
 
  Changelog:
-	 Version 1.0.0:
-	 	First commit
+ Version 1.0.0:
+ First commit
  */
 var ForerunnerDB = (function () {
 	var idCounter = 0;
@@ -141,7 +141,7 @@ var ForerunnerDB = (function () {
 		if (str.substr(0, 1) === '.') {
 			str = str.substr(1, str.length -1);
 		}
-		
+
 		return str;
 	};
 
@@ -401,6 +401,62 @@ var ForerunnerDB = (function () {
 	 * all matches for 'query' with the data held in 'update'. It will not overwrite
 	 * the matched documents with the update document.
 	 *
+	 * @param {Object} obj The object containing updated key/values.
+	 *
+	 * If the object contains a primary key field (based on the collections's primary
+	 * key) then the database will search for an existing document with a matching id.
+	 * If a matching document is found, the document will be updated. Any keys that
+	 * match keys on the existing document will be overwritten with new data. Any keys
+	 * that do not currently exist on the document will be added to the document.
+	 *
+	 * If the object does not contain an id or the id passed does not match an existing
+	 * document, an insert is performed instead. If no id is present a new primary key
+	 * id is provided for the item.
+	 *
+	 * @returns {Object} An object containing two keys, "op" contains either "insert" or
+	 * "update" depending on the type of operation that was performed and "result"
+	 * contains the return data from the operation used.
+	 */
+	Collection.prototype.upsert = function (obj) {
+		var returnData = {},
+			query;
+
+		// Determine if the operation is an insert or an update
+		if (obj[this._primaryKey]) {
+			// Check if an object with this primary key already exists
+			query = {};
+			query[this._primaryKey] = obj[this._primaryKey];
+
+			if (this.find(query).length) {
+				// The document already exists with this id, this operation is an update
+				returnData.op = 'update';
+			} else {
+				// No document with this id exists, this operation is an insert
+				returnData.op = 'insert';
+			}
+		} else {
+			// The document passed does not contain an id, this operation is an insert
+			returnData.op = 'insert';
+		}
+
+		switch (returnData.op) {
+			case 'insert':
+				returnData.result = this.insert(obj);
+				break;
+
+			case 'update':
+				returnData.result = this.update(query, obj);
+				break;
+		}
+
+		return returnData;
+	};
+
+	/**
+	 * Modifies an existing document or documents in a collection. This will update
+	 * all matches for 'query' with the data held in 'update'. It will not overwrite
+	 * the matched documents with the update document.
+	 *
 	 * @param {Object} query The query that must be matched for a document to be
 	 * operated on.
 	 * @param {Object} update The object containing updated key/values. Any keys that
@@ -453,7 +509,7 @@ var ForerunnerDB = (function () {
 		// Clear leading dots from path
 		path = path || '';
 		if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
-		
+
 		var updated = false,
 			recurseUpdated = false,
 			operation,
@@ -492,22 +548,22 @@ var ForerunnerDB = (function () {
 
 						case '$pull':
 							operation = true;
-							
+
 							// Do a pull operation
 							for (k in update[i]) {
 								if (update[i].hasOwnProperty(k)) {
 									if (doc[k] instanceof Array) {
 										tmpArray = [];
-										
+
 										// Loop the array and find matches to our search
 										for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
 											if (this._match(doc[k][tmpIndex], update[i][k])) {
 												tmpArray.push(tmpIndex);
 											}
 										}
-										
+
 										tmpCount = tmpArray.length;
-										
+
 										// Now loop the pull array and remove items to be pulled
 										while (tmpCount--) {
 											doc[k].splice(tmpArray[tmpCount], 1);
@@ -521,27 +577,27 @@ var ForerunnerDB = (function () {
 							break;
 					}
 				}
-				
+
 				// Check if the key has a .$ at the end, denoting an array lookup
 				if (i.substr(i.length - 2, 2) === '.$') {
 					operation = true;
-					
+
 					// Modify i to be the name of the field
 					i = i.substr(0, i.length - 2);
-					
+
 					pathInstance = new Path(path + '.' + i);
-					
+
 					// Check if the key is an array and has items
 					if (doc[i] && doc[i] instanceof Array && doc[i].length) {
 						tmpArray = [];
-						
+
 						// Loop the array and find matches to our search
 						for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 							if (this._match(doc[i][tmpIndex], pathInstance.value(query))) {
 								tmpArray.push(tmpIndex);
 							}
 						}
-						
+
 						// Loop the items that matched and update them
 						for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 							recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, path + '.' + i);
@@ -558,13 +614,13 @@ var ForerunnerDB = (function () {
 							// Check if we are dealing with arrays
 							sourceIsArray = doc[i] instanceof Array;
 							updateIsArray = update[i] instanceof Array;
-							
+
 							if (sourceIsArray || updateIsArray) {
 								// Check if the update is an object and the doc is an array
 								if (!updateIsArray && sourceIsArray) {
 									// Update is an object, source is an array so match the array items
 									// with our query object to find the one to update inside this array
-									
+
 									// Loop the array and find matches to our search
 									for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 										recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, path + '.' + i);
