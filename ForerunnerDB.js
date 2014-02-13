@@ -155,6 +155,9 @@ var ForerunnerDB = (function () {
 		this._data = [];
 		this._binds = {};
 		this._views = [];
+
+		// Set the subset to itself since it is the root collection
+		this._subsetOf(this);
 	};
 
 	Collection.prototype.primaryKey = function (keyName) {
@@ -693,7 +696,6 @@ var ForerunnerDB = (function () {
 			// Remove the data from the collection
 			for (var i = 0; i < dataSet.length; i++) {
 				index = this._data.indexOf(dataSet[i]);
-
 				this._data.splice(index, 1);
 			}
 
@@ -810,7 +812,30 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.subset = function (query, options) {
 		var result = this.find(query, options);
-		return new Collection().setData(result);
+
+		return new Collection()
+			._subsetOf(this)
+			.primaryKey(this._primaryKey)
+			.setData(result);
+	};
+
+	/**
+	 * Gets the collection that this collection is a subset of.
+	 * @returns {Collection}
+	 */
+	Collection.prototype.subsetOf = function () {
+		return this.__subsetOf;
+	};
+
+	/**
+	 * Sets the collection that this collection is a subset of.
+	 * @param {Collection} collection The collection to set as the parent of this subset.
+	 * @returns {*} This object for chaining.
+	 * @private
+	 */
+	Collection.prototype._subsetOf = function (collection) {
+		this.__subsetOf = collection;
+		return this;
 	};
 
 	/**
@@ -1303,12 +1328,22 @@ var ForerunnerDB = (function () {
 		return this._data.length;
 	};
 
+	/**
+	 * The view constructor.
+	 * @param viewName
+	 * @constructor
+	 */
 	var View = function (viewName) {
 		this._name = viewName;
-		this._data = [];
 		this._binds = [];
 	};
 
+	/**
+	 * Gets / sets the DB the view is bound against. Automatically set
+	 * when the db.view(viewName) method is called.
+	 * @param db
+	 * @returns {*}
+	 */
 	View.prototype.db = function (db) {
 		if (db !== undefined) {
 			this._db = db;
@@ -1318,9 +1353,14 @@ var ForerunnerDB = (function () {
 		return this._db;
 	};
 
+	/**
+	 * Gets / sets the collection that the view derives it's data from.
+	 * @param collection
+	 * @returns {*}
+	 */
 	View.prototype.from = function (collection) {
 		if (collection !== undefined) {
-			this._from = this._db.collection(collection);
+			this._from = collection;
 
 			this.refresh();
 			return this;
@@ -1329,6 +1369,12 @@ var ForerunnerDB = (function () {
 		return this._from;
 	};
 
+	/**
+	 * Gets / sets the query that the view uses to build it's data set.
+	 * @param query
+	 * @param options
+	 * @returns {*}
+	 */
 	View.prototype.query = function (query, options) {
 		if (query !== undefined) {
 			this._query = {
@@ -1343,7 +1389,25 @@ var ForerunnerDB = (function () {
 		return this._query;
 	};
 
+	/**
+	 * Refreshes the view data and diffs between previous and new data to
+	 * determine if any events need to be triggered or DOM binds updated.
+	 */
 	View.prototype.refresh = function () {
+		// Take a copy of the data before updating it, we will use this to
+		// "diff" between the old and new data and handle DOM bind updates
+		var oldData = this._data,
+			oldDataArr,
+			newData,
+			newDataArr,
+			query,
+			primaryKey,
+			dataItem,
+			inserted = [],
+			updated = [],
+			removed = [],
+			i;
+
 		// Query the collection and update the data
 		if (this._from) {
 			if (this._query) {
@@ -1353,6 +1417,87 @@ var ForerunnerDB = (function () {
 				// No query, return whole collection
 				this._data = this._from.subset({});
 			}
+		}
+
+		// Check if there was old data
+		if (oldData) {
+			// Now determine the difference
+			newData = this._data;
+
+			if (oldData.subsetOf() === newData.subsetOf()) {
+				newDataArr = newData.find();
+				oldDataArr = oldData.find();
+				primaryKey = newData._primaryKey;
+
+				// The old data and new data were derived from the same parent collection
+				// so scan the data to determine changes
+				for (i = 0; i < newDataArr.length; i++) {
+					dataItem = newDataArr[i];
+
+					query = {};
+					query[primaryKey] = dataItem[primaryKey];
+
+					// Check if this item exists in the old data
+					if (!oldData.find(query)[0]) {
+						// New item detected
+						inserted.push(dataItem);
+					} else {
+						// Updated / already included item detected
+						updated.push(dataItem);
+					}
+				}
+
+				// Now loop the old data and check if any records were removed
+				for (i = 0; i < oldDataArr.length; i++) {
+					dataItem = oldDataArr[i];
+
+					query = {};
+					query[primaryKey] = dataItem[primaryKey];
+
+					// Check if this item exists in the old data
+					if (!newData.find(query)[0]) {
+						// Removed item detected
+						removed.push(dataItem);
+					}
+				}
+
+				// Now we have a diff of the two data sets, we need to get the DOM updated
+				if (inserted.length) {
+					this._onInsert(inserted, []);
+				}
+
+				if (updated.length) {
+					this._onUpdate(updated);
+				}
+
+				if (removed.length) {
+					this._onRemove(removed);
+				}
+			} else {
+				// The previous data and the new data are derived from different collections
+				// and can therefore not be compared, all data is therefore effectively "new"
+			}
+		}
+	};
+
+	/**
+	 * Returns the number of documents currently in the view.
+	 * @returns {Number}
+	 */
+	View.prototype.count = function () {
+		return this._data && this._data._data ? this._data._data.length : 0;
+	};
+
+	/**
+	 * Queries the view data. See Collection.find() for more information.
+	 * @returns {*}
+	 */
+	View.prototype.find = function () {
+		if (this._data) {
+			// Pass the args through to the internal subset data and return
+			return this._data.find.apply(this._data, arguments);
+		} else {
+			return [];
 		}
 	};
 
@@ -1384,16 +1529,186 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 
-	var ObjectId = function () {
-		this._val = (
-			idCounter +
-				(
+	View.prototype._onUpdate = function (items) {
+		var binds = this._binds,
+			views = this._views,
+			unfilteredDataSet = this.find({}),
+			filteredDataSet,
+			i;
+
+		for (i in binds) {
+			if (binds.hasOwnProperty(i)) {
+				if (binds[i].reduce) {
+					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+				} else {
+					filteredDataSet = unfilteredDataSet;
+				}
+				this._fireUpdate(i, binds[i], items, filteredDataSet);
+			}
+		}
+	};
+
+	View.prototype._onInsert = function (inserted, failed) {
+		var binds = this._binds,
+			unfilteredDataSet = this.find({}),
+			filteredDataSet;
+
+		for (var i in binds) {
+			if (binds.hasOwnProperty(i)) {
+				if (binds[i].reduce) {
+					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+				} else {
+					filteredDataSet = unfilteredDataSet;
+				}
+				this._fireInsert(i, binds[i], inserted, failed, filteredDataSet);
+			}
+		}
+	};
+
+	View.prototype._onRemove = function (items) {
+		var binds = this._binds,
+			unfilteredDataSet = this.find({}),
+			filteredDataSet;
+
+		for (var i in binds) {
+			if (binds.hasOwnProperty(i)) {
+				if (binds[i].reduce) {
+					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+				} else {
+					filteredDataSet = unfilteredDataSet;
+				}
+				this._fireRemove(i, binds[i], items, filteredDataSet);
+			}
+		}
+	};
+
+	View.prototype._fireUpdate = function (selector, options, items, all) {
+		var container = $(selector),
+			itemElem,
+			i;
+
+		// Loop the updated items
+		for (i = 0; i < items.length; i++) {
+			// Check for existing item in the container
+			itemElem = container.find('#' + escapeSelector(items[i][this._primaryKey]));
+
+			options.template(items[i], function (itemElem, itemData) { return function (itemHtml) {
+				// Check if there is custom DOM insert method
+				if (options.update) {
+					options.update(itemHtml, itemData, all, itemElem.length ? 'update' : 'append');
+				} else {
+					if (itemElem.length) {
+						// An existing item is in the container, replace it with the
+						// new rendered item from the updated data
+						itemElem.replaceWith(itemHtml);
+					} else {
+						// The item element does not already exist, append it
+						if (options.prependUpdate) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
+					}
+				}
+
+				if (options.afterUpdate) {
+					options.afterUpdate(itemHtml, itemData, all);
+				}
+			}}(itemElem, items[i]));
+		}
+	};
+
+	View.prototype._fireInsert = function (selector, options, inserted, failed, all) {
+		var container = $(selector),
+			itemElem,
+			itemHtml,
+			i;
+
+		// Loop the inserted items
+		for (i = 0; i < inserted.length; i++) {
+			// Check for existing item in the container
+			itemElem = container.find('#' + escapeSelector(inserted[i][this._primaryKey]));
+
+			if (!itemElem.length) {
+				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
+					// Check if there is custom DOM insert method
+					if (options.insert) {
+						options.insert(itemHtml, insertedItem, failed, all);
+					} else {
+						// Handle the insert automatically
+						// Add the item to the container
+						if (options.prependInsert) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
+					}
+
+					if (options.afterInsert) {
+						options.afterInsert(itemHtml, insertedItem, failed, all);
+					}
+				}}(itemElem, inserted[i], failed, all));
+			}
+		}
+	};
+
+	View.prototype._fireRemove = function (selector, options, items, all) {
+		var container = $(selector),
+			itemElem,
+			i;
+
+		// Loop the removed items
+		for (i = 0; i < items.length; i++) {
+			// Check for existing item in the container
+			itemElem = container.find('#' + escapeSelector(items[i][this._primaryKey]));
+
+			if (itemElem.length) {
+				if (options.beforeRemove) {
+					options.beforeRemove(itemElem, items[i], all, function (itemElem, data, all) { return function () {
+						if (options.remove) {
+							options.remove(itemElem, data, all);
+						} else {
+							itemElem.remove();
+
+							if (options.afterRemove) {
+								options.afterRemove(itemElem, data, all);
+							}
+						}
+					}}(itemElem, items[i], all));
+				} else {
+					if (options.remove) {
+						options.remove(itemElem, data, all);
+					} else {
+						itemElem.remove();
+
+						if (options.afterRemove) {
+							options.afterRemove(itemElem, items[i], all);
+						}
+					}
+				}
+			}
+		}
+	};
+
+	/**
+	 * Creates a new objectId object.
+	 * @constructor
+	 */
+	var ObjectId = function (id) {
+		idCounter++;
+
+		if (!id) {
+			this._val = (
+				idCounter + (
 					Math.random() * Math.pow(10, 17) +
-						Math.random() * Math.pow(10, 17) +
-						Math.random() * Math.pow(10, 17) +
-						Math.random() * Math.pow(10, 17)
-					)
+					Math.random() * Math.pow(10, 17) +
+					Math.random() * Math.pow(10, 17) +
+					Math.random() * Math.pow(10, 17)
+				)
 			).toString(24);
+		} else {
+			this._val = id;
+		}
 	};
 
 	ObjectId.prototype.toString = function () {
@@ -1454,13 +1769,18 @@ var ForerunnerDB = (function () {
 	 * @returns {Collection}
 	 */
 	DB.prototype.collection = function (collectionName, primaryKey) {
-		this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
+		if (collectionName) {
+			this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
 
-		if (primaryKey !== undefined) {
-			this._collection[collectionName].primaryKey(primaryKey);
+			if (primaryKey !== undefined) {
+				this._collection[collectionName].primaryKey(primaryKey);
+			}
+
+			return this._collection[collectionName];
+		} else {
+			// Return an object of collection data
+			return this._collection;
 		}
-
-		return this._collection[collectionName];
 	};
 
 	DB.prototype.view = function (viewName) {
@@ -1482,6 +1802,27 @@ var ForerunnerDB = (function () {
 				arr.push({
 					name: i,
 					count: this._collection[i].count()
+				});
+			}
+		}
+
+		return arr;
+	};
+
+	/**
+	 * Returns an array of views the DB currently has.
+	 * @returns {Array} An array of objects containing details of each view
+	 * the database is currently managing.
+	 */
+	DB.prototype.views = function () {
+		var arr = [],
+			i;
+
+		for (i in this._view) {
+			if (this._view.hasOwnProperty(i)) {
+				arr.push({
+					name: i,
+					count: this._view[i].count()
 				});
 			}
 		}
