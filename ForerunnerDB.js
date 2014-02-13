@@ -230,16 +230,21 @@ var ForerunnerDB = (function () {
 			itemElem = container.find('#' + escapeSelector(items[i][this._primaryKey]));
 
 			options.template(items[i], function (itemElem, itemData) { return function (itemHtml) {
-				if (itemElem.length) {
-					// An existing item is in the container, replace it with the
-					// new rendered item from the updated data
-					itemElem.replaceWith(itemHtml);
+				// Check if there is custom DOM insert method
+				if (options.update) {
+					options.update(itemHtml, itemData, all, itemElem.length ? 'update' : 'append');
 				} else {
-					// The item element does not already exist, append it
-					if (options.prependUpdate) {
-						container.prepend(itemHtml);
+					if (itemElem.length) {
+						// An existing item is in the container, replace it with the
+						// new rendered item from the updated data
+						itemElem.replaceWith(itemHtml);
 					} else {
-						container.append(itemHtml);
+						// The item element does not already exist, append it
+						if (options.prependUpdate) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
 					}
 				}
 
@@ -263,11 +268,17 @@ var ForerunnerDB = (function () {
 
 			if (!itemElem.length) {
 				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
-					// Add the item to the container
-					if (options.prependInsert) {
-						container.prepend(itemHtml);
+					// Check if there is custom DOM insert method
+					if (options.insert) {
+						options.insert(itemHtml, insertedItem, failed, all);
 					} else {
-						container.append(itemHtml);
+						// Handle the insert automatically
+						// Add the item to the container
+						if (options.prependInsert) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
 					}
 
 					if (options.afterInsert) {
@@ -291,17 +302,25 @@ var ForerunnerDB = (function () {
 			if (itemElem.length) {
 				if (options.beforeRemove) {
 					options.beforeRemove(itemElem, items[i], all, function (itemElem, data, all) { return function () {
-						itemElem.remove();
+						if (options.remove) {
+							options.remove(itemElem, data, all);
+						} else {
+							itemElem.remove();
 
-						if (options.afterRemove) {
-							options.afterRemove(itemElem, data, all);
+							if (options.afterRemove) {
+								options.afterRemove(itemElem, data, all);
+							}
 						}
 					}}(itemElem, items[i], all));
 				} else {
-					itemElem.remove();
+					if (options.remove) {
+						options.remove(itemElem, data, all);
+					} else {
+						itemElem.remove();
 
-					if (options.afterRemove) {
-						options.afterRemove(itemElem, items[i], all);
+						if (options.afterRemove) {
+							options.afterRemove(itemElem, items[i], all);
+						}
 					}
 				}
 			}
