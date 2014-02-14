@@ -1360,10 +1360,20 @@ var ForerunnerDB = (function () {
 	 */
 	View.prototype.from = function (collection) {
 		if (collection !== undefined) {
-			this._from = collection;
+			// Check if this is a collection name or a collection instance
+			if (collection instanceof Collection) {
+				this._from = collection;
+			} else if (typeof(collection) === 'string') {
+				this._from = this._db.collection(collection);
+			}
 
-			this.refresh();
-			return this;
+			if (this._from) {
+				this._primaryKey = this._from._primaryKey;
+				this.refresh();
+				return this;
+			} else {
+				throw('Cannot determine collection type in view.from()');
+			}
 		}
 
 		return this._from;
@@ -1398,6 +1408,7 @@ var ForerunnerDB = (function () {
 		// "diff" between the old and new data and handle DOM bind updates
 		var oldData = this._data,
 			oldDataArr,
+			oldDataItem,
 			newData,
 			newDataArr,
 			query,
@@ -1438,12 +1449,17 @@ var ForerunnerDB = (function () {
 					query[primaryKey] = dataItem[primaryKey];
 
 					// Check if this item exists in the old data
-					if (!oldData.find(query)[0]) {
+					oldDataItem = oldData.find(query)[0];
+
+					if (!oldDataItem) {
 						// New item detected
 						inserted.push(dataItem);
 					} else {
-						// Updated / already included item detected
-						updated.push(dataItem);
+						// Check if an update has occurred
+						if (JSON.stringify(oldDataItem) !== JSON.stringify(dataItem)) {
+							// Updated / already included item detected
+							updated.push(dataItem);
+						}
 					}
 				}
 
