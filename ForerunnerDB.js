@@ -1604,6 +1604,34 @@ var ForerunnerDB = (function () {
 	};
 
 	/**
+	 * Renders a bind view data to the DOM.
+	 * @param {String} bindSelector The jQuery selector string to use to identify
+	 * the bind target. Must match the selector used when defining the original bind.
+	 */
+	View.prototype.render = function (bindSelector) {
+		// Check the bind exists
+		var bind = this._binds[bindSelector],
+			domTarget = $(bindSelector),
+			allData,
+			dataItem,
+			itemHtml,
+			i;
+
+		if (bind) {
+			allData = this._data.find();
+
+			// Loop all items and add them to the screen
+			for (i = 0; i < allData.length; i++) {
+				dataItem = allData[i];
+
+				itemHtml = bind.template(dataItem, function (itemHtml) {
+					itemHtml.appendTo(domTarget);
+				});
+			}
+		}
+	};
+
+	/**
 	 * Returns the number of documents currently in the view.
 	 * @returns {Number}
 	 */
