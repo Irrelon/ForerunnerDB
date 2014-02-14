@@ -1336,6 +1336,10 @@ var ForerunnerDB = (function () {
 	var View = function (viewName) {
 		this._name = viewName;
 		this._binds = [];
+		this._query = {
+			query: {},
+			options: {}
+		};
 	};
 
 	/**
@@ -1355,7 +1359,8 @@ var ForerunnerDB = (function () {
 
 	/**
 	 * Gets / sets the collection that the view derives it's data from.
-	 * @param collection
+	 * @param {*} collection A collection instance or the name of a collection
+	 * to use as the data set to derive view data from.
 	 * @returns {*}
 	 */
 	View.prototype.from = function (collection) {
@@ -1381,22 +1386,124 @@ var ForerunnerDB = (function () {
 
 	/**
 	 * Gets / sets the query that the view uses to build it's data set.
-	 * @param query
-	 * @param options
+	 * @param {Object=} query
+	 * @param {Boolean=} options An options object.
+	 * @param {Boolean=} refresh Whether to refresh the view data after
+	 * this operation. Defaults to true.
 	 * @returns {*}
 	 */
-	View.prototype.query = function (query, options) {
+	View.prototype.query = function (query, options, refresh) {
 		if (query !== undefined) {
-			this._query = {
-				query: query,
-				options: options
-			};
+			this._query.query = query;
+		}
 
-			this.refresh();
+		if (options !== undefined) {
+			this._query.options = options;
+		}
+
+		if (query !== undefined || options !== undefined) {
+			if (refresh === undefined || refresh === true) {
+				this.refresh();
+			}
 			return this;
 		}
 
 		return this._query;
+	};
+
+	/**
+	 * Add data to the existing query.
+	 * @param {Object} obj The data whose keys will be added to the existing
+	 * query object.
+	 * @param {Boolean} overwrite Whether or not to overwrite data that already
+	 * exists in the query object. Defaults to true.
+	 * @param {Boolean=} refresh Whether or not to refresh the view data set
+	 * once the operation is complete. Defaults to true.
+	 */
+	View.prototype.queryAdd = function (obj, overwrite, refresh) {
+		var query = this._query.query,
+			i;
+
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
+						query[i] = obj[i];
+					}
+				}
+			}
+		}
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+	};
+
+	/**
+	 * Renive data from the existing query.
+	 * @param {Object} obj The data whose keys will be removed from the existing
+	 * query object.
+	 * @param {Boolean=} refresh Whether or not to refresh the view data set
+	 * once the operation is complete. Defaults to true.
+	 */
+	View.prototype.queryRemove = function (obj, refresh) {
+		var query = this._query.query,
+			i;
+
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					delete query[i];
+				}
+			}
+		}
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+	};
+
+	/**
+	 * Gets / sets the query being used to generate the view data.
+	 * @param {Object=} query The query to set.
+	 * @param {Boolean=} refresh Whether to refresh the view data after
+	 * this operation. Defaults to true.
+	 * @returns {*}
+	 */
+	View.prototype.queryObj = function (query, refresh) {
+		if (query !== undefined) {
+			this._query.query = query;
+
+			if (refresh === undefined || refresh === true) {
+				this.refresh();
+			}
+			return this;
+		}
+
+		return this._query.query;
+	};
+
+	/**
+	 * Gets / sets the query options used when applying sorting etc to the
+	 * view data set.
+	 * @param {Object=} options An options object.
+	 * @param {Boolean=} refresh Whether to refresh the view data after
+	 * this operation. Defaults to true.
+	 * @returns {*}
+	 */
+	View.prototype.queryOptions = function (options, refresh) {
+		if (options !== undefined) {
+			this._query.options = options;
+
+			if (refresh === undefined || refresh === true) {
+				this.refresh();
+			}
+			return this;
+		}
+
+		return this._query.options;
 	};
 
 	/**
