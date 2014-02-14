@@ -1607,14 +1607,17 @@ var ForerunnerDB = (function () {
 	 * Renders a bind view data to the DOM.
 	 * @param {String} bindSelector The jQuery selector string to use to identify
 	 * the bind target. Must match the selector used when defining the original bind.
+	 * @param {Function=} domHandler If specified, this handler method will be called
+	 * with the final HTML for the view instead of the DB handling the DOM insertion.
 	 */
-	View.prototype.render = function (bindSelector) {
+	View.prototype.render = function (bindSelector, domHandler) {
 		// Check the bind exists
 		var bind = this._binds[bindSelector],
 			domTarget = $(bindSelector),
 			allData,
 			dataItem,
 			itemHtml,
+			finalHtml = $('<ul></ul>'),
 			i;
 
 		if (bind) {
@@ -1625,8 +1628,14 @@ var ForerunnerDB = (function () {
 				dataItem = allData[i];
 
 				itemHtml = bind.template(dataItem, function (itemHtml) {
-					itemHtml.appendTo(domTarget);
+					finalHtml.append(itemHtml);
 				});
+			}
+
+			if (!domHandler) {
+				domTarget.append(finalHtml.html());
+			} else {
+				domHandler(bindSelector, finalHtml.html());
 			}
 		}
 	};
