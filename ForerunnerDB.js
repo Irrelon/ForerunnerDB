@@ -853,9 +853,6 @@ var ForerunnerDB = (function () {
 		var analysis,
 			self = this,
 			resultArr,
-			dataPath,
-			pathSolver,
-			sorterMethod,
 			joinCollectionIndex,
 			joinIndex,
 			joinCollection = {},
@@ -868,7 +865,6 @@ var ForerunnerDB = (function () {
 			joinSearch,
 			joinMulti,
 			joinRequire,
-			joinPathData,
 			joinFindResults,
 			resultCollectionName,
 			resultIndex,
@@ -899,42 +895,7 @@ var ForerunnerDB = (function () {
 
 			// Order the array if we were passed a sort clause
 			if (options.sort) {
-				// Create a data path from the sort object
-				pathSolver = new Path();
-				dataPath = pathSolver.parse(options.sort, true);
-				pathSolver.path(dataPath.path);
-
-				if (dataPath.value === 1) {
-					// Sort ascending
-					sorterMethod = function (a, b) {
-						var valA = pathSolver.value(a),
-							valB = pathSolver.value(b);
-
-						if (valA > valB) {
-							return 1;
-						} else if (valA < valB) {
-							return -1;
-						}
-
-						return 0;
-					};
-				} else {
-					// Sort descending
-					sorterMethod = function (a, b) {
-						var valA = pathSolver.value(a),
-							valB = pathSolver.value(b);
-
-						if (valA > valB) {
-							return -1;
-						} else if (valA < valB) {
-							return 1;
-						}
-
-						return 0;
-					};
-				}
-
-				resultArr.sort(sorterMethod);
+				resultArr = this.sort(options.sort, resultArr);
 			}
 
 			if (options.limit) {
@@ -1020,6 +981,56 @@ var ForerunnerDB = (function () {
 		} else {
 			return [];
 		}
+	};
+
+	/**
+	 * Sorts an array of documents by the given sort path.
+	 * @param {String} sortPath The path to the key that the array should be sorted by.
+	 * @param {Array} arr The array of documents to sort.
+	 * @returns {Array}
+	 */
+	Collection.prototype.sort = function (sortPath, arr) {
+		// Make sure we have an array object
+		arr = arr || [];
+
+		// Create a data path from the sort object
+		var pathSolver = new Path(),
+			dataPath = pathSolver.parse(sortPath, true),
+			sorterMethod;
+
+		pathSolver.path(dataPath.path);
+
+		if (dataPath.value === 1) {
+			// Sort ascending
+			sorterMethod = function (a, b) {
+				var valA = pathSolver.value(a),
+					valB = pathSolver.value(b);
+
+				if (valA > valB) {
+					return 1;
+				} else if (valA < valB) {
+					return -1;
+				}
+
+				return 0;
+			};
+		} else {
+			// Sort descending
+			sorterMethod = function (a, b) {
+				var valA = pathSolver.value(a),
+					valB = pathSolver.value(b);
+
+				if (valA > valB) {
+					return -1;
+				} else if (valA < valB) {
+					return 1;
+				}
+
+				return 0;
+			};
+		}
+
+		return arr.sort(sorterMethod);
 	};
 
 	/**
@@ -1289,7 +1300,7 @@ var ForerunnerDB = (function () {
 									// each item in the test key data to see if the source item matches one
 									// of them. This is effectively an $in search.
 									recurseVal = false;
-									
+
 									for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
 										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp);
 
@@ -1723,21 +1734,51 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 
+	/**
+	 * Sorts items in the DOM based on the bind settings and the passed item array.
+	 * @param {String} selector The jQuery selector of the bind container.
+	 * @param {Array} itemArr The array of items used to determine the order the DOM
+	 * elements should be in based on the order they are in, in the array.
+	 */
+	View.prototype.sortDomBind = function (selector, itemArr) {
+		var container = $(selector),
+			arrIndex,
+			arrItem,
+			domItem;
+
+		for (arrIndex = 0; arrIndex < itemArr.length; arrIndex++) {
+			arrItem = itemArr[arrIndex];
+
+			// Now we've done our inserts into the DOM, let's ensure they are still
+			// ordered correctly
+			domItem = container.find('#' + arrItem[this._primaryKey]);
+
+			if (arrIndex === 0) {
+				container.prepend(domItem);
+			} else {
+				domItem.insertAfter(container.children(':eq(' + (arrIndex - 1) + ')'));
+			}
+		}
+	};
+
 	View.prototype._onUpdate = function (items) {
 		var binds = this._binds,
-			views = this._views,
 			unfilteredDataSet = this.find({}),
 			filteredDataSet,
-			i;
+			bindKey;
 
-		for (i in binds) {
-			if (binds.hasOwnProperty(i)) {
-				if (binds[i].reduce) {
-					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+		for (bindKey in binds) {
+			if (binds.hasOwnProperty(bindKey)) {
+				if (binds[bindKey].reduce) {
+					filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
 				} else {
 					filteredDataSet = unfilteredDataSet;
 				}
-				this._fireUpdate(i, binds[i], items, filteredDataSet);
+
+				this._fireUpdate(bindKey, binds[bindKey], items, filteredDataSet);
+				if (binds[bindKey].maintainSort) {
+					this.sortDomBind(bindKey, filteredDataSet);
+				}
 			}
 		}
 	};
@@ -1745,16 +1786,21 @@ var ForerunnerDB = (function () {
 	View.prototype._onInsert = function (inserted, failed) {
 		var binds = this._binds,
 			unfilteredDataSet = this.find({}),
-			filteredDataSet;
+			filteredDataSet,
+			bindKey;
 
-		for (var i in binds) {
-			if (binds.hasOwnProperty(i)) {
-				if (binds[i].reduce) {
-					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+		for (bindKey in binds) {
+			if (binds.hasOwnProperty(bindKey)) {
+				if (binds[bindKey].reduce) {
+					filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
 				} else {
 					filteredDataSet = unfilteredDataSet;
 				}
-				this._fireInsert(i, binds[i], inserted, failed, filteredDataSet);
+
+				this._fireInsert(bindKey, binds[bindKey], inserted, failed, filteredDataSet);
+				if (binds[bindKey].maintainSort) {
+					this.sortDomBind(bindKey, filteredDataSet);
+				}
 			}
 		}
 	};
@@ -1762,16 +1808,18 @@ var ForerunnerDB = (function () {
 	View.prototype._onRemove = function (items) {
 		var binds = this._binds,
 			unfilteredDataSet = this.find({}),
-			filteredDataSet;
+			filteredDataSet,
+			bindKey;
 
-		for (var i in binds) {
-			if (binds.hasOwnProperty(i)) {
-				if (binds[i].reduce) {
-					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+		for (bindKey in binds) {
+			if (binds.hasOwnProperty(bindKey)) {
+				if (binds[bindKey].reduce) {
+					filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
 				} else {
 					filteredDataSet = unfilteredDataSet;
 				}
-				this._fireRemove(i, binds[i], items, filteredDataSet);
+
+				this._fireRemove(bindKey, binds[bindKey], items, filteredDataSet);
 			}
 		}
 	};
@@ -1816,6 +1864,7 @@ var ForerunnerDB = (function () {
 		var container = $(selector),
 			itemElem,
 			itemHtml,
+			sortIndex,
 			i;
 
 		// Loop the inserted items
