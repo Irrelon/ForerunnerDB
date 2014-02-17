@@ -13,35 +13,39 @@ To create or get a reference to a collection object call (where collectionName i
 
 	var collection = db.collection('collectionName');
 
+In our examples we will use a collection called "item" which will store some fictitious items for sale:
+
+	var itemCollection = db.collection('item');
+
 ## Setting Initial Data
 When you get a collection instance for the first time it will contain no data. To set data on the collection pass an
 array of objects to the setData() method:
 
-	collection.setData([{
+	itemCollection.setData([{
 		_id: 1,
-		someKey: 'someVal',
+		name: 'Cat Litter',
 		price: 200
 	}, {
 		_id: 2,
-		someKey: 'someVal',
+		name: 'Dog Food',
 		price: 100
 	}]);
 
 ## Inserting Documents
 You can either insert a single document object or pass an array of documents:
 
-	collection.insert({_id: 3, price: 400});
+	itemCollection.insert({_id: 3, price: 400, name: 'Fish Bones'});
 
 Or...
 
-	collection.insert([{_id: 4, price: 267}, {_id: 5, price: 234}]);
+	itemCollection.insert([{_id: 4, price: 267, name:'Scooby Snacks'}, {_id: 5, price: 234, name: 'Chicken Yum Yum'}]);
 
 ## Searching the Collection
 Much like MongoDB, searching for data in a collection is done using the find() method and supports many of the same
 operators starting with a $ that MongoDB supports. For instance to find documents in the collection where the price
 is greater than 90 but less than 150, you can do this:
 
-	collection.find({
+	itemCollection.find({
 		price: {
 			'$gt': 90,
 			'$lt': 150
@@ -49,6 +53,76 @@ is greater than 90 but less than 150, you can do this:
 	});
 
 Which will return an array with all matching documents. If no documents match your search, an empty array is returned.
+
+### Doing Joins
+Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
+
+	var purchaseCollection = db.collection('purchase');
+	purchaseCollection.insert({
+		itemId: 4,
+		user: 'Fred Bloggs',
+		quantity: 2
+	}, {
+		itemId: 4,
+		user: 'Jim Jones',
+		quantity: 1
+	});
+
+Now, when we find data from the "item" collection we can grab all the users that ordered that item as well and store them in a key called "purchasedBy":
+
+	itemCollection.find({}, {
+		'join': [{
+			'purchase': {
+				'itemId': '_id',
+				'$as': 'purchasedBy',
+				'$require': false,
+				'$multi': true
+			}
+		}]
+	});
+
+The "join" key holds an array of joins to perform, each join object has a key which denotes the collection name to pull data from, then matching criteria which in this case is to match purchase.itemId with the item._id. The three other keys are special operations (start with $) and indicate:
+
+* $as tells the join what object key to store the join results in when returning the document
+* $require is a boolean that denotes if the join must be successful for the item to be returned in the final find result
+* $multi indicates if we should match just one item and then return, or match multiple items as an array
+
+The result of the call above is:
+
+	[{
+		"_id":1,
+		"name":"Cat Litter",
+		"price":200,
+		"purchasedBy":[]
+	},{
+		"_id":2,
+		"name":"Dog Food",
+		"price":100,
+		"purchasedBy":[]
+	},{
+		"_id":3,
+		"price":400,
+		"name":"Fish Bones",
+		"purchasedBy":[]
+	},{
+		"_id":4,
+		"price":267,
+		"name":"Scooby Snacks",
+		"purchasedBy": [{
+			"itemId":4,
+			"user":"Fred Bloggs",
+			"quantity":2
+		}, {
+			"itemId":4,
+			"user":"Jim Jones",
+			"quantity":1
+		}]
+	},{
+		"_id":5,
+		"price":234,
+		"name":"Chicken Yum Yum",
+		"purchasedBy":[]
+	}]
 
 ## Updating the Collection
 This is where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update
