@@ -58,7 +58,7 @@ Which will return an array with all matching documents. If no documents match yo
 Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
 
 	var purchaseCollection = db.collection('purchase');
-	purchaseCollection.insert({
+	purchaseCollection.insert([{
 		itemId: 4,
 		user: 'Fred Bloggs',
 		quantity: 2
@@ -66,7 +66,7 @@ Sometimes you want to join two or more collections when running a query and retu
 		itemId: 4,
 		user: 'Jim Jones',
 		quantity: 1
-	});
+	}]);
 
 Now, when we find data from the "item" collection we can grab all the users that ordered that item as well and store them in a key called "purchasedBy":
 
