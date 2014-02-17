@@ -868,6 +868,7 @@ var ForerunnerDB = (function () {
 			joinSearch,
 			joinMulti,
 			joinRequire,
+			joinPathData,
 			joinFindResults,
 			resultCollectionName,
 			resultIndex,
@@ -1124,184 +1125,128 @@ var ForerunnerDB = (function () {
 		var operation,
 			applyOp,
 			recurseVal,
-			tmpArray,
 			tmpIndex,
-			tmpCount,
+			sourceType = typeof source,
+			testType = typeof test,
 			matchedAll = true,
 			i;
 
-		for (i in test) {
-			if (test.hasOwnProperty(i)) {
-				// Reset operation flag
-				operation = false;
+		// Check if the comparison data are both strings or numbers
+		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
+			// The source and test data are flat types that do not require recursive searches,
+			// so just compare them and return the result
+			if (source !== test) {
+				matchedAll = false;
+			}
+		} else {
+			for (i in test) {
+				if (test.hasOwnProperty(i)) {
+					// Reset operation flag
+					operation = false;
 
-				// Check if the property starts with a dollar (function)
-				if (i.substr(0, 1) === '$') {
-					// Check for commands
-					switch (i) {
-						case '$gt':
-							// Greater than
-							if (source > test[i]) {
-								if (opToApply === 'or') {
-									return true;
+					// Check if the property starts with a dollar (function)
+					if (i.substr(0, 1) === '$') {
+						// Check for commands
+						switch (i) {
+							case '$gt':
+								// Greater than
+								if (source > test[i]) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+								operation = true;
+								break;
 
-						case '$gte':
-							// Greater than or equal
-							if (source >= test[i]) {
-								if (opToApply === 'or') {
-									return true;
+							case '$gte':
+								// Greater than or equal
+								if (source >= test[i]) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+								operation = true;
+								break;
 
-						case '$lt':
-							// Less than
-							if (source < test[i]) {
-								if (opToApply === 'or') {
-									return true;
+							case '$lt':
+								// Less than
+								if (source < test[i]) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+								operation = true;
+								break;
 
-						case '$lte':
-							// Less than or equal
-							if (source <= test[i]) {
-								if (opToApply === 'or') {
-									return true;
+							case '$lte':
+								// Less than or equal
+								if (source <= test[i]) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+								operation = true;
+								break;
 
-						case '$exists':
-							// Property exists
-							if ((source === undefined) !== test[i]) {
-								if (opToApply === 'or') {
-									return true;
+							case '$exists':
+								// Property exists
+								if ((source === undefined) !== test[i]) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+								operation = true;
+								break;
 
-						case '$or':
-							// Match true on ANY check to pass
-							applyOp = 'or';
-							operation = true;
+							case '$or':
+								// Match true on ANY check to pass
+								applyOp = 'or';
+								operation = true;
 
-							recurseVal = this._match(source, test[i], applyOp);
+								recurseVal = this._match(source, test[i], applyOp);
 
-							if (recurseVal) {
-								if (opToApply === 'or') {
-									return true;
+								if (recurseVal) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
 								}
-							} else {
-								matchedAll = false;
-							}
-							break;
+								break;
 
-						case '$and':
-							// Match true on ALL checks to pass
-							applyOp = 'and';
-							operation = true;
+							case '$and':
+								// Match true on ALL checks to pass
+								applyOp = 'and';
+								operation = true;
 
-							recurseVal = this._match(source, test[i], applyOp);
+								recurseVal = this._match(source, test[i], applyOp);
 
-							if (!recurseVal) {
-								if (opToApply === 'and') {
-									return false;
+								if (!recurseVal) {
+									if (opToApply === 'and') {
+										return false;
+									}
+
+									matchedAll = false;
 								}
-
-								matchedAll = false;
-							}
-							break;
-					}
-				}
-
-				// Check for regex
-				if (!operation && test[i] instanceof RegExp) {
-					operation = true;
-
-					if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
-						if (opToApply === 'or') {
-							return true;
+								break;
 						}
-					} else {
-						matchedAll = false;
 					}
-				}
 
-				if (!operation) {
-					// Check if our query is an object
-					if (typeof(test[i]) === 'object') {
-						// Because test[i] is an object, source must also be an object
+					// Check for regex
+					if (!operation && test[i] instanceof RegExp) {
+						operation = true;
 
-						// Check if our source data we are checking the test query against
-						// is an object or an array
-						if (source[i] !== undefined) {
-							if (source[i] instanceof Array && !(test[i] instanceof Array)) {
-								// The source data is an array, so check each item until a
-								// match is found
-								for (var arrIndex = 0; arrIndex < source[i].length; arrIndex++) {
-									recurseVal = this._match(source[i][arrIndex], test[i], applyOp);
-
-									if (recurseVal) {
-										// One of the array items matched the query so we can
-										// include this item in the results, so break now
-										break;
-									}
-								}
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else if (typeof(source) === 'object') {
-								// Recurse down the object tree
-								recurseVal = this._match(source[i], test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else {
-								recurseVal = this._match(undefined, test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							}
-						} else {
-							matchedAll = false;
-						}
-					} else {
-						// Check if the prop matches our test value
-						if (source && source[i] === test[i]) {
+						if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
 							if (opToApply === 'or') {
 								return true;
 							}
@@ -1309,10 +1254,99 @@ var ForerunnerDB = (function () {
 							matchedAll = false;
 						}
 					}
-				}
 
-				if (opToApply === 'and' && !matchedAll) {
-					return false;
+					if (!operation) {
+						// Check if our query is an object
+						if (typeof(test[i]) === 'object') {
+							// Because test[i] is an object, source must also be an object
+
+							// Check if our source data we are checking the test query against
+							// is an object or an array
+							if (source[i] !== undefined) {
+								if (source[i] instanceof Array && !(test[i] instanceof Array)) {
+									// The source data is an array, so check each item until a
+									// match is found
+									recurseVal = false;
+									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else if (!(source[i] instanceof Array) && test[i] instanceof Array) {
+									// The test key data is an array and the source key data is not so check
+									// each item in the test key data to see if the source item matches one
+									// of them. This is effectively an $in search.
+									recurseVal = false;
+									
+									for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else if (typeof(source) === 'object') {
+									// Recurse down the object tree
+									recurseVal = this._match(source[i], test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else {
+									recurseVal = this._match(undefined, test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								}
+							} else {
+								matchedAll = false;
+							}
+						} else {
+							// Check if the prop matches our test value
+							if (source && source[i] === test[i]) {
+								if (opToApply === 'or') {
+									return true;
+								}
+							} else {
+								matchedAll = false;
+							}
+						}
+					}
+
+					if (opToApply === 'and' && !matchedAll) {
+						return false;
+					}
 				}
 			}
 		}
