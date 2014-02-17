@@ -1569,6 +1569,8 @@ var ForerunnerDB = (function () {
 			inserted = [],
 			updated = [],
 			removed = [],
+			binds = this._binds,
+			bindKey,
 			i;
 
 		// Query the collection and update the data
@@ -1640,6 +1642,14 @@ var ForerunnerDB = (function () {
 
 				if (removed.length) {
 					this._onRemove(removed);
+				}
+
+				for (bindKey in binds) {
+					if (binds.hasOwnProperty(bindKey)) {
+						if (binds[bindKey].maintainSort) {
+							this.sortDomBind(bindKey, newDataArr);
+						}
+					}
 				}
 			} else {
 				// The previous data and the new data are derived from different collections
@@ -1776,9 +1786,6 @@ var ForerunnerDB = (function () {
 				}
 
 				this._fireUpdate(bindKey, binds[bindKey], items, filteredDataSet);
-				if (binds[bindKey].maintainSort) {
-					this.sortDomBind(bindKey, filteredDataSet);
-				}
 			}
 		}
 	};
@@ -1798,9 +1805,6 @@ var ForerunnerDB = (function () {
 				}
 
 				this._fireInsert(bindKey, binds[bindKey], inserted, failed, filteredDataSet);
-				if (binds[bindKey].maintainSort) {
-					this.sortDomBind(bindKey, filteredDataSet);
-				}
 			}
 		}
 	};
