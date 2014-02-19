@@ -1,5 +1,25 @@
-# ForerunnerDB Client-Side Mongo-Like Database
-## Setup
+# ForerunnerDB - A NoSQL JSON Document DB
+### What Is ForerunnerDB?
+ForerunnerDB (a.k.a. Forerunner or FDB) is a database system that operates as an object store. It is a NoSQL database that is queried in a very similar way to MongoDB. Forerunner's main advantages are:
+
+* Can run in a browser as a client-side database for web-apps or server-side in Node.js
+* Has a very low footprint (59KB uncompressed, 15KB minified, 4KB minified + gzipped)
+* Has built-in data-binding for automatically updating the DOM when underlying data changes**
+
+** Data-binding to the DOM requires jQuery
+
+### ForerunnerDB & MongoDB
+Forerunner and Mongo are very similar and Forerunner has been written to work with similar queries, however there are some key differences that any MongoDB user should be aware of:
+
+* Forerunner supports joins
+* Forerunner's collection update method is more like MySQL's in that only the key/value pairs you pass are updated instead of the entire document being overwritten. You can think of ForerunnerDB's update method has having the MongoDB $set wrapped around your entire passed update document.
+* MongoDB is a pure server-side application so doesn't need to deal with DOM events etc, whereas ForerunnerDB can run in both a server and client environment. In a browser, Forerunner has data-binding built in so that when your data changes, DOM updates are processed automatically.
+* Forerunner supports views. Views allow you to create subsets of collections with joins and other options. Those views can then also have data binding enabled on them. If you change the query that a view is built with, your DOM can automatically update as well to show the results. This allows you to visualise query changes on screen instantly without complex code.
+* Forerunner is NOT persistent storage. Unlike MongoDB or MySQL, Forerunner will loose ALL data if your browser is refreshed (when operating on a client). If you are running Forerunner in a server environment you can think of it as an in-memory store that is volitile and requires populating on starup***
+
+*** ForerunnerDB will get data persistence very soon in an upcoming release!
+
+## Client-Side (Browser) Setup
 Include the ForerunnerDB.js file in your HTML:
 
 	<script src="ForerunnerDB.js" type="text/javascript"></script>
@@ -31,12 +51,14 @@ array of objects to the setData() method:
 		price: 100
 	}]);
 
+Setting data on a collection will empty the existing data from the collection if any exists.
+
 ## Inserting Documents
-You can either insert a single document object or pass an array of documents:
+You can either insert a single document object or pass an array of documents. Insert a single document:
 
 	itemCollection.insert({_id: 3, price: 400, name: 'Fish Bones'});
 
-Or...
+Or an array of documents:
 
 	itemCollection.insert([{_id: 4, price: 267, name:'Scooby Snacks'}, {_id: 5, price: 234, name: 'Chicken Yum Yum'}]);
 
@@ -53,6 +75,21 @@ is greater than 90 but less than 150, you can do this:
 	});
 
 Which will return an array with all matching documents. If no documents match your search, an empty array is returned.
+
+Supported operators:
+
+* $gt Greater Than
+* $gte Greater Than / Equal To
+* $lt Less Than
+* $lte Less Than / Equal To
+* $or Match any of the contitions inside the sub-query
+* $and Match all conditions inside the sub-query
+* $exists Check that a key exists in the document
+* $push Used in updates to add an item to an array
+* $pull Used in updates to remove an item from an array
+* arrayKey.$ Positional selector query
+
+Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
 ### Doing Joins
 Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
@@ -125,10 +162,7 @@ The result of the call above is:
 	}]
 
 ## Updating the Collection
-This is where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update
-document instead of outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more
-like MySQL. In the call below the update will find all documents where the price is greater than 90 and less than 150
-and then update the documents' key "moo" with the value true.
+This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document instead of outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
 	collection.update({
 		price: {
@@ -171,9 +205,9 @@ collection changes. Here is a simple example of a data-bind that will keep the l
 the collection:
 
 ### Prerequisites
-* Data-binding requires jQuery to be present on the page.
-* Your items must include an id="" attribute that matches the primary key of the document it represents.
-* Binding is against an entire collection at present. In the future you will be able to define distinct "views" and bind against them as well.
+* Data-binding requires jQuery to be present on the page
+* Your items must include an id="" attribute that matches the primary key of the document it represents
+* If you require a bind against a subset of the collection's data, use a view and bind against that instead
 
 ### HTML
 	<ul id="myList">
@@ -192,6 +226,28 @@ the collection:
 
 Now if you execute any insert, update or remove on the collection, the HTML will automatically update to reflect the
 changes in the data.
+
+Note that the selector string that a bind uses can match multiple elements which allows you to bind against multiple sections of the page with the same data. For instance instead of binding against an ID (e.g. #myList) you could bind against a class:
+
+### HTML
+	<ul class="myList">
+	</ul>
+	
+	<ul class="myList">
+	</ul>
+	
+### JS
+	collection.bind('.myList', {
+		template: function (data, callback) {
+			// Here is where we pass a rendered HTML version of the data back
+			// to the database. You can use your favourite client-side templating
+			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
+			// We have used a simple string concatenation to visibly show the process.
+			callback('<li>' + data.price + '</li>');
+		}
+	});
+
+The result of this is that both UL elements will get data binding updates when the underlying data changes.
 
 ## Binding Events
 Data binding also has some extra features that allow your app to respond to changes to the data. For instance, if a
@@ -235,7 +291,16 @@ Where the parameters are:
 	failed: An array of documents that failed to insert
 
 # Future Updates
-More features are being actively worked on for this project:
+ForerunnerDB's project road-map:
 
-* Views that can join multiple documents together and data-bind - sort of like virtual collections
-* More support for MongoDB operators (currently support $push, $pull, $gt(e), $lt(e), $exists, $or, $and
+* COMPLETED - Views that can join multiple documents together and data-bind - sort of like virtual collections
+* Support more of the MongoDB query operators
+* Data persistence on server-side
+* NPM installation
+* Collection / query paging e.g. select next 10, select previous 10
+* Collection indexing and index violation checking
+* Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
+* Push to clients - allow server-side to push changes to client-side data automatically and instantly
+* Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
+* Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
+* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
