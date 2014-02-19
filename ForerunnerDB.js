@@ -169,27 +169,37 @@ var ForerunnerDB = (function () {
 		return this._primaryKey;
 	};
 
-	Collection.prototype._onUpdate = function (items) {
-		var binds = this._binds,
-			views = this._views,
-			unfilteredDataSet = this.find({}),
-			filteredDataSet,
-			i;
-
-		for (i in binds) {
-			if (binds.hasOwnProperty(i)) {
-				if (binds[i].reduce) {
-					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
-				} else {
-					filteredDataSet = unfilteredDataSet;
-				}
-				this._fireUpdate(i, binds[i], items, filteredDataSet);
-			}
+	/**
+	 * Adds a view to the internal view lookup.
+	 * @param view
+	 * @returns {Collection}
+	 * @private
+	 */
+	Collection.prototype._addView = function (view) {
+		if (view !== undefined) {
+			this._views[view._name] = view;
 		}
+
+		return this;
+	};
+
+	/**
+	 * Removes a view from the internal view lookup.
+	 * @param view
+	 * @returns {Collection}
+	 * @private
+	 */
+	Collection.prototype._removeView = function (view) {
+		if (view !== undefined) {
+			delete this._views[view._name];
+		}
+
+		return this;
 	};
 
 	Collection.prototype._onInsert = function (inserted, failed) {
 		var binds = this._binds,
+			views = this._views,
 			unfilteredDataSet = this.find({}),
 			filteredDataSet;
 
@@ -203,10 +213,45 @@ var ForerunnerDB = (function () {
 				this._fireInsert(i, binds[i], inserted, failed, filteredDataSet);
 			}
 		}
+
+		// Loop views and inform them of the underlying data change
+		for (i in views) {
+			if (views.hasOwnProperty(i)) {
+				views[i]._onInsert(inserted, failed);
+			}
+		}
+	};
+
+	Collection.prototype._onUpdate = function (items) {
+		var binds = this._binds,
+			views = this._views,
+			unfilteredDataSet = this.find({}),
+			filteredDataSet,
+			i;
+
+		// Loop and update all binds
+		for (i in binds) {
+			if (binds.hasOwnProperty(i)) {
+				if (binds[i].reduce) {
+					filteredDataSet = this.find(binds[i].reduce.query, binds[i].reduce.options);
+				} else {
+					filteredDataSet = unfilteredDataSet;
+				}
+				this._fireUpdate(i, binds[i], items, filteredDataSet);
+			}
+		}
+
+		// Loop views and inform them of the underlying data change
+		for (i in views) {
+			if (views.hasOwnProperty(i)) {
+				views[i]._onUpdate(items);
+			}
+		}
 	};
 
 	Collection.prototype._onRemove = function (items) {
 		var binds = this._binds,
+			views = this._views,
 			unfilteredDataSet = this.find({}),
 			filteredDataSet;
 
@@ -218,6 +263,47 @@ var ForerunnerDB = (function () {
 					filteredDataSet = unfilteredDataSet;
 				}
 				this._fireRemove(i, binds[i], items, filteredDataSet);
+			}
+		}
+
+		// Loop views and inform them of the underlying data change
+		for (i in views) {
+			if (views.hasOwnProperty(i)) {
+				views[i]._onRemove(items);
+			}
+		}
+	};
+
+	Collection.prototype._fireInsert = function (selector, options, inserted, failed, all) {
+		var container = $(selector),
+			itemElem,
+			itemHtml,
+			i;
+
+		// Loop the inserted items
+		for (i = 0; i < inserted.length; i++) {
+			// Check for existing item in the container
+			itemElem = container.find('#' + escapeSelector(inserted[i][this._primaryKey]));
+
+			if (!itemElem.length) {
+				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
+					// Check if there is custom DOM insert method
+					if (options.insert) {
+						options.insert(itemHtml, insertedItem, failed, all);
+					} else {
+						// Handle the insert automatically
+						// Add the item to the container
+						if (options.prependInsert) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
+					}
+
+					if (options.afterInsert) {
+						options.afterInsert(itemHtml, insertedItem, failed, all);
+					}
+				}}(itemElem, inserted[i], failed, all));
 			}
 		}
 	};
@@ -255,40 +341,6 @@ var ForerunnerDB = (function () {
 					options.afterUpdate(itemHtml, itemData, all);
 				}
 			}}(itemElem, items[i]));
-		}
-	};
-
-	Collection.prototype._fireInsert = function (selector, options, inserted, failed, all) {
-		var container = $(selector),
-			itemElem,
-			itemHtml,
-			i;
-
-		// Loop the inserted items
-		for (i = 0; i < inserted.length; i++) {
-			// Check for existing item in the container
-			itemElem = container.find('#' + escapeSelector(inserted[i][this._primaryKey]));
-
-			if (!itemElem.length) {
-				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
-					// Check if there is custom DOM insert method
-					if (options.insert) {
-						options.insert(itemHtml, insertedItem, failed, all);
-					} else {
-						// Handle the insert automatically
-						// Add the item to the container
-						if (options.prependInsert) {
-							container.prepend(itemHtml);
-						} else {
-							container.append(itemHtml);
-						}
-					}
-
-					if (options.afterInsert) {
-						options.afterInsert(itemHtml, insertedItem, failed, all);
-					}
-				}}(itemElem, inserted[i], failed, all));
-			}
 		}
 	};
 
@@ -1410,6 +1462,12 @@ var ForerunnerDB = (function () {
 	 */
 	View.prototype.from = function (collection) {
 		if (collection !== undefined) {
+			// Check if we already have a collection assigned
+			if (this._from) {
+				// Remove ourselves from the collection view lookup
+				this._from._removeView(this);
+			}
+
 			// Check if this is a collection name or a collection instance
 			if (collection instanceof Collection) {
 				this._from = collection;
@@ -1418,6 +1476,9 @@ var ForerunnerDB = (function () {
 			}
 
 			if (this._from) {
+				// Add this view to the collection's view lookup
+				this._from._addView(this);
+
 				this._primaryKey = this._from._primaryKey;
 				this.refresh();
 				return this;
@@ -1771,25 +1832,6 @@ var ForerunnerDB = (function () {
 		}
 	};
 
-	View.prototype._onUpdate = function (items) {
-		var binds = this._binds,
-			unfilteredDataSet = this.find({}),
-			filteredDataSet,
-			bindKey;
-
-		for (bindKey in binds) {
-			if (binds.hasOwnProperty(bindKey)) {
-				if (binds[bindKey].reduce) {
-					filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
-				} else {
-					filteredDataSet = unfilteredDataSet;
-				}
-
-				this._fireUpdate(bindKey, binds[bindKey], items, filteredDataSet);
-			}
-		}
-	};
-
 	View.prototype._onInsert = function (inserted, failed) {
 		var binds = this._binds,
 			unfilteredDataSet = this.find({}),
@@ -1807,6 +1849,29 @@ var ForerunnerDB = (function () {
 				this._fireInsert(bindKey, binds[bindKey], inserted, failed, filteredDataSet);
 			}
 		}
+
+		this.refresh();
+	};
+
+	View.prototype._onUpdate = function (items) {
+		var binds = this._binds,
+			unfilteredDataSet = this.find({}),
+			filteredDataSet,
+			bindKey;
+
+		for (bindKey in binds) {
+			if (binds.hasOwnProperty(bindKey)) {
+				if (binds[bindKey].reduce) {
+					filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
+				} else {
+					filteredDataSet = unfilteredDataSet;
+				}
+
+				this._fireUpdate(bindKey, binds[bindKey], items, filteredDataSet);
+			}
+		}
+
+		this.refresh();
 	};
 
 	View.prototype._onRemove = function (items) {
@@ -1824,6 +1889,43 @@ var ForerunnerDB = (function () {
 				}
 
 				this._fireRemove(bindKey, binds[bindKey], items, filteredDataSet);
+			}
+		}
+
+		this.refresh();
+	};
+
+	View.prototype._fireInsert = function (selector, options, inserted, failed, all) {
+		var container = $(selector),
+			itemElem,
+			itemHtml,
+			sortIndex,
+			i;
+
+		// Loop the inserted items
+		for (i = 0; i < inserted.length; i++) {
+			// Check for existing item in the container
+			itemElem = container.find('#' + escapeSelector(inserted[i][this._primaryKey]));
+
+			if (!itemElem.length) {
+				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
+					// Check if there is custom DOM insert method
+					if (options.insert) {
+						options.insert(itemHtml, insertedItem, failed, all);
+					} else {
+						// Handle the insert automatically
+						// Add the item to the container
+						if (options.prependInsert) {
+							container.prepend(itemHtml);
+						} else {
+							container.append(itemHtml);
+						}
+					}
+
+					if (options.afterInsert) {
+						options.afterInsert(itemHtml, insertedItem, failed, all);
+					}
+				}}(itemElem, inserted[i], failed, all));
 			}
 		}
 	};
@@ -1861,41 +1963,6 @@ var ForerunnerDB = (function () {
 					options.afterUpdate(itemHtml, itemData, all);
 				}
 			}}(itemElem, items[i]));
-		}
-	};
-
-	View.prototype._fireInsert = function (selector, options, inserted, failed, all) {
-		var container = $(selector),
-			itemElem,
-			itemHtml,
-			sortIndex,
-			i;
-
-		// Loop the inserted items
-		for (i = 0; i < inserted.length; i++) {
-			// Check for existing item in the container
-			itemElem = container.find('#' + escapeSelector(inserted[i][this._primaryKey]));
-
-			if (!itemElem.length) {
-				itemHtml = options.template(inserted[i], function (itemElem, insertedItem, failed, all) { return function (itemHtml) {
-					// Check if there is custom DOM insert method
-					if (options.insert) {
-						options.insert(itemHtml, insertedItem, failed, all);
-					} else {
-						// Handle the insert automatically
-						// Add the item to the container
-						if (options.prependInsert) {
-							container.prepend(itemHtml);
-						} else {
-							container.append(itemHtml);
-						}
-					}
-
-					if (options.afterInsert) {
-						options.afterInsert(itemHtml, insertedItem, failed, all);
-					}
-				}}(itemElem, inserted[i], failed, all));
-			}
 		}
 	};
 
