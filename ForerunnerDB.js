@@ -2036,6 +2036,14 @@ var ForerunnerDB = (function () {
 	var DB = function () {
 		this._collection = {};
 		this._view = {};
+
+		// Init plugins
+		for (var i in this.Plugin) {
+			if (this.Plugin.hasOwnProperty(i)) {
+				console.log('ForerunnerDB Init Plugin: ' + i + '...');
+				this[i.substr(0, 1).toLowerCase() + i.substr(1, i.length - 1)] = new this.Plugin[i](this);
+			}
+		}
 	};
 
 	/**
@@ -2144,5 +2152,9 @@ var ForerunnerDB = (function () {
 		return arr;
 	};
 
+	DB.prototype.Plugin = {};
+
 	return DB;
 })();
+
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = ForerunnerDB; }
