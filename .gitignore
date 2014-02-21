@@ -216,3 +216,5 @@ pip-log.txt
 .idea
 templates_c
 cache
+
+node_modules
