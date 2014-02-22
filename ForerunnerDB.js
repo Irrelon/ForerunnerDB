@@ -475,15 +475,16 @@ var ForerunnerDB = (function () {
 	 * all matches for 'query' with the data held in 'update'. It will not overwrite
 	 * the matched documents with the update document.
 	 *
-	 * @param {Object} obj The object containing updated key/values.
+	 * @param {Object} obj The document object to upsert or an array containing
+	 * documents to upsert.
 	 *
-	 * If the object contains a primary key field (based on the collections's primary
+	 * If the document contains a primary key field (based on the collections's primary
 	 * key) then the database will search for an existing document with a matching id.
 	 * If a matching document is found, the document will be updated. Any keys that
 	 * match keys on the existing document will be overwritten with new data. Any keys
 	 * that do not currently exist on the document will be added to the document.
 	 *
-	 * If the object does not contain an id or the id passed does not match an existing
+	 * If the document does not contain an id or the id passed does not match an existing
 	 * document, an insert is performed instead. If no id is present a new primary key
 	 * id is provided for the item.
 	 *
@@ -493,8 +494,21 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.upsert = function (obj) {
 		var returnData = {},
-			query;
+			query,
+			i;
 
+		// Determine if the object passed is an array or not
+		if (obj instanceof Array) {
+			// Loop the array and upsert each item
+			returnData = [];
+			
+			for (i = 0; i < obj.length; i++) {
+				returnData.push(this.upsert(obj[i]));
+			}
+			
+			return returnData;
+		}
+		
 		// Determine if the operation is an insert or an update
 		if (obj[this._primaryKey]) {
 			// Check if an object with this primary key already exists
