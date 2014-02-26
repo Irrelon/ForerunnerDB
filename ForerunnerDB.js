@@ -31,6 +31,11 @@
 var ForerunnerDB = (function () {
 	var idCounter = 0;
 
+	/**
+	 * Escapes a CSS selector.
+	 * @param {String} selector The selector string to escape.
+	 * @returns {String} The escaped selector string.
+	 */
 	var escapeSelector = function (selector) {
 		return selector.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
 	};
@@ -160,6 +165,11 @@ var ForerunnerDB = (function () {
 		this._subsetOf(this);
 	};
 
+	/**
+	 * Gets / sets the primary key for this collection.
+	 * @param {String=} keyName The name of the primary key.
+	 * @returns {*}
+	 */
 	Collection.prototype.primaryKey = function (keyName) {
 		if (keyName !== undefined) {
 			this._primaryKey = keyName;
@@ -171,7 +181,7 @@ var ForerunnerDB = (function () {
 
 	/**
 	 * Adds a view to the internal view lookup.
-	 * @param view
+	 * @param {View} view The view to add.
 	 * @returns {Collection}
 	 * @private
 	 */
@@ -185,7 +195,7 @@ var ForerunnerDB = (function () {
 
 	/**
 	 * Removes a view from the internal view lookup.
-	 * @param view
+	 * @param {View} view The view to remove.
 	 * @returns {Collection}
 	 * @private
 	 */
@@ -197,6 +207,12 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 
+	/**
+	 * Handles insert events and routes changes to binds and views as required.
+	 * @param {Array} inserted An array of inserted documents.
+	 * @param {Array} failed An array of documents that failed to insert.
+	 * @private
+	 */
 	Collection.prototype._onInsert = function (inserted, failed) {
 		var binds = this._binds,
 			views = this._views,
@@ -222,6 +238,11 @@ var ForerunnerDB = (function () {
 		}
 	};
 
+	/**
+	 * Handles update events and routes changes to binds and views as required.
+	 * @param {Array} items An array of updated documents.
+	 * @private
+	 */
 	Collection.prototype._onUpdate = function (items) {
 		var binds = this._binds,
 			views = this._views,
@@ -249,6 +270,11 @@ var ForerunnerDB = (function () {
 		}
 	};
 
+	/**
+	 * Handles remove events and routes changes to binds and views as required.
+	 * @param {Array} items An array of removed documents.
+	 * @private
+	 */
 	Collection.prototype._onRemove = function (items) {
 		var binds = this._binds,
 			views = this._views,
@@ -501,14 +527,14 @@ var ForerunnerDB = (function () {
 		if (obj instanceof Array) {
 			// Loop the array and upsert each item
 			returnData = [];
-			
+
 			for (i = 0; i < obj.length; i++) {
 				returnData.push(this.upsert(obj[i]));
 			}
-			
+
 			return returnData;
 		}
-		
+
 		// Determine if the operation is an insert or an update
 		if (obj[this._primaryKey]) {
 			// Check if an object with this primary key already exists
@@ -904,6 +930,10 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 
+	Collection.prototype.decouple = function (data) {
+		return JSON.parse(JSON.stringify(data));
+	};
+
 	/**
 	 * Queries the collection based on the query object passed.
 	 * @param {Object} query The query key/values that a document must match in
@@ -967,6 +997,9 @@ var ForerunnerDB = (function () {
 			if (options.limit) {
 				resultArr.length = options.limit;
 			}
+
+			// Now decouple the data from the original objects
+			resultArr = this.decouple(resultArr);
 
 			// Now process any joins on the final data
 			if (options.join) {
