@@ -930,6 +930,11 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 
+	/**
+	 * Returns a non-referenced version of the passed object / array.
+	 * @param {Object} data The object or array to return as a non-referenced version.
+	 * @returns {*}
+	 */
 	Collection.prototype.decouple = function (data) {
 		return JSON.parse(JSON.stringify(data));
 	};
