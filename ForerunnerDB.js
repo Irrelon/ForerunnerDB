@@ -166,6 +166,20 @@ var ForerunnerDB = (function () {
 	};
 
 	/**
+	 * Drops a collection and all it's stored data from the database.
+	 * @returns {boolean} True on success, false on failure.
+	 */
+	Collection.prototype.drop = function () {
+		if (this._db && this._name) {
+			delete this._db._collection[this._name];
+			
+			return true;
+		}
+		
+		return false;
+	};
+
+	/**
 	 * Gets / sets the primary key for this collection.
 	 * @param {String=} keyName The name of the primary key.
 	 * @returns {*}
@@ -1495,6 +1509,26 @@ var ForerunnerDB = (function () {
 			options: {}
 		};
 	};
+	
+	/**
+	 * Drops a view and all it's stored data from the database.
+	 * @returns {boolean} True on success, false on failure.
+	 */
+	View.prototype.drop = function () {
+		if ((this._db || this._from) && this._name) {
+			if (this._db) {
+				delete this._db._view[this._name];
+			}
+			
+			if (this._from) {
+				delete this._from._view[this._name];
+			}
+			
+			return true;
+		}
+		
+		return false;
+	};
 
 	/**
 	 * Gets / sets the DB the view is bound against. Automatically set
@@ -2108,7 +2142,7 @@ var ForerunnerDB = (function () {
 		// Init plugins
 		for (var i in this.Plugin) {
 			if (this.Plugin.hasOwnProperty(i)) {
-				console.log('ForerunnerDB Init Plugin: ' + i + '...');
+				//console.log('ForerunnerDB Init Plugin: ' + i + '...');
 				this[i.substr(0, 1).toLowerCase() + i.substr(1, i.length - 1)] = new this.Plugin[i](this);
 			}
 		}
