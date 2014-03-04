@@ -527,14 +527,14 @@ var ForerunnerDB = (function () {
 		if (obj instanceof Array) {
 			// Loop the array and upsert each item
 			returnData = [];
-
+			
 			for (i = 0; i < obj.length; i++) {
 				returnData.push(this.upsert(obj[i]));
 			}
-
+			
 			return returnData;
 		}
-
+		
 		// Determine if the operation is an insert or an update
 		if (obj[this._primaryKey]) {
 			// Check if an object with this primary key already exists
@@ -1473,8 +1473,13 @@ var ForerunnerDB = (function () {
 	 * Returns the number of documents currently in the collection.
 	 * @returns {Number}
 	 */
-	Collection.prototype.count = function () {
-		return this._data.length;
+	Collection.prototype.count = function (query, options) {
+		if (!query) {
+			return this._data.length;
+		} else {
+			// Run query and return count
+			return this.find(query, options).length;
+		}
 	};
 
 	/**
@@ -1684,6 +1689,8 @@ var ForerunnerDB = (function () {
 			removed = [],
 			binds = this._binds,
 			bindKey,
+			bind,
+			operated = false,
 			i;
 
 		// Query the collection and update the data
@@ -1747,20 +1754,29 @@ var ForerunnerDB = (function () {
 				// Now we have a diff of the two data sets, we need to get the DOM updated
 				if (inserted.length) {
 					this._onInsert(inserted, []);
+					operated = true;
 				}
 
 				if (updated.length) {
 					this._onUpdate(updated);
+					operated = true;
 				}
 
 				if (removed.length) {
 					this._onRemove(removed);
+					operated = true;
 				}
 
 				for (bindKey in binds) {
 					if (binds.hasOwnProperty(bindKey)) {
-						if (binds[bindKey].maintainSort) {
+						bind = binds[bindKey];
+						
+						if (bind.maintainSort) {
 							this.sortDomBind(bindKey, newDataArr);
+						}
+						
+						if (bind.afterOperation) {
+							bind.afterOperation();
 						}
 					}
 				}
@@ -2157,9 +2173,32 @@ var ForerunnerDB = (function () {
 		}
 	};
 
+	/**
+	 * Gets a view by it's name.
+	 * @param {String} viewName The name of the view to retrieve.
+	 * @returns {*}
+	 */
 	DB.prototype.view = function (viewName) {
 		this._view[viewName] = this._view[viewName] || new View(viewName).db(this);
 		return this._view[viewName];
+	};
+
+	/**
+	 * Determine if a view with the passed name already exists.
+	 * @param {String} viewName The name of the view to check for.
+	 * @returns {boolean}
+	 */
+	DB.prototype.viewExists = function (viewName) {
+		return Boolean(this._view[viewName]);
+	};
+
+	/**
+	 * Determine if a collection with the passed name already exists.
+	 * @param {String} viewName The name of the collection to check for.
+	 * @returns {boolean}
+	 */
+	DB.prototype.collectionExists = function (viewName) {
+		return Boolean(this._collection[viewName]);
 	};
 
 	/**
