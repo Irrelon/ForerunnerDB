@@ -777,6 +777,22 @@ var ForerunnerDB = (function () {
 				if (i.substr(0, 1) === '$') {
 					// Check for commands
 					switch (i) {
+						case '$inc':
+							operation = true;
+
+							// Do an increment operation
+							for (k in update[i]) {
+								if (update[i].hasOwnProperty(k)) {
+									if (typeof doc[k] === 'number') {
+										doc[k] += update[i][k];
+										updated = true;
+									} else {
+										throw("Cannot increment field that is not a number! (" + k + ")!");
+									}
+								}
+							}
+							break;
+						
 						case '$push':
 							operation = true;
 
