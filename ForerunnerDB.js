@@ -199,6 +199,22 @@ var ForerunnerDB = (function () {
 		return this;
 	};
 	
+	CollectionGroup.prototype.find = function (query, options) {
+		// Loop the collections in this group and find first matching item response
+		var data,
+			i;
+		
+		for (i = 0; i < this._collectionArr.length; i++) {
+			data = this._collectionArr[i].find(query, options);
+			
+			if (data.length) {
+				return data;
+			}
+		}
+		
+		return [];
+	};
+	
 	CollectionGroup.prototype.insert = function (query, options) {
 		// Loop the collections in this group and apply the insert
 		for (var i = 0; i < this._collectionArr.length; i++) {
@@ -213,10 +229,28 @@ var ForerunnerDB = (function () {
 		}
 	};
 	
+	CollectionGroup.prototype.updateById = function (id, update) {
+		// Loop the collections in this group and apply the update
+		for (var i = 0; i < this._collectionArr.length; i++) {
+			this._collectionArr[i].updateById(id, update);
+		}
+	};
+	
 	CollectionGroup.prototype.remove = function (query) {
 		// Loop the collections in this group and apply the remove
 		for (var i = 0; i < this._collectionArr.length; i++) {
 			this._collectionArr[i].remove(query);
+		}
+	};
+	
+	/**
+	 * Helper method that removes a document that matches the given id.
+	 * @param {String} id The id of the document to remove.
+	 */
+	CollectionGroup.prototype.removeById = function (id) {
+		// Loop the collections in this group and apply the remove
+		for (var i = 0; i < this._collectionArr.length; i++) {
+			this._collectionArr[i].removeById(id);
 		}
 	};
 
@@ -640,7 +674,7 @@ var ForerunnerDB = (function () {
 			query = {};
 			query[this._primaryKey] = obj[this._primaryKey];
 
-			if (this.find(query).length) {
+			if (this.count(query).length) {
 				// The document already exists with this id, this operation is an update
 				returnData.op = 'update';
 			} else {
@@ -679,7 +713,7 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.update = function (query, update) {
 		var self = this,
-			dataSet = this.find(query),
+			dataSet = this.find(query, {decouple: false}),
 			updated,
 			updateCall = function (doc) {
 				return self._updateObject(doc, update, query);
@@ -880,7 +914,7 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.remove = function (query) {
 		var self = this,
-			dataSet = this.find(query),
+			dataSet = this.find(query, {decouple: false}),
 			index;
 
 		if (dataSet.length) {
@@ -1049,6 +1083,8 @@ var ForerunnerDB = (function () {
 	Collection.prototype.find = function (query, options) {
 		query = query || {};
 		options = options || {};
+		
+		options.decouple = options.decouple !== undefined ? options.decouple : true;
 
 		var analysis,
 			self = this,
@@ -1102,8 +1138,10 @@ var ForerunnerDB = (function () {
 				resultArr.length = options.limit;
 			}
 
-			// Now decouple the data from the original objects
-			resultArr = this.decouple(resultArr);
+			if (options.decouple) {
+				// Now decouple the data from the original objects
+				resultArr = this.decouple(resultArr);
+			}
 
 			// Now process any joins on the final data
 			if (options.join) {
