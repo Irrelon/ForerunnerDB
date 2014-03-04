@@ -149,6 +149,76 @@ var ForerunnerDB = (function () {
 
 		return str;
 	};
+	
+	var CollectionGroup = function (name) {
+		this._name = name;
+		this._collectionArr = [];
+	};
+	
+	/**
+	 * Gets / sets the db instance the collection group belongs to.
+	 * @param {DB} db The db instance.
+	 * @returns {*}
+	 */
+	CollectionGroup.prototype.db = function (db) {
+		if (db !== undefined) {
+			this._db = db;
+			return this;
+		}
+
+		return this._db;
+	};
+	
+	CollectionGroup.prototype.addCollection = function (collection) {
+		if (collection) {
+			if (this._collectionArr.indexOf(collection) === -1) {
+				this._collectionArr.push(collection);
+				collection._groups.push(this);
+			}
+		}
+		
+		return this;
+	};
+	
+	CollectionGroup.prototype.removeCollection = function (collection) {
+		if (collection) {
+			var collectionIndex = this._collectionArr.indexOf(collection),
+				groupIndex;
+			
+			if (collectionIndex !== -1) {
+				this._collectionArr.splice(collectionIndex, 1);
+				
+				groupIndex = collection._groups.indexOf(this);
+				
+				if (groupIndex !== -1) {
+					collection._groups.splice(groupIndex, 1);
+				}
+			}
+		}
+		
+		return this;
+	};
+	
+	CollectionGroup.prototype.insert = function (query, options) {
+		// Loop the collections in this group and apply the insert
+		for (var i = 0; i < this._collectionArr.length; i++) {
+			this._collectionArr[i].insert(query, options);
+		}
+	};
+	
+	CollectionGroup.prototype.update = function (query, update) {
+		// Loop the collections in this group and apply the update
+		for (var i = 0; i < this._collectionArr.length; i++) {
+			this._collectionArr[i].update(query, update);
+		}
+	};
+	
+	CollectionGroup.prototype.remove = function (query) {
+		// Loop the collections in this group and apply the remove
+		for (var i = 0; i < this._collectionArr.length; i++) {
+			this._collectionArr[i].remove(query);
+		}
+	};
 
 	/**
 	 * Collection object used to store data.
@@ -160,6 +230,7 @@ var ForerunnerDB = (function () {
 		this._data = [];
 		this._binds = {};
 		this._views = [];
+		this._groups = [];
 
 		// Set the subset to itself since it is the root collection
 		this._subsetOf(this);
@@ -172,6 +243,20 @@ var ForerunnerDB = (function () {
 	Collection.prototype.drop = function () {
 		if (this._db && this._name) {
 			delete this._db._collection[this._name];
+			
+			var groupArr = [],
+				i;
+			
+			// Copy the group array because if we call removeCollection on a group
+			// it will alter the groups array of this collection mid-loop!
+			for (i = 0; i < this._groups.length; i++) {
+				groupArr.push(this._groups[i]);
+			}
+			
+			// Loop any groups we are part of and remove ourselves from them
+			for (i = 0; i < groupArr.length; i++) {
+				this._groups[i].removeCollection(this);
+			}
 			
 			return true;
 		}
@@ -2137,6 +2222,7 @@ var ForerunnerDB = (function () {
 	 */
 	var DB = function () {
 		this._collection = {};
+		this._collectionGroup = {};
 		this._view = {};
 
 		// Init plugins
@@ -2155,6 +2241,7 @@ var ForerunnerDB = (function () {
 	DB.types = {
 		Path: Path,
 		Collection: Collection,
+		CollectionGroup: CollectionGroup,
 		ObjectId: ObjectId
 	};
 
@@ -2182,6 +2269,16 @@ var ForerunnerDB = (function () {
 	DB.prototype.off = function () {
 		var elem = $(this);
 		elem.off.apply(elem, arguments);
+	};
+	
+	DB.prototype.collectionGroup = function (collectionGroupName) {
+		if (collectionGroupName) {
+			this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
+			return this._collectionGroup[collectionGroupName];
+		} else {
+			// Return an object of collection data
+			return this._collectionGroup;
+		}
 	};
 
 	/**
