@@ -269,6 +269,42 @@ var ForerunnerDB = (function () {
 		// Set the subset to itself since it is the root collection
 		this._subsetOf(this);
 	};
+	
+	Collection.prototype.on = function(event, listener) {
+		this._listeners[event] = this._listeners[event] || [];
+		this._listeners[event].push(listener);
+		
+		return this;
+	};
+	
+	Collection.prototype.off = function(event, listener) {
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				index = arr.indexOf(listener);
+	
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+		
+		return this;
+	};
+	
+	Collection.prototype.emit = function(event, data) {
+		this._listeners = this._listeners || {};
+	
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				arrCount = arr.length,
+				arrIndex;
+	
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+		
+		return this;
+	};
 
 	/**
 	 * Drops a collection and all it's stored data from the database.
@@ -366,9 +402,11 @@ var ForerunnerDB = (function () {
 		// Loop views and inform them of the underlying data change
 		for (i in views) {
 			if (views.hasOwnProperty(i)) {
-				views[i]._onInsert(inserted, failed);
+				views[i]._onCollectionInsert(inserted, failed);
 			}
 		}
+		
+		this.emit('insert', inserted, failed);
 	};
 
 	/**
@@ -398,9 +436,11 @@ var ForerunnerDB = (function () {
 		// Loop views and inform them of the underlying data change
 		for (i in views) {
 			if (views.hasOwnProperty(i)) {
-				views[i]._onUpdate(items);
+				views[i]._onCollectionUpdate(items);
 			}
 		}
+		
+		this.emit('update', items);
 	};
 
 	/**
@@ -428,9 +468,11 @@ var ForerunnerDB = (function () {
 		// Loop views and inform them of the underlying data change
 		for (i in views) {
 			if (views.hasOwnProperty(i)) {
-				views[i]._onRemove(items);
+				views[i]._onCollectionRemove(items);
 			}
 		}
+		
+		this.emit('remove', items);
 	};
 
 	Collection.prototype._fireInsert = function (selector, options, inserted, failed, all) {
@@ -1643,10 +1685,47 @@ var ForerunnerDB = (function () {
 	var View = function (viewName) {
 		this._name = viewName;
 		this._binds = [];
+		this._listeners = {};
 		this._query = {
 			query: {},
 			options: {}
 		};
+	};
+	
+	View.prototype.on = function(event, listener) {
+		this._listeners[event] = this._listeners[event] || [];
+		this._listeners[event].push(listener);
+		
+		return this;
+	};
+	
+	View.prototype.off = function(event, listener) {
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				index = arr.indexOf(listener);
+	
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+		
+		return this;
+	};
+	
+	View.prototype.emit = function(event, data) {
+		this._listeners = this._listeners || {};
+	
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				arrCount = arr.length,
+				arrIndex;
+	
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+		
+		return this;
 	};
 	
 	/**
@@ -2072,6 +2151,10 @@ var ForerunnerDB = (function () {
 			}
 		}
 	};
+	
+	View.prototype._onCollectionInsert = function (inserted, failed) {
+		this.refresh();
+	};
 
 	View.prototype._onInsert = function (inserted, failed) {
 		var binds = this._binds,
@@ -2091,6 +2174,10 @@ var ForerunnerDB = (function () {
 			}
 		}
 
+		this.emit('insert', inserted, failed);
+	};
+	
+	View.prototype._onCollectionUpdate = function (items) {
 		this.refresh();
 	};
 
@@ -2112,9 +2199,13 @@ var ForerunnerDB = (function () {
 			}
 		}
 
-		this.refresh();
+		this.emit('update', items);
 	};
 
+	View.prototype._onCollectionRemove = function (items) {
+		this.refresh();
+	};
+	
 	View.prototype._onRemove = function (items) {
 		var binds = this._binds,
 			unfilteredDataSet = this.find({}),
@@ -2133,14 +2224,13 @@ var ForerunnerDB = (function () {
 			}
 		}
 
-		this.refresh();
+		this.emit('remove', items);
 	};
 
 	View.prototype._fireInsert = function (selector, options, inserted, failed, all) {
 		var container = $(selector),
 			itemElem,
 			itemHtml,
-			sortIndex,
 			i;
 
 		// Loop the inserted items
@@ -2232,7 +2322,7 @@ var ForerunnerDB = (function () {
 					}}(itemElem, items[i], all));
 				} else {
 					if (options.remove) {
-						options.remove(itemElem, data, all);
+						options.remove(itemElem, items[i], all);
 					} else {
 						itemElem.remove();
 
