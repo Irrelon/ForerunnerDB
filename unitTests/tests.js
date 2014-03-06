@@ -5,24 +5,62 @@ var db,
 		_id: '1',
 		name: 'Sam',
 		age: 19,
-		lookup: true
+		lookup: true,
+		arr: [{
+			val: 1
+		}, {
+			val: 3
+		}],
+		log: {
+			val: 6
+		}
 	},
 	multipleObjects = [{
 		_id: '2',
 		name: 'Jim',
 		age: 15,
 		lookup: true,
-		onlyOne: true
+		onlyOne: true,
+		arr: [{
+			_id: 'anf',
+			val: 2
+		}, {
+			_id: 'eet',
+			val: 4
+		}],
+		log: {
+			val: 7
+		}
 	}, {
 		_id: '3',
 		name: 'Kat',
 		age: 12,
-		lookup: false
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}, {
+			_id: 'zjs',
+			val: 5
+		}],
+		log: {
+			val: 1
+		}
 	}, {
 		_id: '4',
 		name: 'Dean',
 		age: 5,
-		lookup: true
+		lookup: true,
+		arr: [{
+			_id: 'lsd',
+			val: 1
+		}, {
+			_id: 'lop',
+			val: 5
+		}],
+		log: {
+			val: 2
+		}
 	}];
 
 QUnit.config.reorder = false;
@@ -86,10 +124,22 @@ test("Collection.find() :: $exists clause true on field that does not exist", fu
 	ok(result.length === 0, "Failed!");
 });
 
+test("Collection.find() :: $exists clause true on field that does exist", function() {
+	coll1._debug = false;
+	var result = coll1.find({onlyOne: {
+		$exists: true
+	}});
+	coll1._debug = false;
+
+	ok(result.length === 1, "Failed!");
+});
+
 test("Collection.find() :: $exists clause false", function() {
+	coll1._debug = false;
 	var result = coll1.find({doesNotExist: {
 		$exists: false
 	}});
+	coll1._debug = false;
 
 	ok(result.length === 3, "Failed!");
 });
@@ -152,7 +202,6 @@ test("Collection.find() :: $or clause", function() {
 			name: 'Dean'
 		}]
 	});
-	console.log(result);
 
 	ok(result.length === 2, "Failed!");
 });
@@ -165,7 +214,68 @@ test("Collection.find() :: $and clause", function() {
 			name: 'Jim'
 		}]
 	});
-	console.log(result);
 
 	ok(result.length === 1, "Failed!");
+});
+
+test("Collection.find() :: Nested $or clause", function() {
+	var result = coll1.find({
+		log: {
+			$or: [{
+				val: 1
+			}, {
+				val: 2
+			}]
+		}
+	});
+
+	ok(result.length === 2, "Failed!");
+});
+
+test("Collection.update() :: arrayKey.$ Positional array selector", function() {
+	var before = coll1.find({
+		"arr": {
+			"_id": "lsd"
+		}
+	});
+	
+	ok(before.length === 1, "Failed in finding document to update!");
+	
+	var beforeValue;
+	
+	for (var i = 0; i < before[0].arr.length; i++) {
+		if (before[0].arr[i]._id === 'lsd') {
+			beforeValue = before[0].arr[i].val;
+		}
+	}
+	
+	ok(beforeValue === 1, "Failed in finding document to update!");
+	
+	var result = coll1.update({
+		"arr": {
+			"_id": "lsd"
+		}
+	}, {
+		"arr.$": {
+			val: 2
+		}
+	});
+
+	ok(result.length === 1, "Failed to update document with positional data!");
+	
+	var after = coll1.find({
+		"arr": {
+			"_id": "lsd"
+		}
+	});
+	
+	var afterValue;
+	
+	for (var i = 0; i < after[0].arr.length; i++) {
+		if (after[0].arr[i]._id === 'lsd') {
+			afterValue = after[0].arr[i].val;
+		}
+	}
+	
+	ok(afterValue === 2, "Failed in finding document to update!");
 });
