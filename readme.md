@@ -294,11 +294,14 @@ Where the parameters are:
 ForerunnerDB's project road-map:
 
 * COMPLETED - Views that can join multiple documents together and data-bind - sort of like virtual collections
+* COMPLETED - Primary key violation checking
+* COMPLETED - Unit tests
 * Support more of the MongoDB query operators
 * Data persistence on server-side
 * NPM installation
 * Collection / query paging e.g. select next 10, select previous 10
-* Collection indexing and index violation checking
+* Collection indexing
+* Index violation checking
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
