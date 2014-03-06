@@ -1795,29 +1795,34 @@ var ForerunnerDB = (function () {
 	 */
 	View.prototype.from = function (collection) {
 		if (collection !== undefined) {
-			// Check if we already have a collection assigned
-			if (this._from) {
-				// Remove ourselves from the collection view lookup
-				this._from._removeView(this);
+			// Check if the existing from matches the passed one
+			if (this._from !== collection) {
+				// Check if we already have a collection assigned
+				if (this._from) {
+					// Remove ourselves from the collection view lookup
+					this._from._removeView(this);
+				}
+	
+				// Check if this is a collection name or a collection instance
+				if (collection instanceof Collection) {
+					this._from = collection;
+				} else if (typeof(collection) === 'string') {
+					this._from = this._db.collection(collection);
+				}
+	
+				if (this._from) {
+					// Add this view to the collection's view lookup
+					this._from._addView(this);
+	
+					this._primaryKey = this._from._primaryKey;
+					this.refresh();
+					return this;
+				} else {
+					throw('Cannot determine collection type in view.from()');
+				}
 			}
 
-			// Check if this is a collection name or a collection instance
-			if (collection instanceof Collection) {
-				this._from = collection;
-			} else if (typeof(collection) === 'string') {
-				this._from = this._db.collection(collection);
-			}
-
-			if (this._from) {
-				// Add this view to the collection's view lookup
-				this._from._addView(this);
-
-				this._primaryKey = this._from._primaryKey;
-				this.refresh();
-				return this;
-			} else {
-				throw('Cannot determine collection type in view.from()');
-			}
+			return this;
 		}
 
 		return this._from;
@@ -1949,7 +1954,7 @@ var ForerunnerDB = (function () {
 	 * Refreshes the view data and diffs between previous and new data to
 	 * determine if any events need to be triggered or DOM binds updated.
 	 */
-	View.prototype.refresh = function () {
+	View.prototype.refresh = function (force) {
 		// Take a copy of the data before updating it, we will use this to
 		// "diff" between the old and new data and handle DOM bind updates
 		var oldData = this._data,
@@ -1980,87 +1985,124 @@ var ForerunnerDB = (function () {
 			}
 		}
 
-		// Check if there was old data
-		if (oldData) {
-			// Now determine the difference
-			newData = this._data;
-
-			if (oldData.subsetOf() === newData.subsetOf()) {
-				newDataArr = newData.find();
-				oldDataArr = oldData.find();
-				primaryKey = newData._primaryKey;
-
-				// The old data and new data were derived from the same parent collection
-				// so scan the data to determine changes
-				for (i = 0; i < newDataArr.length; i++) {
-					dataItem = newDataArr[i];
-
-					query = {};
-					query[primaryKey] = dataItem[primaryKey];
-
-					// Check if this item exists in the old data
-					oldDataItem = oldData.find(query)[0];
-
-					if (!oldDataItem) {
-						// New item detected
-						inserted.push(dataItem);
-					} else {
-						// Check if an update has occurred
-						if (JSON.stringify(oldDataItem) !== JSON.stringify(dataItem)) {
-							// Updated / already included item detected
-							updated.push(dataItem);
+		if (!force) {
+			// Check if there was old data
+			if (oldData) {
+				// Now determine the difference
+				newData = this._data;
+	
+				if (oldData.subsetOf() === newData.subsetOf()) {
+					newDataArr = newData.find();
+					oldDataArr = oldData.find();
+					primaryKey = newData._primaryKey;
+	
+					// The old data and new data were derived from the same parent collection
+					// so scan the data to determine changes
+					for (i = 0; i < newDataArr.length; i++) {
+						dataItem = newDataArr[i];
+	
+						query = {};
+						query[primaryKey] = dataItem[primaryKey];
+	
+						// Check if this item exists in the old data
+						oldDataItem = oldData.find(query)[0];
+	
+						if (!oldDataItem) {
+							// New item detected
+							inserted.push(dataItem);
+						} else {
+							// Check if an update has occurred
+							if (JSON.stringify(oldDataItem) !== JSON.stringify(dataItem)) {
+								// Updated / already included item detected
+								updated.push(dataItem);
+							}
 						}
 					}
-				}
-
-				// Now loop the old data and check if any records were removed
-				for (i = 0; i < oldDataArr.length; i++) {
-					dataItem = oldDataArr[i];
-
-					query = {};
-					query[primaryKey] = dataItem[primaryKey];
-
-					// Check if this item exists in the old data
-					if (!newData.find(query)[0]) {
-						// Removed item detected
-						removed.push(dataItem);
-					}
-				}
-
-				// Now we have a diff of the two data sets, we need to get the DOM updated
-				if (inserted.length) {
-					this._onInsert(inserted, []);
-					operated = true;
-				}
-
-				if (updated.length) {
-					this._onUpdate(updated);
-					operated = true;
-				}
-
-				if (removed.length) {
-					this._onRemove(removed);
-					operated = true;
-				}
-
-				for (bindKey in binds) {
-					if (binds.hasOwnProperty(bindKey)) {
-						bind = binds[bindKey];
-						
-						if (bind.maintainSort) {
-							this.sortDomBind(bindKey, newDataArr);
-						}
-						
-						if (bind.afterOperation) {
-							bind.afterOperation();
+	
+					// Now loop the old data and check if any records were removed
+					for (i = 0; i < oldDataArr.length; i++) {
+						dataItem = oldDataArr[i];
+	
+						query = {};
+						query[primaryKey] = dataItem[primaryKey];
+	
+						// Check if this item exists in the old data
+						if (!newData.find(query)[0]) {
+							// Removed item detected
+							removed.push(dataItem);
 						}
 					}
+	
+					// Now we have a diff of the two data sets, we need to get the DOM updated
+					if (inserted.length) {
+						this._onInsert(inserted, []);
+						operated = true;
+					}
+	
+					if (updated.length) {
+						this._onUpdate(updated);
+						operated = true;
+					}
+	
+					if (removed.length) {
+						this._onRemove(removed);
+						operated = true;
+					}
+	
+					for (bindKey in binds) {
+						if (binds.hasOwnProperty(bindKey)) {
+							bind = binds[bindKey];
+							
+							if (bind.maintainSort) {
+								this.sortDomBind(bindKey, newDataArr);
+							}
+							
+							if (bind.afterOperation) {
+								bind.afterOperation();
+							}
+						}
+					}
+				} else {
+					// The previous data and the new data are derived from different collections
+					// and can therefore not be compared, all data is therefore effectively "new"
+					// so first perform a remove of all existing data then do an insert on all new data
+					removed = oldData.find();
+					
+					if (removed.length) {
+						this._onRemove(removed);
+						operated = true;
+					}
+					
+					inserted = newData.find();
+					
+					if (inserted.length) {
+						this._onInsert(inserted);
+						operated = true;
+					}
 				}
-			} else {
-				// The previous data and the new data are derived from different collections
-				// and can therefore not be compared, all data is therefore effectively "new"
+			}
+		} else {
+			// Force an update as if the view never got created by padding all elements
+			// to the insert
+			newDataArr = this._data.find();
+			this._onInsert(newDataArr, []);
+			
+			for (bindKey in binds) {
+				if (binds.hasOwnProperty(bindKey)) {
+					bind = binds[bindKey];
+					
+					if (bind.maintainSort) {
+						this.sortDomBind(bindKey, newDataArr);
+					}
+					
+					if (bind.afterOperation) {
+						bind.afterOperation();
+					}
+				}
 			}
 		}
+		
+		return this;
 	};
 
 	/**
