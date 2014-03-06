@@ -3,7 +3,7 @@
 
 * ForerunnerDB - Status: *Production - Stable*
 * ForerunnerDB.Server - Status: **Development - Alpha**
-* ForerunnerDB.Remote - Status: **Development - Alpha
+* ForerunnerDB.Remote - Status: **Development - Alpha**
 * ForerunnerDB.Persist - Status: **Development - Alpha**
 
 ### What Is ForerunnerDB?
