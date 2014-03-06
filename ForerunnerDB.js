@@ -1068,7 +1068,7 @@ var ForerunnerDB = (function () {
 
 				return true;
 			} else {
-				return indexViolation;
+				return false;
 			}
 		}
 
@@ -1082,7 +1082,10 @@ var ForerunnerDB = (function () {
 	 * details about the violation.
 	 */
 	Collection.prototype._indexViolation = function (doc) {
-		return null
+		// Check the item's primary key is not already in use
+		var item = this.findById(doc[this._primaryKey])[0];
+		
+		return Boolean(item);
 	};
 
 	/**
@@ -1129,12 +1132,24 @@ var ForerunnerDB = (function () {
 	Collection.prototype.decouple = function (data) {
 		return JSON.parse(JSON.stringify(data));
 	};
+	
+	/**
+	 * Helper method to find a document by it's id.
+	 * @param {String} id The id of the document.
+	 * @param {Object=} options The options object, allowed keys are sort and limit.
+	 * @returns {Array} The items that were updated.
+	 */
+	Collection.prototype.findById = function (id, options) {
+		var searchObj = {};
+		searchObj[this._primaryKey] = id;
+		return this.find(searchObj, options);
+	};
 
 	/**
 	 * Queries the collection based on the query object passed.
 	 * @param {Object} query The query key/values that a document must match in
 	 * order for it to be returned in the result array.
-	 * @param {Object=} options The options object, allowed keys are sort and limit.
+	 * 
 	 * @returns {Array} The results array from the find operation, containing all
 	 * documents that matched the query.
 	 */
@@ -1432,6 +1447,9 @@ var ForerunnerDB = (function () {
 	 * @private
 	 */
 	Collection.prototype._match = function (source, test, opToApply) {
+		if (this._debug) {
+			debugger;
+		}
 		var operation,
 			applyOp,
 			recurseVal,
@@ -1520,33 +1538,25 @@ var ForerunnerDB = (function () {
 
 							case '$or':
 								// Match true on ANY check to pass
-								applyOp = 'or';
 								operation = true;
-
-								recurseVal = this._match(source, test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
+								
+								for (var orIndex = 0; orIndex < test[i].length; orIndex++) {
+									if (this._match(source, test[i][orIndex], 'and')) {
 										return true;
+									} else {
+										matchedAll = false;
 									}
-								} else {
-									matchedAll = false;
 								}
 								break;
 
 							case '$and':
 								// Match true on ALL checks to pass
-								applyOp = 'and';
 								operation = true;
-
-								recurseVal = this._match(source, test[i], applyOp);
-
-								if (!recurseVal) {
-									if (opToApply === 'and') {
+								
+								for (var andIndex = 0; andIndex < test[i].length; andIndex++) {
+									if (!this._match(source, test[i][andIndex], 'and')) {
 										return false;
 									}
-
-									matchedAll = false;
 								}
 								break;
 						}
@@ -1640,7 +1650,21 @@ var ForerunnerDB = (function () {
 									}
 								}
 							} else {
-								matchedAll = false;
+								// First check if the test match is an $exists
+								if (test[i]['$exists'] !== undefined) {
+									// Push the item through another match recurse
+									recurseVal = this._match(undefined, test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else {
+									matchedAll = false;
+								}
 							}
 						} else {
 							// Check if the prop matches our test value
