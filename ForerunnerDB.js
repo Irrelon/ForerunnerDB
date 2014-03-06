@@ -1083,7 +1083,7 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype._indexViolation = function (doc) {
 		// Check the item's primary key is not already in use
-		var item = this.findById(doc[this._primaryKey])[0];
+		var item = this.findById(doc[this._primaryKey]);
 		
 		return Boolean(item);
 	};
@@ -1142,7 +1142,7 @@ var ForerunnerDB = (function () {
 	Collection.prototype.findById = function (id, options) {
 		var searchObj = {};
 		searchObj[this._primaryKey] = id;
-		return this.find(searchObj, options);
+		return this.find(searchObj, options)[0];
 	};
 
 	/**

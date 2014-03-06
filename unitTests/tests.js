@@ -328,3 +328,40 @@ test("Collection.find() :: Options :: Single join", function() {
 	ok(result[1].orgId === result[1].org._id, "Failed!");
 	ok(result[2].orgId === result[2].org._id, "Failed!");
 });
+
+test("Collection.updateById() :: $push array operator", function() {
+	var before = user.findById("2");
+	
+	ok(before.arr.length === 2, "Failed!");
+	
+	var result = user.updateById("2", {
+		"$push": {
+			"arr": {
+				_id: 'ahh',
+				val: 8
+			}
+		}
+	});
+	
+	var after = user.findById("2");
+	
+	ok(after.arr.length === 3, "Failed!");
+});
+
+test("Collection.updateById() :: $pull array operator", function() {
+	var before = user.findById("2");
+	
+	ok(before.arr.length === 3, "Failed!");
+	
+	var result = user.updateById("2", {
+		"$pull": {
+			"arr": {
+				_id: 'ahh'
+			}
+		}
+	});
+	
+	var after = user.findById("2");
+	
+	ok(after.arr.length === 2, "Failed!");
+});
