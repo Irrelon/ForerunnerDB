@@ -1,10 +1,12 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-### Project / Module Status
+### Project Status
 
-* ForerunnerDB - Status: **Production - Stable**
-* ForerunnerDB.Server - Status: *Development - Alpha*
-* ForerunnerDB.Remote - Status: *Development - Alpha*
-* ForerunnerDB.Persist - Status: *Development - Alpha*
+* ForerunnerDB: **Production - Stable**
+
+#### Sub-Module (Optional Plugins) Status
+* ForerunnerDB.Server: *Development - Alpha*
+* ForerunnerDB.Remote: *Development - Alpha*
+* ForerunnerDB.Persist: *Development - Alpha*
 
 ### What Is ForerunnerDB?
 ForerunnerDB (a.k.a. Forerunner or FDB) is a database system that operates as an object store. It is a NoSQL database that is queried in a very similar way to MongoDB. Forerunner's main advantages are:
