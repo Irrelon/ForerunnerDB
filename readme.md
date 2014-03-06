@@ -12,7 +12,7 @@
 ForerunnerDB (a.k.a. Forerunner or FDB) is a database system that operates as an object store. It is a NoSQL database that is queried in a very similar way to MongoDB. Forerunner's main advantages are:
 
 * Can run in a browser as a client-side database for web-apps or server-side in Node.js
-* Has a very low footprint (59KB uncompressed, 15KB minified, 4KB minified + gzipped)
+* Has a very low footprint (69KB uncompressed, 20KB minified, 4KB minified + gzipped)
 * Has built-in data-binding for automatically updating the DOM when underlying data changes**
 
 ** Data-binding to the DOM requires jQuery
