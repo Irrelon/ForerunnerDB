@@ -365,3 +365,34 @@ test("Collection.updateById() :: $pull array operator", function() {
 	
 	ok(after.arr.length === 2, "Failed!");
 });
+
+test("Collection.upsert() :: Insert on upsert call", function() {
+	var before = user.findById("1");
+
+	ok(!before, "Failed!");
+
+	var result = user.upsert(singleUserObject);
+
+	ok(result.op === 'insert', "Failed!");
+
+	var after = user.findById("1");
+
+	ok(after, "Failed!");
+});
+
+test("Collection.upsert() :: Update on upsert call", function() {
+	var before = user.findById("1");
+
+	ok(before, "Failed!");
+
+	var copy = JSON.parse(JSON.stringify(singleUserObject));
+	copy.updated = true;
+
+	var result = user.upsert(copy);
+
+	ok(result.op === 'update', "Failed!");
+
+	var after = user.findById("1");
+
+	ok(after.updated === true, "Failed!");
+});
