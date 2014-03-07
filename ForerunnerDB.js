@@ -716,7 +716,7 @@ var ForerunnerDB = (function () {
 			query = {};
 			query[this._primaryKey] = obj[this._primaryKey];
 
-			if (this.count(query).length) {
+			if (this.count(query)) {
 				// The document already exists with this id, this operation is an update
 				returnData.op = 'update';
 			} else {
