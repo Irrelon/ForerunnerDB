@@ -1759,11 +1759,11 @@ var ForerunnerDB = (function () {
 	View.prototype.drop = function () {
 		if ((this._db || this._from) && this._name) {
 			if (this._db) {
-				delete this._db._view[this._name];
+				delete this._db._views[this._name];
 			}
 			
 			if (this._from) {
-				delete this._from._view[this._name];
+				delete this._from._views[this._name];
 			}
 			
 			return true;
@@ -2433,7 +2433,7 @@ var ForerunnerDB = (function () {
 	var DB = function () {
 		this._collection = {};
 		this._collectionGroup = {};
-		this._view = {};
+		this._views = {};
 
 		// Init plugins
 		for (var i in this.Plugin) {
@@ -2520,8 +2520,8 @@ var ForerunnerDB = (function () {
 	 * @returns {*}
 	 */
 	DB.prototype.view = function (viewName) {
-		this._view[viewName] = this._view[viewName] || new View(viewName).db(this);
-		return this._view[viewName];
+		this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
+		return this._views[viewName];
 	};
 
 	/**
@@ -2530,7 +2530,7 @@ var ForerunnerDB = (function () {
 	 * @returns {boolean}
 	 */
 	DB.prototype.viewExists = function (viewName) {
-		return Boolean(this._view[viewName]);
+		return Boolean(this._views[viewName]);
 	};
 
 	/**
@@ -2572,11 +2572,11 @@ var ForerunnerDB = (function () {
 		var arr = [],
 			i;
 
-		for (i in this._view) {
-			if (this._view.hasOwnProperty(i)) {
+		for (i in this._views) {
+			if (this._views.hasOwnProperty(i)) {
 				arr.push({
 					name: i,
-					count: this._view[i].count()
+					count: this._views[i].count()
 				});
 			}
 		}
