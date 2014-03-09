@@ -153,6 +153,44 @@ var ForerunnerDB = (function () {
 	var CollectionGroup = function (name) {
 		this._name = name;
 		this._collectionArr = [];
+		this._views = [];
+		this._primaryKey = '_id';
+	};
+	
+	CollectionGroup.prototype.on = function(event, listener) {
+		this._listeners[event] = this._listeners[event] || [];
+		this._listeners[event].push(listener);
+		
+		return this;
+	};
+	
+	CollectionGroup.prototype.off = function(event, listener) {
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				index = arr.indexOf(listener);
+	
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+		
+		return this;
+	};
+	
+	CollectionGroup.prototype.emit = function(event, data) {
+		this._listeners = this._listeners || {};
+	
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				arrCount = arr.length,
+				arrIndex;
+	
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+		
+		return this;
 	};
 	
 	/**
@@ -253,6 +291,51 @@ var ForerunnerDB = (function () {
 			this._collectionArr[i].removeById(id);
 		}
 	};
+	
+	/**
+	 * Adds a view to the internal view lookup.
+	 * @param {View} view The view to add.
+	 * @returns {Collection}
+	 * @private
+	 */
+	CollectionGroup.prototype._addView = function (view) {
+		if (view !== undefined) {
+			this._views[view._name] = view;
+		}
+
+		return this;
+	};
+
+	/**
+	 * Removes a view from the internal view lookup.
+	 * @param {View} view The view to remove.
+	 * @returns {Collection}
+	 * @private
+	 */
+	CollectionGroup.prototype._removeView = function (view) {
+		if (view !== undefined) {
+			delete this._views[view._name];
+		}
+
+		return this;
+	};
+	
+	/**
+	 * Uses the passed query to generate a new collection with results
+	 * matching the query parameters.
+	 *
+	 * @param query
+	 * @param options
+	 * @returns {*}
+	 */
+	CollectionGroup.prototype.subset = function (query, options) {
+		var result = this.find(query, options);
+
+		return new Collection()
+			._subsetOf(this)
+			.primaryKey(this._primaryKey)
+			.setData(result);
+	};
 
 	/**
 	 * Collection object used to store data.
@@ -312,6 +395,10 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.drop = function () {
 		if (this._db && this._name) {
+			if (this._debug || (this._db && this._db._debug)) {
+				console.log('Dropping collection ' + this._name);
+			}
+			
 			delete this._db._collection[this._name];
 			
 			var groupArr = [],
@@ -592,6 +679,8 @@ var ForerunnerDB = (function () {
 	 * @param {Object} options The options object.
 	 */
 	Collection.prototype.bind = function (selector, options) {
+		throw('Binds against collections are now deprecated, use views instead!');
+		
 		if (options && options.template) {
 			this._binds[selector] = options;
 		} else {
@@ -1758,6 +1847,10 @@ var ForerunnerDB = (function () {
 	 */
 	View.prototype.drop = function () {
 		if ((this._db || this._from) && this._name) {
+			if (this._debug || (this._from && this._from._debug) || (this._db && this._db._debug)) {
+				console.log('Dropping view ' + this._name);
+			}
+			
 			if (this._db) {
 				delete this._db._views[this._name];
 			}
@@ -1804,7 +1897,7 @@ var ForerunnerDB = (function () {
 				}
 	
 				// Check if this is a collection name or a collection instance
-				if (collection instanceof Collection) {
+				if (collection instanceof Collection || collection instanceof CollectionGroup) {
 					this._from = collection;
 				} else if (typeof(collection) === 'string') {
 					this._from = this._db.collection(collection);
@@ -2443,6 +2536,15 @@ var ForerunnerDB = (function () {
 			}
 		}
 	};
+	
+	DB.prototype.debug = function (val) {
+		if (val !== undefined) {
+			this._debug = val;
+			return this;
+		}
+		
+		return this._debug;
+	};
 
 	/**
 	 * Accessor to internal data type constructors.
@@ -2501,6 +2603,12 @@ var ForerunnerDB = (function () {
 	 */
 	DB.prototype.collection = function (collectionName, primaryKey) {
 		if (collectionName) {
+			if (!this._collection[collectionName]) {
+				if (this._debug || (this._db && this._db._debug)) {
+					console.log('Creating collection ' + collectionName);
+				}
+			}
+			
 			this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
 
 			if (primaryKey !== undefined) {
@@ -2509,8 +2617,7 @@ var ForerunnerDB = (function () {
 
 			return this._collection[collectionName];
 		} else {
-			// Return an object of collection data
-			return this._collection;
+			throw('Cannot get collection with undefined name!');
 		}
 	};
 
@@ -2520,6 +2627,11 @@ var ForerunnerDB = (function () {
 	 * @returns {*}
 	 */
 	DB.prototype.view = function (viewName) {
+		if (!this._views[viewName]) {
+			if (this._debug) {
+				console.log('Creating view ' + viewName);
+			}
+		}
 		this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
 		return this._views[viewName];
 	};
