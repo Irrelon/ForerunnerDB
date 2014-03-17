@@ -158,6 +158,7 @@ var ForerunnerDB = (function () {
 	};
 	
 	CollectionGroup.prototype.on = function(event, listener) {
+		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
 		
@@ -354,6 +355,7 @@ var ForerunnerDB = (function () {
 	};
 	
 	Collection.prototype.on = function(event, listener) {
+		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
 		
@@ -712,26 +714,6 @@ var ForerunnerDB = (function () {
 		}
 
 		return this._db;
-	};
-
-	/**
-	 * Adds an event listener to the collection.
-	 */
-	Collection.prototype.on = function () {
-		var elem = $(this);
-		elem.on.apply(elem, arguments);
-
-		return this;
-	};
-
-	/**
-	 * Removes an event listener from the collection.
-	 */
-	Collection.prototype.off = function () {
-		var elem = $(this);
-		elem.off.apply(elem, arguments);
-
-		return this;
 	};
 
 	/**
@@ -1806,6 +1788,7 @@ var ForerunnerDB = (function () {
 	};
 	
 	View.prototype.on = function(event, listener) {
+		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
 		
@@ -2547,10 +2530,10 @@ var ForerunnerDB = (function () {
 	};
 
 	/**
-	 * Accessor to internal data type constructors.
+	 * Accessor to internal class constructors.
 	 * @returns {Object}
 	 */
-	DB.types = {
+	DB.classes = {
 		Path: Path,
 		Collection: Collection,
 		CollectionGroup: CollectionGroup,
@@ -2567,20 +2550,41 @@ var ForerunnerDB = (function () {
 		return new Collection().setData(arr);
 	};
 
-	/**
-	 * Adds an event listener to the db.
-	 */
-	DB.prototype.on = function () {
-		var elem = $(this);
-		elem.on.apply(elem, arguments);
+	DB.prototype.on = function(event, listener) {
+		this._listeners = this._listeners || {};
+		this._listeners[event] = this._listeners[event] || [];
+		this._listeners[event].push(listener);
+
+		return this;
 	};
 
-	/**
-	 * Removes an event listener from the db.
-	 */
-	DB.prototype.off = function () {
-		var elem = $(this);
-		elem.off.apply(elem, arguments);
+	DB.prototype.off = function(event, listener) {
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				index = arr.indexOf(listener);
+
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+
+		return this;
+	};
+
+	DB.prototype.emit = function(event, data) {
+		this._listeners = this._listeners || {};
+
+		if (event in this._listeners) {
+			var arr = this._listeners[event],
+				arrCount = arr.length,
+				arrIndex;
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+
+		return this;
 	};
 	
 	DB.prototype.collectionGroup = function (collectionGroupName) {
