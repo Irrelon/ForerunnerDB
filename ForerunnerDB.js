@@ -1370,18 +1370,82 @@ var ForerunnerDB = (function () {
 
 	/**
 	 * Sorts an array of documents by the given sort path.
-	 * @param {String} sortPath The path to the key that the array should be sorted by.
+	 * @param {*} sortObj The keys and orders the array objects should be sorted by.
 	 * @param {Array} arr The array of documents to sort.
 	 * @returns {Array}
 	 */
-	Collection.prototype.sort = function (sortPath, arr) {
+	Collection.prototype.sort = function (sortObj, arr) {
 		// Make sure we have an array object
 		arr = arr || [];
 
-		// Create a data path from the sort object
-		var pathSolver = new Path(),
-			dataPath = pathSolver.parse(sortPath, true),
-			sorterMethod;
+		var	sortArr = [],
+			sortKey,
+			sortSingleObj;
+
+		for (sortKey in sortObj) {
+			if (sortObj.hasOwnProperty(sortKey)) {
+				sortSingleObj = {};
+				sortSingleObj[sortKey] = sortObj[sortKey];
+				sortSingleObj.___fdbKey = sortKey;
+				sortArr.push(sortSingleObj);
+			}
+		}
+
+		if (sortArr.length < 2) {
+			// There is only one sort criteria, do a simple sort and return it
+			return this._sort(sortObj, arr);
+		} else {
+			return this._bucketSort(sortArr, arr);
+		}
+	};
+
+	/**
+	 * Takes array of sort paths and sorts them into buckets before returning final
+	 * array fully sorted by multi-keys.
+	 * @param keyArr
+	 * @param arr
+	 * @returns {*}
+	 * @private
+	 */
+	Collection.prototype._bucketSort = function (keyArr, arr) {
+		var keyObj = keyArr.shift(),
+			arrCopy,
+			buckets,
+			i,
+			finalArr = [];
+
+		if (keyArr.length > 0) {
+			// Sort array by bucket key
+			arr = this._sort(keyObj, arr);
+
+			// Split items into buckets
+			buckets = this.bucket(keyObj.___fdbKey, arr);
+
+			// Loop buckets and sort contents
+			for (i in buckets) {
+				if (buckets.hasOwnProperty(i)) {
+					arrCopy = [].concat(keyArr);
+					finalArr = finalArr.concat(this._bucketSort(arrCopy, buckets[i]));
+				}
+			}
+
+			return finalArr;
+		} else {
+			return this._sort(keyObj, arr);
+		}
+	};
+
+	/**
+	 * Sorts array by individual sort path.
+	 * @param key
+	 * @param arr
+	 * @returns {Array|*}
+	 * @private
+	 */
+	Collection.prototype._sort = function (key, arr) {
+		var sorterMethod,
+			pathSolver = new Path(),
+			dataPath = pathSolver.parse(key, true);
 
 		pathSolver.path(dataPath.path);
 
@@ -1416,6 +1480,25 @@ var ForerunnerDB = (function () {
 		}
 
 		return arr.sort(sorterMethod);
+	};
+
+	/**
+	 * Takes an array of objects and returns a new object with the array items
+	 * split into buckets by the passed key.
+	 * @param {String} key The key to split the array into buckets by.
+	 * @param {Array} arr An array of objects.
+	 * @returns {Object}
+	 */
+	Collection.prototype.bucket = function (key, arr) {
+		var i,
+			buckets = {};
+
+		for (i = 0; i < arr.length; i++) {
+			buckets[arr[i][key]] = buckets[arr[i][key]] || [];
+			buckets[arr[i][key]].push(arr[i]);
+		}
+
+		return buckets;
 	};
 
 	/**
