@@ -240,18 +240,14 @@ var ForerunnerDB = (function () {
 
 	CollectionGroup.prototype.find = function (query, options) {
 		// Loop the collections in this group and find first matching item response
-		var data,
+		var data = new Collection(),
 			i;
 
 		for (i = 0; i < this._collectionArr.length; i++) {
-			data = this._collectionArr[i].find(query, options);
-
-			if (data.length) {
-				return data;
-			}
+			data.insert(this._collectionArr[i].find(query, options));
 		}
 
-		return [];
+		return data.find();
 	};
 
 	CollectionGroup.prototype.insert = function (query, options) {
