@@ -149,51 +149,51 @@ var ForerunnerDB = (function () {
 
 		return str;
 	};
-	
+
 	var CollectionGroup = function (name) {
 		this._name = name;
 		this._collectionArr = [];
 		this._views = [];
 		this._primaryKey = '_id';
 	};
-	
+
 	CollectionGroup.prototype.on = function(event, listener) {
 		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
-		
+
 		return this;
 	};
-	
+
 	CollectionGroup.prototype.off = function(event, listener) {
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				index = arr.indexOf(listener);
-	
+
 			if (index > -1) {
 				arr.splice(index, 1);
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	CollectionGroup.prototype.emit = function(event, data) {
 		this._listeners = this._listeners || {};
-	
+
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				arrCount = arr.length,
 				arrIndex;
-	
+
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	/**
 	 * Gets / sets the db instance the collection group belongs to.
 	 * @param {DB} db The db instance.
@@ -207,7 +207,7 @@ var ForerunnerDB = (function () {
 
 		return this._db;
 	};
-	
+
 	CollectionGroup.prototype.addCollection = function (collection) {
 		if (collection) {
 			if (this._collectionArr.indexOf(collection) === -1) {
@@ -215,73 +215,73 @@ var ForerunnerDB = (function () {
 				collection._groups.push(this);
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	CollectionGroup.prototype.removeCollection = function (collection) {
 		if (collection) {
 			var collectionIndex = this._collectionArr.indexOf(collection),
 				groupIndex;
-			
+
 			if (collectionIndex !== -1) {
 				this._collectionArr.splice(collectionIndex, 1);
-				
+
 				groupIndex = collection._groups.indexOf(this);
-				
+
 				if (groupIndex !== -1) {
 					collection._groups.splice(groupIndex, 1);
 				}
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	CollectionGroup.prototype.find = function (query, options) {
 		// Loop the collections in this group and find first matching item response
 		var data,
 			i;
-		
+
 		for (i = 0; i < this._collectionArr.length; i++) {
 			data = this._collectionArr[i].find(query, options);
-			
+
 			if (data.length) {
 				return data;
 			}
 		}
-		
+
 		return [];
 	};
-	
+
 	CollectionGroup.prototype.insert = function (query, options) {
 		// Loop the collections in this group and apply the insert
 		for (var i = 0; i < this._collectionArr.length; i++) {
 			this._collectionArr[i].insert(query, options);
 		}
 	};
-	
+
 	CollectionGroup.prototype.update = function (query, update) {
 		// Loop the collections in this group and apply the update
 		for (var i = 0; i < this._collectionArr.length; i++) {
 			this._collectionArr[i].update(query, update);
 		}
 	};
-	
+
 	CollectionGroup.prototype.updateById = function (id, update) {
 		// Loop the collections in this group and apply the update
 		for (var i = 0; i < this._collectionArr.length; i++) {
 			this._collectionArr[i].updateById(id, update);
 		}
 	};
-	
+
 	CollectionGroup.prototype.remove = function (query) {
 		// Loop the collections in this group and apply the remove
 		for (var i = 0; i < this._collectionArr.length; i++) {
 			this._collectionArr[i].remove(query);
 		}
 	};
-	
+
 	/**
 	 * Helper method that removes a document that matches the given id.
 	 * @param {String} id The id of the document to remove.
@@ -292,7 +292,7 @@ var ForerunnerDB = (function () {
 			this._collectionArr[i].removeById(id);
 		}
 	};
-	
+
 	/**
 	 * Adds a view to the internal view lookup.
 	 * @param {View} view The view to add.
@@ -320,7 +320,7 @@ var ForerunnerDB = (function () {
 
 		return this;
 	};
-	
+
 	/**
 	 * Uses the passed query to generate a new collection with results
 	 * matching the query parameters.
@@ -353,41 +353,41 @@ var ForerunnerDB = (function () {
 		// Set the subset to itself since it is the root collection
 		this._subsetOf(this);
 	};
-	
+
 	Collection.prototype.on = function(event, listener) {
 		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
-		
+
 		return this;
 	};
-	
+
 	Collection.prototype.off = function(event, listener) {
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				index = arr.indexOf(listener);
-	
+
 			if (index > -1) {
 				arr.splice(index, 1);
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	Collection.prototype.emit = function(event, data) {
 		this._listeners = this._listeners || {};
-	
+
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				arrCount = arr.length,
 				arrIndex;
-	
+
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
 			}
 		}
-		
+
 		return this;
 	};
 
@@ -400,26 +400,26 @@ var ForerunnerDB = (function () {
 			if (this._debug || (this._db && this._db._debug)) {
 				console.log('Dropping collection ' + this._name);
 			}
-			
+
 			delete this._db._collection[this._name];
-			
+
 			var groupArr = [],
 				i;
-			
+
 			// Copy the group array because if we call removeCollection on a group
 			// it will alter the groups array of this collection mid-loop!
 			for (i = 0; i < this._groups.length; i++) {
 				groupArr.push(this._groups[i]);
 			}
-			
+
 			// Loop any groups we are part of and remove ourselves from them
 			for (i = 0; i < groupArr.length; i++) {
 				this._groups[i].removeCollection(this);
 			}
-			
+
 			return true;
 		}
-		
+
 		return false;
 	};
 
@@ -494,7 +494,7 @@ var ForerunnerDB = (function () {
 				views[i]._onCollectionInsert(inserted, failed);
 			}
 		}
-		
+
 		this.emit('insert', inserted, failed);
 	};
 
@@ -528,7 +528,7 @@ var ForerunnerDB = (function () {
 				views[i]._onCollectionUpdate(items);
 			}
 		}
-		
+
 		this.emit('update', items);
 	};
 
@@ -560,7 +560,7 @@ var ForerunnerDB = (function () {
 				views[i]._onCollectionRemove(items);
 			}
 		}
-		
+
 		this.emit('remove', items);
 	};
 
@@ -682,7 +682,7 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.bind = function (selector, options) {
 		throw('Binds against collections are now deprecated, use views instead!');
-		
+
 		if (options && options.template) {
 			this._binds[selector] = options;
 		} else {
@@ -773,14 +773,14 @@ var ForerunnerDB = (function () {
 		if (obj instanceof Array) {
 			// Loop the array and upsert each item
 			returnData = [];
-			
+
 			for (i = 0; i < obj.length; i++) {
 				returnData.push(this.upsert(obj[i]));
 			}
-			
+
 			return returnData;
 		}
-		
+
 		// Determine if the operation is an insert or an update
 		if (obj[this._primaryKey]) {
 			// Check if an object with this primary key already exists
@@ -905,7 +905,7 @@ var ForerunnerDB = (function () {
 								}
 							}
 							break;
-						
+
 						case '$push':
 							operation = true;
 
@@ -1155,7 +1155,7 @@ var ForerunnerDB = (function () {
 	Collection.prototype._indexViolation = function (doc) {
 		// Check the item's primary key is not already in use
 		var item = this.findById(doc[this._primaryKey]);
-		
+
 		return Boolean(item);
 	};
 
@@ -1203,7 +1203,7 @@ var ForerunnerDB = (function () {
 	Collection.prototype.decouple = function (data) {
 		return JSON.parse(JSON.stringify(data));
 	};
-	
+
 	/**
 	 * Helper method to find a document by it's id.
 	 * @param {String} id The id of the document.
@@ -1220,14 +1220,14 @@ var ForerunnerDB = (function () {
 	 * Queries the collection based on the query object passed.
 	 * @param {Object} query The query key/values that a document must match in
 	 * order for it to be returned in the result array.
-	 * 
+	 *
 	 * @returns {Array} The results array from the find operation, containing all
 	 * documents that matched the query.
 	 */
 	Collection.prototype.find = function (query, options) {
 		query = query || {};
 		options = options || {};
-		
+
 		options.decouple = options.decouple !== undefined ? options.decouple : true;
 
 		var analysis,
@@ -1693,7 +1693,7 @@ var ForerunnerDB = (function () {
 							case '$or':
 								// Match true on ANY check to pass
 								operation = true;
-								
+
 								for (var orIndex = 0; orIndex < test[i].length; orIndex++) {
 									if (this._match(source, test[i][orIndex], 'and')) {
 										return true;
@@ -1706,7 +1706,7 @@ var ForerunnerDB = (function () {
 							case '$and':
 								// Match true on ALL checks to pass
 								operation = true;
-								
+
 								for (var andIndex = 0; andIndex < test[i].length; andIndex++) {
 									if (!this._match(source, test[i][andIndex], 'and')) {
 										return false;
@@ -1863,50 +1863,51 @@ var ForerunnerDB = (function () {
 	var View = function (viewName) {
 		this._name = viewName;
 		this._binds = [];
+		this._groups = [];
 		this._listeners = {};
 		this._query = {
 			query: {},
 			options: {}
 		};
 	};
-	
+
 	View.prototype.on = function(event, listener) {
 		this._listeners = this._listeners || {};
 		this._listeners[event] = this._listeners[event] || [];
 		this._listeners[event].push(listener);
-		
+
 		return this;
 	};
-	
+
 	View.prototype.off = function(event, listener) {
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				index = arr.indexOf(listener);
-	
+
 			if (index > -1) {
 				arr.splice(index, 1);
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	View.prototype.emit = function(event, data) {
 		this._listeners = this._listeners || {};
-	
+
 		if (event in this._listeners) {
 			var arr = this._listeners[event],
 				arrCount = arr.length,
 				arrIndex;
-	
+
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
 			}
 		}
-		
+
 		return this;
 	};
-	
+
 	/**
 	 * Drops a view and all it's stored data from the database.
 	 * @returns {boolean} True on success, false on failure.
@@ -1916,18 +1917,18 @@ var ForerunnerDB = (function () {
 			if (this._debug || (this._from && this._from._debug) || (this._db && this._db._debug)) {
 				console.log('Dropping view ' + this._name);
 			}
-			
+
 			if (this._db) {
 				delete this._db._views[this._name];
 			}
-			
+
 			if (this._from) {
 				delete this._from._views[this._name];
 			}
-			
+
 			return true;
 		}
-		
+
 		return false;
 	};
 
@@ -1961,18 +1962,18 @@ var ForerunnerDB = (function () {
 					// Remove ourselves from the collection view lookup
 					this._from._removeView(this);
 				}
-	
+
 				// Check if this is a collection name or a collection instance
 				if (collection instanceof Collection || collection instanceof CollectionGroup) {
 					this._from = collection;
 				} else if (typeof(collection) === 'string') {
 					this._from = this._db.collection(collection);
 				}
-	
+
 				if (this._from) {
 					// Add this view to the collection's view lookup
 					this._from._addView(this);
-	
+
 					this._primaryKey = this._from._primaryKey;
 					this.refresh();
 					return this;
@@ -2149,23 +2150,23 @@ var ForerunnerDB = (function () {
 			if (oldData) {
 				// Now determine the difference
 				newData = this._data;
-	
+
 				if (oldData.subsetOf() === newData.subsetOf()) {
 					newDataArr = newData.find();
 					oldDataArr = oldData.find();
 					primaryKey = newData._primaryKey;
-	
+
 					// The old data and new data were derived from the same parent collection
 					// so scan the data to determine changes
 					for (i = 0; i < newDataArr.length; i++) {
 						dataItem = newDataArr[i];
-	
+
 						query = {};
 						query[primaryKey] = dataItem[primaryKey];
-	
+
 						// Check if this item exists in the old data
 						oldDataItem = oldData.find(query)[0];
-	
+
 						if (!oldDataItem) {
 							// New item detected
 							inserted.push(dataItem);
@@ -2177,45 +2178,45 @@ var ForerunnerDB = (function () {
 							}
 						}
 					}
-	
+
 					// Now loop the old data and check if any records were removed
 					for (i = 0; i < oldDataArr.length; i++) {
 						dataItem = oldDataArr[i];
-	
+
 						query = {};
 						query[primaryKey] = dataItem[primaryKey];
-	
+
 						// Check if this item exists in the old data
 						if (!newData.find(query)[0]) {
 							// Removed item detected
 							removed.push(dataItem);
 						}
 					}
-	
+
 					// Now we have a diff of the two data sets, we need to get the DOM updated
 					if (inserted.length) {
 						this._onInsert(inserted, []);
 						operated = true;
 					}
-	
+
 					if (updated.length) {
 						this._onUpdate(updated);
 						operated = true;
 					}
-	
+
 					if (removed.length) {
 						this._onRemove(removed);
 						operated = true;
 					}
-	
+
 					for (bindKey in binds) {
 						if (binds.hasOwnProperty(bindKey)) {
 							bind = binds[bindKey];
-							
+
 							if (bind.maintainSort) {
 								this.sortDomBind(bindKey, newDataArr);
 							}
-							
+
 							if (bind.afterOperation) {
 								bind.afterOperation();
 							}
@@ -2226,14 +2227,14 @@ var ForerunnerDB = (function () {
 					// and can therefore not be compared, all data is therefore effectively "new"
 					// so first perform a remove of all existing data then do an insert on all new data
 					removed = oldData.find();
-					
+
 					if (removed.length) {
 						this._onRemove(removed);
 						operated = true;
 					}
-					
+
 					inserted = newData.find();
-					
+
 					if (inserted.length) {
 						this._onInsert(inserted);
 						operated = true;
@@ -2245,22 +2246,22 @@ var ForerunnerDB = (function () {
 			// to the insert
 			newDataArr = this._data.find();
 			this._onInsert(newDataArr, []);
-			
+
 			for (bindKey in binds) {
 				if (binds.hasOwnProperty(bindKey)) {
 					bind = binds[bindKey];
-					
+
 					if (bind.maintainSort) {
 						this.sortDomBind(bindKey, newDataArr);
 					}
-					
+
 					if (bind.afterOperation) {
 						bind.afterOperation();
 					}
 				}
 			}
 		}
-		
+
 		return this;
 	};
 
@@ -2376,7 +2377,7 @@ var ForerunnerDB = (function () {
 			}
 		}
 	};
-	
+
 	View.prototype._onCollectionInsert = function (inserted, failed) {
 		this.refresh();
 	};
@@ -2401,7 +2402,7 @@ var ForerunnerDB = (function () {
 
 		this.emit('insert', inserted, failed);
 	};
-	
+
 	View.prototype._onCollectionUpdate = function (items) {
 		this.refresh();
 	};
@@ -2430,7 +2431,7 @@ var ForerunnerDB = (function () {
 	View.prototype._onCollectionRemove = function (items) {
 		this.refresh();
 	};
-	
+
 	View.prototype._onRemove = function (items) {
 		var binds = this._binds,
 			unfilteredDataSet = this.find({}),
@@ -2571,11 +2572,11 @@ var ForerunnerDB = (function () {
 			this._val = (
 				idCounter + (
 					Math.random() * Math.pow(10, 17) +
-					Math.random() * Math.pow(10, 17) +
-					Math.random() * Math.pow(10, 17) +
-					Math.random() * Math.pow(10, 17)
-				)
-			).toString(24);
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17)
+					)
+				).toString(24);
 		} else {
 			this._val = id;
 		}
@@ -2602,13 +2603,13 @@ var ForerunnerDB = (function () {
 			}
 		}
 	};
-	
+
 	DB.prototype.debug = function (val) {
 		if (val !== undefined) {
 			this._debug = val;
 			return this;
 		}
-		
+
 		return this._debug;
 	};
 
@@ -2669,7 +2670,7 @@ var ForerunnerDB = (function () {
 
 		return this;
 	};
-	
+
 	DB.prototype.collectionGroup = function (collectionGroupName) {
 		if (collectionGroupName) {
 			this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
@@ -2695,7 +2696,7 @@ var ForerunnerDB = (function () {
 					console.log('Creating collection ' + collectionName);
 				}
 			}
-			
+
 			this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
 
 			if (primaryKey !== undefined) {
