@@ -1,7 +1,7 @@
 test("Init DB", function() {
 	buildUp();
 
-	ok(db instanceof ForerunnerDB, "Failed!");
+	ok(db instanceof ForerunnerDB, "Complete");
 
 	pullDown();
 });
@@ -11,7 +11,7 @@ test("DB.collection() :: Create Collection", function() {
 
 	user = db.collection('user');
 	organisation = db.collection('organisation');
-	ok(user instanceof ForerunnerDB.classes.Collection, "Failed!");
+	ok(user instanceof ForerunnerDB.classes.Collection, "Complete");
 
 	pullDown();
 });
@@ -20,8 +20,8 @@ test("Collection.setData() :: Single Document Object", function() {
 	buildUp();
 
 	user.setData(singleUserObject);
-	ok(user.find({_id: '1'})[0], "Failed!");
-	ok(user.find({_id: '1'})[0].name === 'Sam', "Failed!");
+	ok(user.find({_id: '1'})[0], "Complete");
+	ok(user.find({_id: '1'})[0].name === 'Sam', "Complete");
 
 	pullDown();
 });
@@ -30,11 +30,11 @@ test("Collection.remove() :: Remove Single Document via Find", function() {
 	buildUp();
 
 	user.setData(singleUserObject);
-	ok(user.find({_id: '1'})[0], "Failed!");
+	ok(user.find({_id: '1'})[0], "Complete");
 
 	var result = user.remove({_id: '1'});
-	ok(!user.find({moo: true})[0], "Failed!");
-	ok(result.length === 1, "Failed!");
+	ok(!user.find({moo: true})[0], "Complete");
+	ok(result.length === 1, "Complete");
 
 	pullDown();
 });
@@ -44,9 +44,9 @@ test("Collection.setData() :: Multiple Documents via Array", function() {
 	buildData();
 
 	count = user.count();
-	ok(count === usersData.length, "Failed!");
-	ok(user.find({_id: '2'})[0], "Failed!");
-	ok(user.find({_id: '2'})[0].name === 'Jim', "Failed!");
+	ok(count === usersData.length, "Complete");
+	ok(user.find({_id: '2'})[0], "Complete");
+	ok(user.find({_id: '2'})[0].name === 'Jim', "Complete");
 
 	pullDown();
 });
@@ -56,9 +56,9 @@ test("Collection.remove() :: Remove Multiple Documents via Find Boolean", functi
 	buildData();
 
 	var result = user.remove({lookup: true});
-	ok(!user.find({_id: '2'})[0], "Failed!");
-	ok(!user.find({_id: '4'})[0], "Failed!");
-	ok(result.length === 2, "Failed!");
+	ok(!user.find({_id: '2'})[0], "Complete");
+	ok(!user.find({_id: '4'})[0], "Complete");
+	ok(result.length === 2, "Complete");
 	pullDown();
 });
 
@@ -69,8 +69,8 @@ test("Collection.insert() :: Check Primary Key Violation is Working", function()
 	user.remove({lookup: true});
 	var result = user.insert(usersData);
 
-	ok(result.inserted.length === 2, "Failed!");
-	ok(result.failed.length === 1, "Failed!");
+	ok(result.inserted.length === 2, "Complete");
+	ok(result.failed.length === 1, "Complete");
 
 	pullDown();
 });
@@ -81,9 +81,9 @@ test("Collection.setData() :: Multiple Records Re-Insert Data", function() {
 
 	var result = user.setData(usersData);
 	count = user.count();
-	ok(count === usersData.length, "Failed!");
-	ok(user.find({_id: '2'})[0], "Failed!");
-	ok(user.find({_id: '2'})[0].name === 'Jim', "Failed!");
+	ok(count === usersData.length, "Complete");
+	ok(user.find({_id: '2'})[0], "Complete");
+	ok(user.find({_id: '2'})[0].name === 'Jim', "Complete");
 
 	pullDown();
 });
@@ -96,7 +96,7 @@ test("Collection.find() :: $exists clause true on field that does exist", functi
 		$exists: true
 	}});
 
-	ok(result.length === 3, "Failed!");
+	ok(result.length === 3, "Complete");
 
 	pullDown();
 });
@@ -109,7 +109,7 @@ test("Collection.find() :: $exists clause true on field that does not exist", fu
 		$exists: true
 	}});
 
-	ok(result.length === 0, "Failed!");
+	ok(result.length === 0, "Complete");
 
 	pullDown();
 });
@@ -124,7 +124,7 @@ test("Collection.find() :: $exists clause true on field that does exist", functi
 	}});
 	user._debug = false;
 
-	ok(result.length === 1, "Failed!");
+	ok(result.length === 1, "Complete");
 
 	pullDown();
 });
@@ -139,7 +139,7 @@ test("Collection.find() :: $exists clause false", function() {
 	}});
 	user._debug = false;
 
-	ok(result.length === 3, "Failed!");
+	ok(result.length === 3, "Complete");
 
 	pullDown();
 });
@@ -152,7 +152,7 @@ test("Collection.find() :: $gt clause", function() {
 		$gt: 11
 	}});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -165,7 +165,7 @@ test("Collection.find() :: $gte clause", function() {
 		$gte: 12
 	}});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -178,7 +178,7 @@ test("Collection.find() :: $lt clause", function() {
 		$lt: 12
 	}});
 
-	ok(result.length === 1, "Failed!");
+	ok(result.length === 1, "Complete");
 
 	pullDown();
 });
@@ -191,7 +191,7 @@ test("Collection.find() :: $lte clause", function() {
 		$lte: 12
 	}});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -205,7 +205,7 @@ test("Collection.find() :: $gt $lt clause combined", function() {
 		$gt: 5
 	}});
 
-	ok(result.length === 1, "Failed!");
+	ok(result.length === 1, "Complete");
 
 	pullDown();
 });
@@ -219,7 +219,7 @@ test("Collection.find() :: $gte $lte clause combined", function() {
 		$gte: 5
 	}});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -236,7 +236,7 @@ test("Collection.find() :: $or clause", function() {
 		}]
 	});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -253,7 +253,7 @@ test("Collection.find() :: $and clause", function() {
 		}]
 	});
 
-	ok(result.length === 1, "Failed!");
+	ok(result.length === 1, "Complete");
 
 	pullDown();
 });
@@ -272,7 +272,7 @@ test("Collection.find() :: Nested $or clause", function() {
 		}
 	});
 
-	ok(result.length === 2, "Failed!");
+	ok(result.length === 2, "Complete");
 
 	pullDown();
 });
@@ -345,9 +345,64 @@ test("Collection.find() :: Options :: Single join", function() {
 		}]
 	});
 	
-	ok(result[0].orgId === result[0].org._id, "Failed!");
-	ok(result[1].orgId === result[1].org._id, "Failed!");
-	ok(result[2].orgId === result[2].org._id, "Failed!");
+	ok(result[0].orgId === result[0].org._id, "Complete");
+	ok(result[1].orgId === result[1].org._id, "Complete");
+	ok(result[2].orgId === result[2].org._id, "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Single join, array of ids", function() {
+	buildUp();
+	buildData();
+
+	var result = user.find({}, {
+		"join": [{
+			"organisation": {
+				"_id": "orgId",
+				"$as": "org",
+				"$require": true,
+				"$multi": false
+			}
+		}, {
+			"user": {
+				"_id": "friends",
+				"$as": "friendData",
+				"$require": true,
+				"$multi": true
+			}
+		}]
+	});
+
+	ok(result[0].orgId === result[0].org._id, "Complete");
+	ok(result[1].orgId === result[1].org._id, "Complete");
+	ok(result[2].orgId === result[2].org._id, "Complete");
+
+	ok(result[0].friends[0] === result[0].friendData[0]._id, "Complete");
+	ok(result[1].friends[0] === result[1].friendData[0]._id, "Complete");
+	ok(result[2].friends[0] === result[2].friendData[0]._id, "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Multi join", function() {
+	buildUp();
+	buildData();
+
+	var result = user.find({}, {
+		"join": [{
+			"user": {
+				"_id": "friends",
+				"$as": "friendData",
+				"$require": true,
+				"$multi": true
+			}
+		}]
+	});
+
+	ok(result[0].friends[0] === result[0].friendData[0]._id, "Complete");
+	ok(result[1].friends[0] === result[1].friendData[0]._id, "Complete");
+	ok(result[2].friends[0] === result[2].friendData[0]._id, "Complete");
 
 	pullDown();
 });
@@ -358,7 +413,7 @@ test("Collection.updateById() :: $push array operator", function() {
 
 	var before = user.findById("2");
 	
-	ok(before.arr.length === 2, "Failed!");
+	ok(before.arr.length === 2, "Complete");
 	
 	var result = user.updateById("2", {
 		"$push": {
@@ -371,7 +426,7 @@ test("Collection.updateById() :: $push array operator", function() {
 	
 	var after = user.findById("2");
 	
-	ok(after.arr.length === 3, "Failed!");
+	ok(after.arr.length === 3, "Complete");
 
 	pullDown();
 });
@@ -382,7 +437,7 @@ test("Collection.updateById() :: $pull array operator", function() {
 
 	var before = user.findById("2");
 	
-	ok(before.arr.length === 3, "Failed!");
+	ok(before.arr.length === 3, "Complete");
 	
 	var result = user.updateById("2", {
 		"$pull": {
@@ -394,7 +449,7 @@ test("Collection.updateById() :: $pull array operator", function() {
 	
 	var after = user.findById("2");
 	
-	ok(after.arr.length === 2, "Failed!");
+	ok(after.arr.length === 2, "Complete");
 
 	pullDown();
 });
@@ -405,15 +460,15 @@ test("Collection.upsert() :: Insert on upsert call", function() {
 
 	var before = user.findById("1");
 
-	ok(!before, "Failed!");
+	ok(!before, "Complete");
 
 	var result = user.upsert(singleUserObject);
 
-	ok(result.op === 'insert', "Failed!");
+	ok(result.op === 'insert', "Complete");
 
 	var after = user.findById("1");
 
-	ok(after, "Failed!");
+	ok(after, "Complete");
 
 	pullDown();
 });
@@ -425,18 +480,187 @@ test("Collection.upsert() :: Update on upsert call", function() {
 	user.upsert(singleUserObject);
 	var before = user.findById("1");
 
-	ok(before, "Failed!");
+	ok(before, "Complete");
 
 	var copy = JSON.parse(JSON.stringify(singleUserObject));
 	copy.updated = true;
 
 	var result = user.upsert(copy);
 
-	ok(result.op === 'update', "Failed!");
+	ok(result.op === 'update', "Complete");
 
 	var after = user.findById("1");
 
-	ok(after.updated === true, "Failed!");
+	ok(after.updated === true, "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Single Sort Argument, Ascending", function() {
+	buildUp();
+	buildData();
+
+	var result = user.find({}, {
+		"sort": {
+			"name": 1
+		}
+	});
+
+	ok(result[0].name === 'Dean', "Complete");
+	ok(result[1].name === 'Jim', "Complete");
+	ok(result[2].name === 'Kat', "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Single Sort Argument, Descending", function() {
+	buildUp();
+	buildData();
+
+	var result = user.find({}, {
+		"sort": {
+			"name": -1
+		}
+	});
+
+	ok(result[0].name === 'Kat', "Complete");
+	ok(result[1].name === 'Jim', "Complete");
+	ok(result[2].name === 'Dean', "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Ascending, Ascending", function() {
+	buildUp();
+	buildData();
+
+	var result = organisation.find({
+		"$or": [{
+			"industry": "construction"
+		}, {
+			"industry": "it"
+		}]
+	}, {
+		"sort": {
+			"industry": 1,
+			"profit": 1
+		}
+	});
+
+	ok(result[0].industry === 'construction' && result[0].profit === 27, "Complete");
+	ok(result[1].industry === 'construction' && result[1].profit === 45, "Complete");
+	ok(result[2].industry === 'construction' && result[2].profit === 340, "Complete");
+	ok(result[3].industry === 'construction' && result[3].profit === 664, "Complete");
+	ok(result[4].industry === 'construction' && result[4].profit === 980, "Complete");
+
+	ok(result[5].industry === 'it' && result[5].profit === 135, "Complete");
+	ok(result[6].industry === 'it' && result[6].profit === 135, "Complete");
+	ok(result[7].industry === 'it' && result[7].profit === 135, "Complete");
+
+	ok(result[8].industry === 'it' && result[8].profit === 200, "Complete");
+	ok(result[9].industry === 'it' && result[9].profit === 780, "Complete");
+
+	ok(result[10].industry === 'it' && result[10].profit === 1002, "Complete");
+	ok(result[11].industry === 'it' && result[11].profit === 1002, "Complete");
+	ok(result[12].industry === 'it' && result[12].profit === 1002, "Complete");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Ascending", function() {
+	buildUp();
+	buildData();
+
+	var result = organisation.find({
+		"$or": [{
+			"industry": "construction"
+		}, {
+			"industry": "it"
+		}]
+	}, {
+		"sort": {
+			"industry": 1,
+			"profit": 1,
+			"type": 1
+		}
+	});
+
+	ok(result[0].industry === 'construction' && result[0].profit === 27, "Profit");
+	ok(result[1].industry === 'construction' && result[1].profit === 45, "Profit");
+	ok(result[2].industry === 'construction' && result[2].profit === 340, "Profit");
+	ok(result[3].industry === 'construction' && result[3].profit === 664, "Profit");
+	ok(result[4].industry === 'construction' && result[4].profit === 980, "Profit");
+
+	ok(result[5].industry === 'it' && result[5].profit === 135 && result[5].type === 'beta', "Profit and Type");
+	ok(result[6].industry === 'it' && result[6].profit === 135 && result[6].type === 'cappa', "Profit and Type");
+	ok(result[7].industry === 'it' && result[7].profit === 135 && result[7].type === 'delta', "Profit and Type");
+
+	ok(result[8].industry === 'it' && result[8].profit === 200 && result[8].type === 'alpha', "Profit and Type");
+	ok(result[9].industry === 'it' && result[9].profit === 780 && result[9].type === 'cappa', "Profit and Type");
+
+	ok(result[10].industry === 'it' && result[10].profit === 1002 && result[10].type === 'alpha', "Profit and Type");
+	ok(result[11].industry === 'it' && result[11].profit === 1002 && result[11].type === 'gamma', "Profit and Type");
+	ok(result[12].industry === 'it' && result[12].profit === 1002 && result[12].type === 'xray', "Profit and Type");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Descending", function() {
+	buildUp();
+	buildData();
+
+	var result = organisation.find({
+		"$or": [{
+			"industry": "construction"
+		}, {
+			"industry": "it"
+		}]
+	}, {
+		"sort": {
+			"industry": 1,
+			"profit": 1,
+			"type": -1
+		}
+	});
+
+	ok(result[0].industry === 'construction' && result[0].profit === 27, "Profit");
+	ok(result[1].industry === 'construction' && result[1].profit === 45, "Profit");
+	ok(result[2].industry === 'construction' && result[2].profit === 340, "Profit");
+	ok(result[3].industry === 'construction' && result[3].profit === 664, "Profit");
+	ok(result[4].industry === 'construction' && result[4].profit === 980, "Profit");
+
+	ok(result[5].industry === 'it' && result[5].profit === 135 && result[5].type === 'delta', "Profit and Type");
+	ok(result[6].industry === 'it' && result[6].profit === 135 && result[6].type === 'cappa', "Profit and Type");
+	ok(result[7].industry === 'it' && result[7].profit === 135 && result[7].type === 'beta', "Profit and Type");
+
+	ok(result[8].industry === 'it' && result[8].profit === 200 && result[8].type === 'alpha', "Profit and Type");
+	ok(result[9].industry === 'it' && result[9].profit === 780 && result[9].type === 'cappa', "Profit and Type");
+
+	ok(result[10].industry === 'it' && result[10].profit === 1002 && result[10].type === 'xray', "Profit and Type");
+	ok(result[11].industry === 'it' && result[11].profit === 1002 && result[11].type === 'gamma', "Profit and Type");
+	ok(result[12].industry === 'it' && result[12].profit === 1002 && result[12].type === 'alpha', "Profit and Type");
+
+	pullDown();
+});
+
+test("Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Descending, Descending with Numbers and Booleans", function() {
+	buildUp();
+	buildData();
+
+	var result = user.find({
+
+	}, {
+		"sort": {
+			"lookup": 1,
+			"age": 1
+		}
+	});
+
+	console.log(result);
+
+	ok(result[0].name === 'Kat' && result[0].lookup === false, "Name and Lookup");
+	ok(result[1].name === 'Dean' && result[1].lookup === true, "Name and Lookup");
+	ok(result[2].name === 'Jim' && result[2].lookup === true, "Name and Lookup");
 
 	pullDown();
 });
