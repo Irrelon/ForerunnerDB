@@ -457,6 +457,45 @@
 			return [];
 		}
 	};
+	
+	/**
+	 * Inserts into view data via the view collection. See Collection.insert() for more information.
+	 * @returns {*}
+	 */
+	View.prototype.insert = function () {
+		if (this._from) {
+			// Pass the args through to the from object
+			return this._from.insert.apply(this._from, arguments);
+		} else {
+			return [];
+		}
+	};
+	
+	/**
+	 * Updates into view data via the view collection. See Collection.update() for more information.
+	 * @returns {*}
+	 */
+	View.prototype.update = function () {
+		if (this._from) {
+			// Pass the args through to the from object
+			return this._from.update.apply(this._from, arguments);
+		} else {
+			return [];
+		}
+	};
+	
+	/**
+	 * Removed from view data via the view collection. See Collection.remove() for more information.
+	 * @returns {*}
+	 */
+	View.prototype.remove = function () {
+		if (this._from) {
+			// Pass the args through to the from object
+			return this._from.remove.apply(this._from, arguments);
+		} else {
+			return [];
+		}
+	};
 
 	View.prototype._onInsert = function (successArr, failArr) {
 		this.emit('insert', successArr, failArr);

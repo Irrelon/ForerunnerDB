@@ -2,6 +2,8 @@ var db,
 	user,
 	organisation,
 	userView,
+	userGroup,
+	userGroupView,
 	organisationView,
 	count,
 	singleUserObject = {
@@ -172,6 +174,21 @@ var viewUp = function () {
 var viewDown = function () {
 	db.view('userView').drop();
 	userView = undefined;
+};
+
+var viewGroupUp = function () {
+	userGroup = db.collectionGroup('userGroup')
+		.addCollection(userView);
+	
+	userGroupView = db.view('userGroupView')
+		.from(userGroup);
+};
+
+var viewGroupDown = function () {
+	db.collectionGroup('userGroup').drop();
+	db.view('userGroupView').drop();
+	userGroup = undefined;
+	userGroupView = undefined;
 };
 
 var domUp = function () {

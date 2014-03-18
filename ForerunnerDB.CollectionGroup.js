@@ -246,6 +246,32 @@
 			.primaryKey(this._primaryKey)
 			.setData(result);
 	};
+	
+	/**
+	 * Drops a collection group from the database.
+	 * @returns {boolean} True on success, false on failure.
+	 */
+	CollectionGroup.prototype.drop = function () {
+		var i,
+			collArr = [].concat(this._collectionArr),
+			viewArr = [].concat(this._views);
+		
+		if (this._debug) {
+			console.log('Dropping collection group ' + this._name);
+		}
+		
+		for (i = 0; i < collArr.length; i++) {
+			this.removeCollection(collArr[i]);
+		}
+		
+		for (i = 0; i < viewArr.length; i++) {
+			this._removeView(viewArr[i]);
+		}
+		
+		this.emit('drop');
+
+		return true;
+	};
 
 	// Extend DB to include collection groups
 	DB.prototype.init = function () {
