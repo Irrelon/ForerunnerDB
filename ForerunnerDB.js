@@ -154,7 +154,6 @@ var ForerunnerDB = (function () {
 		this._name = name;
 		this._collectionArr = [];
 		this._views = [];
-		this._primaryKey = '_id';
 	};
 
 	CollectionGroup.prototype.on = function(event, listener) {
@@ -211,6 +210,17 @@ var ForerunnerDB = (function () {
 	CollectionGroup.prototype.addCollection = function (collection) {
 		if (collection) {
 			if (this._collectionArr.indexOf(collection) === -1) {
+				// Check for compatible primary keys
+				if (this._collectionArr.length) {
+					if (this._primaryKey !== collection.primaryKey()) {
+						throw("All collections in a collection group must have the same primary key!");
+					}
+				} else {
+					// Set the primary key to the first collection added
+					this._primaryKey = collection.primaryKey();
+				}
+
+				// Add the collection
 				this._collectionArr.push(collection);
 				collection._groups.push(this);
 			}
@@ -233,6 +243,11 @@ var ForerunnerDB = (function () {
 					collection._groups.splice(groupIndex, 1);
 				}
 			}
+
+			if (this._collectionArr.length === 0) {
+				// Wipe the primary key
+				delete this._primaryKey;
+			}
 		}
 
 		return this;
@@ -240,14 +255,14 @@ var ForerunnerDB = (function () {
 
 	CollectionGroup.prototype.find = function (query, options) {
 		// Loop the collections in this group and find first matching item response
-		var data = new Collection(),
+		var data = new Collection().primaryKey(this._collectionArr[0].primaryKey()),
 			i;
 
 		for (i = 0; i < this._collectionArr.length; i++) {
-			data.insert(this._collectionArr[i].find(query, options));
+			data.insert(this._collectionArr[i].find(query));
 		}
 
-		return data.find();
+		return data.find(query, options);
 	};
 
 	CollectionGroup.prototype.insert = function (query, options) {
@@ -1982,6 +1997,18 @@ var ForerunnerDB = (function () {
 		}
 
 		return this._from;
+	};
+
+	/**
+	 * Gets the primary key for this view from the assigned collection.
+	 * @returns {String}
+	 */
+	View.prototype.primaryKey = function () {
+		if (this._from) {
+			return this._from.primaryKey();
+		}
+
+		return undefined;
 	};
 
 	/**
