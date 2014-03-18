@@ -910,6 +910,14 @@ var ForerunnerDB = (function () {
 													// Remove the result item if no matching join data is found
 													joinRequire = joinMatch[joinMatchIndex];
 													break;
+												
+												default:
+													// Check for a double-dollar which is a back-reference to the root collection item
+													if (joinMatchIndex.substr(0, 3) === '$$.') {
+														// Back reference
+														// TODO: Support complex joins
+													}
+													break;
 											}
 										} else {
 											// TODO: Could optimise this by caching path objects
