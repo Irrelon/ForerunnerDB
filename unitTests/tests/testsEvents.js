@@ -114,7 +114,6 @@ $(function () {
 	asyncTest("Events - CollectionGroup.on() :: Insert :: Event fired from collection", function() {
 		dbUp();
 		dataUp();
-		viewUp();
 	
 		expect(1);
 	
@@ -131,14 +130,12 @@ $(function () {
 			name: "hello"
 		});
 	
-		viewDown();
 		dbDown();
 	});
 	
 	asyncTest("Events - CollectionGroup.on() :: Update :: Event fired from collection", function() {
 		dbUp();
 		dataUp();
-		viewUp();
 	
 		expect(1);
 	
@@ -160,15 +157,13 @@ $(function () {
 		}, {
 			name: "hello2"
 		});
-	
-		viewDown();
+		
 		dbDown();
 	});
 	
 	asyncTest("Events - CollectionGroup.on() :: Remove :: Event fired from collection", function() {
 		dbUp();
 		dataUp();
-		viewUp();
 	
 		expect(1);
 	
@@ -189,7 +184,6 @@ $(function () {
 			_id: '2342'
 		});
 	
-		viewDown();
 		dbDown();
 	});
 	

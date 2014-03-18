@@ -106,17 +106,14 @@ $(function () {
 		});
 		
 		userView.on('insert', function () {
-			console.log('View insert');
 			ok(true, 'View insert');
 		});
 		
 		userGroup.on('insert', function () {
-			console.log('Group insert');
 			ok(true, 'Group insert');
 		});
 		
 		userGroupView.on('insert', function () {
-			console.log('View from group insert');
 			ok(true, 'View from group insert');
 		});
 		
@@ -153,17 +150,14 @@ $(function () {
 		});
 		
 		userView.on('update', function () {
-			console.log('View update');
 			ok(true, 'View update');
 		});
 		
 		userGroup.on('update', function () {
-			console.log('Group update');
 			ok(true, 'Group update');
 		});
 		
 		userGroupView.on('update', function () {
-			console.log('View from group update');
 			ok(true, 'View from group update');
 		});
 		
@@ -208,17 +202,14 @@ $(function () {
 		});
 		
 		userView.on('remove', function () {
-			console.log('View remove');
 			ok(true, 'View remove');
 		});
 		
 		userGroup.on('remove', function () {
-			console.log('Group remove');
 			ok(true, 'Group remove');
 		});
 		
 		userGroupView.on('remove', function () {
-			console.log('View from group remove');
 			ok(true, 'View from group remove');
 		});
 		
@@ -264,17 +255,14 @@ $(function () {
 		});
 		
 		userView.on('insert', function () {
-			console.log('View insert');
 			ok(true, 'View insert');
 		});
 		
 		userGroup.on('insert', function () {
-			console.log('Group insert');
 			ok(true, 'Group insert');
 		});
 		
 		userGroupView.on('insert', function () {
-			console.log('View from group insert');
 			ok(true, 'View from group insert');
 		});
 		
@@ -311,17 +299,14 @@ $(function () {
 		});
 		
 		userView.on('update', function () {
-			console.log('View update');
 			ok(true, 'View update');
 		});
 		
 		userGroup.on('update', function () {
-			console.log('Group update');
 			ok(true, 'Group update');
 		});
 		
 		userGroupView.on('update', function () {
-			console.log('View from group update');
 			ok(true, 'View from group update');
 		});
 		
@@ -366,17 +351,14 @@ $(function () {
 		});
 		
 		userView.on('remove', function () {
-			console.log('View remove');
 			ok(true, 'View remove');
 		});
 		
 		userGroup.on('remove', function () {
-			console.log('Group remove');
 			ok(true, 'Group remove');
 		});
 		
 		userGroupView.on('remove', function () {
-			console.log('View from group remove');
 			ok(true, 'View from group remove');
 		});
 		

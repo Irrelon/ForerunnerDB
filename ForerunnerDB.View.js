@@ -1,7 +1,9 @@
 (function () {
 	// Import external names locally
 	var Collection = ForerunnerDB.classes.Collection,
-		CollectionGroup = ForerunnerDB.classes.CollectionGroup;
+		CollectionGroup = ForerunnerDB.classes.CollectionGroup,
+		CollectionInit = Collection.prototype.init,
+		DBInit = ForerunnerDB.prototype.init;
 
 	/**
 	 * The view constructor.
@@ -507,6 +509,46 @@
 
 	View.prototype._onRemove = function (successArr, failArr) {
 		this.emit('remove', successArr, failArr);
+	};
+	
+	// Extend collection with view init
+	Collection.prototype.init = function () {
+		this._views = [];
+		CollectionInit.apply(this, arguments);
+	};
+	
+	/**
+	 * Adds a view to the internal view lookup.
+	 * @param {View} view The view to add.
+	 * @returns {Collection}
+	 * @private
+	 */
+	Collection.prototype._addView = function (view) {
+		if (view !== undefined) {
+			this._views[view._name] = view;
+		}
+
+		return this;
+	};
+
+	/**
+	 * Removes a view from the internal view lookup.
+	 * @param {View} view The view to remove.
+	 * @returns {Collection}
+	 * @private
+	 */
+	Collection.prototype._removeView = function (view) {
+		if (view !== undefined) {
+			delete this._views[view._name];
+		}
+
+		return this;
+	};
+	
+	// Extend DB with views init
+	ForerunnerDB.prototype.init = function () {
+		this._views = {};
+		DBInit.apply(this, arguments);
 	};
 
 	/**

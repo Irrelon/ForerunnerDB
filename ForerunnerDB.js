@@ -166,7 +166,6 @@ var ForerunnerDB = (function () {
 		this._primaryKey = '_id';
 		this._name = name;
 		this._data = [];
-		this._views = [];
 		this._groups = [];
 
 		// Set the subset to itself since it is the root collection
@@ -256,34 +255,6 @@ var ForerunnerDB = (function () {
 		}
 
 		return this._primaryKey;
-	};
-
-	/**
-	 * Adds a view to the internal view lookup.
-	 * @param {View} view The view to add.
-	 * @returns {Collection}
-	 * @private
-	 */
-	Collection.prototype._addView = function (view) {
-		if (view !== undefined) {
-			this._views[view._name] = view;
-		}
-
-		return this;
-	};
-
-	/**
-	 * Removes a view from the internal view lookup.
-	 * @param {View} view The view to remove.
-	 * @returns {Collection}
-	 * @private
-	 */
-	Collection.prototype._removeView = function (view) {
-		if (view !== undefined) {
-			delete this._views[view._name];
-		}
-
-		return this;
 	};
 
 	/**
@@ -1502,7 +1473,6 @@ var ForerunnerDB = (function () {
 
 	DB.prototype.init = function () {
 		this._collection = {};
-		this._views = {};
 
 		// Init plugins
 		for (var i in this.Plugin) {

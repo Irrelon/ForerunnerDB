@@ -4,9 +4,16 @@
 * ForerunnerDB: **Production - Stable**
 
 ##### Sub-Module (Optional Plugins) Status
+* ForerunnerDB.CollectionGroup: **Production - Stable**
+* ForerunnerDB.View: **Production - Stable**
+* ForerunnerDB.View.Bind: **Production - Stable**
+
 * ForerunnerDB.Server: *Development - Alpha*
 * ForerunnerDB.Remote: *Development - Alpha*
 * ForerunnerDB.Persist: *Development - Alpha*
+
+##### Unit Tests
+Unit tests are available in the ./unitTests folder, load index.html to run the tests.
 
 ### What Is ForerunnerDB?
 ForerunnerDB (a.k.a. Forerunner or FDB) is a database system that operates as an object store. It is a NoSQL database that is queried in a very similar way to MongoDB. Forerunner's main advantages are:
@@ -24,7 +31,7 @@ Forerunner and Mongo are very similar and Forerunner has been written to work wi
 * Forerunner's collection update method is more like MySQL's in that only the key/value pairs you pass are updated instead of the entire document being overwritten. You can think of ForerunnerDB's update method has having the MongoDB $set wrapped around your entire passed update document.
 * MongoDB is a pure server-side application so doesn't need to deal with DOM events etc, whereas ForerunnerDB can run in both a server and client environment. In a browser, Forerunner has data-binding built in so that when your data changes, DOM updates are processed automatically.
 * Forerunner supports views. Views allow you to create subsets of collections with joins and other options. Those views can then also have data binding enabled on them. If you change the query that a view is built with, your DOM can automatically update as well to show the results. This allows you to visualise query changes on screen instantly without complex code.
-* Forerunner is NOT persistent storage. Unlike MongoDB or MySQL, Forerunner will loose ALL data if your browser is refreshed (when operating on a client). If you are running Forerunner in a server environment you can think of it as an in-memory store that is volitile and requires populating on starup***
+* Forerunner is NOT persistent storage. Unlike MongoDB or MySQL, Forerunner will loose ALL data if your browser is refreshed (when operating on a client). If you are running Forerunner in a server environment you can think of it as an in-memory store that is volitile and requires populating on startup***
 
 *** ForerunnerDB will get data persistence very soon in an upcoming release!
 
@@ -32,6 +39,12 @@ Forerunner and Mongo are very similar and Forerunner has been written to work wi
 Include the ForerunnerDB.js file in your HTML:
 
 	<script src="ForerunnerDB.js" type="text/javascript"></script>
+	
+You can also include optional modules such as collection groups, views and data-binding (in this order):
+
+	<script src="ForerunnerDB.CollectionGroup.js" type="text/javascript"></script>
+	<script src="ForerunnerDB.View.js" type="text/javascript"></script>
+	<script src="ForerunnerDB.View.Bind.js" type="text/javascript"></script>
 
 ## Create a Database
 
