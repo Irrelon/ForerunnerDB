@@ -1,6 +1,8 @@
 var db,
 	user,
 	organisation,
+	userView,
+	organisationView,
 	count,
 	singleUserObject = {
 		_id: '1',
@@ -145,19 +147,37 @@ var db,
 		"type": "gamma"
 	}];
 
-var buildUp = function () {
+var dbUp = function () {
 	db = new ForerunnerDB();
 	user = db.collection('user');
 	organisation = db.collection('organisation');
 };
 
-var pullDown = function () {
+var dataUp = function () {
+	user.setData(usersData);
+	organisation.setData(organisationsData);
+};
+
+var dbDown = function () {
 	organisation = undefined;
 	user = undefined;
 	db = undefined;
 };
 
-var buildData = function () {
-	user.setData(usersData);
-	organisation.setData(organisationsData);
+var viewUp = function () {
+	userView = db.view('userView')
+		.from(db.collection('user'));
+};
+
+var viewDown = function () {
+	db.view('userView').drop();
+	userView = undefined;
+};
+
+var domUp = function () {
+	$('<ul id="testTarget"></ul>').appendTo('body');
+};
+
+var domDown = function () {
+	$('#testTarget').remove();
 };
