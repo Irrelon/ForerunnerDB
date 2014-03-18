@@ -2,11 +2,11 @@
 ##### Project Status
 
 * ForerunnerDB: **Production - Stable**
-
-##### Sub-Module (Optional Plugins) Status
 * ForerunnerDB.CollectionGroup: **Production - Stable**
 * ForerunnerDB.View: **Production - Stable**
 * ForerunnerDB.View.Bind: **Production - Stable**
+
+##### Sub-Module (Optional Plugins) Status
 
 * ForerunnerDB.Server: *Development - Alpha*
 * ForerunnerDB.Remote: *Development - Alpha*
