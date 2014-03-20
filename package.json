@@ -1,0 +1,17 @@
+{
+	"author": "Rob Evans",
+	"name": "ForerunnerDB",
+	"description": "A NoSQL document store database for browsers and Node.js.",
+	"version": "1.0.0",
+	"dependencies": {
+		"forever": "*",
+		"socket.io": "*"
+	},
+	"engines": {
+		"node": "*"
+	},
+	"scripts": {
+		"start": "forever start server/server.js",
+		"stop": "forever stop server/server.js"
+	}
+}

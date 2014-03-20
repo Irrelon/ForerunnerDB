@@ -1,13 +1,44 @@
 <html>
 	<body>
-		<script src="http://localhost:9000/socket.io/socket.io.js"></script>
+		<script src="http://192.168.1.49:9000/socket.io/socket.io.js"></script>
 		<script type="text/javascript" src="../ForerunnerDB.js"></script>
-		<script type="text/javascript" src="../ForerunnerDB.Remote.js"></script>
+		<script type="text/javascript" src="../lib/ForerunnerDB.Remote.js"></script>
 		<script>
 			var db = new ForerunnerDB();
-			db.remote.connect('http://localhost:9000');
-			db.remote.collection('stream').find({name: 'Bob'}, {}, function (err, result) {
-				console.log(err, result);
+
+			db.remote.connect('http://192.168.1.49:9000', {user: 'test', pass: 'test'});
+
+			db.collection('stream').setData([{
+				_id: '1',
+				name: 'Rob'
+			}, {
+				_id: '2',
+				name: 'Jim'
+			}, {
+				_id: '3',
+				name: 'Bob'
+			}], {remote: true}, function (err, result) {
+				console.log('set data', err, result);
+			});
+
+			db.collection('stream').find({name: 'Bob'}, {remote: true}, function (err, result) {
+				console.log('find', err, result);
+			});
+
+			db.collection('stream').insert({_id: "4", name: 'Alan'}, {remote: true}, function (err, result) {
+				console.log('insert', err, result);
+			});
+
+			db.collection('stream').update({name: 'Bob'}, {name: 'Bob-Update'}, {remote: true}, function (err, result) {
+				console.log('update', err, result);
+			});
+
+			db.collection('stream').find({}, {remote: true}, function (err, result) {
+				console.log('find all', err, result);
+			});
+
+			db.collection('stream').remove({}, {remote: true}, function (err, result) {
+				console.log('remove', err, result);
 			});
 		</script>
 	</body>
