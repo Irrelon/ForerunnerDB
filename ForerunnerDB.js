@@ -305,11 +305,13 @@ var ForerunnerDB = (function () {
 	 */
 	Collection.prototype.setData = function (arr) {
 		if (arr) {
+			var oldData = this._data;
+			
 			// Overwrite the data
 			this._data = [];
 			this._data = this._data.concat(arr);
 
-			this.emit('setData', this._data);
+			this.emit('setData', this._data, oldData);
 		}
 
 		return this;

@@ -1,4 +1,30 @@
 $(function () {
+	test("Bind - View.on() :: Remove + Insert via setData from Collection", function() {
+		dbUp();
+		dataUp();
+		viewUp();
+		domUp();
+		
+		userView.bind('#testTarget', {
+			template: function (data, callback) {
+				callback('<li id="' + data._id + '">' + data.name + '</li>');
+			}
+		});
+	
+		user.setData({
+			_id: '2342',
+			name: "hello"
+		});
+		
+		var elem = $('#testTarget').find('#2342');
+		
+		ok(elem.length === 1, "Insert single document");
+	
+		viewDown();
+		domDown();
+		dbDown();
+	});
+	
 	test("Bind - View.on() :: Insert from Collection", function() {
 		dbUp();
 		dataUp();
