@@ -1481,6 +1481,16 @@ var ForerunnerDB = (function () {
 		this.init.apply(this, arguments);
 	};
 
+	DB.prototype._isServer = false;
+
+	DB.prototype.isClient = function () {
+		return !this._isServer;
+	};
+
+	DB.prototype.isServer = function () {
+		return this._isServer;
+	};
+
 	DB.prototype.init = function () {
 		this._collection = {};
 
@@ -1622,4 +1632,7 @@ var ForerunnerDB = (function () {
 	return DB;
 })();
 
-if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') { module.exports = ForerunnerDB; }
+if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') {
+	ForerunnerDB.prototype._isServer = true;
+	module.exports = ForerunnerDB;
+}
