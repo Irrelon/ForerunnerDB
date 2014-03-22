@@ -317,6 +317,8 @@ ForerunnerDB's project road-map:
 * COMPLETED - Views that can join multiple documents together and data-bind - sort of like virtual collections
 * COMPLETED - Primary key violation checking
 * COMPLETED - Unit tests
+* COMPLETED - Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
+* COMPLETED - Query remote database from browser
 * Support more of the MongoDB query operators
 * Data persistence on server-side
 * NPM installation
@@ -327,4 +329,3 @@ ForerunnerDB's project road-map:
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
-* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
