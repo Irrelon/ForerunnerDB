@@ -319,6 +319,7 @@ ForerunnerDB's project road-map:
 * COMPLETED - Unit tests
 * COMPLETED - Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
 * COMPLETED - Query remote database from browser
+* COMPLETED - Data persistence on client-side
 * Support more of the MongoDB query operators
 * Data persistence on server-side
 * NPM installation
