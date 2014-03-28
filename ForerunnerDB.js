@@ -1632,7 +1632,19 @@ var ForerunnerDB = (function () {
 	return DB;
 })();
 
+/**
+ * Node.js module support.
+ */
 if (typeof(module) !== 'undefined' && typeof(module.exports) !== 'undefined') {
 	ForerunnerDB.prototype._isServer = true;
 	module.exports = ForerunnerDB;
+}
+
+/**
+ * AMD module support.
+ */
+if (typeof(define) === 'function' && define.amd) {
+	define([], function() {
+		return ForerunnerDB;
+	});
 }
