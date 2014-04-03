@@ -306,7 +306,7 @@ var ForerunnerDB = (function () {
 	Collection.prototype.setData = function (arr) {
 		if (arr) {
 			var oldData = this._data;
-			
+
 			// Overwrite the data
 			this._data = [];
 			this._data = this._data.concat(arr);
@@ -912,7 +912,7 @@ var ForerunnerDB = (function () {
 													// Remove the result item if no matching join data is found
 													joinRequire = joinMatch[joinMatchIndex];
 													break;
-												
+
 												default:
 													// Check for a double-dollar which is a back-reference to the root collection item
 													if (joinMatchIndex.substr(0, 3) === '$$.') {
@@ -1048,10 +1048,14 @@ var ForerunnerDB = (function () {
 				var valA = pathSolver.value(a),
 					valB = pathSolver.value(b);
 
-				if (valA > valB) {
-					return 1;
-				} else if (valA < valB) {
-					return -1;
+				if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					return valA.localeCompare(valB);
+				} else {
+					if (valA > valB) {
+						return 1;
+					} else if (valA < valB) {
+						return -1;
+					}
 				}
 
 				return 0;
@@ -1062,10 +1066,14 @@ var ForerunnerDB = (function () {
 				var valA = pathSolver.value(a),
 					valB = pathSolver.value(b);
 
-				if (valA > valB) {
-					return -1;
-				} else if (valA < valB) {
-					return 1;
+				if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					return valA.localeCompare(valB) === 1 ? -1 : 1;
+				} else {
+					if (valA > valB) {
+						return -1;
+					} else if (valA < valB) {
+						return 1;
+					}
 				}
 
 				return 0;
