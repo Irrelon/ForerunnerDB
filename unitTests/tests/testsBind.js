@@ -414,4 +414,61 @@ $(function () {
 		viewDown();
 		dbDown();
 	});
+
+	test("Bind - View() :: View sort", function() {
+		dbUp();
+		dataUp();
+		viewUp();
+		domUp();
+
+		userView
+			.queryOptions({
+				sort: {
+					name: 1
+				}
+			})
+			.bind('#testTarget', {
+				sortDomItems: true,
+				template: function (data, callback) {
+					callback('<li class="item" id="' + data._id + '">' + data.name + '</li>');
+				}
+			});
+
+		user.insert({
+			_id: '2342',
+			name: "adam"
+		});
+
+		user.insert({
+			_id: '23432',
+			name: "zelda"
+		});
+
+		user.insert({
+			_id: '2322',
+			name: "beta"
+		});
+
+		userView.refresh(true);
+
+		var viewData = userView.find();
+		//console.log(viewData);
+
+		var elems = $('#testTarget').find('.item');
+
+		ok(elems.length === 6, "Insert documents");
+
+		// Check sort order
+		//console.log($(elems[0]).html(), $(elems[1]).html(), $(elems[2]).html(), $(elems[3]).html(), $(elems[4]).html(), $(elems[5]).html());
+		ok($(elems[0]).html() === 'adam', "Alphabetical 1");
+		ok($(elems[1]).html() === 'beta', "Alphabetical 2");
+		ok($(elems[2]).html() === 'Dean', "Alphabetical 3");
+		ok($(elems[3]).html() === 'Jim', "Alphabetical 4");
+		ok($(elems[4]).html() === 'Kat', "Alphabetical 5");
+		ok($(elems[5]).html() === 'zelda', "Alphabetical 6");
+
+		viewDown();
+		domDown();
+		dbDown();
+	});
 });
