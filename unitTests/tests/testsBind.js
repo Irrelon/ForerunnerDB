@@ -418,11 +418,11 @@
 
 		test("Bind - View() :: View sort", function() {
 			base.dbUp();
-			base.dataUp();
 			base.viewUp();
+			base.dataUp();
 			base.domUp();
 
-			userView._debug = true;
+			//userView._debug = true;
 			userView
 				.queryOptions({
 					sort: {
@@ -430,7 +430,6 @@
 					}
 				}, false)
 				.bind('#testTarget', {
-					sortDomItems: true,
 					template: function (data, callback) {
 						callback('<li class="item" id="' + data._id + '">' + data.name + '</li>');
 					}
@@ -451,12 +450,10 @@
 				name: "beta"
 			});
 
-			userView.refresh(true);
+			//userView.refresh(true);
 
-			var viewData = userView.find();
-			console.log(viewData);
-
-			var elems = $('#testTarget').find('.item');
+			var viewData = userView.find(),
+				elems = $('#testTarget').find('.item');
 
 			ok(elems.length === 6, "Insert documents");
 
@@ -469,7 +466,7 @@
 			ok($(elems[4]).html() === 'Kat', "Alphabetical 5");
 			ok($(elems[5]).html() === 'zelda', "Alphabetical 6");
 
-			userView._debug = false;
+			//userView._debug = false;
 
 			base.viewDown();
 			base.domDown();

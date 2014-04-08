@@ -6,6 +6,10 @@
 			db = new ForerunnerDB();
 			user = db.collection('user');
 			organisation = db.collection('organisation');
+
+			// Don't use deferred emits in testing
+			user._noEmitDefer = true;
+			organisation._noEmitDefer = true;
 		};
 
 		Base.prototype.dataUp = function () {

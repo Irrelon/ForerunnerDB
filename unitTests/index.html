@@ -168,11 +168,57 @@
 <!--<script src="../ForerunnerDB.js"></script>
 <script src="../lib/ForerunnerDB.CollectionGroup.js"></script>
 <script src="../lib/ForerunnerDB.View.js"></script>
-<script src="../lib/ForerunnerDB.View.Bind.js"></script>
+<script src="../lib/ForerunnerDB.View.Bind.js"></script>-->
 
-<script src="base.js"></script>
+<!--<script src="base.js"></script>
 <script src="tests/testsCore.js"></script>
 <script src="tests/testsEvents.js"></script>
 <script src="tests/testsBind.js"></script>-->
+
+<!--<ul id="pagingList" style="position: absolute; left: 0; top: 0; bottom: 0; width: 200px; background: #fff;">
+
+</ul>-->
+<script>
+	/*require([
+		'../ForerunnerDB',
+		'../lib/ForerunnerDB.View',
+		'../lib/ForerunnerDB.View.Bind'
+	], function (ForerunnerDB) {
+		var db = new ForerunnerDB(),
+			coll = db.collection('test'),
+			view = db.view('test'),
+			i;
+
+		window.view = view;
+		window.coll = coll;
+
+		view.from(coll);
+		view.queryOptions({
+			sort: {
+				createdTs: -1
+			}
+		});
+
+		view.bind('#pagingList', {
+			template: function (data, callback) {
+				callback('<li id="' + data._id + '">' + data.name + '</li>');
+			},
+			refresh: function () {
+				console.log('HTML View Bind: refreshed');
+			}
+		});
+
+		i = 200;
+		while (i--) {
+			coll.insert({
+				_id: '1' + i,
+				name: 'Test_1' + i,
+				createdTs: i
+			});
+		}
+
+		console.log("coll.insert({_id: '2000', name: 'Test_2000', createdTs: 2000});");
+	});*/
+</script>
 </body>
 </html>

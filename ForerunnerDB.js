@@ -423,6 +423,7 @@
 
 				if (updated.length) {
 					this._onUpdate(updated);
+					this.deferEmit('change');
 				}
 			}
 
@@ -640,6 +641,7 @@
 				}
 
 				this._onRemove(dataSet);
+				this.deferEmit('change');
 			}
 
 			return dataSet;
@@ -654,6 +656,34 @@
 			var searchObj = {};
 			searchObj[this._primaryKey] = id;
 			return this.remove(searchObj);
+		};
+
+		/**
+		 * Queues an event to be fired. This has automatic de-bouncing so that any
+		 * events of the same type that occur within 100 milliseconds of a previous
+		 * one will all be wrapped into a single emit rather than emitting tons of
+		 * events for lots of chained inserts etc.
+		 * @private
+		 */
+		Collection.prototype.deferEmit = function () {
+			var type = arguments[0];
+
+			if (!this._noEmitDefer && (!this._db || (this._db && !this._db._noEmitDefer))) {
+				var self = this;
+
+				// Check for an existing timeout
+				if (this._changeTimeout) {
+					clearTimeout(this._changeTimeout);
+				}
+
+				// Set a timeout
+				this._changeTimeout = setTimeout(function () {
+					if (self._debug || (self._db && self._db._debug)) { console.log('Collection: emitting ' + type); }
+					self.emit.apply(self, arguments);
+				}, 100);
+			} else {
+				this.emit.apply(this, arguments);
+			}
 		};
 
 		/**
@@ -696,6 +726,10 @@
 			}
 
 			this._onInsert(inserted, failed);
+
+			if (inserted && inserted.length) {
+				this.deferEmit('change');
+			}
 
 			return {
 				inserted: inserted,
@@ -1654,7 +1688,6 @@
 		 * AMD module support.
 		 */
 		define([], function() {
-			console.log('Exec ForerunnerDB');
 			window.ForerunnerDB = init();
 			return window.ForerunnerDB;
 		});

@@ -55,10 +55,12 @@
 			});
 
 			user.on('update', function (updated, failed) {
+				console.log('Updated');
 				ok(updated.length === 1, "Update single document");
 				start();
 			});
 
+			console.log('Calling update');
 			user.update({
 				_id: '2342'
 			}, {
@@ -99,6 +101,7 @@
 			expect(1);
 
 			db.view('userView').on('insert', function (successArr, failed) {
+				console.log('insert');
 				ok(successArr.length === 1, "Insert single document");
 				start();
 			});

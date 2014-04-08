@@ -6,21 +6,33 @@
 			base.viewUp();
 			base.domUp();
 
+			var elem,
+				i;
+
+			userView._debug = false;
 			userView.bind('#testTarget', {
+				pageLimit: 20,
 				template: function (data, callback) {
 					callback('<li id="' + data._id + '">' + data.name + '</li>');
 				}
 			});
 
-			user.setData({
-				_id: '2342',
-				name: "hello"
-			});
+			// Generate some data
+			user.truncate();
+			i = 200;
+			while (i--) {
+				user.insert({
+					_id: '1' + i,
+					name: 'Test_1' + i
+				});
+			}
 
-			var elem = $('#testTarget').find('#2342');
+			userView.refresh(true);
 
-			ok(elem.length === 1, "Insert single document");
-
+			elem = $('#testTarget').find('#2342');
+			console.log(elem.length);
+			ok(elem.length === 200, "View binding");
+			userView._debug = false;
 			base.viewDown();
 			base.domDown();
 			base.dbDown();
