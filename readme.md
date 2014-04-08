@@ -74,14 +74,6 @@ array of objects to the setData() method:
 
 Setting data on a collection will empty the existing data from the collection if any exists.
 
-## Primary Keys
-Collections have a primary key of "_id" by default. If you want to use a different primary key you can specify it on the
-collection. Below is an example of how to set the primary key to "contactId":
-
-    itemCollection.primaryKey('contactId');
-
-> Please note that going forward the primary keys in all example data in this document uses "_id" and not "contactId".
-
 ## Inserting Documents
 You can either insert a single document object or pass an array of documents. Insert a single document:
 
