@@ -325,6 +325,8 @@
 		Collection.prototype.truncate = function () {
 			this.emit('truncate', this._data);
 			this._data.length = 0;
+
+			this.deferEmit('change');
 			return this;
 		};
 
@@ -666,10 +668,11 @@
 		 * @private
 		 */
 		Collection.prototype.deferEmit = function () {
-			var type = arguments[0];
+			var self = this,
+				args;
 
 			if (!this._noEmitDefer && (!this._db || (this._db && !this._db._noEmitDefer))) {
-				var self = this;
+				args = arguments;
 
 				// Check for an existing timeout
 				if (this._changeTimeout) {
@@ -678,8 +681,8 @@
 
 				// Set a timeout
 				this._changeTimeout = setTimeout(function () {
-					if (self._debug || (self._db && self._db._debug)) { console.log('Collection: emitting ' + type); }
-					self.emit.apply(self, arguments);
+					if (self._debug || (self._db && self._db._debug)) { console.log('Collection: emitting ' + args[0]); }
+					self.emit.apply(self, args);
 				}, 100);
 			} else {
 				this.emit.apply(this, arguments);
@@ -726,10 +729,7 @@
 			}
 
 			this._onInsert(inserted, failed);
-
-			if (inserted && inserted.length) {
-				this.deferEmit('change');
-			}
+			this.deferEmit('change');
 
 			return {
 				inserted: inserted,
@@ -1237,9 +1237,6 @@
 		 * @private
 		 */
 		Collection.prototype._match = function (source, test, opToApply) {
-			if (this._debug) {
-				debugger;
-			}
 			var operation,
 				applyOp,
 				recurseVal,

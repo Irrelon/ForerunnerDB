@@ -163,27 +163,27 @@
 <div id="qunit-fixture"></div>
 <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 <script src="./lib/qunit.js"></script>
-<script src="./lib/require.js" data-main="index.js"></script>
+<!--<script src="./lib/require.js" data-main="index.js"></script>-->
 
-<!--<script src="../ForerunnerDB.js"></script>
+<script src="../ForerunnerDB.js"></script>
 <script src="../lib/ForerunnerDB.CollectionGroup.js"></script>
 <script src="../lib/ForerunnerDB.View.js"></script>
-<script src="../lib/ForerunnerDB.View.Bind.js"></script>-->
+<script src="../lib/ForerunnerDB.View.Bind.js"></script>
 
 <!--<script src="base.js"></script>
 <script src="tests/testsCore.js"></script>
 <script src="tests/testsEvents.js"></script>
 <script src="tests/testsBind.js"></script>-->
 
-<!--<ul id="pagingList" style="position: absolute; left: 0; top: 0; bottom: 0; width: 200px; background: #fff;">
+<ul id="pagingList" style="position: absolute; left: 0; top: 0; bottom: 0; width: 200px; background: #fff;">
 
-</ul>-->
+</ul>
 <script>
 	/*require([
 		'../ForerunnerDB',
 		'../lib/ForerunnerDB.View',
 		'../lib/ForerunnerDB.View.Bind'
-	], function (ForerunnerDB) {
+	], function (ForerunnerDB) {*/
 		var db = new ForerunnerDB(),
 			coll = db.collection('test'),
 			view = db.view('test'),
@@ -208,6 +208,9 @@
 			}
 		});
 
+	coll._debug = true;
+	view._debug = true;
+
 		i = 200;
 		while (i--) {
 			coll.insert({
@@ -218,7 +221,7 @@
 		}
 
 		console.log("coll.insert({_id: '2000', name: 'Test_2000', createdTs: 2000});");
-	});*/
+	//});
 </script>
 </body>
 </html>

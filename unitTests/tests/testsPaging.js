@@ -27,7 +27,7 @@
 				});
 			}
 
-			userView.refresh(true);
+			//userView.refresh(true);
 
 			elem = $('#testTarget').find('#2342');
 			console.log(elem.length);
