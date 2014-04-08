@@ -7,9 +7,9 @@
 * ForerunnerDB.View.Bind: **Production - Stable**
 
 ##### Sub-Module (Optional Plugins) Status
+* ForerunnerDB.Persist: *Development - Beta*
 * ForerunnerDB.Server: *Development - Alpha*
 * ForerunnerDB.Remote: *Development - Alpha*
-* ForerunnerDB.Persist: *Development - Alpha*
 
 ##### Unit Tests
 Unit tests are available in the ./unitTests folder, load index.html to run the tests.
@@ -73,6 +73,14 @@ array of objects to the setData() method:
 	}]);
 
 Setting data on a collection will empty the existing data from the collection if any exists.
+
+## Primary Keys
+Collections have a primary key of "_id" by default. If you want to use a different primary key you can specify it on the
+collection. Below is an example of how to set the primary key to "contactId":
+
+    itemCollection.primaryKey('contactId');
+
+> Please note that going forward the primary keys in all example data in this document uses "_id" and not "contactId".
 
 ## Inserting Documents
 You can either insert a single document object or pass an array of documents. Insert a single document:
@@ -241,7 +249,7 @@ the collection:
 			// to the database. You can use your favourite client-side templating
 			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
 			// We have used a simple string concatenation to visibly show the process.
-			callback('<li>' + data.price + '</li>');
+			callback('<li id="' + data._id + '">' + data.price + '</li>');
 		}
 	});
 
@@ -264,7 +272,7 @@ Note that the selector string that a bind uses can match multiple elements which
 			// to the database. You can use your favourite client-side templating
 			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
 			// We have used a simple string concatenation to visibly show the process.
-			callback('<li>' + data.price + '</li>');
+			callback('<li id="' + data._id + '">' + data.price + '</li>');
 		}
 	});
 
@@ -281,7 +289,7 @@ the DOM?
 			// to the database. You can use your favourite client-side templating
 			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
 			// We have used a simple string concatenation to visibly show the process.
-			callback('<li>' + data.price + '</li>');
+			callback('<li id="' + data._id + '">' + data.price + '</li>');
 		},
 		beforeRemove: function (elem, data, allData, callback) {
 			// Use jQuery to animate the element's opacity before removing it from the DOM
