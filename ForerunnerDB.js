@@ -169,6 +169,10 @@
 			this._data = [];
 			this._groups = [];
 
+			this._insertDeferThreshold = 100;
+			this._insertDeferTime = 1;
+			this._insertQueue = [];
+
 			// Set the subset to itself since it is the root collection
 			this._subsetOf(this);
 		};
@@ -689,29 +693,69 @@
 			}
 		};
 
+		Collection.prototype.processInsertQueue = function (callback) {
+			if (this._insertQueue.length) {
+				var self = this,
+					dataArr;
+
+				// Process inserts up to the threshold
+				if (this._insertQueue.length) {
+					if (this._insertQueue.length > this._insertDeferThreshold) {
+						// Grab items up to the threshold value
+						dataArr = this._insertQueue.splice(0, this._insertDeferThreshold);
+					} else {
+						// Grab all the remaining items
+						dataArr = this._insertQueue.splice(0, this._insertQueue.length);
+					}
+
+					this.insert(dataArr);
+				}
+
+				// Queue another process
+				setTimeout(function () {
+					self.processInsertQueue(callback);
+				}, this._insertDeferTime);
+			} else {
+				if (callback) { callback(); }
+			}
+		};
+
 		/**
 		 * Inserts a document or array of documents into the collection.
 		 * @param {Object||Array} data Either a document object or array of document
 		 * objects to insert into the collection.
 		 */
-		Collection.prototype.insert = function (data) {
+		Collection.prototype.insert = function (data, callback) {
 			var inserted = [],
 				failed = [],
 				insertResult,
 				i;
 
 			if (data instanceof Array) {
-				// Loop the array and add items
-				for (i = 0; i < data.length; i++) {
-					insertResult = this._insert(data[i]);
+				// Check if there are more insert items than the insert defer
+				// threshold, if so, break up inserts so we don't tie up the
+				// ui or thread
+				if (data.length > this._insertDeferThreshold) {
+					// Break up insert into blocks
+					this._insertQueue = this._insertQueue.concat(data);
 
-					if (insertResult === true) {
-						inserted.push(data[i]);
-					} else {
-						failed.push({
-							doc: data[i],
-							reason: insertResult
-						});
+					// Fire off the insert queue handler
+					this.processInsertQueue(callback);
+
+					return;
+				} else {
+					// Loop the array and add items
+					for (i = 0; i < data.length; i++) {
+						insertResult = this._insert(data[i]);
+
+						if (insertResult === true) {
+							inserted.push(data[i]);
+						} else {
+							failed.push({
+								doc: data[i],
+								reason: insertResult
+							});
+						}
 					}
 				}
 			} else {
