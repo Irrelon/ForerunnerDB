@@ -898,7 +898,7 @@
 					resultArr = this.sort(options.sort, resultArr);
 				}
 
-				if (options.limit) {
+				if (options.limit && resultArr && resultArr.length > options.limit) {
 					resultArr.length = options.limit;
 				}
 
