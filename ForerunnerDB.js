@@ -169,9 +169,26 @@
 			this._data = [];
 			this._groups = [];
 
-			this._insertDeferThreshold = 100;
-			this._insertDeferTime = 1;
-			this._insertQueue = [];
+			this._deferQueue = {
+				insert: [],
+				update: [],
+				remove: [],
+				upsert: []
+			};
+
+			this._deferThreshold = {
+				insert: 100,
+				update: 100,
+				remove: 100,
+				upsert: 100
+			};
+
+			this._deferTime = {
+				insert: 1,
+				update: 1,
+				remove: 1,
+				upsert: 1
+			};
 
 			// Set the subset to itself since it is the root collection
 			this._subsetOf(this);
@@ -356,21 +373,35 @@
 		 * "update" depending on the type of operation that was performed and "result"
 		 * contains the return data from the operation used.
 		 */
-		Collection.prototype.upsert = function (obj) {
+		Collection.prototype.upsert = function (obj, callback) {
+			var queue = this._deferQueue.upsert,
+				deferThreshold = this._deferThreshold.upsert,
+				deferTime = this._deferTime.upsert;
+
 			var returnData = {},
 				query,
 				i;
 
 			// Determine if the object passed is an array or not
 			if (obj instanceof Array) {
-				// Loop the array and upsert each item
-				returnData = [];
+				if (obj.length > deferThreshold) {
+					// Break up upsert into blocks
+					this._deferQueue.upsert = queue.concat(obj);
 
-				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+					// Fire off the insert queue handler
+					this.processQueue('upsert', callback);
+
+					return;
+				} else {
+					// Loop the array and upsert each item
+					returnData = [];
+
+					for (i = 0; i < obj.length; i++) {
+						returnData.push(this.upsert(obj[i]));
+					}
+
+					return returnData;
 				}
-
-				return returnData;
 			}
 
 			// Determine if the operation is an insert or an update
@@ -693,28 +724,32 @@
 			}
 		};
 
-		Collection.prototype.processInsertQueue = function (callback) {
-			if (this._insertQueue.length) {
+		Collection.prototype.processQueue = function (type, callback) {
+			var queue = this._deferQueue[type],
+				deferThreshold = this._deferThreshold[type],
+				deferTime = this._deferTime[type];
+
+			if (queue.length) {
 				var self = this,
 					dataArr;
 
-				// Process inserts up to the threshold
-				if (this._insertQueue.length) {
-					if (this._insertQueue.length > this._insertDeferThreshold) {
+				// Process items up to the threshold
+				if (queue.length) {
+					if (queue.length > deferThreshold) {
 						// Grab items up to the threshold value
-						dataArr = this._insertQueue.splice(0, this._insertDeferThreshold);
+						dataArr = queue.splice(0, deferThreshold);
 					} else {
 						// Grab all the remaining items
-						dataArr = this._insertQueue.splice(0, this._insertQueue.length);
+						dataArr = queue.splice(0, queue.length);
 					}
 
-					this.insert(dataArr);
+					this[type](dataArr);
 				}
 
 				// Queue another process
 				setTimeout(function () {
-					self.processInsertQueue(callback);
-				}, this._insertDeferTime);
+					self.processQueue(type, callback);
+				}, deferTime);
 			} else {
 				if (callback) { callback(); }
 			}
@@ -723,10 +758,16 @@
 		/**
 		 * Inserts a document or array of documents into the collection.
 		 * @param {Object||Array} data Either a document object or array of document
+		 * @param {Function=} callback Optional callback called once action is complete.
 		 * objects to insert into the collection.
 		 */
 		Collection.prototype.insert = function (data, callback) {
-			var inserted = [],
+			var queue = this._deferQueue.insert,
+				deferThreshold = this._deferThreshold.insert,
+				deferTime = this._deferTime.insert;
+
+			var self = this,
+				inserted = [],
 				failed = [],
 				insertResult,
 				i;
@@ -735,12 +776,12 @@
 				// Check if there are more insert items than the insert defer
 				// threshold, if so, break up inserts so we don't tie up the
 				// ui or thread
-				if (data.length > this._insertDeferThreshold) {
+				if (data.length > deferThreshold) {
 					// Break up insert into blocks
-					this._insertQueue = this._insertQueue.concat(data);
+					this._deferQueue.insert = queue.concat(data);
 
 					// Fire off the insert queue handler
-					this.processInsertQueue(callback);
+					this.processQueue('insert', callback);
 
 					return;
 				} else {
