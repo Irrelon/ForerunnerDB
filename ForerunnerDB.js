@@ -1168,7 +1168,7 @@
 					var valA = pathSolver.value(a),
 						valB = pathSolver.value(b);
 
-					if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB);
 					} else {
 						if (valA > valB) {
