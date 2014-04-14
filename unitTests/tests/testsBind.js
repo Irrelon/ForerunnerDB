@@ -458,7 +458,7 @@
 			ok(elems.length === 6, "Insert documents");
 
 			// Check sort order
-			console.log($(elems[0]).html(), $(elems[1]).html(), $(elems[2]).html(), $(elems[3]).html(), $(elems[4]).html(), $(elems[5]).html());
+			//console.log($(elems[0]).html(), $(elems[1]).html(), $(elems[2]).html(), $(elems[3]).html(), $(elems[4]).html(), $(elems[5]).html());
 			ok($(elems[0]).html() === 'adam', "Alphabetical 1");
 			ok($(elems[1]).html() === 'beta', "Alphabetical 2");
 			ok($(elems[2]).html() === 'Dean', "Alphabetical 3");
