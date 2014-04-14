@@ -400,6 +400,8 @@
 						returnData.push(this.upsert(obj[i]));
 					}
 
+					if (callback) { callback(); }
+
 					return returnData;
 				}
 			}
