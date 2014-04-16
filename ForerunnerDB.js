@@ -331,7 +331,10 @@
 
 				// Overwrite the data
 				this._data = [];
-				this._data = this._data.concat(arr);
+
+				if (arr.length) {
+					this._data = this._data.concat(arr);
+				}
 
 				this.emit('setData', this._data, oldData);
 			}
@@ -374,67 +377,69 @@
 		 * contains the return data from the operation used.
 		 */
 		Collection.prototype.upsert = function (obj, callback) {
-			var queue = this._deferQueue.upsert,
-				deferThreshold = this._deferThreshold.upsert,
-				deferTime = this._deferTime.upsert;
+			if (obj) {
+				var queue = this._deferQueue.upsert,
+					deferThreshold = this._deferThreshold.upsert,
+					deferTime = this._deferTime.upsert;
 
-			var returnData = {},
-				query,
-				i;
+				var returnData = {},
+					query,
+					i;
 
-			// Determine if the object passed is an array or not
-			if (obj instanceof Array) {
-				if (obj.length > deferThreshold) {
-					// Break up upsert into blocks
-					this._deferQueue.upsert = queue.concat(obj);
+				// Determine if the object passed is an array or not
+				if (obj instanceof Array) {
+					if (obj.length > deferThreshold) {
+						// Break up upsert into blocks
+						this._deferQueue.upsert = queue.concat(obj);
 
-					// Fire off the insert queue handler
-					this.processQueue('upsert', callback);
+						// Fire off the insert queue handler
+						this.processQueue('upsert', callback);
 
-					return;
-				} else {
-					// Loop the array and upsert each item
-					returnData = [];
+						return;
+					} else {
+						// Loop the array and upsert each item
+						returnData = [];
 
-					for (i = 0; i < obj.length; i++) {
-						returnData.push(this.upsert(obj[i]));
+						for (i = 0; i < obj.length; i++) {
+							returnData.push(this.upsert(obj[i]));
+						}
+
+						if (callback) { callback(); }
+
+						return returnData;
 					}
-
-					if (callback) { callback(); }
-
-					return returnData;
 				}
-			}
 
-			// Determine if the operation is an insert or an update
-			if (obj[this._primaryKey]) {
-				// Check if an object with this primary key already exists
-				query = {};
-				query[this._primaryKey] = obj[this._primaryKey];
+				// Determine if the operation is an insert or an update
+				if (obj[this._primaryKey]) {
+					// Check if an object with this primary key already exists
+					query = {};
+					query[this._primaryKey] = obj[this._primaryKey];
 
-				if (this.count(query)) {
-					// The document already exists with this id, this operation is an update
-					returnData.op = 'update';
+					if (this.count(query)) {
+						// The document already exists with this id, this operation is an update
+						returnData.op = 'update';
+					} else {
+						// No document with this id exists, this operation is an insert
+						returnData.op = 'insert';
+					}
 				} else {
-					// No document with this id exists, this operation is an insert
+					// The document passed does not contain an id, this operation is an insert
 					returnData.op = 'insert';
 				}
-			} else {
-				// The document passed does not contain an id, this operation is an insert
-				returnData.op = 'insert';
+
+				switch (returnData.op) {
+					case 'insert':
+						returnData.result = this.insert(obj);
+						break;
+
+					case 'update':
+						returnData.result = this.update(query, obj);
+						break;
+				}
+
+				return returnData;
 			}
-
-			switch (returnData.op) {
-				case 'insert':
-					returnData.result = this.insert(obj);
-					break;
-
-				case 'update':
-					returnData.result = this.update(query, obj);
-					break;
-			}
-
-			return returnData;
 		};
 
 		/**
