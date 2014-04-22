@@ -332,6 +332,20 @@
 			base.dbDown();
 		});
 
+		test("Core - Collection.find() :: Value in array of strings", function() {
+			base.dbUp();
+			base.dataUp();
+
+			//db._debug = true;
+			var record = user.find({
+				stringArr: 'moo'
+			});
+			db._debug = false;
+			ok(record.length === 1, "Failed in finding document to by string array value!");
+
+			base.dbDown();
+		});
+
 		test("Core - Collection.find() :: Options :: Single join", function() {
 			base.dbUp();
 			base.dataUp();
