@@ -327,6 +327,10 @@
 		 */
 		Collection.prototype.setData = function (arr) {
 			if (arr) {
+				if (!(arr instanceof Array)) {
+					arr = [arr];
+				}
+
 				var oldData = this._data;
 
 				// Overwrite the data
