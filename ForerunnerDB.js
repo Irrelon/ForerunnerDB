@@ -1555,6 +1555,29 @@
 									if (opToApply === 'or') {
 										return true;
 									}
+								} else if (source && source[i] && source[i] instanceof Array && test[i] && typeof(test[i]) !== "object") {
+									// We are looking for a value inside an array
+
+									// The source data is an array, so check each item until a
+									// match is found
+									recurseVal = false;
+									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
 								} else {
 									matchedAll = false;
 								}
