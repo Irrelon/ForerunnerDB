@@ -1812,6 +1812,23 @@
 			return arr;
 		};
 
+		var Overload = function (arr) {
+			if (arr) {
+				var arrIndex,
+					arrCount = arr.length;
+
+				return function () {
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						if (arr[arrIndex].length === arguments.length) {
+							return arr[arrIndex].apply(this, arguments);
+						}
+					}
+				}
+			} else {
+				return function () {};
+			}
+		};
+
 		/**
 		 * Accessor to internal class constructors.
 		 * @returns {Object}
@@ -1819,7 +1836,8 @@
 		DB.classes = {
 			Path: Path,
 			Collection: Collection,
-			ObjectId: ObjectId
+			ObjectId: ObjectId,
+			Overload: Overload
 		};
 
 		DB.prototype.Plugin = {};

@@ -422,6 +422,20 @@
 			base.dataUp();
 			base.domUp();
 
+			var arr = [],
+				elem,
+				i = 2000;
+
+			// Generate some data
+			user.truncate();
+
+			while (i--) {
+				user.insert({
+					_id: '1' + i,
+					name: Math.floor((Math.random() * 4000))
+				});
+			}
+
 			//userView._debug = true;
 			userView
 				.queryOptions({

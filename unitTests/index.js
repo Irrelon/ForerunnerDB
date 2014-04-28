@@ -14,11 +14,11 @@ require([
 			require([
 				'./tests/testsBind'
 			], function (testsBind) {
-				require([
+				/*require([
 					'./tests/testsPaging'
 				], function (testsPaging) {
 
-				});
+				});*/
 			});
 		});
 	});
