@@ -875,6 +875,42 @@
 			return Boolean(item);
 		};
 
+		Collection.prototype.ensureIndex = function (obj, options) {
+			this._index = this._index || {};
+			options = options || {};
+
+			if (!options.name) {
+				options.name = JSON.stringify(obj);
+			}
+
+			// Check the index does not already exist
+			if (this._index[options.name]) {
+				// Index already exists
+				return {
+					err: 'Index already exists'
+				};
+			}
+
+			// Add the index
+			this._index[options.name] = obj;
+
+			// Create the index
+			this._reIndex(options.name);
+		};
+
+		Collection.prototype._reIndex = function (indexName) {
+			// Grab the index details
+			var index = this._index[indexName];
+
+			if (!index) {
+				return {
+					err: 'Index not found'
+				};
+			}
+
+
+		};
+
 		/**
 		 * Uses the passed query to generate a new collection with results
 		 * matching the query parameters.
