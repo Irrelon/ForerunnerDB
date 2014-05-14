@@ -424,17 +424,17 @@
 
 			var arr = [],
 				elem,
-				i = 2000;
+				i = 400;
 
 			// Generate some data
-			user.truncate();
+			//user.truncate();
 
-			while (i--) {
+			/*while (i--) {
 				user.insert({
 					_id: '1' + i,
 					name: Math.floor((Math.random() * 4000))
 				});
-			}
+			}*/
 
 			//userView._debug = true;
 			userView
