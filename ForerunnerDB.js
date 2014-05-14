@@ -666,7 +666,7 @@
 					}
 				}
 			}
-
+			console.log('Updated path: ' + path);
 			return updated;
 		};
 
@@ -1575,7 +1575,7 @@
 									}
 								} else {
 									// First check if the test match is an $exists
-									if (test[i]['$exists'] !== undefined) {
+									if (test[i] && test[i]['$exists'] !== undefined) {
 										// Push the item through another match recurse
 										recurseVal = this._match(undefined, test[i], applyOp);
 
