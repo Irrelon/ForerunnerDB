@@ -3,7 +3,7 @@
 		var Base = function () {};
 
 		Base.prototype.dbUp = function () {
-			window.db = db = new ForerunnerDB();
+			db = new ForerunnerDB();
 			user = db.collection('user');
 			organisation = db.collection('organisation');
 
@@ -20,7 +20,7 @@
 		Base.prototype.dbDown = function () {
 			organisation = undefined;
 			user = undefined;
-			db = undefined;
+			//db = undefined;
 		};
 
 		Base.prototype.viewUp = function () {

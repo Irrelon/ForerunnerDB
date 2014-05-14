@@ -270,7 +270,7 @@
 
 		Collection.prototype.off = new Overload([
 			function (event) {
-				if (event in this._listeners) {
+				if (this._listeners && this._listeners[event] && event in this._listeners) {
 					delete this._listeners[event];
 				}
 
@@ -282,7 +282,9 @@
 					index;
 
 				if (typeof(listener) === 'string') {
-					delete this._listeners[event][listener];
+					if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+						delete this._listeners[event][listener];
+					}
 				} else {
 					if (event in this._listeners) {
 						arr = this._listeners[event]['*'];
@@ -298,7 +300,7 @@
 			},
 
 			function (event, id, listener) {
-				if (event in this._listeners) {
+				if (this._listeners && event in this._listeners) {
 					var arr = this._listeners[event][id],
 						index = arr.indexOf(listener);
 
@@ -616,7 +618,7 @@
 		 * @param {Object} update The object with key/value pairs to update the document with.
 		 * @param query
 		 * @param path
-		 * @returns {Boolean} True if the document was updated with new / changed data or
+		 * @returns {Object | Boolean} True if the document was updated with new / changed data or
 		 * false if it was not updated because the data was the same.
 		 * @private
 		 */
@@ -634,7 +636,8 @@
 				pathInstance,
 				sourceIsArray,
 				updateIsArray,
-				i, k;
+				i, k,
+				diff = {};
 
 			for (i in update) {
 				if (update.hasOwnProperty(i)) {
@@ -653,6 +656,7 @@
 									if (update[i].hasOwnProperty(k)) {
 										if (typeof doc[k] === 'number') {
 											doc[k] += update[i][k];
+											diff[k] = doc[k];
 											updated = true;
 										} else {
 											throw("Cannot increment field that is not a number! (" + k + ")!");
@@ -669,6 +673,8 @@
 									if (update[i].hasOwnProperty(k)) {
 										if (doc[k] instanceof Array) {
 											doc[k].push(update[i][k]);
+											diff[k] = diff[k] || [];
+											diff[k].push(update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot push to a key that is not an array! (" + k + ")!");
@@ -733,6 +739,7 @@
 							for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 								recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, path + '.' + i);
 								if (recurseUpdated) {
+									diff[i] = recurseUpdated;
 									updated = true;
 								}
 							}
@@ -756,6 +763,7 @@
 										for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 											recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, path + '.' + i);
 											if (recurseUpdated) {
+												diff[i] = recurseUpdated;
 												updated = true;
 											}
 										}
@@ -763,6 +771,7 @@
 										// Either both source and update are arrays or the update is
 										// an array and the source is not, so set source to update
 										doc[i] = update[i];
+										diff[i] = update[i];
 										updated = true;
 									}
 								} else {
@@ -770,24 +779,27 @@
 									// update further
 									recurseUpdated = this._updateObject(doc[i], update[i], query, path + '.' + i);
 									if (recurseUpdated) {
+										diff[i] = recurseUpdated;
 										updated = true;
 									}
 								}
 							} else {
 								doc[i] = update[i];
+								diff[i] = update[i];
 								updated = true;
 							}
 						} else {
 							if (doc[i] !== update[i]) {
 								doc[i] = update[i];
+								diff[i] = update[i];
 								updated = true;
 							}
 						}
 					}
 				}
 			}
-			console.log('Updated path: ' + path);
-			return updated;
+
+			return updated ? diff : false;
 		};
 
 		/**
