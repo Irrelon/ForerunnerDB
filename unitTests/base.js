@@ -3,7 +3,7 @@
 		var Base = function () {};
 
 		Base.prototype.dbUp = function () {
-			db = new ForerunnerDB();
+			window.db = db = new ForerunnerDB();
 			user = db.collection('user');
 			organisation = db.collection('organisation');
 

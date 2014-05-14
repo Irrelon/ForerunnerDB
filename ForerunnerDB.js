@@ -41,6 +41,23 @@
 			return selector.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
 		};
 
+		var Overload = function (arr) {
+			if (arr) {
+				var arrIndex,
+					arrCount = arr.length;
+
+				return function () {
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						if (arr[arrIndex].length === arguments.length) {
+							return arr[arrIndex].apply(this, arguments);
+						}
+					}
+				}
+			} else {
+				return function () {};
+			}
+		};
+
 		/**
 		 * Path object used to resolve object paths and retrieve data from
 		 * objects by using paths.
@@ -194,7 +211,7 @@
 			this._subsetOf(this);
 		};
 
-		Collection.prototype.on = function(event, listener) {
+		/*Collection.prototype.on = function(event, listener) {
 			this._listeners = this._listeners || {};
 			this._listeners[event] = this._listeners[event] || [];
 			this._listeners[event].push(listener);
@@ -225,6 +242,109 @@
 
 				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+				}
+			}
+
+			return this;
+		};*/
+
+		Collection.prototype.on = new Overload([
+			function(event, listener) {
+				this._listeners = this._listeners || {};
+				this._listeners[event] = this._listeners[event] || {};
+				this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+				this._listeners[event]['*'].push(listener);
+
+				return this;
+			},
+
+			function(event, id, listener) {
+				this._listeners = this._listeners || {};
+				this._listeners[event] = this._listeners[event] || {};
+				this._listeners[event][id] = this._listeners[event][id] || [];
+				this._listeners[event][id].push(listener);
+
+				return this;
+			}
+		]);
+
+		Collection.prototype.off = new Overload([
+			function (event) {
+				if (event in this._listeners) {
+					delete this._listeners[event];
+				}
+
+				return this;
+			},
+
+			function(event, listener) {
+				var arr,
+					index;
+
+				if (typeof(listener) === 'string') {
+					delete this._listeners[event][listener];
+				} else {
+					if (event in this._listeners) {
+						arr = this._listeners[event]['*'];
+						index = arr.indexOf(listener);
+
+						if (index > -1) {
+							arr.splice(index, 1);
+						}
+					}
+				}
+
+				return this;
+			},
+
+			function (event, id, listener) {
+				if (event in this._listeners) {
+					var arr = this._listeners[event][id],
+						index = arr.indexOf(listener);
+
+					if (index > -1) {
+						arr.splice(index, 1);
+					}
+				}
+			}
+		]);
+
+		Collection.prototype.emit = function(event, data) {
+			this._listeners = this._listeners || {};
+
+			if (event in this._listeners) {
+				// Handle global emit
+				if (this._listeners[event]['*']) {
+					var arr = this._listeners[event]['*'],
+						arrCount = arr.length,
+						arrIndex;
+
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+					}
+				}
+
+				// Handle individual emit
+				if (data instanceof Array) {
+					// Check if the array is an array of objects in the collection
+					if (data[0] && data[0][this._primaryKey]) {
+						// Loop the array and check for listeners against the primary key
+						var listenerIdArr = this._listeners[event],
+							listenerIdCount,
+							listenerIdIndex,
+							arrCount = data.length,
+							arrIndex;
+
+						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+							if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+								// Emit for this id
+								listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+								for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+									listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+								}
+							}
+						}
+					}
 				}
 			}
 
@@ -1826,23 +1946,6 @@
 			}
 
 			return id;
-		};
-
-		var Overload = function (arr) {
-			if (arr) {
-				var arrIndex,
-					arrCount = arr.length;
-
-				return function () {
-					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-						if (arr[arrIndex].length === arguments.length) {
-							return arr[arrIndex].apply(this, arguments);
-						}
-					}
-				}
-			} else {
-				return function () {};
-			}
 		};
 
 		/**
