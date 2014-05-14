@@ -196,48 +196,48 @@
 </ul>-->
 <script>
 	/*require([
-	 '../ForerunnerDB',
-	 '../lib/ForerunnerDB.View',
-	 '../lib/ForerunnerDB.View.Bind'
-	 ], function (ForerunnerDB) {
-	 var db = new ForerunnerDB(),
-	 coll = db.collection('test'),
-	 view = db.view('test'),
-	 i;
+		'../ForerunnerDB',
+		'../lib/ForerunnerDB.View',
+		'../lib/ForerunnerDB.View.Bind'
+	], function (ForerunnerDB) {
+		var db = new ForerunnerDB(),
+			coll = db.collection('test'),
+			view = db.view('test'),
+			i;
 
-	 window.view = view;
-	 window.coll = coll;
+		window.view = view;
+		window.coll = coll;
 
-	 view.from(coll);
-	 view.queryOptions({
-	 sort: {
-	 createdTs: -1
-	 }
-	 });
+		view.from(coll);
+		view.queryOptions({
+			sort: {
+				createdTs: -1
+			}
+		});
 
-	 view.bind('#pagingList', {
-	 template: function (data, callback) {
-	 callback('<li id="' + data._id + '">' + data.name + '</li>');
-	 },
-	 refresh: function () {
-	 console.log('HTML View Bind: refreshed');
-	 }
-	 });
+		view.bind('#pagingList', {
+			template: function (data, callback) {
+				callback('<li id="' + data._id + '">' + data.name + '</li>');
+			},
+			refresh: function () {
+				console.log('HTML View Bind: refreshed');
+			}
+		});
 
-	 coll._debug = true;
-	 view._debug = true;
+	coll._debug = true;
+	view._debug = true;
 
-	 i = 200;
-	 while (i--) {
-	 coll.insert({
-	 _id: '1' + i,
-	 name: 'Test_1' + i,
-	 createdTs: i
-	 });
-	 }
+		i = 200;
+		while (i--) {
+			coll.insert({
+				_id: '1' + i,
+				name: 'Test_1' + i,
+				createdTs: i
+			});
+		}
 
-	 console.log("coll.insert({_id: '2000', name: 'Test_2000', createdTs: 2000});");
-	 });*/
+		console.log("coll.insert({_id: '2000', name: 'Test_2000', createdTs: 2000});");
+	});*/
 </script>
 </body>
 </html>

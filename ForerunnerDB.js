@@ -846,6 +846,11 @@
 			if (doc) {
 				var indexViolation;
 
+				if (doc[this._primaryKey] === undefined) {
+					// Assign a primary key automatically
+					doc[this._primaryKey] = this._db.objectId();
+				}
+
 				// Check indexes are not going to be broken by the document
 				indexViolation = this._indexViolation(doc);
 
@@ -1233,7 +1238,7 @@
 					var valA = pathSolver.value(a),
 						valB = pathSolver.value(b);
 
-					if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB) === 1 ? -1 : 1;
 					} else {
 						if (valA > valB) {
@@ -1644,31 +1649,6 @@
 		};
 
 		/**
-		 * Creates a new objectId object.
-		 * @constructor
-		 */
-		var ObjectId = function (id) {
-			idCounter++;
-
-			if (!id) {
-				this._val = (
-					idCounter + (
-						Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17)
-						)
-					).toString(24);
-			} else {
-				this._val = id;
-			}
-		};
-
-		ObjectId.prototype.toString = function () {
-			return this._val;
-		};
-
-		/**
 		 * The main DB object used to store collections.
 		 * @constructor
 		 */
@@ -1812,6 +1792,42 @@
 			return arr;
 		};
 
+		/**
+		 * Generates a new 16-character hexadecimal unique ID or
+		 * generates a new 16-character hexadecimal ID based on
+		 * the passed string. Will always generate the same ID
+		 * for the same string.
+		 * @param {String=} str A string to generate the ID from.
+		 * @return {String}
+		 */
+		DB.prototype.objectId = function (str) {
+			var id;
+
+			if (!str) {
+				idCounter++;
+
+				id = (idCounter + (
+					Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17)
+					)
+				).toString(16);
+			} else {
+				var val = 0,
+					count = str.length,
+					i;
+
+				for (i = 0; i < count; i++) {
+					val += str.charCodeAt(i) * Math.pow(10, 17);
+				}
+
+				id = val.toString(16);
+			}
+
+			return id;
+		};
+
 		var Overload = function (arr) {
 			if (arr) {
 				var arrIndex,
@@ -1836,7 +1852,6 @@
 		DB.classes = {
 			Path: Path,
 			Collection: Collection,
-			ObjectId: ObjectId,
 			Overload: Overload
 		};
 

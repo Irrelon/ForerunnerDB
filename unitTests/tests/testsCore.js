@@ -336,10 +336,11 @@
 			base.dbUp();
 			base.dataUp();
 
+			//db._debug = true;
 			var record = user.find({
 				stringArr: 'moo'
 			});
-
+			db._debug = false;
 			ok(record.length === 1, "Failed in finding document to by string array value!");
 
 			base.dbDown();

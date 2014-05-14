@@ -41,7 +41,7 @@
 				console.log(elem.length);
 
 				userView._debug = false;
-				start();
+					start();
 
 				base.viewDown();
 				base.domDown();
