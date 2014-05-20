@@ -621,7 +621,7 @@
 		 * @param {Object} update The object with key/value pairs to update the document with.
 		 * @param query
 		 * @param path
-		 * @returns {Object | Boolean} True if the document was updated with new / changed data or
+		 * @returns {Boolean} True if the document was updated with new / changed data or
 		 * false if it was not updated because the data was the same.
 		 * @private
 		 */
@@ -639,8 +639,7 @@
 				pathInstance,
 				sourceIsArray,
 				updateIsArray,
-				i, k,
-				diff = {};
+				i, k;
 
 			for (i in update) {
 				if (update.hasOwnProperty(i)) {
@@ -659,7 +658,6 @@
 									if (update[i].hasOwnProperty(k)) {
 										if (typeof doc[k] === 'number') {
 											doc[k] += update[i][k];
-											diff[k] = doc[k];
 											updated = true;
 										} else {
 											throw("Cannot increment field that is not a number! (" + k + ")!");
@@ -676,8 +674,6 @@
 									if (update[i].hasOwnProperty(k)) {
 										if (doc[k] instanceof Array) {
 											doc[k].push(update[i][k]);
-											diff[k] = diff[k] || [];
-											diff[k].push(update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot push to a key that is not an array! (" + k + ")!");
@@ -742,7 +738,6 @@
 							for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 								recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, path + '.' + i);
 								if (recurseUpdated) {
-									diff[i] = recurseUpdated;
 									updated = true;
 								}
 							}
@@ -766,7 +761,6 @@
 										for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 											recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, path + '.' + i);
 											if (recurseUpdated) {
-												diff[i] = recurseUpdated;
 												updated = true;
 											}
 										}
@@ -774,7 +768,6 @@
 										// Either both source and update are arrays or the update is
 										// an array and the source is not, so set source to update
 										doc[i] = update[i];
-										diff[i] = update[i];
 										updated = true;
 									}
 								} else {
@@ -782,19 +775,16 @@
 									// update further
 									recurseUpdated = this._updateObject(doc[i], update[i], query, path + '.' + i);
 									if (recurseUpdated) {
-										diff[i] = recurseUpdated;
 										updated = true;
 									}
 								}
 							} else {
 								doc[i] = update[i];
-								diff[i] = update[i];
 								updated = true;
 							}
 						} else {
 							if (doc[i] !== update[i]) {
 								doc[i] = update[i];
-								diff[i] = update[i];
 								updated = true;
 							}
 						}
@@ -802,7 +792,7 @@
 				}
 			}
 
-			return updated ? diff : false;
+			return updated;
 		};
 
 		/**
@@ -1947,7 +1937,7 @@
 						Math.random() * Math.pow(10, 17) +
 						Math.random() * Math.pow(10, 17)
 					)
-				).toString(16);
+					).toString(16);
 			} else {
 				var val = 0,
 					count = str.length,
