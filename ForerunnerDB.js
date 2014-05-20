@@ -137,6 +137,46 @@
 		};
 
 		/**
+		 * Takes a non-recursive object and converts the object hierarchy into
+		 * an array of path strings that allow you to target all possible paths
+		 * in an object.
+		 *
+		 * @returns {Array}
+		 */
+		Path.prototype.parseArr = function (obj, options) {
+			options = options || {};
+			return this._parseArr(obj, '', [], options);
+		};
+
+		Path.prototype._parseArr = function (obj, path, paths, options) {
+			var i,
+				newPath = '';
+
+			path = path || '';
+			paths = paths || [];
+
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					if (!options.ignore || (options.ignore && !options.ignore.test(i))) {
+						if (path) {
+							newPath = path + '.' + i;
+						} else {
+							newPath = i;
+						}
+
+						if (typeof(obj[i]) === 'object') {
+							this._parseArr(obj[i], newPath, paths, options);
+						} else {
+							paths.push(newPath);
+						}
+					}
+				}
+			}
+
+			return paths;
+		};
+
+		/**
 		 * Gets the value that the object contains for the currently assigned
 		 * path string.
 		 * @param {Object} obj The object to evaluate the path against.
@@ -210,43 +250,6 @@
 			// Set the subset to itself since it is the root collection
 			this._subsetOf(this);
 		};
-
-		/*Collection.prototype.on = function(event, listener) {
-			this._listeners = this._listeners || {};
-			this._listeners[event] = this._listeners[event] || [];
-			this._listeners[event].push(listener);
-
-			return this;
-		};
-
-		Collection.prototype.off = function(event, listener) {
-			if (event in this._listeners) {
-				var arr = this._listeners[event],
-					index = arr.indexOf(listener);
-
-				if (index > -1) {
-					arr.splice(index, 1);
-				}
-			}
-
-			return this;
-		};
-
-		Collection.prototype.emit = function(event, data) {
-			this._listeners = this._listeners || {};
-
-			if (event in this._listeners) {
-				var arr = this._listeners[event],
-					arrCount = arr.length,
-					arrIndex;
-
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-				}
-			}
-
-			return this;
-		};*/
 
 		Collection.prototype.on = new Overload([
 			function(event, listener) {
