@@ -311,7 +311,7 @@
 				}
 			});
 
-			ok(result.length === 1, "Failed to update document with positional data!");
+			ok(result.updated.length === 1, "Failed to update document with positional data!");
 
 			var after = user.find({
 				"arr": {
