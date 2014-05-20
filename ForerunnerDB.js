@@ -225,6 +225,7 @@
 			this._name = name;
 			this._data = [];
 			this._groups = [];
+			this._views = [];
 
 			this._deferQueue = {
 				insert: [],
@@ -589,12 +590,19 @@
 				updated,
 				updateCall = function (doc) {
 					return self._updateObject(doc, update, query);
-				};
+				},
+				views = this._views,
+				viewIndex;
 
 			if (dataSet.length) {
 				updated = dataSet.filter(updateCall);
 
 				if (updated.length) {
+					// Loop views and pass them the update query
+					for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+						views[viewIndex].update(query, update);
+					}
+
 					this._onUpdate(updated);
 					this.deferEmit('change');
 				}
@@ -657,7 +665,7 @@
 								for (k in update[i]) {
 									if (update[i].hasOwnProperty(k)) {
 										if (typeof doc[k] === 'number') {
-											doc[k] += update[i][k];
+											this._updateIncrement(doc, k, update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot increment field that is not a number! (" + k + ")!");
@@ -673,7 +681,7 @@
 								for (k in update[i]) {
 									if (update[i].hasOwnProperty(k)) {
 										if (doc[k] instanceof Array) {
-											doc[k].push(update[i][k]);
+											this._updatePush(doc[k], update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot push to a key that is not an array! (" + k + ")!");
@@ -702,7 +710,7 @@
 
 											// Now loop the pull array and remove items to be pulled
 											while (tmpCount--) {
-												doc[k].splice(tmpArray[tmpCount], 1);
+												this._updatePull(doc[k], tmpArray[tmpCount]);
 												updated = true;
 											}
 										} else {
@@ -767,7 +775,7 @@
 									} else {
 										// Either both source and update are arrays or the update is
 										// an array and the source is not, so set source to update
-										doc[i] = update[i];
+										this._updateProperty(doc, i, update[i]);
 										updated = true;
 									}
 								} else {
@@ -779,12 +787,12 @@
 									}
 								}
 							} else {
-								doc[i] = update[i];
+								this._updateProperty(doc, i, update[i]);
 								updated = true;
 							}
 						} else {
 							if (doc[i] !== update[i]) {
-								doc[i] = update[i];
+								this._updateProperty(doc, i, update[i]);
 								updated = true;
 							}
 						}
@@ -793,6 +801,38 @@
 			}
 
 			return updated;
+		};
+
+		Collection.prototype._updateProperty = function (doc, prop, val) {
+			if (this._linked) {
+				$.observable(doc).setProperty(prop, val);
+			} else {
+				doc[prop] = val;
+			}
+		};
+
+		Collection.prototype._updatePush = function (arr, doc) {
+			if (this._linked) {
+				$.observable(arr).insert(doc);
+			} else {
+				arr.push(doc);
+			}
+		};
+
+		Collection.prototype._updatePull = function (arr, index) {
+			if (this._linked) {
+				$.observable(arr).remove(index);
+			} else {
+				arr.splice(index, 1);
+			}
+		};
+
+		Collection.prototype._updateIncrement = function (doc, prop, val) {
+			if (this._linked) {
+				$.observable(doc).setProperty(prop, doc[prop] + val);
+			} else {
+				doc[prop] += val;
+			}
 		};
 
 		/**
@@ -804,13 +844,25 @@
 		Collection.prototype.remove = function (query) {
 			var self = this,
 				dataSet = this.find(query, {decouple: false}),
-				index;
+				index,
+				views = this._views,
+				viewIndex;
 
 			if (dataSet.length) {
 				// Remove the data from the collection
 				for (var i = 0; i < dataSet.length; i++) {
 					index = this._data.indexOf(dataSet[i]);
-					this._data.splice(index, 1);
+
+					if (this._linked) {
+						$.observable(this._data).remove(index);
+					} else {
+						this._data.splice(index, 1);
+					}
+				}
+
+				// Loop views and pass them the remove query
+				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+					views[viewIndex].remove(query);
 				}
 
 				this._onRemove(dataSet);
@@ -829,6 +881,59 @@
 			var searchObj = {};
 			searchObj[this._primaryKey] = id;
 			return this.remove(searchObj);
+		};
+
+		Collection.prototype.view = function (name, query, options) {
+			var view = new View(name, query, options)
+				._addCollection(this);
+
+			this._views = this._views || [];
+			this._views.push(view);
+
+			return view;
+		};
+
+		var View = function (name, query, options) {
+			this._name = name;
+			this._collections = [];
+			this._querySettings = {
+				query: query,
+				options: options
+			};
+
+			this._data = new Collection('__FDB__view_' + this._name);
+		};
+
+		View.prototype.find = function (query, options) {
+			return this._data.find(query, options);
+		};
+
+		View.prototype.insert = function (data, callback) {
+			return this._data.insert(data, callback);
+		};
+
+		View.prototype.update = function (query, update) {
+			return this._data.update(query, update);
+		};
+
+		View.prototype.remove = function (query) {
+			return this._data.remove(query);
+		};
+
+		View.prototype._addCollection = function (collection) {
+			this._collections.push(collection);
+			this._data.insert(collection.find(this._querySettings.query, this._querySettings.options));
+			return this;
+		};
+
+		View.prototype._removeCollection = function (collection) {
+			var collectionIndex = this._collections.indexOf(collection);
+			if (collectionIndex) {
+				this._collections.splice(collection, 1);
+				this._data.remove(collection.find(this._querySettings.query, this._querySettings.options));
+			}
+
+			return this;
 		};
 
 		/**
@@ -898,14 +1003,15 @@
 		 * objects to insert into the collection.
 		 */
 		Collection.prototype.insert = function (data, callback) {
-			var queue = this._deferQueue.insert,
-				deferThreshold = this._deferThreshold.insert,
-				deferTime = this._deferTime.insert;
-
 			var self = this,
+				queue = this._deferQueue.insert,
+				deferThreshold = this._deferThreshold.insert,
+				deferTime = this._deferTime.insert,
 				inserted = [],
 				failed = [],
 				insertResult,
+				views = this._views,
+				viewIndex,
 				i;
 
 			if (data instanceof Array) {
@@ -949,6 +1055,11 @@
 				}
 			}
 
+			// Loop views and pass them the insert query
+			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+				views[viewIndex].insert(data);
+			}
+
 			this._onInsert(inserted, failed);
 			this.deferEmit('change');
 
@@ -981,7 +1092,11 @@
 
 				if (!indexViolation) {
 					// Insert the document
-					this._data.push(doc);
+					if (this._linked) {
+						$.observable(this._data).insert(doc);
+					} else {
+						this._data.push(doc);
+					}
 
 					return true;
 				} else {
@@ -1771,6 +1886,14 @@
 				// Run query and return count
 				return this.find(query, options).length;
 			}
+		};
+
+		Collection.prototype.link = function (outputTargetSelector, templateSelector) {
+			// Create the data binding
+			$.templates(templateSelector).link(outputTargetSelector, this._data);
+
+			// Set the linked flag
+			this._linked = true;
 		};
 
 		/**

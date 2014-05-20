@@ -1,0 +1,100 @@
+<!doctype HTML>
+<html>
+<head>
+	<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script src="jsviews.js"></script>
+	<script src="../ForerunnerDB.js"></script>
+</head>
+<body>
+	<div id="coll"></div>
+	<script id="collTemplate" type="text/x-jsrender">
+		{^{for #data}}
+			{^{:name}}
+			<ol>
+			  {^{for arr}}
+				<li data-link="class{:name}">
+				  {^{:name}}
+				  <img class="remove" src="http://www.jsviews.com/resources/images/close.png" />
+				</li>
+			  {{/for}}
+			</ol>
+		{{/for}}
+	</script>
+	<script>
+		window._counter = 0;
+		var db = new ForerunnerDB(),
+			test = db.collection('test');
+
+		test.link('#coll', '#collTemplate');
+
+		test.insert([{
+			"_id": "1",
+			"name": 'PMX2 Test School 1',
+			"arr": [{
+				"_id": "1",
+				"name": "Rob Evans",
+				"email": 'rob@irrelon.com'
+			}]
+		}, {
+			"_id": "2",
+			"name": 'PMX2 Test School 2',
+			"arr": [{
+				"_id": "1",
+				"name": "Rob Evans",
+				"email": 'rob@irrelon.com'
+			}]
+		}]);
+
+		test.insert({
+			"_id": "3",
+			"name": 'PMX2 Test School 3',
+			"arr": [{
+				"_id": "1",
+				"name": "Rob Evans",
+				"email": 'rob@irrelon.com'
+			}]
+		});
+		setTimeout(function () {
+		test.update({
+			"_id": "1",
+			"arr": {
+				"_id": "1"
+			}
+		}, {
+			"arr.$": {
+				"name": "Roger Rabbit"
+			}
+		})}, 6000);
+
+		var view = test.view('moo', {_id: "1"});
+
+
+		$('body').on("click", ".remove", function() {
+			var view = $.view(this);
+			test.update({_id: view.parent.parent.data._id}, {"$pull": {"arr": {_id: view.data._id}}});
+		});
+
+		/*var coll = {data: [{
+				arr: [
+					{name: "Robert"},
+					{name: "Sarah"}
+				]
+			}, {
+				arr: [
+					{name: "Robert"},
+					{name: "Sarah"}
+				]
+			}]},
+			cnt = 1;
+
+		$.templates("#collTemplate").link("#coll", coll)
+			.on("click", ".remove", function() {
+				var view = $.view(this);
+				$.observable(coll.data[0].arr).remove(view.index);
+			})
+			.on("click", "#add", function() {
+				$.observable(coll.data[0].arr[0]).setProperty('name', 'MOO');
+			});*/
+	</script>
+</body>
+</html>
