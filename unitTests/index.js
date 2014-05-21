@@ -2,7 +2,6 @@ require([
 	'../ForerunnerDB',
 	'../lib/ForerunnerDB.CollectionGroup',
 	'../lib/ForerunnerDB.View',
-	'../lib/ForerunnerDB.View.Bind',
 	'./base'
 ], function (ForerunnerDB, CollectionGroup, View, ViewBind, base) {
 	require([
@@ -11,15 +10,15 @@ require([
 		require([
 			'./tests/testsEvents'
 		], function (testsEvents) {
-			require([
+			/*require([
 				'./tests/testsBind'
 			], function (testsBind) {
-				/*require([
+				require([
 					'./tests/testsPaging'
 				], function (testsPaging) {
 
-				});*/
-			});
+				});
+			});*/
 		});
 	});
 });

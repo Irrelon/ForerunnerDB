@@ -225,7 +225,6 @@
 			this._name = name;
 			this._data = [];
 			this._groups = [];
-			this._views = [];
 
 			this._deferQueue = {
 				insert: [],
@@ -883,59 +882,6 @@
 			return this.remove(searchObj);
 		};
 
-		Collection.prototype.view = function (name, query, options) {
-			var view = new View(name, query, options)
-				._addCollection(this);
-
-			this._views = this._views || [];
-			this._views.push(view);
-
-			return view;
-		};
-
-		var View = function (name, query, options) {
-			this._name = name;
-			this._collections = [];
-			this._querySettings = {
-				query: query,
-				options: options
-			};
-
-			this._data = new Collection('__FDB__view_' + this._name);
-		};
-
-		View.prototype.find = function (query, options) {
-			return this._data.find(query, options);
-		};
-
-		View.prototype.insert = function (data, callback) {
-			return this._data.insert(data, callback);
-		};
-
-		View.prototype.update = function (query, update) {
-			return this._data.update(query, update);
-		};
-
-		View.prototype.remove = function (query) {
-			return this._data.remove(query);
-		};
-
-		View.prototype._addCollection = function (collection) {
-			this._collections.push(collection);
-			this._data.insert(collection.find(this._querySettings.query, this._querySettings.options));
-			return this;
-		};
-
-		View.prototype._removeCollection = function (collection) {
-			var collectionIndex = this._collections.indexOf(collection);
-			if (collectionIndex) {
-				this._collections.splice(collection, 1);
-				this._data.remove(collection.find(this._querySettings.query, this._querySettings.options));
-			}
-
-			return this;
-		};
-
 		/**
 		 * Queues an event to be fired. This has automatic de-bouncing so that any
 		 * events of the same type that occur within 100 milliseconds of a previous
@@ -999,10 +945,29 @@
 		/**
 		 * Inserts a document or array of documents into the collection.
 		 * @param {Object||Array} data Either a document object or array of document
+		 * @param {Number=} index Optional index to insert the record at.
 		 * @param {Function=} callback Optional callback called once action is complete.
 		 * objects to insert into the collection.
 		 */
-		Collection.prototype.insert = function (data, callback) {
+		Collection.prototype.insert = function (data, index, callback) {
+			if (typeof(index) === 'function') {
+				callback = index;
+				index = this._data.length;
+			} else if (index === undefined) {
+				index = this._data.length;
+			}
+
+			return this._insertHandle(data, index, callback);
+		};
+
+		/**
+		 * Inserts a document or array of documents into the collection.
+		 * @param {Object||Array} data Either a document object or array of document
+		 * @param {Number=} index Optional index to insert the record at.
+		 * @param {Function=} callback Optional callback called once action is complete.
+		 * objects to insert into the collection.
+		 */
+		Collection.prototype._insertHandle = function (data, index, callback) {
 			var self = this,
 				queue = this._deferQueue.insert,
 				deferThreshold = this._deferThreshold.insert,
@@ -1029,7 +994,7 @@
 				} else {
 					// Loop the array and add items
 					for (i = 0; i < data.length; i++) {
-						insertResult = this._insert(data[i]);
+						insertResult = this._insert(data[i], index + i);
 
 						if (insertResult === true) {
 							inserted.push(data[i]);
@@ -1043,7 +1008,7 @@
 				}
 			} else {
 				// Store the data item
-				insertResult = this._insert(data);
+				insertResult = this._insert(data, index);
 
 				if (insertResult === true) {
 					inserted.push(data);
@@ -1057,7 +1022,7 @@
 
 			// Loop views and pass them the insert query
 			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-				views[viewIndex].insert(data);
+				views[viewIndex].insert(data, index);
 			}
 
 			this._onInsert(inserted, failed);
@@ -1078,7 +1043,7 @@
 		 * or an object containing details about an index violation if one occurred.
 		 * @private
 		 */
-		Collection.prototype._insert = function (doc) {
+		Collection.prototype._insert = function (doc, index) {
 			if (doc) {
 				var indexViolation;
 
@@ -1093,9 +1058,9 @@
 				if (!indexViolation) {
 					// Insert the document
 					if (this._linked) {
-						$.observable(this._data).insert(doc);
+						$.observable(this._data).insert(index, doc);
 					} else {
-						this._data.push(doc);
+						this._data.splice(index, 0, doc);
 					}
 
 					return true;
