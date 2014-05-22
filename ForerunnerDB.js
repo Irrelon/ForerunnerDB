@@ -1855,10 +1855,56 @@
 
 		Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 			// Create the data binding
-			$.templates(templateSelector).link(outputTargetSelector, this._data);
+			$.templates[templateSelector].link(outputTargetSelector, this._data);
 
 			// Set the linked flag
 			this._linked = true;
+		};
+
+		Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+			var pathHandler = new Path(path),
+				docArr = this.find(match),
+				docCount = docArr.length,
+				docIndex,
+				subDocArr,
+				subDocCollection = this._db.collection('__FDB_temp_' + this._db.objectId()),
+				subDocResults,
+				resultObj = {
+					parents: docCount,
+					subDocTotal: 0,
+					subDocs: [],
+					pathFound: false,
+					err: ''
+				};
+
+			for (docIndex = 0; docIndex < docCount; docIndex++) {
+				subDocArr = pathHandler.value(docArr[docIndex]);
+				if (subDocArr) {
+					subDocCollection.setData(subDocArr);
+					subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
+					if (subDocOptions.returnFirst && subDocResults.length) {
+						return subDocResults[0];
+					}
+
+					resultObj.subDocs.push(subDocResults);
+					resultObj.subDocTotal += subDocResults.length;
+					resultObj.pathFound = true;
+				}
+			}
+
+			// Drop the sub-document collection
+			subDocCollection.drop();
+
+			// Check if the call should not return stats, if so return only subDocs array
+			if (subDocOptions.noStats) {
+				return resultObj.subDocs;
+			}
+
+			if (!resultObj.pathFound) {
+				resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
+			}
+
+			return resultObj;
 		};
 
 		/**
