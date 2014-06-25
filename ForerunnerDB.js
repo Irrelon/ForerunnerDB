@@ -41,6 +41,23 @@
 			return selector.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
 		};
 
+		var Overload = function (arr) {
+			if (arr) {
+				var arrIndex,
+					arrCount = arr.length;
+
+				return function () {
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						if (arr[arrIndex].length === arguments.length) {
+							return arr[arrIndex].apply(this, arguments);
+						}
+					}
+				}
+			} else {
+				return function () {};
+			}
+		};
+
 		/**
 		 * Path object used to resolve object paths and retrieve data from
 		 * objects by using paths.
@@ -120,6 +137,46 @@
 		};
 
 		/**
+		 * Takes a non-recursive object and converts the object hierarchy into
+		 * an array of path strings that allow you to target all possible paths
+		 * in an object.
+		 *
+		 * @returns {Array}
+		 */
+		Path.prototype.parseArr = function (obj, options) {
+			options = options || {};
+			return this._parseArr(obj, '', [], options);
+		};
+
+		Path.prototype._parseArr = function (obj, path, paths, options) {
+			var i,
+				newPath = '';
+
+			path = path || '';
+			paths = paths || [];
+
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					if (!options.ignore || (options.ignore && !options.ignore.test(i))) {
+						if (path) {
+							newPath = path + '.' + i;
+						} else {
+							newPath = i;
+						}
+
+						if (typeof(obj[i]) === 'object') {
+							this._parseArr(obj[i], newPath, paths, options);
+						} else {
+							paths.push(newPath);
+						}
+					}
+				}
+			}
+
+			return paths;
+		};
+
+		/**
 		 * Gets the value that the object contains for the currently assigned
 		 * path string.
 		 * @param {Object} obj The object to evaluate the path against.
@@ -169,41 +226,130 @@
 			this._data = [];
 			this._groups = [];
 
+			this._deferQueue = {
+				insert: [],
+				update: [],
+				remove: [],
+				upsert: []
+			};
+
+			this._deferThreshold = {
+				insert: 100,
+				update: 100,
+				remove: 100,
+				upsert: 100
+			};
+
+			this._deferTime = {
+				insert: 1,
+				update: 1,
+				remove: 1,
+				upsert: 1
+			};
+
 			// Set the subset to itself since it is the root collection
 			this._subsetOf(this);
 		};
 
-		Collection.prototype.on = function(event, listener) {
-			this._listeners = this._listeners || {};
-			this._listeners[event] = this._listeners[event] || [];
-			this._listeners[event].push(listener);
+		Collection.prototype.on = new Overload([
+			function(event, listener) {
+				this._listeners = this._listeners || {};
+				this._listeners[event] = this._listeners[event] || {};
+				this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+				this._listeners[event]['*'].push(listener);
 
-			return this;
-		};
+				return this;
+			},
 
-		Collection.prototype.off = function(event, listener) {
-			if (event in this._listeners) {
-				var arr = this._listeners[event],
-					index = arr.indexOf(listener);
+			function(event, id, listener) {
+				this._listeners = this._listeners || {};
+				this._listeners[event] = this._listeners[event] || {};
+				this._listeners[event][id] = this._listeners[event][id] || [];
+				this._listeners[event][id].push(listener);
 
-				if (index > -1) {
-					arr.splice(index, 1);
+				return this;
+			}
+		]);
+
+		Collection.prototype.off = new Overload([
+			function (event) {
+				if (this._listeners && this._listeners[event] && event in this._listeners) {
+					delete this._listeners[event];
+				}
+
+				return this;
+			},
+
+			function(event, listener) {
+				var arr,
+					index;
+
+				if (typeof(listener) === 'string') {
+					if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+						delete this._listeners[event][listener];
+					}
+				} else {
+					if (event in this._listeners) {
+						arr = this._listeners[event]['*'];
+						index = arr.indexOf(listener);
+
+						if (index > -1) {
+							arr.splice(index, 1);
+						}
+					}
+				}
+
+				return this;
+			},
+
+			function (event, id, listener) {
+				if (this._listeners && event in this._listeners) {
+					var arr = this._listeners[event][id],
+						index = arr.indexOf(listener);
+
+					if (index > -1) {
+						arr.splice(index, 1);
+					}
 				}
 			}
-
-			return this;
-		};
+		]);
 
 		Collection.prototype.emit = function(event, data) {
 			this._listeners = this._listeners || {};
 
 			if (event in this._listeners) {
-				var arr = this._listeners[event],
-					arrCount = arr.length,
-					arrIndex;
+				// Handle global emit
+				if (this._listeners[event]['*']) {
+					var arr = this._listeners[event]['*'],
+						arrCount = arr.length,
+						arrIndex;
 
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+					}
+				}
+
+				// Handle individual emit
+				if (data instanceof Array) {
+					// Check if the array is an array of objects in the collection
+					if (data[0] && data[0][this._primaryKey]) {
+						// Loop the array and check for listeners against the primary key
+						var listenerIdArr = this._listeners[event],
+							listenerIdCount,
+							listenerIdIndex,
+							arrCount = data.length,
+							arrIndex;
+
+						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+							if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+								// Emit for this id
+								listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+								for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+									listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+								}
+							}
+						}
+					}
 				}
 			}
 
@@ -306,11 +452,18 @@
 		 */
 		Collection.prototype.setData = function (arr) {
 			if (arr) {
+				if (!(arr instanceof Array)) {
+					arr = [arr];
+				}
+
 				var oldData = this._data;
 
 				// Overwrite the data
 				this._data = [];
-				this._data = this._data.concat(arr);
+
+				if (arr.length) {
+					this._data = this._data.concat(arr);
+				}
 
 				this.emit('setData', this._data, oldData);
 			}
@@ -352,52 +505,70 @@
 		 * "update" depending on the type of operation that was performed and "result"
 		 * contains the return data from the operation used.
 		 */
-		Collection.prototype.upsert = function (obj) {
-			var returnData = {},
-				query,
-				i;
+		Collection.prototype.upsert = function (obj, callback) {
+			if (obj) {
+				var queue = this._deferQueue.upsert,
+					deferThreshold = this._deferThreshold.upsert,
+					deferTime = this._deferTime.upsert;
 
-			// Determine if the object passed is an array or not
-			if (obj instanceof Array) {
-				// Loop the array and upsert each item
-				returnData = [];
+				var returnData = {},
+					query,
+					i;
 
-				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+				// Determine if the object passed is an array or not
+				if (obj instanceof Array) {
+					if (obj.length > deferThreshold) {
+						// Break up upsert into blocks
+						this._deferQueue.upsert = queue.concat(obj);
+
+						// Fire off the insert queue handler
+						this.processQueue('upsert', callback);
+
+						return;
+					} else {
+						// Loop the array and upsert each item
+						returnData = [];
+
+						for (i = 0; i < obj.length; i++) {
+							returnData.push(this.upsert(obj[i]));
+						}
+
+						if (callback) { callback(); }
+
+						return returnData;
+					}
+				}
+
+				// Determine if the operation is an insert or an update
+				if (obj[this._primaryKey]) {
+					// Check if an object with this primary key already exists
+					query = {};
+					query[this._primaryKey] = obj[this._primaryKey];
+
+					if (this.count(query)) {
+						// The document already exists with this id, this operation is an update
+						returnData.op = 'update';
+					} else {
+						// No document with this id exists, this operation is an insert
+						returnData.op = 'insert';
+					}
+				} else {
+					// The document passed does not contain an id, this operation is an insert
+					returnData.op = 'insert';
+				}
+
+				switch (returnData.op) {
+					case 'insert':
+						returnData.result = this.insert(obj);
+						break;
+
+					case 'update':
+						returnData.result = this.update(query, obj);
+						break;
 				}
 
 				return returnData;
 			}
-
-			// Determine if the operation is an insert or an update
-			if (obj[this._primaryKey]) {
-				// Check if an object with this primary key already exists
-				query = {};
-				query[this._primaryKey] = obj[this._primaryKey];
-
-				if (this.count(query)) {
-					// The document already exists with this id, this operation is an update
-					returnData.op = 'update';
-				} else {
-					// No document with this id exists, this operation is an insert
-					returnData.op = 'insert';
-				}
-			} else {
-				// The document passed does not contain an id, this operation is an insert
-				returnData.op = 'insert';
-			}
-
-			switch (returnData.op) {
-				case 'insert':
-					returnData.result = this.insert(obj);
-					break;
-
-				case 'update':
-					returnData.result = this.update(query, obj);
-					break;
-			}
-
-			return returnData;
 		};
 
 		/**
@@ -418,14 +589,23 @@
 				updated,
 				updateCall = function (doc) {
 					return self._updateObject(doc, update, query);
-				};
+				},
+				views = this._views,
+				viewIndex;
 
 			if (dataSet.length) {
 				updated = dataSet.filter(updateCall);
 
 				if (updated.length) {
+					// Loop views and pass them the update query
+					if (views && views.length) {
+						for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+							views[viewIndex].update(query, update);
+						}
+					}
+
 					this._onUpdate(updated);
-					this.deferEmit('change');
+					this.deferEmit('change', {type: 'update', data: updated});
 				}
 			}
 
@@ -484,9 +664,9 @@
 
 								// Do an increment operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (typeof doc[k] === 'number') {
-											doc[k] += update[i][k];
+											this._updateIncrement(doc, k, update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot increment field that is not a number! (" + k + ")!");
@@ -500,12 +680,63 @@
 
 								// Do a push operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (doc[k] instanceof Array) {
-											doc[k].push(update[i][k]);
+											this._updatePush(doc[k], update[i][k]);
 											updated = true;
 										} else {
 											throw("Cannot push to a key that is not an array! (" + k + ")!");
+										}
+									}
+								}
+								break;
+
+							case '$splicePush':
+								operation = true;
+
+								// Do a splice operation
+								for (k in update[i]) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+										if (doc[k] instanceof Array) {
+											var tempIndex = update[i].$index;
+
+											if (tempIndex !== undefined) {
+												delete update[i][k].$index;
+												this._updateSplicePush(doc[k], tempIndex, update[i][k]);
+												updated = true;
+											} else {
+												throw("Cannot splicePush without a $index integer value!");
+											}
+										} else {
+											throw("Cannot splicePush with a key that is not an array! (" + k + ")!");
+										}
+									}
+								}
+								break;
+
+							case '$move':
+								operation = true;
+
+								// Do a pull operation
+								for (k in update[i]) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+										if (doc[k] instanceof Array) {
+											// Loop the array and find matches to our search
+											for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
+												if (this._match(doc[k][tmpIndex], update[i][k])) {
+													var moveToIndex = update[i].$index;
+
+													if (tempIndex !== undefined) {
+														this._updateSpliceMove(doc[k], tmpIndex, moveToIndex);
+														updated = true;
+													} else {
+														throw("Cannot move without a $index integer value!");
+													}
+													break;
+												}
+											}
+										} else {
+											throw("Cannot pull from a key that is not an array! (" + k + ")!");
 										}
 									}
 								}
@@ -516,7 +747,7 @@
 
 								// Do a pull operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (doc[k] instanceof Array) {
 											tmpArray = [];
 
@@ -531,7 +762,7 @@
 
 											// Now loop the pull array and remove items to be pulled
 											while (tmpCount--) {
-												doc[k].splice(tmpArray[tmpCount], 1);
+												this._updatePull(doc[k], tmpArray[tmpCount]);
 												updated = true;
 											}
 										} else {
@@ -596,7 +827,7 @@
 									} else {
 										// Either both source and update are arrays or the update is
 										// an array and the source is not, so set source to update
-										doc[i] = update[i];
+										this._updateProperty(doc, i, update[i]);
 										updated = true;
 									}
 								} else {
@@ -608,12 +839,12 @@
 									}
 								}
 							} else {
-								doc[i] = update[i];
+								this._updateProperty(doc, i, update[i]);
 								updated = true;
 							}
 						} else {
 							if (doc[i] !== update[i]) {
-								doc[i] = update[i];
+								this._updateProperty(doc, i, update[i]);
 								updated = true;
 							}
 						}
@@ -622,6 +853,62 @@
 			}
 
 			return updated;
+		};
+
+		Collection.prototype._updateProperty = function (doc, prop, val) {
+			if (this._linked) {
+				$.observable(doc).setProperty(prop, val);
+			} else {
+				doc[prop] = val;
+			}
+		};
+
+		Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
+			if (this._linked) {
+				$.observable(arr).move(indexFrom, indexTo);
+			} else {
+				arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+			}
+		};
+
+		Collection.prototype._updateSplicePush = function (arr, index, doc) {
+			if (arr.length > index) {
+			if (this._linked) {
+				$.observable(arr).insert(index, doc);
+			} else {
+				arr.splice(index, 0, doc);
+			}
+			} else {
+				if (this._linked) {
+					$.observable(arr).insert(doc);
+				} else {
+					arr.push(doc);
+				}
+			}
+		};
+
+		Collection.prototype._updatePush = function (arr, doc) {
+			if (this._linked) {
+				$.observable(arr).insert(doc);
+			} else {
+				arr.push(doc);
+			}
+		};
+
+		Collection.prototype._updatePull = function (arr, index) {
+			if (this._linked) {
+				$.observable(arr).remove(index);
+			} else {
+				arr.splice(index, 1);
+			}
+		};
+
+		Collection.prototype._updateIncrement = function (doc, prop, val) {
+			if (this._linked) {
+				$.observable(doc).setProperty(prop, doc[prop] + val);
+			} else {
+				doc[prop] += val;
+			}
 		};
 
 		/**
@@ -633,17 +920,31 @@
 		Collection.prototype.remove = function (query) {
 			var self = this,
 				dataSet = this.find(query, {decouple: false}),
-				index;
+				index,
+				views = this._views,
+				viewIndex;
 
 			if (dataSet.length) {
 				// Remove the data from the collection
 				for (var i = 0; i < dataSet.length; i++) {
 					index = this._data.indexOf(dataSet[i]);
-					this._data.splice(index, 1);
+
+					if (this._linked) {
+						$.observable(this._data).remove(index);
+					} else {
+						this._data.splice(index, 1);
+					}
+				}
+
+				// Loop views and pass them the remove query
+				if (views && views.length) {
+					for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+						views[viewIndex].remove(query);
+					}
 				}
 
 				this._onRemove(dataSet);
-				this.deferEmit('change');
+				this.deferEmit('change', {type: 'remove', data: dataSet});
 			}
 
 			return dataSet;
@@ -689,34 +990,104 @@
 			}
 		};
 
+		Collection.prototype.processQueue = function (type, callback) {
+			var queue = this._deferQueue[type],
+				deferThreshold = this._deferThreshold[type],
+				deferTime = this._deferTime[type];
+
+			if (queue.length) {
+				var self = this,
+					dataArr;
+
+				// Process items up to the threshold
+				if (queue.length) {
+					if (queue.length > deferThreshold) {
+						// Grab items up to the threshold value
+						dataArr = queue.splice(0, deferThreshold);
+					} else {
+						// Grab all the remaining items
+						dataArr = queue.splice(0, queue.length);
+					}
+
+					this[type](dataArr);
+				}
+
+				// Queue another process
+				setTimeout(function () {
+					self.processQueue(type, callback);
+				}, deferTime);
+			} else {
+				if (callback) { callback(); }
+			}
+		};
+
 		/**
 		 * Inserts a document or array of documents into the collection.
 		 * @param {Object||Array} data Either a document object or array of document
+		 * @param {Number=} index Optional index to insert the record at.
+		 * @param {Function=} callback Optional callback called once action is complete.
 		 * objects to insert into the collection.
 		 */
-		Collection.prototype.insert = function (data) {
-			var inserted = [],
+		Collection.prototype.insert = function (data, index, callback) {
+			if (typeof(index) === 'function') {
+				callback = index;
+				index = this._data.length;
+			} else if (index === undefined) {
+				index = this._data.length;
+			}
+
+			return this._insertHandle(data, index, callback);
+		};
+
+		/**
+		 * Inserts a document or array of documents into the collection.
+		 * @param {Object||Array} data Either a document object or array of document
+		 * @param {Number=} index Optional index to insert the record at.
+		 * @param {Function=} callback Optional callback called once action is complete.
+		 * objects to insert into the collection.
+		 */
+		Collection.prototype._insertHandle = function (data, index, callback) {
+			var self = this,
+				queue = this._deferQueue.insert,
+				deferThreshold = this._deferThreshold.insert,
+				deferTime = this._deferTime.insert,
+				inserted = [],
 				failed = [],
 				insertResult,
+				views = this._views,
+				viewIndex,
 				i;
 
 			if (data instanceof Array) {
-				// Loop the array and add items
-				for (i = 0; i < data.length; i++) {
-					insertResult = this._insert(data[i]);
+				// Check if there are more insert items than the insert defer
+				// threshold, if so, break up inserts so we don't tie up the
+				// ui or thread
+				if (data.length > deferThreshold) {
+					// Break up insert into blocks
+					this._deferQueue.insert = queue.concat(data);
 
-					if (insertResult === true) {
-						inserted.push(data[i]);
-					} else {
-						failed.push({
-							doc: data[i],
-							reason: insertResult
-						});
+					// Fire off the insert queue handler
+					this.processQueue('insert', callback);
+
+					return;
+				} else {
+					// Loop the array and add items
+					for (i = 0; i < data.length; i++) {
+						insertResult = this._insert(data[i], index + i);
+
+						if (insertResult === true) {
+							inserted.push(data[i]);
+						} else {
+							failed.push({
+								doc: data[i],
+								reason: insertResult
+							});
+						}
 					}
 				}
 			} else {
 				// Store the data item
-				insertResult = this._insert(data);
+				insertResult = this._insert(data, index);
 
 				if (insertResult === true) {
 					inserted.push(data);
@@ -728,8 +1099,16 @@
 				}
 			}
 
+			// Loop views and pass them the insert query
+			if (views && views.length) {
+				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+					views[viewIndex].insert(data, index);
+				}
+			}
+
 			this._onInsert(inserted, failed);
-			this.deferEmit('change');
+			if (callback) { callback(); }
+			this.deferEmit('change', {type: 'insert', data: inserted});
 
 			return {
 				inserted: inserted,
@@ -746,16 +1125,25 @@
 		 * or an object containing details about an index violation if one occurred.
 		 * @private
 		 */
-		Collection.prototype._insert = function (doc) {
+		Collection.prototype._insert = function (doc, index) {
 			if (doc) {
 				var indexViolation;
+
+				if (doc[this._primaryKey] === undefined) {
+					// Assign a primary key automatically
+					doc[this._primaryKey] = this._db.objectId();
+				}
 
 				// Check indexes are not going to be broken by the document
 				indexViolation = this._indexViolation(doc);
 
 				if (!indexViolation) {
 					// Insert the document
-					this._data.push(doc);
+					if (this._linked) {
+						$.observable(this._data).insert(index, doc);
+					} else {
+						this._data.splice(index, 0, doc);
+					}
 
 					return true;
 				} else {
@@ -777,6 +1165,42 @@
 			var item = this.findById(doc[this._primaryKey]);
 
 			return Boolean(item);
+		};
+
+		Collection.prototype.ensureIndex = function (obj, options) {
+			this._index = this._index || {};
+			options = options || {};
+
+			if (!options.name) {
+				options.name = JSON.stringify(obj);
+			}
+
+			// Check the index does not already exist
+			if (this._index[options.name]) {
+				// Index already exists
+				return {
+					err: 'Index already exists'
+				};
+			}
+
+			// Add the index
+			this._index[options.name] = obj;
+
+			// Create the index
+			this._reIndex(options.name);
+		};
+
+		Collection.prototype._reIndex = function (indexName) {
+			// Grab the index details
+			var index = this._index[indexName];
+
+			if (!index) {
+				return {
+					err: 'Index not found'
+				};
+			}
+
+
 		};
 
 		/**
@@ -898,7 +1322,7 @@
 					resultArr = this.sort(options.sort, resultArr);
 				}
 
-				if (options.limit) {
+				if (options.limit && resultArr && resultArr.length > options.limit) {
 					resultArr.length = options.limit;
 				}
 
@@ -1083,7 +1507,7 @@
 					var valA = pathSolver.value(a),
 						valB = pathSolver.value(b);
 
-					if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB);
 					} else {
 						if (valA > valB) {
@@ -1101,7 +1525,7 @@
 					var valA = pathSolver.value(a),
 						valB = pathSolver.value(b);
 
-					if (typeof(valA) === 'string' || typeof(valB) === 'string') {
+					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB) === 1 ? -1 : 1;
 					} else {
 						if (valA > valB) {
@@ -1346,6 +1770,18 @@
 										}
 									}
 									break;
+
+								case '$ne':
+									// Not equals
+									if (source != test[i]) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+									operation = true;
+									break;
 							}
 						}
 
@@ -1438,7 +1874,7 @@
 									}
 								} else {
 									// First check if the test match is an $exists
-									if (test[i]['$exists'] !== undefined) {
+									if (test[i] && test[i]['$exists'] !== undefined) {
 										// Push the item through another match recurse
 										recurseVal = this._match(undefined, test[i], applyOp);
 
@@ -1458,6 +1894,29 @@
 								if (source && source[i] === test[i]) {
 									if (opToApply === 'or') {
 										return true;
+									}
+								} else if (source && source[i] && source[i] instanceof Array && test[i] && typeof(test[i]) !== "object") {
+									// We are looking for a value inside an array
+
+									// The source data is an array, so check each item until a
+									// match is found
+									recurseVal = false;
+									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
 									}
 								} else {
 									matchedAll = false;
@@ -1489,28 +1948,87 @@
 		};
 
 		/**
-		 * Creates a new objectId object.
-		 * @constructor
+		 * Creates a link to the DOM between the collection data and the elements
+		 * in the passed output selector. When new elements are needed or changes occur
+		 * the passed templateSelector is used to get the template that is output
+		 * to the DOM.
+		 * @param outputTargetSelector
+		 * @param templateSelector
 		 */
-		var ObjectId = function (id) {
-			idCounter++;
+		Collection.prototype.link = function (outputTargetSelector, templateSelector) {
+			// Create the data binding
+			$.templates[templateSelector].link(outputTargetSelector, this._data);
 
-			if (!id) {
-				this._val = (
-					idCounter + (
-						Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17) +
-							Math.random() * Math.pow(10, 17)
-						)
-					).toString(24);
-			} else {
-				this._val = id;
-			}
+			// Set the linked flag
+			this._linked = true;
 		};
 
-		ObjectId.prototype.toString = function () {
-			return this._val;
+		/**
+		 * Removes a link to the DOM between the collection data and the elements
+		 * in the passed output selector that was created using the link() method.
+		 * @param outputTargetSelector
+		 * @param templateSelector
+		 */
+		Collection.prototype.unlink = function (outputTargetSelector, templateSelector) {
+			// Remove the data binding
+			$.templates[templateSelector].unlink(outputTargetSelector);
+
+			// Set the linked flag
+			this._linked = false;
+		};
+
+		/**
+		 * Finds sub-documents from the collection's documents.
+		 * @param match
+		 * @param path
+		 * @param subDocQuery
+		 * @param subDocOptions
+		 * @returns {*}
+		 */
+		Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+			var pathHandler = new Path(path),
+				docArr = this.find(match),
+				docCount = docArr.length,
+				docIndex,
+				subDocArr,
+				subDocCollection = this._db.collection('__FDB_temp_' + this._db.objectId()),
+				subDocResults,
+				resultObj = {
+					parents: docCount,
+					subDocTotal: 0,
+					subDocs: [],
+					pathFound: false,
+					err: ''
+				};
+
+			for (docIndex = 0; docIndex < docCount; docIndex++) {
+				subDocArr = pathHandler.value(docArr[docIndex]);
+				if (subDocArr) {
+					subDocCollection.setData(subDocArr);
+					subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
+					if (subDocOptions.returnFirst && subDocResults.length) {
+						return subDocResults[0];
+					}
+
+					resultObj.subDocs.push(subDocResults);
+					resultObj.subDocTotal += subDocResults.length;
+					resultObj.pathFound = true;
+				}
+			}
+
+			// Drop the sub-document collection
+			subDocCollection.drop();
+
+			// Check if the call should not return stats, if so return only subDocs array
+			if (subDocOptions.noStats) {
+				return resultObj.subDocs;
+			}
+
+			if (!resultObj.pathFound) {
+				resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
+			}
+
+			return resultObj;
 		};
 
 		/**
@@ -1658,13 +2176,49 @@
 		};
 
 		/**
+		 * Generates a new 16-character hexadecimal unique ID or
+		 * generates a new 16-character hexadecimal ID based on
+		 * the passed string. Will always generate the same ID
+		 * for the same string.
+		 * @param {String=} str A string to generate the ID from.
+		 * @return {String}
+		 */
+		DB.prototype.objectId = function (str) {
+			var id;
+
+			if (!str) {
+				idCounter++;
+
+				id = (idCounter + (
+					Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17)
+					)
+					).toString(16);
+			} else {
+				var val = 0,
+					count = str.length,
+					i;
+
+				for (i = 0; i < count; i++) {
+					val += str.charCodeAt(i) * Math.pow(10, 17);
+				}
+
+				id = val.toString(16);
+			}
+
+			return id;
+		};
+
+		/**
 		 * Accessor to internal class constructors.
 		 * @returns {Object}
 		 */
 		DB.classes = {
 			Path: Path,
 			Collection: Collection,
-			ObjectId: ObjectId
+			Overload: Overload
 		};
 
 		DB.prototype.Plugin = {};

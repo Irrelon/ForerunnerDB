@@ -1,10 +1,10 @@
 require([
 	'../ForerunnerDB',
 	'../lib/ForerunnerDB.CollectionGroup',
-	'../lib/ForerunnerDB.View',
-	'../lib/ForerunnerDB.View.Bind',
+	'../lib/ForerunnerDB.OldView',
+	'../lib/ForerunnerDB.OldView.Bind',
 	'./base'
-], function (ForerunnerDB, CollectionGroup, View, ViewBind, base) {
+], function (ForerunnerDB, CollectionGroup, OldView, OldViewBind, base) {
 	require([
 		'./tests/testsCore'
 	], function (testsCore) {
