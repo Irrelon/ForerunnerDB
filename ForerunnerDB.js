@@ -598,12 +598,14 @@
 
 				if (updated.length) {
 					// Loop views and pass them the update query
-					for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-						views[viewIndex].update(query, update);
+					if (views && views.length) {
+						for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+							views[viewIndex].update(query, update);
+						}
 					}
 
 					this._onUpdate(updated);
-					this.deferEmit('change');
+					this.deferEmit('change', {type: 'update', data: updated});
 				}
 			}
 
@@ -662,7 +664,7 @@
 
 								// Do an increment operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (typeof doc[k] === 'number') {
 											this._updateIncrement(doc, k, update[i][k]);
 											updated = true;
@@ -678,7 +680,7 @@
 
 								// Do a push operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (doc[k] instanceof Array) {
 											this._updatePush(doc[k], update[i][k]);
 											updated = true;
@@ -689,12 +691,63 @@
 								}
 								break;
 
+							case '$splicePush':
+								operation = true;
+
+								// Do a splice operation
+								for (k in update[i]) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+										if (doc[k] instanceof Array) {
+											var tempIndex = update[i].$index;
+
+											if (tempIndex !== undefined) {
+												delete update[i][k].$index;
+												this._updateSplicePush(doc[k], tempIndex, update[i][k]);
+												updated = true;
+											} else {
+												throw("Cannot splicePush without a $index integer value!");
+											}
+										} else {
+											throw("Cannot splicePush with a key that is not an array! (" + k + ")!");
+										}
+									}
+								}
+								break;
+
+							case '$move':
+								operation = true;
+
+								// Do a pull operation
+								for (k in update[i]) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+										if (doc[k] instanceof Array) {
+											// Loop the array and find matches to our search
+											for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
+												if (this._match(doc[k][tmpIndex], update[i][k])) {
+													var moveToIndex = update[i].$index;
+
+													if (tempIndex !== undefined) {
+														this._updateSpliceMove(doc[k], tmpIndex, moveToIndex);
+														updated = true;
+													} else {
+														throw("Cannot move without a $index integer value!");
+													}
+													break;
+												}
+											}
+										} else {
+											throw("Cannot pull from a key that is not an array! (" + k + ")!");
+										}
+									}
+								}
+								break;
+
 							case '$pull':
 								operation = true;
 
 								// Do a pull operation
 								for (k in update[i]) {
-									if (update[i].hasOwnProperty(k)) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 										if (doc[k] instanceof Array) {
 											tmpArray = [];
 
@@ -810,6 +863,30 @@
 			}
 		};
 
+		Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
+			if (this._linked) {
+				$.observable(arr).move(indexFrom, indexTo);
+			} else {
+				arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+			}
+		};
+
+		Collection.prototype._updateSplicePush = function (arr, index, doc) {
+			if (arr.length > index) {
+			if (this._linked) {
+				$.observable(arr).insert(index, doc);
+			} else {
+				arr.splice(index, 0, doc);
+			}
+			} else {
+				if (this._linked) {
+					$.observable(arr).insert(doc);
+				} else {
+					arr.push(doc);
+				}
+			}
+		};
+
 		Collection.prototype._updatePush = function (arr, doc) {
 			if (this._linked) {
 				$.observable(arr).insert(doc);
@@ -860,12 +937,14 @@
 				}
 
 				// Loop views and pass them the remove query
-				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-					views[viewIndex].remove(query);
+				if (views && views.length) {
+					for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+						views[viewIndex].remove(query);
+					}
 				}
 
 				this._onRemove(dataSet);
-				this.deferEmit('change');
+				this.deferEmit('change', {type: 'remove', data: dataSet});
 			}
 
 			return dataSet;
@@ -1021,12 +1100,15 @@
 			}
 
 			// Loop views and pass them the insert query
-			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-				views[viewIndex].insert(data, index);
+			if (views && views.length) {
+				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+					views[viewIndex].insert(data, index);
+				}
 			}
 
 			this._onInsert(inserted, failed);
-			this.deferEmit('change');
+			if (callback) { callback(); }
+			this.deferEmit('change', {type: 'insert', data: inserted});
 
 			return {
 				inserted: inserted,
@@ -1688,6 +1770,18 @@
 										}
 									}
 									break;
+
+								case '$ne':
+									// Not equals
+									if (source != test[i]) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+									operation = true;
+									break;
 							}
 						}
 
@@ -1853,6 +1947,14 @@
 			}
 		};
 
+		/**
+		 * Creates a link to the DOM between the collection data and the elements
+		 * in the passed output selector. When new elements are needed or changes occur
+		 * the passed templateSelector is used to get the template that is output
+		 * to the DOM.
+		 * @param outputTargetSelector
+		 * @param templateSelector
+		 */
 		Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 			// Create the data binding
 			$.templates[templateSelector].link(outputTargetSelector, this._data);
@@ -1861,6 +1963,28 @@
 			this._linked = true;
 		};
 
+		/**
+		 * Removes a link to the DOM between the collection data and the elements
+		 * in the passed output selector that was created using the link() method.
+		 * @param outputTargetSelector
+		 * @param templateSelector
+		 */
+		Collection.prototype.unlink = function (outputTargetSelector, templateSelector) {
+			// Remove the data binding
+			$.templates[templateSelector].unlink(outputTargetSelector);
+
+			// Set the linked flag
+			this._linked = false;
+		};
+
+		/**
+		 * Finds sub-documents from the collection's documents.
+		 * @param match
+		 * @param path
+		 * @param subDocQuery
+		 * @param subDocOptions
+		 * @returns {*}
+		 */
 		Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
 			var pathHandler = new Path(path),
 				docArr = this.find(match),

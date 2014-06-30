@@ -202,7 +202,7 @@
 	], function (ForerunnerDB) {
 		var db = new ForerunnerDB(),
 			coll = db.collection('test'),
-			view = db.view('test'),
+			view = db.oldView('test'),
 			i;
 
 		window.view = view;
