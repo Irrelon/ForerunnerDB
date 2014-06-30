@@ -568,6 +568,8 @@
 				}
 
 				return returnData;
+			} else {
+				if (callback) { callback(); }
 			}
 		};
 
@@ -873,11 +875,11 @@
 
 		Collection.prototype._updateSplicePush = function (arr, index, doc) {
 			if (arr.length > index) {
-			if (this._linked) {
-				$.observable(arr).insert(index, doc);
-			} else {
-				arr.splice(index, 0, doc);
-			}
+				if (this._linked) {
+					$.observable(arr).insert(index, doc);
+				} else {
+					arr.splice(index, 0, doc);
+				}
 			} else {
 				if (this._linked) {
 					$.observable(arr).insert(doc);
