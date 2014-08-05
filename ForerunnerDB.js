@@ -1242,6 +1242,33 @@
 		};
 
 		/**
+		 * Find the distinct values for a specified field across a single collection and
+		 * returns the results in an array.
+		 * @param {String} field The field to return distinct values for.
+		 * @param {Object=} query The query to use to filter the documents used to return values from.
+		 * @param {Object=} options The query options to use when running the query.
+		 * @returns {Array}
+		 */
+		Collection.prototype.distinct = function (field, query, options) {
+			var data = this.find(query, options),
+				valueUsed = {},
+				distinctValues = [],
+				value,
+				i;
+
+			// Loop the data and build array of distinct values
+			for (i = 0; i < data.length; i++) {
+				value = data[i][field];
+				if (value && !valueUsed[value]) {
+					valueUsed[value] = true;
+					distinctValues.push(value);
+				}
+			}
+
+			return distinctValues;
+		};
+
+		/**
 		 * Returns a non-referenced version of the passed object / array.
 		 * @param {Object} data The object or array to return as a non-referenced version.
 		 * @returns {*}
@@ -1413,6 +1440,12 @@
 
 					if (index > -1) {
 						resultArr.splice(index, 1);
+					}
+				}
+
+				if (options.transform) {
+					for (i = 0; i < resultArr.length; i++) {
+						resultArr.splice(i, 1, options.transform(resultArr[i]));
 					}
 				}
 
@@ -1772,6 +1805,23 @@
 										}
 									}
 									break;
+
+								// TODO: Enable the $in operator - currently works by just passing an
+								// array to a source key that doesn't contain an array
+								/*case '$in':
+								 // Match any that exist in array of docs
+								 operation = true;
+
+								 for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
+								 if (!this._match(source, test[i][inIndex], opToApply)) {
+								 return false;
+								 }
+								 }
+
+								 if (opToApply === 'or') {
+								 return true;
+								 }
+								 break;*/
 
 								case '$ne':
 									// Not equals
