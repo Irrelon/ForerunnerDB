@@ -296,7 +296,11 @@
 			base.dbUp();
 			base.dataUp();
 
+			var beforeAll = user.find();
+			var beforeComparison = beforeAll[0].arr[1].val;
+
 			var before = user.find({
+				_id: '4',
 				"arr": {
 					"_id": "lsd"
 				}
@@ -304,17 +308,21 @@
 
 			ok(before.length === 1, "Failed in finding document to update!");
 
-			var beforeValue;
+			var beforeValue,
+				beforeNonChangingValue;
 
 			for (var i = 0; i < before[0].arr.length; i++) {
 				if (before[0].arr[i]._id === 'lsd') {
 					beforeValue = before[0].arr[i].val;
+				} else {
+					beforeNonChangingValue = before[0].arr[i].val;
 				}
 			}
 
-			ok(beforeValue === 1, "Failed in finding document to update!");
+			ok(beforeValue === 1 && beforeNonChangingValue == 5, "Failed in finding document to update!");
 
 			var result = user.update({
+				_id: '4',
 				"arr": {
 					"_id": "lsd"
 				}
@@ -326,21 +334,30 @@
 
 			ok(result.length === 1, "Failed to update document with positional data!");
 
+			var afterAll = user.find();
+
+			var afterComparison = afterAll[0].arr[1].val;
 			var after = user.find({
+				_id: '4',
 				"arr": {
 					"_id": "lsd"
 				}
 			});
 
-			var afterValue;
+			var afterValue,
+				afterNonChangingValue;
 
 			for (var i = 0; i < after[0].arr.length; i++) {
 				if (after[0].arr[i]._id === 'lsd') {
 					afterValue = after[0].arr[i].val;
+				} else {
+					afterNonChangingValue = before[0].arr[i].val;
 				}
 			}
 
 			ok(afterValue === 2, "Failed in finding document to update!");
+			ok(beforeNonChangingValue === afterNonChangingValue, "Update changed documents it should not have!");
+			ok(beforeComparison === afterComparison, "Update changed documents it should not have!");
 
 			base.dbDown();
 		});

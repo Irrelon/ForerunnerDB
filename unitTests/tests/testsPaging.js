@@ -18,7 +18,7 @@
 					callback('<li id="' + data._id + '">' + data.name + '</li>');
 				},
 				refresh: function () {
-					console.log('REFRESH', $('#testTarget').find('li').length);
+					//console.log('REFRESH', $('#testTarget').find('li').length);
 				}
 			});
 
@@ -35,10 +35,10 @@
 			userView._debug = false;
 
 			user.insert(arr, function () {
-				console.log('Insert of ' + arr.length + ' records complete');
+				//console.log('Insert of ' + arr.length + ' records complete');
 
 				elem = $('#testTarget').find('li');
-				console.log(elem.length);
+				//console.log(elem.length);
 
 				userView._debug = false;
 					start();

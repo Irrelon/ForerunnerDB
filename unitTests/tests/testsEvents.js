@@ -55,12 +55,12 @@
 			});
 
 			user.on('update', function (updated, failed) {
-				console.log('Updated');
+				//console.log('Updated');
 				ok(updated.length === 1, "Update single document");
 				start();
 			});
 
-			console.log('Calling update');
+			//console.log('Calling update');
 			user.update({
 				_id: '2342'
 			}, {
@@ -82,12 +82,12 @@
 			});
 
 			user.on('update', function (updated, failed) {
-				console.log('Updated', updated);
+				//console.log('Updated', updated);
 				ok(updated.length === 1, "Update single document");
 				start();
 			});
 
-			console.log('Calling update');
+			//console.log('Calling update');
 			user.update({
 				_id: '2342',
 				'name': {said: 'hello'}
@@ -129,7 +129,7 @@
 			expect(1);
 
 			db.oldView('userView').on('insert', function (successArr, failed) {
-				console.log('insert');
+				//console.log('insert');
 				ok(successArr.length === 1, "Insert single document");
 				start();
 			});

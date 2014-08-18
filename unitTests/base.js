@@ -20,7 +20,7 @@
 		Base.prototype.dbDown = function () {
 			organisation = undefined;
 			user = undefined;
-			//db = undefined;
+			db = undefined;
 		};
 
 		Base.prototype.viewUp = function () {

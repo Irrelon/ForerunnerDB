@@ -456,6 +456,8 @@
 					arr = [arr];
 				}
 
+				arr = this.transformIn(arr);
+
 				var oldData = this._data;
 
 				// Overwrite the data
@@ -586,11 +588,18 @@
 		 * @returns {Array} The items that were updated.
 		 */
 		Collection.prototype.update = function (query, update) {
+			// Decouple the update data
+			update = this.decouple(update);
+
+			// Handle transform
+			update = this.transformIn(update);
+
 			var self = this,
 				dataSet = this.find(query, {decouple: false}),
 				updated,
 				updateCall = function (doc) {
-					return self._updateObject(doc, update, query);
+					update = JSON.parse(JSON.stringify(update));
+					return self._updateObject(doc, update, query, '');
 				},
 				views = this._views,
 				viewIndex;
@@ -637,6 +646,7 @@
 		 * @private
 		 */
 		Collection.prototype._updateObject = function (doc, update, query, path) {
+			update = JSON.parse(JSON.stringify(update));
 			// Clear leading dots from path
 			path = path || '';
 			if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
@@ -875,11 +885,11 @@
 
 		Collection.prototype._updateSplicePush = function (arr, index, doc) {
 			if (arr.length > index) {
-				if (this._linked) {
-					$.observable(arr).insert(index, doc);
-				} else {
-					arr.splice(index, 0, doc);
-				}
+			if (this._linked) {
+				$.observable(arr).insert(index, doc);
+			} else {
+				arr.splice(index, 0, doc);
+			}
 			} else {
 				if (this._linked) {
 					$.observable(arr).insert(doc);
@@ -1038,6 +1048,7 @@
 				index = this._data.length;
 			}
 
+			data = this.transformIn(data);
 			return this._insertHandle(data, index, callback);
 		};
 
@@ -1449,10 +1460,83 @@
 					}
 				}
 
+				// Process transforms
+				resultArr = this.transformOut(resultArr);
+
 				return resultArr;
 			} else {
 				return [];
 			}
+		};
+
+		Collection.prototype.transform = function (obj) {
+			if (obj !== undefined) {
+				if (typeof obj === "object") {
+					if (obj.enabled !== undefined) {
+						this._transformEnabled = obj.enabled;
+					}
+
+					if (obj.dataIn !== undefined) {
+						this._transformIn = obj.dataIn;
+					}
+
+					if (obj.dataOut !== undefined) {
+						this._transformOut = obj.dataOut;
+					}
+				} else {
+					if (obj === false) {
+						// Turn off transforms
+						this._transformEnabled = false;
+					} else {
+						// Turn on transforms
+						this._transformEnabled = true;
+					}
+				}
+
+				return this;
+			}
+
+			return {
+				enabled: this._transformEnabled,
+				dataIn: this._transformIn,
+				dataOut: this._transformOut
+			}
+		};
+
+		Collection.prototype.transformIn = function (data) {
+			if (this._transformEnabled && this._transformIn) {
+				if (data instanceof Array) {
+					var finalArr = [], i;
+
+					for (i = 0; i < data.length; i++) {
+						finalArr[i] = this._transformIn(data[i]);
+					}
+
+					return finalArr;
+				} else {
+					return this._transformIn(data);
+				}
+			}
+
+			return data;
+		};
+
+		Collection.prototype.transformOut = function (data) {
+			if (this._transformEnabled && this._transformOut) {
+				if (data instanceof Array) {
+					var finalArr = [], i;
+
+					for (i = 0; i < data.length; i++) {
+						finalArr[i] = this._transformOut(data[i]);
+					}
+
+					return finalArr;
+				} else {
+					return this._transformOut(data);
+				}
+			}
+
+			return data;
 		};
 
 		/**
@@ -1809,19 +1893,19 @@
 								// TODO: Enable the $in operator - currently works by just passing an
 								// array to a source key that doesn't contain an array
 								/*case '$in':
-								 // Match any that exist in array of docs
-								 operation = true;
+									// Match any that exist in array of docs
+									operation = true;
 
-								 for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
-								 if (!this._match(source, test[i][inIndex], opToApply)) {
-								 return false;
-								 }
-								 }
+									for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
+										if (!this._match(source, test[i][inIndex], opToApply)) {
+											return false;
+										}
+									}
 
-								 if (opToApply === 'or') {
-								 return true;
-								 }
-								 break;*/
+									if (opToApply === 'or') {
+										return true;
+									}
+									break;*/
 
 								case '$ne':
 									// Not equals
@@ -2001,9 +2085,9 @@
 
 		/**
 		 * Creates a link to the DOM between the collection data and the elements
-		 * in the passed output selector. When new elements are needed or changes occur
-		 * the passed templateSelector is used to get the template that is output
-		 * to the DOM.
+		 * in the passed output selector. When new elements are needed or changes
+		 * occur the passed templateSelector is used to get the template that is
+		 * output to the DOM.
 		 * @param outputTargetSelector
 		 * @param templateSelector
 		 */
