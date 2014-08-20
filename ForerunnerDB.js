@@ -2167,6 +2167,27 @@
 			return resultObj;
 		};
 
+		var Index = function () {
+			this.init.apply(this, arguments);
+		};
+
+		Index.prototype.init = function () {
+
+		};
+
+		Index.prototype.collection = function () {
+
+		};
+
+		Index.prototype.type = function (val) {
+			if (val !== undefined) {
+				this._type = val;
+				return this;
+			}
+
+			return this._type;
+		};
+
 		/**
 		 * The main DB object used to store collections.
 		 * @constructor
