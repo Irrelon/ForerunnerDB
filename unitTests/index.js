@@ -10,18 +10,22 @@ require([
 		'./tests/testsCore'
 	], function (testsCore) {
 		require([
-			'./tests/testsEvents'
-		], function (testsEvents) {
+			'./tests/testsIndex'
+		], function (testsIndex) {
 			require([
-				'./tests/testsBind'
-			], function (testsBind) {
+				'./tests/testsEvents'
+			], function (testsEvents) {
 				require([
-					'./tests/testsPaging'
-				], function (testsPaging) {
+					'./tests/testsBind'
+				], function (testsBind) {
 					require([
-						'./tests/testsTransform'
-					], function (testsTransform) {
+						'./tests/testsPaging'
+					], function (testsPaging) {
+						require([
+							'./tests/testsTransform'
+						], function (testsTransform) {
 
+						});
 					});
 				});
 			});
