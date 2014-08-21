@@ -4,8 +4,25 @@
 			base.dbUp();
 			base.dataUp();
 
-			ok(result.length === 1, "Insert");
-			ok(result[0].moo === 1 && result[0].goo === 2, "Insert transformed");
+			var indexResult = user.ensureIndex({
+				arr: {
+					val: 1
+				},
+				name: 1
+			}, {
+				unique: true
+			});
+
+			var lookup = indexResult.index.lookup({
+				arr: {
+					val: 5
+				},
+				name: 'Dean'
+			});
+
+			ok(lookup.length === 2, "Lookup returned correct number of results");
+			ok(lookup[0]._id === '4' && lookup[0].arr[1].val === '5', "Lookup returned correct result 1");
+			ok(lookup[1]._id === '5' && lookup[1].arr[1].val === '5', "Lookup returned correct result 2");
 
 			base.dbDown();
 		});

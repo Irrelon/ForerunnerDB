@@ -68,11 +68,13 @@
 			base.dbUp();
 			base.dataUp();
 
+			var count = user.count({lookup: true});
+
 			user.remove({lookup: true});
 			var result = user.insert(usersData);
 
 			ok(result.inserted.length === 2, "Complete");
-			ok(result.failed.length === 1, "Complete");
+			ok(result.failed.length === count, "Complete");
 
 			base.dbDown();
 		});
@@ -98,7 +100,7 @@
 				$exists: true
 			}});
 
-			ok(result.length === 3, "Complete");
+			ok(result.length === 4, "Complete");
 
 			base.dbDown();
 		});
@@ -141,7 +143,7 @@
 			}});
 			user._debug = false;
 
-			ok(result.length === 3, "Complete");
+			ok(result.length === 4, "Complete");
 
 			base.dbDown();
 		});
@@ -180,7 +182,7 @@
 				$lt: 12
 			}});
 
-			ok(result.length === 1, "Complete");
+			ok(result.length === 2, "Complete");
 
 			base.dbDown();
 		});
@@ -193,7 +195,7 @@
 				$lte: 12
 			}});
 
-			ok(result.length === 2, "Complete");
+			ok(result.length === 3, "Complete");
 
 			base.dbDown();
 		});
@@ -221,7 +223,7 @@
 				$gte: 5
 			}});
 
-			ok(result.length === 2, "Complete");
+			ok(result.length === 3, "Complete");
 
 			base.dbDown();
 		});
@@ -234,7 +236,7 @@
 				$ne: 12
 			}});
 
-			ok(result.length === 2, "Complete");
+			ok(result.length === 3, "Complete");
 
 			base.dbDown();
 		});
@@ -251,7 +253,7 @@
 				}]
 			});
 
-			ok(result.length === 2, "Complete");
+			ok(result.length === 3, "Complete");
 
 			base.dbDown();
 		});
@@ -287,7 +289,7 @@
 				}
 			});
 
-			ok(result.length === 2, "Complete");
+			ok(result.length === 3, "Complete");
 
 			base.dbDown();
 		});
@@ -553,8 +555,9 @@
 			});
 
 			ok(result[0].name === 'Dean', "Complete");
-			ok(result[1].name === 'Jim', "Complete");
-			ok(result[2].name === 'Kat', "Complete");
+			ok(result[1].name === 'Dean', "Complete");
+			ok(result[2].name === 'Jim', "Complete");
+			ok(result[3].name === 'Kat', "Complete");
 
 			base.dbDown();
 		});
@@ -702,9 +705,10 @@
 				}
 			});
 
-			ok(result[0].name === 'Kat' && result[0].lookup === false, "Name and Lookup");
-			ok(result[1].name === 'Dean' && result[1].lookup === true, "Name and Lookup");
-			ok(result[2].name === 'Jim' && result[2].lookup === true, "Name and Lookup");
+			ok(result[0].name === 'Dean' && result[0].lookup === false, "Name and Lookup");
+			ok(result[1].name === 'Kat' && result[1].lookup === false, "Name and Lookup");
+			ok(result[2].name === 'Dean' && result[1].lookup === false, "Name and Lookup");
+			ok(result[3].name === 'Jim' && result[2].lookup === true, "Name and Lookup");
 
 			base.dbDown();
 		});
@@ -723,8 +727,9 @@
 			});
 
 			ok(result[0].name === 'Dean' && result[0].age === 5, "Name and Lookup");
-			ok(result[1].name === 'Kat' && result[1].age === 12, "Name and Lookup");
-			ok(result[2].name === 'Jim' && result[2].age === 15, "Name and Lookup");
+			ok(result[1].name === 'Dean' && result[1].age === 5, "Name and Lookup");
+			ok(result[2].name === 'Kat' && result[2].age === 12, "Name and Lookup");
+			ok(result[3].name === 'Jim' && result[3].age === 15, "Name and Lookup");
 
 			base.dbDown();
 		});

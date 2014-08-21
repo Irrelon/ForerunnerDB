@@ -187,26 +187,49 @@
 		};
 
 		/**
-		 * Gets the value that the object contains for the currently assigned
-		 * path string.
+		 * Gets the value(s) that the object contains for the currently assigned path string.
 		 * @param {Object} obj The object to evaluate the path against.
-		 * @returns {*}
+		 * @param {String=} path A path to use instead of the existing one passed in path().
+		 * @returns {Array} An array of values for the given path.
 		 */
-		Path.prototype.value = function (obj) {
-			var arr = this._pathParts,
-				arrCount = arr.length,
-				objPart = obj,
-				i;
+		Path.prototype.value = function (obj, path) {
+			var pathParts,
+				arr,
+				arrCount,
+				objPart,
+				objPartParent,
+				valuesArr = [],
+				i, k;
+
+			if (path !== undefined) {
+				path = this.clean(path);
+				pathParts = path.split('.');
+			}
+
+			arr = pathParts || this._pathParts;
+			arrCount = arr.length;
+			objPart = obj;
 
 			for (i = 0; i < arrCount; i++) {
 				objPart = objPart[arr[i]];
 
-				if (!objPart || typeof(objPart) !== 'object') {
-					break;
+				if (objPartParent instanceof Array) {
+					// Search inside the array for the next key
+					for (k = 0; k < objPartParent.length; k++) {
+						valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+					}
+
+					return valuesArr;
+				} else {
+					if (!objPart || typeof(objPart) !== 'object') {
+						break;
+					}
 				}
+
+				objPartParent = objPart;
 			}
 
-			return objPart;
+			return [objPart];
 		};
 
 		/**
@@ -811,7 +834,7 @@
 
 							// Loop the array and find matches to our search
 							for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-								if (this._match(doc[i][tmpIndex], pathInstance.value(query))) {
+								if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0])) {
 									tmpArray.push(tmpIndex);
 								}
 							}
@@ -1231,7 +1254,7 @@
 
 			// Loop the data and build array of distinct values
 			for (i = 0; i < data.length; i++) {
-				value = pathSolver.value(data[i]);
+				value = pathSolver.value(data[i])[0];
 
 				if (value && !valueUsed[value]) {
 					valueUsed[value] = true;
@@ -1312,7 +1335,7 @@
 					for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
 						joinCollectionName = analysis.joinsOn[joinIndex];
 						joinPath = new Path(analysis.joinQueries[joinCollectionName]);
-						joinQuery = joinPath.value(query);
+						joinQuery = joinPath.value(query)[0];
 						joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
 					}
 				}
@@ -1386,7 +1409,7 @@
 											} else {
 												// TODO: Could optimise this by caching path objects
 												// Get the data to match against and store in the search object
-												joinSearch[joinMatchIndex] = new Path(joinMatch[joinMatchIndex]).value(resultArr[resultIndex]);
+												joinSearch[joinMatchIndex] = new Path(joinMatch[joinMatchIndex]).value(resultArr[resultIndex])[0];
 											}
 										}
 									}
@@ -1586,8 +1609,8 @@
 			if (dataPath.value === 1) {
 				// Sort ascending
 				sorterMethod = function (a, b) {
-					var valA = pathSolver.value(a),
-						valB = pathSolver.value(b);
+					var valA = pathSolver.value(a)[0],
+						valB = pathSolver.value(b)[0];
 
 					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB);
@@ -1604,8 +1627,8 @@
 			} else {
 				// Sort descending
 				sorterMethod = function (a, b) {
-					var valA = pathSolver.value(a),
-						valB = pathSolver.value(b);
+					var valA = pathSolver.value(a)[0],
+						valB = pathSolver.value(b)[0];
 
 					if (typeof(valA) === 'string' && typeof(valB) === 'string') {
 						return valA.localeCompare(valB) === 1 ? -1 : 1;
@@ -2101,7 +2124,7 @@
 				};
 
 			for (docIndex = 0; docIndex < docCount; docIndex++) {
-				subDocArr = pathHandler.value(docArr[docIndex]);
+				subDocArr = pathHandler.value(docArr[docIndex])[0];
 				if (subDocArr) {
 					subDocCollection.setData(subDocArr);
 					subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
@@ -2164,6 +2187,12 @@
 
 			// Add the index
 			this._index[index.name()] = index;
+
+			return {
+				success: true,
+				index: index,
+				name: index.name()
+			};
 		};
 
 		var Index = function () {
@@ -2171,6 +2200,7 @@
 		};
 
 		Index.prototype.init = function (keys, options, collection) {
+			this._crossRef = {};
 			this.data({});
 			this.unique(options && options.unique ? options.unique : false);
 
@@ -2259,18 +2289,19 @@
 					pathSolver = new Path(),
 					keyPaths = pathSolver.parse(this._keys),
 					pathIndex,
-					pathObj;
+					pathObj,
+					indexValues,
+					valueIndex,
+					itemHashArr,
+					hashIndex;
 
-				// Clear the path key data and set as objects to store
-				// our buckets in
-				for (pathIndex = 0; pathIndex < keyPaths.length; pathIndex++) {
-					this._data[keyPaths[pathIndex].path] = {};
-				}
+				// Clear the index data for the index
+				this._data = {};
 
 				// Loop the collection data
 				for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
 					dataItem = collectionData[dataIndex];
-
+debugger;
 					if (uniqueFlag) {
 						// Generate item hash
 						uniqueHash = this._itemHash(dataItem, this._keys);
@@ -2281,50 +2312,134 @@
 							this._state = {
 								err: 'Unique constraint violation with existing data, cannot create index!',
 								keys: this._keys,
-								item: dataItem,
-								hash: uniqueHash
+								hash: uniqueHash,
+								clashItem: dataItem,
+								clashedWith: uniqueLookup[uniqueHash]
 							};
 
 							return this._state;
+						} else {
+							uniqueLookup[uniqueHash] = dataItem;
 						}
 					}
 
+					// Generate item hash
+					itemHashArr = this._itemHashArr(dataItem, this._keys);
+
 					// Get the path search results and store them
-					for (pathIndex = 0; pathIndex < keyPaths.length; pathIndex++) {
-						pathObj = keyPaths[pathIndex];
-						this._data[pathObj.path]
+					for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
+						this.pushToPathValue(itemHashArr[hashIndex], dataItem);
 					}
 				}
 			}
 		};
 
-		Index.prototype.lookup = function (query) {
-			var pathSolver = new Path(),
-				queryPaths = pathSolver.parse(query, true),
-				pathIndex,
-				pathObj;
+		Index.prototype.pushToPathValue = function (hash, obj) {
+			var pathValArr;
 
-			for (pathIndex = 0; pathIndex < queryPaths.length; pathIndex++) {
-				pathObj = queryPaths[pathIndex];
-				this._data[pathObj.path][pathObj.value];
+			pathValArr = this._data[hash] = this._data[hash] || [];
+
+			// Make sure we have not already indexed this object at this path/value
+			if (pathValArr.indexOf(obj) === -1) {
+				// Index the object
+				pathValArr.push(obj);
+
+				// Cross-reference this association for later lookup
+				this.pushToCrossRef(obj, pathValArr);
 			}
+		};
+
+		Index.prototype.pull = function (obj) {
+			// Get all places the object has been used and remove them
+			var id = obj[this._collection.primaryKey()],
+				crossRefArr = this._crossRef[id],
+				arrIndex,
+				arrCount = crossRefArr.length,
+				arrItem;
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arrItem = crossRefArr[arrIndex];
+
+				// Remove item from this index lookup array
+				this._pullFromArray(arrItem, obj);
+			}
+
+			// Now remove the cross-reference entry for this object
+			delete this._crossRef[id];
+		};
+
+		Index.prototype._pullFromArray = function (arr, obj) {
+			var arrCount = arr.length;
+
+			while (arrCount--) {
+				if (arr[arrCount] === obj) {
+					arr.splice(arrCount, 1);
+				}
+			}
+		};
+
+		Index.prototype.pushToCrossRef = function (obj, pathValArr) {
+			var id = obj[this._collection.primaryKey()],
+				crObj;
+
+			this._crossRef[id] = this._crossRef[id] || [];
+
+			// Check if the cross-reference to the pathVal array already exists
+			crObj = this._crossRef[id];
+
+			if (crObj.indexOf(pathValArr) === -1) {
+				// Add the cross-reference
+				crObj.push(pathValArr);
+			}
+		};
+
+		Index.prototype.lookup = function (query) {
+			return this._data[this._itemHash(query, this._keys)] || [];
 		};
 
 		Index.prototype._itemHash = function (item, keys) {
 			var path = new Path(),
 				pathData,
 				hash = '',
-				i, k;
+				k;
 
-			debugger;
 			pathData = path.parse(keys);
 
 			for (k = 0; k < pathData.length; k++) {
 				if (hash) { hash += '_'; }
-				hash += path.value(item, pathData[k].path);
+				hash += path.value(item, pathData[k].path).join(':');
 			}
 
 			return hash;
+		};
+
+		Index.prototype._itemHashArr = function (item, keys) {
+			var path = new Path(),
+				pathData,
+				hash = '',
+				hashArr = [],
+				valArr,
+				i, k, j;
+
+			pathData = path.parse(keys);
+
+			for (k = 0; k < pathData.length; k++) {
+				valArr = path.value(item, pathData[k].path);
+
+				for (i = 0; i < valArr.length; i++) {
+					if (k === 0) {
+						// Setup the initial hash array
+						hashArr.push(valArr[i]);
+					} else {
+						// Loop the hash array and concat the value to it
+						for (j = 0; j < hashArr.length; j++) {
+							hashArr[j] = hashArr[j] + '_' + valArr[i];
+						}
+					}
+				}
+			}
+
+			return hashArr;
 		};
 
 		/**
