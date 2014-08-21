@@ -97,43 +97,53 @@
 		 * @returns {Object}
 		 */
 		Path.prototype.parse = function (obj, withValue) {
-			var path = '',
+			var paths = [],
+				path = '',
+				pathIndex = 0,
 				value,
 				resultData,
-				i;
+				i, k;
 
 			for (i in obj) {
 				if (obj.hasOwnProperty(i)) {
-					path += i;
+					// Set the path to the key
+					path = i;
 
 					if (typeof(obj[i]) === 'object') {
 						if (withValue) {
 							resultData = this.parse(obj[i], withValue);
-							path += '.' + resultData.path;
-							value = resultData.value;
+
+							for (k = 0; k < resultData.length; k++) {
+								paths.push({
+									path: path + '.' + resultData[k].path,
+									value: resultData[k].value
+								});
+							}
 						} else {
-							path += '.' + this.parse(obj[i], withValue);
+							resultData = this.parse(obj[i]);
+
+							for (k = 0; k < resultData.length; k++) {
+								paths.push({
+									path: path + '.' + resultData[k].path
+								});
+							}
 						}
 					} else {
 						if (withValue) {
-							value = obj[i];
+							paths.push({
+								path: path,
+								value: obj[i]
+							});
+						} else {
+							paths.push({
+								path: path
+							});
 						}
 					}
-
-					break;
 				}
 			}
 
-			if (withValue) {
-				return {
-					path: path,
-					value: value
-				};
-			} else {
-				return {
-					path: path
-				};
-			}
+			return paths;
 		};
 
 		/**
@@ -1148,7 +1158,7 @@
 				}
 
 				// Check indexes are not going to be broken by the document
-				indexViolation = this._indexViolation(doc);
+				indexViolation = this.insertIndexViolation(doc);
 
 				if (!indexViolation) {
 					// Insert the document
@@ -1165,55 +1175,6 @@
 			}
 
 			return false;
-		};
-
-		/**
-		 * Checks that the passed document will not violate any index rules.
-		 * @param {Object} doc The document to check indexes against.
-		 * @returns {Object} Either null (no violation occurred) or an object with
-		 * details about the violation.
-		 */
-		Collection.prototype._indexViolation = function (doc) {
-			// Check the item's primary key is not already in use
-			var item = this.findById(doc[this._primaryKey]);
-
-			return Boolean(item);
-		};
-
-		Collection.prototype.ensureIndex = function (obj, options) {
-			this._index = this._index || {};
-			options = options || {};
-
-			if (!options.name) {
-				options.name = JSON.stringify(obj);
-			}
-
-			// Check the index does not already exist
-			if (this._index[options.name]) {
-				// Index already exists
-				return {
-					err: 'Index already exists'
-				};
-			}
-
-			// Add the index
-			this._index[options.name] = obj;
-
-			// Create the index
-			this._reIndex(options.name);
-		};
-
-		Collection.prototype._reIndex = function (indexName) {
-			// Grab the index details
-			var index = this._index[indexName];
-
-			if (!index) {
-				return {
-					err: 'Index not found'
-				};
-			}
-
-
 		};
 
 		/**
@@ -1255,13 +1216,14 @@
 		/**
 		 * Find the distinct values for a specified field across a single collection and
 		 * returns the results in an array.
-		 * @param {String} field The field to return distinct values for.
+		 * @param {String} key The field path to return distinct values for e.g. "person.name".
 		 * @param {Object=} query The query to use to filter the documents used to return values from.
 		 * @param {Object=} options The query options to use when running the query.
 		 * @returns {Array}
 		 */
-		Collection.prototype.distinct = function (field, query, options) {
+		Collection.prototype.distinct = function (key, query, options) {
 			var data = this.find(query, options),
+				pathSolver = new Path(key),
 				valueUsed = {},
 				distinctValues = [],
 				value,
@@ -1269,7 +1231,8 @@
 
 			// Loop the data and build array of distinct values
 			for (i = 0; i < data.length; i++) {
-				value = data[i][field];
+				value = pathSolver.value(data[i]);
+
 				if (value && !valueUsed[value]) {
 					valueUsed[value] = true;
 					distinctValues.push(value);
@@ -1616,7 +1579,7 @@
 		Collection.prototype._sort = function (key, arr) {
 			var sorterMethod,
 				pathSolver = new Path(),
-				dataPath = pathSolver.parse(key, true);
+				dataPath = pathSolver.parse(key, true)[0];
 
 			pathSolver.path(dataPath.path);
 
@@ -2167,16 +2130,97 @@
 			return resultObj;
 		};
 
+		/**
+		 * Checks that the passed document will not violate any index rules.
+		 * @param {Object} doc The document to check indexes against.
+		 * @returns {Object} Either null (no violation occurred) or an object with
+		 * details about the violation.
+		 */
+		Collection.prototype.insertIndexViolation = function (doc) {
+			// Check the item's primary key is not already in use
+			var item = this.findById(doc[this._primaryKey]);
+
+			return Boolean(item);
+		};
+
+		Collection.prototype.ensureIndex = function (keys, options) {
+			this._index = this._index || {};
+
+			var index = new Index();
+			index.collection(this);
+			index.keys(keys);
+			index.unique(options && options.unique ? options.unique : false);
+
+			// Check the index does not already exist
+			if (this._index[index.name()]) {
+				// Index already exists
+				return {
+					err: 'Index already exists'
+				};
+			}
+
+			// Create the index
+			index.rebuild();
+
+			// Add the index
+			this._index[index.name()] = index;
+		};
+
 		var Index = function () {
 			this.init.apply(this, arguments);
 		};
 
-		Index.prototype.init = function () {
+		Index.prototype.init = function (keys, options, collection) {
+			this.data({});
+			this.unique(options && options.unique ? options.unique : false);
 
+			if (keys !== undefined) {
+				this.keys(keys);
+			}
+
+			if (collection !== undefined) {
+				this.collection(collection);
+			}
+
+			if (!options || !options.name) {
+				this.name(JSON.stringify(keys));
+			}
 		};
 
-		Index.prototype.collection = function () {
+		Index.prototype.data = function (val) {
+			if (val !== undefined) {
+				this._data = val;
+				return this;
+			}
 
+			return this._data;
+		};
+
+		Index.prototype.name = function (val) {
+			if (val !== undefined) {
+				this._name = val;
+				return this;
+			}
+
+			return this._name;
+		};
+
+		Index.prototype.collection = function (val) {
+			if (val !== undefined) {
+				this._collection = val;
+				return this;
+			}
+
+			return this._collection;
+		};
+
+		Index.prototype.keys = function (val) {
+			if (val !== undefined) {
+				this._keys = val;
+				return this;
+			}
+
+			return this._keys;
 		};
 
 		Index.prototype.type = function (val) {
@@ -2186,6 +2230,101 @@
 			}
 
 			return this._type;
+		};
+
+		Index.prototype.unique = function (val) {
+			if (val !== undefined) {
+				this._unique = val;
+				return this;
+			}
+
+			return this._unique;
+		};
+
+		Index.prototype.rebuild = function () {
+			// Do we have a collection?
+			if (this._collection) {
+				// Get sorted data
+				var collection = this._collection.subset({}, {
+						decouple: false,
+						sort: this._keys
+					}),
+					collectionData = collection.find(),
+					dataIndex,
+					dataCount = collectionData.length,
+					dataItem,
+					uniqueLookup = {},
+					uniqueFlag = this._unique,
+					uniqueHash,
+					pathSolver = new Path(),
+					keyPaths = pathSolver.parse(this._keys),
+					pathIndex,
+					pathObj;
+
+				// Clear the path key data and set as objects to store
+				// our buckets in
+				for (pathIndex = 0; pathIndex < keyPaths.length; pathIndex++) {
+					this._data[keyPaths[pathIndex].path] = {};
+				}
+
+				// Loop the collection data
+				for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+					dataItem = collectionData[dataIndex];
+
+					if (uniqueFlag) {
+						// Generate item hash
+						uniqueHash = this._itemHash(dataItem, this._keys);
+
+						// Check if the item breaks the unique constraint
+						if (uniqueLookup[uniqueHash]) {
+							// Item breaks unique constraint
+							this._state = {
+								err: 'Unique constraint violation with existing data, cannot create index!',
+								keys: this._keys,
+								item: dataItem,
+								hash: uniqueHash
+							};
+
+							return this._state;
+						}
+					}
+
+					// Get the path search results and store them
+					for (pathIndex = 0; pathIndex < keyPaths.length; pathIndex++) {
+						pathObj = keyPaths[pathIndex];
+						this._data[pathObj.path]
+					}
+				}
+			}
+		};
+
+		Index.prototype.lookup = function (query) {
+			var pathSolver = new Path(),
+				queryPaths = pathSolver.parse(query, true),
+				pathIndex,
+				pathObj;
+
+			for (pathIndex = 0; pathIndex < queryPaths.length; pathIndex++) {
+				pathObj = queryPaths[pathIndex];
+				this._data[pathObj.path][pathObj.value];
+			}
+		};
+
+		Index.prototype._itemHash = function (item, keys) {
+			var path = new Path(),
+				pathData,
+				hash = '',
+				i, k;
+
+			debugger;
+			pathData = path.parse(keys);
+
+			for (k = 0; k < pathData.length; k++) {
+				if (hash) { hash += '_'; }
+				hash += path.value(item, pathData[k].path);
+			}
+
+			return hash;
 		};
 
 		/**
