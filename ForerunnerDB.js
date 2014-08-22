@@ -1996,22 +1996,67 @@
 									}
 									break;
 
-								// TODO: Enable the $in operator - currently works by just passing an
-								// array to a source key that doesn't contain an array
-								/*case '$in':
-								 // Match any that exist in array of docs
-								 operation = true;
+								case '$in':
+									// In
 
-								 for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
-								 if (!this._match(source, test[i][inIndex], opToApply)) {
-								 return false;
-								 }
-								 }
+									// Check that the in test is an array
+									if (test[i] instanceof Array) {
+										var inArr = test[i],
+											inArrCount = inArr.length,
+											inArrIndex,
+											isIn = false;
 
-								 if (opToApply === 'or') {
-								 return true;
-								 }
-								 break;*/
+										for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
+											if (inArr[inArrIndex] === source) {
+												isIn = true;
+												break;
+											}
+										}
+
+										if (isIn) {
+											if (opToApply === 'or') {
+												return true;
+											}
+										} else {
+											matchedAll = false;
+										}
+									} else {
+										throw('Cannot use a $nin operator on a non-array key: ' + i);
+									}
+
+									operation = true;
+									break;
+
+								case '$nin':
+									// Not in
+
+									// Check that the not-in test is an array
+									if (test[i] instanceof Array) {
+										var notInArr = test[i],
+											notInArrCount = notInArr.length,
+											notInArrIndex,
+											notIn = true;
+
+										for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
+											if (notInArr[notInArrIndex] === source) {
+												notIn = false;
+												break;
+											}
+										}
+
+										if (notIn) {
+											if (opToApply === 'or') {
+												return true;
+											}
+										} else {
+											matchedAll = false;
+										}
+									} else {
+										throw('Cannot use a $nin operator on a non-array key: ' + i);
+									}
+
+									operation = true;
+									break;
 
 								case '$ne':
 									// Not equals

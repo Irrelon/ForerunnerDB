@@ -294,6 +294,82 @@
 			base.dbDown();
 		});
 
+		test("Core - Collection.find() :: $in clause against root key data", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				age: {
+					$in: [
+						5, 12
+					]
+				}
+			});
+
+			ok(result.length === 3, "In returned correct number of results");
+			ok(result[0].name === 'Kat', "In returned expected result data");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $in clause against multi-level key data", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				arr: {
+					val: {
+						$in: [
+							2, 4
+						]
+					}
+				}
+			});
+
+			ok(result.length === 1, "In returned correct number of results");
+			ok(result[0].name === 'Jim', "In returned expected result data");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $nin clause against root key data", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				age: {
+					$nin: [
+						5, 12
+					]
+				}
+			});
+
+			ok(result.length === 1, "Not in returned correct number of results");
+			ok(result[0].name === 'Jim', "Not in returned expected result data");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $nin clause against multi-level key data", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				arr: {
+					val: {
+						$nin: [
+							2, 4
+						]
+					}
+				}
+			});
+
+			ok(result.length === 3, "Not in returned correct number of results");
+			ok(result[0].name === 'Kat', "Not in returned expected result data");
+
+			base.dbDown();
+		});
+
 		test("Core - Collection.update() :: arrayKey.$ Positional array selector", function() {
 			base.dbUp();
 			base.dataUp();

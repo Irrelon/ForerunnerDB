@@ -340,6 +340,8 @@ ForerunnerDB's project road-map:
     $splicePush
     $addToSet
     $pull
+    $in
+    $nin
 
 	Required:
 	$mul,
