@@ -1,4 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
+## Version 1.0.23
+
 ##### Project Status
 
 * ForerunnerDB: **Production - Stable**
@@ -103,10 +105,12 @@ Supported operators:
 * $gte Greater Than / Equal To
 * $lt Less Than
 * $lte Less Than / Equal To
-* $or Match any of the contitions inside the sub-query
+* $or Match any of the conditions inside the sub-query
 * $and Match all conditions inside the sub-query
 * $exists Check that a key exists in the document
 * $push Used in updates to add an item to an array
+* $splicePush Add an item into an array at a specified index
+* $addToSet Adds an item into an array only if the item does not already exist in the array
 * $pull Used in updates to remove an item from an array
 * arrayKey.$ Positional selector query
 
@@ -320,11 +324,44 @@ ForerunnerDB's project road-map:
 * COMPLETED - Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
 * COMPLETED - Query remote database from browser
 * COMPLETED - Data persistence on client-side
-* Support more of the MongoDB query operators
+* PARTIAL - Collection indexing
+* PARTIAL - Support more of the MongoDB query operators
+
+	Completed:
+	$ (array positional)
+	$gt
+    $gte
+    $lt
+    $lte
+    $or
+    $and
+    $exists
+    $push
+    $splicePush
+    $addToSet
+    $pull
+
+	Required:
+	$mul,
+	$rename,
+	$setOnInsert,
+	$unset,
+	$min,
+	$max,
+	$currentDate,
+	$pop,
+	$pullAll,
+	$pushAll,
+	$each,
+	$slice,
+	$sort,
+	$position (already have new operator $pushSplice to achieve the same thing),
+	$bit,
+	$isolated
+
 * Data persistence on server-side
 * NPM installation
 * Collection / query paging e.g. select next 10, select previous 10
-* Collection indexing
 * Index violation checking
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly

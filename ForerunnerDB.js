@@ -800,6 +800,40 @@
 								}
 								break;
 
+							case '$addToSet':
+								operation = true;
+
+								// Do a push operation checking first that no other item
+								// exists that matches the item to push
+								for (k in update[i]) {
+									if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+										if (doc[k] instanceof Array) {
+											// Loop the target array and check for existence of item
+											var targetArr = doc[k],
+												targetArrIndex,
+												targetArrCount = targetArr.length,
+												objHash = JSON.stringify(update[i][k]),
+												addObj = true;
+
+											for (targetArrIndex = 0; targetArrIndex < targetArrCount; targetArrIndex++) {
+												if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
+													// The object already exists, don't add it
+													addObj = false;
+													break;
+												}
+											}
+
+											if (addObj) {
+												this._updatePush(doc[k], update[i][k]);
+												updated = true;
+											}
+										} else {
+											throw("Cannot push to a key that is not an array! (" + k + ")!");
+										}
+									}
+								}
+								break;
+
 							case '$splicePush':
 								operation = true;
 
@@ -982,11 +1016,11 @@
 
 		Collection.prototype._updateSplicePush = function (arr, index, doc) {
 			if (arr.length > index) {
-			if (this._linked) {
-				$.observable(arr).insert(index, doc);
-			} else {
-				arr.splice(index, 0, doc);
-			}
+				if (this._linked) {
+					$.observable(arr).insert(index, doc);
+				} else {
+					arr.splice(index, 0, doc);
+				}
 			} else {
 				if (this._linked) {
 					$.observable(arr).insert(doc);
@@ -1965,19 +1999,19 @@
 								// TODO: Enable the $in operator - currently works by just passing an
 								// array to a source key that doesn't contain an array
 								/*case '$in':
-									// Match any that exist in array of docs
-									operation = true;
+								 // Match any that exist in array of docs
+								 operation = true;
 
-									for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
-										if (!this._match(source, test[i][inIndex], opToApply)) {
-											return false;
-										}
-									}
+								 for (var inIndex = 0; inIndex < test[i].length; inIndex++) {
+								 if (!this._match(source, test[i][inIndex], opToApply)) {
+								 return false;
+								 }
+								 }
 
-									if (opToApply === 'or') {
-										return true;
-									}
-									break;*/
+								 if (opToApply === 'or') {
+								 return true;
+								 }
+								 break;*/
 
 								case '$ne':
 									// Not equals
