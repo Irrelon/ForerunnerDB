@@ -35,7 +35,7 @@
 				name: 'Dean'
 			}, {});
 
-			console.log(a);
+			//console.log(a);
 
 			ok(a && a.usesIndex && a.usesIndex.length === 1, "Query analyser returned correct number of indexes to use");
 			ok(a.usesIndex[0]._name === 'testIndex', "Check index name: " + a.usesIndex[0]._name);
@@ -43,7 +43,7 @@
 
 		test("Index - Index.lookup() :: Test lookup from index", function () {
 			var index = user.index('testIndex');
-			console.log(index);
+			//console.log(index);
 			var lookup = index.lookup({
 				arr: {
 					val: 5
@@ -51,7 +51,7 @@
 				name: 'Dean'
 			});
 
-			console.log(lookup);
+			//console.log(lookup);
 
 			ok(lookup.length === 2, "Lookup returned correct number of results");
 			ok(lookup[0]._id === '4' && lookup[0].arr[1].val === 5, "Lookup returned correct result 1");
