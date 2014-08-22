@@ -88,6 +88,31 @@
 			return this._path;
 		};
 
+		Path.prototype.hasObjectPaths = function (testKeys, testObj) {
+			var result = true,
+				i;
+
+			for (i in testKeys) {
+				if (testKeys.hasOwnProperty(i)) {
+					if (testObj[i] === undefined) {
+						return false;
+					}
+
+					if (typeof testKeys[i] === 'object') {
+						// Recurse object
+						result = this.hasObjectPaths(testKeys[i], testObj[i]);
+
+						// Should we exit early?
+						if (!result) {
+							return false;
+						}
+					}
+				}
+			}
+
+			return result;
+		};
+
 		/**
 		 * Takes a non-recursive object and converts the object hierarchy into
 		 * a path string.
@@ -230,6 +255,45 @@
 			}
 
 			return [objPart];
+		};
+
+		/**
+		 * Gets the value(s) that the object contains for the currently assigned path string
+		 * with their associated keys.
+		 * @param {Object} obj The object to evaluate the path against.
+		 * @param {String=} path A path to use instead of the existing one passed in path().
+		 * @returns {Array} An array of values for the given path with the associated key.
+		 */
+		Path.prototype.keyValue = function (obj, path) {
+			var pathParts,
+				arr,
+				arrCount,
+				objPart,
+				objPartParent,
+				objPartHash,
+				i;
+
+			if (path !== undefined) {
+				path = this.clean(path);
+				pathParts = path.split('.');
+			}
+
+			arr = pathParts || this._pathParts;
+			arrCount = arr.length;
+			objPart = obj;
+
+			for (i = 0; i < arrCount; i++) {
+				objPart = objPart[arr[i]];
+
+				if (!objPart || typeof(objPart) !== 'object') {
+					objPartHash = arr[i] + ':' + objPart;
+					break;
+				}
+
+				objPartParent = objPart;
+			}
+
+			return objPartHash;
 		};
 
 		/**
@@ -1340,12 +1404,18 @@
 					}
 				}
 
-				// Filter the source data and return the result
-				resultArr = this._data.filter(matcher);
+				// Check if an index lookup can be used to return this result
+				if (analysis.usesIndex.length) {
+					// Get the data from the index
+					resultArr = analysis.usesIndex[0].lookup(query);
+				} else {
+					// Filter the source data and return the result
+					resultArr = this._data.filter(matcher);
 
-				// Order the array if we were passed a sort clause
-				if (options.sort) {
-					resultArr = this.sort(options.sort, resultArr);
+					// Order the array if we were passed a sort clause
+					if (options.sort) {
+						resultArr = this.sort(options.sort, resultArr);
+					}
 				}
 
 				if (options.limit && resultArr && resultArr.length > options.limit) {
@@ -1688,7 +1758,23 @@
 				joinCollections = [],
 				joinCollectionReferences = [],
 				queryPath,
-				index;
+				index,
+				i;
+
+			// Check if an index can speed up the query
+			for (i in this._indexById) {
+				if (this._indexById.hasOwnProperty(i)) {
+					if (this._indexById[i].match(query, options)) {
+						// This index can be used, store it
+						analysis.usesIndex.push(this._indexById[i]);
+					}
+				}
+			}
+
+			// Sort array descending on index key count (effectively a measure of relevance to the query)
+			analysis.usesIndex.sort(function (a, b) {
+				return b._keyCount - a._keyCount;
+			});
 
 			// Check for join data
 			if (options.join) {
@@ -2167,18 +2253,23 @@
 		};
 
 		Collection.prototype.ensureIndex = function (keys, options) {
-			this._index = this._index || {};
+			this._indexByName = this._indexByName || {};
+			this._indexById = this._indexById || {};
 
-			var index = new Index();
-			index.collection(this);
-			index.keys(keys);
-			index.unique(options && options.unique ? options.unique : false);
+			var index = new Index(keys, options, this);
 
 			// Check the index does not already exist
-			if (this._index[index.name()]) {
+			if (this._indexByName[index.name()]) {
 				// Index already exists
 				return {
-					err: 'Index already exists'
+					err: 'Index with that name already exists'
+				};
+			}
+
+			if (this._indexById[index.id()]) {
+				// Index already exists
+				return {
+					err: 'Index with those keys already exists'
 				};
 			}
 
@@ -2186,13 +2277,19 @@
 			index.rebuild();
 
 			// Add the index
-			this._index[index.name()] = index;
+			this._indexByName[index.name()] = index;
+			this._indexById[index.id()] = index;
 
 			return {
-				success: true,
 				index: index,
-				name: index.name()
+				id: index.id(),
+				name: index.name(),
+				state: index.state()
 			};
+		};
+
+		Collection.prototype.index = function (name) {
+			return this._indexByName[name];
 		};
 
 		var Index = function () {
@@ -2201,6 +2298,9 @@
 
 		Index.prototype.init = function (keys, options, collection) {
 			this._crossRef = {};
+			this._size = 0;
+			this._id = this._itemKeyHash(keys, keys);
+
 			this.data({});
 			this.unique(options && options.unique ? options.unique : false);
 
@@ -2212,9 +2312,15 @@
 				this.collection(collection);
 			}
 
-			if (!options || !options.name) {
-				this.name(JSON.stringify(keys));
-			}
+			this.name(options && options.name ? options.name : this._id);
+		};
+
+		Index.prototype.id = function () {
+			return this._id;
+		};
+
+		Index.prototype.state = function () {
+			return this._state;
 		};
 
 		Index.prototype.data = function (val) {
@@ -2247,6 +2353,9 @@
 		Index.prototype.keys = function (val) {
 			if (val !== undefined) {
 				this._keys = val;
+
+				// Count the keys
+				this._keyCount = (new Path()).parse(this._keys).length;
 				return this;
 			}
 
@@ -2286,12 +2395,6 @@
 					uniqueLookup = {},
 					uniqueFlag = this._unique,
 					uniqueHash,
-					pathSolver = new Path(),
-					keyPaths = pathSolver.parse(this._keys),
-					pathIndex,
-					pathObj,
-					indexValues,
-					valueIndex,
 					itemHashArr,
 					hashIndex;
 
@@ -2301,7 +2404,7 @@
 				// Loop the collection data
 				for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
 					dataItem = collectionData[dataIndex];
-debugger;
+
 					if (uniqueFlag) {
 						// Generate item hash
 						uniqueHash = this._itemHash(dataItem, this._keys);
@@ -2332,17 +2435,27 @@ debugger;
 					}
 				}
 			}
+
+			this._state = {
+				name: this._name,
+				keys: this._keys,
+				indexSize: this._size,
+				built: new Date(),
+				updated: new Date(),
+				ok: true
+			};
 		};
 
 		Index.prototype.pushToPathValue = function (hash, obj) {
-			var pathValArr;
-
-			pathValArr = this._data[hash] = this._data[hash] || [];
+			var pathValArr = this._data[hash] = this._data[hash] || [];
 
 			// Make sure we have not already indexed this object at this path/value
 			if (pathValArr.indexOf(obj) === -1) {
 				// Index the object
 				pathValArr.push(obj);
+
+				// Record the reference to this object in our index size
+				this._size++;
 
 				// Cross-reference this association for later lookup
 				this.pushToCrossRef(obj, pathValArr);
@@ -2397,6 +2510,13 @@ debugger;
 			return this._data[this._itemHash(query, this._keys)] || [];
 		};
 
+		Index.prototype.match = function (query, options) {
+			// Check if the passed query has data in the keys our index
+			// operates on and if so, is the query sort matching our order
+			var pathSolver = new Path();
+			return pathSolver.hasObjectPaths(this._keys, query);
+		};
+
 		Index.prototype._itemHash = function (item, keys) {
 			var path = new Path(),
 				pathData,
@@ -2408,6 +2528,22 @@ debugger;
 			for (k = 0; k < pathData.length; k++) {
 				if (hash) { hash += '_'; }
 				hash += path.value(item, pathData[k].path).join(':');
+			}
+
+			return hash;
+		};
+
+		Index.prototype._itemKeyHash = function (item, keys) {
+			var path = new Path(),
+				pathData,
+				hash = '',
+				k;
+
+			pathData = path.parse(keys);
+
+			for (k = 0; k < pathData.length; k++) {
+				if (hash) { hash += '_'; }
+				hash += path.keyValue(item, pathData[k].path);
 			}
 
 			return hash;
