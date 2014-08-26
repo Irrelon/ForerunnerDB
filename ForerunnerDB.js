@@ -545,27 +545,31 @@
 
 		/**
 		 * Sets the collection's data to the array of documents passed.
-		 * @param arr
+		 * @param data
+		 * @param options Optional options object.
+		 * @param callback Optional callback function.
 		 */
-		Collection.prototype.setData = function (arr) {
-			if (arr) {
-				if (!(arr instanceof Array)) {
-					arr = [arr];
+		Collection.prototype.setData = function (data, options, callback) {
+			if (data) {
+				if (!(data instanceof Array)) {
+					data = [data];
 				}
 
-				arr = this.transformIn(arr);
+				data = this.transformIn(data);
 
 				var oldData = this._data;
 
 				// Overwrite the data
 				this._data = [];
 
-				if (arr.length) {
-					this._data = this._data.concat(arr);
+				if (data.length) {
+					this._data = this._data.concat(data);
 				}
 
 				this.emit('setData', this._data, oldData);
 			}
+
+			if (callback) { callback(false); }
 
 			return this;
 		};
