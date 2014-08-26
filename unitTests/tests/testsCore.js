@@ -349,12 +349,24 @@
 			base.dbUp();
 			base.dataUp();
 
-			var result = user.peek('an');
+			var result = db.peek('an');
 
-			ok(result.length === 3, "Got correct number of results");
+			ok(result.length === 16, "Got correct number of results");
 			ok(result[0]._id === '2', "Got expected result id");
 			ok(result[1]._id === '4', "Got expected result id");
 			ok(result[2]._id === '5', "Got expected result id");
+
+			base.dbDown();
+		});
+
+		test("Core - DB.peekCat() :: Search all database collections for string", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = db.peekCat('an');
+
+			ok(result.organisation && result.organisation.length === 13, "Got correct number of organisation results");
+			ok(result.user && result.user.length === 3, "Got correct number of user results");
 
 			base.dbDown();
 		});

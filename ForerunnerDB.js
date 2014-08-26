@@ -348,6 +348,15 @@
 			this._subsetOf(this);
 		};
 
+		Collection.prototype.name = function (val) {
+			if (val !== undefined) {
+				this._name = val;
+				return this;
+			}
+
+			return this._name;
+		};
+
 		Collection.prototype.on = new Overload([
 			function(event, listener) {
 				this._listeners = this._listeners || {};
@@ -1389,33 +1398,39 @@
 		};
 
 		/**
-		 * Finds all documents that contain the passed string regardless of where
-		 * the string might occur within the document. This will match strings
-		 * from the start, middle or end of the document's string (partial match).
-		 * @param str The string to search for. Case sensitive.
+		 * Finds all documents that contain the passed string or search object
+		 * regardless of where the string might occur within the document. This
+		 * will match strings from the start, middle or end of the document's
+		 * string (partial match).
+		 * @param search The string to search for. Case sensitive.
 		 * @param options A standard find() options object.
 		 * @returns {Array} An array of documents that matched the search string.
 		 */
-		Collection.prototype.peek = function (str, options) {
+		Collection.prototype.peek = function (search, options) {
 			// Loop all items
 			var arr = this._data,
 				arrCount = arr.length,
 				arrIndex,
 				arrItem,
-				tempColl = new Collection();
+				tempColl = new Collection(),
+				typeOfSearch = typeof search;
 
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				// Get json representation of object
-				arrItem = JSON.stringify(arr[arrIndex]);
+			if (typeOfSearch === 'string') {
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					// Get json representation of object
+					arrItem = JSON.stringify(arr[arrIndex]);
 
-				// Check if string exists in object json
-				if (arrItem.indexOf(str) > -1) {
-					// Add this item to the temp collection
-					tempColl.insert(arr[arrIndex]);
+					// Check if string exists in object json
+					if (arrItem.indexOf(search) > -1) {
+						// Add this item to the temp collection
+						tempColl.insert(arr[arrIndex]);
+					}
 				}
-			}
 
-			return tempColl.find({}, options);
+				return tempColl.find({}, options);
+			} else {
+				return this.find(search, options);
+			}
 		};
 
 		/**
@@ -2871,21 +2886,70 @@
 			return id;
 		};
 
-		DB.prototype.peek = function (str) {
+		/**
+		 * Find all documents across all collections in the database that match the passed
+		 * string or search object.
+		 * @param search String or search object.
+		 * @returns {Array}
+		 */
+		DB.prototype.peek = function (search) {
 			var i,
 				coll,
-				arr = [];
+				arr = [],
+				typeOfSearch = typeof search;
 
 			// Loop collections
 			for (i in this._collection) {
 				if (this._collection.hasOwnProperty(i)) {
 					coll = this._collection[i];
 
-					arr = arr.concat(coll.peek(str));
+					if (typeOfSearch === 'string') {
+						arr = arr.concat(coll.peek(search));
+					} else {
+						arr = arr.concat(coll.find(search));
+					}
 				}
 			}
 
 			return arr;
+		};
+
+		/**
+		 * Find all documents across all collections in the database that match the passed
+		 * string or search object and return them in an object where each key is the name
+		 * of the collection that the document was matched in.
+		 * @param search String or search object.
+		 * @returns {Array}
+		 */
+		DB.prototype.peekCat = function (search) {
+			var i,
+				coll,
+				cat = {},
+				arr,
+				typeOfSearch = typeof search;
+
+			// Loop collections
+			for (i in this._collection) {
+				if (this._collection.hasOwnProperty(i)) {
+					coll = this._collection[i];
+
+					if (typeOfSearch === 'string') {
+						arr = coll.peek(search);
+
+						if (arr && arr.length) {
+							cat[coll.name()] = arr;
+						}
+					} else {
+						arr = coll.find(search);
+
+						if (arr && arr.length) {
+							cat[coll.name()] = arr;
+						}
+					}
+				}
+			}
+
+			return cat;
 		};
 
 		/**
