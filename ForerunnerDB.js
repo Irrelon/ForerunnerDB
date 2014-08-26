@@ -1389,6 +1389,36 @@
 		};
 
 		/**
+		 * Finds all documents that contain the passed string regardless of where
+		 * the string might occur within the document. This will match strings
+		 * from the start, middle or end of the document's string (partial match).
+		 * @param str The string to search for. Case sensitive.
+		 * @param options A standard find() options object.
+		 * @returns {Array} An array of documents that matched the search string.
+		 */
+		Collection.prototype.findByString = function (str, options) {
+			// Loop all items
+			var arr = this._data,
+				arrCount = arr.length,
+				arrIndex,
+				arrItem,
+				tempColl = new Collection();
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				// Get json representation of object
+				arrItem = JSON.stringify(arr[arrIndex]);
+
+				// Check if string exists in object json
+				if (arrItem.indexOf(str) > -1) {
+					// Add this item to the temp collection
+					tempColl.insert(arr[arrIndex]);
+				}
+			}
+
+			return tempColl.find({}, options);
+		};
+
+		/**
 		 * Queries the collection based on the query object passed.
 		 * @param {Object} query The query key/values that a document must match in
 		 * order for it to be returned in the result array.

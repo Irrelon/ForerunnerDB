@@ -332,6 +332,19 @@
 			base.dbDown();
 		});
 
+		test("Core - Collection.findByString() :: Search collection for string", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.findByString('anf');
+
+			ok(result.length === 1, "Got correct number of results");
+			ok(result[0].name === 'Jim', "Got expected result data");
+			ok(result[0]._id === '2', "Got expected result id");
+
+			base.dbDown();
+		});
+
 		test("Core - Collection.find() :: $nin clause against root key data", function() {
 			base.dbUp();
 			base.dataUp();
