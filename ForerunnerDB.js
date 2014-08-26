@@ -1396,7 +1396,7 @@
 		 * @param options A standard find() options object.
 		 * @returns {Array} An array of documents that matched the search string.
 		 */
-		Collection.prototype.findByString = function (str, options) {
+		Collection.prototype.peek = function (str, options) {
 			// Loop all items
 			var arr = this._data,
 				arrCount = arr.length,
@@ -2869,6 +2869,23 @@
 			}
 
 			return id;
+		};
+
+		DB.prototype.peek = function (str) {
+			var i,
+				coll,
+				arr = [];
+
+			// Loop collections
+			for (i in this._collection) {
+				if (this._collection.hasOwnProperty(i)) {
+					coll = this._collection[i];
+
+					arr = arr.concat(coll.peek(str));
+				}
+			}
+
+			return arr;
 		};
 
 		/**

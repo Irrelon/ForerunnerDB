@@ -332,15 +332,29 @@
 			base.dbDown();
 		});
 
-		test("Core - Collection.findByString() :: Search collection for string", function() {
+		test("Core - Collection.peek() :: Search collection for string", function() {
 			base.dbUp();
 			base.dataUp();
 
-			var result = user.findByString('anf');
+			var result = user.peek('anf');
 
 			ok(result.length === 1, "Got correct number of results");
 			ok(result[0].name === 'Jim', "Got expected result data");
 			ok(result[0]._id === '2', "Got expected result id");
+
+			base.dbDown();
+		});
+
+		test("Core - DB.peek() :: Search all database collections for string", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.peek('an');
+
+			ok(result.length === 3, "Got correct number of results");
+			ok(result[0]._id === '2', "Got expected result id");
+			ok(result[1]._id === '4', "Got expected result id");
+			ok(result[2]._id === '5', "Got expected result id");
 
 			base.dbDown();
 		});
