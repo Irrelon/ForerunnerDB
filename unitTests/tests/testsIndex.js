@@ -78,20 +78,25 @@
 
 			var collection = db.collection('temp').truncate(),
 				names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+				data = [],
 				tempName,
 				tempAge,
 				a, b,
 				i;
 
-			for (i = 0; i < 40000; i++) {
+			for (i = 0; i < 10000; i++) {
 				tempName = names[Math.ceil(Math.random() * names.length) - 1];
 				tempAge = Math.ceil(Math.random() * 100);
 
-				collection.insert({
+				data.push({
+					_id: String(i),
 					name: tempName,
 					age: tempAge
 				});
 			}
+
+			collection.setData(data, {ensureKeys: false, violationCheck: false});
+			console.log(collection.lastOp());
 
 			var indexResult = collection.ensureIndex({
 				name: 1
@@ -99,6 +104,8 @@
 				unique: false,
 				name: 'index_name'
 			});
+
+			console.log(collection.lastOp());
 
 			// Run with index
 			a = collection.find({name: 'Sally'}, {decouple: false, skipIndex: false});
@@ -109,7 +116,7 @@
 			ok(a.__fdbStats.usedIndex && a.__fdbStats.usedIndex.name() === 'index_name', "Check that index was used");
 			ok(b.__fdbStats.usedIndex === false, "Check that index was not used");
 
-			ok(a.__fdbStats.tookMs <= b.__fdbStats.tookMs, "Check that index was faster than lookup (Indexed: " + a.__fdbStats.tookMs + " vs Non-Indexed: " + b.__fdbStats.tookMs + ")");
+			ok(a.__fdbStats.tookMs <= b.__fdbStats.tookMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbStats.tookMs + " vs Non-Indexed: " + b.length + " rows in " + b.__fdbStats.tookMs + ")");
 
 			base.dbDown();
 		});

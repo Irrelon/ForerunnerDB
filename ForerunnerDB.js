@@ -564,11 +564,18 @@
 		 */
 		Collection.prototype.setData = function (data, options, callback) {
 			if (data) {
+				var time = {
+					start: new Date().getTime()
+				};
+
 				if (!(data instanceof Array)) {
 					data = [data];
 				}
 
+				time.transformStart = new Date().getTime();
 				data = this.transformIn(data);
+				time.transformEnd = new Date().getTime();
+				time.transformTotal = time.transformEnd - time.transformStart;
 
 				var oldData = this._data;
 
@@ -580,7 +587,20 @@
 				}
 
 				// Update the primary key index
-				this._rebuildPrimaryKeyIndex();
+				time.reIndexStart = new Date().getTime();
+				this._rebuildPrimaryKeyIndex(options);
+				time.reIndexEnd = new Date().getTime();
+				time.reIndexTotal = time.reIndexEnd - time.reIndexStart;
+
+				time.end = new Date().getTime();
+				time.total = time.end - time.start;
+
+				this._lastOp = {
+					type: 'setData',
+					stats: {
+						time: time
+					}
+				};
 
 				this.emit('setData', this._data, oldData);
 			}
@@ -590,13 +610,17 @@
 			return this;
 		};
 
-		Collection.prototype._rebuildPrimaryKeyIndex = function () {
-			var arr,
+		Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
+			var ensureKeys = options && options.ensureKeys !== undefined ? options.ensureKeys : true,
+				violationCheck = options && options.violationCheck !== undefined ? options.violationCheck : true,
+				arr,
 				arrCount,
-				arrItem;
+				arrItem,
+				pIndex = this._primaryIndex,
+				pKey = this._primaryKey;
 
 			// Drop the existing primary index
-			this._primaryIndex.truncate();
+			pIndex.truncate();
 
 			// Loop the data and check for a primary key in each object
 			arr = this._data;
@@ -605,13 +629,19 @@
 			while (arrCount--) {
 				arrItem = arr[arrCount];
 
-				// Make sure the item has a primary key
-				this._ensurePrimaryKey(arrItem);
+				if (ensureKeys) {
+					// Make sure the item has a primary key
+					this._ensurePrimaryKey(arrItem);
+				}
 
-				// Check for primary key violation
-				if (!this._primaryIndex.uniqueSet(arrItem[this._primaryKey], arrItem)) {
-					// Primary key violation
-					throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
+				if (violationCheck) {
+					// Check for primary key violation
+					if (!pIndex.uniqueSet(arrItem[pKey], arrItem)) {
+						// Primary key violation
+						throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
+					}
+				} else {
+					pIndex.set(arrItem[pKey], arrItem);
 				}
 			}
 		};
@@ -2484,11 +2514,20 @@
 			return !this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
 		};
 
+		/**
+		 * Creates an index on the specified keys.
+		 * @param {Object} keys The object containing keys to index.
+		 * @param {Object} options An options object.
+		 * @returns {*}
+		 */
 		Collection.prototype.ensureIndex = function (keys, options) {
 			this._indexByName = this._indexByName || {};
 			this._indexById = this._indexById || {};
 
-			var index = new Index(keys, options, this);
+			var index = new Index(keys, options, this),
+				time = {
+					start: new Date().getTime()
+				};
 
 			// Check the index does not already exist
 			if (this._indexByName[index.name()]) {
@@ -2512,6 +2551,16 @@
 			this._indexByName[index.name()] = index;
 			this._indexById[index.id()] = index;
 
+			time.end = new Date().getTime();
+			time.total = time.end - time.start;
+
+			this._lastOp = {
+				type: 'ensureIndex',
+				stats: {
+					time: time
+				}
+			};
+
 			return {
 				index: index,
 				id: index.id(),
@@ -2520,8 +2569,21 @@
 			};
 		};
 
+		/**
+		 * Gets an index by it's name.
+		 * @param {String} name The name of the index to retreive.
+		 * @returns {*}
+		 */
 		Collection.prototype.index = function (name) {
 			return this._indexByName[name];
+		};
+
+		/**
+		 * Gets the last reporting operation's details such as run time.
+		 * @returns {Object}
+		 */
+		Collection.prototype.lastOp = function () {
+			return this._lastOp;
 		};
 
 		var Index = function () {
