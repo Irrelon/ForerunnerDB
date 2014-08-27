@@ -72,6 +72,47 @@
 
 			base.dbDown();
 		});
+
+		test("Index - Collection.find() :: Random data inserted into collection and indexed with existing index", function () {
+			base.dbUp();
+
+			var collection = db.collection('temp').truncate(),
+				names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+				tempName,
+				tempAge,
+				a, b,
+				i;
+
+			for (i = 0; i < 40000; i++) {
+				tempName = names[Math.ceil(Math.random() * names.length) - 1];
+				tempAge = Math.ceil(Math.random() * 100);
+
+				collection.insert({
+					name: tempName,
+					age: tempAge
+				});
+			}
+
+			var indexResult = collection.ensureIndex({
+				name: 1
+			}, {
+				unique: false,
+				name: 'index_name'
+			});
+
+			// Run with index
+			a = collection.find({name: 'Sally'}, {decouple: false, skipIndex: false});
+
+			// Run without index
+			b = collection.find({name: 'Sally'}, {decouple: false, skipIndex: true});
+
+			ok(a.__fdbStats.usedIndex && a.__fdbStats.usedIndex.name() === 'index_name', "Check that index was used");
+			ok(b.__fdbStats.usedIndex === false, "Check that index was not used");
+
+			ok(a.__fdbStats.tookMs <= b.__fdbStats.tookMs, "Check that index was faster than lookup (Indexed: " + a.__fdbStats.tookMs + " vs Non-Indexed: " + b.__fdbStats.tookMs + ")");
+
+			base.dbDown();
+		});
 	});
 
 	if (typeof(define) === 'function' && define.amd) {

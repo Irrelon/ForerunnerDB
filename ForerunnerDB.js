@@ -316,6 +316,7 @@
 
 		Collection.prototype.init = function (name) {
 			this._primaryKey = '_id';
+			this._primaryIndex = new KeyValueStore();
 			this._name = name;
 			this._data = [];
 			this._groups = [];
@@ -501,6 +502,9 @@
 		Collection.prototype.primaryKey = function (keyName) {
 			if (keyName !== undefined) {
 				this._primaryKey = keyName;
+				
+				// Rebuild the primary key index
+				this._rebuildPrimaryKeyIndex();
 				return this;
 			}
 
@@ -572,12 +576,48 @@
 					this._data = this._data.concat(data);
 				}
 
+				// Update the primary key index
+				this._rebuildPrimaryKeyIndex();
+
 				this.emit('setData', this._data, oldData);
 			}
 
 			if (callback) { callback(false); }
 
 			return this;
+		};
+
+		Collection.prototype._rebuildPrimaryKeyIndex = function () {
+			var arr,
+				arrCount,
+				arrItem;
+
+			// Drop the existing primary index
+			this._primaryIndex.truncate();
+
+			// Loop the data and check for a primary key in each object
+			arr = this._data;
+			arrCount = arr.length;
+
+			while (arrCount--) {
+				arrItem = arr[arrCount];
+
+				// Make sure the item has a primary key
+				this._ensurePrimaryKey(arrItem);
+
+				// Check for primary key violation
+				if (!this._primaryIndex.uniqueSet(arrItem[this._primaryKey], arrItem)) {
+					// Primary key violation
+					throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
+				}
+			}
+		};
+
+		Collection.prototype._ensurePrimaryKey = function (obj) {
+			if (obj[this._primaryKey] === undefined) {
+				// Assign a primary key automatically
+				obj[this._primaryKey] = this._db.objectId();
+			}
 		};
 
 		/**
@@ -706,11 +746,26 @@
 			update = this.transformIn(update);
 
 			var self = this,
+				pKey = this._primaryKey,
 				dataSet = this.find(query, {decouple: false}),
 				updated,
 				updateCall = function (doc) {
 					update = JSON.parse(JSON.stringify(update));
-					return self._updateObject(doc, update, query, options, '');
+					if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
+						// Remove item from primary index
+						self._primaryIndex.unSet(doc[pKey]);
+
+						var result = self._updateObject(doc, update, query, options, '');
+
+						// Update the item in the primary index
+						if (self._primaryIndex.uniqueSet(doc[pKey], doc)) {
+							return result;
+						} else {
+							throw('Primary key violation in update! Key violated: ' + doc[pKey]);
+						}
+					} else {
+						return self._updateObject(doc, update, query, options, '');
+					}
 				},
 				views = this._views,
 				viewIndex;
@@ -1103,7 +1158,8 @@
 				dataSet = this.find(query, {decouple: false}),
 				index,
 				views = this._views,
-				viewIndex;
+				viewIndex,
+				pKey = this._primaryKey;
 
 			if (dataSet.length) {
 				// Remove the data from the collection
@@ -1115,6 +1171,8 @@
 					} else {
 						this._data.splice(index, 1);
 					}
+
+					this._primaryIndex.unSet(dataSet[i][pKey]);
 				}
 
 				// Loop views and pass them the remove query
@@ -1311,10 +1369,7 @@
 			if (doc) {
 				var indexViolation;
 
-				if (doc[this._primaryKey] === undefined) {
-					// Assign a primary key automatically
-					doc[this._primaryKey] = this._db.objectId();
-				}
+				this._ensurePrimaryKey(doc);
 
 				// Check indexes are not going to be broken by the document
 				indexViolation = this.insertIndexViolation(doc);
@@ -1462,6 +1517,7 @@
 		 * Queries the collection based on the query object passed.
 		 * @param {Object} query The query key/values that a document must match in
 		 * order for it to be returned in the result array.
+		 * @param {Object=} options An optional options object.
 		 *
 		 * @returns {Array} The results array from the find operation, containing all
 		 * documents that matched the query.
@@ -1472,7 +1528,9 @@
 
 			options.decouple = options.decouple !== undefined ? options.decouple : true;
 
-			var analysis,
+			var startTime = new Date().getTime(),
+				stats = {},
+				analysis,
 				self = this,
 				resultArr,
 				joinCollectionIndex,
@@ -1513,9 +1571,10 @@
 				}
 
 				// Check if an index lookup can be used to return this result
-				if (analysis.usesIndex.length) {
+				if (analysis.usesIndex.length && (!options || (options && !options.skipIndex))) {
 					// Get the data from the index
 					resultArr = analysis.usesIndex[0].lookup(query);
+					stats.usedIndex = analysis.usesIndex[0];
 				} else {
 					// Filter the source data and return the result
 					resultArr = this._data.filter(matcher);
@@ -1524,15 +1583,19 @@
 					if (options.sort) {
 						resultArr = this.sort(options.sort, resultArr);
 					}
+
+					stats.usedIndex = false;
 				}
 
 				if (options.limit && resultArr && resultArr.length > options.limit) {
 					resultArr.length = options.limit;
+					stats.limit = options.limit;
 				}
 
 				if (options.decouple) {
 					// Now decouple the data from the original objects
 					resultArr = this.decouple(resultArr);
+					stats.decouple = options.decouple;
 				}
 
 				// Now process any joins on the final data
@@ -1607,6 +1670,8 @@
 							}
 						}
 					}
+
+					stats.join = true;
 				}
 
 				// Process removal queue
@@ -1622,10 +1687,15 @@
 					for (i = 0; i < resultArr.length; i++) {
 						resultArr.splice(i, 1, options.transform(resultArr[i]));
 					}
+
+					stats.transform = true;
 				}
 
 				// Process transforms
 				resultArr = this.transformOut(resultArr);
+
+				stats.tookMs = new Date().getTime() - startTime;
+				resultArr.__fdbStats = stats;
 
 				return resultArr;
 			} else {
@@ -2393,16 +2463,15 @@
 		};
 
 		/**
-		 * Checks that the passed document will not violate any index rules.
+		 * Checks that the passed document will not violate any index rules if
+		 * inserted into the collection.
 		 * @param {Object} doc The document to check indexes against.
-		 * @returns {Object} Either null (no violation occurred) or an object with
-		 * details about the violation.
+		 * @returns {Boolean} Either false (no violation occurred) or true if
+		 * a violation was detected.
 		 */
 		Collection.prototype.insertIndexViolation = function (doc) {
 			// Check the item's primary key is not already in use
-			var item = this.findById(doc[this._primaryKey]);
-
-			return Boolean(item);
+			return !this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
 		};
 
 		Collection.prototype.ensureIndex = function (keys, options) {
@@ -2731,6 +2800,42 @@
 			return hashArr;
 		};
 
+		var KeyValueStore = function () {
+			this.init.apply(this, arguments);
+		};
+
+		KeyValueStore.prototype.init = function () {
+			this._data = {};
+		};
+
+		KeyValueStore.prototype.truncate = function () {
+			this._data = {};
+			return this;
+		};
+
+		KeyValueStore.prototype.set = function (key, value) {
+			this._data[key] = value ? value : true;
+			return this;
+		};
+
+		KeyValueStore.prototype.lookup = function (key) {
+			return this._data[key];
+		};
+
+		KeyValueStore.prototype.unSet = function (key) {
+			delete this._data[key];
+			return this;
+		};
+
+		KeyValueStore.prototype.uniqueSet = function (key, value) {
+			if (this._data[key] === undefined) {
+				this._data[key] = value;
+				return true;
+			}
+
+			return false;
+		};
+
 		/**
 		 * The main DB object used to store collections.
 		 * @constructor
@@ -2984,6 +3089,8 @@
 		DB.classes = {
 			Path: Path,
 			Collection: Collection,
+			Index: Index,
+			KeyValueStore: KeyValueStore,
 			Overload: Overload
 		};
 

@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.0.24
+## Version 1.0.25
 
 ##### Project Status
 
@@ -298,6 +298,43 @@ documents where the price is greater than or equal to 100:
 			'$gte': 100
 		}
 	});
+
+## Indexes & Performance
+ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method:
+
+	var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+		tempName,
+		tempAge,
+		i;
+
+	for (i = 0; i < 10000; i++) {
+		tempName = names[Math.ceil(Math.random() * names.length) - 1];
+		tempAge = Math.ceil(Math.random() * 100);
+
+		collection.insert({
+			name: tempName,
+			age: tempAge
+		});
+	}
+
+	collection.setData([{
+		name: 'Bill',
+		age: 12
+	}, {
+        name: 'Jim',
+        age: 13
+    }, {
+        name: 'Bill',
+        age: 17
+    }, {
+        name: 'Jim',
+        age: 18
+    }{
+        name: 'Bill',
+        age: 12
+    }]);
+
+You can see that in our collection we have some repeated names and some repeated ages. We will create an index on the "name" field so that lookups against this data are very fast.
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
