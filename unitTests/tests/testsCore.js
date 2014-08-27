@@ -555,7 +555,10 @@
 				$addToSet: {
 					arr: {
 						name: 'Fufu',
-						test: '1'
+						test: '1',
+						moo: {
+							foo: 1
+						}
 					}
 				}
 			});
@@ -572,12 +575,15 @@
 				$addToSet: {
 					arr: {
 						name: 'Fufu',
-						test: '2'
+						test: '2',
+						moo: {
+							foo: 2
+						}
 					}
 				}
 			}, {
 				$addToSet: {
-					key: 'test'
+					key: 'moo.foo'
 				}
 			});
 
@@ -585,7 +591,7 @@
 
 			ok(before.length === 1 && before[0].arr.length === 2, "Check updated document count is correct");
 			ok(updated.length === 1, "Check that the update operation returned correct count");
-			ok(updated[0].arr.length === 2, "Check that the update operation returned correct count");
+			ok(updated && updated[0] && updated[0].arr.length === 2, "Check that the update operation returned correct count");
 
 			// Now push the same entry into the array using $addToSet but test against the "name" field, should fail
 			updated = temp.update({

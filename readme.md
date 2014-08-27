@@ -276,6 +276,8 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
         }
     });
 
+You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
+
 ## Primary Keys
 If your data uses different primary key fields from the default "_id" then you need to tell the collection. Simply call
 the primaryKey() method with the name of the field your primary key is stored in:
