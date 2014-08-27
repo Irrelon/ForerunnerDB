@@ -393,14 +393,16 @@ Where the parameters are:
 # Future Updates
 ForerunnerDB's project road-map:
 
-* COMPLETED - Views that can join multiple documents together and data-bind - sort of like virtual collections
-* COMPLETED - Primary key violation checking
-* COMPLETED - Unit tests
-* COMPLETED - Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
-* COMPLETED - Query remote database from browser
-* COMPLETED - Data persistence on client-side
-* PARTIAL - Collection indexing
-* PARTIAL - Support more of the MongoDB query operators
+## COMPLETED
+* Views that can join multiple documents together and data-bind - sort of like virtual collections
+* Primary key violation checking
+* Unit tests
+* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
+* Query remote database from browser
+* Data persistence on client-side
+## PARTIAL
+* Collection indexing
+* Support more of the MongoDB query operators
 
 	Completed:
 	$ (array positional)
@@ -435,6 +437,8 @@ ForerunnerDB's project road-map:
 	$position (already have new operator $pushSplice to achieve the same thing),
 	$bit,
 	$isolated
+
+## NEEDS IMPLEMENTING
 
 * Data persistence on server-side
 * NPM installation
