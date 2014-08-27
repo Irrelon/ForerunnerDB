@@ -1005,42 +1005,6 @@
 
 			base.dbDown();
 		});
-
-		/*test("Core - Collection.ensureIndex() :: Single collection, create index", function() {
-		 base.dbUp();
-		 base.dataUp();
-
-		 var coll = db.collection('user');
-
-		 var arr = [],
-		 elem,
-		 i = 2000;
-
-		 // Generate some data
-		 user.truncate();
-
-		 while (i--) {
-		 user.insert({
-		 _id: '1' + i,
-		 name: Math.floor((Math.random() * 4000))
-		 });
-		 }
-
-		 var start = new Date().getTime();
-		 coll.find({});
-		 console.log('No sort: ' + (new Date().getTime() - start));
-
-		 var start = new Date().getTime();
-		 coll.find({}, {sort: {name: 1}});
-		 console.log('With sort: ' + (new Date().getTime() - start));
-
-
-		 ok(result[0].name === 'Jim' && result[0].age === 15, "Name and Lookup");
-		 ok(result[1].name === 'Kat' && result[1].age === 12, "Name and Lookup");
-		 ok(result[2].name === 'Dean' && result[2].age === 5, "Name and Lookup");
-
-		 base.dbDown();
-		 });*/
 	});
 
 	if (typeof(define) === 'function' && define.amd) {
