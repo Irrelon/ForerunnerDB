@@ -228,7 +228,8 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
 		}
 	});
 
-	// Try and do it again... this will fail because a matching item already exists in the array
+	// Try and do it again... this will fail because a
+	// matching item already exists in the array
 	collection.update({
         _id: "1"
     }, {
@@ -260,7 +261,8 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
 		}
 	});
 
-	// Try and do it again... this will work because the key "test" is different for the existing and new objects
+	// Try and do it again... this will work because the
+	// key "test" is different for the existing and new objects
 	collection.update({
         _id: "1"
     }, {
