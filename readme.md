@@ -393,14 +393,15 @@ Where the parameters are:
 # Future Updates
 ForerunnerDB's project road-map:
 
-## COMPLETED
+### COMPLETED
 * Views that can join multiple documents together and data-bind - sort of like virtual collections
 * Primary key violation checking
 * Unit tests
 * Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
 * Query remote database from browser
 * Data persistence on client-side
-## PARTIAL
+
+### PARTIAL
 * Collection indexing
 * Support more of the MongoDB query operators
 
@@ -438,8 +439,7 @@ ForerunnerDB's project road-map:
 	$bit,
 	$isolated
 
-## NEEDS IMPLEMENTING
-
+### NEEDS IMPLEMENTING
 * Data persistence on server-side
 * NPM installation
 * Collection / query paging e.g. select next 10, select previous 10
