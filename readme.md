@@ -205,6 +205,77 @@ You can target individual documents for update by their id (primary key) via a q
 
 That will update the document with the _id field of 1 to a new price of 180.
 
+## Using $addToSet to push a unique item into an array
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against:
+
+### A Simple $addToSet, checks uniqueness against a whole document being added
+
+	// Create a collection document
+	collection.setData({
+		_id: "1",
+		arr: []
+	});
+
+	// Update the document by adding an object to the "arr" array
+	collection.update({
+		_id: "1"
+	}, {
+		$addToSet: {
+			arr: {
+				name: 'Fufu',
+				test: '1'
+			}
+		}
+	});
+
+	// Try and do it again... this will fail because a matching item already exists in the array
+	collection.update({
+        _id: "1"
+    }, {
+        $addToSet: {
+            arr: {
+                name: 'Fufu',
+                test: '1'
+            }
+        }
+    });
+
+### An $addToSet using an option to tell Forerunner which key to test uniqueness against
+
+	// Create a collection document
+	collection.setData({
+		_id: "1",
+		arr: []
+	});
+
+	// Update the document by adding an object to the "arr" array
+	collection.update({
+		_id: "1"
+	}, {
+		$addToSet: {
+			arr: {
+				name: 'Fufu',
+				test: '1'
+			}
+		}
+	});
+
+	// Try and do it again... this will work because the key "test" is different for the existing and new objects
+	collection.update({
+        _id: "1"
+    }, {
+        $addToSet: {
+            arr: {
+                name: 'Fufu',
+                test: '2'
+            }
+        }
+    }, {
+        $addToSet: {
+            key: 'test'
+        }
+    });
+
 ## Primary Keys
 If your data uses different primary key fields from the default "_id" then you need to tell the collection. Simply call
 the primaryKey() method with the name of the field your primary key is stored in:

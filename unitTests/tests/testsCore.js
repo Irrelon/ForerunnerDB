@@ -531,6 +531,85 @@
 			base.dbDown();
 		});
 
+		test("Core - Collection.update() :: $addToSet operator for unique push operation against a specific key path", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var temp = db.collection('temp').truncate(),
+				updated,
+				before;
+
+			temp.insert({
+				_id: '1',
+				arr: []
+			});
+
+			before = temp.find();
+
+			ok(before.length === 1 && before[0].arr.length === 0, "Check existing document count is correct");
+
+			// Now push an entry into the array using $addToSet
+			updated = temp.update({
+				_id: '1'
+			}, {
+				$addToSet: {
+					arr: {
+						name: 'Fufu',
+						test: '1'
+					}
+				}
+			});
+
+			before = temp.find();
+
+			ok(before.length === 1 && before[0].arr.length === 1, "Check updated document count is correct");
+			ok(updated.length === 1, "Check that the update operation returned correct count");
+
+			// Now push the same entry into the array using $addToSet but only checking against arr.test - this should pass
+			updated = temp.update({
+				_id: '1'
+			}, {
+				$addToSet: {
+					arr: {
+						name: 'Fufu',
+						test: '2'
+					}
+				}
+			}, {
+				$addToSet: {
+					key: 'test'
+				}
+			});
+
+			before = temp.find();
+
+			ok(before.length === 1 && before[0].arr.length === 2, "Check updated document count is correct");
+			ok(updated.length === 1, "Check that the update operation returned correct count");
+			ok(updated[0].arr.length === 2, "Check that the update operation returned correct count");
+
+			// Now push the same entry into the array using $addToSet but test against the "name" field, should fail
+			updated = temp.update({
+				_id: '1'
+			}, {
+				$addToSet: {
+					arr: {
+						name: 'Fufu'
+					}
+				}
+			}, {
+				$addToSet: {
+					key: 'name'
+				}
+			});
+
+			before = temp.find();
+
+			ok(before.length === 1 && before[0].arr.length === 2, "Check updated document count is correct");
+			ok(updated.length === 0, "Check that the update operation returned correct count");
+
+			base.dbDown();
+		});
+
 		test("Core - Collection.find() :: Value in array of strings", function() {
 			base.dbUp();
 			base.dataUp();

@@ -33,14 +33,11 @@
 		var idCounter = 0;
 
 		/**
-		 * Escapes a CSS selector.
-		 * @param {String} selector The selector string to escape.
-		 * @returns {String} The escaped selector string.
+		 * Allows a method to be overloaded.
+		 * @param arr
+		 * @returns {Function}
+		 * @constructor
 		 */
-		var escapeSelector = function (selector) {
-			return selector.replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
-		};
-
 		var Overload = function (arr) {
 			if (arr) {
 				var arrIndex,
@@ -52,10 +49,12 @@
 							return arr[arrIndex].apply(this, arguments);
 						}
 					}
-				}
-			} else {
-				return function () {};
+
+					return null;
+				};
 			}
+
+			return function () {};
 		};
 
 		/**
@@ -64,7 +63,7 @@
 		 * @param {String=} path The path to assign.
 		 * @constructor
 		 */
-		var Path = function () {
+		var Path = function (path) {
 			this.init.apply(this, arguments);
 		};
 
@@ -124,8 +123,6 @@
 		Path.prototype.parse = function (obj, withValue) {
 			var paths = [],
 				path = '',
-				pathIndex = 0,
-				value,
 				resultData,
 				i, k;
 
@@ -442,9 +439,9 @@
 						// Loop the array and check for listeners against the primary key
 						var listenerIdArr = this._listeners[event],
 							listenerIdCount,
-							listenerIdIndex,
-							arrCount = data.length,
-							arrIndex;
+							listenerIdIndex;
+
+						arrCount = data.length;
 
 						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 							if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
@@ -613,6 +610,7 @@
 		 * document, an insert is performed instead. If no id is present a new primary key
 		 * id is provided for the item.
 		 *
+		 * @param {Function=} callback Optional callback method.
 		 * @returns {Object} An object containing two keys, "op" contains either "insert" or
 		 * "update" depending on the type of operation that was performed and "result"
 		 * contains the return data from the operation used.
@@ -620,8 +618,8 @@
 		Collection.prototype.upsert = function (obj, callback) {
 			if (obj) {
 				var queue = this._deferQueue.upsert,
-					deferThreshold = this._deferThreshold.upsert,
-					deferTime = this._deferTime.upsert;
+					deferThreshold = this._deferThreshold.upsert;
+					//deferTime = this._deferTime.upsert;
 
 				var returnData = {},
 					query,
@@ -683,6 +681,8 @@
 			} else {
 				if (callback) { callback(); }
 			}
+
+			return;
 		};
 
 		/**
@@ -695,9 +695,10 @@
 		 * @param {Object} update The object containing updated key/values. Any keys that
 		 * match keys on the existing document will be overwritten with this data. Any
 		 * keys that do not currently exist on the document will be added to the document.
+		 * @param {Object=} options An options object.
 		 * @returns {Array} The items that were updated.
 		 */
-		Collection.prototype.update = function (query, update) {
+		Collection.prototype.update = function (query, update, options) {
 			// Decouple the update data
 			update = this.decouple(update);
 
@@ -709,7 +710,7 @@
 				updated,
 				updateCall = function (doc) {
 					update = JSON.parse(JSON.stringify(update));
-					return self._updateObject(doc, update, query, '');
+					return self._updateObject(doc, update, query, options, '');
 				},
 				views = this._views,
 				viewIndex;
@@ -750,12 +751,13 @@
 		 * @param {Object} doc The document to update.
 		 * @param {Object} update The object with key/value pairs to update the document with.
 		 * @param query
+		 * @param options
 		 * @param path
 		 * @returns {Boolean} True if the document was updated with new / changed data or
 		 * false if it was not updated because the data was the same.
 		 * @private
 		 */
-		Collection.prototype._updateObject = function (doc, update, query, path) {
+		Collection.prototype._updateObject = function (doc, update, query, options, path) {
 			update = JSON.parse(JSON.stringify(update));
 			// Clear leading dots from path
 			path = path || '';
@@ -825,14 +827,37 @@
 											var targetArr = doc[k],
 												targetArrIndex,
 												targetArrCount = targetArr.length,
-												objHash = JSON.stringify(update[i][k]),
-												addObj = true;
+												objHash,
+												addObj = true,
+												optionObj = (options && options.$addToSet),
+												hashMode,
+												pathSolver;
+
+											// Check if we have an options object for our operation
+											if (optionObj && optionObj.key) {
+												hashMode = false;
+												pathSolver = new Path(optionObj.key);
+												objHash = pathSolver.value(update[i][k])[0];
+											} else {
+												objHash = JSON.stringify(update[i][k]);
+												hashMode = true;
+											}
 
 											for (targetArrIndex = 0; targetArrIndex < targetArrCount; targetArrIndex++) {
-												if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
-													// The object already exists, don't add it
-													addObj = false;
-													break;
+												if (hashMode) {
+													// Check if objects match via a string hash (JSON)
+													if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
+														// The object already exists, don't add it
+														addObj = false;
+														break;
+													}
+												} else {
+													// Check if objects match based on the path
+													if (objHash === pathSolver.value(targetArr[targetArrIndex])[0]) {
+														// The object already exists, don't add it
+														addObj = false;
+														break;
+													}
 												}
 											}
 
@@ -952,7 +977,7 @@
 
 							// Loop the items that matched and update them
 							for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-								recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, path + '.' + i);
+								recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i);
 								if (recurseUpdated) {
 									updated = true;
 								}
@@ -975,7 +1000,7 @@
 
 										// Loop the array and find matches to our search
 										for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-											recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, path + '.' + i);
+											recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i);
 											if (recurseUpdated) {
 												updated = true;
 											}
@@ -989,7 +1014,7 @@
 								} else {
 									// The doc key is an object so traverse the
 									// update further
-									recurseUpdated = this._updateObject(doc[i], update[i], query, path + '.' + i);
+									recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i);
 									if (recurseUpdated) {
 										updated = true;
 									}
