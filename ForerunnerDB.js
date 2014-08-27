@@ -502,6 +502,9 @@
 		Collection.prototype.primaryKey = function (keyName) {
 			if (keyName !== undefined) {
 				this._primaryKey = keyName;
+
+				// Set the primary key index primary key
+				this._primaryIndex.primaryKey(keyName);
 				
 				// Rebuild the primary key index
 				this._rebuildPrimaryKeyIndex();
@@ -695,6 +698,7 @@
 					query = {};
 					query[this._primaryKey] = obj[this._primaryKey];
 
+					//TODO: Could be optimised to use the primary index lookup now?
 					if (this.count(query)) {
 						// The document already exists with this id, this operation is an update
 						returnData.op = 'update';
@@ -1939,20 +1943,26 @@
 				index,
 				i;
 
-			// Check if an index can speed up the query
-			for (i in this._indexById) {
-				if (this._indexById.hasOwnProperty(i)) {
-					if (this._indexById[i].match(query, options)) {
-						// This index can be used, store it
-						analysis.usesIndex.push(this._indexById[i]);
+			// Check if the query is a primary key lookup
+			if (query[this._primaryKey] !== undefined) {
+				// Return item via primary key possible
+				analysis.usesIndex.push(this._primaryIndex);
+			} else {
+				// Check if an index can speed up the query
+				for (i in this._indexById) {
+					if (this._indexById.hasOwnProperty(i)) {
+						if (this._indexById[i].match(query, options)) {
+							// This index can be used, store it
+							analysis.usesIndex.push(this._indexById[i]);
+						}
 					}
 				}
-			}
 
-			// Sort array descending on index key count (effectively a measure of relevance to the query)
-			analysis.usesIndex.sort(function (a, b) {
-				return b._keyCount - a._keyCount;
-			});
+				// Sort array descending on index key count (effectively a measure of relevance to the query)
+				analysis.usesIndex.sort(function (a, b) {
+					return b._keyCount - a._keyCount;
+				});
+			}
 
 			// Check for join data
 			if (options.join) {
@@ -2806,6 +2816,16 @@
 
 		KeyValueStore.prototype.init = function () {
 			this._data = {};
+			this._primaryKey = '_id';
+		};
+
+		KeyValueStore.prototype.primaryKey = function (key) {
+			if (key !== undefined) {
+				this._primaryKey = key;
+				return this;
+			}
+
+			return this._primaryKey;
 		};
 
 		KeyValueStore.prototype.truncate = function () {
@@ -2818,8 +2838,41 @@
 			return this;
 		};
 
-		KeyValueStore.prototype.lookup = function (key) {
+		KeyValueStore.prototype.get = function (key) {
 			return this._data[key];
+		};
+
+		KeyValueStore.prototype.lookup = function (obj) {
+			var pKeyVal = obj[this._primaryKey],
+				arrIndex,
+				arrCount,
+				lookupItem,
+				result;
+
+			if (pKeyVal instanceof Array) {
+				// An array of primary keys, find all matches
+				arrCount = pKeyVal.length;
+				result = [];
+
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					lookupItem = this._data[pKeyVal[arrIndex]];
+
+					if (lookupItem) {
+						result.push(lookupItem);
+					}
+				}
+
+				return result;
+			} else {
+				// Key is a basic lookup from string
+				lookupItem = this._data[pKeyVal];
+
+				if (lookupItem !== undefined) {
+					return [lookupItem];
+				} else {
+					return [];
+				}
+			}
 		};
 
 		KeyValueStore.prototype.unSet = function (key) {
