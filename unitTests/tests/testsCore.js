@@ -228,7 +228,7 @@
 			base.dbDown();
 		});
 
-		test("Core - Collection.find() :: $ne clause", function() {
+		test("Core - Collection.find() :: $ne clause basic string", function() {
 			base.dbUp();
 			base.dataUp();
 
@@ -237,6 +237,34 @@
 			}});
 
 			ok(result.length === 3, "Complete");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: Primary key string lookup", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				_id: "2"
+			});
+
+			ok(result.length === 1, "Check result count is as expected");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $ne clause primary key object", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				_id: {
+					$ne: "2"
+				}
+			});
+
+			ok(result.length === 3, "Check result count is as expected");
 
 			base.dbDown();
 		});

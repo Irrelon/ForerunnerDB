@@ -96,7 +96,6 @@
 			}
 
 			collection.setData(data, {ensureKeys: false, violationCheck: false});
-			console.log(collection.lastOp());
 
 			var indexResult = collection.ensureIndex({
 				name: 1
@@ -105,18 +104,16 @@
 				name: 'index_name'
 			});
 
-			console.log(collection.lastOp());
-
 			// Run with index
 			a = collection.find({name: 'Sally'}, {decouple: false, skipIndex: false});
 
 			// Run without index
 			b = collection.find({name: 'Sally'}, {decouple: false, skipIndex: true});
 
-			ok(a.__fdbStats.usedIndex && a.__fdbStats.usedIndex.name() === 'index_name', "Check that index was used");
-			ok(b.__fdbStats.usedIndex === false, "Check that index was not used");
+			ok(a.__fdbOp.flag('usedIndex') && a.__fdbOp.flag('usedIndex').name() === 'index_name', "Check that index was used");
+			ok(b.__fdbOp.flag('usedIndex') === false, "Check that index was not used");
 
-			ok(a.__fdbStats.tookMs <= b.__fdbStats.tookMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbStats.tookMs + " vs Non-Indexed: " + b.length + " rows in " + b.__fdbStats.tookMs + ")");
+			ok(a.__fdbOp.time().totalMs <= b.__fdbOp.time().totalMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbOp.time().totalMs + " vs Non-Indexed: " + b.length + " rows in " + b.__fdbOp.time().totalMs + ")");
 
 			base.dbDown();
 		});

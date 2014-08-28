@@ -320,6 +320,7 @@
 			this._name = name;
 			this._data = [];
 			this._groups = [];
+			this._metrics = new Metrics();
 
 			this._deferQueue = {
 				insert: [],
@@ -564,18 +565,16 @@
 		 */
 		Collection.prototype.setData = function (data, options, callback) {
 			if (data) {
-				var time = {
-					start: new Date().getTime()
-				};
+				var op = this._metrics.create('setData');
+				op.start();
 
 				if (!(data instanceof Array)) {
 					data = [data];
 				}
 
-				time.transformStart = new Date().getTime();
+				op.time('transformIn');
 				data = this.transformIn(data);
-				time.transformEnd = new Date().getTime();
-				time.transformTotal = time.transformEnd - time.transformStart;
+				op.time('transformIn');
 
 				var oldData = this._data;
 
@@ -587,20 +586,11 @@
 				}
 
 				// Update the primary key index
-				time.reIndexStart = new Date().getTime();
+				op.time('_rebuildPrimaryKeyIndex');
 				this._rebuildPrimaryKeyIndex(options);
-				time.reIndexEnd = new Date().getTime();
-				time.reIndexTotal = time.reIndexEnd - time.reIndexStart;
+				op.time('_rebuildPrimaryKeyIndex');
 
-				time.end = new Date().getTime();
-				time.total = time.end - time.start;
-
-				this._lastOp = {
-					type: 'setData',
-					stats: {
-						time: time
-					}
-				};
+				op.stop();
 
 				this.emit('setData', this._data, oldData);
 			}
@@ -780,8 +770,9 @@
 			update = this.transformIn(update);
 
 			var self = this,
+				op = this._metrics.create('update'),
 				pKey = this._primaryKey,
-				dataSet = this.find(query, {decouple: false}),
+				dataSet,
 				updated,
 				updateCall = function (doc) {
 					update = JSON.parse(JSON.stringify(update));
@@ -804,21 +795,32 @@
 				views = this._views,
 				viewIndex;
 
+			op.start();
+			op.start('Retrieve documents to update');
+			dataSet = this.find(query, {decouple: false});
+			op.start('Retrieve documents to update');
+
 			if (dataSet.length) {
+				op.time('Update documents');
 				updated = dataSet.filter(updateCall);
+				op.time('Update documents');
 
 				if (updated.length) {
 					// Loop views and pass them the update query
 					if (views && views.length) {
+						op.time('Inform views of update');
 						for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 							views[viewIndex].update(query, update);
 						}
+						op.time('Inform views of update');
 					}
 
 					this._onUpdate(updated);
 					this.deferEmit('change', {type: 'update', data: updated});
 				}
 			}
+
+			op.stop();
 
 			return updated || [];
 		};
@@ -1562,8 +1564,7 @@
 
 			options.decouple = options.decouple !== undefined ? options.decouple : true;
 
-			var startTime = new Date().getTime(),
-				stats = {},
+			var op = this._metrics.create('find'),
 				analysis,
 				self = this,
 				resultArr,
@@ -1589,26 +1590,31 @@
 					return self._match(doc, query, 'and');
 				};
 
+			op.start();
 			if (query) {
 				// Get query analysis to execute best optimised code path
+				op.time('_analyseQuery');
 				analysis = this._analyseQuery(query, options);
+				op.time('_analyseQuery');
 
 				if (analysis.hasJoin && analysis.queriesJoin) {
 					// The query has a join and tries to limit by it's joined data
 					// Get an instance reference to the join collections
+					op.time('Get join collection references');
 					for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
 						joinCollectionName = analysis.joinsOn[joinIndex];
 						joinPath = new Path(analysis.joinQueries[joinCollectionName]);
 						joinQuery = joinPath.value(query)[0];
 						joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
 					}
+					op.time('Get join collection references');
 				}
 
 				// Check if an index lookup can be used to return this result
 				if (analysis.usesIndex.length && (!options || (options && !options.skipIndex))) {
 					// Get the data from the index
 					resultArr = analysis.usesIndex[0].lookup(query);
-					stats.usedIndex = analysis.usesIndex[0];
+					op.flag('usedIndex', analysis.usesIndex[0]);
 				} else {
 					// Filter the source data and return the result
 					resultArr = this._data.filter(matcher);
@@ -1618,18 +1624,18 @@
 						resultArr = this.sort(options.sort, resultArr);
 					}
 
-					stats.usedIndex = false;
+					op.flag('usedIndex', false);
 				}
 
 				if (options.limit && resultArr && resultArr.length > options.limit) {
 					resultArr.length = options.limit;
-					stats.limit = options.limit;
+					op.flag('limit', options.limit);
 				}
 
 				if (options.decouple) {
 					// Now decouple the data from the original objects
 					resultArr = this.decouple(resultArr);
-					stats.decouple = options.decouple;
+					op.flag('decouple', options.decouple);
 				}
 
 				// Now process any joins on the final data
@@ -1705,10 +1711,11 @@
 						}
 					}
 
-					stats.join = true;
+					op.flag('join', true);
 				}
 
 				// Process removal queue
+				op.time('Process removal queue');
 				for (i = 0; i < resultRemove.length; i++) {
 					index = resultArr.indexOf(resultRemove[i]);
 
@@ -1716,24 +1723,34 @@
 						resultArr.splice(index, 1);
 					}
 				}
+				op.time('Process removal queue');
 
 				if (options.transform) {
+					op.time('Transform data');
 					for (i = 0; i < resultArr.length; i++) {
 						resultArr.splice(i, 1, options.transform(resultArr[i]));
 					}
-
-					stats.transform = true;
+					op.time('Transform data');
+					op.flag('transform', true);
 				}
 
 				// Process transforms
+				op.time('Transform out data');
 				resultArr = this.transformOut(resultArr);
+				op.time('Transform out data');
 
-				stats.tookMs = new Date().getTime() - startTime;
-				resultArr.__fdbStats = stats;
+				op.stop();
+
+				resultArr.__fdbOp = op;
 
 				return resultArr;
 			} else {
-				return [];
+				op.stop();
+
+				resultArr = [];
+				resultArr.__fdbOp = op;
+
+				return resultArr;
 			}
 		};
 
@@ -2586,6 +2603,176 @@
 			return this._lastOp;
 		};
 
+		/**
+		 * The operation class, used to store details about an operation being
+		 * performed by the database.
+		 * @param {String} name The name of the operation.
+		 * @constructor
+		 */
+		var Operation = function (name) {
+			this.init.apply(this, arguments);
+		};
+
+		Operation.prototype.init = function (name) {
+			this._name = name;
+			this._time = {
+				process: {}
+			};
+			this._flag = {};
+			this._log = [];
+		};
+
+		/**
+		 * Starts the operation timer.
+		 */
+		Operation.prototype.start = function () {
+			this._time.start = new Date().getTime();
+		};
+
+		/**
+		 * Adds an item to the operation log.
+		 * @param {String} event The item to log.
+		 * @returns {*}
+		 */
+		Operation.prototype.log = function (event) {
+			if (event) {
+				var lastLogTime = this._log.length > 0 ? this._log[this._log.length - 1].time : 0,
+					logObj = {
+						event: event,
+						time: new Date().getTime(),
+						delta: 0
+					};
+
+				this._log.push(logObj);
+
+				if (lastLogTime) {
+					logObj.delta = logObj.time - lastLogTime;
+				}
+
+				return this;
+			}
+
+			return this._log;
+		};
+
+		/**
+		 * Called when starting and ending a timed operation, used to time
+		 * internal calls within an operation's execution.
+		 * @param {String} section An operation name.
+		 * @returns {*}
+		 */
+		Operation.prototype.time = function (section) {
+			if (section !== undefined) {
+				var process = this._time.process,
+					processObj = process[section] = process[section] || {};
+
+				if (!processObj.start) {
+					// Timer started
+					processObj.start = new Date().getTime();
+				} else {
+					processObj.end = new Date().getTime();
+					processObj.totalMs = processObj.end - processObj.start;
+				}
+
+				return this;
+			}
+
+			return this._time;
+		};
+
+		/**
+		 * Used to set key/value flags during operation execution.
+		 * @param {String} key
+		 * @param {String} val
+		 * @returns {*}
+		 */
+		Operation.prototype.flag = function (key, val) {
+			if (key !== undefined && val !== undefined) {
+				this._flag[key] = val;
+			} else if (key !== undefined) {
+				return this._flag[key];
+			} else {
+				return this._flag;
+			}
+		};
+
+		/**
+		 * Stops the operation timer.
+		 */
+		Operation.prototype.stop = function () {
+			this._time.stop = new Date().getTime();
+			this._time.totalMs = this._time.stop - this._time.start;
+		};
+
+		/**
+		 * The metrics class used to store details about operations.
+		 * @constructor
+		 */
+		var Metrics = function () {
+			this.init.apply(this, arguments);
+		};
+
+		Metrics.prototype.init = function () {
+			this._data = [];
+		};
+
+		/**
+		 * Creates an operation within the metrics instance and if metrics
+		 * are currently enabled (by calling the start() method) the operation
+		 * is also stored in the metrics log.
+		 * @param {String} name The name of the operation.
+		 * @returns {Operation}
+		 */
+		Metrics.prototype.create = function (name) {
+			var op = new Operation(name);
+
+			if (this._enabled) {
+				this._data.push(op);
+			}
+
+			return op;
+		};
+
+		/**
+		 * Starts logging operations.
+		 * @returns {Metrics}
+		 */
+		Metrics.prototype.start = function () {
+			this._enabled = true;
+			return this;
+		};
+
+		/**
+		 * Stops logging operations.
+		 * @returns {Metrics}
+		 */
+		Metrics.prototype.stop = function () {
+			this._enabled = false;
+			return this;
+		};
+
+		/**
+		 * Clears all logged operations.
+		 * @returns {Metrics}
+		 */
+		Metrics.prototype.clear = function () {
+			this._data = [];
+			return this;
+		};
+
+		/**
+		 * Returns an array of all logged operations.
+		 * @returns {Array}
+		 */
+		Metrics.prototype.list = function () {
+			return this._data;
+		};
+
+		/**
+		 * The index class used to instantiate indexes that the database can
+		 * use to speed up queries on collections and views.
+		 * @constructor
+		 */
 		var Index = function () {
 			this.init.apply(this, arguments);
 		};
@@ -2872,6 +3059,12 @@
 			return hashArr;
 		};
 
+		/**
+		 * The key value store class used when storing basic in-memory KV data,
+		 * and can be queried for quick retrieval. Mostly used for collection
+		 * primary key indexes and lookups.
+		 * @constructor
+		 */
 		var KeyValueStore = function () {
 			this.init.apply(this, arguments);
 		};
@@ -2925,6 +3118,38 @@
 				}
 
 				return result;
+			} else if (typeof pKeyVal === 'object') {
+				// The primary key clause is an object, now we have to do some
+				// more extensive searching
+				if (pKeyVal.$ne) {
+					// Create new data
+					result = [];
+
+					for (arrIndex in this._data) {
+						if (this._data.hasOwnProperty(arrIndex)) {
+							if (arrIndex !== pKeyVal.$ne) {
+								result.push(this._data[arrIndex]);
+							}
+						}
+					}
+
+					return result;
+				}
+
+				if (pKeyVal.$nin && (pKeyVal.$nin instanceof Array)) {
+					// Create new data
+					result = [];
+
+					for (arrIndex in this._data) {
+						if (this._data.hasOwnProperty(arrIndex)) {
+							if (pKeyVal.$nin.indexOf(arrIndex) === -1) {
+								result.push(this._data[arrIndex]);
+							}
+						}
+					}
+
+					return result;
+				}
 			} else {
 				// Key is a basic lookup from string
 				lookupItem = this._data[pKeyVal];
@@ -2979,6 +3204,15 @@
 					this[i.substr(0, 1).toLowerCase() + i.substr(1, i.length - 1)] = new this.Plugin[i](this);
 				}
 			}
+		};
+
+		/**
+		 * Returns a non-referenced version of the passed object / array.
+		 * @param {Object} data The object or array to return as a non-referenced version.
+		 * @returns {*}
+		 */
+		DB.prototype.decouple = function (data) {
+			return JSON.parse(JSON.stringify(data));
 		};
 
 		DB.prototype.debug = function (val) {
