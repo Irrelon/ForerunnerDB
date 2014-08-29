@@ -254,6 +254,32 @@
 			base.dbDown();
 		});
 
+		test("Core - Collection.find() :: Regex lookup", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				name: /a/i
+			});
+
+			ok(result.length === 3, "Check result count is as expected");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: Primary key regex lookup", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				_id: new RegExp('4', 'i')
+			});
+
+			ok(result.length === 1, "Check result count is as expected");
+
+			base.dbDown();
+		});
+
 		test("Core - Collection.find() :: $ne clause primary key object", function() {
 			base.dbUp();
 			base.dataUp();
@@ -261,6 +287,36 @@
 			var result = user.find({
 				_id: {
 					$ne: "2"
+				}
+			});
+
+			ok(result.length === 3, "Check result count is as expected");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $nin clause primary key object", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				_id: {
+					$nin: ["2", "3"]
+				}
+			});
+
+			ok(result.length === 2, "Check result count is as expected");
+
+			base.dbDown();
+		});
+
+		test("Core - Collection.find() :: $in clause primary key object", function() {
+			base.dbUp();
+			base.dataUp();
+
+			var result = user.find({
+				_id: {
+					$in: ["2", "3", "5"]
 				}
 			});
 

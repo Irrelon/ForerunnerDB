@@ -316,7 +316,7 @@
 
 		Collection.prototype.init = function (name) {
 			this._primaryKey = '_id';
-			this._primaryIndex = new KeyValueStore();
+			this._primaryIndex = new KeyValueStore('primary');
 			this._name = name;
 			this._data = [];
 			this._groups = [];
@@ -639,7 +639,7 @@
 		Collection.prototype._ensurePrimaryKey = function (obj) {
 			if (obj[this._primaryKey] === undefined) {
 				// Assign a primary key automatically
-				obj[this._primaryKey] = this._db.objectId();
+				obj[this._primaryKey] = this.objectId();
 			}
 		};
 
@@ -1195,20 +1195,24 @@
 				index,
 				views = this._views,
 				viewIndex,
-				pKey = this._primaryKey;
+				dataItem;
 
 			if (dataSet.length) {
 				// Remove the data from the collection
 				for (var i = 0; i < dataSet.length; i++) {
-					index = this._data.indexOf(dataSet[i]);
+					dataItem = dataSet[i];
+
+					// Remove the item from the collection's indexes
+					this._removeIndex(dataItem);
+
+					// Remove data from internal stores
+					index = this._data.indexOf(dataItem);
 
 					if (this._linked) {
 						$.observable(this._data).remove(index);
 					} else {
 						this._data.splice(index, 1);
 					}
-
-					this._primaryIndex.unSet(dataSet[i][pKey]);
 				}
 
 				// Loop views and pass them the remove query
@@ -1397,6 +1401,7 @@
 		 * check for index violations before allowing the document to be inserted.
 		 * @param {Object} doc The document to insert after passing index violation
 		 * tests.
+		 * @param {Number=} index Optional index to insert the document at.
 		 * @returns {Boolean|Object} True on success, false if no document passed,
 		 * or an object containing details about an index violation if one occurred.
 		 * @private
@@ -1411,6 +1416,9 @@
 				indexViolation = this.insertIndexViolation(doc);
 
 				if (!indexViolation) {
+					// Add the item to the collection's indexes
+					this._insertIndex(doc);
+
 					// Insert the document
 					if (this._linked) {
 						$.observable(this._data).insert(index, doc);
@@ -1420,11 +1428,41 @@
 
 					return true;
 				} else {
-					return false;
+					return 'Index violation in index: ' + indexViolation;
 				}
 			}
 
-			return false;
+			return 'No document passed to insert';
+		};
+
+		Collection.prototype._insertIndex = function (doc) {
+			var arr = this._indexByName,
+				arrIndex;
+
+			// Insert to primary key index
+			this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+
+			// Insert into other indexes
+			for (arrIndex in arr) {
+				if (arr.hasOwnProperty(arrIndex)) {
+					arr[arrIndex].insert(doc);
+				}
+			}
+		};
+
+		Collection.prototype._removeIndex = function (doc) {
+			var arr = this._indexByName,
+				arrIndex;
+
+			// Remove from primary key index
+			this._primaryIndex.unSet(doc[this._primaryKey]);
+
+			// Remove from other indexes
+			for (arrIndex in arr) {
+				if (arr.hasOwnProperty(arrIndex)) {
+					arr[arrIndex].remove(doc);
+				}
+			}
 		};
 
 		/**
@@ -2479,7 +2517,7 @@
 				docCount = docArr.length,
 				docIndex,
 				subDocArr,
-				subDocCollection = this._db.collection('__FDB_temp_' + this._db.objectId()),
+				subDocCollection = this._db.collection('__FDB_temp_' + this.objectId()),
 				subDocResults,
 				resultObj = {
 					parents: docCount,
@@ -2527,8 +2565,31 @@
 		 * a violation was detected.
 		 */
 		Collection.prototype.insertIndexViolation = function (doc) {
+			var indexViolated,
+				arr = this._indexByName,
+				arrIndex,
+				arrItem;
+
 			// Check the item's primary key is not already in use
-			return !this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+			if (this._primaryIndex.get(doc[this._primaryKey])) {
+				indexViolated = this._primaryIndex;
+			} else {
+				// Check violations of other indexes
+				for (arrIndex in arr) {
+					if (arr.hasOwnProperty(arrIndex)) {
+						arrItem = arr[arrIndex];
+
+						if (arrItem.unique()) {
+							if (arrItem.violation(doc)) {
+								indexViolated = arrItem;
+								break;
+							}
+						}
+					}
+				}
+			}
+
+			return indexViolated ? indexViolated.name() : false;
 		};
 
 		/**
@@ -2600,7 +2661,43 @@
 		 * @returns {Object}
 		 */
 		Collection.prototype.lastOp = function () {
-			return this._lastOp;
+			return this._metrics.list();
+		};
+
+		/**
+		 * Generates a new 16-character hexadecimal unique ID or
+		 * generates a new 16-character hexadecimal ID based on
+		 * the passed string. Will always generate the same ID
+		 * for the same string.
+		 * @param {String=} str A string to generate the ID from.
+		 * @return {String}
+		 */
+		Collection.prototype.objectId = function (str) {
+			var id;
+
+			if (!str) {
+				idCounter++;
+
+				id = (idCounter + (
+					Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17) +
+						Math.random() * Math.pow(10, 17)
+					)
+					).toString(16);
+			} else {
+				var val = 0,
+					count = str.length,
+					i;
+
+				for (i = 0; i < count; i++) {
+					val += str.charCodeAt(i) * Math.pow(10, 17);
+				}
+
+				id = val.toString(16);
+			}
+
+			return id;
 		};
 
 		/**
@@ -2804,6 +2901,10 @@
 			return this._state;
 		};
 
+		Index.prototype.size = function () {
+			return this._size;
+		};
+
 		Index.prototype.data = function (val) {
 			if (val !== undefined) {
 				this._data = val;
@@ -2871,49 +2972,18 @@
 					}),
 					collectionData = collection.find(),
 					dataIndex,
-					dataCount = collectionData.length,
-					dataItem,
-					uniqueLookup = {},
-					uniqueFlag = this._unique,
-					uniqueHash,
-					itemHashArr,
-					hashIndex;
+					dataCount = collectionData.length;
 
 				// Clear the index data for the index
 				this._data = {};
 
+				if (this._unique) {
+					this._uniqueLookup = {};
+				}
+
 				// Loop the collection data
 				for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
-					dataItem = collectionData[dataIndex];
-
-					if (uniqueFlag) {
-						// Generate item hash
-						uniqueHash = this._itemHash(dataItem, this._keys);
-
-						// Check if the item breaks the unique constraint
-						if (uniqueLookup[uniqueHash]) {
-							// Item breaks unique constraint
-							this._state = {
-								err: 'Unique constraint violation with existing data, cannot create index!',
-								keys: this._keys,
-								hash: uniqueHash,
-								clashItem: dataItem,
-								clashedWith: uniqueLookup[uniqueHash]
-							};
-
-							return this._state;
-						} else {
-							uniqueLookup[uniqueHash] = dataItem;
-						}
-					}
-
-					// Generate item hash
-					itemHashArr = this._itemHashArr(dataItem, this._keys);
-
-					// Get the path search results and store them
-					for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
-						this.pushToPathValue(itemHashArr[hashIndex], dataItem);
-					}
+					this.insert(collectionData[dataIndex]);
 				}
 			}
 
@@ -2925,6 +2995,59 @@
 				updated: new Date(),
 				ok: true
 			};
+		};
+
+		Index.prototype.insert = function (dataItem, options) {
+			var uniqueFlag = this._unique,
+				uniqueHash,
+				itemHashArr,
+				hashIndex;
+
+			if (uniqueFlag) {
+				uniqueHash = this._itemHash(dataItem, this._keys);
+				this._uniqueLookup[uniqueHash] = dataItem;
+			}
+
+			// Generate item hash
+			itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+			// Get the path search results and store them
+			for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
+				this.pushToPathValue(itemHashArr[hashIndex], dataItem);
+			}
+		};
+
+		Index.prototype.remove = function (dataItem, options) {
+			var uniqueFlag = this._unique,
+				uniqueHash,
+				itemHashArr,
+				hashIndex;
+
+			if (uniqueFlag) {
+				uniqueHash = this._itemHash(dataItem, this._keys);
+				delete this._uniqueLookup[uniqueHash];
+			}
+
+			// Generate item hash
+			itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+			// Get the path search results and store them
+			for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
+				this.pullFromPathValue(itemHashArr[hashIndex], dataItem);
+			}
+		};
+
+		Index.prototype.violation = function (dataItem) {
+			// Generate item hash
+			var uniqueHash = this._itemHash(dataItem, this._keys);
+
+			// Check if the item breaks the unique constraint
+			return Boolean(this._uniqueLookup[uniqueHash]);
+		};
+
+		Index.prototype.hashViolation = function (uniqueHash) {
+			// Check if the item breaks the unique constraint
+			return Boolean(this._uniqueLookup[uniqueHash]);
 		};
 
 		Index.prototype.pushToPathValue = function (hash, obj) {
@@ -2943,6 +3066,31 @@
 			}
 		};
 
+		Index.prototype.pullFromPathValue = function (hash, obj) {
+			var pathValArr = this._data[hash],
+				indexOfObject;
+
+			// Make sure we have already indexed this object at this path/value
+			indexOfObject = pathValArr.indexOf(obj);
+
+			if (indexOfObject > -1) {
+				// Un-index the object
+				pathValArr.splice(indexOfObject, 1);
+
+				// Record the reference to this object in our index size
+				this._size--;
+
+				// Remove object cross-reference
+				this.pullFromCrossRef(obj, pathValArr);
+			}
+
+			// Check if we should remove the path value array
+			if (!pathValArr.length) {
+				// Remove the array
+				delete this._data[hash];
+			}
+		};
+
 		Index.prototype.pull = function (obj) {
 			// Get all places the object has been used and remove them
 			var id = obj[this._collection.primaryKey()],
@@ -2957,6 +3105,9 @@
 				// Remove item from this index lookup array
 				this._pullFromArray(arrItem, obj);
 			}
+
+			// Record the reference to this object in our index size
+			this._size--;
 
 			// Now remove the cross-reference entry for this object
 			delete this._crossRef[id];
@@ -2985,6 +3136,13 @@
 				// Add the cross-reference
 				crObj.push(pathValArr);
 			}
+		};
+
+		Index.prototype.pullFromCrossRef = function (obj, pathValArr) {
+			var id = obj[this._collection.primaryKey()],
+				crObj;
+
+			delete this._crossRef[id];
 		};
 
 		Index.prototype.lookup = function (query) {
@@ -3063,15 +3221,26 @@
 		 * The key value store class used when storing basic in-memory KV data,
 		 * and can be queried for quick retrieval. Mostly used for collection
 		 * primary key indexes and lookups.
+		 * @param {String=} name Optional KV store name.
 		 * @constructor
 		 */
-		var KeyValueStore = function () {
+		var KeyValueStore = function (name) {
 			this.init.apply(this, arguments);
 		};
 
-		KeyValueStore.prototype.init = function () {
+		KeyValueStore.prototype.init = function (name) {
+			this._name = name;
 			this._data = {};
 			this._primaryKey = '_id';
+		};
+
+		KeyValueStore.prototype.name = function (val) {
+			if (val !== undefined) {
+				this._name = val;
+				return this;
+			}
+
+			return this._name;
 		};
 
 		KeyValueStore.prototype.primaryKey = function (key) {
@@ -3118,6 +3287,19 @@
 				}
 
 				return result;
+			} else if (pKeyVal instanceof RegExp) {
+				// Create new data
+				result = [];
+
+				for (arrIndex in this._data) {
+					if (this._data.hasOwnProperty(arrIndex)) {
+						if (pKeyVal.test(arrIndex)) {
+							result.push(this._data[arrIndex]);
+						}
+					}
+				}
+
+				return result;
 			} else if (typeof pKeyVal === 'object') {
 				// The primary key clause is an object, now we have to do some
 				// more extensive searching
@@ -3136,6 +3318,21 @@
 					return result;
 				}
 
+				if (pKeyVal.$in && (pKeyVal.$in instanceof Array)) {
+					// Create new data
+					result = [];
+
+					for (arrIndex in this._data) {
+						if (this._data.hasOwnProperty(arrIndex)) {
+							if (pKeyVal.$in.indexOf(arrIndex) > -1) {
+								result.push(this._data[arrIndex]);
+							}
+						}
+					}
+
+					return result;
+				}
+
 				if (pKeyVal.$nin && (pKeyVal.$nin instanceof Array)) {
 					// Create new data
 					result = [];
@@ -3146,6 +3343,17 @@
 								result.push(this._data[arrIndex]);
 							}
 						}
+					}
+
+					return result;
+				}
+
+				if (pKeyVal.$or && (pKeyVal.$or instanceof Array)) {
+					// Create new data
+					result = [];
+
+					for (arrIndex = 0; arrIndex < pKeyVal.$or.length; arrIndex++) {
+						result = result.concat(this.lookup(pKeyVal.$or[arrIndex]));
 					}
 
 					return result;

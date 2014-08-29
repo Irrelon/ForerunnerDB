@@ -117,6 +117,76 @@
 
 			base.dbDown();
 		});
+
+		test("Index - Collection.find() :: Test index created before inserting data", function () {
+			base.dbUp();
+
+			var coll = db.collection('temp').truncate();
+			var result = coll.ensureIndex({
+				name: 1
+			}, {
+				unique: true
+			});
+
+			var insert1 = coll.insert({
+				name: 'Bob'
+			});
+
+			var insert2 = coll.insert({
+				name: 'Bob'
+			});
+
+			ok(insert1.inserted.length === 1, "Check returned data 1 length");
+			ok(insert2.inserted.length === 0, "Check returned data 2 length");
+
+			base.dbDown();
+		});
+
+		test("Index - Index.remove() :: Test index is being kept up to date with CRUD", function () {
+			base.dbUp();
+
+			var coll,
+				result,
+				insert1,
+				insert2,
+				find,
+				index;
+
+			coll = db.collection('temp').truncate();
+			result = coll.ensureIndex({
+				name: 1
+			}, {
+				unique: true,
+				name: 'uniqueName'
+			});
+
+			insert1 = coll.insert({
+				name: 'Bob'
+			});
+
+			insert2 = coll.insert({
+				name: 'Jill'
+			});
+
+			find = coll.find();
+			index = coll.index('uniqueName');
+
+			ok(find.length === 2, "Check data length");
+			ok(index.size() === 2, "Check index size");
+
+			// Now remove item and check that it cannot be found in the index
+			coll.remove({
+				name: 'Bob'
+			});
+
+			find = coll.find();
+			index = coll.index('uniqueName');
+
+			ok(find.length === 1, "Check data length");
+			ok(index.size() === 1, "Check index size");
+
+			base.dbDown();
+		});
 	});
 
 	if (typeof(define) === 'function' && define.amd) {
