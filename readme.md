@@ -298,6 +298,17 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
 
 You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
 
+## Get Data Item By Reference
+JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
+
+	var result = db.collection('item').find({}, {
+		decouple: false
+	});
+
+If you do not specify a decouple option, ForerunnerDB will default to true and return decoupled objects.
+
+Keep in mind that if you switch off decoupling for a query and then modify any object returned, it will also modify the internal object held in ForerunnerDB, which could result in incorrect index data as well as other anomalies.
+
 ## Primary Keys
 If your data uses different primary key fields from the default "_id" then you need to tell the collection. Simply call
 the primaryKey() method with the name of the field your primary key is stored in:
