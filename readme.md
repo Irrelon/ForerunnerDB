@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.0.26
+## Version 1.0.27
 
 ##### Project Status
 
