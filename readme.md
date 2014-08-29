@@ -85,11 +85,23 @@ Setting data on a collection will empty the existing data from the collection if
 ## Inserting Documents
 You can either insert a single document object or pass an array of documents. Insert a single document:
 
-	itemCollection.insert({_id: 3, price: 400, name: 'Fish Bones'});
+	itemCollection.insert({
+		_id: 3,
+		price: 400,
+		name: 'Fish Bones'
+	});
 
 Or an array of documents:
 
-	itemCollection.insert([{_id: 4, price: 267, name:'Scooby Snacks'}, {_id: 5, price: 234, name: 'Chicken Yum Yum'}]);
+	itemCollection.insert([{
+		_id: 4,
+		price: 267,
+		name:'Scooby Snacks'
+	}, {
+		_id: 5,
+		price: 234,
+		name: 'Chicken Yum Yum'
+	}]);
 
 ## Searching the Collection
 Much like MongoDB, searching for data in a collection is done using the find() method and supports many of the same
