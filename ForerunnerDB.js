@@ -87,6 +87,13 @@
 			return this._path;
 		};
 
+		/**
+		 * Tests if the passed object has the paths that are specified and that
+		 * a value exists in those paths.
+		 * @param {Object} testKeys The object describing the paths to test for.
+		 * @param {Object} testObj The object to test paths against.
+		 * @returns {Boolean} True if the object paths exist.
+		 */
 		Path.prototype.hasObjectPaths = function (testKeys, testObj) {
 			var result = true,
 				i;
@@ -347,6 +354,11 @@
 			this._subsetOf(this);
 		};
 
+		/**
+		 * Gets / sets the name of the collection.
+		 * @param {String} val The name of the collection to set.
+		 * @returns {*}
+		 */
 		Collection.prototype.name = function (val) {
 			if (val !== undefined) {
 				this._name = val;
@@ -600,6 +612,11 @@
 			return this;
 		};
 
+		/**
+		 * Drops and rebuilds the primary key index for all documents in the collection.
+		 * @param {Object=} options An optional options object.
+		 * @private
+		 */
 		Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 			var ensureKeys = options && options.ensureKeys !== undefined ? options.ensureKeys : true,
 				violationCheck = options && options.violationCheck !== undefined ? options.violationCheck : true,
@@ -636,6 +653,12 @@
 			}
 		};
 
+		/**
+		 * Checks for a primary key on the document and assigns one if none
+		 * currently exists.
+		 * @param {Object} obj The object to check a primary key against.
+		 * @private
+		 */
 		Collection.prototype._ensurePrimaryKey = function (obj) {
 			if (obj[this._primaryKey] === undefined) {
 				// Assign a primary key automatically
@@ -1127,6 +1150,14 @@
 			return updated;
 		};
 
+		/**
+		 * Updates a property on an object depending on if the collection is
+		 * currently running data-binding or not.
+		 * @param {Object} doc The object whose property is to be updated.
+		 * @param {String} prop The property to update.
+		 * @param {*} val The new value of the property.
+		 * @private
+		 */
 		Collection.prototype._updateProperty = function (doc, prop, val) {
 			if (this._linked) {
 				$.observable(doc).setProperty(prop, val);
@@ -1135,6 +1166,13 @@
 			}
 		};
 
+		/**
+		 * Changes the index of an item in the passed array.
+		 * @param {Array} arr The array to modify.
+		 * @param {Number} indexFrom The index to move the item from.
+		 * @param {Number} indexTo The index to move the item to.
+		 * @private
+		 */
 		Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 			if (this._linked) {
 				$.observable(arr).move(indexFrom, indexTo);
@@ -1143,6 +1181,13 @@
 			}
 		};
 
+		/**
+		 * Inserts an item into the passed array at the specified index.
+		 * @param {Array} arr The array to insert into.
+		 * @param {Number} index The index to insert at.
+		 * @param {Object} doc The document to insert.
+		 * @private
+		 */
 		Collection.prototype._updateSplicePush = function (arr, index, doc) {
 			if (arr.length > index) {
 				if (this._linked) {
@@ -1159,6 +1204,12 @@
 			}
 		};
 
+		/**
+		 * Inserts an item at the end of an array.
+		 * @param {Array} arr The array to insert the item into.
+		 * @param {Object} doc The document to insert.
+		 * @private
+		 */
 		Collection.prototype._updatePush = function (arr, doc) {
 			if (this._linked) {
 				$.observable(arr).insert(doc);
@@ -1167,6 +1218,12 @@
 			}
 		};
 
+		/**
+		 * Removes an item from the passed array.
+		 * @param {Array} arr The array to modify.
+		 * @param {Number} index The index of the item in the array to remove.
+		 * @private
+		 */
 		Collection.prototype._updatePull = function (arr, index) {
 			if (this._linked) {
 				$.observable(arr).remove(index);
@@ -1175,6 +1232,13 @@
 			}
 		};
 
+		/**
+		 * Increments a value for a property on a document by the passed number.
+		 * @param {Object} doc The document to modify.
+		 * @param {String} prop The property to modify.
+		 * @param {Number} val The amount to increment by.
+		 * @private
+		 */
 		Collection.prototype._updateIncrement = function (doc, prop, val) {
 			if (this._linked) {
 				$.observable(doc).setProperty(prop, doc[prop] + val);
@@ -1269,6 +1333,11 @@
 			}
 		};
 
+		/**
+		 * Processes a deferred action queue.
+		 * @param {String} type The queue name to process.
+		 * @param {Function} callback A method to call when the queue has processed.
+		 */
 		Collection.prototype.processQueue = function (type, callback) {
 			var queue = this._deferQueue[type],
 				deferThreshold = this._deferThreshold[type],
@@ -1435,6 +1504,11 @@
 			return 'No document passed to insert';
 		};
 
+		/**
+		 * Inserts a document into the collection indexes.
+		 * @param {Object} doc The document to insert.
+		 * @private
+		 */
 		Collection.prototype._insertIndex = function (doc) {
 			var arr = this._indexByName,
 				arrIndex;
@@ -1450,6 +1524,11 @@
 			}
 		};
 
+		/**
+		 * Removes a document from the collection indexes.
+		 * @param {Object} doc The document to remove.
+		 * @private
+		 */
 		Collection.prototype._removeIndex = function (doc) {
 			var arr = this._indexByName,
 				arrIndex;
@@ -1792,6 +1871,11 @@
 			}
 		};
 
+		/**
+		 * Gets / sets the collection transform options.
+		 * @param {Object} obj A collection transform options object.
+		 * @returns {*}
+		 */
 		Collection.prototype.transform = function (obj) {
 			if (obj !== undefined) {
 				if (typeof obj === "object") {
@@ -1826,6 +1910,11 @@
 			}
 		};
 
+		/**
+		 * Transforms data using the set transformIn method.
+		 * @param {Object} data The data to transform.
+		 * @returns {*}
+		 */
 		Collection.prototype.transformIn = function (data) {
 			if (this._transformEnabled && this._transformIn) {
 				if (data instanceof Array) {
@@ -1844,6 +1933,11 @@
 			return data;
 		};
 
+		/**
+		 * Transforms data using the set transformOut method.
+		 * @param {Object} data The data to transform.
+		 * @returns {*}
+		 */
 		Collection.prototype.transformOut = function (data) {
 			if (this._transformEnabled && this._transformOut) {
 				if (data instanceof Array) {
@@ -2092,6 +2186,14 @@
 			return analysis;
 		};
 
+		/**
+		 * Checks if the passed query references this collection.
+		 * @param query
+		 * @param collection
+		 * @param path
+		 * @returns {*}
+		 * @private
+		 */
 		Collection.prototype._queryReferencesCollection = function (query, collection, path) {
 			var i;
 
@@ -3234,6 +3336,11 @@
 			this._primaryKey = '_id';
 		};
 
+		/**
+		 * Get / set the name of the key/value store.
+		 * @param {String} val The name to set.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.name = function (val) {
 			if (val !== undefined) {
 				this._name = val;
@@ -3243,6 +3350,11 @@
 			return this._name;
 		};
 
+		/**
+		 * Get / set the primary key.
+		 * @param {String} key The key to set.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.primaryKey = function (key) {
 			if (key !== undefined) {
 				this._primaryKey = key;
@@ -3252,20 +3364,42 @@
 			return this._primaryKey;
 		};
 
+		/**
+		 * Removes all data from the store.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.truncate = function () {
 			this._data = {};
 			return this;
 		};
 
+		/**
+		 * Sets data against a key in the store.
+		 * @param {String} key The key to set data for.
+		 * @param {*} value The value to assign to the key.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.set = function (key, value) {
 			this._data[key] = value ? value : true;
 			return this;
 		};
 
+		/**
+		 * Gets data stored for the passed key.
+		 * @param {String} key The key to get data for.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.get = function (key) {
 			return this._data[key];
 		};
 
+		/**
+		 * Get / set the primary key.
+		 * @param {*} obj A lookup query, can be a string key, an array of string keys,
+		 * an object with further query clauses or a regular expression that should be
+		 * run against all keys.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.lookup = function (obj) {
 			var pKeyVal = obj[this._primaryKey],
 				arrIndex,
@@ -3370,11 +3504,24 @@
 			}
 		};
 
+		/**
+		 * Removes data for the given key from the store.
+		 * @param {String} key The key to un-set.
+		 * @returns {*}
+		 */
 		KeyValueStore.prototype.unSet = function (key) {
 			delete this._data[key];
 			return this;
 		};
 
+		/**
+		 * Sets data for the give key in the store only where the given key
+		 * does not already have a value in the store.
+		 * @param {String} key The key to set data for.
+		 * @param {*} value The value to assign to the key.
+		 * @returns {Boolean} True if data was set or false if data already
+		 * exists for the key.
+		 */
 		KeyValueStore.prototype.uniqueSet = function (key, value) {
 			if (this._data[key] === undefined) {
 				this._data[key] = value;
@@ -3394,14 +3541,6 @@
 
 		DB.prototype._isServer = false;
 
-		DB.prototype.isClient = function () {
-			return !this._isServer;
-		};
-
-		DB.prototype.isServer = function () {
-			return this._isServer;
-		};
-
 		DB.prototype.init = function () {
 			this._collection = {};
 
@@ -3415,6 +3554,24 @@
 		};
 
 		/**
+		 * Checks if the database is running on a client (browser) or
+		 * a server (node.js).
+		 * @returns {Boolean} Returns true if running on a browser.
+		 */
+		DB.prototype.isClient = function () {
+			return !this._isServer;
+		};
+
+		/**
+		 * Checks if the database is running on a client (browser) or
+		 * a server (node.js).
+		 * @returns {Boolean} Returns true if running on a server.
+		 */
+		DB.prototype.isServer = function () {
+			return this._isServer;
+		};
+
+		/**
 		 * Returns a non-referenced version of the passed object / array.
 		 * @param {Object} data The object or array to return as a non-referenced version.
 		 * @returns {*}
@@ -3423,6 +3580,11 @@
 			return JSON.parse(JSON.stringify(data));
 		};
 
+		/**
+		 * Gets / sets the debug flag for the database.
+		 * @param {Boolean} val If true, debug messages will be output to the console.
+		 * @returns {*}
+		 */
 		DB.prototype.debug = function (val) {
 			if (val !== undefined) {
 				this._debug = val;
@@ -3442,6 +3604,13 @@
 			return new Collection().setData(arr);
 		};
 
+		/**
+		 * Registers an event listener against an event name.
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The listener method to call when
+		 * the event is fired.
+		 * @returns {init}
+		 */
 		DB.prototype.on = function(event, listener) {
 			this._listeners = this._listeners || {};
 			this._listeners[event] = this._listeners[event] || [];
@@ -3450,6 +3619,13 @@
 			return this;
 		};
 
+		/**
+		 * De-registers an event listener from an event name.
+		 * @param {String} event The name of the event to stop listening for.
+		 * @param {Function} listener The listener method passed to on() when
+		 * registering the event listener.
+		 * @returns {*}
+		 */
 		DB.prototype.off = function(event, listener) {
 			if (event in this._listeners) {
 				var arr = this._listeners[event],
@@ -3463,6 +3639,12 @@
 			return this;
 		};
 
+		/**
+		 * Emits an event by name with the given data.
+		 * @param {String} event The name of the event to emit.
+		 * @param {*=} data The data to emit with the event.
+		 * @returns {*}
+		 */
 		DB.prototype.emit = function(event, data) {
 			this._listeners = this._listeners || {};
 
