@@ -2932,6 +2932,71 @@
 		};
 
 		/**
+		 * Generates a difference object that contains insert, update and remove arrays
+		 * representing the operations to execute to make this collection have the same
+		 * data as the one passed.
+		 * @param {Collection} collection The collection to diff against.
+		 * @returns {{}}
+		 */
+		Collection.prototype.diff = function (collection) {
+			var diff = {
+				insert: [],
+				update: [],
+				remove: []
+			};
+
+			var pm = this.primaryKey(),
+				arr,
+				arrIndex,
+				arrItem,
+				arrCount;
+
+			// Check if the primary key index of each collection can be utilised
+			if (pm === collection.primaryKey()) {
+				// Use the collection primary key index to do the diff (super-fast)
+				arr = collection._data;
+				arrCount = arr.length;
+
+				// Loop the collection's data array and check for matching items
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					arrItem = arr[arrIndex];
+
+					// Check for a matching item in this collection
+					if (this._primaryIndex.get(arrItem[pm])) {
+						// Matching item exists, check if the data is the same
+						if (this._primaryCrc.get(arrItem[pm]) === collection._primaryCrc.get(arrItem[pm])) {
+							// Matching objects, no update required
+						} else {
+							// The documents exist in both collections but data differs, update required
+							diff.update.push(arrItem);
+						}
+					} else {
+						// The document is missing from this collection, insert requried
+						diff.insert.push(arrItem);
+					}
+				}
+
+				// Now loop this collection's data and check for matching items
+				arr = this._data;
+				arrCount = arr.length;
+
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					arrItem = arr[arrIndex];
+					if (!collection._primaryIndex.get(arrItem[pm])) {
+						// The document does not exist in the other collection, remove required
+						diff.remove.push(arrItem);
+					}
+				}
+			} else {
+				// The primary keys of each collection are different so the primary
+				// key index cannot be used for diffing, do an old-fashioned diff
+
+			}
+
+			return diff;
+		};
+
+		/**
 		 * The operation class, used to store details about an operation being
 		 * performed by the database.
 		 * @param {String} name The name of the operation.
