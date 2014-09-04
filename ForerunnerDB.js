@@ -30,7 +30,32 @@
  */
 (function () {
 	var init = (function () {
-		var idCounter = 0;
+		var idCounter = 0,
+			crcTable = (function () {
+				var crcTable = [],
+					c, n, k;
+
+				for (n = 0; n < 256; n++) {
+					c = n;
+
+					for (k = 0; k < 8; k++) {
+						c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+					}
+
+					crcTable[n] = c;
+				}
+
+				return crcTable;
+			}()),
+			crc = function(str) {
+				var crc = 0 ^ (-1);
+
+				for (var i = 0; i < str.length; i++) {
+					crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+				}
+
+				return (crc ^ (-1)) >>> 0;
+			};
 
 		/**
 		 * Allows a method to be overloaded.
@@ -324,10 +349,13 @@
 		Collection.prototype.init = function (name) {
 			this._primaryKey = '_id';
 			this._primaryIndex = new KeyValueStore('primary');
+			this._primaryCrc = new KeyValueStore('primaryCrc');
+			this._crcLookup = new KeyValueStore('crcLookup');
 			this._name = name;
 			this._data = [];
 			this._groups = [];
 			this._metrics = new Metrics();
+			this._linked = 0;
 
 			this._deferQueue = {
 				insert: [],
@@ -353,6 +381,26 @@
 			// Set the subset to itself since it is the root collection
 			this._subsetOf(this);
 		};
+
+		Collection.prototype.debug = function (val) {
+			if (val !== undefined) {
+				this._debug = val;
+
+				for (var i = 0; i < this._views.length; i++) {
+					this._views[i].debug(val);
+				}
+				return this;
+			}
+
+			return this._debug || (this._db && this._db._debug);
+		};
+
+		/**
+		 * Returns a checksum of a string.
+		 * @param {String} string The string to checksum.
+		 * @return {String} The checksum generated.
+		 */
+		Collection.prototype.crc = crc;
 
 		/**
 		 * Gets / sets the name of the collection.
@@ -479,7 +527,7 @@
 		 */
 		Collection.prototype.drop = function () {
 			if (this._db && this._name) {
-				if (this._debug || (this._db && this._db._debug)) {
+				if (this.debug()) {
 					console.log('Dropping collection ' + this._name);
 				}
 
@@ -518,7 +566,7 @@
 
 				// Set the primary key index primary key
 				this._primaryIndex.primaryKey(keyName);
-				
+
 				// Rebuild the primary key index
 				this._rebuildPrimaryKeyIndex();
 				return this;
@@ -624,10 +672,15 @@
 				arrCount,
 				arrItem,
 				pIndex = this._primaryIndex,
-				pKey = this._primaryKey;
+				crcIndex = this._primaryCrc,
+				crcLookup = this._crcLookup,
+				pKey = this._primaryKey,
+				jString;
 
 			// Drop the existing primary index
 			pIndex.truncate();
+			crcIndex.truncate();
+			crcLookup.truncate();
 
 			// Loop the data and check for a primary key in each object
 			arr = this._data;
@@ -648,7 +701,10 @@
 						throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 					}
 				} else {
+					jString = JSON.stringify(arrItem);
 					pIndex.set(arrItem[pKey], arrItem);
+					crcIndex.set(arrItem[pKey], jString);
+					crcLookup.set(jString, arrItem);
 				}
 			}
 		};
@@ -705,7 +761,7 @@
 			if (obj) {
 				var queue = this._deferQueue.upsert,
 					deferThreshold = this._deferThreshold.upsert;
-					//deferTime = this._deferTime.upsert;
+				//deferTime = this._deferTime.upsert;
 
 				var returnData = {},
 					query,
@@ -792,13 +848,16 @@
 			// Handle transform
 			update = this.transformIn(update);
 
+			if (this.debug()) {
+				console.log('Updating some collection data for collection "' + this.name() + '"');
+			}
+
 			var self = this,
 				op = this._metrics.create('update'),
 				pKey = this._primaryKey,
 				dataSet,
 				updated,
 				updateCall = function (doc) {
-					update = JSON.parse(JSON.stringify(update));
 					if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
 						// Remove item from primary index
 						self._primaryIndex.unSet(doc[pKey]);
@@ -819,9 +878,9 @@
 				viewIndex;
 
 			op.start();
-			op.start('Retrieve documents to update');
+			op.time('Retrieve documents to update');
 			dataSet = this.find(query, {decouple: false});
-			op.start('Retrieve documents to update');
+			op.time('Retrieve documents to update');
 
 			if (dataSet.length) {
 				op.time('Update documents');
@@ -872,7 +931,8 @@
 		 * @private
 		 */
 		Collection.prototype._updateObject = function (doc, update, query, options, path) {
-			update = JSON.parse(JSON.stringify(update));
+			update = this.decouple(update);
+
 			// Clear leading dots from path
 			path = path || '';
 			if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
@@ -1161,8 +1221,16 @@
 		Collection.prototype._updateProperty = function (doc, prop, val) {
 			if (this._linked) {
 				$.observable(doc).setProperty(prop, val);
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+				}
 			} else {
 				doc[prop] = val;
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+				}
 			}
 		};
 
@@ -1176,8 +1244,16 @@
 		Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 			if (this._linked) {
 				$.observable(arr).move(indexFrom, indexTo);
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+				}
 			} else {
 				arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+				}
 			}
 		};
 
@@ -1255,42 +1331,53 @@
 		 */
 		Collection.prototype.remove = function (query) {
 			var self = this,
-				dataSet = this.find(query, {decouple: false}),
+				dataSet,
 				index,
 				views = this._views,
 				viewIndex,
-				dataItem;
+				dataItem,
+				arrIndex,
+				returnArr;
 
-			if (dataSet.length) {
-				// Remove the data from the collection
-				for (var i = 0; i < dataSet.length; i++) {
-					dataItem = dataSet[i];
-
-					// Remove the item from the collection's indexes
-					this._removeIndex(dataItem);
-
-					// Remove data from internal stores
-					index = this._data.indexOf(dataItem);
-
-					if (this._linked) {
-						$.observable(this._data).remove(index);
-					} else {
-						this._data.splice(index, 1);
-					}
+			if (query instanceof Array) {
+				for (arrIndex = 0; arrIndex < query.length; arrIndex++) {
+					returnArr.push(this.remove(query[arrIndex]));
 				}
 
-				// Loop views and pass them the remove query
-				if (views && views.length) {
-					for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-						views[viewIndex].remove(query);
+				return returnArr;
+			} else {
+				dataSet = this.find(query, {decouple: false});
+				if (dataSet.length) {
+					// Remove the data from the collection
+					for (var i = 0; i < dataSet.length; i++) {
+						dataItem = dataSet[i];
+
+						// Remove the item from the collection's indexes
+						this._removeIndex(dataItem);
+
+						// Remove data from internal stores
+						index = this._data.indexOf(dataItem);
+
+						if (this._linked) {
+							$.observable(this._data).remove(index);
+						} else {
+							this._data.splice(index, 1);
+						}
 					}
+
+					// Loop views and pass them the remove query
+					if (views && views.length) {
+						for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+							views[viewIndex].remove(query);
+						}
+					}
+
+					this._onRemove(dataSet);
+					this.deferEmit('change', {type: 'remove', data: dataSet});
 				}
 
-				this._onRemove(dataSet);
-				this.deferEmit('change', {type: 'remove', data: dataSet});
+				return dataSet;
 			}
-
-			return dataSet;
 		};
 
 		/**
@@ -1325,7 +1412,7 @@
 
 				// Set a timeout
 				this._changeTimeout = setTimeout(function () {
-					if (self._debug || (self._db && self._db._debug)) { console.log('Collection: emitting ' + args[0]); }
+					if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 					self.emit.apply(self, args);
 				}, 100);
 			} else {
@@ -1511,10 +1598,13 @@
 		 */
 		Collection.prototype._insertIndex = function (doc) {
 			var arr = this._indexByName,
-				arrIndex;
+				arrIndex,
+				jString = JSON.stringify(doc);
 
 			// Insert to primary key index
 			this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+			this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
+			this._crcLookup.uniqueSet(jString, doc);
 
 			// Insert into other indexes
 			for (arrIndex in arr) {
@@ -1531,10 +1621,13 @@
 		 */
 		Collection.prototype._removeIndex = function (doc) {
 			var arr = this._indexByName,
-				arrIndex;
+				arrIndex,
+				jString = JSON.stringify(doc);
 
 			// Remove from primary key index
 			this._primaryIndex.unSet(doc[this._primaryKey]);
+			this._primaryCrc.unSet(doc[this._primaryKey]);
+			this._crcLookup.unSet(jString);
 
 			// Remove from other indexes
 			for (arrIndex in arr) {
@@ -2584,11 +2677,31 @@
 		 * @param templateSelector
 		 */
 		Collection.prototype.link = function (outputTargetSelector, templateSelector) {
-			// Create the data binding
-			$.templates[templateSelector].link(outputTargetSelector, this._data);
+			// Check for existing data binding
+			this._links = this._links || {};
 
-			// Set the linked flag
-			this._linked = true;
+			if (!this._links[templateSelector]) {
+				if ($(outputTargetSelector).length) {
+					// Create the data binding
+					$.templates[templateSelector].link(outputTargetSelector, this._data);
+
+					// Add link to flags
+					this._links[templateSelector] = outputTargetSelector;
+
+					// Set the linked flag
+					this._linked++;
+
+					if (this.debug()) {
+						console.log('ForerunnerDB.Collection: Added binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+					}
+
+					return this;
+				} else {
+					throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+				}
+			}
+
+			throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		};
 
 		/**
@@ -2598,11 +2711,27 @@
 		 * @param templateSelector
 		 */
 		Collection.prototype.unlink = function (outputTargetSelector, templateSelector) {
-			// Remove the data binding
-			$.templates[templateSelector].unlink(outputTargetSelector);
+			// Check for binding
+			this._links = this._links || {};
 
-			// Set the linked flag
-			this._linked = false;
+			if (this._links[templateSelector]) {
+				// Remove the data binding
+				$.templates[templateSelector].unlink(outputTargetSelector);
+
+				// Remove link from flags
+				delete this._links[templateSelector];
+
+				// Set the linked flag
+				this._linked--;
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+				}
+
+				return this;
+			}
+
+			throw('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		};
 
 		/**
@@ -3541,6 +3670,14 @@
 
 		DB.prototype._isServer = false;
 
+		DB.prototype.isClient = function () {
+			return !this._isServer;
+		};
+
+		DB.prototype.isServer = function () {
+			return this._isServer;
+		};
+
 		DB.prototype.init = function () {
 			this._collection = {};
 
@@ -3552,6 +3689,13 @@
 				}
 			}
 		};
+
+		/**
+		 * Returns a checksum of a string.
+		 * @param {String} string The string to checksum.
+		 * @return {String} The checksum generated.
+		 */
+		DB.prototype.crc = crc;
 
 		/**
 		 * Checks if the database is running on a client (browser) or
@@ -3672,7 +3816,7 @@
 		DB.prototype.collection = function (collectionName, primaryKey) {
 			if (collectionName) {
 				if (!this._collection[collectionName]) {
-					if (this._debug || (this._db && this._db._debug)) {
+					if (this.debug()) {
 						console.log('Creating collection ' + collectionName);
 					}
 				}
