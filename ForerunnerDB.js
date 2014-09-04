@@ -356,6 +356,7 @@
 			this._groups = [];
 			this._metrics = new Metrics();
 			this._linked = 0;
+			this._debug = {};
 
 			this._deferQueue = {
 				insert: [],
@@ -382,18 +383,47 @@
 			this._subsetOf(this);
 		};
 
-		Collection.prototype.debug = function (val) {
-			if (val !== undefined) {
-				this._debug = val;
+		Collection.prototype.debug = new Overload([
+			function () {
+				return this._debug.all;
+			},
 
-				for (var i = 0; i < this._views.length; i++) {
-					this._views[i].debug(val);
+			function (val) {
+				if (val !== undefined) {
+					if (typeof val === 'boolean') {
+						this._debug.all = val;
+
+						// Update the views to use this debug setting
+						for (var i = 0; i < this._views.length; i++) {
+							this._views[i].debug(val);
+						}
+						return this;
+					} else {
+						return this._debug[val] || (this._db && this._db._debug && this._db._debug[val]) || this._debug.all;
+					}
 				}
-				return this;
-			}
 
-			return this._debug || (this._db && this._db._debug);
-		};
+				return this._debug.all;
+			},
+
+			function (type, val) {
+				if (type !== undefined) {
+					if (val !== undefined) {
+						this._debug[type] = val;
+
+						// Update the views to use this debug setting
+						for (var i = 0; i < this._views.length; i++) {
+							this._views[i].debug(type, val);
+						}
+						return this;
+					}
+
+					return this._debug[type] || (this._db && this._db._debug && this._db._debug[type]);
+				}
+
+				return this._debug.all;
+			}
+		]);
 
 		/**
 		 * Returns a checksum of a string.
@@ -890,6 +920,9 @@
 				if (updated.length) {
 					// Loop views and pass them the update query
 					if (views && views.length) {
+						if (this.debug('views')) {
+							console.log('Updating views from collection: ' + this.name());
+						}
 						op.time('Inform views of update');
 						for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 							views[viewIndex].update(query, update);
@@ -3745,6 +3778,7 @@
 
 		DB.prototype.init = function () {
 			this._collection = {};
+			this._debug = {};
 
 			// Init plugins
 			for (var i in this.Plugin) {
@@ -3794,14 +3828,35 @@
 		 * @param {Boolean} val If true, debug messages will be output to the console.
 		 * @returns {*}
 		 */
-		DB.prototype.debug = function (val) {
-			if (val !== undefined) {
-				this._debug = val;
-				return this;
-			}
+		DB.prototype.debug = new Overload([
+			function () {
+				return this._debug.all;
+			},
 
-			return this._debug;
-		};
+			function (val) {
+				if (val !== undefined) {
+					if (typeof val === 'boolean') {
+						this._debug.all = val;
+						return this;
+					}
+				}
+
+				return this._debug.all;
+			},
+
+			function (type, val) {
+				if (type !== undefined) {
+					if (val !== undefined) {
+						this._debug[type] = val;
+						return this;
+					}
+
+					return this._debug[type];
+				}
+
+				return this._debug.all;
+			}
+		]);
 
 		/**
 		 * Converts a normal javascript array of objects into a DB collection.
