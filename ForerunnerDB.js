@@ -1373,6 +1373,8 @@
 				returnArr;
 
 			if (query instanceof Array) {
+				returnArr = [];
+
 				for (arrIndex = 0; arrIndex < query.length; arrIndex++) {
 					returnArr.push(this.remove(query[arrIndex]));
 				}
