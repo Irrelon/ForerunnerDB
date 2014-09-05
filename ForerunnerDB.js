@@ -48,9 +48,10 @@
 				return crcTable;
 			}()),
 			crc = function(str) {
-				var crc = 0 ^ (-1);
+				var crc = 0 ^ (-1),
+					i;
 
-				for (var i = 0; i < str.length; i++) {
+				for (i = 0; i < str.length; i++) {
 					crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
 				}
 
@@ -3781,14 +3782,6 @@
 		DB.prototype.init = function () {
 			this._collection = {};
 			this._debug = {};
-
-			// Init plugins
-			for (var i in this.Plugin) {
-				if (this.Plugin.hasOwnProperty(i)) {
-					//console.log('ForerunnerDB Init Plugin: ' + i + '...');
-					this[i.substr(0, 1).toLowerCase() + i.substr(1, i.length - 1)] = new this.Plugin[i](this);
-				}
-			}
 		};
 
 		/**
@@ -4092,14 +4085,12 @@
 		 * @returns {Object}
 		 */
 		DB.classes = {
-			Path: Path,
-			Collection: Collection,
-			Index: Index,
-			KeyValueStore: KeyValueStore,
-			Overload: Overload
+			"Path": Path,
+			"Collection": Collection,
+			"Index": Index,
+			"KeyValueStore": KeyValueStore,
+			"Overload": Overload
 		};
-
-		DB.prototype.Plugin = {};
 
 		return DB;
 	});
