@@ -247,43 +247,47 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
  * @returns {Array} An array of values for the given path.
  */
 Path.prototype.value = function (obj, path) {
-	var pathParts,
-		arr,
-		arrCount,
-		objPart,
-		objPartParent,
-		valuesArr = [],
-		i, k;
+	if (obj !== undefined && typeof obj === 'object') {
+		var pathParts,
+			arr,
+			arrCount,
+			objPart,
+			objPartParent,
+			valuesArr = [],
+			i, k;
 
-	if (path !== undefined) {
-		path = this.clean(path);
-		pathParts = path.split('.');
-	}
-
-	arr = pathParts || this._pathParts;
-	arrCount = arr.length;
-	objPart = obj;
-
-	for (i = 0; i < arrCount; i++) {
-		objPart = objPart[arr[i]];
-
-		if (objPartParent instanceof Array) {
-			// Search inside the array for the next key
-			for (k = 0; k < objPartParent.length; k++) {
-				valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
-			}
-
-			return valuesArr;
-		} else {
-			if (!objPart || typeof(objPart) !== 'object') {
-				break;
-			}
+		if (path !== undefined) {
+			path = this.clean(path);
+			pathParts = path.split('.');
 		}
 
-		objPartParent = objPart;
-	}
+		arr = pathParts || this._pathParts;
+		arrCount = arr.length;
+		objPart = obj;
 
-	return [objPart];
+		for (i = 0; i < arrCount; i++) {
+			objPart = objPart[arr[i]];
+
+			if (objPartParent instanceof Array) {
+				// Search inside the array for the next key
+				for (k = 0; k < objPartParent.length; k++) {
+					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+				}
+
+				return valuesArr;
+			} else {
+				if (!objPart || typeof(objPart) !== 'object') {
+					break;
+				}
+			}
+
+			objPartParent = objPart;
+		}
+
+		return [objPart];
+	} else {
+		return [];
+	}
 };
 
 /**
