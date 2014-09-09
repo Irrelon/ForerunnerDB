@@ -466,7 +466,7 @@ Where the parameters are:
 	failed: An array of documents that failed to insert
 
 # Development Building / Compiling
-| This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
+> This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
 
 ForerunnerDB uses Browserify to compile to distribution builds whilst maintaining distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
 
