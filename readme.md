@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.0.27
+## Version 1.1.0
 
 ### Installation
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
