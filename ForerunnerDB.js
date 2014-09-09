@@ -2781,7 +2781,7 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 		return this;
 	}
 
-	throw('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 };
 
 /**
