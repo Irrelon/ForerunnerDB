@@ -465,6 +465,32 @@ Where the parameters are:
 	inserted: An array of documents that were inserted
 	failed: An array of documents that failed to insert
 
+# Development Building / Compiling
+| This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
+ForerunnerDB uses Browserify to compile to distribution builds whilst maintaining distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
+
+```
+npm install browserify
+```
+
+Now you can then execute browserify to build ForerunnerDB:
+
+```
+browserify .\build\all.js -v -o .\dist\fdb-all.js
+```
+
+There are also conveinience scripts to do this for you:
+
+###### Windows
+```
+.\build.bat
+```
+
+###### Linux / OSX
+```
+sh .\build.sh
+```
+
 # Future Updates
 ForerunnerDB's project road-map:
 

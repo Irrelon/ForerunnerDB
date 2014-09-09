@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js":[function(require,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js":[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -248,43 +248,47 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
  * @returns {Array} An array of values for the given path.
  */
 Path.prototype.value = function (obj, path) {
-	var pathParts,
-		arr,
-		arrCount,
-		objPart,
-		objPartParent,
-		valuesArr = [],
-		i, k;
+	if (obj !== undefined && typeof obj === 'object') {
+		var pathParts,
+			arr,
+			arrCount,
+			objPart,
+			objPartParent,
+			valuesArr = [],
+			i, k;
 
-	if (path !== undefined) {
-		path = this.clean(path);
-		pathParts = path.split('.');
-	}
-
-	arr = pathParts || this._pathParts;
-	arrCount = arr.length;
-	objPart = obj;
-
-	for (i = 0; i < arrCount; i++) {
-		objPart = objPart[arr[i]];
-
-		if (objPartParent instanceof Array) {
-			// Search inside the array for the next key
-			for (k = 0; k < objPartParent.length; k++) {
-				valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
-			}
-
-			return valuesArr;
-		} else {
-			if (!objPart || typeof(objPart) !== 'object') {
-				break;
-			}
+		if (path !== undefined) {
+			path = this.clean(path);
+			pathParts = path.split('.');
 		}
 
-		objPartParent = objPart;
-	}
+		arr = pathParts || this._pathParts;
+		arrCount = arr.length;
+		objPart = obj;
 
-	return [objPart];
+		for (i = 0; i < arrCount; i++) {
+			objPart = objPart[arr[i]];
+
+			if (objPartParent instanceof Array) {
+				// Search inside the array for the next key
+				for (k = 0; k < objPartParent.length; k++) {
+					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+				}
+
+				return valuesArr;
+			} else {
+				if (!objPart || typeof(objPart) !== 'object') {
+					break;
+				}
+			}
+
+			objPartParent = objPart;
+		}
+
+		return [objPart];
+	} else {
+		return [];
+	}
 };
 
 /**
@@ -1106,7 +1110,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 					case '$move':
 						operation = true;
 
-						// Do a pull operation
+								// Do a move operation
 						for (k in update[i]) {
 							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 								if (doc[k] instanceof Array) {
@@ -1115,7 +1119,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 										if (this._match(doc[k][tmpIndex], update[i][k])) {
 											var moveToIndex = update[i].$index;
 
-											if (tempIndex !== undefined) {
+													if (moveToIndex !== undefined) {
 												this._updateSpliceMove(doc[k], tmpIndex, moveToIndex);
 												updated = true;
 											} else {
@@ -2778,7 +2782,7 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 		return this;
 	}
 
-	throw('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 };
 
 /**
@@ -4495,7 +4499,7 @@ module.exports = CollectionGroup;
 // Grab the view class
 var ForerunnerDB = require('../ForerunnerDB'),
 	OldView = require('./ForerunnerDB.OldView'),
-	OldViewInit = ForerunnerDB.classes.OldView.prototype.init;
+	OldViewInit = OldView.prototype.init;
 
 OldView.prototype.init = function () {
 	var self = this;
@@ -6344,5 +6348,4 @@ ForerunnerDB.prototype.views = function () {
 };
 
 module.exports = View;
-},{"../ForerunnerDB":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js"}]},{},["C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js"])("C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js")
-});
+},{"../ForerunnerDB":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js"}]},{},["C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js"]);
