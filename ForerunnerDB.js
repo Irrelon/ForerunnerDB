@@ -1109,7 +1109,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 					case '$move':
 						operation = true;
 
-						// Do a pull operation
+								// Do a move operation
 						for (k in update[i]) {
 							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 								if (doc[k] instanceof Array) {
@@ -1118,7 +1118,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 										if (this._match(doc[k][tmpIndex], update[i][k])) {
 											var moveToIndex = update[i].$index;
 
-											if (tempIndex !== undefined) {
+													if (moveToIndex !== undefined) {
 												this._updateSpliceMove(doc[k], tmpIndex, moveToIndex);
 												updated = true;
 											} else {
