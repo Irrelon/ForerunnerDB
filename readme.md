@@ -468,7 +468,7 @@ Where the parameters are:
 # Development Building / Compiling
 > This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
 
-ForerunnerDB uses Browserify to compile to distribution builds whilst maintaining distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
+ForerunnerDB uses Browserify to compile to single-file distribution builds whilst maintaining source in distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
 
 ```
 npm install browserify
