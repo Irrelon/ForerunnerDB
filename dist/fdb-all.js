@@ -365,15 +365,14 @@ DB.prototype.collections = function () {
 module.exports = DB;
 },{"./lib/ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./lib/ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./lib/ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./lib/ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./lib/ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js":[function(require,module,exports){
 var ForerunnerDB = require('../ForerunnerDB');
-
 module.exports = ForerunnerDB;
 },{"../ForerunnerDB":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
-var Overload = require('./ForerunnerDB.Overload'),
+var Shared = require('./ForerunnerDB.Shared'),
+	Overload = require('./ForerunnerDB.Overload'),
 	Metrics = require('./ForerunnerDB.Metrics'),
 	KeyValueStore = require('./ForerunnerDB.KeyValueStore'),
 	Path = require('./ForerunnerDB.Path'),
 	Index = require('./ForerunnerDB.Index'),
-	Shared = require('./ForerunnerDB.Shared'),
 	Crc = require('./ForerunnerDB.Crc');
 
 /**
@@ -3080,6 +3079,8 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
+Shared.modules.Collection = Collection;
+
 module.exports = Collection;
 },{"./ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Index":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js","./ForerunnerDB.KeyValueStore":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js","./ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js":[function(require,module,exports){
 var crcTable = (function () {
@@ -3110,7 +3111,8 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0;
 };
 },{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js":[function(require,module,exports){
-var Path = require('./ForerunnerDB.Path');
+var Shared = require('./ForerunnerDB.Shared'),
+	Path = require('./ForerunnerDB.Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -3465,7 +3467,9 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js":[function(require,module,exports){
+},{"./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js":[function(require,module,exports){
+var Shared = require('./ForerunnerDB.Shared');
+
 /**
  * The key value store class used when storing basic in-memory KV data,
  * and can be queried for quick retrieval. Mostly used for collection
@@ -3679,8 +3683,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js":[function(require,module,exports){
-var Operation = require('./ForerunnerDB.Operation');
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js":[function(require,module,exports){
+var Shared = require('./ForerunnerDB.Shared'),
+	Operation = require('./ForerunnerDB.Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -3747,7 +3752,9 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js":[function(require,module,exports){
+},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js":[function(require,module,exports){
+var Shared = require('./ForerunnerDB.Shared');
+
 /**
  * The operation class, used to store details about an operation being
  * performed by the database.
@@ -3850,7 +3857,9 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js":[function(require,module,exports){
+var Shared = require('./ForerunnerDB.Shared');
+
 /**
  * Allows a method to be overloaded.
  * @param arr
@@ -3877,7 +3886,9 @@ var Overload = function (arr) {
 };
 
 module.exports = Overload;
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js":[function(require,module,exports){
+var Shared = require('./ForerunnerDB.Shared');
+
 /**
  * Path object used to resolve object paths and retrieve data from
  * objects by using paths.
@@ -4139,9 +4150,10 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
 var Shared = {
-	idCounter: 0
+	idCounter: 0,
+	modules: {}
 };
 
 module.exports = Shared;
