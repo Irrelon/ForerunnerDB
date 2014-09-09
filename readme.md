@@ -139,6 +139,7 @@ Supported operators:
 * $splicePush Add an item into an array at a specified index
 * $addToSet Adds an item into an array only if the item does not already exist in the array
 * $pull Used in updates to remove an item from an array
+* $move Move an item inside a document's array from one index to another
 * arrayKey.$ Positional selector query
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
@@ -471,7 +472,7 @@ Where the parameters are:
 ForerunnerDB uses Browserify to compile to single-file distribution builds whilst maintaining source in distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
 
 ```
-npm install browserify
+npm install -g browserify
 ```
 
 Now you can then execute browserify to build ForerunnerDB:
@@ -480,7 +481,7 @@ Now you can then execute browserify to build ForerunnerDB:
 browserify .\build\all.js -v -o .\dist\fdb-all.js
 ```
 
-There are also conveinience scripts to do this for you:
+There are also convenience scripts to do this for you:
 
 ###### Windows
 ```
@@ -490,6 +491,31 @@ There are also conveinience scripts to do this for you:
 ###### Linux / OSX
 ```
 sh .\build.sh
+```
+
+##### Continuous Compiling
+Browserify will compile to a single-file each time you run it. If you would prefer to automatically compile each change (for faster development) you can run watchify instead. Install watchify:
+
+```
+npm install -g watchify
+```
+
+You can then run watchify using the same command line arguments as browserify:
+
+```
+watchify .\build\all.js -v -o .\dist\fdb-all.js
+```
+
+There are also convenience scripts to do this for you:
+
+###### Windows
+```
+.\buildWatch.bat
+```
+
+###### Linux / OSX
+```
+sh .\buildWatch.sh
 ```
 
 # Future Updates
@@ -502,9 +528,10 @@ ForerunnerDB's project road-map:
 * Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
 * Query remote database from browser
 * Data persistence on client-side
+* Collection indexing
 
 ### PARTIAL
-* Collection indexing
+
 * Support more of the MongoDB query operators
 
 	Completed:
@@ -517,11 +544,14 @@ ForerunnerDB's project road-map:
     $and
     $exists
     $push
-    $splicePush
     $addToSet
     $pull
     $in
     $nin
+
+    Unique to ForerunnerDB:
+    $move
+    $splicePush
 
 	Required:
 	$mul,
