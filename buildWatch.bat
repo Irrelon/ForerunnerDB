@@ -1,1 +1,1 @@
-watchify .\build\all.js -v -o .\dist\fdb-all.js
+watchify .\build\all.js -s ForerunnerDB -v -o .\dist\fdb-all.js

@@ -1,1 +1,1 @@
-browserify ./build/all.js -v -o ./dist/fdb-all.js
+browserify ./build/all.js -s ForerunnerDB | derequire > ./dist/fdb-all.js
