@@ -1,10 +1,14 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js":[function(require,module,exports){
 var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
 	CollectionGroup = require('../lib/ForerunnerDB.CollectionGroup'),
-	OldView = require('../lib/ForerunnerDB.OldView');
+	View = require('../lib/ForerunnerDB.View'),
+	OldView = require('../lib/ForerunnerDB.OldView'),
+	OldViewBind = require('../lib/ForerunnerDB.OldView.Bind'),
+	Highcharts = require('../lib/ForerunnerDB.Highcharts'),
+	Persist = require('../lib/ForerunnerDB.Persist');
 
 module.exports = ForerunnerDB;
-},{"../lib/ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","../lib/ForerunnerDB.Core":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js","../lib/ForerunnerDB.OldView":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
+},{"../lib/ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","../lib/ForerunnerDB.Core":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js","../lib/ForerunnerDB.Highcharts":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Highcharts.js","../lib/ForerunnerDB.OldView":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js","../lib/ForerunnerDB.OldView.Bind":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.Bind.js","../lib/ForerunnerDB.Persist":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Persist.js","../lib/ForerunnerDB.View":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.View.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -2803,11 +2807,6 @@ var CollectionGroup = function () {
 	this.init.apply(this, arguments);
 };
 
-Collection = require('./ForerunnerDB.Collection');
-Overload = require('./ForerunnerDB.Overload');
-Core = Shared.modules.Core;
-CoreInit = Shared.modules.Core.prototype.init;
-
 CollectionGroup.prototype.init = function (name) {
 	var self = this;
 
@@ -2832,6 +2831,13 @@ CollectionGroup.prototype.init = function (name) {
 		self._onChange.apply(self, arguments);
 	};
 };
+
+Shared.modules.CollectionGroup = CollectionGroup;
+
+Collection = require('./ForerunnerDB.Collection');
+Overload = require('./ForerunnerDB.Overload');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
 
 /*CollectionGroup.prototype.on = function(event, listener) {
  this._listeners = this._listeners || {};
@@ -3508,7 +3514,266 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js":[function(require,module,exports){
+},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Highcharts.js":[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Collection,
+	CollectionInit;
+
+Shared = require('./ForerunnerDB.Shared');
+
+/**
+ * The constructor.
+ *
+ * @constructor
+ */
+var Highchart = function (collection, options) {
+	this.init.apply(this, arguments);
+};
+
+Highchart.prototype.init = function (collection, options) {
+	this._options = options;
+	this._selector = $(this._options.selector);
+	this._listeners = {};
+	this._collection = collection;
+
+	// Setup the chart
+	this._options.series = [];
+
+	// Set the data for the chart
+	var data,
+		seriesObj,
+		chartData,
+		i;
+
+	switch (this._options.type) {
+		case 'pie':
+			// Create chart from data
+			this._selector.highcharts(this._options.chartOptions);
+			this._chart = this._selector.highcharts();
+
+			// Generate graph data from collection data
+			data = this._collection.find();
+
+			seriesObj = {
+				allowPointSelect: true,
+				cursor: 'pointer',
+				dataLabels: {
+					enabled: true,
+					format: '<b>{point.name}</b>: {y} ({point.percentage:.0f}%)',
+					style: {
+						color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+					}
+				}
+			};
+
+			chartData = this.pieDataFromCollectionData(data, this._options.keyField, this._options.valField);
+
+			$.extend(seriesObj, this._options.seriesOptions);
+
+			$.extend(seriesObj, {
+				type: 'pie',
+				name: this._options.seriesName,
+				data: chartData
+			});
+
+			this._chart.addSeries(seriesObj);
+			break;
+
+		case 'line':
+			// Generate graph data from collection data
+			/*seriesObj = {
+				allowPointSelect: true,
+				cursor: 'pointer'
+			};*/
+
+			chartData = this.lineDataFromCollectionData(
+				this._options.seriesField,
+				this._options.keyField,
+				this._options.valField,
+				this._options.orderBy
+			);
+
+			this._options.chartOptions.xAxis = chartData.xAxis;
+			this._options.chartOptions.series = chartData.series;
+
+			this._selector.highcharts(this._options.chartOptions);
+			this._chart = this._selector.highcharts();
+			break;
+	}
+
+	// Hook the collection events to auto-update the chart
+	this._hookEvents();
+};
+
+Collection = Shared.modules.Collection;
+CollectionInit = Collection.prototype.init;
+
+/**
+ * Generate pie-chart series data from the given collection data array.
+ * @param data
+ * @param keyField
+ * @param valField
+ * @returns {Array}
+ */
+Highchart.prototype.pieDataFromCollectionData = function (data, keyField, valField) {
+	var graphData = [],
+		i;
+
+	for (i = 0; i < data.length; i++) {
+		graphData.push([data[i][keyField], data[i][valField]]);
+	}
+
+	return graphData;
+};
+
+/**
+ * Generate line-chart series data from the given collection data array.
+ * @param seriesField
+ * @param keyField
+ * @param valField
+ * @param orderBy
+ */
+Highchart.prototype.lineDataFromCollectionData = function (seriesField, keyField, valField, orderBy) {
+	var data = this._collection.distinct(seriesField),
+		seriesData = [],
+		xAxis = {
+			categories: []
+		},
+		seriesName,
+		query,
+		dataSearch,
+		seriesValues,
+		i, k;
+
+	// What we WANT to output:
+	/*series: [{
+		name: 'Responses',
+		data: [7.0, 6.9, 9.5, 14.5, 18.2, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
+	}]*/
+
+	// Loop keys
+	for (i = 0; i < data.length; i++) {
+		seriesName = data[i];
+		query = {};
+		query[seriesField] = seriesName;
+
+		seriesValues = [];
+		dataSearch = this._collection.find(query, {
+			orderBy: orderBy
+		});
+
+		// Loop the keySearch data and grab the value for each item
+		for (k = 0; k < dataSearch.length; k++) {
+			xAxis.categories.push(dataSearch[k][keyField]);
+			seriesValues.push(dataSearch[k][valField]);
+		}
+
+		seriesData.push({
+			name: seriesName,
+			data: seriesValues
+		});
+	}
+
+	return {
+		xAxis: xAxis,
+		series: seriesData
+	};
+};
+
+Highchart.prototype._hookEvents = function () {
+	var self = this;
+
+	self._collection.on('change', self._changeListener);
+
+	// If the collection is dropped, clean up after ourselves
+	self._collection.on('drop', self._dropListener);
+};
+
+Highchart.prototype._changeListener = function () {
+	var self = this;
+
+	// Update the series data on the chart
+	if(typeof self._collection !== 'undefined' && self._chart) {
+		var data = self._collection.find();
+
+		switch (self._options.type) {
+			case 'pie':
+				self._chart.series[0].setData(
+					self.pieDataFromCollectionData(
+						data,
+						self._options.keyField,
+						self._options.valField
+					)
+				);
+				break;
+
+			case 'line':
+				var lineSeriesData = self.lineDataFromCollectionData(
+					self._options.seriesField,
+					self._options.keyField,
+					self._options.valField,
+					self._options.orderBy
+				);
+
+				self._chart.xAxis[0].setCategories(
+					lineSeriesData.xAxis.categories
+				);
+
+				for (var i = 0; i < lineSeriesData.series.length; i++) {
+					self._chart.series[i].setData(
+						lineSeriesData.series[i].data
+					);
+				}
+				break;
+		}
+	}
+};
+
+Highchart.prototype._dropListener = function () {
+	var self = this;
+
+	self._collection.off('change', self._changeListener);
+	self._collection.off('drop', self._dropListener);
+};
+
+Highchart.prototype.drop = function () {
+	this._chart.destroy();
+
+	this._collection.off('change', this._changeListener);
+	this._collection.off('drop', this._dropListener);
+
+	delete this._collection._highcharts[this._options.selector];
+	delete this._chart;
+	delete this._options;
+	delete this._collection;
+
+	return this;
+};
+
+// Extend collection with view init
+Collection.prototype.init = function () {
+	this._highcharts = {};
+	CollectionInit.apply(this, arguments);
+};
+
+Collection.prototype.chart = function (options) {
+	if (!this._highcharts[options.selector]) {
+		// Store new chart in charts array
+		this._highcharts[options.selector] = new Highchart(this, options);
+	}
+
+	return this._highcharts[options.selector];
+};
+
+Collection.prototype.dropChart = function (selector) {
+	if (this._highcharts[selector]) {
+		this._highcharts[selector].drop();
+	}
+};
+
+module.exports = Highchart;
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js":[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared'),
 	Path = require('./ForerunnerDB.Path');
 
@@ -3539,6 +3804,8 @@ Index.prototype.init = function (keys, options, collection) {
 
 	this.name(options && options.name ? options.name : this._id);
 };
+
+Shared.modules.Index = Index;
 
 Index.prototype.id = function () {
 	return this._id;
@@ -3885,6 +4152,8 @@ KeyValueStore.prototype.init = function (name) {
 	this._primaryKey = '_id';
 };
 
+Shared.modules.KeyValueStore = KeyValueStore;
+
 /**
  * Get / set the name of the key/value store.
  * @param {String} val The name to set.
@@ -4097,6 +4366,8 @@ Metrics.prototype.init = function () {
 	this._data = [];
 };
 
+Shared.modules.Metrics = Metrics;
+
 /**
  * Creates an operation within the metrics instance and if metrics
  * are currently enabled (by calling the start() method) the operation
@@ -4150,7 +4421,418 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js":[function(require,module,exports){
+},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.Bind.js":[function(require,module,exports){
+// Grab the view class
+var Shared,
+	Core,
+	OldView,
+	OldViewInit;
+
+Shared = require('./ForerunnerDB.Shared');
+Core = Shared.modules.Core;
+OldView = Shared.modules.OldView;
+OldViewInit = OldView.prototype.init;
+
+OldView.prototype.init = function () {
+	var self = this;
+
+	this._binds = [];
+	this._renderStart = 0;
+	this._renderEnd = 0;
+
+	this._deferQueue = {
+		insert: [],
+		update: [],
+		remove: [],
+		upsert: [],
+		_bindInsert: [],
+		_bindUpdate: [],
+		_bindRemove: [],
+		_bindUpsert: []
+	};
+
+	this._deferThreshold = {
+		insert: 100,
+		update: 100,
+		remove: 100,
+		upsert: 100,
+		_bindInsert: 100,
+		_bindUpdate: 100,
+		_bindRemove: 100,
+		_bindUpsert: 100
+	};
+
+	this._deferTime = {
+		insert: 100,
+		update: 1,
+		remove: 1,
+		upsert: 1,
+		_bindInsert: 100,
+		_bindUpdate: 1,
+		_bindRemove: 1,
+		_bindUpsert: 1
+	};
+
+	OldViewInit.apply(this, arguments);
+
+	// Hook view events to update binds
+	this.on('insert', function (successArr, failArr) {
+		self._bindEvent('insert', successArr, failArr);
+	});
+
+	this.on('update', function (successArr, failArr) {
+		self._bindEvent('update', successArr, failArr);
+	});
+
+	this.on('remove', function (successArr, failArr) {
+		self._bindEvent('remove', successArr, failArr);
+	});
+
+	this.on('change', self._bindChange);
+};
+
+/**
+ * Binds a selector to the insert, update and delete events of a particular
+ * view and keeps the selector in sync so that updates are reflected on the
+ * web page in real-time.
+ *
+ * @param {String} selector The jQuery selector string to get target elements.
+ * @param {Object} options The options object.
+ */
+OldView.prototype.bind = function (selector, options) {
+	if (options && options.template) {
+		this._binds[selector] = options;
+	} else {
+		throw('Cannot bind data to element, missing options information!');
+	}
+
+	return this;
+};
+
+/**
+ * Un-binds a selector from the view changes.
+ * @param {String} selector The jQuery selector string to identify the bind to remove.
+ * @returns {Collection}
+ */
+OldView.prototype.unBind = function (selector) {
+	delete this._binds[selector];
+	return this;
+};
+
+/**
+ * Returns true if the selector is bound to the view.
+ * @param {String} selector The jQuery selector string to identify the bind to check for.
+ * @returns {boolean}
+ */
+OldView.prototype.isBound = function (selector) {
+	return Boolean(this._binds[selector]);
+};
+
+/**
+ * Sorts items in the DOM based on the bind settings and the passed item array.
+ * @param {String} selector The jQuery selector of the bind container.
+ * @param {Array} itemArr The array of items used to determine the order the DOM
+ * elements should be in based on the order they are in, in the array.
+ */
+OldView.prototype.bindSortDom = function (selector, itemArr) {
+	var container = $(selector),
+		arrIndex,
+		arrItem,
+		domItem;
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.OldView.Bind: Sorting data in DOM...', itemArr);
+	}
+
+	for (arrIndex = 0; arrIndex < itemArr.length; arrIndex++) {
+		arrItem = itemArr[arrIndex];
+
+		// Now we've done our inserts into the DOM, let's ensure
+		// they are still ordered correctly
+		domItem = container.find('#' + arrItem[this._primaryKey]);
+
+		if (domItem.length) {
+			if (arrIndex === 0) {
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView.Bind: Sort, moving to index 0...', domItem);
+				}
+				container.prepend(domItem);
+			} else {
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView.Bind: Sort, moving to index ' + arrIndex + '...', domItem);
+				}
+				domItem.insertAfter(container.children(':eq(' + (arrIndex - 1) + ')'));
+			}
+		} else {
+			if (this.debug()) {
+				console.log('ForerunnerDB.OldView.Bind: Warning, element for array item not found!', arrItem);
+			}
+		}
+	}
+};
+
+OldView.prototype.bindRefresh = function (obj) {
+	var binds = this._binds,
+		bindKey,
+		bind;
+
+	if (!obj) {
+		// Grab current data
+		obj = {
+			data: this.find()
+		};
+	}
+
+	for (bindKey in binds) {
+		if (binds.hasOwnProperty(bindKey)) {
+			bind = binds[bindKey];
+
+			if (this.debug()) { console.log('ForerunnerDB.OldView.Bind: Sorting DOM...'); }
+			this.bindSortDom(bindKey, obj.data);
+
+			if (bind.afterOperation) {
+				bind.afterOperation();
+			}
+
+			if (bind.refresh) {
+				bind.refresh();
+			}
+		}
+	}
+};
+
+/**
+ * Renders a bind view data to the DOM.
+ * @param {String} bindSelector The jQuery selector string to use to identify
+ * the bind target. Must match the selector used when defining the original bind.
+ * @param {Function=} domHandler If specified, this handler method will be called
+ * with the final HTML for the view instead of the DB handling the DOM insertion.
+ */
+OldView.prototype.bindRender = function (bindSelector, domHandler) {
+	// Check the bind exists
+	var bind = this._binds[bindSelector],
+		domTarget = $(bindSelector),
+		allData,
+		dataItem,
+		itemHtml,
+		finalHtml = $('<ul></ul>'),
+		i;
+
+	if (bind) {
+		allData = this._data.find();
+
+		// Loop all items and add them to the screen
+		for (i = 0; i < allData.length; i++) {
+			dataItem = allData[i];
+
+			itemHtml = bind.template(dataItem, function (itemHtml) {
+				finalHtml.append(itemHtml);
+			});
+		}
+
+		if (!domHandler) {
+			domTarget.append(finalHtml.html());
+		} else {
+			domHandler(bindSelector, finalHtml.html());
+		}
+	}
+};
+
+OldView.prototype.processQueue = function (type, callback) {
+	var queue = this._deferQueue[type],
+		deferThreshold = this._deferThreshold[type],
+		deferTime = this._deferTime[type];
+
+	if (queue.length) {
+		var self = this,
+			dataArr;
+
+		// Process items up to the threshold
+		if (queue.length) {
+			if (queue.length > deferThreshold) {
+				// Grab items up to the threshold value
+				dataArr = queue.splice(0, deferThreshold);
+			} else {
+				// Grab all the remaining items
+				dataArr = queue.splice(0, queue.length);
+			}
+
+			this._bindEvent(type, dataArr, []);
+		}
+
+		// Queue another process
+		setTimeout(function () {
+			self.processQueue(type, callback);
+		}, deferTime);
+	} else {
+		if (callback) { callback(); }
+		this.emit('bindQueueComplete');
+	}
+};
+
+OldView.prototype._bindEvent = function (type, successArr, failArr) {
+	var queue = this._deferQueue[type],
+		deferThreshold = this._deferThreshold[type],
+		deferTime = this._deferTime[type];
+
+	var binds = this._binds,
+		unfilteredDataSet = this.find({}),
+		filteredDataSet,
+		bindKey;
+
+	// Check if the number of inserts is greater than the defer threshold
+	/*if (successArr && successArr.length > deferThreshold) {
+	 // Break up upsert into blocks
+	 this._deferQueue[type] = queue.concat(successArr);
+
+	 // Fire off the insert queue handler
+	 this.processQueue(type);
+
+	 return;
+	 } else {*/
+	for (bindKey in binds) {
+		if (binds.hasOwnProperty(bindKey)) {
+			if (binds[bindKey].reduce) {
+				filteredDataSet = this.find(binds[bindKey].reduce.query, binds[bindKey].reduce.options);
+			} else {
+				filteredDataSet = unfilteredDataSet;
+			}
+
+			switch (type) {
+				case 'insert':
+					this._bindInsert(bindKey, binds[bindKey], successArr, failArr, filteredDataSet);
+					break;
+
+				case 'update':
+					this._bindUpdate(bindKey, binds[bindKey], successArr, failArr, filteredDataSet);
+					break;
+
+				case 'remove':
+					this._bindRemove(bindKey, binds[bindKey], successArr, failArr, filteredDataSet);
+					break;
+			}
+		}
+	}
+	//}
+};
+
+OldView.prototype._bindChange = function (newDataArr) {
+	if (this.debug()) {
+		console.log('ForerunnerDB.OldView.Bind: Bind data change, refreshing bind...', newDataArr);
+	}
+
+	this.bindRefresh(newDataArr);
+};
+
+OldView.prototype._bindInsert = function (selector, options, successArr, failArr, all) {
+	var container = $(selector),
+		itemElem,
+		itemHtml,
+		i;
+
+	// Loop the inserted items
+	for (i = 0; i < successArr.length; i++) {
+		// Check for existing item in the container
+		itemElem = container.find('#' + successArr[i][this._primaryKey]);
+
+		if (!itemElem.length) {
+			itemHtml = options.template(successArr[i], function (itemElem, insertedItem, failArr, all) { return function (itemHtml) {
+				// Check if there is custom DOM insert method
+				if (options.insert) {
+					options.insert(itemHtml, insertedItem, failArr, all);
+				} else {
+					// Handle the insert automatically
+					// Add the item to the container
+					if (options.prependInsert) {
+						container.prepend(itemHtml);
+
+					} else {
+						container.append(itemHtml);
+					}
+				}
+
+				if (options.afterInsert) {
+					options.afterInsert(itemHtml, insertedItem, failArr, all);
+				}
+			}}(itemElem, successArr[i], failArr, all));
+		}
+	}
+};
+
+OldView.prototype._bindUpdate = function (selector, options, successArr, failArr, all) {
+	var container = $(selector),
+		itemElem,
+		i;
+
+	// Loop the updated items
+	for (i = 0; i < successArr.length; i++) {
+		// Check for existing item in the container
+		itemElem = container.find('#' + successArr[i][this._primaryKey]);
+
+		options.template(successArr[i], function (itemElem, itemData) { return function (itemHtml) {
+			// Check if there is custom DOM insert method
+			if (options.update) {
+				options.update(itemHtml, itemData, all, itemElem.length ? 'update' : 'append');
+			} else {
+				if (itemElem.length) {
+					// An existing item is in the container, replace it with the
+					// new rendered item from the updated data
+					itemElem.replaceWith(itemHtml);
+				} else {
+					// The item element does not already exist, append it
+					if (options.prependUpdate) {
+						container.prepend(itemHtml);
+					} else {
+						container.append(itemHtml);
+					}
+				}
+			}
+
+			if (options.afterUpdate) {
+				options.afterUpdate(itemHtml, itemData, all);
+			}
+		}}(itemElem, successArr[i]));
+	}
+};
+
+OldView.prototype._bindRemove = function (selector, options, successArr, failArr, all) {
+	var container = $(selector),
+		itemElem,
+		i;
+
+	// Loop the removed items
+	for (i = 0; i < successArr.length; i++) {
+		// Check for existing item in the container
+		itemElem = container.find('#' + successArr[i][this._primaryKey]);
+
+		if (itemElem.length) {
+			if (options.beforeRemove) {
+				options.beforeRemove(itemElem, successArr[i], all, function (itemElem, data, all) { return function () {
+					if (options.remove) {
+						options.remove(itemElem, data, all);
+					} else {
+						itemElem.remove();
+
+						if (options.afterRemove) {
+							options.afterRemove(itemElem, data, all);
+						}
+					}
+				}}(itemElem, successArr[i], all));
+			} else {
+				if (options.remove) {
+					options.remove(itemElem, successArr[i], all);
+				} else {
+					itemElem.remove();
+
+					if (options.afterRemove) {
+						options.afterRemove(itemElem, successArr[i], all);
+					}
+				}
+			}
+		}
+	}
+};
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js":[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -4976,6 +5658,8 @@ Operation.prototype.init = function (name) {
 	this._log = [];
 };
 
+Shared.modules.Operation = Operation;
+
 /**
  * Starts the operation timer.
  */
@@ -5087,6 +5771,8 @@ var Overload = function (arr) {
 	return function () {};
 };
 
+Shared.modules.Overload = Overload;
+
 module.exports = Overload;
 },{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js":[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
@@ -5106,6 +5792,8 @@ Path.prototype.init = function (path) {
 		this.path(path);
 	}
 };
+
+Shared.modules.Path = Path;
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -5352,7 +6040,183 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Persist.js":[function(require,module,exports){
+// Import external names locally
+var Shared = require('./ForerunnerDB.Shared'),
+	Core,
+	Collection,
+	CollectionDrop,
+	CollectionGroup,
+	CollectionInit,
+	CoreInit,
+	Overload,
+	Persist;
+
+Persist = function () {
+	this.init.apply(this, arguments);
+};
+
+Persist.prototype.init = function (db) {
+	// Check environment
+	if (db.isClient()) {
+		if (Storage !== undefined) {
+			this.mode('localStorage');
+		}
+	}
+};
+
+Shared.modules.Persist = Persist;
+
+Core = Shared.modules.Core;
+Collection = require('./ForerunnerDB.Collection');
+CollectionDrop = Collection.prototype.drop;
+CollectionGroup = require('./ForerunnerDB.CollectionGroup');
+CollectionInit = Collection.prototype.init;
+Overload = require('./ForerunnerDB.Overload');
+CoreInit = Core.prototype.init;
+
+Persist.prototype.mode = function (type) {
+	if (type !== undefined) {
+		this._mode = type;
+		return this;
+	}
+
+	return this._mode;
+};
+
+Persist.prototype.save = function (key, data, callback) {
+	var val;
+
+	switch (this.mode()) {
+		case 'localStorage':
+			if (typeof data === 'object') {
+				val = 'json::fdb::' + JSON.stringify(data);
+			} else {
+				val = 'raw::fdb::' + data;
+			}
+
+			localStorage.setItem(key, val);
+
+			if (callback) { callback(false); }
+			break;
+	}
+
+	if (callback) { callback('No data handler.'); }
+};
+
+Persist.prototype.load = function (key, callback) {
+	var val,
+		parts,
+		data;
+
+	switch (this.mode()) {
+		case 'localStorage':
+			val = localStorage.getItem(key);
+
+			if (val) {
+				parts = val.split('::fdb::');
+
+				switch (parts[0]) {
+					case 'json':
+						data = JSON.parse(parts[1]);
+						break;
+
+					case 'raw':
+						data = parts[1];
+						break;
+				}
+
+				if (callback) { callback(false, data); }
+			}
+			break;
+	}
+
+	if (callback) { callback('No data handler or unrecognised data type.'); }
+};
+
+Persist.prototype.drop = function (key, callback) {
+	switch (this.mode()) {
+		case 'localStorage':
+			localStorage.removeItem(key);
+			if (callback) { callback(false); }
+			break;
+	}
+
+	if (callback) { callback('No data handler or unrecognised data type.'); }
+};
+
+// Extend the Collection prototype with persist methods
+Collection.prototype.drop = function (removePersistent) {
+	// Remove persistent storage
+	if (removePersistent) {
+		if (this._name) {
+			if (this._db) {
+				// Save the collection data
+				this._db.persist.drop(this._name);
+			} else {
+				if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
+				return 'Cannot drop a collection\'s persistent storage when the collection is not attached to a database!';
+			}
+		} else {
+			if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
+			return 'Cannot drop a collection\'s persistent storage when no name assigned to collection!';
+		}
+	}
+
+	// Call the original method
+	CollectionDrop.apply(this);
+};
+
+Collection.prototype.save = function (callback) {
+	if (this._name) {
+		if (this._db) {
+			// Save the collection data
+			this._db.persist.save(this._name, this._data);
+		} else {
+			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
+			return 'Cannot save a collection that is not attached to a database!';
+		}
+	} else {
+		if (callback) { callback('Cannot save a collection with no assigned name!'); }
+		return 'Cannot save a collection with no assigned name!';
+	}
+};
+
+Collection.prototype.load = function (callback) {
+	var self = this;
+
+	if (this._name) {
+		if (this._db) {
+			// Load the collection data
+			this._db.persist.load(this._name, function (err, data) {
+				if (!err) {
+					if (data) {
+						self.setData(data);
+					}
+					if (callback) { callback(false); }
+				} else {
+					if (callback) { callback(err); }
+					return err;
+				}
+			});
+		} else {
+			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
+			return 'Cannot load a collection that is not attached to a database!';
+		}
+	} else {
+		if (callback) { callback('Cannot load a collection with no assigned name!'); }
+		return 'Cannot load a collection with no assigned name!';
+	}
+};
+
+// Override the DB init to instantiate the plugin
+Core.prototype.init = function () {
+	this.persist = new Persist(this);
+	CoreInit.apply(this, arguments);
+};
+
+module.exports = Persist;
+},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -5360,5 +6224,674 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}]},{},["C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js"])("C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js")
+},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.View.js":[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	Collection,
+	CollectionGroup,
+	CollectionInit,
+	CoreInit,
+	Overload;
+
+Shared = require('./ForerunnerDB.Shared');
+
+/**
+ * The view constructor.
+ * @param viewName
+ * @constructor
+ */
+var View = function (name, query, options) {
+	this.init.apply(this, arguments);
+};
+
+View.prototype.init = function (name, query, options) {
+	this._name = name;
+	this._collections = [];
+	this._groups = [];
+	this._listeners = {};
+	this._querySettings = {
+		query: query,
+		options: options
+	};
+	this._debug = {};
+
+	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
+};
+
+Shared.modules.View = View;
+
+Collection = require('./ForerunnerDB.Collection');
+CollectionGroup = require('./ForerunnerDB.CollectionGroup');
+Overload = require('./ForerunnerDB.Overload');
+CollectionInit = Collection.prototype.init;
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
+
+View.prototype.debug = new Overload([
+	function () {
+		return this._debug.all;
+	},
+
+	function (val) {
+		if (val !== undefined) {
+			if (typeof val === 'boolean') {
+				this._debug.all = val;
+				this.privateData().debug(val);
+				this.publicData().debug(val);
+				return this;
+			} else {
+				return this._debug.all;
+			}
+		}
+
+		return this._debug.all;
+	},
+
+	function (type, val) {
+		if (type !== undefined) {
+			if (val !== undefined) {
+				this._debug[type] = val;
+				this.privateData().debug(type, val);
+				this.publicData().debug(type, val);
+				return this;
+			}
+
+			return this._debug[type];
+		}
+
+		return this._debug.all;
+	}
+]);
+
+View.prototype.name = function (val) {
+	if (val !== undefined) {
+		this._name = val;
+		return this;
+	}
+
+	return this._name;
+};
+
+/**
+ * Queries the view data. See Collection.find() for more information.
+ * @returns {*}
+ */
+View.prototype.find = function (query, options) {
+	return this.publicData().find(query, options);
+};
+
+/**
+ * Inserts into view data via the view collection. See Collection.insert() for more information.
+ * @returns {*}
+ */
+View.prototype.insert = function (data, index, callback) {
+	// Decouple the data to ensure we are working with our own copy
+	data = this._privateData.decouple(data);
+
+	if (typeof(index) === 'function') {
+		callback = index;
+		index = this._privateData.length;
+	} else if (index === undefined) {
+		index = this._privateData.length;
+	}
+
+	// Modify transform data
+	this._transformInsert(data, index);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData._insertHandle(data, index, callback);
+};
+
+/**
+ * Updates into view data via the view collection. See Collection.update() for more information.
+ * @returns {*}
+ */
+View.prototype.update = function (query, update) {
+	// Modify transform data
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	var updates = this._privateData.update(query, update),
+		primaryKey,
+		tQuery,
+		item;
+
+	if (this._transformEnabled && this._transformIn) {
+		primaryKey = this._publicData.primaryKey();
+
+		for (var i = 0; i < updates.length; i++) {
+			tQuery = {};
+			item = updates[i];
+			tQuery[primaryKey] = item[primaryKey];
+
+			this._transformUpdate(tQuery, item);
+		}
+	}
+
+	return updates;
+};
+
+/**
+ * Removed from view data via the view collection. See Collection.remove() for more information.
+ * @returns {*}
+ */
+View.prototype.remove = function (query) {
+	// Modify transform data
+	this._transformRemove(query);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData.remove(query);
+};
+
+View.prototype.link = function (outputTargetSelector, templateSelector) {
+	var publicData = this.publicData();
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+	}
+	return publicData.link(outputTargetSelector, templateSelector);
+};
+
+View.prototype.unlink = function (outputTargetSelector, templateSelector) {
+	var publicData = this.publicData();
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+	}
+	return publicData.unlink(outputTargetSelector, templateSelector);
+};
+
+View.prototype.from = function (collection) {
+	if (collection !== undefined) {
+		if (typeof(collection) === 'string') {
+			collection = this._db.collection(collection);
+		}
+
+		this._addCollection(collection);
+	}
+
+	return this;
+};
+
+View.prototype._addCollection = function (collection) {
+	if (this._collections.indexOf(collection) === -1) {
+		this._collections.push(collection);
+		collection._addView(this);
+
+		var collData = collection.find(this._querySettings.query, this._querySettings.options);
+
+		this._transformPrimaryKey(collection.primaryKey());
+		this._transformInsert(collData);
+
+		this._privateData.primaryKey(collection.primaryKey());
+		this._privateData.insert(collData);
+	}
+	return this;
+};
+
+View.prototype._removeCollection = function (collection) {
+	var collectionIndex = this._collections.indexOf(collection);
+	if (collectionIndex > -1) {
+		this._collections.splice(collection, 1);
+		collection._removeView(this);
+		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
+	}
+
+	return this;
+};
+
+View.prototype.on = function () {
+	this._privateData.on.apply(this._privateData, arguments);
+};
+
+View.prototype.off = function () {
+	this._privateData.off.apply(this._privateData, arguments);
+};
+
+View.prototype.emit = function () {
+	this._privateData.emit.apply(this._privateData, arguments);
+};
+
+/**
+ * Drops a view and all it's stored data from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+View.prototype.drop = function () {
+	if (this._collections && this._collections.length) {
+		if (this._debug || (this._db && this._db._debug)) {
+			console.log('ForerunnerDB.View: Dropping view ' + this._name);
+		}
+
+		this.emit('drop');
+
+		// Loop collections and remove us from them
+		var arrCount = this._collections.length;
+		while (arrCount--) {
+			this._removeCollection(this._collections[arrCount]);
+		}
+
+		// Drop the view's internal collection
+		this._privateData.drop();
+
+		return true;
+	}
+
+	return false;
+};
+
+/**
+ * Gets / sets the DB the view is bound against. Automatically set
+ * when the db.oldView(viewName) method is called.
+ * @param db
+ * @returns {*}
+ */
+View.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		this.privateData().db(db);
+		this.publicData().db(db);
+		return this;
+	}
+
+	return this._db;
+};
+
+/**
+ * Gets the primary key for this view from the assigned collection.
+ * @returns {String}
+ */
+View.prototype.primaryKey = function () {
+	return this._privateData.primaryKey();
+};
+
+/**
+ * Gets / sets the query that the view uses to build it's data set.
+ * @param {Object=} query
+ * @param {Boolean=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.queryData = function (query, options, refresh) {
+	if (query !== undefined) {
+		this._querySettings.query = query;
+	}
+
+	if (options !== undefined) {
+		this._querySettings.options = options;
+	}
+
+	if (query !== undefined || options !== undefined) {
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+
+		return this;
+	}
+
+	return this._querySettings;
+};
+
+/**
+ * Add data to the existing query.
+ * @param {Object} obj The data whose keys will be added to the existing
+ * query object.
+ * @param {Boolean} overwrite Whether or not to overwrite data that already
+ * exists in the query object. Defaults to true.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+View.prototype.queryAdd = function (obj, overwrite, refresh) {
+	var query = this._querySettings.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
+					query[i] = obj[i];
+				}
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Remove data from the existing query.
+ * @param {Object} obj The data whose keys will be removed from the existing
+ * query object.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+View.prototype.queryRemove = function (obj, refresh) {
+	var query = this._querySettings.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				delete query[i];
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Gets / sets the query being used to generate the view data.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.query = function (query, refresh) {
+	if (query !== undefined) {
+		this._querySettings.query = query;
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._querySettings.query;
+};
+
+/**
+ * Gets / sets the query options used when applying sorting etc to the
+ * view data set.
+ * @param {Object=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.queryOptions = function (options, refresh) {
+	if (options !== undefined) {
+		this._querySettings.options = options;
+		if (options.decouple === undefined) { options.decouple = true; }
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._querySettings.options;
+};
+
+/**
+ * Refreshes the view data such as ordering etc.
+ */
+View.prototype.refresh = function (force) {
+	var sortedData,
+		collection,
+		pubData = this.publicData(),
+		i;
+
+	// Re-grab all the data for the view from the collections
+	this._privateData.remove();
+	pubData.remove();
+
+	for (i = 0; i < this._collections.length; i++) {
+		collection = this._collections[i];
+		this._privateData.insert(collection.find(this._querySettings.query, this._querySettings.options));
+	}
+
+	sortedData = this._privateData.find({}, this._querySettings.options);
+
+	if (pubData._linked) {
+		// Update data and observers
+		// TODO: Shouldn't this data get passed into a transformIn first?
+		$.observable(pubData._data).refresh(sortedData);
+	} else {
+		// Update the underlying data with the new sorted data
+		this._privateData._data.length = 0;
+		this._privateData._data = this._privateData._data.concat(sortedData);
+	}
+
+	return this;
+};
+
+/**
+ * Returns the number of documents currently in the view.
+ * @returns {Number}
+ */
+View.prototype.count = function () {
+	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
+};
+
+/**
+ * Takes an object with the keys "enabled", "dataIn" and "dataOut":
+ * {
+ * 	"enabled": true,
+ * 	"dataIn": function (data) { return data; },
+ * 	"dataOut": function (data) { return data; }
+ * }
+ * @param obj
+ * @returns {*}
+ */
+View.prototype.transform = function (obj) {
+	if (obj !== undefined) {
+		if (typeof obj === "object") {
+			if (obj.enabled !== undefined) {
+				this._transformEnabled = obj.enabled;
+			}
+
+			if (obj.dataIn !== undefined) {
+				this._transformIn = obj.dataIn;
+			}
+
+			if (obj.dataOut !== undefined) {
+				this._transformOut = obj.dataOut;
+			}
+		} else {
+			if (obj === false) {
+				// Turn off transforms
+				this._transformEnabled = false;
+			} else {
+				// Turn on transforms
+				this._transformEnabled = true;
+			}
+		}
+
+		// Update the transformed data object
+		this._transformPrimaryKey(this.privateData().primaryKey());
+		this._transformSetData(this.privateData().find());
+		return this;
+	}
+
+	return {
+		enabled: this._transformEnabled,
+		dataIn: this._transformIn,
+		dataOut: this._transformOut
+	};
+};
+
+/**
+ * Returns the non-transformed data the view holds.
+ */
+View.prototype.privateData = function () {
+	return this._privateData;
+};
+
+/**
+ * Returns a data object representing the public data this view
+ * contains. This can change depending on if transforms are being
+ * applied to the view or not.
+ *
+ * If no transforms are applied then the public data will be the
+ * same as the private data the view holds. If transforms are
+ * applied then the public data will contain the transformed version
+ * of the private data.
+ */
+View.prototype.publicData = function () {
+	if (this._transformEnabled) {
+		return this._publicData;
+	} else {
+		return this._privateData;
+	}
+};
+
+/**
+ * Updates the public data object to match data from the private data object
+ * by running private data through the dataIn method provided in
+ * the transform() call.
+ * @private
+ */
+View.prototype._transformSetData = function (data) {
+	if (this._transformEnabled) {
+		// Clear existing data
+		this._publicData = new Collection('__FDB__view_publicData_' + this._name);
+		this._publicData.db(this._privateData._db);
+		this._publicData.transform({
+			enabled: true,
+			dataIn: this._transformIn,
+			dataOut: this._transformOut
+		});
+
+		this._publicData.setData(data);
+	}
+};
+
+View.prototype._transformInsert = function (data, index) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.insert(data, index);
+	}
+};
+
+View.prototype._transformUpdate = function (query, update) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.update(query, update);
+	}
+};
+
+View.prototype._transformRemove = function (query) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.remove(query);
+	}
+};
+
+View.prototype._transformPrimaryKey = function (key) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.primaryKey(key);
+	}
+};
+
+// Extend collection with view init
+Collection.prototype.init = function () {
+	this._views = [];
+	CollectionInit.apply(this, arguments);
+};
+
+Collection.prototype.view = function (name, query, options) {
+	var view = new View(name, query, options)
+		.db(this._db)
+		._addCollection(this);
+
+	this._views = this._views || [];
+	this._views.push(view);
+
+	return view;
+};
+
+/**
+ * Adds a view to the internal view lookup.
+ * @param {View} view The view to add.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._addView = function (view) {
+	if (view !== undefined) {
+		this._views.push(view);
+	}
+
+	return this;
+};
+
+/**
+ * Removes a view from the internal view lookup.
+ * @param {View} view The view to remove.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._removeView = function (view) {
+	if (view !== undefined) {
+		var index = this._views.indexOf(view);
+		if (index > -1) {
+			this._views.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+// Extend DB with views init
+Core.prototype.init = function () {
+	this._views = {};
+	CoreInit.apply(this, arguments);
+};
+
+/**
+ * Gets a view by it's name.
+ * @param {String} viewName The name of the view to retrieve.
+ * @returns {*}
+ */
+Core.prototype.view = function (viewName) {
+	if (!this._views[viewName]) {
+		if (this._debug || (this._db && this._db._debug)) {
+			console.log('Core.View: Creating view ' + viewName);
+		}
+	}
+
+	this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
+	return this._views[viewName];
+};
+
+/**
+ * Determine if a view with the passed name already exists.
+ * @param {String} viewName The name of the view to check for.
+ * @returns {boolean}
+ */
+Core.prototype.viewExists = function (viewName) {
+	return Boolean(this._views[viewName]);
+};
+
+/**
+ * Returns an array of views the DB currently has.
+ * @returns {Array} An array of objects containing details of each view
+ * the database is currently managing.
+ */
+Core.prototype.views = function () {
+	var arr = [],
+		i;
+
+	for (i in this._views) {
+		if (this._views.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._views[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
+module.exports = View;
+},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}]},{},["C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js"])("C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js")
 });
