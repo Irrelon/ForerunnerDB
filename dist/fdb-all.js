@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js":[function(require,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
 	CollectionGroup = require('../lib/ForerunnerDB.CollectionGroup'),
 	View = require('../lib/ForerunnerDB.View'),
@@ -8,7 +8,7 @@ var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
 	Persist = require('../lib/ForerunnerDB.Persist');
 
 module.exports = ForerunnerDB;
-},{"../lib/ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","../lib/ForerunnerDB.Core":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js","../lib/ForerunnerDB.Highcharts":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Highcharts.js","../lib/ForerunnerDB.OldView":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js","../lib/ForerunnerDB.OldView.Bind":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.Bind.js","../lib/ForerunnerDB.Persist":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Persist.js","../lib/ForerunnerDB.View":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.View.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
+},{"../lib/ForerunnerDB.CollectionGroup":3,"../lib/ForerunnerDB.Core":4,"../lib/ForerunnerDB.Highcharts":6,"../lib/ForerunnerDB.OldView":11,"../lib/ForerunnerDB.OldView.Bind":10,"../lib/ForerunnerDB.Persist":15,"../lib/ForerunnerDB.View":17}],2:[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -2793,7 +2793,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Index":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js","./ForerunnerDB.KeyValueStore":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js","./ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js":[function(require,module,exports){
+},{"./ForerunnerDB.Crc":5,"./ForerunnerDB.Index":7,"./ForerunnerDB.KeyValueStore":8,"./ForerunnerDB.Metrics":9,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],3:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3182,7 +3182,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js":[function(require,module,exports){
+},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],4:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3486,7 +3486,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./ForerunnerDB.Collection.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.Crc.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Metrics.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js":[function(require,module,exports){
+},{"./ForerunnerDB.Collection.js":2,"./ForerunnerDB.Crc.js":5,"./ForerunnerDB.Metrics.js":9,"./ForerunnerDB.Overload.js":13,"./ForerunnerDB.Shared.js":16}],5:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3514,7 +3514,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Highcharts.js":[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -3773,7 +3773,7 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],7:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared'),
 	Path = require('./ForerunnerDB.Path');
 
@@ -4132,7 +4132,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js":[function(require,module,exports){
+},{"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],8:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -4350,7 +4350,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],9:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared'),
 	Operation = require('./ForerunnerDB.Operation');
 
@@ -4421,7 +4421,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.Bind.js":[function(require,module,exports){
+},{"./ForerunnerDB.Operation":12,"./ForerunnerDB.Shared":16}],10:[function(require,module,exports){
 // Grab the view class
 var Shared,
 	Core,
@@ -4832,7 +4832,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],11:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5636,7 +5636,7 @@ Core.prototype.oldViews = function () {
 };
 
 module.exports = OldView;
-},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js":[function(require,module,exports){
+},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],12:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -5743,7 +5743,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],13:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -5774,7 +5774,7 @@ var Overload = function (arr) {
 Shared.modules.Overload = Overload;
 
 module.exports = Overload;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],14:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -6040,7 +6040,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Persist.js":[function(require,module,exports){
+},{"./ForerunnerDB.Shared":16}],15:[function(require,module,exports){
 // Import external names locally
 var Shared = require('./ForerunnerDB.Shared'),
 	Core,
@@ -6216,7 +6216,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
+},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],16:[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -6224,7 +6224,7 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.View.js":[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6893,5 +6893,5 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}]},{},["C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js"])("C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js")
+},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}]},{},[1])(1)
 });

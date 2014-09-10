@@ -13,5 +13,9 @@
 	"scripts": {
 		"start": "forever start server/server.js",
 		"stop": "forever stop server/server.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/coolbloke1324/ForerunnerDB.git"
 	}
 }
