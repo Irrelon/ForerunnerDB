@@ -16,30 +16,74 @@ test("Index - Collection.ensureIndex() :: Assign an index to a collection", func
 	ok(indexResult.state !== undefined, "Check index state object: " + indexResult.state);
 	ok(indexResult.state.ok === true, "Check index state ok: " + indexResult.state.ok);
 	ok(indexResult.state.name === 'testIndex', "Check index state name: " + indexResult.state.name);
+
+	base.dbDown();
 });
 
 test("Index - Collection.index() :: Test lookup of index from collection by name", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var indexResult = user.ensureIndex({
+		arr: {
+			val: 1
+		},
+		name: 1
+	}, {
+		unique: true,
+		name: 'testIndex'
+	});
+
 	var index = user.index('testIndex');
 
 	ok(index !== undefined, "Check index is available: " + index);
 	ok(index.name !== 'testIndex', "Check index is correct name: " + index.name);
+
+	base.dbDown();
 });
 
 test("Index - Index.lookup() :: Test index query detection", function () {
-	var a = user._analyseQuery({
+	base.dbUp();
+	base.dataUp();
+
+	user.ensureIndex({
+		arr: {
+			val: 1
+		},
+		name: 1
+	}, {
+		unique: true,
+		name: 'testIndex'
+	});
+
+	var a = user.explain({
 		arr: {
 			val: 5
 		},
 		name: 'Dean'
-	}, {});
+	});
 
 	//console.log(a);
+	ok(a && a.index.used && a.index.potential.length === 1, "Query analyser returned correct number of indexes to use");
+	ok(a.index.used._name === 'testIndex', "Check index name: " + a.index.used._name);
 
-	ok(a && a.usesIndex && a.usesIndex.length === 1, "Query analyser returned correct number of indexes to use");
-	ok(a.usesIndex[0]._name === 'testIndex', "Check index name: " + a.usesIndex[0]._name);
+	base.dbDown();
 });
 
 test("Index - Index.lookup() :: Test lookup from index", function () {
+	base.dbUp();
+	base.dataUp();
+
+	user.ensureIndex({
+		arr: {
+			val: 1
+		},
+		name: 1
+	}, {
+		unique: true,
+		name: 'testIndex'
+	});
+
 	var index = user.index('testIndex');
 	//console.log(index);
 	var lookup = index.lookup({
@@ -54,9 +98,24 @@ test("Index - Index.lookup() :: Test lookup from index", function () {
 	ok(lookup.length === 2, "Lookup returned correct number of results");
 	ok(lookup[0]._id === '4' && lookup[0].arr[1].val === 5, "Lookup returned correct result 1");
 	ok(lookup[1]._id === '5' && lookup[1].arr[1].val === 5, "Lookup returned correct result 2");
+
+	base.dbDown();
 });
 
 test("Index - Collection.find() :: Test query that should use an index", function () {
+	base.dbUp();
+	base.dataUp();
+
+	user.ensureIndex({
+		arr: {
+			val: 1
+		},
+		name: 1
+	}, {
+		unique: true,
+		name: 'testIndex'
+	});
+
 	var result = user.find({
 		arr: {
 			val: 5
@@ -79,7 +138,7 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 		data = [],
 		tempName,
 		tempAge,
-		a, b,
+		a, b, c,
 		i;
 
 	for (i = 0; i < 10000; i++) {
@@ -107,6 +166,9 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 
 	// Run without index
 	b = collection.find({name: 'Sally'}, {decouple: false, skipIndex: true});
+
+	// Run with index + table scan
+	c = collection.find({name: 'Sally', age: 12}, {decouple: false, skipIndex: false});
 
 	ok(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name() === 'index_name', "Check that index was used");
 	ok(b.__fdbOp.data('index.used') === false, "Check that index was not used");

@@ -367,7 +367,31 @@ With the compound index, Forerunner can now pull the matching record right out o
 
 Forerunner can provide you with details about how the query is optimised (called the query plan) and which indexes are used so that you can check if your indexes are setup and being utilised correctly. To see the query plan for a query use the explain() method:
 
+	collection.explain({
+		name: 'Bill',
+       	age: 17
+	});
 
+The resulting object will contain information about the query:
+
+	{
+		operation: name, // The name of the operation executed such as "find", "update" etc
+		index: {
+			potential: [], // Indexes that could have potentially been used
+			used: false // The index that was picked to use or false if none
+		},
+		steps: [], // The steps taken to generate the query results and their execution times
+		time: {
+			startMs: 0,
+			stopMs: 0,
+			totalMs: 0,
+			process: {} // A list of timed processes that ran during the query
+		},
+		flag: {}, // An object with flags that denote certain execution paths
+		log: [] // Any extra data that might be useful such as warnings or helpful hints
+	}
+
+Examining the steps array will provide you with the most insight into how the query was executed and if a table scan was involved or not.
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
