@@ -1494,22 +1494,9 @@ Collection.prototype.peek = function (search, options) {
  */
 Collection.prototype.explain = function (query, options) {
 	var result = this.find(query, options),
-		ops = result.__fdbOp,
-		plan = {
-			operation: '', // The name of the operation executed such as "find", "update" etc
-			index: {
-				potential: [], // Indexes that could have potentially been used
-				used: null // The index that was picked to use
-			},
-			steps: [], // The steps taken to generate the query results,
-			time: {
-				startMs: 0,
-				stopMs: 0,
-				totalMs: 0
-			}
-		};
+		plan = result.__fdbOp._data;
 
-	return result.__fdbOp;
+	return plan;
 };
 
 /**
@@ -1577,17 +1564,23 @@ Collection.prototype.find = function (query, options) {
 		// Check if an index lookup can be used to return this result
 		if (analysis.usesIndex.length && (!options || (options && !options.skipIndex))) {
 			// Get the data from the index
+			op.time('indexLookup');
 			resultArr = analysis.usesIndex[0].lookup(query);
+			op.time('indexLookup');
 
 			op.data('index.potential', analysis.usesIndex);
 			op.data('index.used', analysis.usesIndex[0]);
 		} else {
 			// Filter the source data and return the result
+			op.time('tableScan');
 			resultArr = this._data.filter(matcher);
+			op.time('tableScan');
 
 			// Order the array if we were passed a sort clause
 			if (options.sort) {
+				op.time('sort');
 				resultArr = this.sort(options.sort, resultArr);
+				op.time('sort');
 			}
 
 			op.flag('usedIndex', false);
@@ -5757,6 +5750,11 @@ Operation.prototype.time = function (section) {
 		} else {
 			processObj.stopMs = new Date().getTime();
 			processObj.totalMs = processObj.stopMs - processObj.startMs;
+
+			this._data.steps.push({
+				name: section,
+				totalMs: processObj.totalMs
+			});
 		}
 
 		return this;
