@@ -126,7 +126,7 @@ is greater than 90 but less than 150, you can do this:
 
 Which will return an array with all matching documents. If no documents match your search, an empty array is returned.
 
-Supported operators:
+Supported search operators:
 
 * $gt Greater Than
 * $gte Greater Than / Equal To
@@ -135,11 +135,6 @@ Supported operators:
 * $or Match any of the conditions inside the sub-query
 * $and Match all conditions inside the sub-query
 * $exists Check that a key exists in the document
-* $push Used in updates to add an item to an array
-* $splicePush Add an item into an array at a specified index
-* $addToSet Adds an item into an array only if the item does not already exist in the array
-* $pull Used in updates to remove an item from an array
-* $move Move an item inside a document's array from one index to another
 * arrayKey.$ Positional selector query
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
@@ -232,6 +227,13 @@ You can target individual documents for update by their id (primary key) via a q
 	collection.updateById(1, {price: 180});
 
 That will update the document with the _id field of 1 to a new price of 180.
+
+### Supported Update Operators
+* $push Used in updates to add an item to an array
+* $splicePush Add an item into an array at a specified index
+* $addToSet Adds an item into an array only if the item does not already exist in the array
+* $pull Used in updates to remove an item from an array
+* $move Move an item inside a document's array from one index to another
 
 ## Using $addToSet to push a unique item into an array
 ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against:
@@ -478,19 +480,7 @@ npm install -g browserify
 Now you can then execute browserify to build ForerunnerDB:
 
 ```
-browserify .\build\all.js -v -o .\dist\fdb-all.js
-```
-
-There are also convenience scripts to do this for you:
-
-###### Windows
-```
-.\build.bat
-```
-
-###### Linux / OSX
-```
-sh .\build.sh
+browserify .\build\all.js -o .\dist\fdb-all.js
 ```
 
 ##### Continuous Compiling
@@ -503,20 +493,10 @@ npm install -g watchify
 You can then run watchify using the same command line arguments as browserify:
 
 ```
-watchify .\build\all.js -v -o .\dist\fdb-all.js
+watchify .\build\all.js -o .\dist\fdb-all.js
 ```
 
-There are also convenience scripts to do this for you:
-
-###### Windows
-```
-.\buildWatch.bat
-```
-
-###### Linux / OSX
-```
-sh .\buildWatch.sh
-```
+The fully minified version of ForerunnerDB is run through Google's Closure Compiler with advanced optimisations switched on.
 
 # Future Updates
 ForerunnerDB's project road-map:
@@ -567,7 +547,7 @@ ForerunnerDB's project road-map:
 	$each,
 	$slice,
 	$sort,
-	$position (already have new operator $pushSplice to achieve the same thing),
+	$position (already have new operator $splicePush to achieve the same thing),
 	$bit,
 	$isolated
 
