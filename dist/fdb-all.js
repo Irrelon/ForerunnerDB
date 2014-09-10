@@ -1,379 +1,20 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js":[function(require,module,exports){
-/*
- The MIT License (MIT)
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js":[function(require,module,exports){
+var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
+	CollectionGroup = require('../lib/ForerunnerDB.CollectionGroup'),
+	OldView = require('../lib/ForerunnerDB.OldView');
 
- Copyright (c) 2014 Irrelon Software Limited
- http://www.irrelon.com
-
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
-
- The above copyright notice, url and this permission notice shall be included in
- all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
-
- Source: https://github.com/coolbloke1324/ForerunnerDB
- */
-var Overload = require('./lib/ForerunnerDB.Overload'),
-	Collection = require('./lib/ForerunnerDB.Collection'),
-	Metrics = require('./lib/ForerunnerDB.Metrics'),
-	Shared = require('./lib/ForerunnerDB.Shared'),
-	Crc = require('./lib/ForerunnerDB.Crc');
-
-/**
- * The main DB object used to store collections.
- * @constructor
- */
-var DB = function () {
-	this.init.apply(this, arguments);
-};
-
-DB.prototype._isServer = false;
-
-DB.prototype.isClient = function () {
-	return !this._isServer;
-};
-
-DB.prototype.isServer = function () {
-	return this._isServer;
-};
-
-DB.prototype.init = function () {
-	this._collection = {};
-	this._debug = {};
-};
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-DB.prototype.crc = Crc;
-
-/**
- * Checks if the database is running on a client (browser) or
- * a server (node.js).
- * @returns {Boolean} Returns true if running on a browser.
- */
-DB.prototype.isClient = function () {
-	return !this._isServer;
-};
-
-/**
- * Checks if the database is running on a client (browser) or
- * a server (node.js).
- * @returns {Boolean} Returns true if running on a server.
- */
-DB.prototype.isServer = function () {
-	return this._isServer;
-};
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-DB.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
-
-/**
- * Gets / sets the debug flag for the database.
- * @param {Boolean} val If true, debug messages will be output to the console.
- * @returns {*}
- */
-DB.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				return this;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
-
-/**
- * Converts a normal javascript array of objects into a DB collection.
- * @param {Array} arr An array of objects.
- * @returns {Collection} A new collection instance with the data set to the
- * array passed.
- */
-DB.prototype.arrayToCollection = function (arr) {
-	return new Collection().setData(arr);
-};
-
-/**
- * Registers an event listener against an event name.
- * @param {String} event The name of the event to listen for.
- * @param {Function} listener The listener method to call when
- * the event is fired.
- * @returns {init}
- */
-DB.prototype.on = function(event, listener) {
-	this._listeners = this._listeners || {};
-	this._listeners[event] = this._listeners[event] || [];
-	this._listeners[event].push(listener);
-
-	return this;
-};
-
-/**
- * De-registers an event listener from an event name.
- * @param {String} event The name of the event to stop listening for.
- * @param {Function} listener The listener method passed to on() when
- * registering the event listener.
- * @returns {*}
- */
-DB.prototype.off = function(event, listener) {
-	if (event in this._listeners) {
-		var arr = this._listeners[event],
-			index = arr.indexOf(listener);
-
-		if (index > -1) {
-			arr.splice(index, 1);
-		}
-	}
-
-	return this;
-};
-
-/**
- * Emits an event by name with the given data.
- * @param {String} event The name of the event to emit.
- * @param {*=} data The data to emit with the event.
- * @returns {*}
- */
-DB.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		var arr = this._listeners[event],
-			arrCount = arr.length,
-			arrIndex;
-
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-		}
-	}
-
-	return this;
-};
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-DB.prototype.objectId = function (str) {
-	var id;
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17)
-			)
-			).toString(16);
-	} else {
-		var val = 0,
-			count = str.length,
-			i;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * Math.pow(10, 17);
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
-
-/**
- * Find all documents across all collections in the database that match the passed
- * string or search object.
- * @param search String or search object.
- * @returns {Array}
- */
-DB.prototype.peek = function (search) {
-	var i,
-		coll,
-		arr = [],
-		typeOfSearch = typeof search;
-
-	// Loop collections
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
-			coll = this._collection[i];
-
-			if (typeOfSearch === 'string') {
-				arr = arr.concat(coll.peek(search));
-			} else {
-				arr = arr.concat(coll.find(search));
-			}
-		}
-	}
-
-	return arr;
-};
-
-/**
- * Find all documents across all collections in the database that match the passed
- * string or search object and return them in an object where each key is the name
- * of the collection that the document was matched in.
- * @param search String or search object.
- * @returns {Array}
- */
-DB.prototype.peekCat = function (search) {
-	var i,
-		coll,
-		cat = {},
-		arr,
-		typeOfSearch = typeof search;
-
-	// Loop collections
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
-			coll = this._collection[i];
-
-			if (typeOfSearch === 'string') {
-				arr = coll.peek(search);
-
-				if (arr && arr.length) {
-					cat[coll.name()] = arr;
-				}
-			} else {
-				arr = coll.find(search);
-
-				if (arr && arr.length) {
-					cat[coll.name()] = arr;
-				}
-			}
-		}
-	}
-
-	return cat;
-};
-
-/**
- * Get a collection by name. If the collection does not already exist
- * then one is created for that name automatically.
- * @param {String} collectionName The name of the collection.
- * @param {String=} primaryKey Optional primary key to specify the primary key field on the collection
- * objects. Defaults to "_id".
- * @returns {Collection}
- */
-DB.prototype.collection = function (collectionName, primaryKey) {
-	if (collectionName) {
-		if (!this._collection[collectionName]) {
-			if (this.debug()) {
-				console.log('Creating collection ' + collectionName);
-			}
-		}
-
-		this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
-
-		if (primaryKey !== undefined) {
-			this._collection[collectionName].primaryKey(primaryKey);
-		}
-
-		return this._collection[collectionName];
-	} else {
-		throw('Cannot get collection with undefined name!');
-	}
-};
-
-/**
- * Determine if a collection with the passed name already exists.
- * @param {String} viewName The name of the collection to check for.
- * @returns {boolean}
- */
-DB.prototype.collectionExists = function (viewName) {
-	return Boolean(this._collection[viewName]);
-};
-
-/**
- * Returns an array of collections the DB currently has.
- * @returns {Array} An array of objects containing details of each collection
- * the database is currently managing.
- */
-DB.prototype.collections = function () {
-	var arr = [],
-		i;
-
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
-			arr.push({
-				name: i,
-				count: this._collection[i].count()
-			});
-		}
-	}
-
-	return arr;
-};
-
-/**
- * Accessor to internal class constructors.
- * @returns {Object}
- */
-/*DB.classes = {
-	"Path": Path,
-	"Collection": Collection,
-	"Index": Index,
-	"KeyValueStore": KeyValueStore,
-	"Overload": Overload
-};*/
-
-module.exports = DB;
-},{"./lib/ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./lib/ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./lib/ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./lib/ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./lib/ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\build\\all.js":[function(require,module,exports){
-var ForerunnerDB = require('../ForerunnerDB');
 module.exports = ForerunnerDB;
-},{"../ForerunnerDB":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\ForerunnerDB.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared'),
-	Overload = require('./ForerunnerDB.Overload'),
-	Metrics = require('./ForerunnerDB.Metrics'),
-	KeyValueStore = require('./ForerunnerDB.KeyValueStore'),
-	Path = require('./ForerunnerDB.Path'),
-	Index = require('./ForerunnerDB.Index'),
-	Crc = require('./ForerunnerDB.Crc');
+},{"../lib/ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","../lib/ForerunnerDB.Core":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js","../lib/ForerunnerDB.OldView":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js":[function(require,module,exports){
+var Shared,
+	Core,
+	Overload,
+	Metrics,
+	KeyValueStore,
+	Path,
+	Index,
+	Crc;
+
+Shared = require('./ForerunnerDB.Shared');
 
 /**
  * Collection object used to store data.
@@ -419,6 +60,16 @@ Collection.prototype.init = function (name) {
 	// Set the subset to itself since it is the root collection
 	this._subsetOf(this);
 };
+
+Shared.modules.Collection = Collection;
+
+Overload = require('./ForerunnerDB.Overload');
+Metrics = require('./ForerunnerDB.Metrics');
+KeyValueStore = require('./ForerunnerDB.KeyValueStore');
+Path = require('./ForerunnerDB.Path');
+Index = require('./ForerunnerDB.Index');
+Crc = require('./ForerunnerDB.Crc');
+Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
 	function () {
@@ -3079,10 +2730,757 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Shared.modules.Collection = Collection;
+/**
+ * Get a collection by name. If the collection does not already exist
+ * then one is created for that name automatically.
+ * @param {String} collectionName The name of the collection.
+ * @param {String=} primaryKey Optional primary key to specify the primary key field on the collection
+ * objects. Defaults to "_id".
+ * @returns {Collection}
+ */
+Core.prototype.collection = function (collectionName, primaryKey) {
+	if (collectionName) {
+		if (!this._collection[collectionName]) {
+			if (this.debug()) {
+				console.log('Creating collection ' + collectionName);
+			}
+		}
+
+		this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
+
+		if (primaryKey !== undefined) {
+			this._collection[collectionName].primaryKey(primaryKey);
+		}
+
+		return this._collection[collectionName];
+	} else {
+		throw('Cannot get collection with undefined name!');
+	}
+};
+
+/**
+ * Determine if a collection with the passed name already exists.
+ * @param {String} viewName The name of the collection to check for.
+ * @returns {boolean}
+ */
+Core.prototype.collectionExists = function (viewName) {
+	return Boolean(this._collection[viewName]);
+};
+
+/**
+ * Returns an array of collections the DB currently has.
+ * @returns {Array} An array of objects containing details of each collection
+ * the database is currently managing.
+ */
+Core.prototype.collections = function () {
+	var arr = [],
+		i;
+
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._collection[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
 
 module.exports = Collection;
-},{"./ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Index":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js","./ForerunnerDB.KeyValueStore":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js","./ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js":[function(require,module,exports){
+},{"./ForerunnerDB.Crc":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Index":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Index.js","./ForerunnerDB.KeyValueStore":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.KeyValueStore.js","./ForerunnerDB.Metrics":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Path":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Path.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js":[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	CoreInit,
+	Collection,
+	Overload;
+
+Shared = require('./ForerunnerDB.Shared');
+
+var CollectionGroup = function () {
+	this.init.apply(this, arguments);
+};
+
+Collection = require('./ForerunnerDB.Collection');
+Overload = require('./ForerunnerDB.Overload');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
+
+CollectionGroup.prototype.init = function (name) {
+	var self = this;
+
+	this._name = name;
+	this._collectionArr = [];
+	this._views = [];
+
+	// Register listeners for the CRUD events
+	this._onCollectionInsert = function () {
+		self._onInsert.apply(self, arguments);
+	};
+
+	this._onCollectionUpdate = function () {
+		self._onUpdate.apply(self, arguments);
+	};
+
+	this._onCollectionRemove = function () {
+		self._onRemove.apply(self, arguments);
+	};
+
+	this._onCollectionChange = function () {
+		self._onChange.apply(self, arguments);
+	};
+};
+
+/*CollectionGroup.prototype.on = function(event, listener) {
+ this._listeners = this._listeners || {};
+ this._listeners[event] = this._listeners[event] || [];
+ this._listeners[event].push(listener);
+
+ return this;
+ };
+
+ CollectionGroup.prototype.off = function(event, listener) {
+ if (event in this._listeners) {
+ var arr = this._listeners[event],
+ index = arr.indexOf(listener);
+
+ if (index > -1) {
+ arr.splice(index, 1);
+ }
+ }
+
+ return this;
+ };
+
+ CollectionGroup.prototype.emit = function(event, data) {
+ this._listeners = this._listeners || {};
+
+ if (event in this._listeners) {
+ var arr = this._listeners[event],
+ arrCount = arr.length,
+ arrIndex;
+
+ for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+ arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+ }
+ }
+
+ return this;
+ };*/
+
+CollectionGroup.prototype.on = new Overload([
+	function(event, listener) {
+		this._listeners = this._listeners || {};
+		this._listeners[event] = this._listeners[event] || {};
+		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+		this._listeners[event]['*'].push(listener);
+
+		return this;
+	},
+
+	function(event, id, listener) {
+		this._listeners = this._listeners || {};
+		this._listeners[event] = this._listeners[event] || {};
+		this._listeners[event][id] = this._listeners[event][id] || [];
+		this._listeners[event][id].push(listener);
+
+		return this;
+	}
+]);
+
+CollectionGroup.prototype.off = new Overload([
+	function (event) {
+		if (this._listeners && this._listeners[event] && event in this._listeners) {
+			delete this._listeners[event];
+		}
+
+		return this;
+	},
+
+	function(event, listener) {
+		var arr,
+			index;
+
+		if (typeof(listener) === 'string') {
+			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+				delete this._listeners[event][listener];
+			}
+		} else {
+			if (event in this._listeners) {
+				arr = this._listeners[event]['*'];
+				index = arr.indexOf(listener);
+
+				if (index > -1) {
+					arr.splice(index, 1);
+				}
+			}
+		}
+
+		return this;
+	},
+
+	function (event, id, listener) {
+		if (this._listeners && event in this._listeners) {
+			var arr = this._listeners[event][id],
+				index = arr.indexOf(listener);
+
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+	}
+]);
+
+CollectionGroup.prototype.emit = function(event, data) {
+	this._listeners = this._listeners || {};
+
+	if (event in this._listeners) {
+		// Handle global emit
+		if (this._listeners[event]['*']) {
+			var arr = this._listeners[event]['*'],
+				arrCount = arr.length,
+				arrIndex;
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+
+		// Handle individual emit
+		if (data instanceof Array) {
+			// Check if the array is an array of objects in the collection
+			if (data[0] && data[0][this._primaryKey]) {
+				// Loop the array and check for listeners against the primary key
+				var listenerIdArr = this._listeners[event],
+					listenerIdCount,
+					listenerIdIndex,
+					arrCount = data.length,
+					arrIndex;
+
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+						// Emit for this id
+						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Gets / sets the db instance the collection group belongs to.
+ * @param {DB} db The db instance.
+ * @returns {*}
+ */
+CollectionGroup.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		return this;
+	}
+
+	return this._db;
+};
+
+CollectionGroup.prototype.addCollection = function (collection) {
+	if (collection) {
+		if (this._collectionArr.indexOf(collection) === -1) {
+			var self = this;
+
+			// Check for compatible primary keys
+			if (this._collectionArr.length) {
+				if (this._primaryKey !== collection.primaryKey()) {
+					throw("All collections in a collection group must have the same primary key!");
+				}
+			} else {
+				// Set the primary key to the first collection added
+				this._primaryKey = collection.primaryKey();
+			}
+
+			// Add the collection
+			this._collectionArr.push(collection);
+			collection._groups.push(this);
+
+			// Listen to events from the collection
+			collection.on('insert', this._onCollectionInsert);
+			collection.on('update', this._onCollectionUpdate);
+			collection.on('remove', this._onCollectionRemove);
+			collection.on('change', this._onCollectionChange);
+		}
+	}
+
+	return this;
+};
+
+CollectionGroup.prototype.removeCollection = function (collection) {
+	if (collection) {
+		var collectionIndex = this._collectionArr.indexOf(collection),
+			groupIndex;
+
+		if (collectionIndex !== -1) {
+			// Remove event listeners from this collection
+			collection.off('insert', this._onCollectionInsert);
+			collection.off('update', this._onCollectionUpdate);
+			collection.off('remove', this._onCollectionRemove);
+			collection.off('change', this._onCollectionChange);
+
+			this._collectionArr.splice(collectionIndex, 1);
+
+			groupIndex = collection._groups.indexOf(this);
+
+			if (groupIndex !== -1) {
+				collection._groups.splice(groupIndex, 1);
+			}
+		}
+
+		if (this._collectionArr.length === 0) {
+			// Wipe the primary key
+			delete this._primaryKey;
+		}
+	}
+
+	return this;
+};
+
+CollectionGroup.prototype.find = function (query, options) {
+	// Loop the collections in this group and find first matching item response
+	var data = new Collection().primaryKey(this._collectionArr[0].primaryKey()),
+		i;
+
+	for (i = 0; i < this._collectionArr.length; i++) {
+		data.insert(this._collectionArr[i].find(query));
+	}
+
+	return data.find(query, options);
+};
+
+CollectionGroup.prototype.insert = function (query, options) {
+	// Loop the collections in this group and apply the insert
+	for (var i = 0; i < this._collectionArr.length; i++) {
+		this._collectionArr[i].insert(query, options);
+	}
+};
+
+CollectionGroup.prototype.update = function (query, update) {
+	// Loop the collections in this group and apply the update
+	for (var i = 0; i < this._collectionArr.length; i++) {
+		this._collectionArr[i].update(query, update);
+	}
+};
+
+CollectionGroup.prototype.updateById = function (id, update) {
+	// Loop the collections in this group and apply the update
+	for (var i = 0; i < this._collectionArr.length; i++) {
+		this._collectionArr[i].updateById(id, update);
+	}
+};
+
+CollectionGroup.prototype.remove = function (query) {
+	// Loop the collections in this group and apply the remove
+	for (var i = 0; i < this._collectionArr.length; i++) {
+		this._collectionArr[i].remove(query);
+	}
+};
+
+/**
+ * Helper method that removes a document that matches the given id.
+ * @param {String} id The id of the document to remove.
+ */
+CollectionGroup.prototype.removeById = function (id) {
+	// Loop the collections in this group and apply the remove
+	for (var i = 0; i < this._collectionArr.length; i++) {
+		this._collectionArr[i].removeById(id);
+	}
+};
+
+CollectionGroup.prototype._onInsert = function (successArr, failArr) {
+	this.emit('insert', successArr, failArr);
+};
+
+CollectionGroup.prototype._onUpdate = function (successArr, failArr) {
+	this.emit('update', successArr, failArr);
+};
+
+CollectionGroup.prototype._onRemove = function (successArr, failArr) {
+	this.emit('remove', successArr, failArr);
+};
+
+CollectionGroup.prototype._onChange = function () {
+	this.emit('change');
+};
+
+/**
+ * Uses the passed query to generate a new collection with results
+ * matching the query parameters.
+ *
+ * @param query
+ * @param options
+ * @returns {*}
+ */
+CollectionGroup.prototype.subset = function (query, options) {
+	var result = this.find(query, options);
+
+	return new Collection()
+		._subsetOf(this)
+		.primaryKey(this._primaryKey)
+		.setData(result);
+};
+
+/**
+ * Drops a collection group from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+CollectionGroup.prototype.drop = function () {
+	var i,
+		collArr = [].concat(this._collectionArr),
+		viewArr = [].concat(this._views);
+
+	if (this._debug) {
+		console.log('Dropping collection group ' + this._name);
+	}
+
+	for (i = 0; i < collArr.length; i++) {
+		this.removeCollection(collArr[i]);
+	}
+
+	for (i = 0; i < viewArr.length; i++) {
+		this._removeView(viewArr[i]);
+	}
+
+	this.emit('drop');
+
+	return true;
+};
+
+// Extend DB to include collection groups
+Core.prototype.init = function () {
+	this._collectionGroup = {};
+	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.collectionGroup = function (collectionGroupName) {
+	if (collectionGroupName) {
+		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
+		return this._collectionGroup[collectionGroupName];
+	} else {
+		// Return an object of collection data
+		return this._collectionGroup;
+	}
+};
+
+module.exports = CollectionGroup;
+},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Core.js":[function(require,module,exports){
+/*
+ The MIT License (MIT)
+
+ Copyright (c) 2014 Irrelon Software Limited
+ http://www.irrelon.com
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice, url and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+ Source: https://github.com/coolbloke1324/ForerunnerDB
+ */
+var Shared,
+	Overload,
+	Collection,
+	Metrics,
+	Crc;
+
+Shared = require('./ForerunnerDB.Shared.js');
+
+/**
+ * The main ForerunnerDB core object.
+ * @constructor
+ */
+var Core = function () {
+	this.init.apply(this, arguments);
+};
+
+Core.prototype.init = function () {
+	this._collection = {};
+	this._debug = {};
+};
+
+Shared.modules.Core = Core;
+
+Overload = require('./ForerunnerDB.Overload.js');
+Collection = require('./ForerunnerDB.Collection.js');
+Metrics = require('./ForerunnerDB.Metrics.js');
+Crc = require('./ForerunnerDB.Crc.js');
+
+Core.prototype._isServer = false;
+
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} string The string to checksum.
+ * @return {String} The checksum generated.
+ */
+Core.prototype.crc = Crc;
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a browser.
+ */
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a server.
+ */
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+Core.prototype.decouple = function (data) {
+	return JSON.parse(JSON.stringify(data));
+};
+
+/**
+ * Gets / sets the debug flag for the database.
+ * @param {Boolean} val If true, debug messages will be output to the console.
+ * @returns {*}
+ */
+Core.prototype.debug = new Overload([
+	function () {
+		return this._debug.all;
+	},
+
+	function (val) {
+		if (val !== undefined) {
+			if (typeof val === 'boolean') {
+				this._debug.all = val;
+				return this;
+			}
+		}
+
+		return this._debug.all;
+	},
+
+	function (type, val) {
+		if (type !== undefined) {
+			if (val !== undefined) {
+				this._debug[type] = val;
+				return this;
+			}
+
+			return this._debug[type];
+		}
+
+		return this._debug.all;
+	}
+]);
+
+/**
+ * Converts a normal javascript array of objects into a DB collection.
+ * @param {Array} arr An array of objects.
+ * @returns {Collection} A new collection instance with the data set to the
+ * array passed.
+ */
+Core.prototype.arrayToCollection = function (arr) {
+	return new Collection().setData(arr);
+};
+
+/**
+ * Registers an event listener against an event name.
+ * @param {String} event The name of the event to listen for.
+ * @param {Function} listener The listener method to call when
+ * the event is fired.
+ * @returns {init}
+ */
+Core.prototype.on = function(event, listener) {
+	this._listeners = this._listeners || {};
+	this._listeners[event] = this._listeners[event] || [];
+	this._listeners[event].push(listener);
+
+	return this;
+};
+
+/**
+ * De-registers an event listener from an event name.
+ * @param {String} event The name of the event to stop listening for.
+ * @param {Function} listener The listener method passed to on() when
+ * registering the event listener.
+ * @returns {*}
+ */
+Core.prototype.off = function(event, listener) {
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			index = arr.indexOf(listener);
+
+		if (index > -1) {
+			arr.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Emits an event by name with the given data.
+ * @param {String} event The name of the event to emit.
+ * @param {*=} data The data to emit with the event.
+ * @returns {*}
+ */
+Core.prototype.emit = function(event, data) {
+	this._listeners = this._listeners || {};
+
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			arrCount = arr.length,
+			arrIndex;
+
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Generates a new 16-character hexadecimal unique ID or
+ * generates a new 16-character hexadecimal ID based on
+ * the passed string. Will always generate the same ID
+ * for the same string.
+ * @param {String=} str A string to generate the ID from.
+ * @return {String}
+ */
+Core.prototype.objectId = function (str) {
+	var id;
+
+	if (!str) {
+		Shared.idCounter++;
+
+		id = (Shared.idCounter + (
+			Math.random() * Math.pow(10, 17) +
+				Math.random() * Math.pow(10, 17) +
+				Math.random() * Math.pow(10, 17) +
+				Math.random() * Math.pow(10, 17)
+			)
+			).toString(16);
+	} else {
+		var val = 0,
+			count = str.length,
+			i;
+
+		for (i = 0; i < count; i++) {
+			val += str.charCodeAt(i) * Math.pow(10, 17);
+		}
+
+		id = val.toString(16);
+	}
+
+	return id;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object.
+ * @param search String or search object.
+ * @returns {Array}
+ */
+Core.prototype.peek = function (search) {
+	var i,
+		coll,
+		arr = [],
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = arr.concat(coll.peek(search));
+			} else {
+				arr = arr.concat(coll.find(search));
+			}
+		}
+	}
+
+	return arr;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object and return them in an object where each key is the name
+ * of the collection that the document was matched in.
+ * @param search String or search object.
+ * @returns {Array}
+ */
+Core.prototype.peekCat = function (search) {
+	var i,
+		coll,
+		cat = {},
+		arr,
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = coll.peek(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			} else {
+				arr = coll.find(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			}
+		}
+	}
+
+	return cat;
+};
+
+module.exports = Core;
+},{"./ForerunnerDB.Collection.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.Crc.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js","./ForerunnerDB.Metrics.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Metrics.js","./ForerunnerDB.Overload.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared.js":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Crc.js":[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3752,7 +4150,811 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js":[function(require,module,exports){
+},{"./ForerunnerDB.Operation":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.OldView.js":[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	CollectionGroup,
+	Collection,
+	CollectionInit,
+	CollectionGroupInit,
+	CoreInit,
+	Overload;
+
+Shared = require('./ForerunnerDB.Shared');
+
+/**
+ * The view constructor.
+ * @param viewName
+ * @constructor
+ */
+var OldView = function () {
+	this.init.apply(this, arguments);
+};
+
+OldView.prototype.init = function (viewName) {
+	var self = this;
+
+	this._name = viewName;
+	this._groups = [];
+	this._listeners = {};
+	this._query = {
+		query: {},
+		options: {}
+	};
+
+	// Register listeners for the CRUD events
+	this._onFromSetData = function () {
+		self._onSetData.apply(self, arguments);
+	};
+
+	this._onFromInsert = function () {
+		self._onInsert.apply(self, arguments);
+	};
+
+	this._onFromUpdate = function () {
+		self._onUpdate.apply(self, arguments);
+	};
+
+	this._onFromRemove = function () {
+		self._onRemove.apply(self, arguments);
+	};
+
+	this._onFromChange = function () {
+		if (self.debug()) { console.log('ForerunnerDB.OldView: Received change'); }
+		self._onChange.apply(self, arguments);
+	};
+};
+
+Shared.modules.OldView = OldView;
+
+CollectionGroup = require('./ForerunnerDB.CollectionGroup');
+Collection = require('./ForerunnerDB.Collection');
+CollectionInit = Collection.prototype.init;
+CollectionGroupInit = CollectionGroup.prototype.init;
+Overload = require('./ForerunnerDB.Overload');
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
+
+OldView.prototype.on = new Overload([
+	function(event, listener) {
+		this._listeners = this._listeners || {};
+		this._listeners[event] = this._listeners[event] || {};
+		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+		this._listeners[event]['*'].push(listener);
+
+		return this;
+	},
+
+	function(event, id, listener) {
+		this._listeners = this._listeners || {};
+		this._listeners[event] = this._listeners[event] || {};
+		this._listeners[event][id] = this._listeners[event][id] || [];
+		this._listeners[event][id].push(listener);
+
+		return this;
+	}
+]);
+
+OldView.prototype.off = new Overload([
+	function (event) {
+		if (this._listeners && this._listeners[event] && event in this._listeners) {
+			delete this._listeners[event];
+		}
+
+		return this;
+	},
+
+	function(event, listener) {
+		var arr,
+			index;
+
+		if (typeof(listener) === 'string') {
+			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+				delete this._listeners[event][listener];
+			}
+		} else {
+			if (event in this._listeners) {
+				arr = this._listeners[event]['*'];
+				index = arr.indexOf(listener);
+
+				if (index > -1) {
+					arr.splice(index, 1);
+				}
+			}
+		}
+
+		return this;
+	},
+
+	function (event, id, listener) {
+		if (this._listeners && event in this._listeners) {
+			var arr = this._listeners[event][id],
+				index = arr.indexOf(listener);
+
+			if (index > -1) {
+				arr.splice(index, 1);
+			}
+		}
+	}
+]);
+
+OldView.prototype.emit = function(event, data) {
+	this._listeners = this._listeners || {};
+
+	if (event in this._listeners) {
+		// Handle global emit
+		if (this._listeners[event]['*']) {
+			var arr = this._listeners[event]['*'],
+				arrCount = arr.length,
+				arrIndex;
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+			}
+		}
+
+		// Handle individual emit
+		if (data instanceof Array) {
+			// Check if the array is an array of objects in the collection
+			if (data[0] && data[0][this._primaryKey]) {
+				// Loop the array and check for listeners against the primary key
+				var listenerIdArr = this._listeners[event],
+					listenerIdCount,
+					listenerIdIndex,
+					arrCount = data.length,
+					arrIndex;
+
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+						// Emit for this id
+						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Drops a view and all it's stored data from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+OldView.prototype.drop = function () {
+	if ((this._db || this._from) && this._name) {
+		if (this.debug()) {
+			console.log('ForerunnerDB.OldView: Dropping view ' + this._name);
+		}
+
+		this.emit('drop');
+
+		if (this._db) {
+			delete this._db._oldViews[this._name];
+		}
+
+		if (this._from) {
+			delete this._from._oldViews[this._name];
+		}
+
+		return true;
+	}
+
+	return false;
+};
+
+OldView.prototype.debug = function () {
+	// TODO: Make this function work
+	return false;
+};
+
+/**
+ * Gets / sets the DB the view is bound against. Automatically set
+ * when the db.oldView(viewName) method is called.
+ * @param db
+ * @returns {*}
+ */
+OldView.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		return this;
+	}
+
+	return this._db;
+};
+
+/**
+ * Gets / sets the collection that the view derives it's data from.
+ * @param {*} collection A collection instance or the name of a collection
+ * to use as the data set to derive view data from.
+ * @returns {*}
+ */
+OldView.prototype.from = function (collection) {
+	if (collection !== undefined) {
+		// Check if this is a collection name or a collection instance
+		if (typeof(collection) === 'string') {
+			if (this._db.collectionExists(collection)) {
+				collection = this._db.collection(collection);
+			} else {
+				throw('Invalid collection in view.from() call.');
+			}
+		}
+
+		// Check if the existing from matches the passed one
+		if (this._from !== collection) {
+			// Check if we already have a collection assigned
+			if (this._from) {
+				// Remove ourselves from the collection view lookup
+				this.removeFrom();
+			}
+
+			this.addFrom(collection);
+		}
+
+		return this;
+	}
+
+	return this._from;
+};
+
+OldView.prototype.addFrom = function (collection) {
+	var self = this;
+
+	this._from = collection;
+
+	if (this._from) {
+		this._from.on('setData', this._onFromSetData);
+		//this._from.on('insert', this._onFromInsert);
+		//this._from.on('update', this._onFromUpdate);
+		//this._from.on('remove', this._onFromRemove);
+		this._from.on('change', this._onFromChange);
+
+		// Add this view to the collection's view lookup
+		this._from._addOldView(this);
+		this._primaryKey = this._from._primaryKey;
+
+		this.refresh();
+		return this;
+	} else {
+		throw('Cannot determine collection type in view.from()');
+	}
+};
+
+OldView.prototype.removeFrom = function () {
+	// Unsubscribe from events on this "from"
+	this._from.off('setData', this._onFromSetData);
+	//this._from.off('insert', this._onFromInsert);
+	//this._from.off('update', this._onFromUpdate);
+	//this._from.off('remove', this._onFromRemove);
+	this._from.off('change', this._onFromChange);
+
+	this._from._removeOldView(this);
+};
+
+/**
+ * Gets the primary key for this view from the assigned collection.
+ * @returns {String}
+ */
+OldView.prototype.primaryKey = function () {
+	if (this._from) {
+		return this._from.primaryKey();
+	}
+
+	return undefined;
+};
+
+/**
+ * Gets / sets the query that the view uses to build it's data set.
+ * @param {Object=} query
+ * @param {Boolean=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+OldView.prototype.queryData = function (query, options, refresh) {
+	if (query !== undefined) {
+		this._query.query = query;
+	}
+
+	if (options !== undefined) {
+		this._query.options = options;
+	}
+
+	if (query !== undefined || options !== undefined) {
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+
+		return this;
+	}
+
+	return this._query;
+};
+
+/**
+ * Add data to the existing query.
+ * @param {Object} obj The data whose keys will be added to the existing
+ * query object.
+ * @param {Boolean} overwrite Whether or not to overwrite data that already
+ * exists in the query object. Defaults to true.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+OldView.prototype.queryAdd = function (obj, overwrite, refresh) {
+	var query = this._query.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
+					query[i] = obj[i];
+				}
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Remove data from the existing query.
+ * @param {Object} obj The data whose keys will be removed from the existing
+ * query object.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+OldView.prototype.queryRemove = function (obj, refresh) {
+	var query = this._query.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				delete query[i];
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Gets / sets the query being used to generate the view data.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+OldView.prototype.query = function (query, refresh) {
+	if (query !== undefined) {
+		this._query.query = query;
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._query.query;
+};
+
+/**
+ * Gets / sets the query options used when applying sorting etc to the
+ * view data set.
+ * @param {Object=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+OldView.prototype.queryOptions = function (options, refresh) {
+	if (options !== undefined) {
+		this._query.options = options;
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._query.options;
+};
+
+/**
+ * Refreshes the view data and diffs between previous and new data to
+ * determine if any events need to be triggered or DOM binds updated.
+ */
+OldView.prototype.refresh = function (force) {
+	if (this._from) {
+		// Take a copy of the data before updating it, we will use this to
+		// "diff" between the old and new data and handle DOM bind updates
+		var oldData = this._data,
+			oldDataArr,
+			oldDataItem,
+			newData,
+			newDataArr,
+			query,
+			primaryKey,
+			dataItem,
+			inserted = [],
+			updated = [],
+			removed = [],
+			operated = false,
+			i;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.OldView: Refreshing view ' + this._name);
+			console.log('ForerunnerDB.OldView: Existing data: ' + (typeof(this._data) !== "undefined"));
+			if (typeof(this._data) !== "undefined") {
+				console.log('ForerunnerDB.OldView: Current data rows: ' + this._data.find().length);
+			}
+			//console.log(OldView.prototype.refresh.caller);
+		}
+
+		// Query the collection and update the data
+		if (this._query) {
+			if (this.debug()) {
+				console.log('ForerunnerDB.OldView: View has query and options, getting subset...');
+			}
+			// Run query against collection
+			//console.log('refresh with query and options', this._query.options);
+			this._data = this._from.subset(this._query.query, this._query.options);
+			//console.log(this._data);
+		} else {
+			// No query, return whole collection
+			if (this._query.options) {
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView: View has options, getting subset...');
+				}
+				this._data = this._from.subset({}, this._query.options);
+			} else {
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView: View has no query or options, getting subset...');
+				}
+				this._data = this._from.subset({});
+			}
+		}
+
+		// Check if there was old data
+		if (!force && oldData) {
+			if (this.debug()) {
+				console.log('ForerunnerDB.OldView: Refresh not forced, old data detected...');
+			}
+
+			// Now determine the difference
+			newData = this._data;
+
+			if (oldData.subsetOf() === newData.subsetOf()) {
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView: Old and new data are from same collection...');
+				}
+				newDataArr = newData.find();
+				oldDataArr = oldData.find();
+				primaryKey = newData._primaryKey;
+
+				// The old data and new data were derived from the same parent collection
+				// so scan the data to determine changes
+				for (i = 0; i < newDataArr.length; i++) {
+					dataItem = newDataArr[i];
+
+					query = {};
+					query[primaryKey] = dataItem[primaryKey];
+
+					// Check if this item exists in the old data
+					oldDataItem = oldData.find(query)[0];
+
+					if (!oldDataItem) {
+						// New item detected
+						inserted.push(dataItem);
+					} else {
+						// Check if an update has occurred
+						if (JSON.stringify(oldDataItem) !== JSON.stringify(dataItem)) {
+							// Updated / already included item detected
+							updated.push(dataItem);
+						}
+					}
+				}
+
+				// Now loop the old data and check if any records were removed
+				for (i = 0; i < oldDataArr.length; i++) {
+					dataItem = oldDataArr[i];
+
+					query = {};
+					query[primaryKey] = dataItem[primaryKey];
+
+					// Check if this item exists in the old data
+					if (!newData.find(query)[0]) {
+						// Removed item detected
+						removed.push(dataItem);
+					}
+				}
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView: Removed ' + removed.length + ' rows');
+					console.log('ForerunnerDB.OldView: Inserted ' + inserted.length + ' rows');
+					console.log('ForerunnerDB.OldView: Updated ' + updated.length + ' rows');
+				}
+
+				// Now we have a diff of the two data sets, we need to get the DOM updated
+				if (inserted.length) {
+					this._onInsert(inserted, []);
+					operated = true;
+				}
+
+				if (updated.length) {
+					this._onUpdate(updated, []);
+					operated = true;
+				}
+
+				if (removed.length) {
+					this._onRemove(removed, []);
+					operated = true;
+				}
+			} else {
+				// The previous data and the new data are derived from different collections
+				// and can therefore not be compared, all data is therefore effectively "new"
+				// so first perform a remove of all existing data then do an insert on all new data
+				if (this.debug()) {
+					console.log('ForerunnerDB.OldView: Old and new data are from different collections...');
+				}
+				removed = oldData.find();
+
+				if (removed.length) {
+					this._onRemove(removed);
+					operated = true;
+				}
+
+				inserted = newData.find();
+
+				if (inserted.length) {
+					this._onInsert(inserted);
+					operated = true;
+				}
+			}
+		} else {
+			// Force an update as if the view never got created by padding all elements
+			// to the insert
+			if (this.debug()) {
+				console.log('ForerunnerDB.OldView: Forcing data update', newDataArr);
+			}
+
+			this._data = this._from.subset(this._query.query, this._query.options);
+			newDataArr = this._data.find();
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.OldView: Emitting change event with data', newDataArr);
+			}
+			this._onInsert(newDataArr, []);
+		}
+
+		if (this.debug()) { console.log('ForerunnerDB.OldView: Emitting change'); }
+		this.emit('change');
+	}
+
+	return this;
+};
+
+/**
+ * Returns the number of documents currently in the view.
+ * @returns {Number}
+ */
+OldView.prototype.count = function () {
+	return this._data && this._data._data ? this._data._data.length : 0;
+};
+
+/**
+ * Queries the view data. See Collection.find() for more information.
+ * @returns {*}
+ */
+OldView.prototype.find = function () {
+	if (this._data) {
+		if (this.debug()) {
+			console.log('ForerunnerDB.OldView: Finding data in view collection...', this._data);
+		}
+
+		return this._data.find.apply(this._data, arguments);
+	} else {
+		return [];
+	}
+};
+
+/**
+ * Inserts into view data via the view collection. See Collection.insert() for more information.
+ * @returns {*}
+ */
+OldView.prototype.insert = function () {
+	if (this._from) {
+		// Pass the args through to the from object
+		return this._from.insert.apply(this._from, arguments);
+	} else {
+		return [];
+	}
+};
+
+/**
+ * Updates into view data via the view collection. See Collection.update() for more information.
+ * @returns {*}
+ */
+OldView.prototype.update = function () {
+	if (this._from) {
+		// Pass the args through to the from object
+		return this._from.update.apply(this._from, arguments);
+	} else {
+		return [];
+	}
+};
+
+/**
+ * Removed from view data via the view collection. See Collection.remove() for more information.
+ * @returns {*}
+ */
+OldView.prototype.remove = function () {
+	if (this._from) {
+		// Pass the args through to the from object
+		return this._from.remove.apply(this._from, arguments);
+	} else {
+		return [];
+	}
+};
+
+OldView.prototype._onSetData = function (newDataArr, oldDataArr) {
+	this.emit('remove', oldDataArr, []);
+	this.emit('insert', newDataArr, []);
+	//this.refresh();
+};
+
+OldView.prototype._onInsert = function (successArr, failArr) {
+	this.emit('insert', successArr, failArr);
+	//this.refresh();
+};
+
+OldView.prototype._onUpdate = function (successArr, failArr) {
+	this.emit('update', successArr, failArr);
+	//this.refresh();
+};
+
+OldView.prototype._onRemove = function (successArr, failArr) {
+	this.emit('remove', successArr, failArr);
+	//this.refresh();
+};
+
+OldView.prototype._onChange = function () {
+	if (this.debug()) { console.log('ForerunnerDB.OldView: Refreshing data'); }
+	this.refresh();
+};
+
+// Extend collection with view init
+Collection.prototype.init = function () {
+	this._oldViews = [];
+	CollectionInit.apply(this, arguments);
+};
+
+/**
+ * Adds a view to the internal view lookup.
+ * @param {View} view The view to add.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._addOldView = function (view) {
+	if (view !== undefined) {
+		this._oldViews[view._name] = view;
+	}
+
+	return this;
+};
+
+/**
+ * Removes a view from the internal view lookup.
+ * @param {View} view The view to remove.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._removeOldView = function (view) {
+	if (view !== undefined) {
+		delete this._oldViews[view._name];
+	}
+
+	return this;
+};
+
+// Extend collection with view init
+CollectionGroup.prototype.init = function () {
+	this._oldViews = [];
+	CollectionGroupInit.apply(this, arguments);
+};
+
+/**
+ * Adds a view to the internal view lookup.
+ * @param {View} view The view to add.
+ * @returns {Collection}
+ * @private
+ */
+CollectionGroup.prototype._addOldView = function (view) {
+	if (view !== undefined) {
+		this._oldViews[view._name] = view;
+	}
+
+	return this;
+};
+
+/**
+ * Removes a view from the internal view lookup.
+ * @param {View} view The view to remove.
+ * @returns {Collection}
+ * @private
+ */
+CollectionGroup.prototype._removeOldView = function (view) {
+	if (view !== undefined) {
+		delete this._oldViews[view._name];
+	}
+
+	return this;
+};
+
+// Extend DB with views init
+Core.prototype.init = function () {
+	this._oldViews = {};
+	CoreInit.apply(this, arguments);
+};
+
+/**
+ * Gets a view by it's name.
+ * @param {String} viewName The name of the view to retrieve.
+ * @returns {*}
+ */
+Core.prototype.oldView = function (viewName) {
+	if (!this._oldViews[viewName]) {
+		if (this.debug()) {
+			console.log('ForerunnerDB.OldView: Creating view ' + viewName);
+		}
+	}
+
+	this._oldViews[viewName] = this._oldViews[viewName] || new OldView(viewName).db(this);
+	return this._oldViews[viewName];
+};
+
+/**
+ * Determine if a view with the passed name already exists.
+ * @param {String} viewName The name of the view to check for.
+ * @returns {boolean}
+ */
+Core.prototype.oldViewExists = function (viewName) {
+	return Boolean(this._oldViews[viewName]);
+};
+
+/**
+ * Returns an array of views the DB currently has.
+ * @returns {Array} An array of objects containing details of each view
+ * the database is currently managing.
+ */
+Core.prototype.oldViews = function () {
+	var arr = [],
+		i;
+
+	for (i in this._oldViews) {
+		if (this._oldViews.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._oldViews[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
+module.exports = OldView;
+},{"./ForerunnerDB.Collection":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Collection.js","./ForerunnerDB.CollectionGroup":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.CollectionGroup.js","./ForerunnerDB.Overload":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Overload.js","./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Operation.js":[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -4153,7 +5355,8 @@ module.exports = Path;
 },{"./ForerunnerDB.Shared":"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js"}],"C:\\Users\\rob.evans\\Development\\ForerunnerDB\\lib\\ForerunnerDB.Shared.js":[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
-	modules: {}
+	modules: {},
+	prototypes: {}
 };
 
 module.exports = Shared;
