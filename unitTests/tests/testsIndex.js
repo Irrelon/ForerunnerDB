@@ -108,8 +108,8 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 	// Run without index
 	b = collection.find({name: 'Sally'}, {decouple: false, skipIndex: true});
 
-	ok(a.__fdbOp.flag('usedIndex') && a.__fdbOp.flag('usedIndex').name() === 'index_name', "Check that index was used");
-	ok(b.__fdbOp.flag('usedIndex') === false, "Check that index was not used");
+	ok(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name() === 'index_name', "Check that index was used");
+	ok(b.__fdbOp.data('index.used') === false, "Check that index was not used");
 
 	ok(a.__fdbOp.time().totalMs <= b.__fdbOp.time().totalMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbOp.time().totalMs + " vs Non-Indexed: " + b.length + " rows in " + b.__fdbOp.time().totalMs + ")");
 

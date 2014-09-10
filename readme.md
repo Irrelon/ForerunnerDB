@@ -1,7 +1,10 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.1.0
+## Version 1.2.0
 
-### Installation
+## What is ForerunnerDB
+ForerunnerDB is a NoSQL database for your browser. It supports the same queries and methods as MongoDB and runs on browsers and Node.js.
+
+## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
 ```
@@ -10,57 +13,10 @@ npm install forerunnerdb
 
 This will also work for browser-based development, however if you prefer a more traditional download, please use the download button to the right of the github page and see "Client-Side (Browser) Setup" further down.
 
-##### Project Status
-
-* ForerunnerDB: **Production - Stable**
-* ForerunnerDB.CollectionGroup: **Production - Stable**
-* ForerunnerDB.View: **Production - Stable**
-
-##### Sub-Module (Optional Plugins) Status
-* ForerunnerDB.Persist: *Development - Beta*
-* ForerunnerDB.Server: *Development - Alpha*
-* ForerunnerDB.Remote: *Development - Alpha*
-
-##### Legacy Modules (Optional Plugins) Status
-* ForerunnerDB.OldView: **Production - Stable**
-* ForerunnerDB.OldView.Bind: **Production - Stable**
-
-##### Unit Tests
-Unit tests are available in the ./unitTests folder, load index.html to run the tests.
-
-### What Is ForerunnerDB?
-ForerunnerDB (a.k.a. Forerunner or FDB) is a database system that operates as an object store. It is a NoSQL database that is queried in a very similar way to MongoDB. Forerunner's main advantages are:
-
-* Can run in a browser as a client-side database for web-apps or server-side in Node.js
-* Has a low download footprint
-* Has indexing support to speed up intensive queries
-* Includes advanced features like unique index and primary key violation checking
-* Can save data to browser local storage for offline app support
-* Has built-in data-binding for automatically updating the DOM when underlying data changes**
-
-** Data-binding to the DOM requires jsViews
-
-### ForerunnerDB & MongoDB
-Forerunner has been written to work with similar queries to MongoDB, however there are some key differences that any MongoDB user should be aware of:
-
-* Forerunner supports joins
-* Forerunner's collection update method is more like MySQL's in that only the key/value pairs you pass are updated instead of the entire document being overwritten. You can think of ForerunnerDB's update method has having the MongoDB $set wrapped around your entire passed update document.
-* MongoDB is a pure server-side application so doesn't need to deal with DOM events etc, whereas ForerunnerDB can run in both a server and client environment. In a browser, Forerunner has data-binding built in so that when your data changes, DOM updates are processed automatically.
-* Forerunner supports views. Views allow you to create subsets of collections including using joins, data transforms and other options. Those views can then also have data binding enabled on them. If you change the query that a view is built with, your DOM can automatically update as well to show the results. This allows you to visualise query changes on screen instantly without complex code.
-* Forerunner is **NOT persistent storage**. Unlike MongoDB or MySQL, Forerunner will loose ALL data if your browser is refreshed (when operating on a client) unless you tell Forerunner to save the database to local storage with the save() command. If you are running Forerunner in a server environment you can think of it as an in-memory store that is volitile and requires populating on startup***
-
-*** ForerunnerDB will get server-side data persistence very soon in an upcoming release!
-
-## Client-Side (Browser) Setup
+## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML:
 
-	<script src="ForerunnerDB.js" type="text/javascript"></script>
-	
-You can also include optional modules such as collection groups, views and data-binding (in this order):
-
-	<script src="ForerunnerDB.CollectionGroup.js" type="text/javascript"></script>
-	<script src="ForerunnerDB.View.js" type="text/javascript"></script>
-	<script src="ForerunnerDB.View.Bind.js" type="text/javascript"></script>
+	<script src="./dist/fdb-all.min.js" type="text/javascript"></script>
 
 ## Create a Database
 
@@ -370,12 +326,48 @@ ForerunnerDB currently supports basic indexing for performance enhancements when
     }, {
         name: 'Jim',
         age: 18
-    }{
+    }, {
         name: 'Bill',
         age: 12
-    }]);
+    }, {
+		name: 'Jim',
+		age: 13
+	}]);
 
-You can see that in our collection we have some repeated names and some repeated ages. We will create an index on the "name" field so that lookups against this data are very fast.
+You can see that in our collection we have some repeated names and some repeated ages. We will create an index on the "name" field so that lookups against this data are very fast. In the index below we are indexing against the "name" field in ascending order, which is what the 1 denotes in name: 1. If we wish to index in descending order we would use name: -1 instead.
+
+	collection.ensureIndex({
+		name: 1
+	});
+
+The collection now contains an ascending index against the name field. Queries that check against the name field will now be optimised:
+
+	collection.find({
+		name: 'Bill',
+		age: 17
+	});
+
+In that query example we test for a name that equals "Bill" and an age that equals 17.
+
+ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined.
+
+In the case of the index and query above, Forerunner's process will be:
+
+* Query the index for all records that match the name "Bill" (very fast)
+* Iterate over the records from the index and check each one for the age 17 (slow)
+
+To speed up queries that use multiple fields you can create a compound index on those fields:
+
+	collection.ensureIndex({
+		name: 1,
+		age: 1
+	});
+
+With the compound index, Forerunner can now pull the matching record right out of the hash table without doing a data scan which is very very fast.
+
+Forerunner can provide you with details about how the query is optimised (called the query plan) and which indexes are used so that you can check if your indexes are setup and being utilised correctly. To see the query plan for a query use the explain() method:
+
+
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
@@ -468,7 +460,12 @@ Where the parameters are:
 	inserted: An array of documents that were inserted
 	failed: An array of documents that failed to insert
 
-# Development Building / Compiling
+# Development
+
+## Unit Tests
+Unit tests are available in the ./unitTests folder, load index.html to run the tests.
+
+## Building / Compiling
 > This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
 
 ForerunnerDB uses Browserify to compile to single-file distribution builds whilst maintaining source in distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
@@ -483,7 +480,7 @@ Now you can then execute browserify to build ForerunnerDB:
 browserify .\build\all.js -o .\dist\fdb-all.js
 ```
 
-##### Continuous Compiling
+## Continuous Compiling
 Browserify will compile to a single-file each time you run it. If you would prefer to automatically compile each change (for faster development) you can run watchify instead. Install watchify:
 
 ```
@@ -509,6 +506,7 @@ ForerunnerDB's project road-map:
 * Query remote database from browser
 * Data persistence on client-side
 * Collection indexing
+* NPM installation
 
 ### PARTIAL
 
@@ -553,7 +551,6 @@ ForerunnerDB's project road-map:
 
 ### NEEDS IMPLEMENTING
 * Data persistence on server-side
-* NPM installation
 * Collection / query paging e.g. select next 10, select previous 10
 * Index violation checking
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging

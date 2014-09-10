@@ -1487,6 +1487,32 @@ Collection.prototype.peek = function (search, options) {
 };
 
 /**
+ * Provides a query plan / operations log for a query.
+ * @param {Object} query The query to execute.
+ * @param {Object=} options Optional options object.
+ * @returns {Object} The query plan.
+ */
+Collection.prototype.explain = function (query, options) {
+	var result = this.find(query, options),
+		ops = result.__fdbOp,
+		plan = {
+			operation: '', // The name of the operation executed such as "find", "update" etc
+			index: {
+				potential: [], // Indexes that could have potentially been used
+				used: null // The index that was picked to use
+			},
+			steps: [], // The steps taken to generate the query results,
+			time: {
+				startMs: 0,
+				stopMs: 0,
+				totalMs: 0
+			}
+		};
+
+	return result.__fdbOp;
+};
+
+/**
  * Queries the collection based on the query object passed.
  * @param {Object} query The query key/values that a document must match in
  * order for it to be returned in the result array.
@@ -1530,28 +1556,31 @@ Collection.prototype.find = function (query, options) {
 	op.start();
 	if (query) {
 		// Get query analysis to execute best optimised code path
-		op.time('_analyseQuery');
+		op.time('analyseQuery');
 		analysis = this._analyseQuery(query, options);
-		op.time('_analyseQuery');
+		op.time('analyseQuery');
+		op.data('analysis', analysis);
 
 		if (analysis.hasJoin && analysis.queriesJoin) {
 			// The query has a join and tries to limit by it's joined data
 			// Get an instance reference to the join collections
-			op.time('Get join collection references');
+			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
 				joinCollectionName = analysis.joinsOn[joinIndex];
 				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
 				joinQuery = joinPath.value(query)[0];
 				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
 			}
-			op.time('Get join collection references');
+			op.time('joinReferences');
 		}
 
 		// Check if an index lookup can be used to return this result
 		if (analysis.usesIndex.length && (!options || (options && !options.skipIndex))) {
 			// Get the data from the index
 			resultArr = analysis.usesIndex[0].lookup(query);
-			op.flag('usedIndex', analysis.usesIndex[0]);
+
+			op.data('index.potential', analysis.usesIndex);
+			op.data('index.used', analysis.usesIndex[0]);
 		} else {
 			// Filter the source data and return the result
 			resultArr = this._data.filter(matcher);
@@ -1566,13 +1595,15 @@ Collection.prototype.find = function (query, options) {
 
 		if (options.limit && resultArr && resultArr.length > options.limit) {
 			resultArr.length = options.limit;
-			op.flag('limit', options.limit);
+			op.data('limit', options.limit);
 		}
 
 		if (options.decouple) {
 			// Now decouple the data from the original objects
+			op.time('decouple');
 			resultArr = this.decouple(resultArr);
-			op.flag('decouple', options.decouple);
+			op.time('decouple');
+			op.data('flag.decouple', true);
 		}
 
 		// Now process any joins on the final data
@@ -1648,11 +1679,11 @@ Collection.prototype.find = function (query, options) {
 				}
 			}
 
-			op.flag('join', true);
+			op.data('flag.join', true);
 		}
 
 		// Process removal queue
-		op.time('Process removal queue');
+		op.time('removalQueue');
 		for (i = 0; i < resultRemove.length; i++) {
 			index = resultArr.indexOf(resultRemove[i]);
 
@@ -1660,21 +1691,21 @@ Collection.prototype.find = function (query, options) {
 				resultArr.splice(index, 1);
 			}
 		}
-		op.time('Process removal queue');
+		op.time('removalQueue');
 
 		if (options.transform) {
-			op.time('Transform data');
+			op.time('transform');
 			for (i = 0; i < resultArr.length; i++) {
 				resultArr.splice(i, 1, options.transform(resultArr[i]));
 			}
-			op.time('Transform data');
-			op.flag('transform', true);
+			op.time('transform');
+			op.data('flag.transform', true);
 		}
 
 		// Process transforms
-		op.time('Transform out data');
+		op.time('transformOut');
 		resultArr = this.transformOut(resultArr);
-		op.time('Transform out data');
+		op.time('transformOut');
 
 		op.stop();
 
@@ -1961,6 +1992,9 @@ Collection.prototype._analyseQuery = function (query, options) {
 		analysis.usesIndex.sort(function (a, b) {
 			return b._keyCount - a._keyCount;
 		});
+
+		// TODO: Check if the keycounts match for any indexes and if so, check their record length
+		// TODO: to determine the most effective index to use
 	}
 
 	// Check for join data
@@ -5637,7 +5671,8 @@ Core.prototype.oldViews = function () {
 
 module.exports = OldView;
 },{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],12:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared');
+var Shared = require('./ForerunnerDB.Shared'),
+	Path = require('./ForerunnerDB.Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -5646,16 +5681,28 @@ var Shared = require('./ForerunnerDB.Shared');
  * @constructor
  */
 var Operation = function (name) {
+	this.pathSolver = new Path();
+	this.counter = 0;
 	this.init.apply(this, arguments);
 };
 
 Operation.prototype.init = function (name) {
-	this._name = name;
-	this._time = {
-		process: {}
+	this._data = {
+		operation: name, // The name of the operation executed such as "find", "update" etc
+		index: {
+			potential: [], // Indexes that could have potentially been used
+			used: false // The index that was picked to use
+		},
+		steps: [], // The steps taken to generate the query results,
+		time: {
+			startMs: 0,
+			stopMs: 0,
+			totalMs: 0,
+			process: {}
+		},
+		flag: {}, // An object with flags that denote certain execution paths
+		log: [] // Any extra data that might be useful such as warnings or helpful hints
 	};
-	this._flag = {};
-	this._log = [];
 };
 
 Shared.modules.Operation = Operation;
@@ -5664,7 +5711,7 @@ Shared.modules.Operation = Operation;
  * Starts the operation timer.
  */
 Operation.prototype.start = function () {
-	this._time.start = new Date().getTime();
+	this._data.time.startMs = new Date().getTime();
 };
 
 /**
@@ -5674,14 +5721,14 @@ Operation.prototype.start = function () {
  */
 Operation.prototype.log = function (event) {
 	if (event) {
-		var lastLogTime = this._log.length > 0 ? this._log[this._log.length - 1].time : 0,
+		var lastLogTime = this._log.length > 0 ? this._data.log[this._data.log.length - 1].time : 0,
 			logObj = {
 				event: event,
 				time: new Date().getTime(),
 				delta: 0
 			};
 
-		this._log.push(logObj);
+		this._data.log.push(logObj);
 
 		if (lastLogTime) {
 			logObj.delta = logObj.time - lastLogTime;
@@ -5690,7 +5737,7 @@ Operation.prototype.log = function (event) {
 		return this;
 	}
 
-	return this._log;
+	return this._data.log;
 };
 
 /**
@@ -5701,21 +5748,21 @@ Operation.prototype.log = function (event) {
  */
 Operation.prototype.time = function (section) {
 	if (section !== undefined) {
-		var process = this._time.process,
+		var process = this._data.time.process,
 			processObj = process[section] = process[section] || {};
 
-		if (!processObj.start) {
+		if (!processObj.startMs) {
 			// Timer started
-			processObj.start = new Date().getTime();
+			processObj.startMs = new Date().getTime();
 		} else {
-			processObj.end = new Date().getTime();
-			processObj.totalMs = processObj.end - processObj.start;
+			processObj.stopMs = new Date().getTime();
+			processObj.totalMs = processObj.stopMs - processObj.startMs;
 		}
 
 		return this;
 	}
 
-	return this._time;
+	return this._data.time;
 };
 
 /**
@@ -5726,24 +5773,40 @@ Operation.prototype.time = function (section) {
  */
 Operation.prototype.flag = function (key, val) {
 	if (key !== undefined && val !== undefined) {
-		this._flag[key] = val;
+		this._data.flag[key] = val;
 	} else if (key !== undefined) {
-		return this._flag[key];
+		return this._data.flag[key];
 	} else {
-		return this._flag;
+		return this._data.flag;
 	}
+};
+
+Operation.prototype.data = function (path, val, noTime) {
+	if (val !== undefined) {
+		// Assign value to object path
+		this.pathSolver.set(this._data, path, val);
+
+		return this;
+	}
+
+	return this.pathSolver.get(this._data, path);
+};
+
+Operation.prototype.pushData = function (path, val, noTime) {
+	// Assign value to object path
+	this.pathSolver.push(this._data, path, val);
 };
 
 /**
  * Stops the operation timer.
  */
 Operation.prototype.stop = function () {
-	this._time.stop = new Date().getTime();
-	this._time.totalMs = this._time.stop - this._time.start;
+	this._data.time.stopMs = new Date().getTime();
+	this._data.time.totalMs = this._data.time.stopMs - this._data.time.startMs;
 };
 
 module.exports = Operation;
-},{"./ForerunnerDB.Shared":16}],13:[function(require,module,exports){
+},{"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],13:[function(require,module,exports){
 var Shared = require('./ForerunnerDB.Shared');
 
 /**
@@ -5985,6 +6048,80 @@ Path.prototype.value = function (obj, path) {
 	} else {
 		return [];
 	}
+};
+
+/**
+ * Sets a value on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to update.
+ * @param {*} val The value to set the object path to.
+ * @returns {*}
+ */
+Path.prototype.set = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = val;
+		}
+	}
+
+	return obj;
+};
+
+Path.prototype.get = function (obj, path) {
+	return this.value(obj, path)[0];
+};
+
+/**
+ * Push a value to an array on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to the array to push to.
+ * @param {*} val The value to push to the array at the object path.
+ * @returns {*}
+ */
+Path.prototype.push = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = obj[part] || [];
+
+			if (obj[part] instanceof Array) {
+				obj[part].push(val);
+			} else {
+				throw('Cannot push to a path whose endpoint is not an array!');
+			}
+		}
+	}
+
+	return obj;
 };
 
 /**
