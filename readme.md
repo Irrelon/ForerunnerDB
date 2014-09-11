@@ -297,14 +297,16 @@ documents where the price is greater than or equal to 100:
 	});
 
 ## Indexes & Performance
-ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method:
+ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method. ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined. Let's setup some data to index:
 
-	var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+	var db = new ForerunnerDB(),
+		names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+		collection = db.collection('test'),
 		tempName,
 		tempAge,
 		i;
 
-	for (i = 0; i < 10000; i++) {
+	for (i = 0; i < 100000; i++) {
 		tempName = names[Math.ceil(Math.random() * names.length) - 1];
 		tempAge = Math.ceil(Math.random() * 100);
 
@@ -314,27 +316,39 @@ ForerunnerDB currently supports basic indexing for performance enhancements when
 		});
 	}
 
-	collection.setData([{
-		name: 'Bill',
-		age: 12
-	}, {
-        name: 'Jim',
-        age: 13
-    }, {
-        name: 'Bill',
-        age: 17
-    }, {
-        name: 'Jim',
-        age: 18
-    }, {
-        name: 'Bill',
-        age: 12
-    }, {
-		name: 'Jim',
-		age: 13
-	}]);
+You can see that in our collection we have some random names and some random ages. If we ask Forerunner to explain the query plan for querying the name and age fields:
 
-You can see that in our collection we have some repeated names and some repeated ages. We will create an index on the "name" field so that lookups against this data are very fast. In the index below we are indexing against the "name" field in ascending order, which is what the 1 denotes in name: 1. If we wish to index in descending order we would use name: -1 instead.
+	collection.explain({
+		name: 'Bill',
+        age: 17
+	});
+
+The result shows that the largest amount of time was taken in the "tableScan" step:
+
+	{
+		analysis: Object,
+		flag: Object,
+		index: Object,
+		log: Array[0],
+		operation: "find",
+		results: 128, // Will vary depending on your random entries inserted earlier
+		steps: Array[4] // Lists the steps Forerunner took to generate the results
+			[0]: Object
+				name: "analyseQuery",
+				totalMs: 0
+			[1]: Object
+				name: "checkIndexes",
+                totalMs: 0
+			[2]: Object
+				name: "tableScan",
+                totalMs: 54
+			[3]: Object
+				name: "decouple",
+                totalMs: 1,
+        time: Object
+	}
+
+From the explain output we can see that a large amount of time was taken up doing a table scan. This means that the database had to scan through every item in the collection and determine if it matched the query you passed. Let's speed this up by creating an index on the "name" field so that lookups against that field are very fast. In the index below we are indexing against the "name" field in ascending order, which is what the 1 denotes in name: 1. If we wish to index in descending order we would use name: -1 instead.
 
 	collection.ensureIndex({
 		name: 1
@@ -342,56 +356,131 @@ You can see that in our collection we have some repeated names and some repeated
 
 The collection now contains an ascending index against the name field. Queries that check against the name field will now be optimised:
 
-	collection.find({
+	collection.explain({
 		name: 'Bill',
 		age: 17
 	});
 
-In that query example we test for a name that equals "Bill" and an age that equals 17.
+Now the explain output has some different results:
 
-ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined.
+	{
+		analysis: Object,
+		flag: Object,
+		index: Object,
+		log: Array[0],
+		operation: "find",
+		results: 128, // Will vary depending on your random entries inserted earlier
+		steps: Array[6] // Lists the steps Forerunner took to generate the results
+			[0]: Object
+				name: "analyseQuery",
+				totalMs: 1
+			[1]: Object
+				name: "checkIndexes",
+                totalMs: 1
+			[2]: Object
+				name: "checkIndexMatch: name:1",
+                totalMs: 0
+			[3]: Object
+				name: "indexLookup",
+                totalMs: 0,
+			[4]: Object
+				name: "tableScan",
+                totalMs: 13,
+			[5]: Object
+				name: "decouple",
+                totalMs: 1,
+        time: Object
+	}
+
+The query plan shows that the index was used because it has an "indexLookup" step, however we still have a "tableScan" step that took 13 milliseconds to execute. Why was this? If we delve into the query plan a little more by expanding the analysis object we can see why:
+
+	{
+		analysis: Object
+			hasJoin: false,
+			indexMatch: Array[1]
+				[0]: Object
+					index: Index,
+					keyData: Object
+						matchedKeyCount: 1,
+						totalKeyCount: 2,
+						matchedKeys: Object
+							age: false,
+							name: true
+					lookup: Array[12353]
+			joinQueries: Object,
+			options: Object,
+			queriesJoin: false,
+			queriesOn: Array[1],
+			query: Object
+		flag: Object,
+		index: Object,
+		log: Array[0],
+		operation: "find",
+		results: 128, // Will vary depending on your random entries inserted earlier
+		steps: Array[6] // Lists the steps Forerunner took to generate the results
+        time: Object
+	}
+
+In the selected index to use (indexMatch[0]) the keyData shows that the index only matched 1 out of the 2 query keys.
 
 In the case of the index and query above, Forerunner's process will be:
 
 * Query the index for all records that match the name "Bill" (very fast)
 * Iterate over the records from the index and check each one for the age 17 (slow)
 
-To speed up queries that use multiple fields you can create a compound index on those fields:
+This means that while the index can be used, a table scan of the index is still required. We can make our index better by using a compound index:
 
 	collection.ensureIndex({
 		name: 1,
 		age: 1
 	});
 
-With the compound index, Forerunner can now pull the matching record right out of the hash table without doing a data scan which is very very fast.
-
-Forerunner can provide you with details about how the query is optimised (called the query plan) and which indexes are used so that you can check if your indexes are setup and being utilised correctly. To see the query plan for a query use the explain() method:
+With the compound index, Forerunner can now pull the matching record right out of the hash table without doing a data scan which is very very fast:
 
 	collection.explain({
 		name: 'Bill',
-       	age: 17
+		age: 17
 	});
 
-The resulting object will contain information about the query:
+Which gives:
 
 	{
-		operation: name, // The name of the operation executed such as "find", "update" etc
-		index: {
-			potential: [], // Indexes that could have potentially been used
-			used: false // The index that was picked to use or false if none
-		},
-		steps: [], // The steps taken to generate the query results and their execution times
-		time: {
-			startMs: 0,
-			stopMs: 0,
-			totalMs: 0,
-			process: {} // A list of timed processes that ran during the query
-		},
-		flag: {}, // An object with flags that denote certain execution paths
-		log: [] // Any extra data that might be useful such as warnings or helpful hints
+		analysis: Object,
+		flag: Object,
+		index: Object,
+		log: Array[0],
+		operation: "find",
+		results: 128, // Will vary depending on your random entries inserted earlier
+		steps: Array[7] // Lists the steps Forerunner took to generate the results
+			[0]: Object
+				name: "analyseQuery",
+				totalMs: 0
+			[1]: Object
+				name: "checkIndexes",
+                totalMs: 0
+			[2]: Object
+				name: "checkIndexMatch: name:1",
+                totalMs: 0
+			[3]: Object
+				name: "checkIndexMatch: name:1_age:1",
+                totalMs: 0,
+			[4]: Object
+				name: "findOptimalIndex",
+                totalMs: 0,
+			[5]: Object
+				name: "indexLookup",
+                totalMs: 0,
+			[6]: Object
+				name: "decouple",
+                totalMs: 0,
+        time: Object
 	}
 
-Examining the steps array will provide you with the most insight into how the query was executed and if a table scan was involved or not.
+Now we are able to query 100,000 records instantly, requiring zero milliseconds to return the results.
+
+Examining the output from an explain() call will provide you with the most insight into how the query was executed and if a table scan was involved or not, helping you to plan your indexes accordingly.
+
+Keep in mind that indexes require memory to maintain hash tables and there is always a trade-off between speed and memory usage.
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
@@ -399,24 +488,20 @@ collection changes. Here is a simple example of a data-bind that will keep the l
 the collection:
 
 ### Prerequisites
-* Data-binding requires jQuery to be present on the page
-* Your items must include an id="" attribute that matches the primary key of the document it represents
-* If you require a bind against a subset of the collection's data, use a view and bind against that instead
+* Data-binding requires jQuery and jsViews to be loaded
 
 ### HTML
 	<ul id="myList">
 	</ul>
+	<script id="myLinkFragment" type="text/x-jsrender">
+		<li data-link="id{:_id}">{^{:name}}</li>
+	</script>
 
 ### JS
-	collection.bind('#myList', {
-		template: function (data, callback) {
-			// Here is where we pass a rendered HTML version of the data back
-			// to the database. You can use your favourite client-side templating
-			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
-			// We have used a simple string concatenation to visibly show the process.
-			callback('<li id="' + data._id + '">' + data.price + '</li>');
-		}
-	});
+	var db = new ForerunnerDB(),
+		collection = db.collection('test');
+
+	collection.link('#myList', '#myLinkFragment');
 
 Now if you execute any insert, update or remove on the collection, the HTML will automatically update to reflect the
 changes in the data.
@@ -429,60 +514,15 @@ Note that the selector string that a bind uses can match multiple elements which
 	
 	<ul class="myList">
 	</ul>
+
+	<script id="myLinkFragment" type="text/x-jsrender">
+        <li data-link="id{:_id}">{^{:name}}</li>
+    </script>
 	
 ### JS
-	collection.bind('.myList', {
-		template: function (data, callback) {
-			// Here is where we pass a rendered HTML version of the data back
-			// to the database. You can use your favourite client-side templating
-			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
-			// We have used a simple string concatenation to visibly show the process.
-			callback('<li id="' + data._id + '">' + data.price + '</li>');
-		}
-	});
+	collection.link('#myList', '#myLinkFragment');
 
 The result of this is that both UL elements will get data binding updates when the underlying data changes.
-
-## Binding Events
-Data binding also has some extra features that allow your app to respond to changes to the data. For instance, if a
-document is removed, perhaps you would like to fade out the item in the HTML instead of it being instantly removed from
-the DOM?
-
-	collection.bind('#myList', {
-		template: function (data, callback) {
-			// Here is where we pass a rendered HTML version of the data back
-			// to the database. You can use your favourite client-side templating
-			// system to achieve this e.g. jsRender, jSmart, HandleBars etc
-			// We have used a simple string concatenation to visibly show the process.
-			callback('<li id="' + data._id + '">' + data.price + '</li>');
-		},
-		beforeRemove: function (elem, data, allData, callback) {
-			// Use jQuery to animate the element's opacity before removing it from the DOM
-			elem.animate({
-				opacity: 0
-			}, 600, function () {
-				// Now that the animation is complete, call the callback which informs the
-				// data-binding system it can proceed with removing the element
-				callback();
-			});
-		}
-	});
-
-The full list of events that can be used are:
-
-	beforeRemove: function (jqSelector elem, array elemData, array allData, function callback);
-	afterRemove: function (jqSelector elem, array elemData, array allData);
-	afterInsert: function (jqSelector elem, array inserted, array failed, array allData);
-	afterUpdate: function (jqSelector elem, array elemData, array allData);
-
-Where the parameters are:
-
-	elem: The jQuery selector object representing the element in the DOM that has changed
-	elemData: The document in the collection the DOM element relates to
-	allData: The entire collection's data array
-	callback: The callback to use once you have finished processing
-	inserted: An array of documents that were inserted
-	failed: An array of documents that failed to insert
 
 # Development
 
