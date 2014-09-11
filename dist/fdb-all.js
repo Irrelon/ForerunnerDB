@@ -1493,10 +1493,8 @@ Collection.prototype.peek = function (search, options) {
  * @returns {Object} The query plan.
  */
 Collection.prototype.explain = function (query, options) {
-	var result = this.find(query, options),
-		plan = result.__fdbOp._data;
-
-	return plan;
+	var result = this.find(query, options);
+	return result.__fdbOp._data;
 };
 
 /**
@@ -1515,8 +1513,9 @@ Collection.prototype.find = function (query, options) {
 	options.decouple = options.decouple !== undefined ? options.decouple : true;
 
 	var op = this._metrics.create('find'),
-		analysis,
 		self = this,
+		analysis,
+		finalQuery,
 		resultArr,
 		joinCollectionIndex,
 		joinIndex,
@@ -1970,6 +1969,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		indexMatchData,
 		indexRef,
 		indexRefName,
+		indexLookup,
 		pathSolver,
 		i;
 
@@ -1981,8 +1981,9 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		pathSolver = new Path();
 		analysis.usesIndex.push({
 			keyData: {
-				matchedKeys: 1,
-				totalKeys: pathSolver.countKeys(query)
+				matchedKeys: [this._primaryKey],
+				matchedKeyCount: 1,
+				totalKeyCount: pathSolver.countKeys(query)
 			},
 			index: this._primaryIndex
 		});
@@ -1997,10 +1998,12 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 			op.time('checkIndexMatch: ' + indexRefName);
 			indexMatchData = indexRef.match(query, options);
+			indexLookup = indexRef.lookup(query, options);
 
-			if (indexMatchData.matchedKeys > 0) {
+			if (indexMatchData.matchedKeyCount > 0) {
 				// This index can be used, store it
 				analysis.usesIndex.push({
+					lookup: indexLookup,
 					keyData: indexMatchData,
 					index: indexRef
 				});
@@ -2014,7 +2017,28 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	if (analysis.usesIndex.length > 1) {
 		op.time('indexSort');
 		analysis.usesIndex.sort(function (a, b) {
-			return b.keyData.matchedKeys - a.keyData.matchedKeys; // index._keyCount
+			if (a.keyData.totalKeyCount === a.keyData.matchedKeyCount) {
+				// This index matches all query keys so will return the correct result instantly
+				return 1;
+			}
+
+			if (b.keyData.totalKeyCount === b.keyData.matchedKeyCount) {
+				// This index matches all query keys so will return the correct result instantly
+				return -1;
+			}
+
+			// The indexes don't match all the query keys, check if both these indexes match
+			// the same number of keys and if so they are technically equal from a key point
+			// of view, but can still be compared by the number of records they return from
+			// the query. The fewer records they return the better so order by record count
+			if (a.keyData.matchedKeyCount === b.keyData.matchedKeyCount) {
+				return b.lookup.length - a.lookup.length;
+			}
+
+			// The indexes don't match all the query keys and they don't have matching key
+			// counts, so order them by key count. The index with the most matching keys
+			// should return the query results the fastest
+			return b.keyData.matchedKeyCount - a.keyData.matchedKeyCount; // index._keyCount
 		});
 		op.time('indexSort');
 	}
@@ -5969,15 +5993,16 @@ Path.prototype.countKeys = function (testObj) {
  */
 Path.prototype.countObjectPaths = function (testKeys, testObj) {
 	var matchData,
-		matchedKeys = 0,
-		totalKeys = 0,
+		matchedKeys = {},
+		matchedKeyCount = 0,
+		totalKeyCount = 0,
 		i;
-
+debugger;
 	for (i in testObj) {
 		if (testObj.hasOwnProperty(i)) {
 			if (testObj[i] !== undefined) {
 				if (typeof testObj[i] !== 'object') {
-					totalKeys++;
+					totalKeyCount++;
 				}
 			}
 
@@ -5986,18 +6011,23 @@ Path.prototype.countObjectPaths = function (testKeys, testObj) {
 					// Recurse object
 					matchData = this.countObjectPaths(testKeys[i], testObj[i]);
 
-					totalKeys += matchData.totalKeys;
-					matchedKeys += matchData.matchedKeys;
+					matchedKeys[i] = matchData.matchedKeys;
+					totalKeyCount += matchData.totalKeyCount;
+					matchedKeyCount += matchData.matchedKeyCount;
 				} else {
-					matchedKeys++;
+					matchedKeys[i] = true;
+					matchedKeyCount++;
 				}
+			} else {
+				matchedKeys[i] = false;
 			}
 		}
 	}
 
 	return {
 		matchedKeys: matchedKeys,
-		totalKeys: totalKeys
+		matchedKeyCount: matchedKeyCount,
+		totalKeyCount: totalKeyCount
 	};
 };
 

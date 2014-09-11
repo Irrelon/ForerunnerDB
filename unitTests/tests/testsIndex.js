@@ -60,10 +60,12 @@ test("Index - Index.lookup() :: Test index query detection", function () {
 		arr: {
 			val: 5
 		},
-		name: 'Dean'
+		name: 'Dean',
+		orgId: "3"
 	});
 
 	//console.log(a);
+	debugger;
 	ok(a && a.index.used && a.index.potential.length === 1, "Query analyser returned correct number of indexes to use");
 	ok(a.index.used._name === 'testIndex', "Check index name: " + a.index.used._name);
 
@@ -169,6 +171,8 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 
 	// Run with index + table scan
 	c = collection.find({name: 'Sally', age: 12}, {decouple: false, skipIndex: false});
+
+
 
 	ok(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name() === 'index_name', "Check that index was used");
 	ok(b.__fdbOp.data('index.used') === false, "Check that index was not used");
