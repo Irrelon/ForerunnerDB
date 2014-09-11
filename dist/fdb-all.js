@@ -1516,6 +1516,7 @@ Collection.prototype.find = function (query, options) {
 		self = this,
 		analysis,
 		finalQuery,
+		scanLength,
 		requiresTableScan = true,
 		resultArr,
 		joinCollectionIndex,
@@ -1581,12 +1582,15 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		if (requiresTableScan) {
-			op.time('tableScan');
 			if (resultArr && resultArr.length) {
+				scanLength = resultArr.length;
+				op.time('tableScan: ' + scanLength);
 				// Filter the source data and return the result
 				resultArr = resultArr.filter(matcher);
 			} else {
 				// Filter the source data and return the result
+				scanLength = this._data.length;
+				op.time('tableScan: ' + scanLength);
 				resultArr = this._data.filter(matcher);
 			}
 
@@ -1596,7 +1600,7 @@ Collection.prototype.find = function (query, options) {
 				resultArr = this.sort(options.sort, resultArr);
 				op.time('sort');
 			}
-			op.time('tableScan');
+			op.time('tableScan: ' + scanLength);
 		}
 
 		if (options.limit && resultArr && resultArr.length > options.limit) {
@@ -1689,15 +1693,17 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Process removal queue
-		op.time('removalQueue');
-		for (i = 0; i < resultRemove.length; i++) {
-			index = resultArr.indexOf(resultRemove[i]);
+		if (resultRemove.length) {
+			op.time('removalQueue');
+			for (i = 0; i < resultRemove.length; i++) {
+				index = resultArr.indexOf(resultRemove[i]);
 
-			if (index > -1) {
-				resultArr.splice(index, 1);
+				if (index > -1) {
+					resultArr.splice(index, 1);
+				}
 			}
+			op.time('removalQueue');
 		}
-		op.time('removalQueue');
 
 		if (options.transform) {
 			op.time('transform');
@@ -1709,9 +1715,14 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Process transforms
-		op.time('transformOut');
-		resultArr = this.transformOut(resultArr);
-		op.time('transformOut');
+		if (this._transformEnabled && this._transformOut) {
+			op.time('transformOut');
+			resultArr = this.transformOut(resultArr);
+			op.time('transformOut');
+		}
+
+
+		op.data('results', resultArr.length);
 
 		op.stop();
 
