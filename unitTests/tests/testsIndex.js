@@ -86,10 +86,8 @@ test("Index - Index.lookup() :: Test index query detection", function () {
 		orgId: "3"
 	});
 
-	//console.log(a);
-	debugger;
-	ok(a && a.index.used && a.index.potential.length === 1, "Query analyser returned correct number of indexes to use");
-	ok(a.index.used._name === 'testIndex', "Check index name: " + a.index.used._name);
+	ok(a && a.index.used && a.index.potential.length === 3, "Query analyser returned correct number of indexes to use");
+	ok(a.index.used._name === 'testArrValAndOrgId', "Check index name: " + a.index.used._name);
 
 	base.dbDown();
 });

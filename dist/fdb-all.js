@@ -1994,6 +1994,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		op.time('checkIndexMatch: Primary Key');
 		pathSolver = new Path();
 		analysis.indexMatch.push({
+			lookup: this._primaryIndex.lookup(query, options),
 			keyData: {
 				matchedKeys: [this._primaryKey],
 				matchedKeyCount: 1,
@@ -2034,7 +2035,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 	// Sort array descending on index key count (effectively a measure of relevance to the query)
 	if (analysis.indexMatch.length > 1) {
-		op.time('indexSort');
+		op.time('findOptimalIndex');
 		analysis.indexMatch.sort(function (a, b) {
 			if (a.keyData.totalKeyCount === a.keyData.matchedKeyCount) {
 				// This index matches all query keys so will return the correct result instantly
@@ -2059,7 +2060,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			// should return the query results the fastest
 			return b.keyData.matchedKeyCount - a.keyData.matchedKeyCount; // index._keyCount
 		});
-		op.time('indexSort');
+		op.time('findOptimalIndex');
 	}
 
 	// Check for join data
