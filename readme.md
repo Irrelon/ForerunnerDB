@@ -11,7 +11,7 @@ If you are using Node.js (or have it installed) you can use NPM to download Fore
 npm install forerunnerdb
 ```
 
-This will also work for browser-based development, however if you prefer a more traditional download, please use the download button to the right of the github page and see "Use Forerunner in Browser" below.
+This will also work for browser-based development, however if you prefer a more traditional download, please use the download button to the right of the github page.
 
 ## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML:
