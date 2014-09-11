@@ -1516,6 +1516,7 @@ Collection.prototype.find = function (query, options) {
 		self = this,
 		analysis,
 		finalQuery,
+		requiresTableScan = true,
 		resultArr,
 		joinCollectionIndex,
 		joinIndex,
@@ -1561,21 +1562,33 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Check if an index lookup can be used to return this result
-		if (analysis.usesIndex.length && (!options || (options && !options.skipIndex))) {
-			op.data('index.potential', analysis.usesIndex);
-			op.data('index.used', analysis.usesIndex[0].index);
+		if (analysis.indexMatch.length && (!options || (options && !options.skipIndex))) {
+			op.data('index.potential', analysis.indexMatch);
+			op.data('index.used', analysis.indexMatch[0].index);
 
 			// Get the data from the index
 			op.time('indexLookup');
-			resultArr = analysis.usesIndex[0].index.lookup(query);
+			resultArr = analysis.indexMatch[0].lookup;
 			op.time('indexLookup');
 
-			// TODO: Check if the index coverage is all keys, if not we still need to table scan it
+			// Check if the index coverage is all keys, if not we still need to table scan it
+			if (analysis.indexMatch[0].keyData.totalKeyCount === analysis.indexMatch[0].keyData.matchedKeyCount) {
+				// Require a table scan to find relevant documents
+				requiresTableScan = false;
+			}
 		} else {
-			// Filter the source data and return the result
+			op.flag('usedIndex', false);
+		}
+
+		if (requiresTableScan) {
 			op.time('tableScan');
-			resultArr = this._data.filter(matcher);
-			op.time('tableScan');
+			if (resultArr && resultArr.length) {
+				// Filter the source data and return the result
+				resultArr = resultArr.filter(matcher);
+			} else {
+				// Filter the source data and return the result
+				resultArr = this._data.filter(matcher);
+			}
 
 			// Order the array if we were passed a sort clause
 			if (options.sort) {
@@ -1583,8 +1596,7 @@ Collection.prototype.find = function (query, options) {
 				resultArr = this.sort(options.sort, resultArr);
 				op.time('sort');
 			}
-
-			op.flag('usedIndex', false);
+			op.time('tableScan');
 		}
 
 		if (options.limit && resultArr && resultArr.length > options.limit) {
@@ -1955,10 +1967,12 @@ Collection.prototype.bucket = function (key, arr) {
 Collection.prototype._analyseQuery = function (query, options, op) {
 	var analysis = {
 			queriesOn: [this._name],
-			usesIndex: [],
+			indexMatch: [],
 			hasJoin: false,
 			queriesJoin: false,
-			joinQueries: {}
+			joinQueries: {},
+			query: query,
+			options: options
 		},
 		joinCollectionIndex,
 		joinCollectionName,
@@ -1979,7 +1993,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		// Return item via primary key possible
 		op.time('checkIndexMatch: Primary Key');
 		pathSolver = new Path();
-		analysis.usesIndex.push({
+		analysis.indexMatch.push({
 			keyData: {
 				matchedKeys: [this._primaryKey],
 				matchedKeyCount: 1,
@@ -2002,29 +2016,34 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 			if (indexMatchData.matchedKeyCount > 0) {
 				// This index can be used, store it
-				analysis.usesIndex.push({
+				analysis.indexMatch.push({
 					lookup: indexLookup,
 					keyData: indexMatchData,
 					index: indexRef
 				});
 			}
 			op.time('checkIndexMatch: ' + indexRefName);
+
+			if (indexMatchData.totalKeyCount === indexMatchData.matchedKeyCount) {
+				// Found an optimal index, do not check for any more
+				break;
+			}
 		}
 	}
 	op.time('checkIndexes');
 
 	// Sort array descending on index key count (effectively a measure of relevance to the query)
-	if (analysis.usesIndex.length > 1) {
+	if (analysis.indexMatch.length > 1) {
 		op.time('indexSort');
-		analysis.usesIndex.sort(function (a, b) {
+		analysis.indexMatch.sort(function (a, b) {
 			if (a.keyData.totalKeyCount === a.keyData.matchedKeyCount) {
 				// This index matches all query keys so will return the correct result instantly
-				return 1;
+				return -1;
 			}
 
 			if (b.keyData.totalKeyCount === b.keyData.matchedKeyCount) {
 				// This index matches all query keys so will return the correct result instantly
-				return -1;
+				return 1;
 			}
 
 			// The indexes don't match all the query keys, check if both these indexes match
@@ -2032,7 +2051,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			// of view, but can still be compared by the number of records they return from
 			// the query. The fewer records they return the better so order by record count
 			if (a.keyData.matchedKeyCount === b.keyData.matchedKeyCount) {
-				return b.lookup.length - a.lookup.length;
+				return a.lookup.length - b.lookup.length;
 			}
 
 			// The indexes don't match all the query keys and they don't have matching key
@@ -2042,9 +2061,6 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		});
 		op.time('indexSort');
 	}
-
-	// TODO: Check if the keycounts match for any indexes and if so, check their record length
-	// TODO: to determine the most effective index to use
 
 	// Check for join data
 	if (options.join) {
@@ -5805,14 +5821,16 @@ Operation.prototype.time = function (section) {
 		if (!processObj.startMs) {
 			// Timer started
 			processObj.startMs = new Date().getTime();
+			processObj.stepObj = {
+				name: section
+			};
+
+			this._data.steps.push(processObj.stepObj);
 		} else {
 			processObj.stopMs = new Date().getTime();
 			processObj.totalMs = processObj.stopMs - processObj.startMs;
-
-			this._data.steps.push({
-				name: section,
-				totalMs: processObj.totalMs
-			});
+			processObj.stepObj.totalMs = processObj.totalMs;
+			delete processObj.stepObj;
 		}
 
 		return this;
@@ -5997,29 +6015,27 @@ Path.prototype.countObjectPaths = function (testKeys, testObj) {
 		matchedKeyCount = 0,
 		totalKeyCount = 0,
 		i;
-debugger;
+
 	for (i in testObj) {
 		if (testObj.hasOwnProperty(i)) {
-			if (testObj[i] !== undefined) {
-				if (typeof testObj[i] !== 'object') {
-					totalKeyCount++;
-				}
-			}
+			if (typeof testObj[i] === 'object') {
+				// The test / query object key is an object, recurse
+				matchData = this.countObjectPaths(testKeys[i], testObj[i]);
 
-			if (testKeys[i] !== undefined) {
-				if (typeof testObj[i] === 'object') {
-					// Recurse object
-					matchData = this.countObjectPaths(testKeys[i], testObj[i]);
+				matchedKeys[i] = matchData.matchedKeys;
+				totalKeyCount += matchData.totalKeyCount;
+				matchedKeyCount += matchData.matchedKeyCount;
+			} else {
+				// The test / query object has a property that is not an object so add it as a key
+				totalKeyCount++;
 
-					matchedKeys[i] = matchData.matchedKeys;
-					totalKeyCount += matchData.totalKeyCount;
-					matchedKeyCount += matchData.matchedKeyCount;
-				} else {
+				// Check if the test keys also have this key and it is also not an object
+				if (testKeys && testKeys[i] && typeof testKeys[i] !== 'object') {
 					matchedKeys[i] = true;
 					matchedKeyCount++;
+				} else {
+					matchedKeys[i] = false;
 				}
-			} else {
-				matchedKeys[i] = false;
 			}
 		}
 	}

@@ -47,20 +47,42 @@ test("Index - Index.lookup() :: Test index query detection", function () {
 	base.dataUp();
 
 	user.ensureIndex({
-		arr: {
-			val: 1
-		},
 		name: 1
 	}, {
 		unique: true,
-		name: 'testIndex'
+		name: 'testName'
+	});
+
+	user.ensureIndex({
+		arr: {
+			val: 1
+		}
+	}, {
+		unique: true,
+		name: 'testArr'
+	});
+
+	user.ensureIndex({
+		orgId: 1
+	}, {
+		unique: false,
+		name: 'testOrgId'
+	});
+
+	user.ensureIndex({
+		orgId: 1,
+		arr: {
+			val: 1
+		}
+	}, {
+		unique: false,
+		name: 'testArrValAndOrgId'
 	});
 
 	var a = user.explain({
 		arr: {
 			val: 5
 		},
-		name: 'Dean',
 		orgId: "3"
 	});
 
