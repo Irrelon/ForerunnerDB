@@ -1,14 +1,14 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
-	CollectionGroup = require('../lib/ForerunnerDB.CollectionGroup'),
-	View = require('../lib/ForerunnerDB.View'),
-	OldView = require('../lib/ForerunnerDB.OldView'),
-	OldViewBind = require('../lib/ForerunnerDB.OldView.Bind'),
-	Highcharts = require('../lib/ForerunnerDB.Highcharts'),
-	Persist = require('../lib/ForerunnerDB.Persist');
+var ForerunnerDB = require('../lib/Core'),
+	CollectionGroup = require('../lib/CollectionGroup'),
+	View = require('../lib/View'),
+	OldView = require('../lib/OldView'),
+	OldViewBind = require('../lib/OldView.Bind'),
+	Highcharts = require('../lib/Highcharts'),
+	Persist = require('../lib/Persist');
 
 module.exports = ForerunnerDB;
-},{"../lib/ForerunnerDB.CollectionGroup":3,"../lib/ForerunnerDB.Core":4,"../lib/ForerunnerDB.Highcharts":6,"../lib/ForerunnerDB.OldView":11,"../lib/ForerunnerDB.OldView.Bind":10,"../lib/ForerunnerDB.Persist":15,"../lib/ForerunnerDB.View":17}],2:[function(require,module,exports){
+},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/OldView":11,"../lib/OldView.Bind":10,"../lib/Persist":15,"../lib/View":17}],2:[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -18,7 +18,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 
 /**
  * Collection object used to store data.
@@ -67,12 +67,12 @@ Collection.prototype.init = function (name) {
 
 Shared.modules.Collection = Collection;
 
-Overload = require('./ForerunnerDB.Overload');
-Metrics = require('./ForerunnerDB.Metrics');
-KeyValueStore = require('./ForerunnerDB.KeyValueStore');
-Path = require('./ForerunnerDB.Path');
-Index = require('./ForerunnerDB.Index');
-Crc = require('./ForerunnerDB.Crc');
+Overload = require('./Overload');
+Metrics = require('./Metrics');
+KeyValueStore = require('./KeyValueStore');
+Path = require('./Path');
+Index = require('./Index');
+Crc = require('./Crc');
 Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
@@ -2906,7 +2906,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./ForerunnerDB.Crc":5,"./ForerunnerDB.Index":7,"./ForerunnerDB.KeyValueStore":8,"./ForerunnerDB.Metrics":9,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],3:[function(require,module,exports){
+},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":13,"./Path":14,"./Shared":16}],3:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -2914,7 +2914,7 @@ var Shared,
 	Collection,
 	Overload;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
@@ -2947,8 +2947,8 @@ CollectionGroup.prototype.init = function (name) {
 
 Shared.modules.CollectionGroup = CollectionGroup;
 
-Collection = require('./ForerunnerDB.Collection');
-Overload = require('./ForerunnerDB.Overload');
+Collection = require('./Collection');
+Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3295,7 +3295,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],4:[function(require,module,exports){
+},{"./Collection":2,"./Overload":13,"./Shared":16}],4:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3328,7 +3328,7 @@ var Shared,
 	Metrics,
 	Crc;
 
-Shared = require('./ForerunnerDB.Shared.js');
+Shared = require('./Shared.js');
 
 /**
  * The main ForerunnerDB core object.
@@ -3345,10 +3345,10 @@ Core.prototype.init = function () {
 
 Shared.modules.Core = Core;
 
-Overload = require('./ForerunnerDB.Overload.js');
-Collection = require('./ForerunnerDB.Collection.js');
-Metrics = require('./ForerunnerDB.Metrics.js');
-Crc = require('./ForerunnerDB.Crc.js');
+Overload = require('./Overload.js');
+Collection = require('./Collection.js');
+Metrics = require('./Metrics.js');
+Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3599,7 +3599,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./ForerunnerDB.Collection.js":2,"./ForerunnerDB.Crc.js":5,"./ForerunnerDB.Metrics.js":9,"./ForerunnerDB.Overload.js":13,"./ForerunnerDB.Shared.js":16}],5:[function(require,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":13,"./Shared.js":16}],5:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3633,7 +3633,7 @@ var Shared,
 	Collection,
 	CollectionInit;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 
 /**
  * The constructor.
@@ -3886,9 +3886,9 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./ForerunnerDB.Shared":16}],7:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared'),
-	Path = require('./ForerunnerDB.Path');
+},{"./Shared":16}],7:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -4245,8 +4245,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],8:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared');
+},{"./Path":14,"./Shared":16}],8:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -4463,9 +4463,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./ForerunnerDB.Shared":16}],9:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared'),
-	Operation = require('./ForerunnerDB.Operation');
+},{"./Shared":16}],9:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Operation = require('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -4534,14 +4534,14 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./ForerunnerDB.Operation":12,"./ForerunnerDB.Shared":16}],10:[function(require,module,exports){
+},{"./Operation":12,"./Shared":16}],10:[function(require,module,exports){
 // Grab the view class
 var Shared,
 	Core,
 	OldView,
 	OldViewInit;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 Core = Shared.modules.Core;
 OldView = Shared.modules.OldView;
 OldViewInit = OldView.prototype.init;
@@ -4945,7 +4945,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./ForerunnerDB.Shared":16}],11:[function(require,module,exports){
+},{"./Shared":16}],11:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -4956,7 +4956,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 
 /**
  * The view constructor.
@@ -5003,11 +5003,11 @@ OldView.prototype.init = function (viewName) {
 
 Shared.modules.OldView = OldView;
 
-CollectionGroup = require('./ForerunnerDB.CollectionGroup');
-Collection = require('./ForerunnerDB.Collection');
+CollectionGroup = require('./CollectionGroup');
+Collection = require('./Collection');
 CollectionInit = Collection.prototype.init;
 CollectionGroupInit = CollectionGroup.prototype.init;
-Overload = require('./ForerunnerDB.Overload');
+Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
@@ -5749,9 +5749,9 @@ Core.prototype.oldViews = function () {
 };
 
 module.exports = OldView;
-},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],12:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared'),
-	Path = require('./ForerunnerDB.Path');
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],12:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -5892,8 +5892,8 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./ForerunnerDB.Path":14,"./ForerunnerDB.Shared":16}],13:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared');
+},{"./Path":14,"./Shared":16}],13:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Allows a method to be overloaded.
@@ -5923,8 +5923,8 @@ var Overload = function (arr) {
 Shared.modules.Overload = Overload;
 
 module.exports = Overload;
-},{"./ForerunnerDB.Shared":16}],14:[function(require,module,exports){
-var Shared = require('./ForerunnerDB.Shared');
+},{"./Shared":16}],14:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -6332,9 +6332,9 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./ForerunnerDB.Shared":16}],15:[function(require,module,exports){
+},{"./Shared":16}],15:[function(require,module,exports){
 // Import external names locally
-var Shared = require('./ForerunnerDB.Shared'),
+var Shared = require('./Shared'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -6360,11 +6360,11 @@ Persist.prototype.init = function (db) {
 Shared.modules.Persist = Persist;
 
 Core = Shared.modules.Core;
-Collection = require('./ForerunnerDB.Collection');
+Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
-CollectionGroup = require('./ForerunnerDB.CollectionGroup');
+CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = require('./ForerunnerDB.Overload');
+Overload = require('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
@@ -6508,7 +6508,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}],16:[function(require,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],16:[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -6526,7 +6526,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = require('./ForerunnerDB.Shared');
+Shared = require('./Shared');
 
 /**
  * The view constructor.
@@ -6553,9 +6553,9 @@ View.prototype.init = function (name, query, options) {
 
 Shared.modules.View = View;
 
-Collection = require('./ForerunnerDB.Collection');
-CollectionGroup = require('./ForerunnerDB.CollectionGroup');
-Overload = require('./ForerunnerDB.Overload');
+Collection = require('./Collection');
+CollectionGroup = require('./CollectionGroup');
+Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -7185,5 +7185,5 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./ForerunnerDB.Collection":2,"./ForerunnerDB.CollectionGroup":3,"./ForerunnerDB.Overload":13,"./ForerunnerDB.Shared":16}]},{},[1])(1)
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}]},{},[1])(1)
 });
