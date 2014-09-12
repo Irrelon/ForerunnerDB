@@ -42,7 +42,7 @@ test("Index - Collection.index() :: Test lookup of index from collection by name
 	base.dbDown();
 });
 
-test("Index - Index.lookup() :: Test index query detection", function () {
+test("Index - Index.lookup() :: Test optimal query index detection", function () {
 	base.dbUp();
 	base.dataUp();
 
