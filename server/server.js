@@ -1,7 +1,7 @@
 var Server = (function () {
 	// Require FDB
-	var ForerunnerDB = require('../lib/ForerunnerDB.Core'),
-		Server = require('../lib/ForerunnerDB.Server.js');
+	var ForerunnerDB = require('../lib/Core'),
+		Server = require('../lib/Server.js');
 
 	// Instantiate FDB
 	var db = new ForerunnerDB();
