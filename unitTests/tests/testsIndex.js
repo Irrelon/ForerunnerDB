@@ -271,3 +271,40 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 
 	base.dbDown();
 });
+
+test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
+	base.dbUp();
+
+	var coll,
+		result,
+		insert1,
+		insert2,
+		find,
+		index;
+
+	coll = db.collection('temp').truncate();
+	coll.setData([
+		{"_id": "139", "eventId": "139", "nthRepeat": 0, "name": "Test", "notes": "wfewef", "startDateTime": "2014-09-01T23:00:00+00:00", "endDateTime": "2014-09-03T23:00:00+00:00", "reminderType": "", "reminderTime": 0, "isRepeatedEvent": false, "repeatContext": null, "repeatDate": null, "repeatForever": 0, "creator": {"organisationUserId": "63614", "dateTime": "2014-09-01T13:01:54+00:00"}, "updated": [], "_s": "Test:::01:::09:00", "attendees": [
+			{"contactId": "78254", "selectedUserId": "79255"},
+			{"contactId": "78255", "selectedUserId": "79255"}
+		]}
+	]);
+
+	result = coll.ensureIndex({
+		attendees: {
+			selectedUserId: 1
+		}
+	}, {
+		unique: true,
+		name: 'uniqueName'
+	});
+
+	insert1 = coll.insert({
+		name: 'Bob'
+	});
+
+	ok(find.length === 1, "Check data length");
+	ok(index.size() === 1, "Check index size");
+
+	base.dbDown();
+});
