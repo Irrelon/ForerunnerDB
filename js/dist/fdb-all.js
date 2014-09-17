@@ -3505,25 +3505,28 @@ Core.prototype.emit = function(event, data) {
  * @return {String}
  */
 Core.prototype.objectId = function (str) {
-	var id;
+	var id,
+		val,
+		count,
+		pow = Math.pow(10, 17),
+		i;
 
 	if (!str) {
 		Shared.idCounter++;
 
 		id = (Shared.idCounter + (
-			Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17)
+			Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow
 			)
-			).toString(16);
+		).toString(16);
 	} else {
-		var val = 0,
-			count = str.length,
-			i;
+		val = 0;
+		count = str.length;
 
 		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * Math.pow(10, 17);
+			val += str.charCodeAt(i) * pow;
 		}
 
 		id = val.toString(16);
@@ -6387,7 +6390,11 @@ Persist.prototype.save = function (key, data, callback) {
 				val = 'raw::fdb::' + data;
 			}
 
-			localStorage.setItem(key, val);
+			try {
+				localStorage.setItem(key, val);
+			} catch (e) {
+				if (callback) { callback(e); }
+			}
 
 			if (callback) { callback(false); }
 			break;
@@ -6403,7 +6410,11 @@ Persist.prototype.load = function (key, callback) {
 
 	switch (this.mode()) {
 		case 'localStorage':
-			val = localStorage.getItem(key);
+			try {
+				val = localStorage.getItem(key);
+			} catch (e) {
+				callback(e, null);
+			}
 
 			if (val) {
 				parts = val.split('::fdb::');
@@ -6429,7 +6440,12 @@ Persist.prototype.load = function (key, callback) {
 Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localStorage':
-			localStorage.removeItem(key);
+			try {
+				localStorage.removeItem(key);
+			} catch (e) {
+				if (callback) { callback(e); }
+			}
+
 			if (callback) { callback(false); }
 			break;
 	}
