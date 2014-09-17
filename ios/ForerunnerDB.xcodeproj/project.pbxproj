@@ -7,165 +7,168 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		541414E319AC6A2A005F9D60 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 541414E219AC6A2A005F9D60 /* Foundation.framework */; };
-		541414F119AC6A2A005F9D60 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 541414F019AC6A2A005F9D60 /* XCTest.framework */; };
-		541414F219AC6A2A005F9D60 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 541414E219AC6A2A005F9D60 /* Foundation.framework */; };
-		541414F419AC6A2A005F9D60 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 541414F319AC6A2A005F9D60 /* UIKit.framework */; };
-		541414F719AC6A2A005F9D60 /* libForerunnerDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 541414DF19AC6A2A005F9D60 /* libForerunnerDB.a */; };
-		541414FD19AC6A2A005F9D60 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 541414FB19AC6A2A005F9D60 /* InfoPlist.strings */; };
-		541414FF19AC6A2A005F9D60 /* ForerunnerDBTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 541414FE19AC6A2A005F9D60 /* ForerunnerDBTests.m */; };
-		546F519B19AC6C91007DD89F /* ForerunnerDB_Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 546F519619AC6C91007DD89F /* ForerunnerDB_Collection.m */; };
-		546F519C19AC6C91007DD89F /* ForerunnerDB_Index.m in Sources */ = {isa = PBXBuildFile; fileRef = 546F519819AC6C91007DD89F /* ForerunnerDB_Index.m */; };
-		546F519D19AC6C91007DD89F /* ForerunnerDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 546F519A19AC6C91007DD89F /* ForerunnerDB.m */; };
-		546F519E19AC6CA6007DD89F /* ForerunnerDB.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546F519919AC6C91007DD89F /* ForerunnerDB.h */; };
-		546F519F19AC6CA9007DD89F /* ForerunnerDB_Index.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546F519719AC6C91007DD89F /* ForerunnerDB_Index.h */; };
-		546F51A019AC6CAB007DD89F /* ForerunnerDB_Collection.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 546F519519AC6C91007DD89F /* ForerunnerDB_Collection.h */; };
-		546F51A319AC6E48007DD89F /* NSObject+NSObject_Type.m in Sources */ = {isa = PBXBuildFile; fileRef = 546F51A219AC6E48007DD89F /* NSObject+NSObject_Type.m */; };
-		6C699FE685544DF588FBF4CD /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 390B4E216771475AACF6C951 /* libPods.a */; };
-		7A6EE42F54504D0DA5C6D10C /* libPods.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 390B4E216771475AACF6C951 /* libPods.a */; };
+		5415116719C9ADDB005A6B46 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5415116619C9ADDB005A6B46 /* Foundation.framework */; };
+		5415116C19C9ADDB005A6B46 /* ForerunnerDB.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5415116B19C9ADDB005A6B46 /* ForerunnerDB.h */; };
+		5415116E19C9ADDB005A6B46 /* ForerunnerDB.m in Sources */ = {isa = PBXBuildFile; fileRef = 5415116D19C9ADDB005A6B46 /* ForerunnerDB.m */; };
+		5415117519C9ADDB005A6B46 /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5415117419C9ADDB005A6B46 /* XCTest.framework */; };
+		5415117619C9ADDB005A6B46 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5415116619C9ADDB005A6B46 /* Foundation.framework */; };
+		5415117819C9ADDB005A6B46 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5415117719C9ADDB005A6B46 /* UIKit.framework */; };
+		5415117B19C9ADDB005A6B46 /* libForerunnerDB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 5415116319C9ADDB005A6B46 /* libForerunnerDB.a */; };
+		5415118119C9ADDB005A6B46 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5415117F19C9ADDB005A6B46 /* InfoPlist.strings */; };
+		5415118319C9ADDB005A6B46 /* ForerunnerDBTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5415118219C9ADDB005A6B46 /* ForerunnerDBTests.m */; };
+		5461F2E719C9AE410049D73E /* ForerunnerDB_Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2E419C9AE410049D73E /* ForerunnerDB_Collection.m */; };
+		5461F2E819C9AE410049D73E /* ForerunnerDB_Index.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2E619C9AE410049D73E /* ForerunnerDB_Index.m */; };
+		5461F2F119C9AE570049D73E /* BaseConversion.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2EA19C9AE570049D73E /* BaseConversion.m */; };
+		5461F2F219C9AE570049D73E /* EventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2EC19C9AE570049D73E /* EventEmitter.m */; };
+		5461F2F319C9AE570049D73E /* NSObject+NSObject_Type.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2EE19C9AE570049D73E /* NSObject+NSObject_Type.m */; };
+		5461F2F419C9AE570049D73E /* ObjectId.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2F019C9AE570049D73E /* ObjectId.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		541414F519AC6A2A005F9D60 /* PBXContainerItemProxy */ = {
+		5415117919C9ADDB005A6B46 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 541414D719AC6A2A005F9D60 /* Project object */;
+			containerPortal = 5415115B19C9ADDB005A6B46 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 541414DE19AC6A2A005F9D60;
+			remoteGlobalIDString = 5415116219C9ADDB005A6B46;
 			remoteInfo = ForerunnerDB;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		541414DD19AC6A2A005F9D60 /* CopyFiles */ = {
+		5415116119C9ADDB005A6B46 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "include/$(PRODUCT_NAME)";
 			dstSubfolderSpec = 16;
 			files = (
-				546F519E19AC6CA6007DD89F /* ForerunnerDB.h in CopyFiles */,
-				546F519F19AC6CA9007DD89F /* ForerunnerDB_Index.h in CopyFiles */,
-				546F51A019AC6CAB007DD89F /* ForerunnerDB_Collection.h in CopyFiles */,
+				5415116C19C9ADDB005A6B46 /* ForerunnerDB.h in CopyFiles */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		09CD570E5BEC4424B51FB35B /* Pods.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = Pods.xcconfig; path = Pods/Pods.xcconfig; sourceTree = "<group>"; };
-		390B4E216771475AACF6C951 /* libPods.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libPods.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		541414DF19AC6A2A005F9D60 /* libForerunnerDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libForerunnerDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		541414E219AC6A2A005F9D60 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		541414E619AC6A2A005F9D60 /* ForerunnerDB-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ForerunnerDB-Prefix.pch"; sourceTree = "<group>"; };
-		541414EF19AC6A2A005F9D60 /* ForerunnerDBTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForerunnerDBTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		541414F019AC6A2A005F9D60 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
-		541414F319AC6A2A005F9D60 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
-		541414FA19AC6A2A005F9D60 /* ForerunnerDBTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ForerunnerDBTests-Info.plist"; sourceTree = "<group>"; };
-		541414FC19AC6A2A005F9D60 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		541414FE19AC6A2A005F9D60 /* ForerunnerDBTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDBTests.m; sourceTree = "<group>"; };
-		546F519519AC6C91007DD89F /* ForerunnerDB_Collection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB_Collection.h; sourceTree = "<group>"; };
-		546F519619AC6C91007DD89F /* ForerunnerDB_Collection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB_Collection.m; sourceTree = "<group>"; };
-		546F519719AC6C91007DD89F /* ForerunnerDB_Index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB_Index.h; sourceTree = "<group>"; };
-		546F519819AC6C91007DD89F /* ForerunnerDB_Index.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB_Index.m; sourceTree = "<group>"; };
-		546F519919AC6C91007DD89F /* ForerunnerDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB.h; sourceTree = "<group>"; };
-		546F519A19AC6C91007DD89F /* ForerunnerDB.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB.m; sourceTree = "<group>"; };
-		546F51A119AC6E48007DD89F /* NSObject+NSObject_Type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+NSObject_Type.h"; sourceTree = "<group>"; };
-		546F51A219AC6E48007DD89F /* NSObject+NSObject_Type.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+NSObject_Type.m"; sourceTree = "<group>"; };
+		5415116319C9ADDB005A6B46 /* libForerunnerDB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libForerunnerDB.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		5415116619C9ADDB005A6B46 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		5415116A19C9ADDB005A6B46 /* ForerunnerDB-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "ForerunnerDB-Prefix.pch"; sourceTree = "<group>"; };
+		5415116B19C9ADDB005A6B46 /* ForerunnerDB.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB.h; sourceTree = "<group>"; };
+		5415116D19C9ADDB005A6B46 /* ForerunnerDB.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB.m; sourceTree = "<group>"; };
+		5415117319C9ADDB005A6B46 /* ForerunnerDBTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ForerunnerDBTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		5415117419C9ADDB005A6B46 /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		5415117719C9ADDB005A6B46 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = DEVELOPER_DIR; };
+		5415117E19C9ADDB005A6B46 /* ForerunnerDBTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ForerunnerDBTests-Info.plist"; sourceTree = "<group>"; };
+		5415118019C9ADDB005A6B46 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5415118219C9ADDB005A6B46 /* ForerunnerDBTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDBTests.m; sourceTree = "<group>"; };
+		5461F2E319C9AE410049D73E /* ForerunnerDB_Collection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB_Collection.h; sourceTree = "<group>"; };
+		5461F2E419C9AE410049D73E /* ForerunnerDB_Collection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB_Collection.m; sourceTree = "<group>"; };
+		5461F2E519C9AE410049D73E /* ForerunnerDB_Index.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ForerunnerDB_Index.h; sourceTree = "<group>"; };
+		5461F2E619C9AE410049D73E /* ForerunnerDB_Index.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB_Index.m; sourceTree = "<group>"; };
+		5461F2E919C9AE570049D73E /* BaseConversion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BaseConversion.h; sourceTree = "<group>"; };
+		5461F2EA19C9AE570049D73E /* BaseConversion.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BaseConversion.m; sourceTree = "<group>"; };
+		5461F2EB19C9AE570049D73E /* EventEmitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventEmitter.h; sourceTree = "<group>"; };
+		5461F2EC19C9AE570049D73E /* EventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventEmitter.m; sourceTree = "<group>"; };
+		5461F2ED19C9AE570049D73E /* NSObject+NSObject_Type.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSObject+NSObject_Type.h"; sourceTree = "<group>"; };
+		5461F2EE19C9AE570049D73E /* NSObject+NSObject_Type.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+NSObject_Type.m"; sourceTree = "<group>"; };
+		5461F2EF19C9AE570049D73E /* ObjectId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectId.h; sourceTree = "<group>"; };
+		5461F2F019C9AE570049D73E /* ObjectId.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjectId.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		541414DC19AC6A2A005F9D60 /* Frameworks */ = {
+		5415116019C9ADDB005A6B46 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				541414E319AC6A2A005F9D60 /* Foundation.framework in Frameworks */,
-				6C699FE685544DF588FBF4CD /* libPods.a in Frameworks */,
+				5415116719C9ADDB005A6B46 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		541414EC19AC6A2A005F9D60 /* Frameworks */ = {
+		5415117019C9ADDB005A6B46 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				541414F119AC6A2A005F9D60 /* XCTest.framework in Frameworks */,
-				541414F419AC6A2A005F9D60 /* UIKit.framework in Frameworks */,
-				541414F219AC6A2A005F9D60 /* Foundation.framework in Frameworks */,
-				541414F719AC6A2A005F9D60 /* libForerunnerDB.a in Frameworks */,
-				7A6EE42F54504D0DA5C6D10C /* libPods.a in Frameworks */,
+				5415117519C9ADDB005A6B46 /* XCTest.framework in Frameworks */,
+				5415117819C9ADDB005A6B46 /* UIKit.framework in Frameworks */,
+				5415117619C9ADDB005A6B46 /* Foundation.framework in Frameworks */,
+				5415117B19C9ADDB005A6B46 /* libForerunnerDB.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		541414D619AC6A2A005F9D60 = {
+		5415115A19C9ADDB005A6B46 = {
 			isa = PBXGroup;
 			children = (
-				541414E419AC6A2A005F9D60 /* ForerunnerDB */,
-				541414F819AC6A2A005F9D60 /* ForerunnerDBTests */,
-				541414E119AC6A2A005F9D60 /* Frameworks */,
-				541414E019AC6A2A005F9D60 /* Products */,
-				09CD570E5BEC4424B51FB35B /* Pods.xcconfig */,
+				5415116819C9ADDB005A6B46 /* ForerunnerDB */,
+				5415117C19C9ADDB005A6B46 /* ForerunnerDBTests */,
+				5415116519C9ADDB005A6B46 /* Frameworks */,
+				5415116419C9ADDB005A6B46 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		541414E019AC6A2A005F9D60 /* Products */ = {
+		5415116419C9ADDB005A6B46 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				541414DF19AC6A2A005F9D60 /* libForerunnerDB.a */,
-				541414EF19AC6A2A005F9D60 /* ForerunnerDBTests.xctest */,
+				5415116319C9ADDB005A6B46 /* libForerunnerDB.a */,
+				5415117319C9ADDB005A6B46 /* ForerunnerDBTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		541414E119AC6A2A005F9D60 /* Frameworks */ = {
+		5415116519C9ADDB005A6B46 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				541414E219AC6A2A005F9D60 /* Foundation.framework */,
-				541414F019AC6A2A005F9D60 /* XCTest.framework */,
-				541414F319AC6A2A005F9D60 /* UIKit.framework */,
-				390B4E216771475AACF6C951 /* libPods.a */,
+				5415116619C9ADDB005A6B46 /* Foundation.framework */,
+				5415117419C9ADDB005A6B46 /* XCTest.framework */,
+				5415117719C9ADDB005A6B46 /* UIKit.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		541414E419AC6A2A005F9D60 /* ForerunnerDB */ = {
+		5415116819C9ADDB005A6B46 /* ForerunnerDB */ = {
 			isa = PBXGroup;
 			children = (
-				546F519519AC6C91007DD89F /* ForerunnerDB_Collection.h */,
-				546F519619AC6C91007DD89F /* ForerunnerDB_Collection.m */,
-				546F519719AC6C91007DD89F /* ForerunnerDB_Index.h */,
-				546F519819AC6C91007DD89F /* ForerunnerDB_Index.m */,
-				546F519919AC6C91007DD89F /* ForerunnerDB.h */,
-				546F519A19AC6C91007DD89F /* ForerunnerDB.m */,
-				541414E519AC6A2A005F9D60 /* Supporting Files */,
+				5461F2E319C9AE410049D73E /* ForerunnerDB_Collection.h */,
+				5461F2E419C9AE410049D73E /* ForerunnerDB_Collection.m */,
+				5461F2E519C9AE410049D73E /* ForerunnerDB_Index.h */,
+				5461F2E619C9AE410049D73E /* ForerunnerDB_Index.m */,
+				5415116B19C9ADDB005A6B46 /* ForerunnerDB.h */,
+				5415116D19C9ADDB005A6B46 /* ForerunnerDB.m */,
+				5415116919C9ADDB005A6B46 /* Supporting Files */,
 			);
 			path = ForerunnerDB;
 			sourceTree = "<group>";
 		};
-		541414E519AC6A2A005F9D60 /* Supporting Files */ = {
+		5415116919C9ADDB005A6B46 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				546F51A119AC6E48007DD89F /* NSObject+NSObject_Type.h */,
-				546F51A219AC6E48007DD89F /* NSObject+NSObject_Type.m */,
-				541414E619AC6A2A005F9D60 /* ForerunnerDB-Prefix.pch */,
+				5461F2E919C9AE570049D73E /* BaseConversion.h */,
+				5461F2EA19C9AE570049D73E /* BaseConversion.m */,
+				5461F2EB19C9AE570049D73E /* EventEmitter.h */,
+				5461F2EC19C9AE570049D73E /* EventEmitter.m */,
+				5461F2ED19C9AE570049D73E /* NSObject+NSObject_Type.h */,
+				5461F2EE19C9AE570049D73E /* NSObject+NSObject_Type.m */,
+				5461F2EF19C9AE570049D73E /* ObjectId.h */,
+				5461F2F019C9AE570049D73E /* ObjectId.m */,
+				5415116A19C9ADDB005A6B46 /* ForerunnerDB-Prefix.pch */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		541414F819AC6A2A005F9D60 /* ForerunnerDBTests */ = {
+		5415117C19C9ADDB005A6B46 /* ForerunnerDBTests */ = {
 			isa = PBXGroup;
 			children = (
-				541414FE19AC6A2A005F9D60 /* ForerunnerDBTests.m */,
-				541414F919AC6A2A005F9D60 /* Supporting Files */,
+				5415118219C9ADDB005A6B46 /* ForerunnerDBTests.m */,
+				5415117D19C9ADDB005A6B46 /* Supporting Files */,
 			);
 			path = ForerunnerDBTests;
 			sourceTree = "<group>";
 		};
-		541414F919AC6A2A005F9D60 /* Supporting Files */ = {
+		5415117D19C9ADDB005A6B46 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				541414FA19AC6A2A005F9D60 /* ForerunnerDBTests-Info.plist */,
-				541414FB19AC6A2A005F9D60 /* InfoPlist.strings */,
+				5415117E19C9ADDB005A6B46 /* ForerunnerDBTests-Info.plist */,
+				5415117F19C9ADDB005A6B46 /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -173,15 +176,13 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		541414DE19AC6A2A005F9D60 /* ForerunnerDB */ = {
+		5415116219C9ADDB005A6B46 /* ForerunnerDB */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5414150219AC6A2A005F9D60 /* Build configuration list for PBXNativeTarget "ForerunnerDB" */;
+			buildConfigurationList = 5415118619C9ADDB005A6B46 /* Build configuration list for PBXNativeTarget "ForerunnerDB" */;
 			buildPhases = (
-				328ADD0C2EBD4812A93A8665 /* Check Pods Manifest.lock */,
-				541414DB19AC6A2A005F9D60 /* Sources */,
-				541414DC19AC6A2A005F9D60 /* Frameworks */,
-				541414DD19AC6A2A005F9D60 /* CopyFiles */,
-				A5751828D3D14FFA93149E6A /* Copy Pods Resources */,
+				5415115F19C9ADDB005A6B46 /* Sources */,
+				5415116019C9ADDB005A6B46 /* Frameworks */,
+				5415116119C9ADDB005A6B46 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -189,165 +190,103 @@
 			);
 			name = ForerunnerDB;
 			productName = ForerunnerDB;
-			productReference = 541414DF19AC6A2A005F9D60 /* libForerunnerDB.a */;
+			productReference = 5415116319C9ADDB005A6B46 /* libForerunnerDB.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		541414EE19AC6A2A005F9D60 /* ForerunnerDBTests */ = {
+		5415117219C9ADDB005A6B46 /* ForerunnerDBTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 5414150519AC6A2A005F9D60 /* Build configuration list for PBXNativeTarget "ForerunnerDBTests" */;
+			buildConfigurationList = 5415118919C9ADDB005A6B46 /* Build configuration list for PBXNativeTarget "ForerunnerDBTests" */;
 			buildPhases = (
-				7DDBB042C1D74C4D9E24225E /* Check Pods Manifest.lock */,
-				541414EB19AC6A2A005F9D60 /* Sources */,
-				541414EC19AC6A2A005F9D60 /* Frameworks */,
-				541414ED19AC6A2A005F9D60 /* Resources */,
-				D847985509AE4CA19325B2AE /* Copy Pods Resources */,
+				5415116F19C9ADDB005A6B46 /* Sources */,
+				5415117019C9ADDB005A6B46 /* Frameworks */,
+				5415117119C9ADDB005A6B46 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				541414F619AC6A2A005F9D60 /* PBXTargetDependency */,
+				5415117A19C9ADDB005A6B46 /* PBXTargetDependency */,
 			);
 			name = ForerunnerDBTests;
 			productName = ForerunnerDBTests;
-			productReference = 541414EF19AC6A2A005F9D60 /* ForerunnerDBTests.xctest */;
+			productReference = 5415117319C9ADDB005A6B46 /* ForerunnerDBTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		541414D719AC6A2A005F9D60 /* Project object */ = {
+		5415115B19C9ADDB005A6B46 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0510;
 				ORGANIZATIONNAME = "Irrelon Software Limited";
 			};
-			buildConfigurationList = 541414DA19AC6A2A005F9D60 /* Build configuration list for PBXProject "ForerunnerDB" */;
+			buildConfigurationList = 5415115E19C9ADDB005A6B46 /* Build configuration list for PBXProject "ForerunnerDB" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
 			);
-			mainGroup = 541414D619AC6A2A005F9D60;
-			productRefGroup = 541414E019AC6A2A005F9D60 /* Products */;
+			mainGroup = 5415115A19C9ADDB005A6B46;
+			productRefGroup = 5415116419C9ADDB005A6B46 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				541414DE19AC6A2A005F9D60 /* ForerunnerDB */,
-				541414EE19AC6A2A005F9D60 /* ForerunnerDBTests */,
+				5415116219C9ADDB005A6B46 /* ForerunnerDB */,
+				5415117219C9ADDB005A6B46 /* ForerunnerDBTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		541414ED19AC6A2A005F9D60 /* Resources */ = {
+		5415117119C9ADDB005A6B46 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				541414FD19AC6A2A005F9D60 /* InfoPlist.strings in Resources */,
+				5415118119C9ADDB005A6B46 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		328ADD0C2EBD4812A93A8665 /* Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		7DDBB042C1D74C4D9E24225E /* Check Pods Manifest.lock */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Check Pods Manifest.lock";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
-			showEnvVarsInLog = 0;
-		};
-		A5751828D3D14FFA93149E6A /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Pods-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-		D847985509AE4CA19325B2AE /* Copy Pods Resources */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			name = "Copy Pods Resources";
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "\"${SRCROOT}/Pods/Pods-resources.sh\"\n";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
-		541414DB19AC6A2A005F9D60 /* Sources */ = {
+		5415115F19C9ADDB005A6B46 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				546F519D19AC6C91007DD89F /* ForerunnerDB.m in Sources */,
-				546F519C19AC6C91007DD89F /* ForerunnerDB_Index.m in Sources */,
-				546F519B19AC6C91007DD89F /* ForerunnerDB_Collection.m in Sources */,
-				546F51A319AC6E48007DD89F /* NSObject+NSObject_Type.m in Sources */,
+				5461F2F419C9AE570049D73E /* ObjectId.m in Sources */,
+				5461F2F119C9AE570049D73E /* BaseConversion.m in Sources */,
+				5461F2E819C9AE410049D73E /* ForerunnerDB_Index.m in Sources */,
+				5415116E19C9ADDB005A6B46 /* ForerunnerDB.m in Sources */,
+				5461F2E719C9AE410049D73E /* ForerunnerDB_Collection.m in Sources */,
+				5461F2F219C9AE570049D73E /* EventEmitter.m in Sources */,
+				5461F2F319C9AE570049D73E /* NSObject+NSObject_Type.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		541414EB19AC6A2A005F9D60 /* Sources */ = {
+		5415116F19C9ADDB005A6B46 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				541414FF19AC6A2A005F9D60 /* ForerunnerDBTests.m in Sources */,
+				5415118319C9ADDB005A6B46 /* ForerunnerDBTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		541414F619AC6A2A005F9D60 /* PBXTargetDependency */ = {
+		5415117A19C9ADDB005A6B46 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 541414DE19AC6A2A005F9D60 /* ForerunnerDB */;
-			targetProxy = 541414F519AC6A2A005F9D60 /* PBXContainerItemProxy */;
+			target = 5415116219C9ADDB005A6B46 /* ForerunnerDB */;
+			targetProxy = 5415117919C9ADDB005A6B46 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
-		541414FB19AC6A2A005F9D60 /* InfoPlist.strings */ = {
+		5415117F19C9ADDB005A6B46 /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
-				541414FC19AC6A2A005F9D60 /* en */,
+				5415118019C9ADDB005A6B46 /* en */,
 			);
 			name = InfoPlist.strings;
 			sourceTree = "<group>";
@@ -355,7 +294,7 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
-		5414150019AC6A2A005F9D60 /* Debug */ = {
+		5415118419C9ADDB005A6B46 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -392,7 +331,7 @@
 			};
 			name = Debug;
 		};
-		5414150119AC6A2A005F9D60 /* Release */ = {
+		5415118519C9ADDB005A6B46 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -423,9 +362,8 @@
 			};
 			name = Release;
 		};
-		5414150319AC6A2A005F9D60 /* Debug */ = {
+		5415118719C9ADDB005A6B46 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 09CD570E5BEC4424B51FB35B /* Pods.xcconfig */;
 			buildSettings = {
 				DSTROOT = /tmp/ForerunnerDB.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -433,13 +371,11 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		5414150419AC6A2A005F9D60 /* Release */ = {
+		5415118819C9ADDB005A6B46 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 09CD570E5BEC4424B51FB35B /* Pods.xcconfig */;
 			buildSettings = {
 				DSTROOT = /tmp/ForerunnerDB.dst;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -447,13 +383,11 @@
 				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
-				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
-		5414150619AC6A2A005F9D60 /* Debug */ = {
+		5415118A19C9ADDB005A6B46 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 09CD570E5BEC4424B51FB35B /* Pods.xcconfig */;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -472,9 +406,8 @@
 			};
 			name = Debug;
 		};
-		5414150719AC6A2A005F9D60 /* Release */ = {
+		5415118B19C9ADDB005A6B46 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 09CD570E5BEC4424B51FB35B /* Pods.xcconfig */;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
@@ -492,34 +425,34 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		541414DA19AC6A2A005F9D60 /* Build configuration list for PBXProject "ForerunnerDB" */ = {
+		5415115E19C9ADDB005A6B46 /* Build configuration list for PBXProject "ForerunnerDB" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5414150019AC6A2A005F9D60 /* Debug */,
-				5414150119AC6A2A005F9D60 /* Release */,
+				5415118419C9ADDB005A6B46 /* Debug */,
+				5415118519C9ADDB005A6B46 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5414150219AC6A2A005F9D60 /* Build configuration list for PBXNativeTarget "ForerunnerDB" */ = {
+		5415118619C9ADDB005A6B46 /* Build configuration list for PBXNativeTarget "ForerunnerDB" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5414150319AC6A2A005F9D60 /* Debug */,
-				5414150419AC6A2A005F9D60 /* Release */,
+				5415118719C9ADDB005A6B46 /* Debug */,
+				5415118819C9ADDB005A6B46 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		5414150519AC6A2A005F9D60 /* Build configuration list for PBXNativeTarget "ForerunnerDBTests" */ = {
+		5415118919C9ADDB005A6B46 /* Build configuration list for PBXNativeTarget "ForerunnerDBTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				5414150619AC6A2A005F9D60 /* Debug */,
-				5414150719AC6A2A005F9D60 /* Release */,
+				5415118A19C9ADDB005A6B46 /* Debug */,
+				5415118B19C9ADDB005A6B46 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 541414D719AC6A2A005F9D60 /* Project object */;
+	rootObject = 5415115B19C9ADDB005A6B46 /* Project object */;
 }

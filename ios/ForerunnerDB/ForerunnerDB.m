@@ -8,6 +8,7 @@
 
 #import "ForerunnerDB.h"
 #import "ObjectId.h"
+#import "EventEmitter.h"
 
 #define random() (arc4random_uniform(74))
 

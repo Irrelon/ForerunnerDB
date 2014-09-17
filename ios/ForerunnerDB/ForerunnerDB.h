@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "ForerunnerDB_Index.h"
 #import "ForerunnerDB_Collection.h"
-#import "EventEmitter.h"
 #import "BaseConversion.h"
 
 @interface ForerunnerDB : NSObject

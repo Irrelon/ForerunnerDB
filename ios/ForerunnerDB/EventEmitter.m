@@ -209,7 +209,7 @@ static const char* _EventEmitter_ListenerArray = "EventEmitter_ListenerArray";
 	NSMutableArray* eventListener = [eventListeners valueForKey:event];
 	NSMutableIndexSet* discardedItems = [NSMutableIndexSet indexSet];
 	NSUInteger index = 0;
-
+	
 	for (NSObject<EventEmitterListener>* listener in eventListener) {
 		[listener notify:array];
 		if (listener.once) {
