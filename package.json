@@ -2,7 +2,7 @@
 	"author": "Rob Evans - Irrelon Software Limited",
 	"name": "forerunnerdb",
 	"description": "A NoSQL document store database for browsers and Node.js.",
-	"version": "1.1.0",
+	"version": "1.2.1",
 	"dependencies": {
 		"forever": "*",
 		"faye": "*",
