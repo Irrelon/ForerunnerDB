@@ -1,2 +1,2 @@
-browserify -s ForerunnerDB .\js\builds\all.js > .\js\dist\fdb-all.js
-"C:\Program Files\nodejs\compiler.jar" --compilation_level ADVANCED_OPTIMIZATIONS --warning_level=QUIET --js .\js\dist\fdb-all.js .\js\dist\fdb-all.min.js
+browserify -s ForerunnerDB .\builds\all.js > .\dist\fdb-all.js
+"C:\Program Files\nodejs\compiler.jar" --compilation_level ADVANCED_OPTIMIZATIONS --warning_level=QUIET --js .\dist\fdb-all.js .\dist\fdb-all.min.js
