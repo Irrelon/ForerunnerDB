@@ -2755,16 +2755,17 @@ Collection.prototype.lastOp = function () {
  * @return {String}
  */
 Collection.prototype.objectId = function (str) {
-	var id;
+	var id,
+		pow = Math.pow(10, 17);
 
 	if (!str) {
 		Shared.idCounter++;
 
 		id = (Shared.idCounter + (
-			Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17) +
-				Math.random() * Math.pow(10, 17)
+			Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow
 			)
 			).toString(16);
 	} else {
@@ -2773,7 +2774,7 @@ Collection.prototype.objectId = function (str) {
 			i;
 
 		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * Math.pow(10, 17);
+			val += str.charCodeAt(i) * pow;
 		}
 
 		id = val.toString(16);
