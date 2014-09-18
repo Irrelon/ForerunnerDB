@@ -2,7 +2,7 @@
 var ForerunnerDB = require('../lib/Core'),
 	View = require('../lib/View');
 
-module.exports = ForerunnerDB; 
+module.exports = ForerunnerDB;
 },{"../lib/Core":3,"../lib/View":12}],2:[function(require,module,exports){
 var Shared,
 	Core,
