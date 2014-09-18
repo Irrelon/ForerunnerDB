@@ -1,6 +1,6 @@
 //
 //  ForerunnerDB.m
-//  orbzu
+//  ForerunnerDB
 //
 //  Created by Rob Evans on 22/06/2014.
 //  Copyright (c) 2014 Irrelon Software Limited. All rights reserved.
@@ -10,6 +10,7 @@
 #import "ObjectId.h"
 
 #define random() (arc4random_uniform(74))
+#define cPow pow(3, 19)
 
 @implementation ForerunnerDB
 
@@ -27,6 +28,10 @@
     
     // returns the same object each time
     return _sharedObject;
+}
+
+- (NSString *)crc:(NSString *)str {
+	return [[NSString alloc] init];
 }
 
 - (ForerunnerDB *)init {
@@ -66,24 +71,16 @@
 }
 
 - (NSString *)objectId {
-	NSString *newId;
-
-	long double val = self.idCounter + (
-		random() * pow(10, 17) +
-		random() * pow(10, 17) +
-		random() * pow(10, 17) +
-		random() * pow(10, 17)
-	);
-	
-	NSUInteger base = 16;
+	long long val = (self.idCounter + (
+		rand() * cPow +
+		rand() * cPow +
+		rand() * cPow +
+		rand() * cPow
+	));
 	
 	self.idCounter++;
-
-	newId = [self.baseConversion formatNumber:val toBase:base];
 	
-	//newId = [[[ObjectId alloc] init] newId];
-	
-	return newId;
+	return [[NSString alloc] initWithFormat:@"%llx", val];
 }
 
 - (NSString *)objectId:(NSString *)str {

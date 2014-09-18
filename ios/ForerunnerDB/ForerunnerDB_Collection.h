@@ -1,12 +1,13 @@
 //
 //  ForerunnerDB_Collection.h
-//  orbzu
+//  ForerunnerDB
 //
 //  Created by Rob Evans on 22/06/2014.
 //  Copyright (c) 2014 Irrelon Software Limited. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 #import "ForerunnerDB_Index.h"
 #import "EventEmitter.h"
 
@@ -49,5 +50,6 @@
 - (NSInteger)indexOfObject:(id)obj;
 - (BOOL)save;
 - (BOOL)load;
+- (void)linkTableView:(UITableView *)view;
 
 @end

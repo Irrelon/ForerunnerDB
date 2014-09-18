@@ -21,7 +21,12 @@
 		5461F2F119C9AE570049D73E /* BaseConversion.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2EA19C9AE570049D73E /* BaseConversion.m */; };
 		5461F2F319C9AE570049D73E /* NSObject+NSObject_Type.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2EE19C9AE570049D73E /* NSObject+NSObject_Type.m */; };
 		5461F2F419C9AE570049D73E /* ObjectId.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2F019C9AE570049D73E /* ObjectId.m */; };
-		5461F2F919C9B0E90049D73E /* EventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2F819C9B0E90049D73E /* EventEmitter.m */; };
+		5461F2FD19C9B3A10049D73E /* EventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2FC19C9B3A10049D73E /* EventEmitter.m */; };
+		5461F2FE19C9B3A10049D73E /* EventEmitter.m in Sources */ = {isa = PBXBuildFile; fileRef = 5461F2FC19C9B3A10049D73E /* EventEmitter.m */; };
+		548A984319C9C5F100536628 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 548A984219C9C5F100536628 /* CoreData.framework */; };
+		548A984519C9C95600536628 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 548A984419C9C95600536628 /* UIKit.framework */; };
+		548A984619C9C97200536628 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 548A984419C9C95600536628 /* UIKit.framework */; };
+		548A984C19CACC6400536628 /* ForerunnerDB_Persist.m in Sources */ = {isa = PBXBuildFile; fileRef = 548A984B19CACC6400536628 /* ForerunnerDB_Persist.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,8 +74,11 @@
 		5461F2EE19C9AE570049D73E /* NSObject+NSObject_Type.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSObject+NSObject_Type.m"; sourceTree = "<group>"; };
 		5461F2EF19C9AE570049D73E /* ObjectId.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ObjectId.h; sourceTree = "<group>"; };
 		5461F2F019C9AE570049D73E /* ObjectId.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ObjectId.m; sourceTree = "<group>"; };
-		5461F2F719C9B0E90049D73E /* EventEmitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventEmitter.h; sourceTree = "<group>"; };
-		5461F2F819C9B0E90049D73E /* EventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventEmitter.m; sourceTree = "<group>"; };
+		5461F2FB19C9B3A10049D73E /* EventEmitter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventEmitter.h; sourceTree = "<group>"; };
+		5461F2FC19C9B3A10049D73E /* EventEmitter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EventEmitter.m; sourceTree = "<group>"; };
+		548A984219C9C5F100536628 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		548A984419C9C95600536628 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		548A984B19CACC6400536628 /* ForerunnerDB_Persist.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ForerunnerDB_Persist.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -78,6 +86,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				548A984519C9C95600536628 /* UIKit.framework in Frameworks */,
+				548A984319C9C5F100536628 /* CoreData.framework in Frameworks */,
 				5415116719C9ADDB005A6B46 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -86,6 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				548A984619C9C97200536628 /* UIKit.framework in Frameworks */,
 				5415117519C9ADDB005A6B46 /* XCTest.framework in Frameworks */,
 				5415117819C9ADDB005A6B46 /* UIKit.framework in Frameworks */,
 				5415117619C9ADDB005A6B46 /* Foundation.framework in Frameworks */,
@@ -118,6 +129,8 @@
 		5415116519C9ADDB005A6B46 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				548A984419C9C95600536628 /* UIKit.framework */,
+				548A984219C9C5F100536628 /* CoreData.framework */,
 				5415116619C9ADDB005A6B46 /* Foundation.framework */,
 				5415117419C9ADDB005A6B46 /* XCTest.framework */,
 				5415117719C9ADDB005A6B46 /* UIKit.framework */,
@@ -142,9 +155,9 @@
 		5415116919C9ADDB005A6B46 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				5461F2FB19C9B3A10049D73E /* EventEmitter.h */,
+				5461F2FC19C9B3A10049D73E /* EventEmitter.m */,
 				5461F2FA19C9B1080049D73E /* Categories */,
-				5461F2F719C9B0E90049D73E /* EventEmitter.h */,
-				5461F2F819C9B0E90049D73E /* EventEmitter.m */,
 				5461F2E919C9AE570049D73E /* BaseConversion.h */,
 				5461F2EA19C9AE570049D73E /* BaseConversion.m */,
 				5461F2EF19C9AE570049D73E /* ObjectId.h */,
@@ -158,6 +171,7 @@
 			isa = PBXGroup;
 			children = (
 				5415118219C9ADDB005A6B46 /* ForerunnerDBTests.m */,
+				548A984B19CACC6400536628 /* ForerunnerDB_Persist.m */,
 				5415117D19C9ADDB005A6B46 /* Supporting Files */,
 			);
 			path = ForerunnerDBTests;
@@ -268,7 +282,7 @@
 				5415116E19C9ADDB005A6B46 /* ForerunnerDB.m in Sources */,
 				5461F2E719C9AE410049D73E /* ForerunnerDB_Collection.m in Sources */,
 				5461F2F319C9AE570049D73E /* NSObject+NSObject_Type.m in Sources */,
-				5461F2F919C9B0E90049D73E /* EventEmitter.m in Sources */,
+				5461F2FD19C9B3A10049D73E /* EventEmitter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -277,6 +291,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				5415118319C9ADDB005A6B46 /* ForerunnerDBTests.m in Sources */,
+				548A984C19CACC6400536628 /* ForerunnerDB_Persist.m in Sources */,
+				5461F2FE19C9B3A10049D73E /* EventEmitter.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -1,6 +1,6 @@
 //
 //  ForerunnerDB_Collection.m
-//  orbzu
+//  ForerunnerDB
 //
 //  Created by Rob Evans on 22/06/2014.
 //  Copyright (c) 2014 Irrelon Software Limited. All rights reserved.
@@ -653,6 +653,10 @@
 	self._data = [NSKeyedUnarchiver unarchiveObjectWithFile:archivePath];
 	
 	return true;
+}
+
+- (void)linkTableView:(UITableView *)view {
+	
 }
 
 @end

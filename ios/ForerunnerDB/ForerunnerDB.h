@@ -1,6 +1,6 @@
 //
 //  ForerunnerDB.h
-//  orbzu
+//  ForerunnerDB
 //
 //  Created by Rob Evans on 22/06/2014.
 //  Copyright (c) 2014 Irrelon Software Limited. All rights reserved.

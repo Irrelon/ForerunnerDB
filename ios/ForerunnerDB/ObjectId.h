@@ -11,7 +11,7 @@
 @interface ObjectId : NSObject
 
 - (int)getRandomNumberBetween:(int)from to:(int)to;
-- (NSString *)stringToHex:(NSString *)str;
+- (NSString *)getHexString;
 - (NSString *)newId;
 
 @end

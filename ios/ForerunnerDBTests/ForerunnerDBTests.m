@@ -34,8 +34,16 @@
 }
 
 - (void)testObjectId {
-	NSString *objId = [self.db objectId];
-	XCTAssertTrue([objId length] >= 15, @"Check objectId length");
+	NSString *objId;
+	
+	// Generate a bunch of id and check that they are all long enough
+	for (int i = 0; i < 100000; i++) {
+		objId = [self.db objectId];
+		if ([objId length] < 15) {
+			NSLog(@"%lu %@", (unsigned long)[objId length], objId);
+		}
+		XCTAssertTrue([objId length] >= 15, @"Check objectId length");
+	}
 }
 
 - (void)testCollectionName
@@ -66,24 +74,6 @@
 	NSInteger count = [self.coll count];
 	
 	XCTAssertEqual(testVal, count, @"Collection has correct count");
-}
-
-- (void)testSaveToPersistentStorage {
-	[self.coll insert:@{@"hello": @{@"test": @1, @"arr": @[@1, @2]}}];
-	BOOL saved = [self.coll save];
-	XCTAssertTrue(saved == true, @"Did save return true");
-}
-
-- (void)testLoadFromPersistentStorage {
-	NSMutableArray *noData = [self.coll find];
-	BOOL loaded = [self.coll load];
-	NSMutableArray *data = [self.coll find];
-	BOOL val = [[[[[data objectAtIndex:0] objectForKey:@"hello"] objectForKey:@"arr"] objectAtIndex:0] isEqualToValue:@1];
-	
-	XCTAssertTrue([noData count] == 0, @"Initial data has no entries");
-	XCTAssertTrue([data count] == 1, @"After load, data has 1 entry");
-	XCTAssertTrue(val == true, @"After load, data has correct entry");
-	XCTAssertTrue(loaded == true, @"Did save return true");
 }
 
 @end

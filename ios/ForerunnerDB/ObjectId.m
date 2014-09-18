@@ -14,30 +14,20 @@
     return (int)from + arc4random() % (to-from+1);
 }
 
-- (NSString *)stringToHex:(NSString *)str
-{
-    NSUInteger len = [str length];
-    unichar *chars = malloc(len * sizeof(unichar));
-    [str getCharacters:chars];
+- (NSString *)getHexString {
+    NSString *longlongstr = [NSString stringWithFormat:@"%d%d%d%d%d%d",[self getRandomNumberBetween:100 to:999],[self getRandomNumberBetween:100 to:999],[self getRandomNumberBetween:100 to:999],[self getRandomNumberBetween:100 to:999],[self getRandomNumberBetween:100 to:999],[self getRandomNumberBetween:100 to:999]];
+    long long longnumber = [longlongstr longLongValue];
+    NSString *hexStr =  [NSString stringWithFormat:@"%llx",longnumber];
 	
-    NSMutableString *hexString = [[NSMutableString alloc] init];
-	
-    for(NSUInteger i = 0; i < len; i++ )
-    {
-        // [hexString [NSString stringWithFormat:@"%02x", chars[i]]]; /*previous input*/
-        [hexString appendFormat:@"%02x", chars[i]]; /*EDITED PER COMMENT BELOW*/
-    }
-    free(chars);
-	
-    return hexString;
+	return hexStr;
 }
 
 - (NSString *)newId {
-	int randomNumber = [self getRandomNumberBetween:0 to:999] + [self getRandomNumberBetween:0 to:999] + [self getRandomNumberBetween:0 to:999];
+	/*int randomNumber = [self getRandomNumberBetween:0 to:999] + [self getRandomNumberBetween:0 to:999] + [self getRandomNumberBetween:0 to:999];
 	NSString *randomNumberStr = [NSString stringWithFormat:@"%d",randomNumber];
-	NSString *hexStr = [self stringToHex:randomNumberStr];
+	NSString *hexStr = [self stringToHex:randomNumberStr];*/
 	
-	return hexStr;
+	return [self getHexString];
 }
 
 @end

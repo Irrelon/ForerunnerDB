@@ -1,6 +1,6 @@
 //
 //  NSObject+NSObject_Type.m
-//  orbzu
+//  ForerunnerDB
 //
 //  Created by Rob Evans on 25/06/2014.
 //  Copyright (c) 2014 Irrelon Software Limited. All rights reserved.
