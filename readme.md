@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.2.1
+## Version 1.2.2
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same queries and methods as MongoDB and runs on browsers and Node.js.
@@ -14,7 +14,7 @@ npm install forerunnerdb
 This will also work for browser-based development, however if you prefer a more traditional download, please use the download button to the right of the github page.
 
 ## Use Forerunner in Browser
-Include the ForerunnerDB.js file in your HTML:
+Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
 
 	<script src="./dist/fdb-all.min.js" type="text/javascript"></script>
 
