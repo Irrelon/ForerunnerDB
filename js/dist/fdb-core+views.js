@@ -1,3 +1,9 @@
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var ForerunnerDB = require('../lib/Core'),
+	View = require('../lib/View');
+
+module.exports = ForerunnerDB; 
+},{"../lib/Core":3,"../lib/View":12}],2:[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -2896,3 +2902,2246 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
+},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Overload":9,"./Path":10,"./Shared":11}],3:[function(require,module,exports){
+/*
+ The MIT License (MIT)
+
+ Copyright (c) 2014 Irrelon Software Limited
+ http://www.irrelon.com
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice, url and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+ Source: https://github.com/coolbloke1324/ForerunnerDB
+ */
+var Shared,
+	Overload,
+	Collection,
+	Metrics,
+	Crc;
+
+Shared = require('./Shared.js');
+
+/**
+ * The main ForerunnerDB core object.
+ * @constructor
+ */
+var Core = function () {
+	this.init.apply(this, arguments);
+};
+
+Core.prototype.init = function () {
+	this._collection = {};
+	this._debug = {};
+};
+
+Shared.modules.Core = Core;
+
+Overload = require('./Overload.js');
+Collection = require('./Collection.js');
+Metrics = require('./Metrics.js');
+Crc = require('./Crc.js');
+
+Core.prototype._isServer = false;
+
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} string The string to checksum.
+ * @return {String} The checksum generated.
+ */
+Core.prototype.crc = Crc;
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a browser.
+ */
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a server.
+ */
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+Core.prototype.decouple = function (data) {
+	return JSON.parse(JSON.stringify(data));
+};
+
+/**
+ * Gets / sets the debug flag for the database.
+ * @param {Boolean} val If true, debug messages will be output to the console.
+ * @returns {*}
+ */
+Core.prototype.debug = new Overload([
+	function () {
+		return this._debug.all;
+	},
+
+	function (val) {
+		if (val !== undefined) {
+			if (typeof val === 'boolean') {
+				this._debug.all = val;
+				return this;
+			}
+		}
+
+		return this._debug.all;
+	},
+
+	function (type, val) {
+		if (type !== undefined) {
+			if (val !== undefined) {
+				this._debug[type] = val;
+				return this;
+			}
+
+			return this._debug[type];
+		}
+
+		return this._debug.all;
+	}
+]);
+
+/**
+ * Converts a normal javascript array of objects into a DB collection.
+ * @param {Array} arr An array of objects.
+ * @returns {Collection} A new collection instance with the data set to the
+ * array passed.
+ */
+Core.prototype.arrayToCollection = function (arr) {
+	return new Collection().setData(arr);
+};
+
+/**
+ * Registers an event listener against an event name.
+ * @param {String} event The name of the event to listen for.
+ * @param {Function} listener The listener method to call when
+ * the event is fired.
+ * @returns {init}
+ */
+Core.prototype.on = function(event, listener) {
+	this._listeners = this._listeners || {};
+	this._listeners[event] = this._listeners[event] || [];
+	this._listeners[event].push(listener);
+
+	return this;
+};
+
+/**
+ * De-registers an event listener from an event name.
+ * @param {String} event The name of the event to stop listening for.
+ * @param {Function} listener The listener method passed to on() when
+ * registering the event listener.
+ * @returns {*}
+ */
+Core.prototype.off = function(event, listener) {
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			index = arr.indexOf(listener);
+
+		if (index > -1) {
+			arr.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Emits an event by name with the given data.
+ * @param {String} event The name of the event to emit.
+ * @param {*=} data The data to emit with the event.
+ * @returns {*}
+ */
+Core.prototype.emit = function(event, data) {
+	this._listeners = this._listeners || {};
+
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			arrCount = arr.length,
+			arrIndex;
+
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Generates a new 16-character hexadecimal unique ID or
+ * generates a new 16-character hexadecimal ID based on
+ * the passed string. Will always generate the same ID
+ * for the same string.
+ * @param {String=} str A string to generate the ID from.
+ * @return {String}
+ */
+Core.prototype.objectId = function (str) {
+	var id,
+		val,
+		count,
+		pow = Math.pow(10, 17),
+		i;
+
+	if (!str) {
+		Shared.idCounter++;
+
+		id = (Shared.idCounter + (
+			Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow
+			)
+		).toString(16);
+	} else {
+		val = 0;
+		count = str.length;
+
+		for (i = 0; i < count; i++) {
+			val += str.charCodeAt(i) * pow;
+		}
+
+		id = val.toString(16);
+	}
+
+	return id;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object.
+ * @param search String or search object.
+ * @returns {Array}
+ */
+Core.prototype.peek = function (search) {
+	var i,
+		coll,
+		arr = [],
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = arr.concat(coll.peek(search));
+			} else {
+				arr = arr.concat(coll.find(search));
+			}
+		}
+	}
+
+	return arr;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object and return them in an object where each key is the name
+ * of the collection that the document was matched in.
+ * @param search String or search object.
+ * @returns {Array}
+ */
+Core.prototype.peekCat = function (search) {
+	var i,
+		coll,
+		cat = {},
+		arr,
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = coll.peek(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			} else {
+				arr = coll.find(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			}
+		}
+	}
+
+	return cat;
+};
+
+module.exports = Core;
+},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload.js":9,"./Shared.js":11}],4:[function(require,module,exports){
+var crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+
+	for (n = 0; n < 256; n++) {
+		c = n;
+
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1));
+		}
+
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}());
+
+module.exports = function(str) {
+	var crc = 0 ^ (-1),
+		i;
+
+	for (i = 0; i < str.length; i++) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF];
+	}
+
+	return (crc ^ (-1)) >>> 0;
+};
+},{}],5:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
+
+/**
+ * The index class used to instantiate indexes that the database can
+ * use to speed up queries on collections and views.
+ * @constructor
+ */
+var Index = function () {
+	this.init.apply(this, arguments);
+};
+
+Index.prototype.init = function (keys, options, collection) {
+	this._crossRef = {};
+	this._size = 0;
+	this._id = this._itemKeyHash(keys, keys);
+
+	this.data({});
+	this.unique(options && options.unique ? options.unique : false);
+
+	if (keys !== undefined) {
+		this.keys(keys);
+	}
+
+	if (collection !== undefined) {
+		this.collection(collection);
+	}
+
+	this.name(options && options.name ? options.name : this._id);
+};
+
+Shared.modules.Index = Index;
+
+Index.prototype.id = function () {
+	return this._id;
+};
+
+Index.prototype.state = function () {
+	return this._state;
+};
+
+Index.prototype.size = function () {
+	return this._size;
+};
+
+Index.prototype.data = function (val) {
+	if (val !== undefined) {
+		this._data = val;
+		return this;
+	}
+
+	return this._data;
+};
+
+Index.prototype.name = function (val) {
+	if (val !== undefined) {
+		this._name = val;
+		return this;
+	}
+
+	return this._name;
+};
+
+Index.prototype.collection = function (val) {
+	if (val !== undefined) {
+		this._collection = val;
+		return this;
+	}
+
+	return this._collection;
+};
+
+Index.prototype.keys = function (val) {
+	if (val !== undefined) {
+		this._keys = val;
+
+		// Count the keys
+		this._keyCount = (new Path()).parse(this._keys).length;
+		return this;
+	}
+
+	return this._keys;
+};
+
+Index.prototype.type = function (val) {
+	if (val !== undefined) {
+		this._type = val;
+		return this;
+	}
+
+	return this._type;
+};
+
+Index.prototype.unique = function (val) {
+	if (val !== undefined) {
+		this._unique = val;
+		return this;
+	}
+
+	return this._unique;
+};
+
+Index.prototype.rebuild = function () {
+	// Do we have a collection?
+	if (this._collection) {
+		// Get sorted data
+		var collection = this._collection.subset({}, {
+				decouple: false,
+				sort: this._keys
+			}),
+			collectionData = collection.find(),
+			dataIndex,
+			dataCount = collectionData.length;
+
+		// Clear the index data for the index
+		this._data = {};
+
+		if (this._unique) {
+			this._uniqueLookup = {};
+		}
+
+		// Loop the collection data
+		for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+			this.insert(collectionData[dataIndex]);
+		}
+	}
+
+	this._state = {
+		name: this._name,
+		keys: this._keys,
+		indexSize: this._size,
+		built: new Date(),
+		updated: new Date(),
+		ok: true
+	};
+};
+
+Index.prototype.insert = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash,
+		itemHashArr,
+		hashIndex;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		this._uniqueLookup[uniqueHash] = dataItem;
+	}
+
+	// Generate item hash
+	itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+	// Get the path search results and store them
+	for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
+		this.pushToPathValue(itemHashArr[hashIndex], dataItem);
+	}
+};
+
+Index.prototype.remove = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash,
+		itemHashArr,
+		hashIndex;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		delete this._uniqueLookup[uniqueHash];
+	}
+
+	// Generate item hash
+	itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+	// Get the path search results and store them
+	for (hashIndex = 0; hashIndex < itemHashArr.length; hashIndex++) {
+		this.pullFromPathValue(itemHashArr[hashIndex], dataItem);
+	}
+};
+
+Index.prototype.violation = function (dataItem) {
+	// Generate item hash
+	var uniqueHash = this._itemHash(dataItem, this._keys);
+
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index.prototype.hashViolation = function (uniqueHash) {
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index.prototype.pushToPathValue = function (hash, obj) {
+	var pathValArr = this._data[hash] = this._data[hash] || [];
+
+	// Make sure we have not already indexed this object at this path/value
+	if (pathValArr.indexOf(obj) === -1) {
+		// Index the object
+		pathValArr.push(obj);
+
+		// Record the reference to this object in our index size
+		this._size++;
+
+		// Cross-reference this association for later lookup
+		this.pushToCrossRef(obj, pathValArr);
+	}
+};
+
+Index.prototype.pullFromPathValue = function (hash, obj) {
+	var pathValArr = this._data[hash],
+		indexOfObject;
+
+	// Make sure we have already indexed this object at this path/value
+	indexOfObject = pathValArr.indexOf(obj);
+
+	if (indexOfObject > -1) {
+		// Un-index the object
+		pathValArr.splice(indexOfObject, 1);
+
+		// Record the reference to this object in our index size
+		this._size--;
+
+		// Remove object cross-reference
+		this.pullFromCrossRef(obj, pathValArr);
+	}
+
+	// Check if we should remove the path value array
+	if (!pathValArr.length) {
+		// Remove the array
+		delete this._data[hash];
+	}
+};
+
+Index.prototype.pull = function (obj) {
+	// Get all places the object has been used and remove them
+	var id = obj[this._collection.primaryKey()],
+		crossRefArr = this._crossRef[id],
+		arrIndex,
+		arrCount = crossRefArr.length,
+		arrItem;
+
+	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+		arrItem = crossRefArr[arrIndex];
+
+		// Remove item from this index lookup array
+		this._pullFromArray(arrItem, obj);
+	}
+
+	// Record the reference to this object in our index size
+	this._size--;
+
+	// Now remove the cross-reference entry for this object
+	delete this._crossRef[id];
+};
+
+Index.prototype._pullFromArray = function (arr, obj) {
+	var arrCount = arr.length;
+
+	while (arrCount--) {
+		if (arr[arrCount] === obj) {
+			arr.splice(arrCount, 1);
+		}
+	}
+};
+
+Index.prototype.pushToCrossRef = function (obj, pathValArr) {
+	var id = obj[this._collection.primaryKey()],
+		crObj;
+
+	this._crossRef[id] = this._crossRef[id] || [];
+
+	// Check if the cross-reference to the pathVal array already exists
+	crObj = this._crossRef[id];
+
+	if (crObj.indexOf(pathValArr) === -1) {
+		// Add the cross-reference
+		crObj.push(pathValArr);
+	}
+};
+
+Index.prototype.pullFromCrossRef = function (obj, pathValArr) {
+	var id = obj[this._collection.primaryKey()],
+		crObj;
+
+	delete this._crossRef[id];
+};
+
+Index.prototype.lookup = function (query) {
+	return this._data[this._itemHash(query, this._keys)] || [];
+};
+
+Index.prototype.match = function (query, options) {
+	// Check if the passed query has data in the keys our index
+	// operates on and if so, is the query sort matching our order
+	var pathSolver = new Path();
+	return pathSolver.countObjectPaths(this._keys, query);
+};
+
+Index.prototype._itemHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.value(item, pathData[k].path).join(':');
+	}
+
+	return hash;
+};
+
+Index.prototype._itemKeyHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.keyValue(item, pathData[k].path);
+	}
+
+	return hash;
+};
+
+Index.prototype._itemHashArr = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		hashArr = [],
+		valArr,
+		i, k, j;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		valArr = path.value(item, pathData[k].path);
+
+		for (i = 0; i < valArr.length; i++) {
+			if (k === 0) {
+				// Setup the initial hash array
+				hashArr.push(valArr[i]);
+			} else {
+				// Loop the hash array and concat the value to it
+				for (j = 0; j < hashArr.length; j++) {
+					hashArr[j] = hashArr[j] + '_' + valArr[i];
+				}
+			}
+		}
+	}
+
+	return hashArr;
+};
+
+module.exports = Index;
+},{"./Path":10,"./Shared":11}],6:[function(require,module,exports){
+var Shared = require('./Shared');
+
+/**
+ * The key value store class used when storing basic in-memory KV data,
+ * and can be queried for quick retrieval. Mostly used for collection
+ * primary key indexes and lookups.
+ * @param {String=} name Optional KV store name.
+ * @constructor
+ */
+var KeyValueStore = function (name) {
+	this.init.apply(this, arguments);
+};
+
+KeyValueStore.prototype.init = function (name) {
+	this._name = name;
+	this._data = {};
+	this._primaryKey = '_id';
+};
+
+Shared.modules.KeyValueStore = KeyValueStore;
+
+/**
+ * Get / set the name of the key/value store.
+ * @param {String} val The name to set.
+ * @returns {*}
+ */
+KeyValueStore.prototype.name = function (val) {
+	if (val !== undefined) {
+		this._name = val;
+		return this;
+	}
+
+	return this._name;
+};
+
+/**
+ * Get / set the primary key.
+ * @param {String} key The key to set.
+ * @returns {*}
+ */
+KeyValueStore.prototype.primaryKey = function (key) {
+	if (key !== undefined) {
+		this._primaryKey = key;
+		return this;
+	}
+
+	return this._primaryKey;
+};
+
+/**
+ * Removes all data from the store.
+ * @returns {*}
+ */
+KeyValueStore.prototype.truncate = function () {
+	this._data = {};
+	return this;
+};
+
+/**
+ * Sets data against a key in the store.
+ * @param {String} key The key to set data for.
+ * @param {*} value The value to assign to the key.
+ * @returns {*}
+ */
+KeyValueStore.prototype.set = function (key, value) {
+	this._data[key] = value ? value : true;
+	return this;
+};
+
+/**
+ * Gets data stored for the passed key.
+ * @param {String} key The key to get data for.
+ * @returns {*}
+ */
+KeyValueStore.prototype.get = function (key) {
+	return this._data[key];
+};
+
+/**
+ * Get / set the primary key.
+ * @param {*} obj A lookup query, can be a string key, an array of string keys,
+ * an object with further query clauses or a regular expression that should be
+ * run against all keys.
+ * @returns {*}
+ */
+KeyValueStore.prototype.lookup = function (obj) {
+	var pKeyVal = obj[this._primaryKey],
+		arrIndex,
+		arrCount,
+		lookupItem,
+		result;
+
+	if (pKeyVal instanceof Array) {
+		// An array of primary keys, find all matches
+		arrCount = pKeyVal.length;
+		result = [];
+
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			lookupItem = this._data[pKeyVal[arrIndex]];
+
+			if (lookupItem) {
+				result.push(lookupItem);
+			}
+		}
+
+		return result;
+	} else if (pKeyVal instanceof RegExp) {
+		// Create new data
+		result = [];
+
+		for (arrIndex in this._data) {
+			if (this._data.hasOwnProperty(arrIndex)) {
+				if (pKeyVal.test(arrIndex)) {
+					result.push(this._data[arrIndex]);
+				}
+			}
+		}
+
+		return result;
+	} else if (typeof pKeyVal === 'object') {
+		// The primary key clause is an object, now we have to do some
+		// more extensive searching
+		if (pKeyVal.$ne) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (arrIndex !== pKeyVal.$ne) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$in && (pKeyVal.$in instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (pKeyVal.$in.indexOf(arrIndex) > -1) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$nin && (pKeyVal.$nin instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (pKeyVal.$nin.indexOf(arrIndex) === -1) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$or && (pKeyVal.$or instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex = 0; arrIndex < pKeyVal.$or.length; arrIndex++) {
+				result = result.concat(this.lookup(pKeyVal.$or[arrIndex]));
+			}
+
+			return result;
+		}
+	} else {
+		// Key is a basic lookup from string
+		lookupItem = this._data[pKeyVal];
+
+		if (lookupItem !== undefined) {
+			return [lookupItem];
+		} else {
+			return [];
+		}
+	}
+};
+
+/**
+ * Removes data for the given key from the store.
+ * @param {String} key The key to un-set.
+ * @returns {*}
+ */
+KeyValueStore.prototype.unSet = function (key) {
+	delete this._data[key];
+	return this;
+};
+
+/**
+ * Sets data for the give key in the store only where the given key
+ * does not already have a value in the store.
+ * @param {String} key The key to set data for.
+ * @param {*} value The value to assign to the key.
+ * @returns {Boolean} True if data was set or false if data already
+ * exists for the key.
+ */
+KeyValueStore.prototype.uniqueSet = function (key, value) {
+	if (this._data[key] === undefined) {
+		this._data[key] = value;
+		return true;
+	}
+
+	return false;
+};
+
+module.exports = KeyValueStore;
+},{"./Shared":11}],7:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Operation = require('./Operation');
+
+/**
+ * The metrics class used to store details about operations.
+ * @constructor
+ */
+var Metrics = function () {
+	this.init.apply(this, arguments);
+};
+
+Metrics.prototype.init = function () {
+	this._data = [];
+};
+
+Shared.modules.Metrics = Metrics;
+
+/**
+ * Creates an operation within the metrics instance and if metrics
+ * are currently enabled (by calling the start() method) the operation
+ * is also stored in the metrics log.
+ * @param {String} name The name of the operation.
+ * @returns {Operation}
+ */
+Metrics.prototype.create = function (name) {
+	var op = new Operation(name);
+
+	if (this._enabled) {
+		this._data.push(op);
+	}
+
+	return op;
+};
+
+/**
+ * Starts logging operations.
+ * @returns {Metrics}
+ */
+Metrics.prototype.start = function () {
+	this._enabled = true;
+	return this;
+};
+
+/**
+ * Stops logging operations.
+ * @returns {Metrics}
+ */
+Metrics.prototype.stop = function () {
+	this._enabled = false;
+	return this;
+};
+
+/**
+ * Clears all logged operations.
+ * @returns {Metrics}
+ */
+Metrics.prototype.clear = function () {
+	this._data = [];
+	return this;
+};
+
+/**
+ * Returns an array of all logged operations.
+ * @returns {Array}
+ */
+Metrics.prototype.list = function () {
+	return this._data;
+};
+
+module.exports = Metrics;
+},{"./Operation":8,"./Shared":11}],8:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
+
+/**
+ * The operation class, used to store details about an operation being
+ * performed by the database.
+ * @param {String} name The name of the operation.
+ * @constructor
+ */
+var Operation = function (name) {
+	this.pathSolver = new Path();
+	this.counter = 0;
+	this.init.apply(this, arguments);
+};
+
+Operation.prototype.init = function (name) {
+	this._data = {
+		operation: name, // The name of the operation executed such as "find", "update" etc
+		index: {
+			potential: [], // Indexes that could have potentially been used
+			used: false // The index that was picked to use
+		},
+		steps: [], // The steps taken to generate the query results,
+		time: {
+			startMs: 0,
+			stopMs: 0,
+			totalMs: 0,
+			process: {}
+		},
+		flag: {}, // An object with flags that denote certain execution paths
+		log: [] // Any extra data that might be useful such as warnings or helpful hints
+	};
+};
+
+Shared.modules.Operation = Operation;
+
+/**
+ * Starts the operation timer.
+ */
+Operation.prototype.start = function () {
+	this._data.time.startMs = new Date().getTime();
+};
+
+/**
+ * Adds an item to the operation log.
+ * @param {String} event The item to log.
+ * @returns {*}
+ */
+Operation.prototype.log = function (event) {
+	if (event) {
+		var lastLogTime = this._log.length > 0 ? this._data.log[this._data.log.length - 1].time : 0,
+			logObj = {
+				event: event,
+				time: new Date().getTime(),
+				delta: 0
+			};
+
+		this._data.log.push(logObj);
+
+		if (lastLogTime) {
+			logObj.delta = logObj.time - lastLogTime;
+		}
+
+		return this;
+	}
+
+	return this._data.log;
+};
+
+/**
+ * Called when starting and ending a timed operation, used to time
+ * internal calls within an operation's execution.
+ * @param {String} section An operation name.
+ * @returns {*}
+ */
+Operation.prototype.time = function (section) {
+	if (section !== undefined) {
+		var process = this._data.time.process,
+			processObj = process[section] = process[section] || {};
+
+		if (!processObj.startMs) {
+			// Timer started
+			processObj.startMs = new Date().getTime();
+			processObj.stepObj = {
+				name: section
+			};
+
+			this._data.steps.push(processObj.stepObj);
+		} else {
+			processObj.stopMs = new Date().getTime();
+			processObj.totalMs = processObj.stopMs - processObj.startMs;
+			processObj.stepObj.totalMs = processObj.totalMs;
+			delete processObj.stepObj;
+		}
+
+		return this;
+	}
+
+	return this._data.time;
+};
+
+/**
+ * Used to set key/value flags during operation execution.
+ * @param {String} key
+ * @param {String} val
+ * @returns {*}
+ */
+Operation.prototype.flag = function (key, val) {
+	if (key !== undefined && val !== undefined) {
+		this._data.flag[key] = val;
+	} else if (key !== undefined) {
+		return this._data.flag[key];
+	} else {
+		return this._data.flag;
+	}
+};
+
+Operation.prototype.data = function (path, val, noTime) {
+	if (val !== undefined) {
+		// Assign value to object path
+		this.pathSolver.set(this._data, path, val);
+
+		return this;
+	}
+
+	return this.pathSolver.get(this._data, path);
+};
+
+Operation.prototype.pushData = function (path, val, noTime) {
+	// Assign value to object path
+	this.pathSolver.push(this._data, path, val);
+};
+
+/**
+ * Stops the operation timer.
+ */
+Operation.prototype.stop = function () {
+	this._data.time.stopMs = new Date().getTime();
+	this._data.time.totalMs = this._data.time.stopMs - this._data.time.startMs;
+};
+
+module.exports = Operation;
+},{"./Path":10,"./Shared":11}],9:[function(require,module,exports){
+var Shared = require('./Shared');
+
+/**
+ * Allows a method to be overloaded.
+ * @param arr
+ * @returns {Function}
+ * @constructor
+ */
+var Overload = function (arr) {
+	if (arr) {
+		var arrIndex,
+			arrCount = arr.length;
+
+		return function () {
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				if (arr[arrIndex].length === arguments.length) {
+					return arr[arrIndex].apply(this, arguments);
+				}
+			}
+
+			return null;
+		};
+	}
+
+	return function () {};
+};
+
+Shared.modules.Overload = Overload;
+
+module.exports = Overload;
+},{"./Shared":11}],10:[function(require,module,exports){
+var Shared = require('./Shared');
+
+/**
+ * Path object used to resolve object paths and retrieve data from
+ * objects by using paths.
+ * @param {String=} path The path to assign.
+ * @constructor
+ */
+var Path = function (path) {
+	this.init.apply(this, arguments);
+};
+
+Path.prototype.init = function (path) {
+	if (path) {
+		this.path(path);
+	}
+};
+
+Shared.modules.Path = Path;
+
+/**
+ * Gets / sets the given path for the Path instance.
+ * @param {String=} path The path to assign.
+ */
+Path.prototype.path = function (path) {
+	if (path !== undefined) {
+		this._path = this.clean(path);
+		this._pathParts = this._path.split('.');
+		return this;
+	}
+
+	return this._path;
+};
+
+/**
+ * Tests if the passed object has the paths that are specified and that
+ * a value exists in those paths.
+ * @param {Object} testKeys The object describing the paths to test for.
+ * @param {Object} testObj The object to test paths against.
+ * @returns {Boolean} True if the object paths exist.
+ */
+Path.prototype.hasObjectPaths = function (testKeys, testObj) {
+	var result = true,
+		i;
+
+	for (i in testKeys) {
+		if (testKeys.hasOwnProperty(i)) {
+			if (testObj[i] === undefined) {
+				return false;
+			}
+
+			if (typeof testKeys[i] === 'object') {
+				// Recurse object
+				result = this.hasObjectPaths(testKeys[i], testObj[i]);
+
+				// Should we exit early?
+				if (!result) {
+					return false;
+				}
+			}
+		}
+	}
+
+	return result;
+};
+
+/**
+ * Counts the total number of key endpoints in the passed object.
+ * @param {Object} testObj The object to count key endpoints for.
+ * @returns {Number} The number of endpoints.
+ */
+Path.prototype.countKeys = function (testObj) {
+	var totalKeys = 0,
+		i;
+
+	for (i in testObj) {
+		if (testObj.hasOwnProperty(i)) {
+			if (testObj[i] !== undefined) {
+				if (typeof testObj[i] !== 'object') {
+					totalKeys++;
+				} else {
+					totalKeys += this.countKeys(testObj[i]);
+				}
+			}
+		}
+	}
+
+	return totalKeys;
+};
+
+/**
+ * Tests if the passed object has the paths that are specified and that
+ * a value exists in those paths and if so returns the number matched.
+ * @param {Object} testKeys The object describing the paths to test for.
+ * @param {Object} testObj The object to test paths against.
+ * @returns {Object} Stats on the matched keys
+ */
+Path.prototype.countObjectPaths = function (testKeys, testObj) {
+	var matchData,
+		matchedKeys = {},
+		matchedKeyCount = 0,
+		totalKeyCount = 0,
+		i;
+
+	for (i in testObj) {
+		if (testObj.hasOwnProperty(i)) {
+			if (typeof testObj[i] === 'object') {
+				// The test / query object key is an object, recurse
+				matchData = this.countObjectPaths(testKeys[i], testObj[i]);
+
+				matchedKeys[i] = matchData.matchedKeys;
+				totalKeyCount += matchData.totalKeyCount;
+				matchedKeyCount += matchData.matchedKeyCount;
+			} else {
+				// The test / query object has a property that is not an object so add it as a key
+				totalKeyCount++;
+
+				// Check if the test keys also have this key and it is also not an object
+				if (testKeys && testKeys[i] && typeof testKeys[i] !== 'object') {
+					matchedKeys[i] = true;
+					matchedKeyCount++;
+				} else {
+					matchedKeys[i] = false;
+				}
+			}
+		}
+	}
+
+	return {
+		matchedKeys: matchedKeys,
+		matchedKeyCount: matchedKeyCount,
+		totalKeyCount: totalKeyCount
+	};
+};
+
+/**
+ * Takes a non-recursive object and converts the object hierarchy into
+ * a path string.
+ * @param {Object} obj The object to parse.
+ * @param {Boolean=} withValue If true will include a 'value' key in the returned
+ * object that represents the value the object path points to.
+ * @returns {Object}
+ */
+Path.prototype.parse = function (obj, withValue) {
+	var paths = [],
+		path = '',
+		resultData,
+		i, k;
+
+	for (i in obj) {
+		if (obj.hasOwnProperty(i)) {
+			// Set the path to the key
+			path = i;
+
+			if (typeof(obj[i]) === 'object') {
+				if (withValue) {
+					resultData = this.parse(obj[i], withValue);
+
+					for (k = 0; k < resultData.length; k++) {
+						paths.push({
+							path: path + '.' + resultData[k].path,
+							value: resultData[k].value
+						});
+					}
+				} else {
+					resultData = this.parse(obj[i]);
+
+					for (k = 0; k < resultData.length; k++) {
+						paths.push({
+							path: path + '.' + resultData[k].path
+						});
+					}
+				}
+			} else {
+				if (withValue) {
+					paths.push({
+						path: path,
+						value: obj[i]
+					});
+				} else {
+					paths.push({
+						path: path
+					});
+				}
+			}
+		}
+	}
+
+	return paths;
+};
+
+/**
+ * Takes a non-recursive object and converts the object hierarchy into
+ * an array of path strings that allow you to target all possible paths
+ * in an object.
+ *
+ * @returns {Array}
+ */
+Path.prototype.parseArr = function (obj, options) {
+	options = options || {};
+	return this._parseArr(obj, '', [], options);
+};
+
+Path.prototype._parseArr = function (obj, path, paths, options) {
+	var i,
+		newPath = '';
+
+	path = path || '';
+	paths = paths || [];
+
+	for (i in obj) {
+		if (obj.hasOwnProperty(i)) {
+			if (!options.ignore || (options.ignore && !options.ignore.test(i))) {
+				if (path) {
+					newPath = path + '.' + i;
+				} else {
+					newPath = i;
+				}
+
+				if (typeof(obj[i]) === 'object') {
+					this._parseArr(obj[i], newPath, paths, options);
+				} else {
+					paths.push(newPath);
+				}
+			}
+		}
+	}
+
+	return paths;
+};
+
+/**
+ * Gets the value(s) that the object contains for the currently assigned path string.
+ * @param {Object} obj The object to evaluate the path against.
+ * @param {String=} path A path to use instead of the existing one passed in path().
+ * @returns {Array} An array of values for the given path.
+ */
+Path.prototype.value = function (obj, path) {
+	if (obj !== undefined && typeof obj === 'object') {
+		var pathParts,
+			arr,
+			arrCount,
+			objPart,
+			objPartParent,
+			valuesArr = [],
+			i, k;
+
+		if (path !== undefined) {
+			path = this.clean(path);
+			pathParts = path.split('.');
+		}
+
+		arr = pathParts || this._pathParts;
+		arrCount = arr.length;
+		objPart = obj;
+
+		for (i = 0; i < arrCount; i++) {
+			objPart = objPart[arr[i]];
+
+			if (objPartParent instanceof Array) {
+				// Search inside the array for the next key
+				for (k = 0; k < objPartParent.length; k++) {
+					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+				}
+
+				return valuesArr;
+			} else {
+				if (!objPart || typeof(objPart) !== 'object') {
+					break;
+				}
+			}
+
+			objPartParent = objPart;
+		}
+
+		return [objPart];
+	} else {
+		return [];
+	}
+};
+
+/**
+ * Sets a value on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to update.
+ * @param {*} val The value to set the object path to.
+ * @returns {*}
+ */
+Path.prototype.set = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = val;
+		}
+	}
+
+	return obj;
+};
+
+Path.prototype.get = function (obj, path) {
+	return this.value(obj, path)[0];
+};
+
+/**
+ * Push a value to an array on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to the array to push to.
+ * @param {*} val The value to push to the array at the object path.
+ * @returns {*}
+ */
+Path.prototype.push = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = obj[part] || [];
+
+			if (obj[part] instanceof Array) {
+				obj[part].push(val);
+			} else {
+				throw('Cannot push to a path whose endpoint is not an array!');
+			}
+		}
+	}
+
+	return obj;
+};
+
+/**
+ * Gets the value(s) that the object contains for the currently assigned path string
+ * with their associated keys.
+ * @param {Object} obj The object to evaluate the path against.
+ * @param {String=} path A path to use instead of the existing one passed in path().
+ * @returns {Array} An array of values for the given path with the associated key.
+ */
+Path.prototype.keyValue = function (obj, path) {
+	var pathParts,
+		arr,
+		arrCount,
+		objPart,
+		objPartParent,
+		objPartHash,
+		i;
+
+	if (path !== undefined) {
+		path = this.clean(path);
+		pathParts = path.split('.');
+	}
+
+	arr = pathParts || this._pathParts;
+	arrCount = arr.length;
+	objPart = obj;
+
+	for (i = 0; i < arrCount; i++) {
+		objPart = objPart[arr[i]];
+
+		if (!objPart || typeof(objPart) !== 'object') {
+			objPartHash = arr[i] + ':' + objPart;
+			break;
+		}
+
+		objPartParent = objPart;
+	}
+
+	return objPartHash;
+};
+
+/**
+ * Removes leading period (.) from string and returns it.
+ * @param {String} str The string to clean.
+ * @returns {*}
+ */
+Path.prototype.clean = function (str) {
+	if (str.substr(0, 1) === '.') {
+		str = str.substr(1, str.length -1);
+	}
+
+	return str;
+};
+
+module.exports = Path;
+},{"./Shared":11}],11:[function(require,module,exports){
+var Shared = {
+	idCounter: 0,
+	modules: {},
+	prototypes: {}
+};
+
+module.exports = Shared;
+},{}],12:[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	Collection,
+	CollectionInit,
+	CoreInit,
+	Overload;
+
+Shared = require('./Shared');
+
+/**
+ * The view constructor.
+ * @param viewName
+ * @constructor
+ */
+var View = function (name, query, options) {
+	this.init.apply(this, arguments);
+};
+
+View.prototype.init = function (name, query, options) {
+	this._name = name;
+	this._collections = [];
+	this._groups = [];
+	this._listeners = {};
+	this._querySettings = {
+		query: query,
+		options: options
+	};
+	this._debug = {};
+
+	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
+};
+
+Shared.modules.View = View;
+
+Collection = require('./Collection');
+Overload = require('./Overload');
+CollectionInit = Collection.prototype.init;
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
+
+View.prototype.debug = new Overload([
+	function () {
+		return this._debug.all;
+	},
+
+	function (val) {
+		if (val !== undefined) {
+			if (typeof val === 'boolean') {
+				this._debug.all = val;
+				this.privateData().debug(val);
+				this.publicData().debug(val);
+				return this;
+			} else {
+				return this._debug.all;
+			}
+		}
+
+		return this._debug.all;
+	},
+
+	function (type, val) {
+		if (type !== undefined) {
+			if (val !== undefined) {
+				this._debug[type] = val;
+				this.privateData().debug(type, val);
+				this.publicData().debug(type, val);
+				return this;
+			}
+
+			return this._debug[type];
+		}
+
+		return this._debug.all;
+	}
+]);
+
+View.prototype.name = function (val) {
+	if (val !== undefined) {
+		this._name = val;
+		return this;
+	}
+
+	return this._name;
+};
+
+/**
+ * Queries the view data. See Collection.find() for more information.
+ * @returns {*}
+ */
+View.prototype.find = function (query, options) {
+	return this.publicData().find(query, options);
+};
+
+/**
+ * Inserts into view data via the view collection. See Collection.insert() for more information.
+ * @returns {*}
+ */
+View.prototype.insert = function (data, index, callback) {
+	// Decouple the data to ensure we are working with our own copy
+	data = this._privateData.decouple(data);
+
+	if (typeof(index) === 'function') {
+		callback = index;
+		index = this._privateData.length;
+	} else if (index === undefined) {
+		index = this._privateData.length;
+	}
+
+	// Modify transform data
+	this._transformInsert(data, index);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData._insertHandle(data, index, callback);
+};
+
+/**
+ * Updates into view data via the view collection. See Collection.update() for more information.
+ * @returns {*}
+ */
+View.prototype.update = function (query, update) {
+	// Modify transform data
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	var updates = this._privateData.update(query, update),
+		primaryKey,
+		tQuery,
+		item;
+
+	if (this._transformEnabled && this._transformIn) {
+		primaryKey = this._publicData.primaryKey();
+
+		for (var i = 0; i < updates.length; i++) {
+			tQuery = {};
+			item = updates[i];
+			tQuery[primaryKey] = item[primaryKey];
+
+			this._transformUpdate(tQuery, item);
+		}
+	}
+
+	return updates;
+};
+
+/**
+ * Removed from view data via the view collection. See Collection.remove() for more information.
+ * @returns {*}
+ */
+View.prototype.remove = function (query) {
+	// Modify transform data
+	this._transformRemove(query);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData.remove(query);
+};
+
+View.prototype.link = function (outputTargetSelector, templateSelector) {
+	var publicData = this.publicData();
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+	}
+	return publicData.link(outputTargetSelector, templateSelector);
+};
+
+View.prototype.unlink = function (outputTargetSelector, templateSelector) {
+	var publicData = this.publicData();
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+	}
+	return publicData.unlink(outputTargetSelector, templateSelector);
+};
+
+View.prototype.from = function (collection) {
+	if (collection !== undefined) {
+		if (typeof(collection) === 'string') {
+			collection = this._db.collection(collection);
+		}
+
+		this._addCollection(collection);
+	}
+
+	return this;
+};
+
+View.prototype._addCollection = function (collection) {
+	if (this._collections.indexOf(collection) === -1) {
+		this._collections.push(collection);
+		collection._addView(this);
+
+		var collData = collection.find(this._querySettings.query, this._querySettings.options);
+
+		this._transformPrimaryKey(collection.primaryKey());
+		this._transformInsert(collData);
+
+		this._privateData.primaryKey(collection.primaryKey());
+		this._privateData.insert(collData);
+	}
+	return this;
+};
+
+View.prototype._removeCollection = function (collection) {
+	var collectionIndex = this._collections.indexOf(collection);
+	if (collectionIndex > -1) {
+		this._collections.splice(collection, 1);
+		collection._removeView(this);
+		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
+	}
+
+	return this;
+};
+
+View.prototype.on = function () {
+	this._privateData.on.apply(this._privateData, arguments);
+};
+
+View.prototype.off = function () {
+	this._privateData.off.apply(this._privateData, arguments);
+};
+
+View.prototype.emit = function () {
+	this._privateData.emit.apply(this._privateData, arguments);
+};
+
+/**
+ * Drops a view and all it's stored data from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+View.prototype.drop = function () {
+	if (this._collections && this._collections.length) {
+		if (this._debug || (this._db && this._db._debug)) {
+			console.log('ForerunnerDB.View: Dropping view ' + this._name);
+		}
+
+		this.emit('drop');
+
+		// Loop collections and remove us from them
+		var arrCount = this._collections.length;
+		while (arrCount--) {
+			this._removeCollection(this._collections[arrCount]);
+		}
+
+		// Drop the view's internal collection
+		this._privateData.drop();
+
+		return true;
+	}
+
+	return false;
+};
+
+/**
+ * Gets / sets the DB the view is bound against. Automatically set
+ * when the db.oldView(viewName) method is called.
+ * @param db
+ * @returns {*}
+ */
+View.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		this.privateData().db(db);
+		this.publicData().db(db);
+		return this;
+	}
+
+	return this._db;
+};
+
+/**
+ * Gets the primary key for this view from the assigned collection.
+ * @returns {String}
+ */
+View.prototype.primaryKey = function () {
+	return this._privateData.primaryKey();
+};
+
+/**
+ * Gets / sets the query that the view uses to build it's data set.
+ * @param {Object=} query
+ * @param {Boolean=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.queryData = function (query, options, refresh) {
+	if (query !== undefined) {
+		this._querySettings.query = query;
+	}
+
+	if (options !== undefined) {
+		this._querySettings.options = options;
+	}
+
+	if (query !== undefined || options !== undefined) {
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+
+		return this;
+	}
+
+	return this._querySettings;
+};
+
+/**
+ * Add data to the existing query.
+ * @param {Object} obj The data whose keys will be added to the existing
+ * query object.
+ * @param {Boolean} overwrite Whether or not to overwrite data that already
+ * exists in the query object. Defaults to true.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+View.prototype.queryAdd = function (obj, overwrite, refresh) {
+	var query = this._querySettings.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
+					query[i] = obj[i];
+				}
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Remove data from the existing query.
+ * @param {Object} obj The data whose keys will be removed from the existing
+ * query object.
+ * @param {Boolean=} refresh Whether or not to refresh the view data set
+ * once the operation is complete. Defaults to true.
+ */
+View.prototype.queryRemove = function (obj, refresh) {
+	var query = this._querySettings.query,
+		i;
+
+	if (obj !== undefined) {
+		// Loop object properties and add to existing query
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				delete query[i];
+			}
+		}
+	}
+
+	if (refresh === undefined || refresh === true) {
+		this.refresh();
+	}
+};
+
+/**
+ * Gets / sets the query being used to generate the view data.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.query = function (query, refresh) {
+	if (query !== undefined) {
+		this._querySettings.query = query;
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._querySettings.query;
+};
+
+/**
+ * Gets / sets the query options used when applying sorting etc to the
+ * view data set.
+ * @param {Object=} options An options object.
+ * @param {Boolean=} refresh Whether to refresh the view data after
+ * this operation. Defaults to true.
+ * @returns {*}
+ */
+View.prototype.queryOptions = function (options, refresh) {
+	if (options !== undefined) {
+		this._querySettings.options = options;
+		if (options.decouple === undefined) { options.decouple = true; }
+
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
+		return this;
+	}
+
+	return this._querySettings.options;
+};
+
+/**
+ * Refreshes the view data such as ordering etc.
+ */
+View.prototype.refresh = function (force) {
+	var sortedData,
+		collection,
+		pubData = this.publicData(),
+		i;
+
+	// Re-grab all the data for the view from the collections
+	this._privateData.remove();
+	pubData.remove();
+
+	for (i = 0; i < this._collections.length; i++) {
+		collection = this._collections[i];
+		this._privateData.insert(collection.find(this._querySettings.query, this._querySettings.options));
+	}
+
+	sortedData = this._privateData.find({}, this._querySettings.options);
+
+	if (pubData._linked) {
+		// Update data and observers
+		// TODO: Shouldn't this data get passed into a transformIn first?
+		$.observable(pubData._data).refresh(sortedData);
+	} else {
+		// Update the underlying data with the new sorted data
+		this._privateData._data.length = 0;
+		this._privateData._data = this._privateData._data.concat(sortedData);
+	}
+
+	return this;
+};
+
+/**
+ * Returns the number of documents currently in the view.
+ * @returns {Number}
+ */
+View.prototype.count = function () {
+	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
+};
+
+/**
+ * Takes an object with the keys "enabled", "dataIn" and "dataOut":
+ * {
+ * 	"enabled": true,
+ * 	"dataIn": function (data) { return data; },
+ * 	"dataOut": function (data) { return data; }
+ * }
+ * @param obj
+ * @returns {*}
+ */
+View.prototype.transform = function (obj) {
+	if (obj !== undefined) {
+		if (typeof obj === "object") {
+			if (obj.enabled !== undefined) {
+				this._transformEnabled = obj.enabled;
+			}
+
+			if (obj.dataIn !== undefined) {
+				this._transformIn = obj.dataIn;
+			}
+
+			if (obj.dataOut !== undefined) {
+				this._transformOut = obj.dataOut;
+			}
+		} else {
+			if (obj === false) {
+				// Turn off transforms
+				this._transformEnabled = false;
+			} else {
+				// Turn on transforms
+				this._transformEnabled = true;
+			}
+		}
+
+		// Update the transformed data object
+		this._transformPrimaryKey(this.privateData().primaryKey());
+		this._transformSetData(this.privateData().find());
+		return this;
+	}
+
+	return {
+		enabled: this._transformEnabled,
+		dataIn: this._transformIn,
+		dataOut: this._transformOut
+	};
+};
+
+/**
+ * Returns the non-transformed data the view holds.
+ */
+View.prototype.privateData = function () {
+	return this._privateData;
+};
+
+/**
+ * Returns a data object representing the public data this view
+ * contains. This can change depending on if transforms are being
+ * applied to the view or not.
+ *
+ * If no transforms are applied then the public data will be the
+ * same as the private data the view holds. If transforms are
+ * applied then the public data will contain the transformed version
+ * of the private data.
+ */
+View.prototype.publicData = function () {
+	if (this._transformEnabled) {
+		return this._publicData;
+	} else {
+		return this._privateData;
+	}
+};
+
+/**
+ * Updates the public data object to match data from the private data object
+ * by running private data through the dataIn method provided in
+ * the transform() call.
+ * @private
+ */
+View.prototype._transformSetData = function (data) {
+	if (this._transformEnabled) {
+		// Clear existing data
+		this._publicData = new Collection('__FDB__view_publicData_' + this._name);
+		this._publicData.db(this._privateData._db);
+		this._publicData.transform({
+			enabled: true,
+			dataIn: this._transformIn,
+			dataOut: this._transformOut
+		});
+
+		this._publicData.setData(data);
+	}
+};
+
+View.prototype._transformInsert = function (data, index) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.insert(data, index);
+	}
+};
+
+View.prototype._transformUpdate = function (query, update) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.update(query, update);
+	}
+};
+
+View.prototype._transformRemove = function (query) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.remove(query);
+	}
+};
+
+View.prototype._transformPrimaryKey = function (key) {
+	if (this._transformEnabled && this._publicData) {
+		this._publicData.primaryKey(key);
+	}
+};
+
+// Extend collection with view init
+Collection.prototype.init = function () {
+	this._views = [];
+	CollectionInit.apply(this, arguments);
+};
+
+Collection.prototype.view = function (name, query, options) {
+	var view = new View(name, query, options)
+		.db(this._db)
+		._addCollection(this);
+
+	this._views = this._views || [];
+	this._views.push(view);
+
+	return view;
+};
+
+/**
+ * Adds a view to the internal view lookup.
+ * @param {View} view The view to add.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._addView = function (view) {
+	if (view !== undefined) {
+		this._views.push(view);
+	}
+
+	return this;
+};
+
+/**
+ * Removes a view from the internal view lookup.
+ * @param {View} view The view to remove.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._removeView = function (view) {
+	if (view !== undefined) {
+		var index = this._views.indexOf(view);
+		if (index > -1) {
+			this._views.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+// Extend DB with views init
+Core.prototype.init = function () {
+	this._views = {};
+	CoreInit.apply(this, arguments);
+};
+
+/**
+ * Gets a view by it's name.
+ * @param {String} viewName The name of the view to retrieve.
+ * @returns {*}
+ */
+Core.prototype.view = function (viewName) {
+	if (!this._views[viewName]) {
+		if (this._debug || (this._db && this._db._debug)) {
+			console.log('Core.View: Creating view ' + viewName);
+		}
+	}
+
+	this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
+	return this._views[viewName];
+};
+
+/**
+ * Determine if a view with the passed name already exists.
+ * @param {String} viewName The name of the view to check for.
+ * @returns {boolean}
+ */
+Core.prototype.viewExists = function (viewName) {
+	return Boolean(this._views[viewName]);
+};
+
+/**
+ * Returns an array of views the DB currently has.
+ * @returns {Array} An array of objects containing details of each view
+ * the database is currently managing.
+ */
+Core.prototype.views = function () {
+	var arr = [],
+		i;
+
+	for (i in this._views) {
+		if (this._views.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._views[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
+module.exports = View;
+},{"./Collection":2,"./Overload":9,"./Shared":11}]},{},[1])(1)
+});

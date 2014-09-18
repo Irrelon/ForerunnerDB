@@ -2,7 +2,6 @@
 var Shared,
 	Core,
 	Collection,
-	CollectionGroup,
 	CollectionInit,
 	CoreInit,
 	Overload;
@@ -35,7 +34,6 @@ View.prototype.init = function (name, query, options) {
 Shared.modules.View = View;
 
 Collection = require('./Collection');
-CollectionGroup = require('./CollectionGroup');
 Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;

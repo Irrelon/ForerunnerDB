@@ -50,7 +50,7 @@ Cluster.prototype.register = function (callback) {
 					output: "json"
 				},
 				body: {
-					hash: ',4k)2c(Zp[aE[[44[=FAM#<PLC ~YNlKlc -1x{FAM>wQ@6+6`+%+oeKk-f&ro_@',
+					hash: '1XGEwbaTpQhd++>;b(*Ra>1(g$J%/6i7(bm!DP?qe^H=|(|{V([A|:Zf5g+33eF?',
 					ip: this._ip
 				}
 			},
