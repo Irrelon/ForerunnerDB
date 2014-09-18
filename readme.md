@@ -16,7 +16,7 @@ This will also work for browser-based development, however if you prefer a more 
 ## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
 
-	<script src="./dist/fdb-all.min.js" type="text/javascript"></script>
+	<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
 
 ## Create a Database
 
