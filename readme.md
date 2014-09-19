@@ -4,6 +4,9 @@
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same queries and methods as MongoDB and runs on browsers and Node.js.
 
+## License
+Forerunner is free for use if you are using it for non-commmercial, non-governmental and non-profit use. If you are doing something commercial please visit the license page to see which license best suits your requirements: http://www.forerunnerdb.com/#pricingboxes
+
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
