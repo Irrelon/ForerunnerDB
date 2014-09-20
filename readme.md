@@ -679,7 +679,7 @@ npm install -g browserify
 Now you can then execute browserify to build ForerunnerDB:
 
 ```
-browserify .\build\all.js -o .\dist\fdb-all.js
+browserify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
 ## Continuous Compiling
@@ -692,64 +692,50 @@ npm install -g watchify
 You can then run watchify using the same command line arguments as browserify:
 
 ```
-watchify .\build\all.js -o .\dist\fdb-all.js
+watchify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
-The fully minified version of ForerunnerDB is run through Google's Closure Compiler with advanced optimisations switched on.
+The fully minified version of ForerunnerDB is run through Google's Closure Compiler with simple optimisations switched on.
 
 # Future Updates
 ForerunnerDB's project road-map:
 
-### COMPLETED
+### COMPLETED ROADMAP
 * Views that can join multiple documents together and data-bind - sort of like virtual collections
 * Primary key violation checking
+* Collection indexing
 * Index violation checking
 * Unit tests
-* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilage on their own records as an example, but their read privilage could be {} allowing read on all documents.
+* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilege on their own records as an example, but their read privilege could be {} allowing read on all documents.
 * Query remote database from browser
 * Data persistence on client-side
-* Collection indexing
 * NPM installation
 
-### PARTIAL
+#### Supported query operators
+* $ (array positional)
+* $gt
+* $gte
+* $lt
+* $lte
+* $or
+* $and
+* $exists
+* $push
+* $addToSet
+* $pull
+* $in
+* $nin
+* $mul
+* $rename
+* $unset
+* $pop
+* $position
+* $each
+* $pullAll
 
-* Support more of the MongoDB query operators
-
-	Completed:
-	$ (array positional)
-	$gt
-    $gte
-    $lt
-    $lte
-    $or
-    $and
-    $exists
-    $push
-    $addToSet
-    $pull
-    $in
-    $nin
-    $mul
-    $rename
-    $unset
-    $pop
-    $position
-    $each
-	$pullAll
-
-    Unique to ForerunnerDB:
-    $move
-    $splicePush
-
-	Required:
-	$setOnInsert
-	$min
-	$max
-	$currentDate
-	$slice
-	$sort
-	$bit
-	$isolated
+#### Operators that are unique to ForerunnerDB:
+* $move
+* $splicePush
 
 ### NEEDS IMPLEMENTING
 * Data persistence on server-side
@@ -758,3 +744,13 @@ ForerunnerDB's project road-map:
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
+
+#### Further query operators
+* $setOnInsert
+* $min
+* $max
+* $currentDate
+* $slice
+* $sort
+* $bit
+* $isolated
