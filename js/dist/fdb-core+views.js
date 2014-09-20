@@ -1,9 +1,9 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var ForerunnerDB = require('../lib/Core'),
-	View = require('../lib/View');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+var ForerunnerDB = _dereq_('../lib/Core'),
+	View = _dereq_('../lib/View');
 
 module.exports = ForerunnerDB;
-},{"../lib/Core":3,"../lib/View":12}],2:[function(require,module,exports){
+},{"../lib/Core":3,"../lib/View":12}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -13,7 +13,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * Collection object used to store data.
@@ -62,12 +62,12 @@ Collection.prototype.init = function (name) {
 
 Shared.modules.Collection = Collection;
 
-Overload = require('./Overload');
-Metrics = require('./Metrics');
-KeyValueStore = require('./KeyValueStore');
-Path = require('./Path');
-Index = require('./Index');
-Crc = require('./Crc');
+Overload = _dereq_('./Overload');
+Metrics = _dereq_('./Metrics');
+KeyValueStore = _dereq_('./KeyValueStore');
+Path = _dereq_('./Path');
+Index = _dereq_('./Index');
+Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
@@ -2902,7 +2902,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Overload":9,"./Path":10,"./Shared":11}],3:[function(require,module,exports){
+},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Overload":9,"./Path":10,"./Shared":11}],3:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -2935,7 +2935,7 @@ var Shared,
 	Metrics,
 	Crc;
 
-Shared = require('./Shared.js');
+Shared = _dereq_('./Shared.js');
 
 /**
  * The main ForerunnerDB core object.
@@ -2952,10 +2952,10 @@ Core.prototype.init = function () {
 
 Shared.modules.Core = Core;
 
-Overload = require('./Overload.js');
-Collection = require('./Collection.js');
-Metrics = require('./Metrics.js');
-Crc = require('./Crc.js');
+Overload = _dereq_('./Overload.js');
+Collection = _dereq_('./Collection.js');
+Metrics = _dereq_('./Metrics.js');
+Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3209,7 +3209,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload.js":9,"./Shared.js":11}],4:[function(require,module,exports){
+},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload.js":9,"./Shared.js":11}],4:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3237,9 +3237,9 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],5:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{}],5:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -3596,8 +3596,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":10,"./Shared":11}],6:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Path":10,"./Shared":11}],6:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -3814,9 +3814,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":11}],7:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Operation = require('./Operation');
+},{"./Shared":11}],7:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Operation = _dereq_('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -3885,9 +3885,9 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":8,"./Shared":11}],8:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{"./Operation":8,"./Shared":11}],8:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -4028,8 +4028,8 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":10,"./Shared":11}],9:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Path":10,"./Shared":11}],9:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * Allows a method to be overloaded.
@@ -4059,8 +4059,8 @@ var Overload = function (arr) {
 Shared.modules.Overload = Overload;
 
 module.exports = Overload;
-},{"./Shared":11}],10:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Shared":11}],10:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -4468,7 +4468,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":11}],11:[function(require,module,exports){
+},{"./Shared":11}],11:[function(_dereq_,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -4476,7 +4476,7 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}],12:[function(require,module,exports){
+},{}],12:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -4485,7 +4485,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * The view constructor.
@@ -4512,8 +4512,8 @@ View.prototype.init = function (name, query, options) {
 
 Shared.modules.View = View;
 
-Collection = require('./Collection');
-Overload = require('./Overload');
+Collection = _dereq_('./Collection');
+Overload = _dereq_('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -4714,7 +4714,7 @@ View.prototype.emit = function () {
  */
 View.prototype.drop = function () {
 	if (this._collections && this._collections.length) {
-		if (this._debug || (this._db && this._db._debug)) {
+		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
@@ -5103,7 +5103,7 @@ Core.prototype.init = function () {
  */
 Core.prototype.view = function (viewName) {
 	if (!this._views[viewName]) {
-		if (this._debug || (this._db && this._db._debug)) {
+		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Core.View: Creating view ' + viewName);
 		}
 	}
