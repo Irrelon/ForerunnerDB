@@ -637,14 +637,16 @@ Collection.prototype.updateById = function (id, update) {
  * Internal method for document updating.
  * @param {Object} doc The document to update.
  * @param {Object} update The object with key/value pairs to update the document with.
- * @param query
- * @param options
- * @param path
+ * @param {Object} query The query object that we need to match to perform an update.
+ * @param {Object} options An options object.
+ * @param {String} path The current recursive path.
+ * @param {String} opType The type of update operation to perform, if none is specified
+ * default is to set new data against matching fields.
  * @returns {Boolean} True if the document was updated with new / changed data or
  * false if it was not updated because the data was the same.
  * @private
  */
-Collection.prototype._updateObject = function (doc, update, query, options, path) {
+Collection.prototype._updateObject = function (doc, update, query, options, path, opType) {
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -672,10 +674,15 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 				// Check for commands
 				switch (i) {
 					case '$inc':
+						//debugger;
 						operation = true;
+						recurseUpdated = this._updateObject(doc, update[i], query, options, path, 'inc');
+						if (recurseUpdated) {
+							updated = true;
+						}
 
 						// Do an increment operation
-						for (k in update[i]) {
+						/*for (k in update[i]) {
 							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 								if (typeof doc[k] === 'number') {
 									this._updateIncrement(doc, k, update[i][k]);
@@ -684,7 +691,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									throw("Cannot increment field that is not a number! (" + k + ")!");
 								}
 							}
-						}
+						}*/
 						break;
 
 					case '$push':
@@ -870,7 +877,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i);
+						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -893,7 +900,8 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i);
+									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
+
 									if (recurseUpdated) {
 										updated = true;
 									}
@@ -901,25 +909,57 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 							} else {
 								// Either both source and update are arrays or the update is
 								// an array and the source is not, so set source to update
-								this._updateProperty(doc, i, update[i]);
-								updated = true;
+								switch (opType) {
+									case 'inc':
+										this._updateIncrement(doc, i, update[i]);
+										updated = true;
+										break;
+
+									default:
+										if (doc[i] !== update[i]) {
+											this._updateProperty(doc, i, update[i]);
+											updated = true;
+										}
+										break;
+								}
 							}
 						} else {
 							// The doc key is an object so traverse the
 							// update further
-							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i);
+							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+
 							if (recurseUpdated) {
 								updated = true;
 							}
 						}
 					} else {
-						this._updateProperty(doc, i, update[i]);
-						updated = true;
+						switch (opType) {
+							case 'inc':
+								this._updateIncrement(doc, i, update[i]);
+								updated = true;
+								break;
+
+							default:
+								if (doc[i] !== update[i]) {
+									this._updateProperty(doc, i, update[i]);
+									updated = true;
+								}
+								break;
+						}
 					}
 				} else {
-					if (doc[i] !== update[i]) {
-						this._updateProperty(doc, i, update[i]);
-						updated = true;
+					switch (opType) {
+						case 'inc':
+							this._updateIncrement(doc, i, update[i]);
+							updated = true;
+							break;
+
+						default:
+							if (doc[i] !== update[i]) {
+								this._updateProperty(doc, i, update[i]);
+								updated = true;
+							}
+							break;
 					}
 				}
 			}
@@ -961,6 +1001,21 @@ Collection.prototype._updateProperty = function (doc, prop, val) {
 		if (this.debug()) {
 			console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
 		}
+	}
+};
+
+/**
+ * Increments a value for a property on a document by the passed number.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to increment by.
+ * @private
+ */
+Collection.prototype._updateIncrement = function (doc, prop, val) {
+	if (this._linked) {
+		$.observable(doc).setProperty(prop, doc[prop] + val);
+	} else {
+		doc[prop] += val;
 	}
 };
 
@@ -1035,21 +1090,6 @@ Collection.prototype._updatePull = function (arr, index) {
 		$.observable(arr).remove(index);
 	} else {
 		arr.splice(index, 1);
-	}
-};
-
-/**
- * Increments a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to increment by.
- * @private
- */
-Collection.prototype._updateIncrement = function (doc, prop, val) {
-	if (this._linked) {
-		$.observable(doc).setProperty(prop, doc[prop] + val);
-	} else {
-		doc[prop] += val;
 	}
 };
 

@@ -1,15 +1,15 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var Core = _dereq_('../lib/Core'),
-	CollectionGroup = _dereq_('../lib/CollectionGroup'),
-	View = _dereq_('../lib/View'),
-	OldView = _dereq_('../lib/OldView'),
-	OldViewBind = _dereq_('../lib/OldView.Bind'),
-	Highcharts = _dereq_('../lib/Highcharts'),
-	Persist = _dereq_('../lib/Persist');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Core = require('../lib/Core'),
+	CollectionGroup = require('../lib/CollectionGroup'),
+	View = require('../lib/View'),
+	OldView = require('../lib/OldView'),
+	OldViewBind = require('../lib/OldView.Bind'),
+	Highcharts = require('../lib/Highcharts'),
+	Persist = require('../lib/Persist');
 
 module.exports = Core;
 window['ForerunnerDB'] = Core;
-},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/OldView":11,"../lib/OldView.Bind":10,"../lib/Persist":15,"../lib/View":17}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/OldView":11,"../lib/OldView.Bind":10,"../lib/Persist":15,"../lib/View":17}],2:[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -19,7 +19,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * Collection object used to store data.
@@ -68,12 +68,12 @@ Collection.prototype.init = function (name) {
 
 Shared.modules.Collection = Collection;
 
-Overload = _dereq_('./Overload');
-Metrics = _dereq_('./Metrics');
-KeyValueStore = _dereq_('./KeyValueStore');
-Path = _dereq_('./Path');
-Index = _dereq_('./Index');
-Crc = _dereq_('./Crc');
+Overload = require('./Overload');
+Metrics = require('./Metrics');
+KeyValueStore = require('./KeyValueStore');
+Path = require('./Path');
+Index = require('./Index');
+Crc = require('./Crc');
 Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
@@ -649,14 +649,16 @@ Collection.prototype.updateById = function (id, update) {
  * Internal method for document updating.
  * @param {Object} doc The document to update.
  * @param {Object} update The object with key/value pairs to update the document with.
- * @param query
- * @param options
- * @param path
+ * @param {Object} query The query object that we need to match to perform an update.
+ * @param {Object} options An options object.
+ * @param {String} path The current recursive path.
+ * @param {String} opType The type of update operation to perform, if none is specified
+ * default is to set new data against matching fields.
  * @returns {Boolean} True if the document was updated with new / changed data or
  * false if it was not updated because the data was the same.
  * @private
  */
-Collection.prototype._updateObject = function (doc, update, query, options, path) {
+Collection.prototype._updateObject = function (doc, update, query, options, path, opType) {
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -684,10 +686,15 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 				// Check for commands
 				switch (i) {
 					case '$inc':
+						//debugger;
 						operation = true;
+						recurseUpdated = this._updateObject(doc, update[i], query, options, path, 'inc');
+						if (recurseUpdated) {
+							updated = true;
+						}
 
 						// Do an increment operation
-						for (k in update[i]) {
+						/*for (k in update[i]) {
 							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
 								if (typeof doc[k] === 'number') {
 									this._updateIncrement(doc, k, update[i][k]);
@@ -696,7 +703,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									throw("Cannot increment field that is not a number! (" + k + ")!");
 								}
 							}
-						}
+						}*/
 						break;
 
 					case '$push':
@@ -861,7 +868,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 			}
 
 			// Check if the key has a .$ at the end, denoting an array lookup
-			if (i.substr(i.length - 2, 2) === '.$') {
+			if (this._isPositionalKey(i)) {
 				operation = true;
 
 				// Modify i to be the name of the field
@@ -882,7 +889,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i);
+						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -905,7 +912,8 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i);
+									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
+
 									if (recurseUpdated) {
 										updated = true;
 									}
@@ -913,25 +921,57 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 							} else {
 								// Either both source and update are arrays or the update is
 								// an array and the source is not, so set source to update
-								this._updateProperty(doc, i, update[i]);
-								updated = true;
+								switch (opType) {
+									case 'inc':
+										this._updateIncrement(doc, i, update[i]);
+										updated = true;
+										break;
+
+									default:
+										if (doc[i] !== update[i]) {
+											this._updateProperty(doc, i, update[i]);
+											updated = true;
+										}
+										break;
+								}
 							}
 						} else {
 							// The doc key is an object so traverse the
 							// update further
-							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i);
+							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+
 							if (recurseUpdated) {
 								updated = true;
 							}
 						}
 					} else {
-						this._updateProperty(doc, i, update[i]);
-						updated = true;
+						switch (opType) {
+							case 'inc':
+								this._updateIncrement(doc, i, update[i]);
+								updated = true;
+								break;
+
+							default:
+								if (doc[i] !== update[i]) {
+									this._updateProperty(doc, i, update[i]);
+									updated = true;
+								}
+								break;
+						}
 					}
 				} else {
-					if (doc[i] !== update[i]) {
-						this._updateProperty(doc, i, update[i]);
-						updated = true;
+					switch (opType) {
+						case 'inc':
+							this._updateIncrement(doc, i, update[i]);
+							updated = true;
+							break;
+
+						default:
+							if (doc[i] !== update[i]) {
+								this._updateProperty(doc, i, update[i]);
+								updated = true;
+							}
+							break;
 					}
 				}
 			}
@@ -939,6 +979,17 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 	}
 
 	return updated;
+};
+
+/**
+ * Determines if the passed key has an array positional mark (a dollar at the end
+ * of its name).
+ * @param {String} key The key to check.
+ * @returns {Boolean} True if it is a positional or false if not.
+ * @private
+ */
+Collection.prototype._isPositionalKey = function (key) {
+	return key.substr(key.length - 2, 2) === '.$';
 };
 
 /**
@@ -962,6 +1013,21 @@ Collection.prototype._updateProperty = function (doc, prop, val) {
 		if (this.debug()) {
 			console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
 		}
+	}
+};
+
+/**
+ * Increments a value for a property on a document by the passed number.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to increment by.
+ * @private
+ */
+Collection.prototype._updateIncrement = function (doc, prop, val) {
+	if (this._linked) {
+		$.observable(doc).setProperty(prop, doc[prop] + val);
+	} else {
+		doc[prop] += val;
 	}
 };
 
@@ -1036,21 +1102,6 @@ Collection.prototype._updatePull = function (arr, index) {
 		$.observable(arr).remove(index);
 	} else {
 		arr.splice(index, 1);
-	}
-};
-
-/**
- * Increments a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to increment by.
- * @private
- */
-Collection.prototype._updateIncrement = function (doc, prop, val) {
-	if (this._linked) {
-		$.observable(doc).setProperty(prop, doc[prop] + val);
-	} else {
-		doc[prop] += val;
 	}
 };
 
@@ -2913,7 +2964,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":13,"./Path":14,"./Shared":16}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":13,"./Path":14,"./Shared":16}],3:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -2921,7 +2972,7 @@ var Shared,
 	Collection,
 	Overload;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
@@ -2954,8 +3005,8 @@ CollectionGroup.prototype.init = function (name) {
 
 Shared.modules.CollectionGroup = CollectionGroup;
 
-Collection = _dereq_('./Collection');
-Overload = _dereq_('./Overload');
+Collection = require('./Collection');
+Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3302,7 +3353,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Overload":13,"./Shared":16}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Overload":13,"./Shared":16}],4:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3335,7 +3386,7 @@ var Shared,
 	Metrics,
 	Crc;
 
-Shared = _dereq_('./Shared.js');
+Shared = require('./Shared.js');
 
 /**
  * The main ForerunnerDB core object.
@@ -3352,10 +3403,10 @@ Core.prototype.init = function () {
 
 Shared.modules.Core = Core;
 
-Overload = _dereq_('./Overload.js');
-Collection = _dereq_('./Collection.js');
-Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Overload = require('./Overload.js');
+Collection = require('./Collection.js');
+Metrics = require('./Metrics.js');
+Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3609,7 +3660,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":13,"./Shared.js":16}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":13,"./Shared.js":16}],5:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3637,13 +3688,13 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],6:[function(_dereq_,module,exports){
+},{}],6:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
 	CollectionInit;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * The constructor.
@@ -3896,9 +3947,9 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":16}],7:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Path = _dereq_('./Path');
+},{"./Shared":16}],7:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -4255,8 +4306,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":14,"./Shared":16}],8:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Path":14,"./Shared":16}],8:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -4473,9 +4524,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":16}],9:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Operation = _dereq_('./Operation');
+},{"./Shared":16}],9:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Operation = require('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -4544,14 +4595,14 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":12,"./Shared":16}],10:[function(_dereq_,module,exports){
+},{"./Operation":12,"./Shared":16}],10:[function(require,module,exports){
 // Grab the view class
 var Shared,
 	Core,
 	OldView,
 	OldViewInit;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 Core = Shared.modules.Core;
 OldView = Shared.modules.OldView;
 OldViewInit = OldView.prototype.init;
@@ -4955,7 +5006,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./Shared":16}],11:[function(_dereq_,module,exports){
+},{"./Shared":16}],11:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -4966,7 +5017,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * The view constructor.
@@ -5013,11 +5064,11 @@ OldView.prototype.init = function (viewName) {
 
 Shared.modules.OldView = OldView;
 
-CollectionGroup = _dereq_('./CollectionGroup');
-Collection = _dereq_('./Collection');
+CollectionGroup = require('./CollectionGroup');
+Collection = require('./Collection');
 CollectionInit = Collection.prototype.init;
 CollectionGroupInit = CollectionGroup.prototype.init;
-Overload = _dereq_('./Overload');
+Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
@@ -5759,9 +5810,9 @@ Core.prototype.oldViews = function () {
 };
 
 module.exports = OldView;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],12:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Path = _dereq_('./Path');
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],12:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -5902,8 +5953,8 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":14,"./Shared":16}],13:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Path":14,"./Shared":16}],13:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Allows a method to be overloaded.
@@ -5933,8 +5984,8 @@ var Overload = function (arr) {
 Shared.modules.Overload = Overload;
 
 module.exports = Overload;
-},{"./Shared":16}],14:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Shared":16}],14:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -6342,9 +6393,9 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":16}],15:[function(_dereq_,module,exports){
+},{"./Shared":16}],15:[function(require,module,exports){
 // Import external names locally
-var Shared = _dereq_('./Shared'),
+var Shared = require('./Shared'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -6370,11 +6421,11 @@ Persist.prototype.init = function (db) {
 Shared.modules.Persist = Persist;
 
 Core = Shared.modules.Core;
-Collection = _dereq_('./Collection');
+Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
-CollectionGroup = _dereq_('./CollectionGroup');
+CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = _dereq_('./Overload');
+Overload = require('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
@@ -6531,7 +6582,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],16:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":13,"./Shared":16}],16:[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -6539,7 +6590,7 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}],17:[function(_dereq_,module,exports){
+},{}],17:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6548,7 +6599,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * The view constructor.
@@ -6575,8 +6626,8 @@ View.prototype.init = function (name, query, options) {
 
 Shared.modules.View = View;
 
-Collection = _dereq_('./Collection');
-Overload = _dereq_('./Overload');
+Collection = require('./Collection');
+Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
