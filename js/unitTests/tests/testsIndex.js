@@ -272,6 +272,7 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 	base.dbDown();
 });
 
+/*
 test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 	base.dbUp();
 
@@ -307,4 +308,4 @@ test("Index - Collection.ensureIndex() :: Test index against a key in a sub-arra
 	ok(index.size() === 1, "Check index size");
 
 	base.dbDown();
-});
+});*/
