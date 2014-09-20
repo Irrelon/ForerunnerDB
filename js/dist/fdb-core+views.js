@@ -699,6 +699,11 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 						// Do a push operation
 						for (k in update[i]) {
 							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
+								if (doc[k] === undefined) {
+									// Initialise a new array
+									doc[k] = [];
+								}
+								
 								if (doc[k] instanceof Array) {
 									this._updatePush(doc[k], update[i][k]);
 									updated = true;
