@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.2.4
+## Version 1.2.5
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -728,27 +728,27 @@ ForerunnerDB's project road-map:
     $pull
     $in
     $nin
+    $mul
+    $rename
+    $unset
+    $pop
+    $position
+    $each
 
     Unique to ForerunnerDB:
     $move
     $splicePush
 
 	Required:
-	$mul,
-	$rename,
-	$setOnInsert,
-	$unset,
-	$min,
-	$max,
-	$currentDate,
-	$pop,
-	$pullAll,
-	$pushAll,
-	$each,
-	$slice,
-	$sort,
-	$position (already have new operator $splicePush to achieve the same thing),
-	$bit,
+	$setOnInsert
+	$min
+	$max
+	$currentDate
+	$pullAll
+	$pushAll
+	$slice
+	$sort
+	$bit
 	$isolated
 
 ### NEEDS IMPLEMENTING

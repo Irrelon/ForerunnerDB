@@ -796,7 +796,10 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									}
 								} else if (update[i].$each instanceof Array) {
 									// Do a loop over the each to push multiple items
-
+									tmpCount = update[i].$each.length;
+									for (tmpIndex = 0; tmpIndex < tmpCount; tmpIndex++) {
+										this._updatePush(doc[i], update[i].$each[tmpIndex]);
+									}
 								} else {
 									// Do a standard push
 									this._updatePush(doc[i], update[i]);
