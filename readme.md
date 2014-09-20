@@ -147,16 +147,18 @@ The $splicePush operator adds an item into an array at a specified index
 	}, {
 		$splicePush: {
 			<field>: <value>
+			$index: <index>
 		}
 	});
 
-The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
+The following example inserts "Milk" to the "shoppingList" array at index 1 in the document with the id "23231":
 
 	db.users.update({
 		_id: "23231"
 	}, {
-		$push: {
+		$splicePush: {
 			shoppingList: "Milk"
+			$index: 1
 		}
 	});
 
