@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.2.2
+## Version 1.2.3
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same queries and methods as MongoDB and runs on browsers and Node.js.
@@ -140,7 +140,26 @@ The following example appends "Milk" to the "shoppingList" array in the document
 	});
 
 #### $splicePush
-Add an item into an array at a specified index
+The $splicePush operator adds an item into an array at a specified index
+
+	db.collection.update({
+		<query>
+	}, {
+		$splicePush: {
+			<field>: <value>
+		}
+	});
+
+The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
+
+	db.users.update({
+		_id: "23231"
+	}, {
+		$push: {
+			shoppingList: "Milk"
+		}
+	});
+
 
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array
