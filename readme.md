@@ -700,7 +700,7 @@ The fully minified version of ForerunnerDB is run through Google's Closure Compi
 # Future Updates
 ForerunnerDB's project road-map:
 
-### COMPLETED ROADMAP
+### Roadmap Completed Items
 * Views that can join multiple documents together and data-bind - sort of like virtual collections
 * Primary key violation checking
 * Collection indexing
@@ -737,7 +737,7 @@ ForerunnerDB's project road-map:
 * $move
 * $splicePush
 
-### NEEDS IMPLEMENTING
+### Future Updates
 * Data persistence on server-side
 * Collection / query paging e.g. select next 10, select previous 10
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
@@ -745,7 +745,7 @@ ForerunnerDB's project road-map:
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
 
-#### Further query operators
+#### Query operators still to implement
 * $setOnInsert
 * $min
 * $max
