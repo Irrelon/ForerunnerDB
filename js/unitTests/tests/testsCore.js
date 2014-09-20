@@ -813,6 +813,33 @@ test("Core - Collection.updateById() :: $push array operator", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $push array operator to undefined field (should assign new array to field)", function() {
+	base.dbUp();
+	
+	var coll = db.collection('test');
+	coll.setData([{
+		_id: 'fooItem',
+		name: 'foo'
+	}]);
+
+	coll.update({
+		_id: "fooItem"
+	}, {
+		"$push": {
+			"arr": {
+				_id: 'ahh',
+				val: 8
+			}
+		}
+	});
+
+	var after = coll.findById("2");
+
+	ok(after.arr instanceof Array && after.arr.length === 1, "Complete");
+
+	base.dbDown();
+});
+
 test("Core - Collection.updateById() :: $pull array operator", function() {
 	base.dbUp();
 	base.dataUp();
