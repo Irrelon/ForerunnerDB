@@ -969,6 +969,35 @@ test("Core - Collection.update() :: $splicePush array operator", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $mul operator", function() {
+	base.dbUp();
+	
+	var coll = db.collection('test');
+	
+	coll.setData([{
+		_id: '1',
+		remaining: 20
+	}]);
+	
+	var before = coll.find()[0];
+	
+	ok(before.remaining === 20, "Check initial numbers");
+	
+	coll.update({
+		_id: "1"
+	}, {
+		$mul: {
+			remaining: 1.5
+		} 
+	});
+
+	var after = coll.find()[0];
+	
+	ok(after.remaining === 30, "Check final numbers");
+
+	base.dbDown();
+});
+
 test("Core - Collection.upsert() :: Insert on upsert call", function() {
 	base.dbUp();
 	base.dataUp();
