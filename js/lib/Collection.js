@@ -906,9 +906,14 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 								throw("Cannot pull from a key that is not an array! (" + i + ")!");
 							}
 							break;
-						
+
 						case '$mul':
 							this._updateMultiply(doc, i, update[i]);
+							updated = true;
+							break;
+
+						case '$rename':
+							this._updateRename(doc, i, update[i]);
 							updated = true;
 							break;
 
@@ -1063,6 +1068,24 @@ Collection.prototype._updateMultiply = function (doc, prop, val) {
 		$.observable(doc).setProperty(prop, doc[prop] * val);
 	} else {
 		doc[prop] *= val;
+	}
+};
+
+/**
+ * Renames a property on a document to the passed property.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to rename.
+ * @param {Number} val The new property name.
+ * @private
+ */
+Collection.prototype._updateRename = function (doc, prop, val) {
+	var existingVal = doc[prop];
+	if (this._linked) {
+		$.observable(doc).setProperty(val, existingVal);
+		$.observable(doc).removeProperty(prop);
+	} else {
+		doc[val] = existingVal;
+		delete doc[prop];
 	}
 };
 

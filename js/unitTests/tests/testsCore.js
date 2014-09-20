@@ -998,6 +998,36 @@ test("Core - Collection.update() :: $mul operator", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $rename operator", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	coll.setData([{
+		_id: '1',
+		remaining: 20
+	}]);
+
+	var before = coll.find()[0];
+
+	ok(before.remaining === 20, "Check initial numbers");
+
+	coll.update({
+		_id: "1"
+	}, {
+		$rename: {
+			remaining: 'upstarted'
+		}
+	});
+
+	var after = coll.find()[0];
+
+	ok(after.remaining === undefined, "Check final properties");
+	ok(after.upstarted === 20, "Check final properties");
+
+	base.dbDown();
+});
+
 test("Core - Collection.upsert() :: Insert on upsert call", function() {
 	base.dbUp();
 	base.dataUp();
