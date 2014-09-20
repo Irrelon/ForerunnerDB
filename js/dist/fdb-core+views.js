@@ -912,6 +912,11 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 								throw("Cannot pull from a key that is not an array! (" + i + ")!");
 							}
 							break;
+						
+						case '$mul':
+							this._updateMultiply(doc, i, update[i]);
+							updated = true;
+							break;
 
 						default:
 							if (doc[i] !== update[i]) {
@@ -1049,6 +1054,21 @@ Collection.prototype._updatePull = function (arr, index) {
 		$.observable(arr).remove(index);
 	} else {
 		arr.splice(index, 1);
+	}
+};
+
+/**
+ * Multiplies a value for a property on a document by the passed number.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to multiply by.
+ * @private
+ */
+Collection.prototype._updateMultiply = function (doc, prop, val) {
+	if (this._linked) {
+		$.observable(doc).setProperty(prop, doc[prop] * val);
+	} else {
+		doc[prop] *= val;
 	}
 };
 
