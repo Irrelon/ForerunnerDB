@@ -833,7 +833,7 @@ test("Core - Collection.update() :: $push array operator to undefined field (sho
 		}
 	});
 
-	var after = coll.findById("2");
+	var after = coll.findById("fooItem");
 
 	ok(after.arr instanceof Array && after.arr.length === 1, "Complete");
 
