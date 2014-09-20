@@ -235,7 +235,7 @@ View.prototype.emit = function () {
  */
 View.prototype.drop = function () {
 	if (this._collections && this._collections.length) {
-		if (this._debug || (this._db && this._db._debug)) {
+		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
@@ -624,7 +624,7 @@ Core.prototype.init = function () {
  */
 Core.prototype.view = function (viewName) {
 	if (!this._views[viewName]) {
-		if (this._debug || (this._db && this._db._debug)) {
+		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Core.View: Creating view ' + viewName);
 		}
 	}
