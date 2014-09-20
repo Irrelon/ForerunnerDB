@@ -114,12 +114,39 @@ You can target individual documents for update by their id (primary key) via a q
 
 That will update the document with the _id field of 1 to a new price of 180.
 
-### Supported Update Operators
-* $push Used in updates to add an item to an array
-* $splicePush Add an item into an array at a specified index
-* $addToSet Adds an item into an array only if the item does not already exist in the array
-* $pull Used in updates to remove an item from an array
-* $move Move an item inside a document's array from one index to another
+### Update Operators
+#### $push
+The $push operator appends a specified value to an array
+
+	db.collection.update({
+		<query>
+	}, {
+		$push: {
+			<field>: <value>
+		}
+	});
+
+The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
+
+	db.users.update({
+		_id: "23231"
+	}, {
+		$push: {
+			shoppingList: "Milk"
+		}
+	});
+
+#### $splicePush
+Add an item into an array at a specified index
+
+#### $addToSet
+Adds an item into an array only if the item does not already exist in the array
+
+#### $pull
+Used in updates to remove an item from an array
+
+#### $move
+Move an item that exists inside a document's array from one index to another
 
 ## Using $addToSet to push a unique item into an array
 ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against:
