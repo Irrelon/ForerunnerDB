@@ -812,7 +812,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 								}
 								updated = true;
 							} else {
-								throw("Cannot push to a key that is not an array! (" + i + ")!");
+								throw("Cannot push to a key that is not an array! (" + i + ")");
 							}
 							break;
 
@@ -834,8 +834,34 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									this._updatePull(doc[i], tmpArray[tmpCount]);
 									updated = true;
 								}
-							} else {
-								throw("Cannot pull from a key that is not an array! (" + i + ")!");
+							}
+							break;
+
+						case '$pullAll':
+							if (doc[i] instanceof Array) {
+								if (update[i] instanceof Array) {
+									tmpArray = doc[i];
+									tmpCount = tmpArray.length;
+
+									if (tmpCount > 0) {
+										// Now loop the pull array and remove items to be pulled
+										while (tmpCount--) {
+											for (tempIndex = 0; tempIndex < update[i].length; tempIndex++) {
+												if (tmpArray[tmpCount] === update[i][tempIndex]) {
+													this._updatePull(doc[i], tmpCount);
+													tmpCount--;
+													updated = true;
+												}
+											}
+
+											if (tmpCount < 0) {
+												break;
+											}
+										}
+									}
+								} else {
+									throw("Cannot pullAll without being given an array of values to pull! (" + i + ")");
+								}
 							}
 							break;
 
@@ -891,7 +917,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									updated = true;
 								}
 							} else {
-								throw("Cannot push to a key that is not an array! (" + k + ")!");
+								throw("Cannot addToSet on a key that is not an array! (" + k + ")!");
 							}
 							break;
 
@@ -914,7 +940,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									throw("Cannot splicePush without a $index integer value!");
 								}
 							} else {
-								throw("Cannot splicePush with a key that is not an array! (" + i + ")!");
+								throw("Cannot splicePush with a key that is not an array! (" + i + ")");
 							}
 							break;
 
@@ -935,7 +961,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									}
 								}
 							} else {
-								throw("Cannot pull from a key that is not an array! (" + i + ")!");
+								throw("Cannot move on a key that is not an array! (" + i + ")");
 							}
 							break;
 
@@ -960,7 +986,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 									updated = true;
 								}
 							} else {
-								throw("Cannot pop from a key that is not an array! (" + i + ")!");
+								throw("Cannot pop from a key that is not an array! (" + i + ")");
 							}
 							break;
 
