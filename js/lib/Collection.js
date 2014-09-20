@@ -673,183 +673,15 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 			if (i.substr(0, 1) === '$') {
 				// Check for commands
 				switch (i) {
-					case '$inc':
-						//debugger;
+					case '$index':
+						// Ignore $index operators
+						break;
+
+					default:
 						operation = true;
-						recurseUpdated = this._updateObject(doc, update[i], query, options, path, 'inc');
+						recurseUpdated = this._updateObject(doc, update[i], query, options, path, i);
 						if (recurseUpdated) {
 							updated = true;
-						}
-
-						// Do an increment operation
-						/*for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (typeof doc[k] === 'number') {
-									this._updateIncrement(doc, k, update[i][k]);
-									updated = true;
-								} else {
-									throw("Cannot increment field that is not a number! (" + k + ")!");
-								}
-							}
-						}*/
-						break;
-
-					case '$push':
-						operation = true;
-
-						// Do a push operation
-						for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (doc[k] === undefined) {
-									// Initialise a new array
-									doc[k] = [];
-								}
-								
-								if (doc[k] instanceof Array) {
-									this._updatePush(doc[k], update[i][k]);
-									updated = true;
-								} else {
-									throw("Cannot push to a key that is not an array! (" + k + ")!");
-								}
-							}
-						}
-						break;
-
-					case '$addToSet':
-						operation = true;
-
-						// Do a push operation checking first that no other item
-						// exists that matches the item to push
-						for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (doc[k] instanceof Array) {
-									// Loop the target array and check for existence of item
-									var targetArr = doc[k],
-										targetArrIndex,
-										targetArrCount = targetArr.length,
-										objHash,
-										addObj = true,
-										optionObj = (options && options.$addToSet),
-										hashMode,
-										pathSolver;
-
-									// Check if we have an options object for our operation
-									if (optionObj && optionObj.key) {
-										hashMode = false;
-										pathSolver = new Path(optionObj.key);
-										objHash = pathSolver.value(update[i][k])[0];
-									} else {
-										objHash = JSON.stringify(update[i][k]);
-										hashMode = true;
-									}
-
-									for (targetArrIndex = 0; targetArrIndex < targetArrCount; targetArrIndex++) {
-										if (hashMode) {
-											// Check if objects match via a string hash (JSON)
-											if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
-												// The object already exists, don't add it
-												addObj = false;
-												break;
-											}
-										} else {
-											// Check if objects match based on the path
-											if (objHash === pathSolver.value(targetArr[targetArrIndex])[0]) {
-												// The object already exists, don't add it
-												addObj = false;
-												break;
-											}
-										}
-									}
-
-									if (addObj) {
-										this._updatePush(doc[k], update[i][k]);
-										updated = true;
-									}
-								} else {
-									throw("Cannot push to a key that is not an array! (" + k + ")!");
-								}
-							}
-						}
-						break;
-
-					case '$splicePush':
-						operation = true;
-
-						// Do a splice operation
-						for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (doc[k] instanceof Array) {
-									var tempIndex = update[i].$index;
-
-									if (tempIndex !== undefined) {
-										delete update[i][k].$index;
-										this._updateSplicePush(doc[k], tempIndex, update[i][k]);
-										updated = true;
-									} else {
-										throw("Cannot splicePush without a $index integer value!");
-									}
-								} else {
-									throw("Cannot splicePush with a key that is not an array! (" + k + ")!");
-								}
-							}
-						}
-						break;
-
-					case '$move':
-						operation = true;
-
-						// Do a move operation
-						for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (doc[k] instanceof Array) {
-									// Loop the array and find matches to our search
-									for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
-										if (this._match(doc[k][tmpIndex], update[i][k])) {
-											var moveToIndex = update[i].$index;
-
-											if (moveToIndex !== undefined) {
-												this._updateSpliceMove(doc[k], tmpIndex, moveToIndex);
-												updated = true;
-											} else {
-												throw("Cannot move without a $index integer value!");
-											}
-											break;
-										}
-									}
-								} else {
-									throw("Cannot pull from a key that is not an array! (" + k + ")!");
-								}
-							}
-						}
-						break;
-
-					case '$pull':
-						operation = true;
-
-						// Do a pull operation
-						for (k in update[i]) {
-							if (update[i].hasOwnProperty(k) && k.substr(0, 1) !== '$') {
-								if (doc[k] instanceof Array) {
-									tmpArray = [];
-
-									// Loop the array and find matches to our search
-									for (tmpIndex = 0; tmpIndex < doc[k].length; tmpIndex++) {
-										if (this._match(doc[k][tmpIndex], update[i][k])) {
-											tmpArray.push(tmpIndex);
-										}
-									}
-
-									tmpCount = tmpArray.length;
-
-									// Now loop the pull array and remove items to be pulled
-									while (tmpCount--) {
-										this._updatePull(doc[k], tmpArray[tmpCount]);
-										updated = true;
-									}
-								} else {
-									throw("Cannot pull from a key that is not an array! (" + k + ")!");
-								}
-							}
 						}
 						break;
 				}
@@ -886,7 +718,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 			}
 
 			if (!operation) {
-				if (typeof(update[i]) === 'object') {
+				if (!opType && typeof(update[i]) === 'object') {
 					if (doc[i] !== null && typeof(doc[i]) === 'object') {
 						// Check if we are dealing with arrays
 						sourceIsArray = doc[i] instanceof Array;
@@ -909,18 +741,9 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 							} else {
 								// Either both source and update are arrays or the update is
 								// an array and the source is not, so set source to update
-								switch (opType) {
-									case 'inc':
-										this._updateIncrement(doc, i, update[i]);
-										updated = true;
-										break;
-
-									default:
-										if (doc[i] !== update[i]) {
-											this._updateProperty(doc, i, update[i]);
-											updated = true;
-										}
-										break;
+								if (doc[i] !== update[i]) {
+									this._updateProperty(doc, i, update[i]);
+									updated = true;
 								}
 							}
 						} else {
@@ -933,25 +756,155 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 							}
 						}
 					} else {
-						switch (opType) {
-							case 'inc':
-								this._updateIncrement(doc, i, update[i]);
-								updated = true;
-								break;
-
-							default:
-								if (doc[i] !== update[i]) {
-									this._updateProperty(doc, i, update[i]);
-									updated = true;
-								}
-								break;
+						if (doc[i] !== update[i]) {
+							this._updateProperty(doc, i, update[i]);
+							updated = true;
 						}
 					}
 				} else {
 					switch (opType) {
-						case 'inc':
+						case '$inc':
 							this._updateIncrement(doc, i, update[i]);
 							updated = true;
+							break;
+
+						case '$push':
+							// Check if the target key is undefined and if so, create an array
+							if (doc[i] === undefined) {
+								// Initialise a new array
+								doc[i] = [];
+							}
+
+							// Check that the target key is an array
+							if (doc[i] instanceof Array) {
+								this._updatePush(doc[i], update[i]);
+								updated = true;
+							} else {
+								throw("Cannot push to a key that is not an array! (" + i + ")!");
+							}
+							break;
+
+						case '$pull':
+							if (doc[i] instanceof Array) {
+								tmpArray = [];
+
+								// Loop the array and find matches to our search
+								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
+									if (this._match(doc[i][tmpIndex], update[i])) {
+										tmpArray.push(tmpIndex);
+									}
+								}
+
+								tmpCount = tmpArray.length;
+
+								// Now loop the pull array and remove items to be pulled
+								while (tmpCount--) {
+									this._updatePull(doc[i], tmpArray[tmpCount]);
+									updated = true;
+								}
+							} else {
+								throw("Cannot pull from a key that is not an array! (" + i + ")!");
+							}
+							break;
+
+						case '$addToSet':
+							// Check if the target key is undefined and if so, create an array
+							if (doc[i] === undefined) {
+								// Initialise a new array
+								doc[i] = [];
+							}
+
+							// Check that the target key is an array
+							if (doc[i] instanceof Array) {
+								// Loop the target array and check for existence of item
+								var targetArr = doc[i],
+									targetArrIndex,
+									targetArrCount = targetArr.length,
+									objHash,
+									addObj = true,
+									optionObj = (options && options.$addToSet),
+									hashMode,
+									pathSolver;
+
+								// Check if we have an options object for our operation
+								if (optionObj && optionObj.key) {
+									hashMode = false;
+									pathSolver = new Path(optionObj.key);
+									objHash = pathSolver.value(update[i])[0];
+								} else {
+									objHash = JSON.stringify(update[i]);
+									hashMode = true;
+								}
+
+								for (targetArrIndex = 0; targetArrIndex < targetArrCount; targetArrIndex++) {
+									if (hashMode) {
+										// Check if objects match via a string hash (JSON)
+										if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
+											// The object already exists, don't add it
+											addObj = false;
+											break;
+										}
+									} else {
+										// Check if objects match based on the path
+										if (objHash === pathSolver.value(targetArr[targetArrIndex])[0]) {
+											// The object already exists, don't add it
+											addObj = false;
+											break;
+										}
+									}
+								}
+
+								if (addObj) {
+									this._updatePush(doc[i], update[i]);
+									updated = true;
+								}
+							} else {
+								throw("Cannot push to a key that is not an array! (" + k + ")!");
+							}
+							break;
+
+						case '$splicePush':
+							// Check if the target key is undefined and if so, create an array
+							if (doc[i] === undefined) {
+								// Initialise a new array
+								doc[i] = [];
+							}
+
+							// Check that the target key is an array
+							if (doc[i] instanceof Array) {
+								var tempIndex = update.$index;
+
+								if (tempIndex !== undefined) {
+									delete update.$index;
+									this._updateSplicePush(doc[i], tempIndex, update[i]);
+									updated = true;
+								} else {
+									throw("Cannot splicePush without a $index integer value!");
+								}
+							} else {
+								throw("Cannot splicePush with a key that is not an array! (" + i + ")!");
+							}
+							break;
+
+						case '$move':
+							if (doc[i] instanceof Array) {
+								// Loop the array and find matches to our search
+								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
+									if (this._match(doc[i][tmpIndex], update[i])) {
+										var moveToIndex = update[i].$index;
+
+										if (moveToIndex !== undefined) {
+											this._updateSpliceMove(doc[i], tmpIndex, moveToIndex);
+											updated = true;
+										} else {
+											throw("Cannot move without a $index integer value!");
+										}
+										break;
+									}
+								}
+							} else {
+								throw("Cannot pull from a key that is not an array! (" + i + ")!");
+							}
 							break;
 
 						default:
