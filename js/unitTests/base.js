@@ -16,6 +16,8 @@ Base.prototype.dataUp = function () {
 };
 
 Base.prototype.dbDown = function () {
+	organisation ? organisation.drop() : '';
+	user ? user.drop() : '';
 	organisation = undefined;
 	user = undefined;
 	db = undefined;
