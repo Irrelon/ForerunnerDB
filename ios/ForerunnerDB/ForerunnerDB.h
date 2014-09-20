@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 #import "ForerunnerDB_Index.h"
 #import "ForerunnerDB_Collection.h"
-#import "BaseConversion.h"
 #import "EventEmitter.h"
 
 @interface ForerunnerDB : NSObject
@@ -17,7 +16,6 @@
 @property NSMutableDictionary *_collections;
 @property NSMutableDictionary *_debug;
 @property NSInteger idCounter;
-@property BaseConversion *baseConversion;
 
 + (id)sharedInstance;
 - (NSString *)crc:(NSString *)str;

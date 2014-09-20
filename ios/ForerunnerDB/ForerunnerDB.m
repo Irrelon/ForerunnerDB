@@ -7,7 +7,6 @@
 //
 
 #import "ForerunnerDB.h"
-#import "ObjectId.h"
 
 #define random() (arc4random_uniform(74))
 #define cPow pow(3, 19)
@@ -40,7 +39,6 @@
 		self.idCounter = 0;
         self._collections = [[NSMutableDictionary alloc] init];
 		self._debug = [[NSMutableDictionary alloc] init];
-		self.baseConversion = [[BaseConversion alloc] init];
     }
     
     return self;
@@ -84,13 +82,16 @@
 }
 
 - (NSString *)objectId:(NSString *)str {
-	int val;
+	long long val = (self.idCounter + (
+		rand() * cPow +
+		rand() * cPow +
+		rand() * cPow +
+		rand() * cPow
+	));
 	
-	for (int i = 0; i < [str length]; i++) {
-		val += [str characterAtIndex:i] * pow(10, 17);
-	}
+	self.idCounter++;
 	
-	return [self.baseConversion formatNumber:val toBase:16];
+	return [[NSString alloc] initWithFormat:@"%llx", val];
 }
 
 - (ForerunnerDB_Collection *)collection:(NSString *)name {
