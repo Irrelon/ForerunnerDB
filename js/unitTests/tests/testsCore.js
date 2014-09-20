@@ -871,6 +871,34 @@ test("Core - Collection.update() :: $inc operator advanced", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $push array operator with $position modifier", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var before = user.findById("2");
+
+	ok(before.friends.length === 2, "Check for correct initial array length");
+	ok(before.friends[0] === "3" && before.friends[1] === "4", "Check for correct initial values");
+
+	var result = user.update({
+		_id: "2"
+	}, {
+		"$push": {
+			"friends": {
+				"$each": ["6"],
+				"$position": 1
+			}
+		}
+	});
+
+	var after = user.findById("2");
+
+	ok(after.friends.length === 3, "Check for correct new array length");
+	ok(after.friends[0] === "3" && after.friends[1] === "6" && after.friends[2] === "4", "Check for correct new values");
+
+	base.dbDown();
+});
+
 test("Core - Collection.updateById() :: $push array operator", function() {
 	base.dbUp();
 	base.dataUp();
@@ -928,19 +956,19 @@ test("Core - Collection.updateById() :: $pull array operator", function() {
 
 	var before = user.findById("2");
 
-	ok(before.arr.length === 3, "Complete");
+	ok(before.arr.length === 2, "Complete");
 
 	var result = user.updateById("2", {
 		"$pull": {
 			"arr": {
-				_id: 'ahh'
+				_id: 'lsd'
 			}
 		}
 	});
 
 	var after = user.findById("2");
 
-	ok(after.arr.length === 2, "Complete");
+	ok(after.arr.length === 1, "Complete");
 
 	base.dbDown();
 });
@@ -1024,6 +1052,35 @@ test("Core - Collection.update() :: $rename operator", function() {
 
 	ok(after.remaining === undefined, "Check final properties");
 	ok(after.upstarted === 20, "Check final properties");
+
+	base.dbDown();
+});
+
+test("Core - Collection.update() :: $unset operator", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	coll.setData([{
+		_id: '1',
+		remaining: 20
+	}]);
+
+	var before = coll.find()[0];
+
+	ok(before.remaining === 20, "Check initial numbers");
+
+	coll.update({
+		_id: "1"
+	}, {
+		$unset: {
+			remaining: 1
+		}
+	});
+
+	var after = coll.find()[0];
+
+	ok(after.remaining === undefined, "Check final properties");
 
 	base.dbDown();
 });

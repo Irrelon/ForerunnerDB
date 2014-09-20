@@ -339,6 +339,13 @@ Collection.prototype.setData = function (data, options, callback) {
 		var op = this._metrics.create('setData');
 		op.start();
 
+		options = options || {};
+		options.decouple = options.decouple !== undefined ? options.decouple : true;
+
+		if (options.decouple) {
+			data = this.decouple(data);
+		}
+
 		if (!(data instanceof Array)) {
 			data = [data];
 		}
@@ -777,7 +784,23 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 							// Check that the target key is an array
 							if (doc[i] instanceof Array) {
-								this._updatePush(doc[i], update[i]);
+								// Check for a $position modifier with an $each
+								if (update[i].$position !== undefined && update[i].$each instanceof Array) {
+									// Grab the position to insert at
+									tempIndex = update[i].$position;
+
+									// Loop the each array and push each item
+									tmpCount = update[i].$each.length;
+									for (tmpIndex = 0; tmpIndex < tmpCount; tmpIndex++) {
+										this._updateSplicePush(doc[i], tempIndex + tmpIndex, update[i].$each[tmpIndex]);
+									}
+								} else if (update[i].$each instanceof Array) {
+									// Do a loop over the each to push multiple items
+
+								} else {
+									// Do a standard push
+									this._updatePush(doc[i], update[i]);
+								}
 								updated = true;
 							} else {
 								throw("Cannot push to a key that is not an array! (" + i + ")!");
@@ -915,6 +938,21 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 						case '$rename':
 							this._updateRename(doc, i, update[i]);
 							updated = true;
+							break;
+
+						case '$unset':
+							this._updateUnset(doc, i);
+							updated = true;
+							break;
+
+						case '$pop':
+							if (doc[i] instanceof Array) {
+								if (this._updatePop(doc[i], update[i])) {
+									updated = true;
+								}
+							} else {
+								throw("Cannot pop from a key that is not an array! (" + i + ")!");
+							}
 							break;
 
 						default:
@@ -1087,6 +1125,57 @@ Collection.prototype._updateRename = function (doc, prop, val) {
 		doc[val] = existingVal;
 		delete doc[prop];
 	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @private
+ */
+Collection.prototype._updateUnset = function (doc, prop) {
+	if (this._linked) {
+		$.observable(doc).removeProperty(prop);
+	} else {
+		delete doc[prop];
+	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @return {Boolean}
+ * @private
+ */
+Collection.prototype._updatePop = function (doc, val) {
+	var index,
+		updated = false;
+
+	if (doc.length > 0) {
+		if (this._linked) {
+			if (val === 1) {
+				index = doc.length - 1;
+			} else if (val === -1) {
+				index = 0;
+			}
+
+			if (index > -1) {
+				$.observable(arr).remove(index);
+				updated = true;
+			}
+		} else {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+	}
+
+	return updated;
 };
 
 /**
