@@ -789,6 +789,59 @@ test("Core - Collection.find() :: Options :: Multi join", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $inc operator", function() {
+	base.dbUp();
+	
+	var coll = db.collection('test');
+	
+	coll.setData([{
+		_id: '1',
+		remaining: 20,
+		purchased: 0,
+		likes: [{
+			_id: 'jimjonjibbajabba@gmail.com',
+			likeCount: 0,
+			unLikeCount: 10
+		}, {
+			_id: 'billbradleybonnington@gmail.com',
+			likeCount: 12,
+			unLikeCount: 6
+		}]
+	}]);
+	
+	var before = coll.find()[0];
+	
+	ok(before.remaining === 20, "Check initial numbers");
+	ok(before.purchased === 0, "Check initial numbers");
+	ok(before.likes[0].likeCount === 0, "Check initial numbers");
+	ok(before.likes[0].unLikeCount === 10, "Check initial numbers");
+	
+	coll.update({
+		_id: "1",
+		likes: {
+			_id: "jimjonjibbajabba@gmail.com"
+		}
+	}, {
+		$inc: {
+			purchased: 1,
+			remaining: -1,
+			"likes.$": {
+				likeCount: 1,
+				unLikeCount: -3
+			}
+		} 
+	});
+
+	var after = coll.find()[0];
+	
+	ok(after.remaining === 19, "Check final numbers");
+	ok(after.purchased === 1, "Check final numbers");
+	ok(after.likes[0].likeCount === 1, "Check final numbers");
+	ok(after.likes[0].unLikeCount === 7, "Check final numbers");
+
+	base.dbDown();
+});
+
 test("Core - Collection.updateById() :: $push array operator", function() {
 	base.dbUp();
 	base.dataUp();
