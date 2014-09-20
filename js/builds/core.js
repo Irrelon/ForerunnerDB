@@ -1,3 +1,3 @@
-var ForerunnerDB = require('../lib/Core');
+var Core = require('../lib/Core');
 
-module.exports = ForerunnerDB;
+module.exports = Core;

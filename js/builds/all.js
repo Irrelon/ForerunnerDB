@@ -1,4 +1,4 @@
-var ForerunnerDB = require('../lib/Core'),
+var Core = require('../lib/Core'),
 	CollectionGroup = require('../lib/CollectionGroup'),
 	View = require('../lib/View'),
 	OldView = require('../lib/OldView'),
@@ -6,4 +6,5 @@ var ForerunnerDB = require('../lib/Core'),
 	Highcharts = require('../lib/Highcharts'),
 	Persist = require('../lib/Persist');
 
-module.exports = ForerunnerDB;
+module.exports = Core;
+window['ForerunnerDB'] = Core;

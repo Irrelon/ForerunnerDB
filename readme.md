@@ -166,6 +166,12 @@ The following example inserts "Milk" to the "shoppingList" array at index 1 in t
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array
 
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against.
+
+In the following example $addToSet is used to check uniqueness against the whole document being added:
+
+
+
 #### $pull
 Used in updates to remove an item from an array
 

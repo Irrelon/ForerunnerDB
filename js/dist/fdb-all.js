@@ -1,5 +1,5 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var ForerunnerDB = _dereq_('../lib/Core'),
+var Core = _dereq_('../lib/Core'),
 	CollectionGroup = _dereq_('../lib/CollectionGroup'),
 	View = _dereq_('../lib/View'),
 	OldView = _dereq_('../lib/OldView'),
@@ -7,7 +7,8 @@ var ForerunnerDB = _dereq_('../lib/Core'),
 	Highcharts = _dereq_('../lib/Highcharts'),
 	Persist = _dereq_('../lib/Persist');
 
-module.exports = ForerunnerDB;
+module.exports = Core;
+window['ForerunnerDB'] = Core;
 },{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/OldView":11,"../lib/OldView.Bind":10,"../lib/Persist":15,"../lib/View":17}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
