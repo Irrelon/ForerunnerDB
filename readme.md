@@ -118,6 +118,29 @@ You can target individual documents for update by their id (primary key) via a q
 That will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
+#### $inc
+The $inc operator increments / decrements a field value by the given number.
+
+	db.collection.update({
+		<query>
+	}, {
+		$inc: {
+			<field>: <value>
+		}
+	});
+
+In the following example, the "count" field is decremented by 1 in the document that matches the id "445324":
+
+	db.collection.update({
+		_id: "445324"
+	}, {
+		$inc: {
+			count: -1
+		}
+	});
+
+Using a positive number will increment, using a negative number will decrement.
+
 #### $push
 The $push operator appends a specified value to an array.
 
@@ -251,18 +274,40 @@ The $pull operator removes a specified value or values that match a specified qu
 		}
 	});
 
-The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
+The following example removes the "Milk" entry from the "shoppingList" array:
 
 	db.users.update({
 		_id: "23231"
 	}, {
-		$push: {
+		$pull: {
 			shoppingList: "Milk"
 		}
 	});
 
+If an array element is an embedded document (JavaScript object), the $pull operator applies its specified query to the element as though it were a top-level object.
+
 #### $move
-Move an item that exists inside a document's array from one index to another
+The $move operator moves an item that exists inside a document's array from one index to another.
+
+	db.collection.update({
+		<query>
+	}, {
+		$move: {
+			<arrayField>: <value|query>,
+			$index: <index>
+		}
+	});
+
+The following example moves "Milk" in the "shoppingList" array to index 1 in the document with the id "23231":
+
+	db.users.update({
+		_id: "23231"
+	}, {
+		$move: {
+			shoppingList: "Milk"
+			$index: 1
+		}
+	});
 
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
