@@ -119,7 +119,7 @@ That will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
 #### $push
-The $push operator appends a specified value to an array
+The $push operator appends a specified value to an array.
 
 	db.collection.update({
 		<query>
@@ -140,7 +140,7 @@ The following example appends "Milk" to the "shoppingList" array in the document
 	});
 
 #### $splicePush
-The $splicePush operator adds an item into an array at a specified index
+The $splicePush operator adds an item into an array at a specified index.
 
 	db.collection.update({
 		<query>
@@ -164,7 +164,7 @@ The following example inserts "Milk" to the "shoppingList" array at index 1 in t
 
 
 #### $addToSet
-Adds an item into an array only if the item does not already exist in the array
+Adds an item into an array only if the item does not already exist in the array.
 
 ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against.
 
@@ -241,7 +241,25 @@ Now in the example below we specify which key to test uniqueness against:
 You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
 
 #### $pull
-Used in updates to remove an item from an array
+The $pull operator removes a specified value or values that match a specified query.
+
+	db.collection.update({
+		<query>
+	}, {
+		$pull: {
+			<arrayField>: <value|query>
+		}
+	});
+
+The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
+
+	db.users.update({
+		_id: "23231"
+	}, {
+		$push: {
+			shoppingList: "Milk"
+		}
+	});
 
 #### $move
 Move an item that exists inside a document's array from one index to another
