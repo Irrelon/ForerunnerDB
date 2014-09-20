@@ -849,7 +849,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 			}
 
 			// Check if the key has a .$ at the end, denoting an array lookup
-			if (i.substr(i.length - 2, 2) === '.$') {
+			if (this._isPositionalKey(i)) {
 				operation = true;
 
 				// Modify i to be the name of the field
@@ -927,6 +927,17 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 	}
 
 	return updated;
+};
+
+/**
+ * Determines if the passed key has an array positional mark (a dollar at the end
+ * of its name).
+ * @param {String} key The key to check.
+ * @returns {Boolean} True if it is a positional or false if not.
+ * @private
+ */
+Collection.prototype._isPositionalKey = function (key) {
+	return key.substr(key.length - 2, 2) === '.$';
 };
 
 /**
