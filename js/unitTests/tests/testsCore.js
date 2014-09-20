@@ -796,6 +796,35 @@ test("Core - Collection.update() :: $inc operator", function() {
 	
 	coll.setData([{
 		_id: '1',
+		remaining: 20
+	}]);
+	
+	var before = coll.find()[0];
+	
+	ok(before.remaining === 20, "Check initial numbers");
+	
+	coll.update({
+		_id: "1"
+	}, {
+		$inc: {
+			remaining: -1
+		} 
+	});
+
+	var after = coll.find()[0];
+	
+	ok(after.remaining === 19, "Check final numbers");
+
+	base.dbDown();
+});
+
+test("Core - Collection.update() :: $inc operator advanced", function() {
+	base.dbUp();
+	
+	var coll = db.collection('test');
+	
+	coll.setData([{
+		_id: '1',
 		remaining: 20,
 		purchased: 0,
 		likes: [{
@@ -829,7 +858,7 @@ test("Core - Collection.update() :: $inc operator", function() {
 				likeCount: 1,
 				unLikeCount: -3
 			}
-		} 
+		}
 	});
 
 	var after = coll.find()[0];
