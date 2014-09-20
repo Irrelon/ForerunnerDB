@@ -170,19 +170,6 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
 
 In the following example $addToSet is used to check uniqueness against the whole document being added:
 
-
-
-#### $pull
-Used in updates to remove an item from an array
-
-#### $move
-Move an item that exists inside a document's array from one index to another
-
-## Using $addToSet to push a unique item into an array
-ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against:
-
-### A Simple $addToSet, checks uniqueness against a whole document being added
-
 	// Create a collection document
 	collection.setData({
 		_id: "1",
@@ -214,7 +201,7 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
         }
     });
 
-### An $addToSet using an option to tell Forerunner which key to test uniqueness against
+Now in the example below we specify which key to test uniqueness against:
 
 	// Create a collection document
 	collection.setData({
@@ -252,6 +239,12 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
     });
 
 You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
+
+#### $pull
+Used in updates to remove an item from an array
+
+#### $move
+Move an item that exists inside a document's array from one index to another
 
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
