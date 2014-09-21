@@ -698,6 +698,11 @@ watchify ./js/build/all.js -o ./js/dist/fdb-all.js
 
 The fully minified version of ForerunnerDB is run through Google's Closure Compiler with simple optimisations switched on.
 
+# iOS Version
+You may notice in the repo that there is an iOS folder containing a version of Forerunner for iOS. This project is still at an alpha level and should be considered non-production code, however you are welcome to play around with it and get a feel for what will be available soon.
+
+The iOS version is part of the roadmap and will include data-binding for list structures like UITableView, as well as individual controls like UILabel. Data-persistence is already working as well as inserting and basic data queries, update and remove.
+
 # Future Updates
 ForerunnerDB's project road-map:
 
@@ -745,6 +750,8 @@ ForerunnerDB's project road-map:
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
+* Native iOS version
+* Native Android version
 
 #### Query operators still to implement
 * $setOnInsert
