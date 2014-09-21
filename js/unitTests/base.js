@@ -24,12 +24,12 @@ Base.prototype.dbDown = function () {
 };
 
 Base.prototype.viewUp = function () {
-	userView = db.oldView('userView')
+	userView = db.view('userView')
 		.from(db.collection('user'));
 };
 
 Base.prototype.viewDown = function () {
-	db.oldView('userView').drop();
+	db.view('userView').drop();
 	userView = undefined;
 };
 
@@ -37,13 +37,13 @@ Base.prototype.viewGroupUp = function () {
 	userGroup = db.collectionGroup('userGroup')
 		.addCollection(userView);
 
-	userGroupView = db.oldView('userGroupView')
+	userGroupView = db.view('userGroupView')
 		.from(userGroup);
 };
 
 Base.prototype.viewGroupDown = function () {
 	db.collectionGroup('userGroup').drop();
-	db.oldView('userGroupView').drop();
+	db.view('userGroupView').drop();
 	userGroup = undefined;
 	userGroupView = undefined;
 };
