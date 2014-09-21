@@ -5,7 +5,7 @@
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
 
 ## License
-Forerunner is free for use if you are using it for non-commercial, non-governmental and non-profit use. If you are doing something commercial please visit the license page to see which license best suits your requirements: http://www.forerunnerdb.com/#pricingboxes
+Forerunner is free for use if you are using it for non-commercial, non-governmental, or non-profit use. If you are doing something commercial please visit the [license page](http://www.forerunnerdb.com/#pricingboxes) to see which license best suits your requirements.
 
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
@@ -14,7 +14,7 @@ If you are using Node.js (or have it installed) you can use NPM to download Fore
 npm install forerunnerdb
 ```
 
-This will also work for browser-based development, however if you prefer a more traditional download, please use the download button to the right of the github page.
+This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/coolbloke1324/ForerunnerDB/archive/master.zip).
 
 ## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
@@ -48,10 +48,10 @@ array of objects to the setData() method:
 		price: 100
 	}]);
 
-Setting data on a collection will empty the existing data from the collection if any exists.
+Setting data on a collection will empty any existing data from the collection.
 
 ## Inserting Documents
-You can either insert a single document object or pass an array of documents. Insert a single document:
+You can either insert a single document object:
 
 	itemCollection.insert({
 		_id: 3,
@@ -59,7 +59,7 @@ You can either insert a single document object or pass an array of documents. In
 		name: 'Fish Bones'
 	});
 
-Or an array of documents:
+or pass an array of documents:
 
 	itemCollection.insert([{
 		_id: 4,
@@ -72,9 +72,9 @@ Or an array of documents:
 	}]);
 
 ## Searching the Collection
-Much like MongoDB, searching for data in a collection is done using the find() method and supports many of the same
-operators starting with a $ that MongoDB supports. For instance to find documents in the collection where the price
-is greater than 90 but less than 150, you can do this:
+Much like MongoDB, searching for data in a collection is done using the find() method, which supports many of the same
+operators starting with a $ that MongoDB supports. For instance, finding documents in the collection where the price
+is greater than 90 but less than 150, would look like this:
 
 	itemCollection.find({
 		price: {
@@ -83,7 +83,7 @@ is greater than 90 but less than 150, you can do this:
 		}
 	});
 
-Which will return an array with all matching documents. If no documents match your search, an empty array is returned.
+And would return an array with all matching documents. If no documents match your search, an empty array is returned.
 
 Supported search operators:
 
@@ -99,7 +99,7 @@ Supported search operators:
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
 ## Updating the Collection
-This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document instead of outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
+This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
 	collection.update({
 		price: {
@@ -115,7 +115,7 @@ You can target individual documents for update by their id (primary key) via a q
 
 	collection.updateById(1, {price: 180});
 
-That will update the document with the _id field of 1 to a new price of 180.
+This will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
 #### $inc
@@ -189,7 +189,7 @@ The following example inserts "Milk" to the "shoppingList" array at index 1 in t
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array.
 
-ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. The main difference between ForerunnerDB and MongoDB is that ForerunnerDB also allows you to specify a matching field / path to check uniqueness against.
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check uniqueness against.
 
 In the following example $addToSet is used to check uniqueness against the whole document being added:
 
@@ -264,7 +264,7 @@ Now in the example below we specify which key to test uniqueness against:
 You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
 
 #### $pull
-The $pull operator removes a specified value or values that match a specified query.
+The $pull operator removes a specified value or values that match an input query.
 
 	db.collection.update({
 		<query>
@@ -434,7 +434,7 @@ The result of the call above is:
 		"purchasedBy":[]
 	}]
 
-## Indexes & Performance
+## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method. ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined. Let's setup some data to index:
 
 	var db = new ForerunnerDB(),
@@ -616,9 +616,9 @@ Which gives:
 
 Now we are able to query 100,000 records instantly, requiring zero milliseconds to return the results.
 
-Examining the output from an explain() call will provide you with the most insight into how the query was executed and if a table scan was involved or not, helping you to plan your indexes accordingly.
+Examining the output from an explain() call will provide you with the most insight into how the query was executed and if a table scan was involved or not, helping you to plan your indices accordingly.
 
-Keep in mind that indexes require memory to maintain hash tables and there is always a trade-off between speed and memory usage.
+Keep in mind that indices require memory to maintain hash tables and there is always a trade-off between speed and memory usage.
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
@@ -644,7 +644,7 @@ the collection:
 Now if you execute any insert, update or remove on the collection, the HTML will automatically update to reflect the
 changes in the data.
 
-Note that the selector string that a bind uses can match multiple elements which allows you to bind against multiple sections of the page with the same data. For instance instead of binding against an ID (e.g. #myList) you could bind against a class:
+Note that the selector string that a bind uses can match multiple elements, allowing you to bind against multiple sections of the page with the same data. For instance, instead of binding against an ID (e.g. #myList) you could bind against a class:
 
 ### HTML
 	<ul class="myList">
@@ -706,7 +706,7 @@ ForerunnerDB's project road-map:
 * Collection indexing
 * Index violation checking
 * Unit tests
-* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents e.g. a user account could have a CRUD security record that has {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user, meaning they would only have update privilege on their own records as an example, but their read privilege could be {} allowing read on all documents.
+* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents-- e.g. a user account could have a CRUD security record containing {profileId: '352349thj439yh43'} so that only documents that match that query can be edited by the user. This means they would only have update privilege on their own records as an example, but their read privilege could be {} allowing read on all documents.
 * Query remote database from browser
 * Data persistence on client-side
 * NPM installation
@@ -739,7 +739,7 @@ ForerunnerDB's project road-map:
 
 ### Future Updates
 * Data persistence on server-side
-* Collection / query paging e.g. select next 10, select previous 10
+* Collection / query paging-- e.g. select next 10, select previous 10
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
