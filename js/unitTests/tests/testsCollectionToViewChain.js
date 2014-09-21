@@ -1,4 +1,4 @@
-test("Chains CRUD - setData", function() {
+test("Collection -> View - Chains CRUD - setData", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
@@ -18,7 +18,7 @@ test("Chains CRUD - setData", function() {
 	base.dbDown();
 });
 
-test("Chains CRUD - insert", function() {
+test("Collection -> View - Chains CRUD - insert", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
@@ -38,7 +38,7 @@ test("Chains CRUD - insert", function() {
 	base.dbDown();
 });
 
-test("Chains CRUD - updated", function() {
+test("Collection -> View - Chains CRUD - updated", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
@@ -64,7 +64,7 @@ test("Chains CRUD - updated", function() {
 	base.dbDown();
 });
 
-test("Chains CRUD - remove", function() {
+test("Collection -> View - Chains CRUD - remove", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),

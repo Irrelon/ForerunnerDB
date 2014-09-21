@@ -17,26 +17,10 @@ CollectionGroup.prototype.init = function (name) {
 	this._name = name;
 	this._collectionArr = [];
 	this._views = [];
-
-	// Register listeners for the CRUD events
-	this._onCollectionInsert = function () {
-		self._onInsert.apply(self, arguments);
-	};
-
-	this._onCollectionUpdate = function () {
-		self._onUpdate.apply(self, arguments);
-	};
-
-	this._onCollectionRemove = function () {
-		self._onRemove.apply(self, arguments);
-	};
-
-	this._onCollectionChange = function () {
-		self._onChange.apply(self, arguments);
-	};
 };
 
-Shared.modules.CollectionGroup = CollectionGroup;
+Shared.addModule('CollectionGroup', CollectionGroup);
+Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 Overload = require('./Overload');
@@ -194,12 +178,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			// Add the collection
 			this._collectionArr.push(collection);
 			collection._groups.push(this);
-
-			// Listen to events from the collection
-			collection.on('insert', this._onCollectionInsert);
-			collection.on('update', this._onCollectionUpdate);
-			collection.on('remove', this._onCollectionRemove);
-			collection.on('change', this._onCollectionChange);
+			collection.chain(this);
 		}
 	}
 
@@ -212,12 +191,7 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			groupIndex;
 
 		if (collectionIndex !== -1) {
-			// Remove event listeners from this collection
-			collection.off('insert', this._onCollectionInsert);
-			collection.off('update', this._onCollectionUpdate);
-			collection.off('remove', this._onCollectionRemove);
-			collection.off('change', this._onCollectionChange);
-
+			collection.unChain(this);
 			this._collectionArr.splice(collectionIndex, 1);
 
 			groupIndex = collection._groups.indexOf(this);
@@ -289,22 +263,6 @@ CollectionGroup.prototype.removeById = function (id) {
 	for (var i = 0; i < this._collectionArr.length; i++) {
 		this._collectionArr[i].removeById(id);
 	}
-};
-
-CollectionGroup.prototype._onInsert = function (successArr, failArr) {
-	this.emit('insert', successArr, failArr);
-};
-
-CollectionGroup.prototype._onUpdate = function (successArr, failArr) {
-	this.emit('update', successArr, failArr);
-};
-
-CollectionGroup.prototype._onRemove = function (successArr, failArr) {
-	this.emit('remove', successArr, failArr);
-};
-
-CollectionGroup.prototype._onChange = function () {
-	this.emit('change');
 };
 
 /**

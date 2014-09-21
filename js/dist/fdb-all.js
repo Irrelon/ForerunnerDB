@@ -3191,26 +3191,10 @@ CollectionGroup.prototype.init = function (name) {
 	this._name = name;
 	this._collectionArr = [];
 	this._views = [];
-
-	// Register listeners for the CRUD events
-	this._onCollectionInsert = function () {
-		self._onInsert.apply(self, arguments);
-	};
-
-	this._onCollectionUpdate = function () {
-		self._onUpdate.apply(self, arguments);
-	};
-
-	this._onCollectionRemove = function () {
-		self._onRemove.apply(self, arguments);
-	};
-
-	this._onCollectionChange = function () {
-		self._onChange.apply(self, arguments);
-	};
 };
 
-Shared.modules.CollectionGroup = CollectionGroup;
+Shared.addModule('CollectionGroup', CollectionGroup);
+Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 Overload = require('./Overload');
@@ -3368,12 +3352,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			// Add the collection
 			this._collectionArr.push(collection);
 			collection._groups.push(this);
-
-			// Listen to events from the collection
-			collection.on('insert', this._onCollectionInsert);
-			collection.on('update', this._onCollectionUpdate);
-			collection.on('remove', this._onCollectionRemove);
-			collection.on('change', this._onCollectionChange);
+			collection.chain(this);
 		}
 	}
 
@@ -3386,12 +3365,7 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			groupIndex;
 
 		if (collectionIndex !== -1) {
-			// Remove event listeners from this collection
-			collection.off('insert', this._onCollectionInsert);
-			collection.off('update', this._onCollectionUpdate);
-			collection.off('remove', this._onCollectionRemove);
-			collection.off('change', this._onCollectionChange);
-
+			collection.unChain(this);
 			this._collectionArr.splice(collectionIndex, 1);
 
 			groupIndex = collection._groups.indexOf(this);
@@ -3463,22 +3437,6 @@ CollectionGroup.prototype.removeById = function (id) {
 	for (var i = 0; i < this._collectionArr.length; i++) {
 		this._collectionArr[i].removeById(id);
 	}
-};
-
-CollectionGroup.prototype._onInsert = function (successArr, failArr) {
-	this.emit('insert', successArr, failArr);
-};
-
-CollectionGroup.prototype._onUpdate = function (successArr, failArr) {
-	this.emit('update', successArr, failArr);
-};
-
-CollectionGroup.prototype._onRemove = function (successArr, failArr) {
-	this.emit('remove', successArr, failArr);
-};
-
-CollectionGroup.prototype._onChange = function () {
-	this.emit('change');
 };
 
 /**
@@ -5715,95 +5673,6 @@ View.prototype.name = function (val) {
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
-};
-
-/**
- * Inserts into view data via the view collection. See Collection.insert() for more information.
- * @returns {*}
- */
-View.prototype.setData = function (data, oldData) {
-	// Decouple the data to ensure we are working with our own copy
-	data = this._privateData.decouple(data);
-
-	// Modify transform data
-	this._transformSetData(data);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	return this._privateData.setData(data);
-};
-
-
-/**
- * Inserts into view data via the view collection. See Collection.insert() for more information.
- * @returns {*}
- */
-View.prototype.insert = function (data, index, callback) {
-	// Decouple the data to ensure we are working with our own copy
-	data = this._privateData.decouple(data);
-
-	if (typeof(index) === 'function') {
-		callback = index;
-		index = this._privateData.length;
-	} else if (index === undefined) {
-		index = this._privateData.length;
-	}
-
-	// Modify transform data
-	this._transformInsert(data, index);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	return this._privateData._insertHandle(data, index, callback);
-};
-
-/**
- * Updates into view data via the view collection. See Collection.update() for more information.
- * @returns {*}
- */
-View.prototype.update = function (query, update) {
-	// Modify transform data
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	var updates = this._privateData.update(query, update),
-		primaryKey,
-		tQuery,
-		item;
-
-	if (this._transformEnabled && this._transformIn) {
-		primaryKey = this._publicData.primaryKey();
-
-		for (var i = 0; i < updates.length; i++) {
-			tQuery = {};
-			item = updates[i];
-			tQuery[primaryKey] = item[primaryKey];
-
-			this._transformUpdate(tQuery, item);
-		}
-	}
-
-	return updates;
-};
-
-/**
- * Removed from view data via the view collection. See Collection.remove() for more information.
- * @returns {*}
- */
-View.prototype.remove = function (query) {
-	// Modify transform data
-	this._transformRemove(query);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	return this._privateData.remove(query);
 };
 
 View.prototype.link = function (outputTargetSelector, templateSelector) {
