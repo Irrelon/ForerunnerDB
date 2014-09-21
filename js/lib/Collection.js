@@ -380,14 +380,19 @@ Collection.prototype.setData = function (data, options, callback) {
 		this._rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
-		// Loop views and pass them the insert query
+		op.time('Resolve chains');
+		this.chainSend('setData', data, {oldData: oldData});
+		op.time('Resolve chains');
+
+		// CHAIN
+		/*// Loop views and pass them the insert query
 		if (views && views.length) {
 			op.time('Inform ' + views.length + ' views about the new data');
 			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 				views[viewIndex].setData(data, oldData);
 			}
 			op.time('Inform ' + views.length + ' views about the new data');
-		}
+		}*/
 
 		op.stop();
 
@@ -627,8 +632,16 @@ Collection.prototype.update = function (query, update, options) {
 		op.time('Update documents');
 
 		if (updated.length) {
+			op.time('Resolve chains');
+			this.chainSend('update', {
+				query: query,
+				update: update
+			}, options);
+			op.time('Resolve chains');
+
+			// CHAIN
 			// Loop views and pass them the update query
-			if (views && views.length) {
+			/*if (views && views.length) {
 				if (this.debug('views')) {
 					console.log('Updating views from collection: ' + this.name());
 				}
@@ -637,7 +650,7 @@ Collection.prototype.update = function (query, update, options) {
 					views[viewIndex].update(query, update);
 				}
 				op.time('Inform views of update');
-			}
+			}*/
 
 			this._onUpdate(updated);
 			this.deferEmit('change', {type: 'update', data: updated});
@@ -1279,12 +1292,19 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 			}
 
+			//op.time('Resolve chains');
+			this.chainSend('remove', {
+				query: query
+			}, options);
+			//op.time('Resolve chains');
+
+			// CHAIN
 			// Loop views and pass them the remove query
-			if (views && views.length) {
+			/*if (views && views.length) {
 				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 					views[viewIndex].remove(query);
 				}
-			}
+			}*/
 
 			if (!options || (options && !options.noEmit)) {
 				this._onRemove(dataSet);
@@ -1452,12 +1472,17 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		}
 	}
 
+	//op.time('Resolve chains');
+	this.chainSend('insert', data, {index: index});
+	//op.time('Resolve chains');
+
+	// CHAIN
 	// Loop views and pass them the insert query
-	if (views && views.length) {
+	/*if (views && views.length) {
 		for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 			views[viewIndex].insert(data, index);
 		}
-	}
+	}*/
 
 	this._onInsert(inserted, failed);
 	if (callback) { callback(); }

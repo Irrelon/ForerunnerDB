@@ -214,7 +214,7 @@ View.prototype.from = function (collection) {
 View.prototype._addCollection = function (collection) {
 	if (this._collections.indexOf(collection) === -1) {
 		this._collections.push(collection);
-		collection._addView(this);
+		collection.chain(this);
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
@@ -231,11 +231,80 @@ View.prototype._removeCollection = function (collection) {
 	var collectionIndex = this._collections.indexOf(collection);
 	if (collectionIndex > -1) {
 		this._collections.splice(collection, 1);
-		collection._removeView(this);
+		collection.unChain(this);
 		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
 	}
 
 	return this;
+};
+
+View.prototype._chainHandler = function (sender, type, data, options) {
+	switch (type) {
+		case 'setData':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			// Modify transform data
+			this._transformSetData(data);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData.setData(data);
+			break;
+
+		case 'insert':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			var index = options && options.index ? options.index : this._privateData.length;
+
+			// Modify transform data
+			this._transformInsert(data, index);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData._insertHandle(data, index);
+			break;
+
+		case 'update':
+			// Modify transform data
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			var updates = this._privateData.update(data.query, data.update, data.options),
+				primaryKey,
+				tQuery,
+				item;
+
+			if (this._transformEnabled && this._transformIn) {
+				primaryKey = this._publicData.primaryKey();
+
+				for (var i = 0; i < updates.length; i++) {
+					tQuery = {};
+					item = updates[i];
+					tQuery[primaryKey] = item[primaryKey];
+
+					this._transformUpdate(tQuery, item);
+				}
+			}
+			break;
+
+		case 'remove':
+			// Modify transform data
+			this._transformRemove(data.query, options);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData.remove(data.query, options);
+			break;
+	}
 };
 
 View.prototype.on = function () {
@@ -566,15 +635,15 @@ View.prototype._transformInsert = function (data, index) {
 	}
 };
 
-View.prototype._transformUpdate = function (query, update) {
+View.prototype._transformUpdate = function (query, update, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.update(query, update);
+		this._publicData.update(query, update, options);
 	}
 };
 
-View.prototype._transformRemove = function (query) {
+View.prototype._transformRemove = function (query, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.remove(query);
+		this._publicData.remove(query, options);
 	}
 };
 

@@ -1,7 +1,7 @@
 var Shared = {
 	idCounter: 0,
 	modules: {},
-	prototypes: {},
+
 	addModule: function (name, module) {
 		this.modules[name] = module;
 	},
@@ -40,13 +40,13 @@ var Shared = {
 					index;
 
 				for (index = 0; index < count; index++) {
-					arr[index].chainReceive(type, data, options);
+					arr[index].chainReceive(this, type, data, options);
 				}
 			}
 		},
-		chainReceive: function (type, data, options) {
+		chainReceive: function (sender, type, data, options) {
 			// Fire our internal handler
-			if (!this._chainHandler(type, data, options)) {
+			if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
 				// Propagate the message down the chain
 				this.chainSend(type, data, options);
 			}

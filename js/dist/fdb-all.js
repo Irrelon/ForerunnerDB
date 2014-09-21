@@ -391,14 +391,19 @@ Collection.prototype.setData = function (data, options, callback) {
 		this._rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
-		// Loop views and pass them the insert query
+		op.time('Resolve chains');
+		this.chainSend('setData', data, {oldData: oldData});
+		op.time('Resolve chains');
+
+		// CHAIN
+		/*// Loop views and pass them the insert query
 		if (views && views.length) {
 			op.time('Inform ' + views.length + ' views about the new data');
 			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 				views[viewIndex].setData(data, oldData);
 			}
 			op.time('Inform ' + views.length + ' views about the new data');
-		}
+		}*/
 
 		op.stop();
 
@@ -638,8 +643,16 @@ Collection.prototype.update = function (query, update, options) {
 		op.time('Update documents');
 
 		if (updated.length) {
+			op.time('Resolve chains');
+			this.chainSend('update', {
+				query: query,
+				update: update
+			}, options);
+			op.time('Resolve chains');
+
+			// CHAIN
 			// Loop views and pass them the update query
-			if (views && views.length) {
+			/*if (views && views.length) {
 				if (this.debug('views')) {
 					console.log('Updating views from collection: ' + this.name());
 				}
@@ -648,7 +661,7 @@ Collection.prototype.update = function (query, update, options) {
 					views[viewIndex].update(query, update);
 				}
 				op.time('Inform views of update');
-			}
+			}*/
 
 			this._onUpdate(updated);
 			this.deferEmit('change', {type: 'update', data: updated});
@@ -1290,12 +1303,19 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 			}
 
+			//op.time('Resolve chains');
+			this.chainSend('remove', {
+				query: query
+			}, options);
+			//op.time('Resolve chains');
+
+			// CHAIN
 			// Loop views and pass them the remove query
-			if (views && views.length) {
+			/*if (views && views.length) {
 				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 					views[viewIndex].remove(query);
 				}
-			}
+			}*/
 
 			if (!options || (options && !options.noEmit)) {
 				this._onRemove(dataSet);
@@ -1463,12 +1483,17 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		}
 	}
 
+	//op.time('Resolve chains');
+	this.chainSend('insert', data, {index: index});
+	//op.time('Resolve chains');
+
+	// CHAIN
 	// Loop views and pass them the insert query
-	if (views && views.length) {
+	/*if (views && views.length) {
 		for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
 			views[viewIndex].insert(data, index);
 		}
-	}
+	}*/
 
 	this._onInsert(inserted, failed);
 	if (callback) { callback(); }
@@ -5541,7 +5566,7 @@ module.exports = Persist;
 var Shared = {
 	idCounter: 0,
 	modules: {},
-	prototypes: {},
+
 	addModule: function (name, module) {
 		this.modules[name] = module;
 	},
@@ -5580,13 +5605,13 @@ var Shared = {
 					index;
 
 				for (index = 0; index < count; index++) {
-					arr[index].chainReceive(type, data, options);
+					arr[index].chainReceive(this, type, data, options);
 				}
 			}
 		},
-		chainReceive: function (type, data, options) {
+		chainReceive: function (sender, type, data, options) {
 			// Fire our internal handler
-			if (!this._chainHandler(type, data, options)) {
+			if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
 				// Propagate the message down the chain
 				this.chainSend(type, data, options);
 			}
@@ -5812,7 +5837,7 @@ View.prototype.from = function (collection) {
 View.prototype._addCollection = function (collection) {
 	if (this._collections.indexOf(collection) === -1) {
 		this._collections.push(collection);
-		collection._addView(this);
+		collection.chain(this);
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
@@ -5829,11 +5854,80 @@ View.prototype._removeCollection = function (collection) {
 	var collectionIndex = this._collections.indexOf(collection);
 	if (collectionIndex > -1) {
 		this._collections.splice(collection, 1);
-		collection._removeView(this);
+		collection.unChain(this);
 		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
 	}
 
 	return this;
+};
+
+View.prototype._chainHandler = function (sender, type, data, options) {
+	switch (type) {
+		case 'setData':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			// Modify transform data
+			this._transformSetData(data);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData.setData(data);
+			break;
+
+		case 'insert':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			var index = options && options.index ? options.index : this._privateData.length;
+
+			// Modify transform data
+			this._transformInsert(data, index);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData._insertHandle(data, index);
+			break;
+
+		case 'update':
+			// Modify transform data
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			var updates = this._privateData.update(data.query, data.update, data.options),
+				primaryKey,
+				tQuery,
+				item;
+
+			if (this._transformEnabled && this._transformIn) {
+				primaryKey = this._publicData.primaryKey();
+
+				for (var i = 0; i < updates.length; i++) {
+					tQuery = {};
+					item = updates[i];
+					tQuery[primaryKey] = item[primaryKey];
+
+					this._transformUpdate(tQuery, item);
+				}
+			}
+			break;
+
+		case 'remove':
+			// Modify transform data
+			this._transformRemove(data.query, options);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			return this._privateData.remove(data.query, options);
+			break;
+	}
 };
 
 View.prototype.on = function () {
@@ -6164,15 +6258,15 @@ View.prototype._transformInsert = function (data, index) {
 	}
 };
 
-View.prototype._transformUpdate = function (query, update) {
+View.prototype._transformUpdate = function (query, update, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.update(query, update);
+		this._publicData.update(query, update, options);
 	}
 };
 
-View.prototype._transformRemove = function (query) {
+View.prototype._transformRemove = function (query, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.remove(query);
+		this._publicData.remove(query, options);
 	}
 };
 
