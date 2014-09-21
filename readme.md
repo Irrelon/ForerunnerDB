@@ -1,5 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-## Version 1.2.6
+## Version 1.2.7
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
