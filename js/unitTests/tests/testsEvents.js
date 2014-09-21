@@ -329,14 +329,18 @@ asyncTest("Events - CollectionGroup.on() :: Remove :: Event fired from view", fu
 	var group = db.collectionGroup('testGroup')
 		.addCollection(userView);
 
-	group.on('remove', function (successArr, failArr) {
+	var testFunc = function (successArr, failArr) {
 		ok(successArr.length === 1, "Remove single document");
 		start();
-	});
+	};
+
+	group.on('remove', testFunc);
 
 	user.remove({
 		_id: '2342'
 	});
+
+	group.off('remove', testFunc);
 
 	base.viewDown();
 	base.dbDown();

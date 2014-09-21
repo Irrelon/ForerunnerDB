@@ -65,7 +65,8 @@ Collection.prototype.init = function (name) {
 	this._subsetOf(this);
 };
 
-Shared.modules.Collection = Collection;
+Shared.addModule('Collection', Collection);
+Shared.inherit(Collection.prototype, Shared.chainSystem);
 
 Overload = require('./Overload');
 Metrics = require('./Metrics');
@@ -347,7 +348,9 @@ Collection.prototype.db = function (db) {
  */
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
-		var op = this._metrics.create('setData');
+		var op = this._metrics.create('setData'),
+			views = this._views;
+
 		op.start();
 
 		options = options || {};
@@ -367,17 +370,35 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		var oldData = this._data;
 
-		// Overwrite the data
-		this._data = [];
+		if (this._linked) {
+			// The collection is data-bound so do a .remove() instead of just clearing the data
+			this.remove();
+		} else {
+			// Overwrite the data
+			this._data = [];
+		}
 
 		if (data.length) {
-			this._data = this._data.concat(data);
+			if (this._linked) {
+				this.insert(data);
+			} else {
+				this._data = this._data.concat(data);
+			}
 		}
 
 		// Update the primary key index
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
 		this._rebuildPrimaryKeyIndex(options);
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
+
+		// Loop views and pass them the insert query
+		if (views && views.length) {
+			op.time('Inform ' + views.length + ' views about the new data');
+			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+				views[viewIndex].setData(data, oldData);
+			}
+			op.time('Inform ' + views.length + ' views about the new data');
+		}
 
 		op.stop();
 
@@ -1222,9 +1243,11 @@ Collection.prototype._updatePop = function (doc, val) {
  * Removes any documents from the collection that match the search query
  * key/values.
  * @param {Object} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
  * @returns {Array} An array of the documents that were removed.
  */
-Collection.prototype.remove = function (query) {
+Collection.prototype.remove = function (query, options, callback) {
 	var self = this,
 		dataSet,
 		index,
@@ -1238,8 +1261,13 @@ Collection.prototype.remove = function (query) {
 		returnArr = [];
 
 		for (arrIndex = 0; arrIndex < query.length; arrIndex++) {
-			returnArr.push(this.remove(query[arrIndex]));
+			returnArr.push(this.remove(query[arrIndex], {noEmit: true}));
 		}
+
+		if (!options || (options && !options.noEmit)) {
+			this._onRemove(returnArr);
+		}
+
 
 		return returnArr;
 	} else {
@@ -1269,7 +1297,10 @@ Collection.prototype.remove = function (query) {
 				}
 			}
 
-			this._onRemove(dataSet);
+			if (!options || (options && !options.noEmit)) {
+				this._onRemove(dataSet);
+			}
+
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
@@ -2756,12 +2787,24 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 		// Check for binding
 		this._links = this._links || {};
 
-		if (this._links[templateSelector]) {
+		var templateId;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (this._links[templateId]) {
 			// Remove the data binding
-			jQuery.templates[templateSelector].unlink(outputTargetSelector);
+			jQuery.templates[templateId].unlink(outputTargetSelector);
 
 			// Remove link from flags
-			delete this._links[templateSelector];
+			delete this._links[templateId];
 
 			// Set the linked flag
 			this._linked--;
@@ -3521,7 +3564,8 @@ Core.prototype.init = function () {
 	this._debug = {};
 };
 
-Shared.modules.Core = Core;
+Shared.addModule('Core', Core);
+Shared.inherit(Core.prototype, Shared.chainSystem);
 
 Overload = require('./Overload.js');
 Collection = require('./Collection.js');
@@ -4099,7 +4143,8 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.modules.Index = Index;
+Shared.addModule('Index', Index);
+Shared.inherit(Index.prototype, Shared.chainSystem);
 
 Index.prototype.id = function () {
 	return this._id;
@@ -4446,7 +4491,8 @@ KeyValueStore.prototype.init = function (name) {
 	this._primaryKey = '_id';
 };
 
-Shared.modules.KeyValueStore = KeyValueStore;
+Shared.addModule('KeyValueStore', KeyValueStore);
+Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
 
 /**
  * Get / set the name of the key/value store.
@@ -4660,7 +4706,8 @@ Metrics.prototype.init = function () {
 	this._data = [];
 };
 
-Shared.modules.Metrics = Metrics;
+Shared.addModule('Metrics', Metrics);
+Shared.inherit(Metrics.prototype, Shared.chainSystem);
 
 /**
  * Creates an operation within the metrics instance and if metrics
@@ -4750,7 +4797,8 @@ Operation.prototype.init = function (name) {
 	};
 };
 
-Shared.modules.Operation = Operation;
+Shared.addModule('Operation', Operation);
+Shared.inherit(Operation.prototype, Shared.chainSystem);
 
 /**
  * Starts the operation timer.
@@ -4886,7 +4934,7 @@ var Overload = function (arr) {
 	return function () {};
 };
 
-Shared.modules.Overload = Overload;
+Shared.addModule('Overload', Overload);
 
 module.exports = Overload;
 },{"./Shared":14}],12:[function(require,module,exports){
@@ -4908,7 +4956,8 @@ Path.prototype.init = function (path) {
 	}
 };
 
-Shared.modules.Path = Path;
+Shared.addModule('Path', Path);
+Shared.inherit(Path.prototype, Shared.chainSystem);
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -5323,7 +5372,8 @@ Persist.prototype.init = function (db) {
 	}
 };
 
-Shared.modules.Persist = Persist;
+Shared.addModule('Persist', Persist);
+Shared.inherit(Persist.prototype, Shared.chainSystem);
 
 Core = Shared.modules.Core;
 Collection = require('./Collection');
@@ -5491,7 +5541,57 @@ module.exports = Persist;
 var Shared = {
 	idCounter: 0,
 	modules: {},
-	prototypes: {}
+	prototypes: {},
+	addModule: function (name, module) {
+		this.modules[name] = module;
+	},
+
+	inherit: function (obj, system) {
+		for (var i in system) {
+			if (system.hasOwnProperty(i)) {
+				obj[i] = system[i];
+			}
+		}
+	},
+
+	// Inheritable systems
+	chainSystem: {
+		chain: function (obj) {
+			this._chain = this._chain || [];
+			var index = this._chain.indexOf(obj);
+
+			if (index === -1) {
+				this._chain.push(obj);
+			}
+		},
+		unChain: function (obj) {
+			if (this._chain) {
+				var index = this._chain.indexOf(obj);
+
+				if (index > -1) {
+					this._chain.splice(index, 1);
+				}
+			}
+		},
+		chainSend: function (type, data, options) {
+			if (this._chain) {
+				var arr = this._chain,
+					count = arr.length,
+					index;
+
+				for (index = 0; index < count; index++) {
+					arr[index].chainReceive(type, data, options);
+				}
+			}
+		},
+		chainReceive: function (type, data, options) {
+			// Fire our internal handler
+			if (!this._chainHandler(type, data, options)) {
+				// Propagate the message down the chain
+				this.chainSend(type, data, options);
+			}
+		}
+	}
 };
 
 module.exports = Shared;
@@ -5529,7 +5629,8 @@ View.prototype.init = function (name, query, options) {
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
 
-Shared.modules.View = View;
+Shared.addModule('View', View);
+Shared.inherit(View.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
@@ -5590,6 +5691,25 @@ View.prototype.name = function (val) {
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
 };
+
+/**
+ * Inserts into view data via the view collection. See Collection.insert() for more information.
+ * @returns {*}
+ */
+View.prototype.setData = function (data, oldData) {
+	// Decouple the data to ensure we are working with our own copy
+	data = this._privateData.decouple(data);
+
+	// Modify transform data
+	this._transformSetData(data);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData.setData(data);
+};
+
 
 /**
  * Inserts into view data via the view collection. See Collection.insert() for more information.

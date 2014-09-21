@@ -17,6 +17,10 @@ test("Bind - View.on() :: Remove + Insert via setData from Collection", function
 
 	ok(elem.length === 1, "Insert single document");
 
+	userView.unlink('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
+	});
+
 	base.viewDown();
 	base.domDown();
 	base.dbDown();
@@ -137,7 +141,7 @@ test("Bind - View.on() :: Insert from CollectionGroup via Collection Interface",
 	userGroupView.link('#testTarget', {
 		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
-
+	debugger;
 	user.insert({
 		_id: '2342',
 		name: "hello"

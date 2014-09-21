@@ -17,7 +17,8 @@ KeyValueStore.prototype.init = function (name) {
 	this._primaryKey = '_id';
 };
 
-Shared.modules.KeyValueStore = KeyValueStore;
+Shared.addModule('KeyValueStore', KeyValueStore);
+Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
 
 /**
  * Get / set the name of the key/value store.

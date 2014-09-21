@@ -45,7 +45,8 @@ Core.prototype.init = function () {
 	this._debug = {};
 };
 
-Shared.modules.Core = Core;
+Shared.addModule('Core', Core);
+Shared.inherit(Core.prototype, Shared.chainSystem);
 
 Overload = require('./Overload.js');
 Collection = require('./Collection.js');

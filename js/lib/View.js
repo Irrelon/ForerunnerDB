@@ -31,7 +31,8 @@ View.prototype.init = function (name, query, options) {
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
 
-Shared.modules.View = View;
+Shared.addModule('View', View);
+Shared.inherit(View.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
@@ -92,6 +93,25 @@ View.prototype.name = function (val) {
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
 };
+
+/**
+ * Inserts into view data via the view collection. See Collection.insert() for more information.
+ * @returns {*}
+ */
+View.prototype.setData = function (data, oldData) {
+	// Decouple the data to ensure we are working with our own copy
+	data = this._privateData.decouple(data);
+
+	// Modify transform data
+	this._transformSetData(data);
+
+	if (this.debug()) {
+		console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+	}
+
+	return this._privateData.setData(data);
+};
+
 
 /**
  * Inserts into view data via the view collection. See Collection.insert() for more information.

@@ -54,7 +54,8 @@ Collection.prototype.init = function (name) {
 	this._subsetOf(this);
 };
 
-Shared.modules.Collection = Collection;
+Shared.addModule('Collection', Collection);
+Shared.inherit(Collection.prototype, Shared.chainSystem);
 
 Overload = require('./Overload');
 Metrics = require('./Metrics');
@@ -336,7 +337,9 @@ Collection.prototype.db = function (db) {
  */
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
-		var op = this._metrics.create('setData');
+		var op = this._metrics.create('setData'),
+			views = this._views;
+
 		op.start();
 
 		options = options || {};
@@ -356,17 +359,35 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		var oldData = this._data;
 
-		// Overwrite the data
-		this._data = [];
+		if (this._linked) {
+			// The collection is data-bound so do a .remove() instead of just clearing the data
+			this.remove();
+		} else {
+			// Overwrite the data
+			this._data = [];
+		}
 
 		if (data.length) {
-			this._data = this._data.concat(data);
+			if (this._linked) {
+				this.insert(data);
+			} else {
+				this._data = this._data.concat(data);
+			}
 		}
 
 		// Update the primary key index
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
 		this._rebuildPrimaryKeyIndex(options);
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
+
+		// Loop views and pass them the insert query
+		if (views && views.length) {
+			op.time('Inform ' + views.length + ' views about the new data');
+			for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
+				views[viewIndex].setData(data, oldData);
+			}
+			op.time('Inform ' + views.length + ' views about the new data');
+		}
 
 		op.stop();
 
@@ -1211,9 +1232,11 @@ Collection.prototype._updatePop = function (doc, val) {
  * Removes any documents from the collection that match the search query
  * key/values.
  * @param {Object} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
  * @returns {Array} An array of the documents that were removed.
  */
-Collection.prototype.remove = function (query) {
+Collection.prototype.remove = function (query, options, callback) {
 	var self = this,
 		dataSet,
 		index,
@@ -1227,8 +1250,13 @@ Collection.prototype.remove = function (query) {
 		returnArr = [];
 
 		for (arrIndex = 0; arrIndex < query.length; arrIndex++) {
-			returnArr.push(this.remove(query[arrIndex]));
+			returnArr.push(this.remove(query[arrIndex], {noEmit: true}));
 		}
+
+		if (!options || (options && !options.noEmit)) {
+			this._onRemove(returnArr);
+		}
+
 
 		return returnArr;
 	} else {
@@ -1258,7 +1286,10 @@ Collection.prototype.remove = function (query) {
 				}
 			}
 
-			this._onRemove(dataSet);
+			if (!options || (options && !options.noEmit)) {
+				this._onRemove(dataSet);
+			}
+
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
@@ -2745,12 +2776,24 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 		// Check for binding
 		this._links = this._links || {};
 
-		if (this._links[templateSelector]) {
+		var templateId;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (this._links[templateId]) {
 			// Remove the data binding
-			jQuery.templates[templateSelector].unlink(outputTargetSelector);
+			jQuery.templates[templateId].unlink(outputTargetSelector);
 
 			// Remove link from flags
-			delete this._links[templateSelector];
+			delete this._links[templateId];
 
 			// Set the linked flag
 			this._linked--;

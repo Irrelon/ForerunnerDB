@@ -29,7 +29,8 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.modules.Index = Index;
+Shared.addModule('Index', Index);
+Shared.inherit(Index.prototype, Shared.chainSystem);
 
 Index.prototype.id = function () {
 	return this._id;

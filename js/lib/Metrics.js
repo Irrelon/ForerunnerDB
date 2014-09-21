@@ -13,7 +13,8 @@ Metrics.prototype.init = function () {
 	this._data = [];
 };
 
-Shared.modules.Metrics = Metrics;
+Shared.addModule('Metrics', Metrics);
+Shared.inherit(Metrics.prototype, Shared.chainSystem);
 
 /**
  * Creates an operation within the metrics instance and if metrics

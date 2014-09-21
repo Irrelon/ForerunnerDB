@@ -25,6 +25,6 @@ var Overload = function (arr) {
 	return function () {};
 };
 
-Shared.modules.Overload = Overload;
+Shared.addModule('Overload', Overload);
 
 module.exports = Overload;
