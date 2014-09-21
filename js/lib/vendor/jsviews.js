@@ -1683,7 +1683,7 @@ informal pre V1.0 commit counter: 56 (Beta Candidate) */
 	//========================== Define default delimiters ==========================
 	$viewsDelimiters();
 
-})(this, this.jQuery);
+})(window, window.jQuery);
 
 /* JsObservable:
  *    See http://github.com/borismoore/jsobservable and http://jsviews.com/jsobservable
@@ -2568,7 +2568,7 @@ informal pre V1.0 commit counter: 56 (Beta Candidate) */
 		return mapDef;
 	};
 
-})(this, this.jQuery);
+})(window, window.jQuery);
 
 /* JsViews:
  * Interactive data-driven views using templates and data-linking.
@@ -5374,4 +5374,4 @@ informal pre V1.0 commit counter: 56 (Beta Candidate) */
 	// Fallback strings or onError handlers for any tag instance
 	// $.observable(object).removeProperty(path)
 	// data-link="{on ... myHandler}" (See unit tests. Examples to follow)
-})(this, this.jQuery);
+})(window, window.jQuery);
