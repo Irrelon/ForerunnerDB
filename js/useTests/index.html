@@ -2,18 +2,17 @@
 <html>
 <head>
 	<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<script src="../lib/jsviews.js"></script>
 	<script src="../dist/fdb-all.js"></script>
 </head>
 <body>
 	<div id="coll"></div>
 	<script id="collTemplate" type="text/x-jsrender">
 		{^{for #data}}
-			<div>
+			<div data-link="id{:_id}">
 				{^{:name}}
 				<ol>
 				  {^{for arr}}
-					<li data-link="class{:name}">
+					<li data-link="class{:name} id{:_id}">
 					  {^{:name}}
 					  <img class="remove" src="http://www.jsviews.com/resources/images/close.png" />
 					</li>
@@ -37,7 +36,7 @@
 
 		test.insert([{
 			"_id": "1",
-			"name": 'PMX2 Test School 1',
+			"name": 'Test2 Test School 1',
 			"arr": [{
 				"_id": "1",
 				"name": "Rob Evans",
@@ -45,7 +44,7 @@
 			}]
 		}, {
 			"_id": "2",
-			"name": 'PMX2 Test School 2',
+			"name": 'Test2 Test School 2',
 			"arr": [{
 				"_id": "1",
 				"name": "Rob Evans",
@@ -55,7 +54,7 @@
 
 		test.insert({
 			"_id": "3",
-			"name": 'PMX2 Test School 3',
+			"name": 'Test2 Test School 3',
 			"arr": [{
 				"_id": "1",
 				"name": "Rob Evans",
@@ -83,13 +82,24 @@
 		view.refresh();
 
 		$('body').on("click", ".remove", function() {
+			debugger;
+
 			var view = $.view(this);
-			test.update({_id: view.parent.parent.data._id}, {"$pull": {"arr": {_id: view.data._id}}});
+
+			test.update({
+				_id: view.parent.parent.data._id
+			}, {
+				"$pull": {
+					"arr": {
+						_id: view.data._id
+					}
+				}
+			});
 		});
 
 		/*var coll = [{
 				"_id": "1",
-				"name": 'PMX2 Test School 1',
+				"name": 'Test2 Test School 1',
 				"arr": [{
 					"_id": "1",
 					"name": "Rob Evans",
@@ -97,7 +107,7 @@
 				}]
 			}, {
 				"_id": "2",
-				"name": 'PMX2 Test School 2',
+				"name": 'Test2 Test School 2',
 				"arr": [{
 					"_id": "1",
 					"name": "Rob Evans",
@@ -105,7 +115,7 @@
 				}]
 			}, {
 				"_id": "3",
-				"name": 'PMX2 Test School 3',
+				"name": 'Test2 Test School 3',
 				"arr": [{
 					"_id": "1",
 					"name": "Rob Evans",
@@ -117,7 +127,7 @@
 		setTimeout(function () {
 			$.observable(coll).insert([{
 				"_id": "2.5",
-				"name": 'PMX2 Test School 2.5',
+				"name": 'Test2 Test School 2.5',
 				"arr": [{
 					"_id": "1",
 					"name": "Rob Evans",
