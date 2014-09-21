@@ -1,4 +1,5 @@
 # ForerunnerDB - A NoSQL JSON Document DB
+ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
 ## Version 1.2.7
 
 ## What is ForerunnerDB
