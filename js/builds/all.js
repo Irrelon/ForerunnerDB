@@ -4,7 +4,8 @@ var Core = require('../lib/Core'),
 	OldView = require('../lib/OldView'),
 	OldViewBind = require('../lib/OldView.Bind'),
 	Highcharts = require('../lib/Highcharts'),
-	Persist = require('../lib/Persist');
+	Persist = require('../lib/Persist'),
+	jsviews = require('../lib/vendor/jsviews');
 
 module.exports = Core;
 window['ForerunnerDB'] = Core;

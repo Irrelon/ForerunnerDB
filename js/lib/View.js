@@ -428,7 +428,7 @@ View.prototype.refresh = function (force) {
 	if (pubData._linked) {
 		// Update data and observers
 		// TODO: Shouldn't this data get passed into a transformIn first?
-		$.observable(pubData._data).refresh(sortedData);
+		jQuery.observable(pubData._data).refresh(sortedData);
 	} else {
 		// Update the underlying data with the new sorted data
 		this._privateData._data.length = 0;
