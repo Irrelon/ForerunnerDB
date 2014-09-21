@@ -762,3 +762,6 @@ ForerunnerDB's project road-map:
 * $sort
 * $bit
 * $isolated
+
+#### Scheduled Features - 1.3.0
+* Support Angular.js by registering as a module if ajs exists
