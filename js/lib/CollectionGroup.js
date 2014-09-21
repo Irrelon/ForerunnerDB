@@ -43,43 +43,6 @@ Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
-/*CollectionGroup.prototype.on = function(event, listener) {
- this._listeners = this._listeners || {};
- this._listeners[event] = this._listeners[event] || [];
- this._listeners[event].push(listener);
-
- return this;
- };
-
- CollectionGroup.prototype.off = function(event, listener) {
- if (event in this._listeners) {
- var arr = this._listeners[event],
- index = arr.indexOf(listener);
-
- if (index > -1) {
- arr.splice(index, 1);
- }
- }
-
- return this;
- };
-
- CollectionGroup.prototype.emit = function(event, data) {
- this._listeners = this._listeners || {};
-
- if (event in this._listeners) {
- var arr = this._listeners[event],
- arrCount = arr.length,
- arrIndex;
-
- for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
- arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
- }
- }
-
- return this;
- };*/
-
 CollectionGroup.prototype.on = new Overload([
 	function(event, listener) {
 		this._listeners = this._listeners || {};
@@ -186,6 +149,20 @@ CollectionGroup.prototype.emit = function(event, data) {
 };
 
 /**
+ * Gets / sets the primary key for this collection group.
+ * @param {String=} keyName The name of the primary key.
+ * @returns {*}
+ */
+CollectionGroup.prototype.primaryKey = function (keyName) {
+	if (keyName !== undefined) {
+		this._primaryKey = keyName;
+		return this;
+	}
+
+	return this._primaryKey;
+};
+
+/**
  * Gets / sets the db instance the collection group belongs to.
  * @param {DB} db The db instance.
  * @returns {*}
@@ -211,7 +188,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 				}
 			} else {
 				// Set the primary key to the first collection added
-				this._primaryKey = collection.primaryKey();
+				this.primaryKey(collection.primaryKey());
 			}
 
 			// Add the collection
@@ -260,15 +237,19 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 };
 
 CollectionGroup.prototype.find = function (query, options) {
-	// Loop the collections in this group and find first matching item response
-	var data = new Collection().primaryKey(this._collectionArr[0].primaryKey()),
-		i;
+	if (this._collectionArr.length) {
+		// Loop the collections in this group and find first matching item response
+		var data = new Collection().primaryKey(this.primaryKey()),
+			i;
 
-	for (i = 0; i < this._collectionArr.length; i++) {
-		data.insert(this._collectionArr[i].find(query));
+		for (i = 0; i < this._collectionArr.length; i++) {
+			data.insert(this._collectionArr[i].find(query));
+		}
+
+		return data.find(query, options);
+	} else {
+		return [];
 	}
-
-	return data.find(query, options);
 };
 
 CollectionGroup.prototype.insert = function (query, options) {

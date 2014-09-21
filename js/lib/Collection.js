@@ -2675,27 +2675,45 @@ Collection.prototype.count = function (query, options) {
  */
 Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 	if (window.jQuery) {
-		// Check for existing data binding
+		// Make sure we have a data-binding store object to use
 		this._links = this._links || {};
 
-		if (!this._links[templateSelector]) {
+		var templateId,
+			templateHtml;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+				templateHtml = templateSelector.template;
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (!this._links[templateId]) {
 			if (jQuery(outputTargetSelector).length) {
 				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateSelector]) {
-					// Grab the template
-					var template = jQuery(templateSelector);
-					if (template.length) {
-						jQuery.views.templates(templateSelector, jQuery(template[0]).html());
-					} else {
-						throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+				if (!jQuery.templates[templateId]) {
+					if (!templateHtml) {
+						// Grab the template
+						var template = jQuery(templateSelector);
+						if (template.length) {
+							templateHtml = jQuery(template[0]).html();
+						} else {
+							throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+						}
 					}
+
+					jQuery.views.templates(templateId, templateHtml);
 				}
 
 				// Create the data binding
-				jQuery.templates[templateSelector].link(outputTargetSelector, this._data);
+				jQuery.templates[templateId].link(outputTargetSelector, this._data);
 
 				// Add link to flags
-				this._links[templateSelector] = outputTargetSelector;
+				this._links[templateId] = outputTargetSelector;
 
 				// Set the linked flag
 				this._linked++;
@@ -2710,7 +2728,7 @@ Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 			}
 		}
 
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 	} else {
 		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
 	}

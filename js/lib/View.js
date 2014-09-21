@@ -34,6 +34,7 @@ View.prototype.init = function (name, query, options) {
 Shared.modules.View = View;
 
 Collection = require('./Collection');
+CollectionGroup = require('./CollectionGroup');
 Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
@@ -586,7 +587,7 @@ Collection.prototype.view = function (name, query, options) {
  * @returns {Collection}
  * @private
  */
-Collection.prototype._addView = function (view) {
+Collection.prototype._addView = CollectionGroup.prototype._addView = function (view) {
 	if (view !== undefined) {
 		this._views.push(view);
 	}
@@ -600,7 +601,7 @@ Collection.prototype._addView = function (view) {
  * @returns {Collection}
  * @private
  */
-Collection.prototype._removeView = function (view) {
+Collection.prototype._removeView = CollectionGroup.prototype._removeView = function (view) {
 	if (view !== undefined) {
 		var index = this._views.indexOf(view);
 		if (index > -1) {

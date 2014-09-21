@@ -4,10 +4,8 @@ test("Bind - View.on() :: Remove + Insert via setData from Collection", function
 	base.viewUp();
 	base.domUp();
 
-	userView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.setData({
@@ -30,10 +28,8 @@ test("Bind - View.on() :: Insert from Collection", function() {
 	base.viewUp();
 	base.domUp();
 
-	userView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -56,10 +52,8 @@ test("Bind - View.on() :: Update from Collection", function() {
 	base.viewUp();
 	base.domUp();
 
-	userView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -90,10 +84,8 @@ test("Bind - View.on() :: Remove from Collection", function() {
 	base.viewUp();
 	base.domUp();
 
-	userView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -142,10 +134,8 @@ test("Bind - View.on() :: Insert from CollectionGroup via Collection Interface",
 		ok(true, 'View from group insert');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -186,10 +176,8 @@ test("Bind - View.on() :: Update from CollectionGroup via Collection Interface",
 		ok(true, 'View from group update');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -238,10 +226,8 @@ test("Bind - View.on() :: Remove from CollectionGroup via Collection Interface",
 		ok(true, 'View from group remove');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	user.insert({
@@ -291,10 +277,8 @@ test("Bind - View.on() :: Insert from CollectionGroup via CollectionGroup Interf
 		ok(true, 'View from group insert');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	userGroup.insert({
@@ -335,10 +319,8 @@ test("Bind - View.on() :: Update from CollectionGroup via CollectionGroup Interf
 		ok(true, 'View from group update');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	userGroup.insert({
@@ -387,10 +369,8 @@ test("Bind - View.on() :: Remove from CollectionGroup via CollectionGroup Interf
 		ok(true, 'View from group remove');
 	});
 
-	userGroupView.bind('#testTarget', {
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		}
+	userGroupView.link('#testTarget', {
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	userGroup.insert({
@@ -441,10 +421,8 @@ test("Bind - View() :: View sort", function() {
 				name: 1
 			}
 		}, false)
-		.bind('#testTarget', {
-			template: function (data, callback) {
-				callback('<li class="item" id="' + data._id + '">' + data.name + '</li>');
-			}
+		.link('#testTarget', {
+			template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 		});
 
 	user.insert({

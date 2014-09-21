@@ -10,14 +10,9 @@ asyncTest("Paging - View.page :: Limit view page", function() {
 		elem,
 		i = 200;
 
-	userView.bind('#testTarget', {
+	userView.link('#testTarget', {
 		pageLimit: 20,
-		template: function (data, callback) {
-			callback('<li id="' + data._id + '">' + data.name + '</li>');
-		},
-		refresh: function () {
-			//console.log('REFRESH', $('#testTarget').find('li').length);
-		}
+		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
 
 	// Generate some data
