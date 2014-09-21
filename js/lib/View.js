@@ -240,8 +240,6 @@ View.prototype.drop = function () {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
-		this.emit('drop');
-
 		// Loop collections and remove us from them
 		var arrCount = this._collections.length;
 		while (arrCount--) {
@@ -395,7 +393,7 @@ View.prototype.query = function (query, refresh) {
 View.prototype.queryOptions = function (options, refresh) {
 	if (options !== undefined) {
 		this._querySettings.options = options;
-		if (options.decouple === undefined) { options.decouple = true; }
+		if (options.$decouple === undefined) { options.$decouple = true; }
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();

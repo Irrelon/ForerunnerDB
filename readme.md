@@ -314,7 +314,7 @@ The following example moves "Milk" in the "shoppingList" array to index 1 in the
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
 
 	var result = db.collection('item').find({}, {
-		decouple: false
+		$decouple: false
 	});
 
 If you do not specify a decouple option, ForerunnerDB will default to true and return decoupled objects.

@@ -4,15 +4,19 @@ asyncTest("Events - Collection.on() :: Insert with Success", function() {
 
 	expect(1);
 
-	user.on('insert', function (successArr, failed) {
+	var eventFunc = function (successArr, failed) {
 		ok(successArr.length === 1, "Insert single document");
 		start();
-	});
+	};
+
+	user.on('insert', eventFunc);
 
 	user.insert({
 		_id: '2342',
 		name: "hello"
 	});
+
+	user.off('insert', eventFunc);
 
 	base.dbDown();
 });

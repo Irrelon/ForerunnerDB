@@ -106,8 +106,8 @@ Index.prototype.rebuild = function () {
 	if (this._collection) {
 		// Get sorted data
 		var collection = this._collection.subset({}, {
-				decouple: false,
-				sort: this._keys
+				$decouple: false,
+				$orderBy: this._keys
 			}),
 			collectionData = collection.find(),
 			dataIndex,

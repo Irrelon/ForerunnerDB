@@ -184,15 +184,13 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 	});
 
 	// Run with index
-	a = collection.find({name: 'Sally'}, {decouple: false, skipIndex: false});
+	a = collection.find({name: 'Sally'}, {$decouple: false, $skipIndex: false});
 
 	// Run without index
-	b = collection.find({name: 'Sally'}, {decouple: false, skipIndex: true});
+	b = collection.find({name: 'Sally'}, {$decouple: false, $skipIndex: true});
 
 	// Run with index + table scan
-	c = collection.find({name: 'Sally', age: 12}, {decouple: false, skipIndex: false});
-
-
+	c = collection.find({name: 'Sally', age: 12}, {$decouple: false, $skipIndex: false});
 
 	ok(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name() === 'index_name', "Check that index was used");
 	ok(b.__fdbOp.data('index.used') === false, "Check that index was not used");

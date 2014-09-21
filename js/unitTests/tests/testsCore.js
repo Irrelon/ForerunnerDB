@@ -1185,7 +1185,7 @@ test("Core - Collection.find() :: Options :: Single Sort Argument, Ascending", f
 	base.dataUp();
 
 	var result = user.find({}, {
-		"sort": {
+		"$orderBy": {
 			"name": 1
 		}
 	});
@@ -1203,7 +1203,7 @@ test("Core - Collection.find() :: Options :: Single Sort Argument, Descending", 
 	base.dataUp();
 
 	var result = user.find({}, {
-		"sort": {
+		"$orderBy": {
 			"name": -1
 		}
 	});
@@ -1226,7 +1226,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments),
 			"industry": "it"
 		}]
 	}, {
-		"sort": {
+		"$orderBy": {
 			"industry": 1,
 			"profit": 1
 		}
@@ -1263,7 +1263,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments),
 			"industry": "it"
 		}]
 	}, {
-		"sort": {
+		"$orderBy": {
 			"industry": 1,
 			"profit": 1,
 			"type": 1
@@ -1301,7 +1301,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments),
 			"industry": "it"
 		}]
 	}, {
-		"sort": {
+		"$orderBy": {
 			"industry": 1,
 			"profit": 1,
 			"type": -1
@@ -1335,7 +1335,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments),
 	var result = user.find({
 
 	}, {
-		"sort": {
+		"$orderBy": {
 			"lookup": 1,
 			"age": 1
 		}
@@ -1357,7 +1357,7 @@ test("Core - CollectionGroup.find() :: Single collection", function() {
 		.addCollection(user);
 
 	var result = group.find({}, {
-		"sort": {
+		"$orderBy": {
 			"age": 1
 		}
 	});
@@ -1378,7 +1378,7 @@ test("Core - CollectionGroup.find() :: Single collection, descending sort", func
 		.addCollection(user);
 
 	var result = group.find({}, {
-		"sort": {
+		"$orderBy": {
 			"age": -1
 		}
 	});

@@ -421,7 +421,7 @@ test("Bind - View() :: View sort", function() {
 	//userView._debug = true;
 	userView
 		.queryOptions({
-			sort: {
+			$orderBy: {
 				name: 1
 			}
 		}, false)

@@ -15,6 +15,7 @@ CollectionGroup.prototype.init = function (name) {
 	var self = this;
 
 	this._name = name;
+	this._data = new Collection('__FDB__cg_data_' + this._name);
 	this._collectionArr = [];
 	this._views = [];
 };
@@ -27,109 +28,16 @@ Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
-CollectionGroup.prototype.on = new Overload([
-	function(event, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
-		this._listeners[event]['*'].push(listener);
+CollectionGroup.prototype.on = function () {
+	this._data.on.apply(this._data, arguments);
+};
 
-		return this;
-	},
+CollectionGroup.prototype.off = function () {
+	this._data.off.apply(this._data, arguments);
+};
 
-	function(event, id, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event][id] = this._listeners[event][id] || [];
-		this._listeners[event][id].push(listener);
-
-		return this;
-	}
-]);
-
-CollectionGroup.prototype.off = new Overload([
-	function (event) {
-		if (this._listeners && this._listeners[event] && event in this._listeners) {
-			delete this._listeners[event];
-		}
-
-		return this;
-	},
-
-	function(event, listener) {
-		var arr,
-			index;
-
-		if (typeof(listener) === 'string') {
-			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-				delete this._listeners[event][listener];
-			}
-		} else {
-			if (event in this._listeners) {
-				arr = this._listeners[event]['*'];
-				index = arr.indexOf(listener);
-
-				if (index > -1) {
-					arr.splice(index, 1);
-				}
-			}
-		}
-
-		return this;
-	},
-
-	function (event, id, listener) {
-		if (this._listeners && event in this._listeners) {
-			var arr = this._listeners[event][id],
-				index = arr.indexOf(listener);
-
-			if (index > -1) {
-				arr.splice(index, 1);
-			}
-		}
-	}
-]);
-
-CollectionGroup.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		// Handle global emit
-		if (this._listeners[event]['*']) {
-			var arr = this._listeners[event]['*'],
-				arrCount = arr.length,
-				arrIndex;
-
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-			}
-		}
-
-		// Handle individual emit
-		if (data instanceof Array) {
-			// Check if the array is an array of objects in the collection
-			if (data[0] && data[0][this._primaryKey]) {
-				// Loop the array and check for listeners against the primary key
-				var listenerIdArr = this._listeners[event],
-					listenerIdCount,
-					listenerIdIndex,
-					arrCount = data.length,
-					arrIndex;
-
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
-						// Emit for this id
-						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
-						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return this;
+CollectionGroup.prototype.emit = function () {
+	this._data.emit.apply(this._data, arguments);
 };
 
 /**
@@ -179,6 +87,9 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			this._collectionArr.push(collection);
 			collection._groups.push(this);
 			collection.chain(this);
+
+			// Add collection's data
+			this._data.insert(collection.find());
 		}
 	}
 
@@ -210,20 +121,40 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 	return this;
 };
 
-CollectionGroup.prototype.find = function (query, options) {
-	if (this._collectionArr.length) {
-		// Loop the collections in this group and find first matching item response
-		var data = new Collection().primaryKey(this.primaryKey()),
-			i;
+CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
+	switch (type) {
+		case 'setData':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._data.decouple(data);
 
-		for (i = 0; i < this._collectionArr.length; i++) {
-			data.insert(this._collectionArr[i].find(query));
-		}
+			// Remove old data
+			this._data.remove(options.oldData);
 
-		return data.find(query, options);
-	} else {
-		return [];
+			// Add new data
+			this._data.insert(data);
+			break;
+
+		case 'insert':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._data.decouple(data);
+
+			// Add new data
+			this._data.insert(data);
+			break;
+
+		case 'update':
+			// Update data
+			this._data.update(data.query, data.update, options);
+			break;
+
+		case 'remove':
+			this._data.remove(data.query, options);
+			break;
 	}
+};
+
+CollectionGroup.prototype.find = function (query, options) {
+	return this._data.find(query, options);
 };
 
 CollectionGroup.prototype.insert = function (query, options) {
