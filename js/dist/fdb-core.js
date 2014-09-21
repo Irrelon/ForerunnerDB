@@ -1025,7 +1025,7 @@ Collection.prototype._isPositionalKey = function (key) {
  */
 Collection.prototype._updateProperty = function (doc, prop, val) {
 	if (this._linked) {
-		$.observable(doc).setProperty(prop, val);
+		jQuery.observable(doc).setProperty(prop, val);
 
 		if (this.debug()) {
 			console.log('ForerunnerDB.Collection: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
@@ -1048,7 +1048,7 @@ Collection.prototype._updateProperty = function (doc, prop, val) {
  */
 Collection.prototype._updateIncrement = function (doc, prop, val) {
 	if (this._linked) {
-		$.observable(doc).setProperty(prop, doc[prop] + val);
+		jQuery.observable(doc).setProperty(prop, doc[prop] + val);
 	} else {
 		doc[prop] += val;
 	}
@@ -1063,7 +1063,7 @@ Collection.prototype._updateIncrement = function (doc, prop, val) {
  */
 Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 	if (this._linked) {
-		$.observable(arr).move(indexFrom, indexTo);
+		jQuery.observable(arr).move(indexFrom, indexTo);
 
 		if (this.debug()) {
 			console.log('ForerunnerDB.Collection: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
@@ -1087,13 +1087,13 @@ Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 Collection.prototype._updateSplicePush = function (arr, index, doc) {
 	if (arr.length > index) {
 		if (this._linked) {
-			$.observable(arr).insert(index, doc);
+			jQuery.observable(arr).insert(index, doc);
 		} else {
 			arr.splice(index, 0, doc);
 		}
 	} else {
 		if (this._linked) {
-			$.observable(arr).insert(doc);
+			jQuery.observable(arr).insert(doc);
 		} else {
 			arr.push(doc);
 		}
@@ -1108,7 +1108,7 @@ Collection.prototype._updateSplicePush = function (arr, index, doc) {
  */
 Collection.prototype._updatePush = function (arr, doc) {
 	if (this._linked) {
-		$.observable(arr).insert(doc);
+		jQuery.observable(arr).insert(doc);
 	} else {
 		arr.push(doc);
 	}
@@ -1122,7 +1122,7 @@ Collection.prototype._updatePush = function (arr, doc) {
  */
 Collection.prototype._updatePull = function (arr, index) {
 	if (this._linked) {
-		$.observable(arr).remove(index);
+		jQuery.observable(arr).remove(index);
 	} else {
 		arr.splice(index, 1);
 	}
@@ -1137,7 +1137,7 @@ Collection.prototype._updatePull = function (arr, index) {
  */
 Collection.prototype._updateMultiply = function (doc, prop, val) {
 	if (this._linked) {
-		$.observable(doc).setProperty(prop, doc[prop] * val);
+		jQuery.observable(doc).setProperty(prop, doc[prop] * val);
 	} else {
 		doc[prop] *= val;
 	}
@@ -1153,8 +1153,8 @@ Collection.prototype._updateMultiply = function (doc, prop, val) {
 Collection.prototype._updateRename = function (doc, prop, val) {
 	var existingVal = doc[prop];
 	if (this._linked) {
-		$.observable(doc).setProperty(val, existingVal);
-		$.observable(doc).removeProperty(prop);
+		jQuery.observable(doc).setProperty(val, existingVal);
+		jQuery.observable(doc).removeProperty(prop);
 	} else {
 		doc[val] = existingVal;
 		delete doc[prop];
@@ -1169,7 +1169,7 @@ Collection.prototype._updateRename = function (doc, prop, val) {
  */
 Collection.prototype._updateUnset = function (doc, prop) {
 	if (this._linked) {
-		$.observable(doc).removeProperty(prop);
+		jQuery.observable(doc).removeProperty(prop);
 	} else {
 		delete doc[prop];
 	}
@@ -1195,7 +1195,7 @@ Collection.prototype._updatePop = function (doc, val) {
 			}
 
 			if (index > -1) {
-				$.observable(arr).remove(index);
+				jQuery.observable(arr).remove(index);
 				updated = true;
 			}
 		} else {
@@ -1250,7 +1250,7 @@ Collection.prototype.remove = function (query) {
 				index = this._data.indexOf(dataItem);
 
 				if (this._linked) {
-					$.observable(this._data).remove(index);
+					jQuery.observable(this._data).remove(index);
 				} else {
 					this._data.splice(index, 1);
 				}
@@ -1468,7 +1468,7 @@ Collection.prototype._insert = function (doc, index) {
 
 			// Insert the document
 			if (this._linked) {
-				$.observable(this._data).insert(index, doc);
+				jQuery.observable(this._data).insert(index, doc);
 			} else {
 				this._data.splice(index, 0, doc);
 			}
@@ -2679,42 +2679,46 @@ Collection.prototype.count = function (query, options) {
  * @param templateSelector
  */
 Collection.prototype.link = function (outputTargetSelector, templateSelector) {
-	// Check for existing data binding
-	this._links = this._links || {};
+	if (window.jQuery) {
+		// Check for existing data binding
+		this._links = this._links || {};
 
-	if (!this._links[templateSelector]) {
-		if ($(outputTargetSelector).length) {
-			// Ensure the template is in memory and if not, try to get it
-			if (!$.templates[templateSelector]) {
-				// Grab the template
-				var template = $(templateSelector);
-				if (template.length) {
-					$.views.templates(templateSelector, $(template[0]).html());
-				} else {
-					throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+		if (!this._links[templateSelector]) {
+			if (jQuery(outputTargetSelector).length) {
+				// Ensure the template is in memory and if not, try to get it
+				if (!jQuery.templates[templateSelector]) {
+					// Grab the template
+					var template = jQuery(templateSelector);
+					if (template.length) {
+						jQuery.views.templates(templateSelector, jQuery(template[0]).html());
+					} else {
+						throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+					}
 				}
+
+				// Create the data binding
+				jQuery.templates[templateSelector].link(outputTargetSelector, this._data);
+
+				// Add link to flags
+				this._links[templateSelector] = outputTargetSelector;
+
+				// Set the linked flag
+				this._linked++;
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Collection: Added binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+				}
+
+				return this;
+			} else {
+				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 			}
-
-			// Create the data binding
-			$.templates[templateSelector].link(outputTargetSelector, this._data);
-
-			// Add link to flags
-			this._links[templateSelector] = outputTargetSelector;
-
-			// Set the linked flag
-			this._linked++;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Collection: Added binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
-			}
-
-			return this;
-		} else {
-			throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 		}
-	}
 
-	throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+	}
 };
 
 /**
@@ -2724,27 +2728,31 @@ Collection.prototype.link = function (outputTargetSelector, templateSelector) {
  * @param templateSelector
  */
 Collection.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	// Check for binding
-	this._links = this._links || {};
+	if (window.jQuery) {
+		// Check for binding
+		this._links = this._links || {};
 
-	if (this._links[templateSelector]) {
-		// Remove the data binding
-		$.templates[templateSelector].unlink(outputTargetSelector);
+		if (this._links[templateSelector]) {
+			// Remove the data binding
+			jQuery.templates[templateSelector].unlink(outputTargetSelector);
 
-		// Remove link from flags
-		delete this._links[templateSelector];
+			// Remove link from flags
+			delete this._links[templateSelector];
 
-		// Set the linked flag
-		this._linked--;
+			// Set the linked flag
+			this._linked--;
 
-		if (this.debug()) {
-			console.log('ForerunnerDB.Collection: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+			if (this.debug()) {
+				console.log('ForerunnerDB.Collection: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+			}
+
+			return this;
 		}
 
-		return this;
+		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
 	}
-
-	console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 };
 
 /**
