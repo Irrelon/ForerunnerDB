@@ -284,7 +284,7 @@ test("Bind - View.on() :: Insert from CollectionGroup via CollectionGroup Interf
 	userGroupView.link('#testTarget', {
 		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
-debugger;
+
 	userGroup.insert({
 		_id: '2342',
 		name: "hello"
@@ -444,7 +444,7 @@ test("Bind - View() :: View sort", function() {
 		name: "beta"
 	});
 
-	userView.refresh(true);
+	//userView.refresh(true);
 
 	var viewData = userView.find(),
 		elems = $('#testTarget').find('.item');
@@ -452,14 +452,13 @@ test("Bind - View() :: View sort", function() {
 	ok(elems.length === 7, "Insert documents");
 
 	// Check sort order
-	//console.log($(elems[0]).html(), $(elems[1]).html(), $(elems[2]).html(), $(elems[3]).html(), $(elems[4]).html(), $(elems[5]).html());
-	ok($(elems[0]).html() === 'adam', "Alphabetical 1");
-	ok($(elems[1]).html() === 'beta', "Alphabetical 2");
-	ok($(elems[2]).html() === 'Dean', "Alphabetical 3");
-	ok($(elems[3]).html() === 'Dean', "Alphabetical 4");
-	ok($(elems[4]).html() === 'Jim', "Alphabetical 5");
-	ok($(elems[5]).html() === 'Kat', "Alphabetical 6");
-	ok($(elems[6]).html() === 'zelda', "Alphabetical 7");
+	ok($(elems[0]).attr('id') === '2342', "Alphabetical 1");
+	ok($(elems[1]).attr('id') === '2322', "Alphabetical 2");
+	ok($(elems[2]).attr('id') === '2', "Alphabetical 3");
+	ok($(elems[3]).attr('id') === '3', "Alphabetical 4");
+	ok($(elems[4]).attr('id') === '4', "Alphabetical 5");
+	ok($(elems[5]).attr('id') === '5', "Alphabetical 6");
+	ok($(elems[6]).attr('id') === '23432', "Alphabetical 7");
 
 	//userView._debug = false;
 

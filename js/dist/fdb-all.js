@@ -5624,6 +5624,11 @@ View.prototype._removeCollection = function (collection) {
 };
 
 View.prototype._chainHandler = function (sender, type, data, options) {
+	var index,
+		tempData,
+		dataIsArray,
+		i;
+
 	switch (type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
@@ -5643,16 +5648,57 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			// Decouple the data to ensure we are working with our own copy
 			data = this._privateData.decouple(data);
 
-			var index = options && options.index ? options.index : this._privateData.length;
+			// Check if our view has an orderBy clause
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Create a temp data array from existing view data
+				tempData = [].concat(this._privateData._data);
+				dataIsArray = data instanceof Array;
 
-			// Modify transform data
-			this._transformInsert(data, index);
+				// Add our new data
+				if (dataIsArray) {
+					tempData = tempData.concat(data);
+				} else {
+					tempData.push(data);
+				}
+
+				// Run the new array through the sorting system
+				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+				// Now we have sorted data, determine how to insert it in the correct locations
+				// in our existing data array for this view
+				if (dataIsArray) {
+					// We have an array of documents, order them by their index location
+					data.sort(function (a, b) {
+						return tempData.indexOf(a) - tempData.indexOf(b);
+					});
+
+					// loop and add each one to the correct place
+					for (i = 0; i < data.length; i++) {
+						index = tempData.indexOf(data[i]);
+
+						// Modify transform data
+						this._transformInsert(data, index);
+						this._privateData._insertHandle(data, index);
+					}
+				} else {
+					index = tempData.indexOf(data);
+
+					// Modify transform data
+					this._transformInsert(data, index);
+					this._privateData._insertHandle(data, index);
+				}
+			} else {
+				// Set the insert index to the passed index, or if none, the end of the view data array
+				index = options && options.index ? options.index : this._privateData.length;
+
+				// Modify transform data
+				this._transformInsert(data, index);
+				this._privateData._insertHandle(data, index);
+			}
 
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
-
-			this._privateData._insertHandle(data, index);
 			break;
 
 		case 'update':
@@ -5669,7 +5715,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
 
-				for (var i = 0; i < updates.length; i++) {
+				for (i = 0; i < updates.length; i++) {
 					tQuery = {};
 					item = updates[i];
 					tQuery[primaryKey] = item[primaryKey];
