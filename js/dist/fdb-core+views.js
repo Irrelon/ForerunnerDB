@@ -3,7 +3,7 @@ var Core = _dereq_('../lib/Core'),
 	View = _dereq_('../lib/View');
 
 module.exports = Core;
-},{"../lib/Core":3,"../lib/View":12}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/View":13}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -60,7 +60,8 @@ Collection.prototype.init = function (name) {
 	this._subsetOf(this);
 };
 
-Shared.modules.Collection = Collection;
+Shared.addModule('Collection', Collection);
+Shared.inherit(Collection.prototype, Shared.chainSystem);
 
 Overload = _dereq_('./Overload');
 Metrics = _dereq_('./Metrics');
@@ -79,11 +80,7 @@ Collection.prototype.debug = new Overload([
 		if (val !== undefined) {
 			if (typeof val === 'boolean') {
 				this._debug.all = val;
-
-				// Update the views to use this debug setting
-				for (var i = 0; i < this._views.length; i++) {
-					this._views[i].debug(val);
-				}
+				this.chainSend('debug', this._debug);
 				return this;
 			} else {
 				return this._debug[val] || (this._db && this._db._debug && this._db._debug[val]) || this._debug.all;
@@ -97,11 +94,7 @@ Collection.prototype.debug = new Overload([
 		if (type !== undefined) {
 			if (val !== undefined) {
 				this._debug[type] = val;
-
-				// Update the views to use this debug setting
-				for (var i = 0; i < this._views.length; i++) {
-					this._views[i].debug(type, val);
-				}
+				this.chainSend('debug', this._debug);
 				return this;
 			}
 
@@ -343,12 +336,13 @@ Collection.prototype.db = function (db) {
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
 		var op = this._metrics.create('setData');
+
 		op.start();
 
 		options = options || {};
-		options.decouple = options.decouple !== undefined ? options.decouple : true;
+		options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
 
-		if (options.decouple) {
+		if (options.$decouple) {
 			data = this.decouple(data);
 		}
 
@@ -362,17 +356,30 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		var oldData = this._data;
 
-		// Overwrite the data
-		this._data = [];
+		if (this._linked) {
+			// The collection is data-bound so do a .remove() instead of just clearing the data
+			this.remove();
+		} else {
+			// Overwrite the data
+			this._data = [];
+		}
 
 		if (data.length) {
-			this._data = this._data.concat(data);
+			if (this._linked) {
+				this.insert(data);
+			} else {
+				this._data = this._data.concat(data);
+			}
 		}
 
 		// Update the primary key index
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
 		this._rebuildPrimaryKeyIndex(options);
-		op.time('_rebuildPrimaryKeyIndex');
+		op.time('Rebuild Primary Key Index');
+
+		op.time('Resolve chains');
+		this.chainSend('setData', data, {oldData: oldData});
+		op.time('Resolve chains');
 
 		op.stop();
 
@@ -597,13 +604,11 @@ Collection.prototype.update = function (query, update, options) {
 			} else {
 				return self._updateObject(doc, update, query, options, '');
 			}
-		},
-		views = this._views,
-		viewIndex;
+		};
 
 	op.start();
 	op.time('Retrieve documents to update');
-	dataSet = this.find(query, {decouple: false});
+	dataSet = this.find(query, {$decouple: false});
 	op.time('Retrieve documents to update');
 
 	if (dataSet.length) {
@@ -612,17 +617,12 @@ Collection.prototype.update = function (query, update, options) {
 		op.time('Update documents');
 
 		if (updated.length) {
-			// Loop views and pass them the update query
-			if (views && views.length) {
-				if (this.debug('views')) {
-					console.log('Updating views from collection: ' + this.name());
-				}
-				op.time('Inform views of update');
-				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-					views[viewIndex].update(query, update);
-				}
-				op.time('Inform views of update');
-			}
+			op.time('Resolve chains');
+			this.chainSend('update', {
+				query: query,
+				update: update
+			}, options);
+			op.time('Resolve chains');
 
 			this._onUpdate(updated);
 			this.deferEmit('change', {type: 'update', data: updated});
@@ -631,6 +631,7 @@ Collection.prototype.update = function (query, update, options) {
 
 	op.stop();
 
+	// TODO: Should we decouple the updated array before return by default?
 	return updated || [];
 };
 
@@ -1217,14 +1218,14 @@ Collection.prototype._updatePop = function (doc, val) {
  * Removes any documents from the collection that match the search query
  * key/values.
  * @param {Object} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
  * @returns {Array} An array of the documents that were removed.
  */
-Collection.prototype.remove = function (query) {
+Collection.prototype.remove = function (query, options, callback) {
 	var self = this,
 		dataSet,
 		index,
-		views = this._views,
-		viewIndex,
 		dataItem,
 		arrIndex,
 		returnArr;
@@ -1233,12 +1234,17 @@ Collection.prototype.remove = function (query) {
 		returnArr = [];
 
 		for (arrIndex = 0; arrIndex < query.length; arrIndex++) {
-			returnArr.push(this.remove(query[arrIndex]));
+			returnArr.push(this.remove(query[arrIndex], {noEmit: true}));
 		}
+
+		if (!options || (options && !options.noEmit)) {
+			this._onRemove(returnArr);
+		}
+
 
 		return returnArr;
 	} else {
-		dataSet = this.find(query, {decouple: false});
+		dataSet = this.find(query, {$decouple: false});
 		if (dataSet.length) {
 			// Remove the data from the collection
 			for (var i = 0; i < dataSet.length; i++) {
@@ -1257,14 +1263,16 @@ Collection.prototype.remove = function (query) {
 				}
 			}
 
-			// Loop views and pass them the remove query
-			if (views && views.length) {
-				for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-					views[viewIndex].remove(query);
-				}
+			//op.time('Resolve chains');
+			this.chainSend('remove', {
+				query: query
+			}, options);
+			//op.time('Resolve chains');
+
+			if (!options || (options && !options.noEmit)) {
+				this._onRemove(dataSet);
 			}
 
-			this._onRemove(dataSet);
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
@@ -1382,8 +1390,6 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		inserted = [],
 		failed = [],
 		insertResult,
-		views = this._views,
-		viewIndex,
 		i;
 
 	if (data instanceof Array) {
@@ -1427,12 +1433,9 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		}
 	}
 
-	// Loop views and pass them the insert query
-	if (views && views.length) {
-		for (viewIndex = 0; viewIndex < views.length; viewIndex++) {
-			views[viewIndex].insert(data, index);
-		}
-	}
+	//op.time('Resolve chains');
+	this.chainSend('insert', data, {index: index});
+	//op.time('Resolve chains');
 
 	this._onInsert(inserted, failed);
 	if (callback) { callback(); }
@@ -1675,7 +1678,7 @@ Collection.prototype.find = function (query, options) {
 	query = query || {};
 	options = options || {};
 
-	options.decouple = options.decouple !== undefined ? options.decouple : true;
+	options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
 
 	var op = this._metrics.create('find'),
 		self = this,
@@ -1728,7 +1731,7 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Check if an index lookup can be used to return this result
-		if (analysis.indexMatch.length && (!options || (options && !options.skipIndex))) {
+		if (analysis.indexMatch.length && (!options || (options && !options.$skipIndex))) {
 			op.data('index.potential', analysis.indexMatch);
 			op.data('index.used', analysis.indexMatch[0].index);
 
@@ -1760,9 +1763,9 @@ Collection.prototype.find = function (query, options) {
 			}
 
 			// Order the array if we were passed a sort clause
-			if (options.sort) {
+			if (options.$orderBy) {
 				op.time('sort');
-				resultArr = this.sort(options.sort, resultArr);
+				resultArr = this.sort(options.$orderBy, resultArr);
 				op.time('sort');
 			}
 			op.time('tableScan: ' + scanLength);
@@ -1773,7 +1776,7 @@ Collection.prototype.find = function (query, options) {
 			op.data('limit', options.limit);
 		}
 
-		if (options.decouple) {
+		if (options.$decouple) {
 			// Now decouple the data from the original objects
 			op.time('decouple');
 			resultArr = this.decouple(resultArr);
@@ -1901,6 +1904,20 @@ Collection.prototype.find = function (query, options) {
 		resultArr.__fdbOp = op;
 
 		return resultArr;
+	}
+};
+
+/**
+ * Gets the index in the collection data array of the first item matched by
+ * the passed query object.
+ * @param {Object} query The query to run to find the item to return the index of.
+ * @returns {Number}
+ */
+Collection.prototype.indexOf = function (query) {
+	var item = this.find(query, {$decouple: false})[0];
+
+	if (item) {
+		return this._data.indexOf(item);
 	}
 };
 
@@ -2681,27 +2698,45 @@ Collection.prototype.count = function (query, options) {
  */
 Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 	if (window.jQuery) {
-		// Check for existing data binding
+		// Make sure we have a data-binding store object to use
 		this._links = this._links || {};
 
-		if (!this._links[templateSelector]) {
+		var templateId,
+			templateHtml;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+				templateHtml = templateSelector.template;
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (!this._links[templateId]) {
 			if (jQuery(outputTargetSelector).length) {
 				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateSelector]) {
-					// Grab the template
-					var template = jQuery(templateSelector);
-					if (template.length) {
-						jQuery.views.templates(templateSelector, jQuery(template[0]).html());
-					} else {
-						throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+				if (!jQuery.templates[templateId]) {
+					if (!templateHtml) {
+						// Grab the template
+						var template = jQuery(templateSelector);
+						if (template.length) {
+							templateHtml = jQuery(template[0]).html();
+						} else {
+							throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+						}
 					}
+
+					jQuery.views.templates(templateId, templateHtml);
 				}
 
 				// Create the data binding
-				jQuery.templates[templateSelector].link(outputTargetSelector, this._data);
+				jQuery.templates[templateId].link(outputTargetSelector, this._data);
 
 				// Add link to flags
-				this._links[templateSelector] = outputTargetSelector;
+				this._links[templateId] = outputTargetSelector;
 
 				// Set the linked flag
 				this._linked++;
@@ -2716,7 +2751,7 @@ Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 			}
 		}
 
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 	} else {
 		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
 	}
@@ -2733,12 +2768,24 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 		// Check for binding
 		this._links = this._links || {};
 
-		if (this._links[templateSelector]) {
+		var templateId;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (this._links[templateId]) {
 			// Remove the data binding
-			jQuery.templates[templateSelector].unlink(outputTargetSelector);
+			jQuery.templates[templateId].unlink(outputTargetSelector);
 
 			// Remove link from flags
-			delete this._links[templateSelector];
+			delete this._links[templateId];
 
 			// Set the linked flag
 			this._linked--;
@@ -3080,7 +3127,260 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Overload":9,"./Path":10,"./Shared":11}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Overload":10,"./Path":11,"./Shared":12}],3:[function(_dereq_,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	CoreInit,
+	Collection,
+	Overload;
+
+Shared = _dereq_('./Shared');
+
+var CollectionGroup = function () {
+	this.init.apply(this, arguments);
+};
+
+CollectionGroup.prototype.init = function (name) {
+	var self = this;
+
+	this._name = name;
+	this._data = new Collection('__FDB__cg_data_' + this._name);
+	this._collections = [];
+	this._views = [];
+};
+
+Shared.addModule('CollectionGroup', CollectionGroup);
+Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
+
+Collection = _dereq_('./Collection');
+Overload = _dereq_('./Overload');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
+
+CollectionGroup.prototype.on = function () {
+	this._data.on.apply(this._data, arguments);
+};
+
+CollectionGroup.prototype.off = function () {
+	this._data.off.apply(this._data, arguments);
+};
+
+CollectionGroup.prototype.emit = function () {
+	this._data.emit.apply(this._data, arguments);
+};
+
+/**
+ * Gets / sets the primary key for this collection group.
+ * @param {String=} keyName The name of the primary key.
+ * @returns {*}
+ */
+CollectionGroup.prototype.primaryKey = function (keyName) {
+	if (keyName !== undefined) {
+		this._primaryKey = keyName;
+		return this;
+	}
+
+	return this._primaryKey;
+};
+
+/**
+ * Gets / sets the db instance the collection group belongs to.
+ * @param {DB} db The db instance.
+ * @returns {*}
+ */
+CollectionGroup.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		return this;
+	}
+
+	return this._db;
+};
+
+CollectionGroup.prototype.addCollection = function (collection) {
+	if (collection) {
+		if (this._collections.indexOf(collection) === -1) {
+			var self = this;
+
+			// Check for compatible primary keys
+			if (this._collections.length) {
+				if (this._primaryKey !== collection.primaryKey()) {
+					throw("All collections in a collection group must have the same primary key!");
+				}
+			} else {
+				// Set the primary key to the first collection added
+				this.primaryKey(collection.primaryKey());
+			}
+
+			// Add the collection
+			this._collections.push(collection);
+			collection._groups.push(this);
+			collection.chain(this);
+
+			// Add collection's data
+			this._data.insert(collection.find());
+		}
+	}
+
+	return this;
+};
+
+CollectionGroup.prototype.removeCollection = function (collection) {
+	if (collection) {
+		var collectionIndex = this._collections.indexOf(collection),
+			groupIndex;
+
+		if (collectionIndex !== -1) {
+			collection.unChain(this);
+			this._collections.splice(collectionIndex, 1);
+
+			groupIndex = collection._groups.indexOf(this);
+
+			if (groupIndex !== -1) {
+				collection._groups.splice(groupIndex, 1);
+			}
+		}
+
+		if (this._collections.length === 0) {
+			// Wipe the primary key
+			delete this._primaryKey;
+		}
+	}
+
+	return this;
+};
+
+CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
+	switch (type) {
+		case 'setData':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._data.decouple(data);
+
+			// Remove old data
+			this._data.remove(options.oldData);
+
+			// Add new data
+			this._data.insert(data);
+			break;
+
+		case 'insert':
+			// Decouple the data to ensure we are working with our own copy
+			data = this._data.decouple(data);
+
+			// Add new data
+			this._data.insert(data);
+			break;
+
+		case 'update':
+			// Update data
+			this._data.update(data.query, data.update, options);
+			break;
+
+		case 'remove':
+			this._data.remove(data.query, options);
+			break;
+	}
+};
+
+CollectionGroup.prototype.insert = function () {
+	this._collectionsRun('insert', arguments);
+};
+
+CollectionGroup.prototype.update = function () {
+	this._collectionsRun('update', arguments);
+};
+
+CollectionGroup.prototype.updateById = function () {
+	this._collectionsRun('updateById', arguments);
+};
+
+CollectionGroup.prototype.remove = function () {
+	this._collectionsRun('remove', arguments);
+};
+
+CollectionGroup.prototype._collectionsRun = function (type, args) {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], args);
+	}
+};
+
+CollectionGroup.prototype.find = function (query, options) {
+	return this._data.find(query, options);
+};
+
+/**
+ * Helper method that removes a document that matches the given id.
+ * @param {String} id The id of the document to remove.
+ */
+CollectionGroup.prototype.removeById = function (id) {
+	// Loop the collections in this group and apply the remove
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i].removeById(id);
+	}
+};
+
+/**
+ * Uses the passed query to generate a new collection with results
+ * matching the query parameters.
+ *
+ * @param query
+ * @param options
+ * @returns {*}
+ */
+CollectionGroup.prototype.subset = function (query, options) {
+	var result = this.find(query, options);
+
+	return new Collection()
+		._subsetOf(this)
+		.primaryKey(this._primaryKey)
+		.setData(result);
+};
+
+/**
+ * Drops a collection group from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+CollectionGroup.prototype.drop = function () {
+	var i,
+		collArr = [].concat(this._collections),
+		viewArr = [].concat(this._views);
+
+	if (this._debug) {
+		console.log('Dropping collection group ' + this._name);
+	}
+
+	for (i = 0; i < collArr.length; i++) {
+		this.removeCollection(collArr[i]);
+	}
+
+	for (i = 0; i < viewArr.length; i++) {
+		this._removeView(viewArr[i]);
+	}
+
+	this.emit('drop');
+
+	return true;
+};
+
+// Extend DB to include collection groups
+Core.prototype.init = function () {
+	this._collectionGroup = {};
+	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.collectionGroup = function (collectionGroupName) {
+	if (collectionGroupName) {
+		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
+		return this._collectionGroup[collectionGroupName];
+	} else {
+		// Return an object of collection data
+		return this._collectionGroup;
+	}
+};
+
+module.exports = CollectionGroup;
+},{"./Collection":2,"./Overload":10,"./Shared":12}],4:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3128,7 +3428,8 @@ Core.prototype.init = function () {
 	this._debug = {};
 };
 
-Shared.modules.Core = Core;
+Shared.addModule('Core', Core);
+Shared.inherit(Core.prototype, Shared.chainSystem);
 
 Overload = _dereq_('./Overload.js');
 Collection = _dereq_('./Collection.js');
@@ -3387,7 +3688,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload.js":9,"./Shared.js":11}],4:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Overload.js":10,"./Shared.js":12}],5:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3415,7 +3716,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -3447,7 +3748,8 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.modules.Index = Index;
+Shared.addModule('Index', Index);
+Shared.inherit(Index.prototype, Shared.chainSystem);
 
 Index.prototype.id = function () {
 	return this._id;
@@ -3523,8 +3825,8 @@ Index.prototype.rebuild = function () {
 	if (this._collection) {
 		// Get sorted data
 		var collection = this._collection.subset({}, {
-				decouple: false,
-				sort: this._keys
+				$decouple: false,
+				$orderBy: this._keys
 			}),
 			collectionData = collection.find(),
 			dataIndex,
@@ -3774,7 +4076,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":10,"./Shared":11}],6:[function(_dereq_,module,exports){
+},{"./Path":11,"./Shared":12}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3794,7 +4096,8 @@ KeyValueStore.prototype.init = function (name) {
 	this._primaryKey = '_id';
 };
 
-Shared.modules.KeyValueStore = KeyValueStore;
+Shared.addModule('KeyValueStore', KeyValueStore);
+Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
 
 /**
  * Get / set the name of the key/value store.
@@ -3992,7 +4295,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":11}],7:[function(_dereq_,module,exports){
+},{"./Shared":12}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4008,7 +4311,8 @@ Metrics.prototype.init = function () {
 	this._data = [];
 };
 
-Shared.modules.Metrics = Metrics;
+Shared.addModule('Metrics', Metrics);
+Shared.inherit(Metrics.prototype, Shared.chainSystem);
 
 /**
  * Creates an operation within the metrics instance and if metrics
@@ -4063,7 +4367,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":8,"./Shared":11}],8:[function(_dereq_,module,exports){
+},{"./Operation":9,"./Shared":12}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4098,7 +4402,8 @@ Operation.prototype.init = function (name) {
 	};
 };
 
-Shared.modules.Operation = Operation;
+Shared.addModule('Operation', Operation);
+Shared.inherit(Operation.prototype, Shared.chainSystem);
 
 /**
  * Starts the operation timer.
@@ -4206,7 +4511,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":10,"./Shared":11}],9:[function(_dereq_,module,exports){
+},{"./Path":11,"./Shared":12}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4234,10 +4539,10 @@ var Overload = function (arr) {
 	return function () {};
 };
 
-Shared.modules.Overload = Overload;
+Shared.addModule('Overload', Overload);
 
 module.exports = Overload;
-},{"./Shared":11}],10:[function(_dereq_,module,exports){
+},{"./Shared":12}],11:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4256,7 +4561,8 @@ Path.prototype.init = function (path) {
 	}
 };
 
-Shared.modules.Path = Path;
+Shared.addModule('Path', Path);
+Shared.inherit(Path.prototype, Shared.chainSystem);
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -4646,15 +4952,65 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":11}],11:[function(_dereq_,module,exports){
+},{"./Shared":12}],12:[function(_dereq_,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
-	prototypes: {}
+
+	addModule: function (name, module) {
+		this.modules[name] = module;
+	},
+
+	inherit: function (obj, system) {
+		for (var i in system) {
+			if (system.hasOwnProperty(i)) {
+				obj[i] = system[i];
+			}
+		}
+	},
+
+	// Inheritable systems
+	chainSystem: {
+		chain: function (obj) {
+			this._chain = this._chain || [];
+			var index = this._chain.indexOf(obj);
+
+			if (index === -1) {
+				this._chain.push(obj);
+			}
+		},
+		unChain: function (obj) {
+			if (this._chain) {
+				var index = this._chain.indexOf(obj);
+
+				if (index > -1) {
+					this._chain.splice(index, 1);
+				}
+			}
+		},
+		chainSend: function (type, data, options) {
+			if (this._chain) {
+				var arr = this._chain,
+					count = arr.length,
+					index;
+
+				for (index = 0; index < count; index++) {
+					arr[index].chainReceive(this, type, data, options);
+				}
+			}
+		},
+		chainReceive: function (sender, type, data, options) {
+			// Fire our internal handler
+			if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
+				// Propagate the message down the chain
+				this.chainSend(type, data, options);
+			}
+		}
+	}
 };
 
 module.exports = Shared;
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -4688,9 +5044,11 @@ View.prototype.init = function (name, query, options) {
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
 
-Shared.modules.View = View;
+Shared.addModule('View', View);
+Shared.inherit(View.prototype, Shared.chainSystem);
 
 Collection = _dereq_('./Collection');
+CollectionGroup = _dereq_('./CollectionGroup');
 Overload = _dereq_('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
@@ -4741,82 +5099,34 @@ View.prototype.name = function (val) {
 	return this._name;
 };
 
+View.prototype.insert = function () {
+	this._collectionsRun('insert', arguments);
+};
+
+View.prototype.update = function () {
+	this._collectionsRun('update', arguments);
+};
+
+View.prototype.updateById = function () {
+	this._collectionsRun('updateById', arguments);
+};
+
+View.prototype.remove = function () {
+	this._collectionsRun('remove', arguments);
+};
+
+View.prototype._collectionsRun = function (type, args) {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], args);
+	}
+};
+
 /**
  * Queries the view data. See Collection.find() for more information.
  * @returns {*}
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
-};
-
-/**
- * Inserts into view data via the view collection. See Collection.insert() for more information.
- * @returns {*}
- */
-View.prototype.insert = function (data, index, callback) {
-	// Decouple the data to ensure we are working with our own copy
-	data = this._privateData.decouple(data);
-
-	if (typeof(index) === 'function') {
-		callback = index;
-		index = this._privateData.length;
-	} else if (index === undefined) {
-		index = this._privateData.length;
-	}
-
-	// Modify transform data
-	this._transformInsert(data, index);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	return this._privateData._insertHandle(data, index, callback);
-};
-
-/**
- * Updates into view data via the view collection. See Collection.update() for more information.
- * @returns {*}
- */
-View.prototype.update = function (query, update) {
-	// Modify transform data
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	var updates = this._privateData.update(query, update),
-		primaryKey,
-		tQuery,
-		item;
-
-	if (this._transformEnabled && this._transformIn) {
-		primaryKey = this._publicData.primaryKey();
-
-		for (var i = 0; i < updates.length; i++) {
-			tQuery = {};
-			item = updates[i];
-			tQuery[primaryKey] = item[primaryKey];
-
-			this._transformUpdate(tQuery, item);
-		}
-	}
-
-	return updates;
-};
-
-/**
- * Removed from view data via the view collection. See Collection.remove() for more information.
- * @returns {*}
- */
-View.prototype.remove = function (query) {
-	// Modify transform data
-	this._transformRemove(query);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-	}
-
-	return this._privateData.remove(query);
 };
 
 View.prototype.link = function (outputTargetSelector, templateSelector) {
@@ -4850,7 +5160,7 @@ View.prototype.from = function (collection) {
 View.prototype._addCollection = function (collection) {
 	if (this._collections.indexOf(collection) === -1) {
 		this._collections.push(collection);
-		collection._addView(this);
+		collection.chain(this);
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
@@ -4867,11 +5177,150 @@ View.prototype._removeCollection = function (collection) {
 	var collectionIndex = this._collections.indexOf(collection);
 	if (collectionIndex > -1) {
 		this._collections.splice(collection, 1);
-		collection._removeView(this);
+		collection.unChain(this);
 		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
 	}
 
 	return this;
+};
+
+View.prototype._chainHandler = function (sender, type, data, options) {
+	var index,
+		tempData,
+		dataIsArray,
+		updates,
+		primaryKey,
+		tQuery,
+		item,
+		currentIndex,
+		i;
+
+	switch (type) {
+		case 'setData':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			// Modify transform data
+			this._transformSetData(data);
+
+			this._privateData.setData(data);
+			break;
+
+		case 'insert':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			// Decouple the data to ensure we are working with our own copy
+			data = this._privateData.decouple(data);
+
+			// Check if our view has an orderBy clause
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Create a temp data array from existing view data
+				tempData = [].concat(this._privateData._data);
+				dataIsArray = data instanceof Array;
+
+				// Add our new data
+				if (dataIsArray) {
+					tempData = tempData.concat(data);
+				} else {
+					tempData.push(data);
+				}
+
+				// Run the new array through the sorting system
+				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+				// Now we have sorted data, determine how to insert it in the correct locations
+				// in our existing data array for this view
+				if (dataIsArray) {
+					// We have an array of documents, order them by their index location
+					data.sort(function (a, b) {
+						return tempData.indexOf(a) - tempData.indexOf(b);
+					});
+
+					// loop and add each one to the correct place
+					for (i = 0; i < data.length; i++) {
+						index = tempData.indexOf(data[i]);
+
+						// Modify transform data
+						this._transformInsert(data, index);
+						this._privateData._insertHandle(data, index);
+					}
+				} else {
+					index = tempData.indexOf(data);
+
+					// Modify transform data
+					this._transformInsert(data, index);
+					this._privateData._insertHandle(data, index);
+				}
+			} else {
+				// Set the insert index to the passed index, or if none, the end of the view data array
+				index = options && options.index ? options.index : this._privateData.length;
+
+				// Modify transform data
+				this._transformInsert(data, index);
+				this._privateData._insertHandle(data, index);
+			}
+			break;
+
+		case 'update':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			updates = this._privateData.update(data.query, data.update, data.options);
+
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Create a temp data array from existing view data
+				tempData = [].concat(this._privateData._data);
+
+				// Run the new array through the sorting system
+				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+				// Now we have sorted data, determine where to move the updated documents
+				// Order updates by their index location
+				updates.sort(function (a, b) {
+					return tempData.indexOf(a) - tempData.indexOf(b);
+				});
+
+				// Loop and add each one to the correct place
+				for (i = 0; i < updates.length; i++) {
+					currentIndex = this._privateData._data.indexOf(updates[i]);
+					index = tempData.indexOf(updates[i]);
+
+					// Modify transform data
+					this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+				}
+			}
+
+			if (this._transformEnabled && this._transformIn) {
+				primaryKey = this._publicData.primaryKey();
+
+				for (i = 0; i < updates.length; i++) {
+					tQuery = {};
+					item = updates[i];
+					tQuery[primaryKey] = item[primaryKey];
+
+					this._transformUpdate(tQuery, item);
+				}
+			}
+			break;
+
+		case 'remove':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
+			// Modify transform data
+			this._transformRemove(data.query, options);
+
+			this._privateData.remove(data.query, options);
+			break;
+	}
 };
 
 View.prototype.on = function () {
@@ -4895,8 +5344,6 @@ View.prototype.drop = function () {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
-
-		this.emit('drop');
 
 		// Loop collections and remove us from them
 		var arrCount = this._collections.length;
@@ -5051,7 +5498,7 @@ View.prototype.query = function (query, refresh) {
 View.prototype.queryOptions = function (options, refresh) {
 	if (options !== undefined) {
 		this._querySettings.options = options;
-		if (options.decouple === undefined) { options.decouple = true; }
+		if (options.$decouple === undefined) { options.$decouple = true; }
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
@@ -5202,15 +5649,15 @@ View.prototype._transformInsert = function (data, index) {
 	}
 };
 
-View.prototype._transformUpdate = function (query, update) {
+View.prototype._transformUpdate = function (query, update, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.update(query, update);
+		this._publicData.update(query, update, options);
 	}
 };
 
-View.prototype._transformRemove = function (query) {
+View.prototype._transformRemove = function (query, options) {
 	if (this._transformEnabled && this._publicData) {
-		this._publicData.remove(query);
+		this._publicData.remove(query, options);
 	}
 };
 
@@ -5243,7 +5690,7 @@ Collection.prototype.view = function (name, query, options) {
  * @returns {Collection}
  * @private
  */
-Collection.prototype._addView = function (view) {
+Collection.prototype._addView = CollectionGroup.prototype._addView = function (view) {
 	if (view !== undefined) {
 		this._views.push(view);
 	}
@@ -5257,7 +5704,7 @@ Collection.prototype._addView = function (view) {
  * @returns {Collection}
  * @private
  */
-Collection.prototype._removeView = function (view) {
+Collection.prototype._removeView = CollectionGroup.prototype._removeView = function (view) {
 	if (view !== undefined) {
 		var index = this._views.indexOf(view);
 		if (index > -1) {
@@ -5321,5 +5768,5 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":2,"./Overload":9,"./Shared":11}]},{},[1])(1)
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":10,"./Shared":12}]},{},[1])(1)
 });
