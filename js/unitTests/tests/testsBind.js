@@ -141,7 +141,7 @@ test("Bind - View.on() :: Insert from CollectionGroup via Collection Interface",
 	userGroupView.link('#testTarget', {
 		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
-	debugger;
+
 	user.insert({
 		_id: '2342',
 		name: "hello"
@@ -284,7 +284,7 @@ test("Bind - View.on() :: Insert from CollectionGroup via CollectionGroup Interf
 	userGroupView.link('#testTarget', {
 		template: '<li data-link="id{:_id}">{^{:name}}</li>'
 	});
-
+debugger;
 	userGroup.insert({
 		_id: '2342',
 		name: "hello"
@@ -444,7 +444,7 @@ test("Bind - View() :: View sort", function() {
 		name: "beta"
 	});
 
-	//userView.refresh(true);
+	userView.refresh(true);
 
 	var viewData = userView.find(),
 		elems = $('#testTarget').find('.item');

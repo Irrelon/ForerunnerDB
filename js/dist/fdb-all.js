@@ -3136,7 +3136,7 @@ CollectionGroup.prototype.init = function (name) {
 
 	this._name = name;
 	this._data = new Collection('__FDB__cg_data_' + this._name);
-	this._collectionArr = [];
+	this._collections = [];
 	this._views = [];
 };
 
@@ -3190,11 +3190,11 @@ CollectionGroup.prototype.db = function (db) {
 
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
-		if (this._collectionArr.indexOf(collection) === -1) {
+		if (this._collections.indexOf(collection) === -1) {
 			var self = this;
 
 			// Check for compatible primary keys
-			if (this._collectionArr.length) {
+			if (this._collections.length) {
 				if (this._primaryKey !== collection.primaryKey()) {
 					throw("All collections in a collection group must have the same primary key!");
 				}
@@ -3204,7 +3204,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			}
 
 			// Add the collection
-			this._collectionArr.push(collection);
+			this._collections.push(collection);
 			collection._groups.push(this);
 			collection.chain(this);
 
@@ -3218,12 +3218,12 @@ CollectionGroup.prototype.addCollection = function (collection) {
 
 CollectionGroup.prototype.removeCollection = function (collection) {
 	if (collection) {
-		var collectionIndex = this._collectionArr.indexOf(collection),
+		var collectionIndex = this._collections.indexOf(collection),
 			groupIndex;
 
 		if (collectionIndex !== -1) {
 			collection.unChain(this);
-			this._collectionArr.splice(collectionIndex, 1);
+			this._collections.splice(collectionIndex, 1);
 
 			groupIndex = collection._groups.indexOf(this);
 
@@ -3232,7 +3232,7 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			}
 		}
 
-		if (this._collectionArr.length === 0) {
+		if (this._collections.length === 0) {
 			// Wipe the primary key
 			delete this._primaryKey;
 		}
@@ -3273,36 +3273,30 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 	}
 };
 
+CollectionGroup.prototype.insert = function () {
+	this._collectionsRun('insert', arguments);
+};
+
+CollectionGroup.prototype.update = function () {
+	this._collectionsRun('update', arguments);
+};
+
+CollectionGroup.prototype.updateById = function () {
+	this._collectionsRun('updateById', arguments);
+};
+
+CollectionGroup.prototype.remove = function () {
+	this._collectionsRun('remove', arguments);
+};
+
+CollectionGroup.prototype._collectionsRun = function (type, args) {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], args);
+	}
+};
+
 CollectionGroup.prototype.find = function (query, options) {
 	return this._data.find(query, options);
-};
-
-CollectionGroup.prototype.insert = function (query, options) {
-	// Loop the collections in this group and apply the insert
-	for (var i = 0; i < this._collectionArr.length; i++) {
-		this._collectionArr[i].insert(query, options);
-	}
-};
-
-CollectionGroup.prototype.update = function (query, update) {
-	// Loop the collections in this group and apply the update
-	for (var i = 0; i < this._collectionArr.length; i++) {
-		this._collectionArr[i].update(query, update);
-	}
-};
-
-CollectionGroup.prototype.updateById = function (id, update) {
-	// Loop the collections in this group and apply the update
-	for (var i = 0; i < this._collectionArr.length; i++) {
-		this._collectionArr[i].updateById(id, update);
-	}
-};
-
-CollectionGroup.prototype.remove = function (query) {
-	// Loop the collections in this group and apply the remove
-	for (var i = 0; i < this._collectionArr.length; i++) {
-		this._collectionArr[i].remove(query);
-	}
 };
 
 /**
@@ -3311,8 +3305,8 @@ CollectionGroup.prototype.remove = function (query) {
  */
 CollectionGroup.prototype.removeById = function (id) {
 	// Loop the collections in this group and apply the remove
-	for (var i = 0; i < this._collectionArr.length; i++) {
-		this._collectionArr[i].removeById(id);
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i].removeById(id);
 	}
 };
 
@@ -3339,7 +3333,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  */
 CollectionGroup.prototype.drop = function () {
 	var i,
-		collArr = [].concat(this._collectionArr),
+		collArr = [].concat(this._collections),
 		viewArr = [].concat(this._views);
 
 	if (this._debug) {
@@ -5544,6 +5538,28 @@ View.prototype.name = function (val) {
 	return this._name;
 };
 
+View.prototype.insert = function () {
+	this._collectionsRun('insert', arguments);
+};
+
+View.prototype.update = function () {
+	this._collectionsRun('update', arguments);
+};
+
+View.prototype.updateById = function () {
+	this._collectionsRun('updateById', arguments);
+};
+
+View.prototype.remove = function () {
+	this._collectionsRun('remove', arguments);
+};
+
+View.prototype._collectionsRun = function (type, args) {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], args);
+	}
+};
+
 /**
  * Queries the view data. See Collection.find() for more information.
  * @returns {*}
@@ -5620,7 +5636,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData.setData(data);
+			this._privateData.setData(data);
 			break;
 
 		case 'insert':
@@ -5636,7 +5652,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData._insertHandle(data, index);
+			this._privateData._insertHandle(data, index);
 			break;
 
 		case 'update':
@@ -5671,7 +5687,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData.remove(data.query, options);
+			this._privateData.remove(data.query, options);
 			break;
 	}
 };

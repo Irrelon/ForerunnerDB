@@ -86,6 +86,28 @@ View.prototype.name = function (val) {
 	return this._name;
 };
 
+View.prototype.insert = function () {
+	this._collectionsRun('insert', arguments);
+};
+
+View.prototype.update = function () {
+	this._collectionsRun('update', arguments);
+};
+
+View.prototype.updateById = function () {
+	this._collectionsRun('updateById', arguments);
+};
+
+View.prototype.remove = function () {
+	this._collectionsRun('remove', arguments);
+};
+
+View.prototype._collectionsRun = function (type, args) {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], args);
+	}
+};
+
 /**
  * Queries the view data. See Collection.find() for more information.
  * @returns {*}
@@ -162,7 +184,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData.setData(data);
+			this._privateData.setData(data);
 			break;
 
 		case 'insert':
@@ -178,7 +200,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData._insertHandle(data, index);
+			this._privateData._insertHandle(data, index);
 			break;
 
 		case 'update':
@@ -213,7 +235,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			return this._privateData.remove(data.query, options);
+			this._privateData.remove(data.query, options);
 			break;
 	}
 };
