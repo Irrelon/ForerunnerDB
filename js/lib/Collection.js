@@ -625,6 +625,7 @@ Collection.prototype.update = function (query, update, options) {
 
 	op.stop();
 
+	// TODO: Should we decouple the updated array before return by default?
 	return updated || [];
 };
 
@@ -1897,6 +1898,20 @@ Collection.prototype.find = function (query, options) {
 		resultArr.__fdbOp = op;
 
 		return resultArr;
+	}
+};
+
+/**
+ * Gets the index in the collection data array of the first item matched by
+ * the passed query object.
+ * @param {Object} query The query to run to find the item to return the index of.
+ * @returns {Number}
+ */
+Collection.prototype.indexOf = function (query) {
+	var item = this.find(query, {$decouple: false})[0];
+
+	if (item) {
+		return this._data.indexOf(item);
 	}
 };
 

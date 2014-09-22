@@ -175,24 +175,33 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 	var index,
 		tempData,
 		dataIsArray,
+		updates,
+		primaryKey,
+		tQuery,
+		item,
+		currentIndex,
 		i;
 
 	switch (type) {
 		case 'setData':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
 			// Decouple the data to ensure we are working with our own copy
 			data = this._privateData.decouple(data);
 
 			// Modify transform data
 			this._transformSetData(data);
 
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
-
 			this._privateData.setData(data);
 			break;
 
 		case 'insert':
+			if (this.debug()) {
+				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+			}
+
 			// Decouple the data to ensure we are working with our own copy
 			data = this._privateData.decouple(data);
 
@@ -243,22 +252,37 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				this._transformInsert(data, index);
 				this._privateData._insertHandle(data, index);
 			}
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
 			break;
 
 		case 'update':
-			// Modify transform data
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			var updates = this._privateData.update(data.query, data.update, data.options),
-				primaryKey,
-				tQuery,
-				item;
+			updates = this._privateData.update(data.query, data.update, data.options);
+
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Create a temp data array from existing view data
+				tempData = [].concat(this._privateData._data);
+
+				// Run the new array through the sorting system
+				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+				// Now we have sorted data, determine where to move the updated documents
+				// Order updates by their index location
+				updates.sort(function (a, b) {
+					return tempData.indexOf(a) - tempData.indexOf(b);
+				});
+
+				// Loop and add each one to the correct place
+				for (i = 0; i < updates.length; i++) {
+					currentIndex = this._privateData._data.indexOf(updates[i]);
+					index = tempData.indexOf(updates[i]);
+
+					// Modify transform data
+					this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+				}
+			}
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -274,12 +298,12 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			break;
 
 		case 'remove':
-			// Modify transform data
-			this._transformRemove(data.query, options);
-
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
+
+			// Modify transform data
+			this._transformRemove(data.query, options);
 
 			this._privateData.remove(data.query, options);
 			break;

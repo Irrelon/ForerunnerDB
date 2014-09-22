@@ -398,27 +398,12 @@ test("Bind - View.on() :: Remove from CollectionGroup via CollectionGroup Interf
 	base.dbDown();
 });
 
-test("Bind - View() :: View sort", function() {
+test("Bind - View() :: View order is correct after insert", function() {
 	base.dbUp();
 	base.viewUp();
 	base.dataUp();
 	base.domUp();
 
-	var arr = [],
-		elem,
-		i = 400;
-
-	// Generate some data
-	//user.truncate();
-
-	/*while (i--) {
-		user.insert({
-			_id: '1' + i,
-			name: Math.floor((Math.random() * 4000))
-		});
-	}*/
-
-	//userView._debug = true;
 	userView
 		.queryOptions({
 			$orderBy: {
@@ -444,10 +429,7 @@ test("Bind - View() :: View sort", function() {
 		name: "beta"
 	});
 
-	//userView.refresh(true);
-
-	var viewData = userView.find(),
-		elems = $('#testTarget').find('.item');
+	var elems = $('#testTarget').find('.item');
 
 	ok(elems.length === 7, "Insert documents");
 
@@ -460,7 +442,52 @@ test("Bind - View() :: View sort", function() {
 	ok($(elems[5]).attr('id') === '5', "Alphabetical 6");
 	ok($(elems[6]).attr('id') === '23432', "Alphabetical 7");
 
-	//userView._debug = false;
+	base.viewDown();
+	base.domDown();
+	base.dbDown();
+});
+
+test("Bind - View() :: View order is correct after update", function() {
+	base.dbUp();
+	base.viewUp();
+	base.dataUp();
+	base.domUp();
+
+	userView
+		.queryOptions({
+			$orderBy: {
+				name: 1
+			}
+		}, false)
+		.link('#testTarget', {
+			template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+	var elems = $('#testTarget').find('.item');
+
+	ok(elems.length === 4, "Document count");
+
+	// Check sort order
+	ok($(elems[0]).attr('id') === '2', "Alphabetical 1");
+	ok($(elems[1]).attr('id') === '3', "Alphabetical 2");
+	ok($(elems[2]).attr('id') === '4', "Alphabetical 3");
+	ok($(elems[3]).attr('id') === '5', "Alphabetical 4");
+
+	user.update({
+		_id: '2'
+	}, {
+		name: 'Zelda'
+	});
+
+	elems = $('#testTarget').find('.item');
+
+	ok(elems.length === 4, "Document count");
+
+	// Check sort order
+	ok($(elems[0]).attr('id') === '3', "Alphabetical 1");
+	ok($(elems[1]).attr('id') === '4', "Alphabetical 2");
+	ok($(elems[2]).attr('id') === '5', "Alphabetical 3");
+	ok($(elems[3]).attr('id') === '2', "Alphabetical 4");
 
 	base.viewDown();
 	base.domDown();
