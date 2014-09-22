@@ -765,3 +765,4 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - 1.3.0
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
+* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
