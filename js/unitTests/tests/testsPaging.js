@@ -27,8 +27,8 @@ asyncTest("Paging - View.page :: Limit view page", function() {
 
 	userView._debug = false;
 
-	user.insert(arr, function () {
-		//console.log('Insert of ' + arr.length + ' records complete');
+	user.insert(arr, 0, function () {
+		console.log('Insert of ' + arr.length + ' records complete');
 
 		elem = $('#testTarget').find('li');
 		//console.log(elem.length);
@@ -36,11 +36,11 @@ asyncTest("Paging - View.page :: Limit view page", function() {
 		userView._debug = false;
 			start();
 
-		base.viewDown();
-		base.domDown();
-		base.dbDown();
+		//base.viewDown();
+		//base.domDown();
+		//base.dbDown();
 
-		ok(elem.length === 200, "View binding");
+		ok(elem.length === 204, "View binding");
 
 		//userView.refresh(true);
 	});
