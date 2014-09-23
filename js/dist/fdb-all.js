@@ -1,14 +1,14 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Core = require('../lib/Core'),
-	CollectionGroup = require('../lib/CollectionGroup'),
-	View = require('../lib/View'),
-	Highcharts = require('../lib/Highcharts'),
-	Persist = require('../lib/Persist'),
-	jsviews = require('../lib/vendor/jsviews');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+var Core = _dereq_('../lib/Core'),
+	CollectionGroup = _dereq_('../lib/CollectionGroup'),
+	View = _dereq_('../lib/View'),
+	Highcharts = _dereq_('../lib/Highcharts'),
+	Persist = _dereq_('../lib/Persist'),
+	jsviews = _dereq_('../lib/vendor/jsviews');
 
 module.exports = Core;
 window['ForerunnerDB'] = Core;
-},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/Persist":13,"../lib/View":15,"../lib/vendor/jsviews":16}],2:[function(require,module,exports){
+},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/Persist":13,"../lib/View":15,"../lib/vendor/jsviews":16}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -18,7 +18,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * Collection object used to store data.
@@ -68,12 +68,12 @@ Collection.prototype.init = function (name) {
 Shared.addModule('Collection', Collection);
 Shared.inherit(Collection.prototype, Shared.chainSystem);
 
-Overload = require('./Overload');
-Metrics = require('./Metrics');
-KeyValueStore = require('./KeyValueStore');
-Path = require('./Path');
-Index = require('./Index');
-Crc = require('./Crc');
+Overload = _dereq_('./Overload');
+Metrics = _dereq_('./Metrics');
+KeyValueStore = _dereq_('./KeyValueStore');
+Path = _dereq_('./Path');
+Index = _dereq_('./Index');
+Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
@@ -3132,7 +3132,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":11,"./Path":12,"./Shared":14}],3:[function(require,module,exports){
+},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":11,"./Path":12,"./Shared":14}],3:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3140,7 +3140,7 @@ var Shared,
 	Collection,
 	Overload;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
@@ -3158,8 +3158,8 @@ CollectionGroup.prototype.init = function (name) {
 Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
-Collection = require('./Collection');
-Overload = require('./Overload');
+Collection = _dereq_('./Collection');
+Overload = _dereq_('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3385,7 +3385,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Overload":11,"./Shared":14}],4:[function(require,module,exports){
+},{"./Collection":2,"./Overload":11,"./Shared":14}],4:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3418,7 +3418,7 @@ var Shared,
 	Metrics,
 	Crc;
 
-Shared = require('./Shared.js');
+Shared = _dereq_('./Shared.js');
 
 /**
  * The main ForerunnerDB core object.
@@ -3436,10 +3436,10 @@ Core.prototype.init = function () {
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
-Overload = require('./Overload.js');
-Collection = require('./Collection.js');
-Metrics = require('./Metrics.js');
-Crc = require('./Crc.js');
+Overload = _dereq_('./Overload.js');
+Collection = _dereq_('./Collection.js');
+Metrics = _dereq_('./Metrics.js');
+Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3693,7 +3693,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":11,"./Shared.js":14}],5:[function(require,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":11,"./Shared.js":14}],5:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3721,13 +3721,13 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],6:[function(require,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
 	CollectionInit;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * The constructor.
@@ -3980,9 +3980,9 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":14}],7:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{"./Shared":14}],7:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -4340,8 +4340,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":12,"./Shared":14}],8:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Path":12,"./Shared":14}],8:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -4559,9 +4559,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":14}],9:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Operation = require('./Operation');
+},{"./Shared":14}],9:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Operation = _dereq_('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -4631,9 +4631,9 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":10,"./Shared":14}],10:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{"./Operation":10,"./Shared":14}],10:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -4775,8 +4775,8 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":12,"./Shared":14}],11:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Path":12,"./Shared":14}],11:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * Allows a method to be overloaded.
@@ -4806,8 +4806,8 @@ var Overload = function (arr) {
 Shared.addModule('Overload', Overload);
 
 module.exports = Overload;
-},{"./Shared":14}],12:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Shared":14}],12:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -5216,9 +5216,9 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":14}],13:[function(require,module,exports){
+},{"./Shared":14}],13:[function(_dereq_,module,exports){
 // Import external names locally
-var Shared = require('./Shared'),
+var Shared = _dereq_('./Shared'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -5245,11 +5245,11 @@ Shared.addModule('Persist', Persist);
 Shared.inherit(Persist.prototype, Shared.chainSystem);
 
 Core = Shared.modules.Core;
-Collection = require('./Collection');
+Collection = _dereq_('./Collection');
 CollectionDrop = Collection.prototype.drop;
-CollectionGroup = require('./CollectionGroup');
+CollectionGroup = _dereq_('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = require('./Overload');
+Overload = _dereq_('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
@@ -5406,7 +5406,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],14:[function(require,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],14:[function(_dereq_,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -5464,7 +5464,7 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}],15:[function(require,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5473,7 +5473,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * The view constructor.
@@ -5501,9 +5501,9 @@ View.prototype.init = function (name, query, options) {
 Shared.addModule('View', View);
 Shared.inherit(View.prototype, Shared.chainSystem);
 
-Collection = require('./Collection');
-CollectionGroup = require('./CollectionGroup');
-Overload = require('./Overload');
+Collection = _dereq_('./Collection');
+CollectionGroup = _dereq_('./CollectionGroup');
+Overload = _dereq_('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -6222,7 +6222,7 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],16:[function(require,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],16:[function(_dereq_,module,exports){
 /*! jsviews.js v1.0.0-alpha single-file version:
 includes JsRender, JsObservable and JsViews  http://github.com/BorisMoore/jsrender and http://jsviews.com/jsviews
 informal pre V1.0 commit counter: 56 (Beta Candidate) */

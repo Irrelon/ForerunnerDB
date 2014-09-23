@@ -5259,7 +5259,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				}
 			} else {
 				// Set the insert index to the passed index, or if none, the end of the view data array
-				index = options && options.index ? options.index : this._privateData.length;
+				index = options && options.index ? options.index : this._privateData._data.length;
 
 				// Modify transform data
 				this._transformInsert(data, index);
