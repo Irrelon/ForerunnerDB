@@ -549,6 +549,9 @@ Collection.prototype.upsert = function (obj, callback) {
 			case 'update':
 				returnData.result = this.update(query, obj);
 				break;
+
+			default:
+				break;
 		}
 
 		return returnData;
@@ -3280,6 +3283,9 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 		case 'remove':
 			this._data.remove(data.query, options);
 			break;
+
+		default:
+			break;
 	}
 };
 
@@ -5319,6 +5325,9 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			this._transformRemove(data.query, options);
 
 			this._privateData.remove(data.query, options);
+			break;
+
+		default:
 			break;
 	}
 };

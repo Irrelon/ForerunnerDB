@@ -1,14 +1,16 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var Core = _dereq_('../lib/Core'),
-	CollectionGroup = _dereq_('../lib/CollectionGroup'),
-	View = _dereq_('../lib/View'),
-	Highcharts = _dereq_('../lib/Highcharts'),
-	Persist = _dereq_('../lib/Persist'),
-	jsviews = _dereq_('../lib/vendor/jsviews');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+var Core = require('../lib/Core'),
+	CollectionGroup = require('../lib/CollectionGroup'),
+	View = require('../lib/View'),
+	Highcharts = require('../lib/Highcharts'),
+	Persist = require('../lib/Persist'),
+	Document = require('../lib/Document'),
+	Overview = require('../lib/Overview'),
+	jsviews = require('../lib/vendor/jsviews');
 
 module.exports = Core;
-window['ForerunnerDB'] = Core;
-},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Highcharts":6,"../lib/Persist":13,"../lib/View":15,"../lib/vendor/jsviews":16}],2:[function(_dereq_,module,exports){
+//window['ForerunnerDB'] = Core;
+},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Document":6,"../lib/Highcharts":7,"../lib/Overview":13,"../lib/Persist":15,"../lib/View":17,"../lib/vendor/jsviews":18}],2:[function(require,module,exports){
 var Shared,
 	Core,
 	Overload,
@@ -18,7 +20,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * Collection object used to store data.
@@ -68,12 +70,12 @@ Collection.prototype.init = function (name) {
 Shared.addModule('Collection', Collection);
 Shared.inherit(Collection.prototype, Shared.chainSystem);
 
-Overload = _dereq_('./Overload');
-Metrics = _dereq_('./Metrics');
-KeyValueStore = _dereq_('./KeyValueStore');
-Path = _dereq_('./Path');
-Index = _dereq_('./Index');
-Crc = _dereq_('./Crc');
+Overload = require('./Overload');
+Metrics = require('./Metrics');
+KeyValueStore = require('./KeyValueStore');
+Path = require('./Path');
+Index = require('./Index');
+Crc = require('./Crc');
 Core = Shared.modules.Core;
 
 Collection.prototype.debug = new Overload([
@@ -553,6 +555,9 @@ Collection.prototype.upsert = function (obj, callback) {
 
 			case 'update':
 				returnData.result = this.update(query, obj);
+				break;
+
+			default:
 				break;
 		}
 
@@ -3132,7 +3137,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":11,"./Path":12,"./Shared":14}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":12,"./Path":14,"./Shared":16}],3:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3140,7 +3145,7 @@ var Shared,
 	Collection,
 	Overload;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
@@ -3158,8 +3163,8 @@ CollectionGroup.prototype.init = function (name) {
 Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
-Collection = _dereq_('./Collection');
-Overload = _dereq_('./Overload');
+Collection = require('./Collection');
+Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3285,6 +3290,9 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 		case 'remove':
 			this._data.remove(data.query, options);
 			break;
+
+		default:
+			break;
 	}
 };
 
@@ -3385,7 +3393,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Overload":11,"./Shared":14}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Overload":12,"./Shared":16}],4:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3418,7 +3426,7 @@ var Shared,
 	Metrics,
 	Crc;
 
-Shared = _dereq_('./Shared.js');
+Shared = require('./Shared.js');
 
 /**
  * The main ForerunnerDB core object.
@@ -3436,10 +3444,10 @@ Core.prototype.init = function () {
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
-Overload = _dereq_('./Overload.js');
-Collection = _dereq_('./Collection.js');
-Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Overload = require('./Overload.js');
+Collection = require('./Collection.js');
+Metrics = require('./Metrics.js');
+Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3693,7 +3701,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload.js":11,"./Shared.js":14}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":10,"./Overload.js":12,"./Shared.js":16}],5:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3721,13 +3729,88 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],6:[function(_dereq_,module,exports){
+},{}],6:[function(require,module,exports){
+var Shared,
+	Collection;
+
+Shared = require('./Shared');
+
+var Document = function () {
+	this.init.apply(this, arguments);
+};
+
+Document.prototype.init = function () {
+	this._data = {};
+};
+
+Shared.addModule('Document', Document);
+Shared.inherit(Document.prototype, Shared.chainSystem);
+
+Collection = require('./Collection');
+
+Document.prototype.setData = function (data) {
+	var i;
+
+	if (data) {
+		if (this._linked) {
+			// Remove keys that don't exist in the new data from the current object
+			for (i in this._data) {
+				if (this._data.hasOwnProperty(i)) {
+					// Check if existing data has key
+					if (data[i] === undefined) {
+						// Remove the property
+						delete this._data;
+					}
+				}
+			}
+
+			// Now update the object with new data
+			this._updateObject(this._data, data, {});
+		} else {
+			// Straight data assignment
+			this._data = this.decouple(data);
+		}
+	}
+};
+
+/**
+ * Modifies the document. This will update the document with the data held in 'update'.
+ *
+ * @param {Object} query The query that must be matched for a document to be
+ * operated on.
+ * @param {Object} update The object containing updated key/values. Any keys that
+ * match keys on the existing document will be overwritten with this data. Any
+ * keys that do not currently exist on the document will be added to the document.
+ * @param {Object=} options An options object.
+ * @returns {Array} The items that were updated.
+ */
+Document.prototype.update = function (query, update, options) {
+	this._updateObject(this._data, update, query, options);
+};
+
+/**
+ * Internal method for document updating.
+ * @param {Object} doc The document to update.
+ * @param {Object} update The object with key/value pairs to update the document with.
+ * @param {Object} query The query object that we need to match to perform an update.
+ * @param {Object} options An options object.
+ * @param {String} path The current recursive path.
+ * @param {String} opType The type of update operation to perform, if none is specified
+ * default is to set new data against matching fields.
+ * @returns {Boolean} True if the document was updated with new / changed data or
+ * false if it was not updated because the data was the same.
+ * @private
+ */
+Document.prototype._updateObject = Collection.prototype._updateObject;
+
+module.exports = Document;
+},{"./Collection":2,"./Shared":16}],7:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
 	CollectionInit;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * The constructor.
@@ -3980,9 +4063,9 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":14}],7:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Path = _dereq_('./Path');
+},{"./Shared":16}],8:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -4340,8 +4423,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":12,"./Shared":14}],8:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Path":14,"./Shared":16}],9:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -4559,9 +4642,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":14}],9:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Operation = _dereq_('./Operation');
+},{"./Shared":16}],10:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Operation = require('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -4631,9 +4714,9 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":10,"./Shared":14}],10:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared'),
-	Path = _dereq_('./Path');
+},{"./Operation":11,"./Shared":16}],11:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -4775,8 +4858,8 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":12,"./Shared":14}],11:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Path":14,"./Shared":16}],12:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Allows a method to be overloaded.
@@ -4806,8 +4889,229 @@ var Overload = function (arr) {
 Shared.addModule('Overload', Overload);
 
 module.exports = Overload;
-},{"./Shared":14}],12:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
+},{"./Shared":16}],13:[function(require,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	CoreInit,
+	Collection,
+	Document,
+	Overload;
+
+Shared = require('./Shared');
+
+var Overview = function () {
+	this.init.apply(this, arguments);
+};
+
+Overview.prototype.init = function (name) {
+	var self = this;
+
+	this._name = name;
+	this._data = new Collection();
+	this._reducedData = new Document();
+	this._collections = [];
+};
+
+Shared.addModule('Overview', Overview);
+Shared.inherit(Overview.prototype, Shared.chainSystem);
+
+Collection = require('./Collection');
+Document = require('./Document');
+Overload = require('./Overload');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
+
+Overview.prototype.from = function (collection) {
+	if (collection !== undefined) {
+		if (typeof(collection) === 'string') {
+			collection = this._db.collection(collection);
+		}
+
+		this._addCollection(collection);
+	}
+
+	return this;
+};
+
+Overview.prototype.find = function () {
+	for (var i = 0; i < this._collections.length; i++) {
+		this._collections[i][type].apply(this._collections[i], arguments);
+	}
+};
+
+Overview.prototype._addCollection = function (collection) {
+	if (this._collections.indexOf(collection) === -1) {
+		this._collections.push(collection);
+		collection.chain(this);
+		this._refresh();
+	}
+	return this;
+};
+
+Overview.prototype._removeCollection = function (collection) {
+	var collectionIndex = this._collections.indexOf(collection);
+	if (collectionIndex > -1) {
+		this._collections.splice(collection, 1);
+		collection.unChain(this);
+		this._refresh();
+	}
+
+	return this;
+};
+
+Overview.prototype._refresh = function () {
+	var collData = this.find(this._querySettings.query, this._querySettings.options);
+};
+
+Overview.prototype._chainHandler = function (sender, type, data, options) {
+	switch (type) {
+		case 'setData':
+		case 'insert':
+		case 'update':
+		case 'remove':
+			this._data.remove(data.query, options);
+			break;
+
+		default:
+			break;
+	}
+};
+
+/**
+ * Creates a link to the DOM between the overview data and the elements
+ * in the passed output selector. When new elements are needed or changes
+ * occur the passed templateSelector is used to get the template that is
+ * output to the DOM.
+ * @param outputTargetSelector
+ * @param templateSelector
+ */
+Overview.prototype.link = function (outputTargetSelector, templateSelector) {
+	if (window.jQuery) {
+		// Make sure we have a data-binding store object to use
+		this._links = this._links || {};
+
+		var templateId,
+			templateHtml;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+				templateHtml = templateSelector.template;
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (!this._links[templateId]) {
+			if (jQuery(outputTargetSelector).length) {
+				// Ensure the template is in memory and if not, try to get it
+				if (!jQuery.templates[templateId]) {
+					if (!templateHtml) {
+						// Grab the template
+						var template = jQuery(templateSelector);
+						if (template.length) {
+							templateHtml = jQuery(template[0]).html();
+						} else {
+							throw('Unable to bind overview to target because template does not exist: ' + templateSelector);
+						}
+					}
+
+					jQuery.views.templates(templateId, templateHtml);
+				}
+
+				// Create the data binding
+				jQuery.templates[templateId].link(outputTargetSelector, this._data);
+
+				// Add link to flags
+				this._links[templateId] = outputTargetSelector;
+
+				// Set the linked flag
+				this._linked++;
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Overview: Added binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
+				}
+
+				return this;
+			} else {
+				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+			}
+		}
+
+		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+	}
+};
+
+/**
+ * Removes a link to the DOM between the overview data and the elements
+ * in the passed output selector that was created using the link() method.
+ * @param outputTargetSelector
+ * @param templateSelector
+ */
+Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
+	if (window.jQuery) {
+		// Check for binding
+		this._links = this._links || {};
+
+		var templateId;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (this._links[templateId]) {
+			// Remove the data binding
+			jQuery.templates[templateId].unlink(outputTargetSelector);
+
+			// Remove link from flags
+			delete this._links[templateId];
+
+			// Set the linked flag
+			this._linked--;
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.Overview: Removed binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
+			}
+
+			return this;
+		}
+
+		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+	}
+};
+
+// Extend DB to include collection groups
+Core.prototype.init = function () {
+	this._overview = {};
+	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.overview = function (overviewName) {
+	if (overviewName) {
+		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
+		return this._overview[overviewName];
+	} else {
+		// Return an object of collection data
+		return this._overview;
+	}
+};
+
+module.exports = Overview;
+},{"./Collection":2,"./Document":6,"./Overload":12,"./Shared":16}],14:[function(require,module,exports){
+var Shared = require('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -5216,9 +5520,9 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":14}],13:[function(_dereq_,module,exports){
+},{"./Shared":16}],15:[function(require,module,exports){
 // Import external names locally
-var Shared = _dereq_('./Shared'),
+var Shared = require('./Shared'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -5245,11 +5549,11 @@ Shared.addModule('Persist', Persist);
 Shared.inherit(Persist.prototype, Shared.chainSystem);
 
 Core = Shared.modules.Core;
-Collection = _dereq_('./Collection');
+Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
-CollectionGroup = _dereq_('./CollectionGroup');
+CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = _dereq_('./Overload');
+Overload = require('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
@@ -5406,7 +5710,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],14:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":12,"./Shared":16}],16:[function(require,module,exports){
 var Shared = {
 	idCounter: 0,
 	modules: {},
@@ -5464,7 +5768,7 @@ var Shared = {
 };
 
 module.exports = Shared;
-},{}],15:[function(_dereq_,module,exports){
+},{}],17:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5473,7 +5777,7 @@ var Shared,
 	CoreInit,
 	Overload;
 
-Shared = _dereq_('./Shared');
+Shared = require('./Shared');
 
 /**
  * The view constructor.
@@ -5501,9 +5805,9 @@ View.prototype.init = function (name, query, options) {
 Shared.addModule('View', View);
 Shared.inherit(View.prototype, Shared.chainSystem);
 
-Collection = _dereq_('./Collection');
-CollectionGroup = _dereq_('./CollectionGroup');
-Overload = _dereq_('./Overload');
+Collection = require('./Collection');
+CollectionGroup = require('./CollectionGroup');
+Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -5773,6 +6077,9 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			this._transformRemove(data.query, options);
 
 			this._privateData.remove(data.query, options);
+			break;
+
+		default:
 			break;
 	}
 };
@@ -6222,7 +6529,7 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":11,"./Shared":14}],16:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Overload":12,"./Shared":16}],18:[function(require,module,exports){
 /*! jsviews.js v1.0.0-alpha single-file version:
 includes JsRender, JsObservable and JsViews  http://github.com/BorisMoore/jsrender and http://jsviews.com/jsviews
 informal pre V1.0 commit counter: 56 (Beta Candidate) */
