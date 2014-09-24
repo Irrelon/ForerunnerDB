@@ -779,6 +779,7 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - 1.2.8
 * Data persistence added to documentation
+* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6)
 
 #### Scheduled Features - 1.2.9
 * Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
