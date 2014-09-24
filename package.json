@@ -27,3 +27,34 @@
 		}
 	}
 }
+  "author": "Rob Evans - Irrelon Software Limited",
+  "name": "forerunnerdb",
+  "description": "A NoSQL document store database for browsers and Node.js.",
+  "version": "1.2.6",
+  "dependencies": {
+    "forever": "*",
+    "faye": "*",
+    "request": "*",
+    "async": "*",
+    "socket.io": "*"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "start": "forever start server/server.js",
+    "stop": "forever stop server/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/coolbloke1324/ForerunnerDB.git"
+  },
+  "options": {
+    "cluster": {
+      "list": "192.168.0.99"
+    }
+  },
+  "devDependencies": {
+    "forever": "^0.11.1"
+  }
+}
