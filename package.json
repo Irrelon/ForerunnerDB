@@ -3,13 +3,7 @@
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
   "version": "1.2.6",
-  "dependencies": {
-    "forever": "*",
-    "faye": "*",
-    "request": "*",
-    "async": "*",
-    "socket.io": "*"
-  },
+  "dependencies": {},
   "engines": {
     "node": "*"
   },
@@ -32,5 +26,7 @@
     "forever": "^0.11.1",
     "request": "^2.44.0",
     "socket.io": "^1.1.0"
-  }
+  },
+  "main": "./js/dist/builds/core",
+  "browserify": "./js/dist/builds/core"
 }
