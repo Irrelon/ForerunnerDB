@@ -8,4 +8,3 @@ var Core = require('../lib/Core'),
 	jsviews = require('../lib/vendor/jsviews');
 
 module.exports = Core;
-window['ForerunnerDB'] = Core;
