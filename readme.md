@@ -701,6 +701,8 @@ The fully minified version of ForerunnerDB is run through Google's Closure Compi
 ## Contributing to This Project
 Contributions through pull requests are welcome. Please ensure that if your pull request includes code changes that you have run the unit tests and they have all passed. If your code changes include new features not currently under test coverage from existing unit tests please create new unit tests to cover your changes and ensure they work as expected.
 
+Code style is also important. Tabs are in use instead of spaces for indentation. Braces should start at the end of lines rather than the next line down. Doc comments are in JSDoc format and must be fully written for public-facing methods in any code you write. Private methods also require doc comments in master but can be merged into the dev branch without them.
+
 So to summarise:
 
 * Always check unit tests are running and passing
