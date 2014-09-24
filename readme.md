@@ -698,6 +698,14 @@ watchify ./js/build/all.js -o ./js/dist/fdb-all.js
 
 The fully minified version of ForerunnerDB is run through Google's Closure Compiler with simple optimisations switched on.
 
+## Contributing to This Project
+Contributions through pull requests are welcome. Please ensure that if your pull request includes code changes that you have run the unit tests and they have all passed. If your code changes include new features not currently under test coverage from existing unit tests please create new unit tests to cover your changes and ensure they work as expected.
+
+So to summarise:
+
+* Always check unit tests are running and passing
+* Create new tests when you add or modify functionality that is not currently under test coverage
+
 # iOS Version
 You may notice in the repo that there is an iOS folder containing a version of Forerunner for iOS. This project is still at an alpha level and should be considered non-production code, however you are welcome to play around with it and get a feel for what will be available soon.
 
@@ -765,11 +773,15 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - 1.2.7
 * Rewritten data propagation system
+* Added new class "Overview" to allow data-binding against auto-propagated map-reduce data
 * Remove iOS from this repo, add to its own
 * Remove server from this repo, add to its own
 
 #### Scheduled Features - 1.2.8
 * Data persistence added to documentation
+
+#### Scheduled Features - 1.2.9
+* Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
 
 #### Scheduled Features - 1.3.0
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
