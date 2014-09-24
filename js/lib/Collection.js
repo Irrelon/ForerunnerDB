@@ -543,6 +543,9 @@ Collection.prototype.upsert = function (obj, callback) {
 			case 'update':
 				returnData.result = this.update(query, obj);
 				break;
+
+			default:
+				break;
 		}
 
 		return returnData;
