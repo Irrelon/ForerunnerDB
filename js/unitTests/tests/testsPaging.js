@@ -40,7 +40,7 @@ asyncTest("Paging - View.page :: Limit view page", function() {
 		base.domDown();
 		base.dbDown();
 
-		ok(elem.length === 204, "View binding");
+		ok(elem.length === 20, "View binding");
 
 		//userView.refresh(true);
 	});
