@@ -763,6 +763,11 @@ ForerunnerDB's project road-map:
 * $bit
 * $isolated
 
+#### Scheduled Features - 1.2.7
+* Rewritten data propagation system
+* Remove iOS from this repo, add to its own
+* Remove server from this repo, add to its own
+
 #### Scheduled Features - 1.2.8
 * Data persistence added to documentation
 
