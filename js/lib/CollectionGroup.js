@@ -150,6 +150,9 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 		case 'remove':
 			this._data.remove(data.query, options);
 			break;
+
+		default:
+			break;
 	}
 };
 
