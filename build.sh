@@ -5,7 +5,7 @@ rm ./js/dist/fdb-core+persist.js
 rm ./js/dist/fdb-all.js
 rm ./js/dist/fdb-core.min.js
 rm ./js/dist/fdb-core+views.min.js
-rm ./js/dist/fdb-core+views.persist.js
+rm ./js/dist/fdb-core+persist.min.js
 rm ./js/dist/fdb-all.min.js
 
 browserify ./js/builds/core.js -s ForerunnerDB | derequire > ./js/dist/fdb-core.js
