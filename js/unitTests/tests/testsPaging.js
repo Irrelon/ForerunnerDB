@@ -36,9 +36,9 @@ asyncTest("Paging - View.page :: Limit view page", function() {
 		userView._debug = false;
 			start();
 
-		//base.viewDown();
-		//base.domDown();
-		//base.dbDown();
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
 
 		ok(elem.length === 204, "View binding");
 
