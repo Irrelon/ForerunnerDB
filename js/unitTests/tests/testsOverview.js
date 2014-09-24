@@ -4,11 +4,12 @@ test('Overview - Overview.reduce() :: Correct data reduced for overview', functi
 	var coll = db.collection('moo');
 
 	db.overview('mooOverview')
+		.query({
+			'new': true
+		})
 		.from('moo')
 		.reduce(function () {
-			var arr = this.find({
-					'new': true
-				}),
+			var arr = this.find(),
 				item = {
 					count: arr.length
 				};

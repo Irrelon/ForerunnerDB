@@ -77,14 +77,7 @@ View.prototype.debug = new Overload([
 	}
 ]);
 
-View.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(View.prototype, 'name');
 
 View.prototype.insert = function () {
 	this._collectionsRun('insert', arguments);
@@ -131,6 +124,13 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 	}
 	return publicData.unlink(outputTargetSelector, templateSelector);
 };
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+View.prototype.decouple = Shared.common.decouple;
 
 View.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -189,7 +189,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this._privateData.decouple(data);
+			data = this.decouple(data);
 
 			// Modify transform data
 			this._transformSetData(data);
@@ -203,7 +203,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this._privateData.decouple(data);
+			data = this.decouple(data);
 
 			// Check if our view has an orderBy clause
 			if (this._querySettings.options && this._querySettings.options.$orderBy) {

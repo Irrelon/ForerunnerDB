@@ -108,17 +108,10 @@ Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the name of the collection.
- * @param {String} val The name of the collection to set.
+ * @param {String=} val The name of the collection to set.
  * @returns {*}
  */
-Collection.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(Collection.prototype, 'name');
 
 Collection.prototype.on = new Overload([
 	function(event, listener) {
@@ -308,18 +301,11 @@ Collection.prototype._onRemove = function (items) {
 };
 
 /**
- * Gets / sets the db instance the collection belongs to.
- * @param {DB} db The db instance.
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Core=} db The db instance.
  * @returns {*}
  */
-Collection.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
-	}
-
-	return this._db;
-};
+Shared.synthesize(Collection.prototype, 'db');
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -1599,9 +1585,7 @@ Collection.prototype.distinct = function (key, query, options) {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Collection.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Collection.prototype.decouple = Shared.common.decouple;
 
 /**
  * Helper method to find a document by it's id.

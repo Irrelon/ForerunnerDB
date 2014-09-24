@@ -30,6 +30,11 @@ Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
+Shared.synthesize(Overview.prototype, 'name');
+Shared.synthesize(Overview.prototype, 'db');
+Shared.synthesize(Overview.prototype, 'query');
+Shared.synthesize(Overview.prototype, 'reduce');
+
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {
 		if (typeof(collection) === 'string') {

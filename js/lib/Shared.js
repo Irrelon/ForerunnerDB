@@ -1,6 +1,12 @@
 var Shared = {
 	idCounter: 0,
 	modules: {},
+	common: {
+		decouple: function (data) {
+			return JSON.parse(JSON.stringify(data));
+		}
+	},
+	_synth: {},
 
 	addModule: function (name, module) {
 		this.modules[name] = module;
@@ -12,6 +18,19 @@ var Shared = {
 				obj[i] = system[i];
 			}
 		}
+	},
+
+	synthesize: function (obj, name) {
+		this._synth[name] = this._synth[name] || function (val) {
+			if (val !== undefined) {
+				this['_' + name] = val;
+				return this;
+			}
+
+			return this['_' + name];
+		};
+
+		obj[name] = this._synth[name];
 	},
 
 	// Inheritable systems

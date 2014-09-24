@@ -1,5 +1,7 @@
 var Shared,
-	Collection;
+	Collection,
+	Core,
+	CoreInit;
 
 Shared = require('./Shared');
 
@@ -7,7 +9,8 @@ var Document = function () {
 	this.init.apply(this, arguments);
 };
 
-Document.prototype.init = function () {
+Document.prototype.init = function (name) {
+	this._name = name;
 	this._data = {};
 };
 
@@ -15,11 +18,29 @@ Shared.addModule('Document', Document);
 Shared.inherit(Document.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
+
+/**
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Core=} db The db instance.
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'db');
+
+/**
+ * Gets / sets the document name.
+ * @param {String=} val The name to assign
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'name');
 
 Document.prototype.setData = function (data) {
 	var i;
 
 	if (data) {
+		data = this.decouple(data);
+
 		if (this._linked) {
 			// Remove keys that don't exist in the new data from the current object
 			for (i in this._data) {
@@ -36,10 +57,19 @@ Document.prototype.setData = function (data) {
 			this._updateObject(this._data, data, {});
 		} else {
 			// Straight data assignment
-			this._data = this.decouple(data);
+			this._data = data;
 		}
 	}
+
+	return this;
 };
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+Document.prototype.decouple = Shared.common.decouple;
 
 /**
  * Modifies the document. This will update the document with the data held in 'update'.
@@ -70,5 +100,21 @@ Document.prototype.update = function (query, update, options) {
  * @private
  */
 Document.prototype._updateObject = Collection.prototype._updateObject;
+
+// Extend DB to include documents
+Core.prototype.init = function () {
+	this._document = {};
+	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.document = function (documentName) {
+	if (documentName) {
+		this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
+		return this._document[documentName];
+	} else {
+		// Return an object of collection data
+		return this._document;
+	}
+};
 
 module.exports = Document;

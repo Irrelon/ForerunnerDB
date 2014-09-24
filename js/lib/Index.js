@@ -53,14 +53,7 @@ Index.prototype.data = function (val) {
 	return this._data;
 };
 
-Index.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(Index.prototype, 'name');
 
 Index.prototype.collection = function (val) {
 	if (val !== undefined) {

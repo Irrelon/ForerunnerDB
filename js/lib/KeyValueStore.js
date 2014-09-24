@@ -25,14 +25,7 @@ Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
  * @param {String} val The name to set.
  * @returns {*}
  */
-KeyValueStore.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(KeyValueStore.prototype, 'name');
 
 /**
  * Get / set the primary key.

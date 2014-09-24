@@ -121,17 +121,10 @@ Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the name of the collection.
- * @param {String} val The name of the collection to set.
+ * @param {String=} val The name of the collection to set.
  * @returns {*}
  */
-Collection.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(Collection.prototype, 'name');
 
 Collection.prototype.on = new Overload([
 	function(event, listener) {
@@ -321,18 +314,11 @@ Collection.prototype._onRemove = function (items) {
 };
 
 /**
- * Gets / sets the db instance the collection belongs to.
- * @param {DB} db The db instance.
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Core=} db The db instance.
  * @returns {*}
  */
-Collection.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
-	}
-
-	return this._db;
-};
+Shared.synthesize(Collection.prototype, 'db');
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -1612,9 +1598,7 @@ Collection.prototype.distinct = function (key, query, options) {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Collection.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Collection.prototype.decouple = Shared.common.decouple;
 
 /**
  * Helper method to find a document by it's id.
@@ -3196,17 +3180,10 @@ CollectionGroup.prototype.primaryKey = function (keyName) {
 
 /**
  * Gets / sets the db instance the collection group belongs to.
- * @param {DB} db The db instance.
+ * @param {Core=} db The db instance.
  * @returns {*}
  */
-CollectionGroup.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
-	}
-
-	return this._db;
-};
+Shared.synthesize(CollectionGroup.prototype, 'db');
 
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
@@ -3440,6 +3417,10 @@ Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
 };
+
+// Provide public access to the Shared object
+Core.shared = Shared;
+Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
@@ -3731,7 +3712,9 @@ module.exports = function(str) {
 };
 },{}],6:[function(require,module,exports){
 var Shared,
-	Collection;
+	Collection,
+	Core,
+	CoreInit;
 
 Shared = require('./Shared');
 
@@ -3739,7 +3722,8 @@ var Document = function () {
 	this.init.apply(this, arguments);
 };
 
-Document.prototype.init = function () {
+Document.prototype.init = function (name) {
+	this._name = name;
 	this._data = {};
 };
 
@@ -3747,11 +3731,29 @@ Shared.addModule('Document', Document);
 Shared.inherit(Document.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
+Core = Shared.modules.Core;
+CoreInit = Shared.modules.Core.prototype.init;
+
+/**
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Core=} db The db instance.
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'db');
+
+/**
+ * Gets / sets the document name.
+ * @param {String=} val The name to assign
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'name');
 
 Document.prototype.setData = function (data) {
 	var i;
 
 	if (data) {
+		data = this.decouple(data);
+
 		if (this._linked) {
 			// Remove keys that don't exist in the new data from the current object
 			for (i in this._data) {
@@ -3768,10 +3770,19 @@ Document.prototype.setData = function (data) {
 			this._updateObject(this._data, data, {});
 		} else {
 			// Straight data assignment
-			this._data = this.decouple(data);
+			this._data = data;
 		}
 	}
+
+	return this;
 };
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+Document.prototype.decouple = Shared.common.decouple;
 
 /**
  * Modifies the document. This will update the document with the data held in 'update'.
@@ -3802,6 +3813,22 @@ Document.prototype.update = function (query, update, options) {
  * @private
  */
 Document.prototype._updateObject = Collection.prototype._updateObject;
+
+// Extend DB to include documents
+Core.prototype.init = function () {
+	this._document = {};
+	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.document = function (documentName) {
+	if (documentName) {
+		this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
+		return this._document[documentName];
+	} else {
+		// Return an object of collection data
+		return this._document;
+	}
+};
 
 module.exports = Document;
 },{"./Collection":2,"./Shared":16}],7:[function(require,module,exports){
@@ -4119,14 +4146,7 @@ Index.prototype.data = function (val) {
 	return this._data;
 };
 
-Index.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(Index.prototype, 'name');
 
 Index.prototype.collection = function (val) {
 	if (val !== undefined) {
@@ -4451,14 +4471,7 @@ Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
  * @param {String} val The name to set.
  * @returns {*}
  */
-KeyValueStore.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(KeyValueStore.prototype, 'name');
 
 /**
  * Get / set the primary key.
@@ -4921,6 +4934,11 @@ Document = require('./Document');
 Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
+
+Shared.synthesize(Overview.prototype, 'name');
+Shared.synthesize(Overview.prototype, 'db');
+Shared.synthesize(Overview.prototype, 'query');
+Shared.synthesize(Overview.prototype, 'reduce');
 
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -5714,6 +5732,12 @@ module.exports = Persist;
 var Shared = {
 	idCounter: 0,
 	modules: {},
+	common: {
+		decouple: function (data) {
+			return JSON.parse(JSON.stringify(data));
+		}
+	},
+	_synth: {},
 
 	addModule: function (name, module) {
 		this.modules[name] = module;
@@ -5725,6 +5749,19 @@ var Shared = {
 				obj[i] = system[i];
 			}
 		}
+	},
+
+	synthesize: function (obj, name) {
+		this._synth[name] = this._synth[name] || function (val) {
+			if (val !== undefined) {
+				this['_' + name] = val;
+				return this;
+			}
+
+			return this['_' + name];
+		};
+
+		obj[name] = this._synth[name];
 	},
 
 	// Inheritable systems
@@ -5848,14 +5885,7 @@ View.prototype.debug = new Overload([
 	}
 ]);
 
-View.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(View.prototype, 'name');
 
 View.prototype.insert = function () {
 	this._collectionsRun('insert', arguments);

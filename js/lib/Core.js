@@ -45,6 +45,10 @@ Core.prototype.init = function () {
 	this._debug = {};
 };
 
+// Provide public access to the Shared object
+Core.shared = Shared;
+Core.prototype.shared = Shared;
+
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
@@ -93,9 +97,7 @@ Core.prototype.isServer = function () {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Core.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Core.prototype.decouple = Shared.common.decouple;
 
 /**
  * Gets / sets the debug flag for the database.

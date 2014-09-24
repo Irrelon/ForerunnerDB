@@ -56,17 +56,10 @@ CollectionGroup.prototype.primaryKey = function (keyName) {
 
 /**
  * Gets / sets the db instance the collection group belongs to.
- * @param {DB} db The db instance.
+ * @param {Core=} db The db instance.
  * @returns {*}
  */
-CollectionGroup.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
-	}
-
-	return this._db;
-};
+Shared.synthesize(CollectionGroup.prototype, 'db');
 
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
@@ -121,11 +114,18 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 	return this;
 };
 
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+CollectionGroup.prototype.decouple = Shared.common.decouple;
+
 CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
 	switch (type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			data = this._data.decouple(data);
+			data = this.decouple(data);
 
 			// Remove old data
 			this._data.remove(options.oldData);
@@ -136,7 +136,7 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			data = this._data.decouple(data);
+			data = this.decouple(data);
 
 			// Add new data
 			this._data.insert(data);
