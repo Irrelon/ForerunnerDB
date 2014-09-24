@@ -307,6 +307,9 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 
 			this._privateData.remove(data.query, options);
 			break;
+
+		default:
+			break;
 	}
 };
 
