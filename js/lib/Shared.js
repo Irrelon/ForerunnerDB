@@ -50,6 +50,20 @@ var idCounter = 0,
 
 				return id;
 			},
+
+			/**
+			 * Gets / sets debug flag that can enable debug message output to the
+			 * console if required.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
+			/**
+			 * Sets debug flag for a particular type that can enable debug message
+			 * output to the console if required.
+			 * @param {String} type The name of the debug type to set flag for.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
 			debug: new Overload([
 				function () {
 					return this._debug && this._debug.all;
