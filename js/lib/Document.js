@@ -89,6 +89,20 @@ Document.prototype.objectId = Shared.common.objectId;
 Document.prototype.on = Shared.common.on;
 Document.prototype.off = Shared.common.off;
 Document.prototype.emit = Shared.common.emit;
+
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
 Document.prototype.debug = Shared.common.debug;
 
 /**
