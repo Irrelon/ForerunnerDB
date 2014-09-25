@@ -15,8 +15,8 @@ Overview.prototype.init = function (name) {
 	var self = this;
 
 	this._name = name;
-	this._data = new Collection();
-	this._reducedData = new Document('__FDB__dc_data_' + this._name);
+	this._data = new Document('__FDB__dc_data_' + this._name);
+	this._collData = new Collection();
 	this._collections = [];
 };
 
@@ -28,10 +28,27 @@ Document = require('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
-Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'db');
+Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'query');
+Shared.synthesize(Overview.prototype, 'queryOptions');
 Shared.synthesize(Overview.prototype, 'reduce');
+
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+Overview.prototype.debug = Shared.common.debug;
+Overview.prototype.objectId = Shared.common.objectId;
 
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -46,9 +63,7 @@ Overview.prototype.from = function (collection) {
 };
 
 Overview.prototype.find = function () {
-	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i].apply(this._collections[i], arguments);
-	}
+	return this._collData.find.apply(this._collData, arguments);
 };
 
 Overview.prototype._addCollection = function (collection) {
@@ -72,7 +87,26 @@ Overview.prototype._removeCollection = function (collection) {
 };
 
 Overview.prototype._refresh = function () {
-	var collData = this.find(this._query, this._options);
+	if (this._collections && this._collections[0]) {
+		this._collData.primaryKey(this._collections[0].primaryKey());
+		var tempArr = [],
+			i;
+
+		for (i = 0; i < this._collections.length; i++) {
+			tempArr = tempArr.concat(this._collections[i].find(this._query, this._queryOptions));
+		}
+
+		this._collData.setData(tempArr);
+	}
+
+	// Now execute the reduce method
+	if (this._reduce) {
+		var reducedData = this._reduce();
+
+		// Update the document with the newly returned data
+		this._data.setData(reducedData);
+	}
+
 };
 
 Overview.prototype._chainHandler = function (sender, type, data, options) {
@@ -81,7 +115,7 @@ Overview.prototype._chainHandler = function (sender, type, data, options) {
 		case 'insert':
 		case 'update':
 		case 'remove':
-			this._data.remove(data.query, options);
+			this._refresh();
 			break;
 
 		default:
@@ -98,64 +132,8 @@ Overview.prototype._chainHandler = function (sender, type, data, options) {
  * @param templateSelector
  */
 Overview.prototype.link = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Make sure we have a data-binding store object to use
-		this._links = this._links || {};
-
-		var templateId,
-			templateHtml;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-				templateHtml = templateSelector.template;
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (!this._links[templateId]) {
-			if (jQuery(outputTargetSelector).length) {
-				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateId]) {
-					if (!templateHtml) {
-						// Grab the template
-						var template = jQuery(templateSelector);
-						if (template.length) {
-							templateHtml = jQuery(template[0]).html();
-						} else {
-							throw('Unable to bind overview to target because template does not exist: ' + templateSelector);
-						}
-					}
-
-					jQuery.views.templates(templateId, templateHtml);
-				}
-
-				// Create the data binding
-				jQuery.templates[templateId].link(outputTargetSelector, this._data);
-
-				// Add link to flags
-				this._links[templateId] = outputTargetSelector;
-
-				// Set the linked flag
-				this._linked++;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.Overview: Added binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
-				}
-
-				return this;
-			} else {
-				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
-			}
-		}
-
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
+	this._data.link.apply(this._data, arguments);
+	this._refresh();
 };
 
 /**
@@ -165,43 +143,8 @@ Overview.prototype.link = function (outputTargetSelector, templateSelector) {
  * @param templateSelector
  */
 Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Check for binding
-		this._links = this._links || {};
-
-		var templateId;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (this._links[templateId]) {
-			// Remove the data binding
-			jQuery.templates[templateId].unlink(outputTargetSelector);
-
-			// Remove link from flags
-			delete this._links[templateId];
-
-			// Set the linked flag
-			this._linked--;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Overview: Removed binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
-			}
-
-			return this;
-		}
-
-		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
+	this._data.unlink.apply(this._data, arguments);
+	this._refresh();
 };
 
 // Extend DB to include collection groups
