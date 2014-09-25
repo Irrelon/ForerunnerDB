@@ -5,7 +5,6 @@ module.exports = Core;
 },{"../lib/Core":3}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
-	Overload,
 	Metrics,
 	KeyValueStore,
 	Path,
@@ -32,7 +31,6 @@ Collection.prototype.init = function (name) {
 	this._groups = [];
 	this._metrics = new Metrics();
 	this._linked = 0;
-	this._debug = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -62,7 +60,6 @@ Collection.prototype.init = function (name) {
 Shared.addModule('Collection', Collection);
 Shared.inherit(Collection.prototype, Shared.chainSystem);
 
-Overload = _dereq_('./Overload');
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
 Path = _dereq_('./Path');
@@ -70,39 +67,20 @@ Index = _dereq_('./Index');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
-Collection.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			} else {
-				return this._debug[val] || (this._db && this._db._debug && this._db._debug[val]) || this._debug.all;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			}
-
-			return this._debug[type] || (this._db && this._db._debug && this._db._debug[type]);
-		}
-
-		return this._debug.all;
-	}
-]);
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -113,129 +91,21 @@ Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the name of the collection.
- * @param {String} val The name of the collection to set.
+ * @param {String=} val The name of the collection to set.
  * @returns {*}
  */
-Collection.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
+Shared.synthesize(Collection.prototype, 'name');
 
-	return this._name;
-};
-
-Collection.prototype.on = new Overload([
-	function(event, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
-		this._listeners[event]['*'].push(listener);
-
-		return this;
-	},
-
-	function(event, id, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event][id] = this._listeners[event][id] || [];
-		this._listeners[event][id].push(listener);
-
-		return this;
-	}
-]);
-
-Collection.prototype.off = new Overload([
-	function (event) {
-		if (this._listeners && this._listeners[event] && event in this._listeners) {
-			delete this._listeners[event];
-		}
-
-		return this;
-	},
-
-	function(event, listener) {
-		var arr,
-			index;
-
-		if (typeof(listener) === 'string') {
-			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-				delete this._listeners[event][listener];
-			}
-		} else {
-			if (event in this._listeners) {
-				arr = this._listeners[event]['*'];
-				index = arr.indexOf(listener);
-
-				if (index > -1) {
-					arr.splice(index, 1);
-				}
-			}
-		}
-
-		return this;
-	},
-
-	function (event, id, listener) {
-		if (this._listeners && event in this._listeners) {
-			var arr = this._listeners[event][id],
-				index = arr.indexOf(listener);
-
-			if (index > -1) {
-				arr.splice(index, 1);
-			}
-		}
-	}
-]);
-
-Collection.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		// Handle global emit
-		if (this._listeners[event]['*']) {
-			var arr = this._listeners[event]['*'],
-				arrCount = arr.length,
-				arrIndex;
-
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-			}
-		}
-
-		// Handle individual emit
-		if (data instanceof Array) {
-			// Check if the array is an array of objects in the collection
-			if (data[0] && data[0][this._primaryKey]) {
-				// Loop the array and check for listeners against the primary key
-				var listenerIdArr = this._listeners[event],
-					listenerIdCount,
-					listenerIdIndex;
-
-				arrCount = data.length;
-
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
-						// Emit for this id
-						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
-						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return this;
-};
+Collection.prototype.on = Shared.common.on;
+Collection.prototype.off = Shared.common.off;
+Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Drops a collection and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._name) {
+	if (this._db && this._db._collection && this._name) {
 		if (this.debug()) {
 			console.log('Dropping collection ' + this._name);
 		}
@@ -271,13 +141,15 @@ Collection.prototype.drop = function () {
  */
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
-		this._primaryKey = keyName;
+		if (this._primaryKey !== keyName) {
+			this._primaryKey = keyName;
 
-		// Set the primary key index primary key
-		this._primaryIndex.primaryKey(keyName);
+			// Set the primary key index primary key
+			this._primaryIndex.primaryKey(keyName);
 
-		// Rebuild the primary key index
-		this._rebuildPrimaryKeyIndex();
+			// Rebuild the primary key index
+			this._rebuildPrimaryKeyIndex();
+		}
 		return this;
 	}
 
@@ -313,18 +185,11 @@ Collection.prototype._onRemove = function (items) {
 };
 
 /**
- * Gets / sets the db instance the collection belongs to.
- * @param {DB} db The db instance.
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Core=} db The db instance.
  * @returns {*}
  */
-Collection.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
-	}
-
-	return this._db;
-};
+Shared.synthesize(Collection.prototype, 'db');
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -1604,9 +1469,7 @@ Collection.prototype.distinct = function (key, query, options) {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Collection.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Collection.prototype.decouple = Shared.common.decouple;
 
 /**
  * Helper method to find a document by it's id.
@@ -2976,34 +2839,7 @@ Collection.prototype.lastOp = function () {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Collection.prototype.objectId = function (str) {
-	var id,
-		pow = Math.pow(10, 17);
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-			).toString(16);
-	} else {
-		var val = 0,
-			count = str.length,
-			i;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Collection.prototype.objectId = Shared.common.objectId;
 
 /**
  * Generates a difference object that contains insert, update and remove arrays
@@ -3129,7 +2965,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Overload":9,"./Path":10,"./Shared":11}],3:[function(_dereq_,module,exports){
+},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Path":9,"./Shared":10}],3:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3157,7 +2993,6 @@ module.exports = Collection;
  Source: https://github.com/coolbloke1324/ForerunnerDB
  */
 var Shared,
-	Overload,
 	Collection,
 	Metrics,
 	Crc;
@@ -3177,10 +3012,13 @@ Core.prototype.init = function () {
 	this._debug = {};
 };
 
+// Provide public access to the Shared object
+Core.shared = Shared;
+Core.prototype.shared = Shared;
+
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
-Overload = _dereq_('./Overload.js');
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
@@ -3225,44 +3063,22 @@ Core.prototype.isServer = function () {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Core.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Core.prototype.decouple = Shared.common.decouple;
 
 /**
- * Gets / sets the debug flag for the database.
- * @param {Boolean} val If true, debug messages will be output to the console.
- * @returns {*}
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
  */
-Core.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				return this;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+Core.prototype.debug = Shared.common.debug;
 
 /**
  * Converts a normal javascript array of objects into a DB collection.
@@ -3339,36 +3155,7 @@ Core.prototype.emit = function(event, data) {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Core.prototype.objectId = function (str) {
-	var id,
-		val,
-		count,
-		pow = Math.pow(10, 17),
-		i;
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-		).toString(16);
-	} else {
-		val = 0;
-		count = str.length;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Core.prototype.objectId = Shared.common.objectId;
 
 /**
  * Find all documents across all collections in the database that match the passed
@@ -3437,7 +3224,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload.js":9,"./Shared.js":11}],4:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Shared.js":10}],4:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3521,14 +3308,7 @@ Index.prototype.data = function (val) {
 	return this._data;
 };
 
-Index.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(Index.prototype, 'name');
 
 Index.prototype.collection = function (val) {
 	if (val !== undefined) {
@@ -3825,7 +3605,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":10,"./Shared":11}],6:[function(_dereq_,module,exports){
+},{"./Path":9,"./Shared":10}],6:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3853,14 +3633,7 @@ Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
  * @param {String} val The name to set.
  * @returns {*}
  */
-KeyValueStore.prototype.name = function (val) {
-	if (val !== undefined) {
-		this._name = val;
-		return this;
-	}
-
-	return this._name;
-};
+Shared.synthesize(KeyValueStore.prototype, 'name');
 
 /**
  * Get / set the primary key.
@@ -4044,7 +3817,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":11}],7:[function(_dereq_,module,exports){
+},{"./Shared":10}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4116,7 +3889,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":8,"./Shared":11}],8:[function(_dereq_,module,exports){
+},{"./Operation":8,"./Shared":10}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4260,38 +4033,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":10,"./Shared":11}],9:[function(_dereq_,module,exports){
-var Shared = _dereq_('./Shared');
-
-/**
- * Allows a method to be overloaded.
- * @param arr
- * @returns {Function}
- * @constructor
- */
-var Overload = function (arr) {
-	if (arr) {
-		var arrIndex,
-			arrCount = arr.length;
-
-		return function () {
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				if (arr[arrIndex].length === arguments.length) {
-					return arr[arrIndex].apply(this, arguments);
-				}
-			}
-
-			return null;
-		};
-	}
-
-	return function () {};
-};
-
-Shared.addModule('Overload', Overload);
-
-module.exports = Overload;
-},{"./Shared":11}],10:[function(_dereq_,module,exports){
+},{"./Path":9,"./Shared":10}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4701,62 +4443,288 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":11}],11:[function(_dereq_,module,exports){
-var Shared = {
-	idCounter: 0,
-	modules: {},
+},{"./Shared":10}],10:[function(_dereq_,module,exports){
+var idCounter = 0,
+	Overload = function (arr) {
+		if (arr) {
+			var arrIndex,
+				arrCount = arr.length;
 
-	addModule: function (name, module) {
-		this.modules[name] = module;
-	},
+			return function () {
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					if (arr[arrIndex].length === arguments.length) {
+						return arr[arrIndex].apply(this, arguments);
+					}
+				}
 
-	inherit: function (obj, system) {
-		for (var i in system) {
-			if (system.hasOwnProperty(i)) {
-				obj[i] = system[i];
-			}
+				return null;
+			};
 		}
+
+		return function () {};
 	},
+	Shared = {
+		modules: {},
+		common: {
+			decouple: function (data) {
+				return JSON.parse(JSON.stringify(data));
+			},
+			objectId: function (str) {
+				var id,
+					pow = Math.pow(10, 17);
 
-	// Inheritable systems
-	chainSystem: {
-		chain: function (obj) {
-			this._chain = this._chain || [];
-			var index = this._chain.indexOf(obj);
+				if (!str) {
+					idCounter++;
 
-			if (index === -1) {
-				this._chain.push(obj);
+					id = (idCounter + (
+						Math.random() * pow +
+						Math.random() * pow +
+						Math.random() * pow +
+						Math.random() * pow
+					)).toString(16);
+				} else {
+					var val = 0,
+						count = str.length,
+						i;
+
+					for (i = 0; i < count; i++) {
+						val += str.charCodeAt(i) * pow;
+					}
+
+					id = val.toString(16);
+				}
+
+				return id;
+			},
+
+			/**
+			 * Gets / sets debug flag that can enable debug message output to the
+			 * console if required.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
+			/**
+			 * Sets debug flag for a particular type that can enable debug message
+			 * output to the console if required.
+			 * @param {String} type The name of the debug type to set flag for.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
+			debug: new Overload([
+				function () {
+					return this._debug && this._debug.all;
+				},
+
+				function (val) {
+					if (val !== undefined) {
+						if (typeof val === 'boolean') {
+							this._debug = this._debug || {};
+							this._debug.all = val;
+							this.chainSend('debug', this._debug);
+							return this;
+						} else {
+							return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[val]) || (this._debug && this._debug.all);
+						}
+					}
+
+					return this._debug && this._debug.all;
+				},
+
+				function (type, val) {
+					if (type !== undefined) {
+						if (val !== undefined) {
+							this._debug = this._debug || {};
+							this._debug[type] = val;
+							this.chainSend('debug', this._debug);
+							return this;
+						}
+
+						return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[type]);
+					}
+
+					return this._debug && this._debug.all;
+				}
+			]),
+
+			on: new Overload([
+				function(event, listener) {
+					this._listeners = this._listeners || {};
+					this._listeners[event] = this._listeners[event] || {};
+					this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+					this._listeners[event]['*'].push(listener);
+
+					return this;
+				},
+
+				function(event, id, listener) {
+					this._listeners = this._listeners || {};
+					this._listeners[event] = this._listeners[event] || {};
+					this._listeners[event][id] = this._listeners[event][id] || [];
+					this._listeners[event][id].push(listener);
+
+					return this;
+				}
+			]),
+
+			off: new Overload([
+				function (event) {
+					if (this._listeners && this._listeners[event] && event in this._listeners) {
+						delete this._listeners[event];
+					}
+
+					return this;
+				},
+
+				function(event, listener) {
+					var arr,
+						index;
+
+					if (typeof(listener) === 'string') {
+						if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+							delete this._listeners[event][listener];
+						}
+					} else {
+						if (event in this._listeners) {
+							arr = this._listeners[event]['*'];
+							index = arr.indexOf(listener);
+
+							if (index > -1) {
+								arr.splice(index, 1);
+							}
+						}
+					}
+
+					return this;
+				},
+
+				function (event, id, listener) {
+					if (this._listeners && event in this._listeners) {
+						var arr = this._listeners[event][id],
+							index = arr.indexOf(listener);
+
+						if (index > -1) {
+							arr.splice(index, 1);
+						}
+					}
+				}
+			]),
+
+			emit: function (event, data) {
+				this._listeners = this._listeners || {};
+
+				if (event in this._listeners) {
+					// Handle global emit
+					if (this._listeners[event]['*']) {
+						var arr = this._listeners[event]['*'],
+							arrCount = arr.length,
+							arrIndex;
+
+						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+							arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+						}
+					}
+
+					// Handle individual emit
+					if (data instanceof Array) {
+						// Check if the array is an array of objects in the collection
+						if (data[0] && data[0][this._primaryKey]) {
+							// Loop the array and check for listeners against the primary key
+							var listenerIdArr = this._listeners[event],
+								listenerIdCount,
+								listenerIdIndex;
+
+							arrCount = data.length;
+
+							for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+								if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+									// Emit for this id
+									listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+									for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+										listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+									}
+								}
+							}
+						}
+					}
+				}
+
+				return this;
 			}
 		},
-		unChain: function (obj) {
-			if (this._chain) {
+		_synth: {},
+
+		addModule: function (name, module) {
+			this.modules[name] = module;
+		},
+
+		inherit: function (obj, system) {
+			for (var i in system) {
+				if (system.hasOwnProperty(i)) {
+					obj[i] = system[i];
+				}
+			}
+		},
+
+		synthesize: function (obj, name) {
+			this._synth[name] = this._synth[name] || function (val) {
+				if (val !== undefined) {
+					this['_' + name] = val;
+					return this;
+				}
+
+				return this['_' + name];
+			};
+
+			obj[name] = this._synth[name];
+		},
+
+		/**
+		 * Allows a method to be overloaded.
+		 * @param arr
+		 * @returns {Function}
+		 * @constructor
+		 */
+		overload: Overload,
+
+		// Inheritable systems
+		chainSystem: {
+			chain: function (obj) {
+				this._chain = this._chain || [];
 				var index = this._chain.indexOf(obj);
 
-				if (index > -1) {
-					this._chain.splice(index, 1);
+				if (index === -1) {
+					this._chain.push(obj);
 				}
-			}
-		},
-		chainSend: function (type, data, options) {
-			if (this._chain) {
-				var arr = this._chain,
-					count = arr.length,
-					index;
+			},
+			unChain: function (obj) {
+				if (this._chain) {
+					var index = this._chain.indexOf(obj);
 
-				for (index = 0; index < count; index++) {
-					arr[index].chainReceive(this, type, data, options);
+					if (index > -1) {
+						this._chain.splice(index, 1);
+					}
 				}
-			}
-		},
-		chainReceive: function (sender, type, data, options) {
-			// Fire our internal handler
-			if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
-				// Propagate the message down the chain
-				this.chainSend(type, data, options);
+			},
+			chainSend: function (type, data, options) {
+				if (this._chain) {
+					var arr = this._chain,
+						count = arr.length,
+						index;
+
+					for (index = 0; index < count; index++) {
+						arr[index].chainReceive(this, type, data, options);
+					}
+				}
+			},
+			chainReceive: function (sender, type, data, options) {
+				// Fire our internal handler
+				if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
+					// Propagate the message down the chain
+					this.chainSend(type, data, options);
+				}
 			}
 		}
-	}
-};
+	};
 
 module.exports = Shared;
 },{}]},{},[1])(1)

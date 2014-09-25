@@ -1,9 +1,9 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
-	View = _dereq_('../lib/View');
+  Persist = _dereq_('../lib/Persist');
 
 module.exports = Core;
-},{"../lib/Core":4,"../lib/View":12}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/Persist":11}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -2966,7 +2966,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Path":10,"./Shared":11}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Path":10,"./Shared":12}],3:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3235,7 +3235,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":11}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Shared":12}],4:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3494,7 +3494,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Shared.js":11}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Shared.js":12}],5:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3875,7 +3875,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":10,"./Shared":11}],7:[function(_dereq_,module,exports){
+},{"./Path":10,"./Shared":12}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4087,7 +4087,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":11}],8:[function(_dereq_,module,exports){
+},{"./Shared":12}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4159,7 +4159,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":9,"./Shared":11}],9:[function(_dereq_,module,exports){
+},{"./Operation":9,"./Shared":12}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4303,7 +4303,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":10,"./Shared":11}],10:[function(_dereq_,module,exports){
+},{"./Path":10,"./Shared":12}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4713,7 +4713,195 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":11}],11:[function(_dereq_,module,exports){
+},{"./Shared":12}],11:[function(_dereq_,module,exports){
+// Import external names locally
+var Shared = _dereq_('./Shared'),
+	Core,
+	Collection,
+	CollectionDrop,
+	CollectionGroup,
+	CollectionInit,
+	CoreInit,
+	Persist;
+
+Persist = function () {
+	this.init.apply(this, arguments);
+};
+
+Persist.prototype.init = function (db) {
+	// Check environment
+	if (db.isClient()) {
+		if (Storage !== undefined) {
+			this.mode('localStorage');
+		}
+	}
+};
+
+Shared.addModule('Persist', Persist);
+Shared.inherit(Persist.prototype, Shared.chainSystem);
+
+Core = Shared.modules.Core;
+Collection = _dereq_('./Collection');
+CollectionDrop = Collection.prototype.drop;
+CollectionGroup = _dereq_('./CollectionGroup');
+CollectionInit = Collection.prototype.init;
+CoreInit = Core.prototype.init;
+
+Persist.prototype.mode = function (type) {
+	if (type !== undefined) {
+		this._mode = type;
+		return this;
+	}
+
+	return this._mode;
+};
+
+Persist.prototype.save = function (key, data, callback) {
+	var val;
+
+	switch (this.mode()) {
+		case 'localStorage':
+			if (typeof data === 'object') {
+				val = 'json::fdb::' + JSON.stringify(data);
+			} else {
+				val = 'raw::fdb::' + data;
+			}
+
+			try {
+				localStorage.setItem(key, val);
+			} catch (e) {
+				if (callback) { callback(e); }
+			}
+
+			if (callback) { callback(false); }
+			break;
+	}
+
+	if (callback) { callback('No data handler.'); }
+};
+
+Persist.prototype.load = function (key, callback) {
+	var val,
+		parts,
+		data;
+
+	switch (this.mode()) {
+		case 'localStorage':
+			try {
+				val = localStorage.getItem(key);
+			} catch (e) {
+				callback(e, null);
+			}
+
+			if (val) {
+				parts = val.split('::fdb::');
+
+				switch (parts[0]) {
+					case 'json':
+						data = JSON.parse(parts[1]);
+						break;
+
+					case 'raw':
+						data = parts[1];
+						break;
+				}
+
+				if (callback) { callback(false, data); }
+			}
+			break;
+	}
+
+	if (callback) { callback('No data handler or unrecognised data type.'); }
+};
+
+Persist.prototype.drop = function (key, callback) {
+	switch (this.mode()) {
+		case 'localStorage':
+			try {
+				localStorage.removeItem(key);
+			} catch (e) {
+				if (callback) { callback(e); }
+			}
+
+			if (callback) { callback(false); }
+			break;
+	}
+
+	if (callback) { callback('No data handler or unrecognised data type.'); }
+};
+
+// Extend the Collection prototype with persist methods
+Collection.prototype.drop = function (removePersistent) {
+	// Remove persistent storage
+	if (removePersistent) {
+		if (this._name) {
+			if (this._db) {
+				// Save the collection data
+				this._db.persist.drop(this._name);
+			} else {
+				if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
+				return 'Cannot drop a collection\'s persistent storage when the collection is not attached to a database!';
+			}
+		} else {
+			if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
+			return 'Cannot drop a collection\'s persistent storage when no name assigned to collection!';
+		}
+	}
+
+	// Call the original method
+	CollectionDrop.apply(this);
+};
+
+Collection.prototype.save = function (callback) {
+	if (this._name) {
+		if (this._db) {
+			// Save the collection data
+			this._db.persist.save(this._name, this._data);
+		} else {
+			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
+			return 'Cannot save a collection that is not attached to a database!';
+		}
+	} else {
+		if (callback) { callback('Cannot save a collection with no assigned name!'); }
+		return 'Cannot save a collection with no assigned name!';
+	}
+};
+
+Collection.prototype.load = function (callback) {
+	var self = this;
+
+	if (this._name) {
+		if (this._db) {
+			// Load the collection data
+			this._db.persist.load(this._name, function (err, data) {
+				if (!err) {
+					if (data) {
+						self.setData(data);
+					}
+					if (callback) { callback(false); }
+				} else {
+					if (callback) { callback(err); }
+					return err;
+				}
+			});
+		} else {
+			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
+			return 'Cannot load a collection that is not attached to a database!';
+		}
+	} else {
+		if (callback) { callback('Cannot load a collection with no assigned name!'); }
+		return 'Cannot load a collection with no assigned name!';
+	}
+};
+
+// Override the DB init to instantiate the plugin
+Core.prototype.init = function () {
+	this.persist = new Persist(this);
+	CoreInit.apply(this, arguments);
+};
+
+module.exports = Persist;
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":12}],12:[function(_dereq_,module,exports){
 var idCounter = 0,
 	Overload = function (arr) {
 		if (arr) {
@@ -4997,792 +5185,5 @@ var idCounter = 0,
 	};
 
 module.exports = Shared;
-},{}],12:[function(_dereq_,module,exports){
-// Import external names locally
-var Shared,
-	Core,
-	Collection,
-	CollectionInit,
-	CoreInit;
-
-Shared = _dereq_('./Shared');
-
-/**
- * The view constructor.
- * @param viewName
- * @constructor
- */
-var View = function (name, query, options) {
-	this.init.apply(this, arguments);
-};
-
-View.prototype.init = function (name, query, options) {
-	this._name = name;
-	this._collections = [];
-	this._groups = [];
-	this._listeners = {};
-	this._querySettings = {
-		query: query,
-		options: options
-	};
-	this._debug = {};
-
-	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
-};
-
-Shared.addModule('View', View);
-Shared.inherit(View.prototype, Shared.chainSystem);
-
-Collection = _dereq_('./Collection');
-CollectionGroup = _dereq_('./CollectionGroup');
-CollectionInit = Collection.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
-
-Shared.synthesize(View.prototype, 'name');
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-View.prototype.debug = Shared.common.debug;
-
-/**
- * Executes an insert against all data-sources (collections) this view is
- * linked to.
- */
-View.prototype.insert = function () {
-	this._collectionsRun('insert', arguments);
-};
-
-/**
- * Executes an update against all data-sources (collections) this view is
- * linked to.
- */
-View.prototype.update = function () {
-	this._collectionsRun('update', arguments);
-};
-
-/**
- * Executes an updateById against all data-sources (collections) this view is
- * linked to.
- */
-View.prototype.updateById = function () {
-	this._collectionsRun('updateById', arguments);
-};
-
-/**
- * Executes an remove against all data-sources (collections) this view is
- * linked to.
- */
-View.prototype.remove = function () {
-	this._collectionsRun('remove', arguments);
-};
-
-View.prototype._collectionsRun = function (type, args) {
-	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i][type].apply(this._collections[i], args);
-	}
-};
-
-/**
- * Queries the view data. See Collection.find() for more information.
- * @returns {*}
- */
-View.prototype.find = function (query, options) {
-	return this.publicData().find(query, options);
-};
-
-/**
- * Data-binds the view data to the elements matched by the passed selector.
- * @param {String} outputTargetSelector The jQuery element selector to select the element
- * into which the data-bound rendered items will be placed. All existing HTML will be
- * removed from this element.
- * @param {String|Object} templateSelector This can either be a jQuery selector identifying
- * which template element to get the template HTML from that each item in the view's data
- * will use when rendering to the screen, or you can pass an object with a template key
- * containing a string that represents the HTML template such as:
- *     { template: '<div>{{:name}}</div>' }
- * @returns {*}
- */
-View.prototype.link = function (outputTargetSelector, templateSelector) {
-	var publicData = this.publicData();
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-	}
-	return publicData.link(outputTargetSelector, templateSelector);
-};
-
-View.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	var publicData = this.publicData();
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-	}
-	return publicData.unlink(outputTargetSelector, templateSelector);
-};
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-View.prototype.decouple = Shared.common.decouple;
-
-/**
- * Sets the collection from which the view will assemble its data.
- * @param {Collection} collection The collection to use to assemble view data.
- * @returns {View}
- */
-View.prototype.from = function (collection) {
-	if (collection !== undefined) {
-		if (typeof(collection) === 'string') {
-			collection = this._db.collection(collection);
-		}
-
-		this._addCollection(collection);
-	}
-
-	return this;
-};
-
-View.prototype._addCollection = function (collection) {
-	if (this._collections.indexOf(collection) === -1) {
-		this._collections.push(collection);
-		collection.chain(this);
-
-		var collData = collection.find(this._querySettings.query, this._querySettings.options);
-
-		this._transformPrimaryKey(collection.primaryKey());
-		this._transformInsert(collData);
-
-		this._privateData.primaryKey(collection.primaryKey());
-		this._privateData.insert(collData);
-	}
-	return this;
-};
-
-View.prototype._removeCollection = function (collection) {
-	var collectionIndex = this._collections.indexOf(collection);
-	if (collectionIndex > -1) {
-		this._collections.splice(collection, 1);
-		collection.unChain(this);
-		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
-	}
-
-	return this;
-};
-
-View.prototype._chainHandler = function (sender, type, data, options) {
-	var index,
-		tempData,
-		dataIsArray,
-		updates,
-		primaryKey,
-		tQuery,
-		item,
-		currentIndex,
-		i;
-
-	switch (type) {
-		case 'setData':
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
-
-			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
-
-			// Modify transform data
-			this._transformSetData(data);
-
-			this._privateData.setData(data);
-			break;
-
-		case 'insert':
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
-
-			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
-
-			// Check if our view has an orderBy clause
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-				dataIsArray = data instanceof Array;
-
-				// Add our new data
-				if (dataIsArray) {
-					tempData = tempData.concat(data);
-				} else {
-					tempData.push(data);
-				}
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine how to insert it in the correct locations
-				// in our existing data array for this view
-				if (dataIsArray) {
-					// We have an array of documents, order them by their index location
-					data.sort(function (a, b) {
-						return tempData.indexOf(a) - tempData.indexOf(b);
-					});
-
-					// loop and add each one to the correct place
-					for (i = 0; i < data.length; i++) {
-						index = tempData.indexOf(data[i]);
-
-						// Modify transform data
-						this._transformInsert(data, index);
-						this._privateData._insertHandle(data, index);
-					}
-				} else {
-					index = tempData.indexOf(data);
-
-					// Modify transform data
-					this._transformInsert(data, index);
-					this._privateData._insertHandle(data, index);
-				}
-			} else {
-				// Set the insert index to the passed index, or if none, the end of the view data array
-				index = options && options.index ? options.index : this._privateData._data.length;
-
-				// Modify transform data
-				this._transformInsert(data, index);
-				this._privateData._insertHandle(data, index);
-			}
-			break;
-
-		case 'update':
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
-
-			updates = this._privateData.update(data.query, data.update, data.options);
-
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine where to move the updated documents
-				// Order updates by their index location
-				updates.sort(function (a, b) {
-					return tempData.indexOf(a) - tempData.indexOf(b);
-				});
-
-				// Loop and add each one to the correct place
-				for (i = 0; i < updates.length; i++) {
-					currentIndex = this._privateData._data.indexOf(updates[i]);
-					index = tempData.indexOf(updates[i]);
-
-					// Modify transform data
-					this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-				}
-			}
-
-			if (this._transformEnabled && this._transformIn) {
-				primaryKey = this._publicData.primaryKey();
-
-				for (i = 0; i < updates.length; i++) {
-					tQuery = {};
-					item = updates[i];
-					tQuery[primaryKey] = item[primaryKey];
-
-					this._transformUpdate(tQuery, item);
-				}
-			}
-			break;
-
-		case 'remove':
-			if (this.debug()) {
-				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
-			}
-
-			// Modify transform data
-			this._transformRemove(data.query, options);
-
-			this._privateData.remove(data.query, options);
-			break;
-
-		default:
-			break;
-	}
-};
-
-View.prototype.on = function () {
-	this._privateData.on.apply(this._privateData, arguments);
-};
-
-View.prototype.off = function () {
-	this._privateData.off.apply(this._privateData, arguments);
-};
-
-View.prototype.emit = function () {
-	this._privateData.emit.apply(this._privateData, arguments);
-};
-
-/**
- * Drops a view and all it's stored data from the database.
- * @returns {boolean} True on success, false on failure.
- */
-View.prototype.drop = function () {
-	if (this._collections && this._collections.length) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('ForerunnerDB.View: Dropping view ' + this._name);
-		}
-
-		// Loop collections and remove us from them
-		var arrCount = this._collections.length;
-		while (arrCount--) {
-			this._removeCollection(this._collections[arrCount]);
-		}
-
-		// Drop the view's internal collection
-		this._privateData.drop();
-
-		return true;
-	}
-
-	return false;
-};
-
-/**
- * Gets / sets the DB the view is bound against. Automatically set
- * when the db.oldView(viewName) method is called.
- * @param db
- * @returns {*}
- */
-View.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		this.privateData().db(db);
-		this.publicData().db(db);
-		return this;
-	}
-
-	return this._db;
-};
-
-/**
- * Gets the primary key for this view from the assigned collection.
- * @returns {String}
- */
-View.prototype.primaryKey = function () {
-	return this._privateData.primaryKey();
-};
-
-/**
- * Gets / sets the query that the view uses to build it's data set.
- * @param {Object=} query
- * @param {Boolean=} options An options object.
- * @param {Boolean=} refresh Whether to refresh the view data after
- * this operation. Defaults to true.
- * @returns {*}
- */
-View.prototype.queryData = function (query, options, refresh) {
-	if (query !== undefined) {
-		this._querySettings.query = query;
-	}
-
-	if (options !== undefined) {
-		this._querySettings.options = options;
-	}
-
-	if (query !== undefined || options !== undefined) {
-		if (refresh === undefined || refresh === true) {
-			this.refresh();
-		}
-
-		return this;
-	}
-
-	return this._querySettings;
-};
-
-/**
- * Add data to the existing query.
- * @param {Object} obj The data whose keys will be added to the existing
- * query object.
- * @param {Boolean} overwrite Whether or not to overwrite data that already
- * exists in the query object. Defaults to true.
- * @param {Boolean=} refresh Whether or not to refresh the view data set
- * once the operation is complete. Defaults to true.
- */
-View.prototype.queryAdd = function (obj, overwrite, refresh) {
-	var query = this._querySettings.query,
-		i;
-
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
-					query[i] = obj[i];
-				}
-			}
-		}
-	}
-
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
-	}
-};
-
-/**
- * Remove data from the existing query.
- * @param {Object} obj The data whose keys will be removed from the existing
- * query object.
- * @param {Boolean=} refresh Whether or not to refresh the view data set
- * once the operation is complete. Defaults to true.
- */
-View.prototype.queryRemove = function (obj, refresh) {
-	var query = this._querySettings.query,
-		i;
-
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				delete query[i];
-			}
-		}
-	}
-
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
-	}
-};
-
-/**
- * Gets / sets the query being used to generate the view data.
- * @param {Object=} query The query to set.
- * @param {Boolean=} refresh Whether to refresh the view data after
- * this operation. Defaults to true.
- * @returns {*}
- */
-View.prototype.query = function (query, refresh) {
-	if (query !== undefined) {
-		this._querySettings.query = query;
-
-		if (refresh === undefined || refresh === true) {
-			this.refresh();
-		}
-		return this;
-	}
-
-	return this._querySettings.query;
-};
-
-/**
- * Gets / sets the query options used when applying sorting etc to the
- * view data set.
- * @param {Object=} options An options object.
- * @param {Boolean=} refresh Whether to refresh the view data after
- * this operation. Defaults to true.
- * @returns {*}
- */
-View.prototype.queryOptions = function (options, refresh) {
-	if (options !== undefined) {
-		this._querySettings.options = options;
-		if (options.$decouple === undefined) { options.$decouple = true; }
-
-		if (refresh === undefined || refresh === true) {
-			this.refresh();
-		}
-		return this;
-	}
-
-	return this._querySettings.options;
-};
-
-/**
- * Refreshes the view data such as ordering etc.
- */
-View.prototype.refresh = function () {
-	var sortedData,
-		collection,
-		pubData = this.publicData(),
-		i;
-
-	// Re-grab all the data for the view from the collections
-	this._privateData.remove();
-	pubData.remove();
-
-	for (i = 0; i < this._collections.length; i++) {
-		collection = this._collections[i];
-		this._privateData.insert(collection.find(this._querySettings.query, this._querySettings.options));
-	}
-
-	sortedData = this._privateData.find({}, this._querySettings.options);
-
-	if (pubData._linked) {
-		// Update data and observers
-		// TODO: Shouldn't this data get passed into a transformIn first?
-		jQuery.observable(pubData._data).refresh(sortedData);
-	} else {
-		// Update the underlying data with the new sorted data
-		this._privateData._data.length = 0;
-		this._privateData._data = this._privateData._data.concat(sortedData);
-	}
-
-	return this;
-};
-
-/**
- * Returns the number of documents currently in the view.
- * @returns {Number}
- */
-View.prototype.count = function () {
-	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
-};
-
-/**
- * Takes the passed data and uses it to set transform methods and globally
- * enable or disable the transform system for the view.
- * @param {Object} obj The new transform system settings "enabled", "dataIn" and "dataOut":
- * {
- * 	"enabled": true,
- * 	"dataIn": function (data) { return data; },
- * 	"dataOut": function (data) { return data; }
- * }
- * @returns {*}
- */
-View.prototype.transform = function (obj) {
-	if (obj !== undefined) {
-		if (typeof obj === "object") {
-			if (obj.enabled !== undefined) {
-				this._transformEnabled = obj.enabled;
-			}
-
-			if (obj.dataIn !== undefined) {
-				this._transformIn = obj.dataIn;
-			}
-
-			if (obj.dataOut !== undefined) {
-				this._transformOut = obj.dataOut;
-			}
-		} else {
-			if (obj === false) {
-				// Turn off transforms
-				this._transformEnabled = false;
-			} else {
-				// Turn on transforms
-				this._transformEnabled = true;
-			}
-		}
-
-		// Update the transformed data object
-		this._transformPrimaryKey(this.privateData().primaryKey());
-		this._transformSetData(this.privateData().find());
-		return this;
-	}
-
-	return {
-		enabled: this._transformEnabled,
-		dataIn: this._transformIn,
-		dataOut: this._transformOut
-	};
-};
-
-/**
- * Returns the non-transformed data the view holds as a collection
- * reference.
- * @return {Collection} The non-transformed collection reference.
- */
-View.prototype.privateData = function () {
-	return this._privateData;
-};
-
-/**
- * Returns a data object representing the public data this view
- * contains. This can change depending on if transforms are being
- * applied to the view or not.
- *
- * If no transforms are applied then the public data will be the
- * same as the private data the view holds. If transforms are
- * applied then the public data will contain the transformed version
- * of the private data.
- */
-View.prototype.publicData = function () {
-	if (this._transformEnabled) {
-		return this._publicData;
-	} else {
-		return this._privateData;
-	}
-};
-
-/**
- * Updates the public data object to match data from the private data object
- * by running private data through the dataIn method provided in
- * the transform() call.
- * @private
- */
-View.prototype._transformSetData = function (data) {
-	if (this._transformEnabled) {
-		// Clear existing data
-		this._publicData = new Collection('__FDB__view_publicData_' + this._name);
-		this._publicData.db(this._privateData._db);
-		this._publicData.transform({
-			enabled: true,
-			dataIn: this._transformIn,
-			dataOut: this._transformOut
-		});
-
-		this._publicData.setData(data);
-	}
-};
-
-View.prototype._transformInsert = function (data, index) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.insert(data, index);
-	}
-};
-
-View.prototype._transformUpdate = function (query, update, options) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.update(query, update, options);
-	}
-};
-
-View.prototype._transformRemove = function (query, options) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.remove(query, options);
-	}
-};
-
-View.prototype._transformPrimaryKey = function (key) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.primaryKey(key);
-	}
-};
-
-// Extend collection with view init
-Collection.prototype.init = function () {
-	this._views = [];
-	CollectionInit.apply(this, arguments);
-};
-
-/**
- * Creates a view and assigns the collection as its data source.
- * @param {String} name The name of the new view.
- * @param {Object} query The query to apply to the new view.
- * @param {Object} options The options object to apply to the view.
- * @returns {*}
- */
-Collection.prototype.view = function (name, query, options) {
-	if (this._db && this._db._views ) {
-		if (!this._db._views[name]) {
-			var view = new View(name, query, options)
-				.db(this._db)
-				._addCollection(this);
-
-			this._views = this._views || [];
-			this._views.push(view);
-
-			return view;
-		} else {
-			throw('Cannot create a view using this collection because one with this name already exists: ' + name);
-		}
-	}
-};
-
-/**
- * Adds a view to the internal view lookup.
- * @param {View} view The view to add.
- * @returns {Collection}
- * @private
- */
-Collection.prototype._addView = CollectionGroup.prototype._addView = function (view) {
-	if (view !== undefined) {
-		this._views.push(view);
-	}
-
-	return this;
-};
-
-/**
- * Removes a view from the internal view lookup.
- * @param {View} view The view to remove.
- * @returns {Collection}
- * @private
- */
-Collection.prototype._removeView = CollectionGroup.prototype._removeView = function (view) {
-	if (view !== undefined) {
-		var index = this._views.indexOf(view);
-		if (index > -1) {
-			this._views.splice(index, 1);
-		}
-	}
-
-	return this;
-};
-
-// Extend DB with views init
-Core.prototype.init = function () {
-	this._views = {};
-	CoreInit.apply(this, arguments);
-};
-
-/**
- * Gets a view by it's name.
- * @param {String} viewName The name of the view to retrieve.
- * @returns {*}
- */
-Core.prototype.view = function (viewName) {
-	if (!this._views[viewName]) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Core.View: Creating view ' + viewName);
-		}
-	}
-
-	this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
-	return this._views[viewName];
-};
-
-/**
- * Determine if a view with the passed name already exists.
- * @param {String} viewName The name of the view to check for.
- * @returns {boolean}
- */
-Core.prototype.viewExists = function (viewName) {
-	return Boolean(this._views[viewName]);
-};
-
-/**
- * Returns an array of views the DB currently has.
- * @returns {Array} An array of objects containing details of each view
- * the database is currently managing.
- */
-Core.prototype.views = function () {
-	var arr = [],
-		i;
-
-	for (i in this._views) {
-		if (this._views.hasOwnProperty(i)) {
-			arr.push({
-				name: i,
-				count: this._views[i].count()
-			});
-		}
-	}
-
-	return arr;
-};
-
-module.exports = View;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":11}]},{},[1])(1)
+},{}]},{},[1])(1)
 });
