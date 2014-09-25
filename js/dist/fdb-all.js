@@ -39,7 +39,6 @@ Collection.prototype.init = function (name) {
 	this._groups = [];
 	this._metrics = new Metrics();
 	this._linked = 0;
-	this._debug = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -76,6 +75,19 @@ Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
 Collection.prototype.debug = Shared.common.debug;
 
 /**
@@ -137,13 +149,15 @@ Collection.prototype.drop = function () {
  */
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
-		this._primaryKey = keyName;
+		if (this._primaryKey !== keyName) {
+			this._primaryKey = keyName;
 
-		// Set the primary key index primary key
-		this._primaryIndex.primaryKey(keyName);
+			// Set the primary key index primary key
+			this._primaryIndex.primaryKey(keyName);
 
-		// Rebuild the primary key index
-		this._rebuildPrimaryKeyIndex();
+			// Rebuild the primary key index
+			this._rebuildPrimaryKeyIndex();
+		}
 		return this;
 	}
 
@@ -2988,6 +3002,21 @@ Collection = require('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+CollectionGroup.prototype.debug = Shared.common.debug;
+
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
 };
@@ -3314,9 +3343,17 @@ Core.prototype.isServer = function () {
 Core.prototype.decouple = Shared.common.decouple;
 
 /**
- * Gets / sets the debug flag for the database.
- * @param {Boolean} val If true, debug messages will be output to the console.
- * @returns {*}
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
  */
 Core.prototype.debug = Shared.common.debug;
 
@@ -3584,6 +3621,20 @@ Document.prototype.objectId = Shared.common.objectId;
 Document.prototype.on = Shared.common.on;
 Document.prototype.off = Shared.common.off;
 Document.prototype.emit = Shared.common.emit;
+
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
 Document.prototype.debug = Shared.common.debug;
 
 /**
@@ -5024,8 +5075,8 @@ Overview.prototype.init = function (name) {
 	var self = this;
 
 	this._name = name;
-	this._data = new Collection();
-	this._reducedData = new Document('__FDB__dc_data_' + this._name);
+	this._data = new Document('__FDB__dc_data_' + this._name);
+	this._collData = new Collection();
 	this._collections = [];
 };
 
@@ -5037,10 +5088,27 @@ Document = require('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
-Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'db');
+Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'query');
+Shared.synthesize(Overview.prototype, 'queryOptions');
 Shared.synthesize(Overview.prototype, 'reduce');
+
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+Overview.prototype.debug = Shared.common.debug;
+Overview.prototype.objectId = Shared.common.objectId;
 
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -5055,9 +5123,7 @@ Overview.prototype.from = function (collection) {
 };
 
 Overview.prototype.find = function () {
-	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i].apply(this._collections[i], arguments);
-	}
+	return this._collData.find.apply(this._collData, arguments);
 };
 
 Overview.prototype._addCollection = function (collection) {
@@ -5081,7 +5147,26 @@ Overview.prototype._removeCollection = function (collection) {
 };
 
 Overview.prototype._refresh = function () {
-	var collData = this.find(this._query, this._options);
+	if (this._collections && this._collections[0]) {
+		this._collData.primaryKey(this._collections[0].primaryKey());
+		var tempArr = [],
+			i;
+
+		for (i = 0; i < this._collections.length; i++) {
+			tempArr = tempArr.concat(this._collections[i].find(this._query, this._queryOptions));
+		}
+
+		this._collData.setData(tempArr);
+	}
+
+	// Now execute the reduce method
+	if (this._reduce) {
+		var reducedData = this._reduce();
+
+		// Update the document with the newly returned data
+		this._data.setData(reducedData);
+	}
+
 };
 
 Overview.prototype._chainHandler = function (sender, type, data, options) {
@@ -5090,7 +5175,7 @@ Overview.prototype._chainHandler = function (sender, type, data, options) {
 		case 'insert':
 		case 'update':
 		case 'remove':
-			this._data.remove(data.query, options);
+			this._refresh();
 			break;
 
 		default:
@@ -5107,64 +5192,8 @@ Overview.prototype._chainHandler = function (sender, type, data, options) {
  * @param templateSelector
  */
 Overview.prototype.link = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Make sure we have a data-binding store object to use
-		this._links = this._links || {};
-
-		var templateId,
-			templateHtml;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-				templateHtml = templateSelector.template;
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (!this._links[templateId]) {
-			if (jQuery(outputTargetSelector).length) {
-				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateId]) {
-					if (!templateHtml) {
-						// Grab the template
-						var template = jQuery(templateSelector);
-						if (template.length) {
-							templateHtml = jQuery(template[0]).html();
-						} else {
-							throw('Unable to bind overview to target because template does not exist: ' + templateSelector);
-						}
-					}
-
-					jQuery.views.templates(templateId, templateHtml);
-				}
-
-				// Create the data binding
-				jQuery.templates[templateId].link(outputTargetSelector, this._data);
-
-				// Add link to flags
-				this._links[templateId] = outputTargetSelector;
-
-				// Set the linked flag
-				this._linked++;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.Overview: Added binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
-				}
-
-				return this;
-			} else {
-				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
-			}
-		}
-
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
+	this._data.link.apply(this._data, arguments);
+	this._refresh();
 };
 
 /**
@@ -5174,43 +5203,8 @@ Overview.prototype.link = function (outputTargetSelector, templateSelector) {
  * @param templateSelector
  */
 Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Check for binding
-		this._links = this._links || {};
-
-		var templateId;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (this._links[templateId]) {
-			// Remove the data binding
-			jQuery.templates[templateId].unlink(outputTargetSelector);
-
-			// Remove link from flags
-			delete this._links[templateId];
-
-			// Set the linked flag
-			this._linked--;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Overview: Removed binding overview "' + this.name() + '" to output target: ' + outputTargetSelector);
-			}
-
-			return this;
-		}
-
-		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
+	this._data.unlink.apply(this._data, arguments);
+	this._refresh();
 };
 
 // Extend DB to include collection groups
@@ -5881,6 +5875,20 @@ var idCounter = 0,
 
 				return id;
 			},
+
+			/**
+			 * Gets / sets debug flag that can enable debug message output to the
+			 * console if required.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
+			/**
+			 * Sets debug flag for a particular type that can enable debug message
+			 * output to the console if required.
+			 * @param {String} type The name of the debug type to set flag for.
+			 * @param {Boolean} val The value to set debug flag to.
+			 * @return {Boolean} True if enabled, false otherwise.
+			 */
 			debug: new Overload([
 				function () {
 					return this._debug && this._debug.all;
@@ -6140,22 +6148,51 @@ CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
-View.prototype.debug = Shared.common.debug;
-
 Shared.synthesize(View.prototype, 'name');
 
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+View.prototype.debug = Shared.common.debug;
+
+/**
+ * Executes an insert against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.insert = function () {
 	this._collectionsRun('insert', arguments);
 };
 
+/**
+ * Executes an update against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.update = function () {
 	this._collectionsRun('update', arguments);
 };
 
+/**
+ * Executes an updateById against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.updateById = function () {
 	this._collectionsRun('updateById', arguments);
 };
 
+/**
+ * Executes an remove against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.remove = function () {
 	this._collectionsRun('remove', arguments);
 };
@@ -6174,6 +6211,18 @@ View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
 };
 
+/**
+ * Data-binds the view data to the elements matched by the passed selector.
+ * @param {String} outputTargetSelector The jQuery element selector to select the element
+ * into which the data-bound rendered items will be placed. All existing HTML will be
+ * removed from this element.
+ * @param {String|Object} templateSelector This can either be a jQuery selector identifying
+ * which template element to get the template HTML from that each item in the view's data
+ * will use when rendering to the screen, or you can pass an object with a template key
+ * containing a string that represents the HTML template such as:
+ *     { template: '<div>{{:name}}</div>' }
+ * @returns {*}
+ */
 View.prototype.link = function (outputTargetSelector, templateSelector) {
 	var publicData = this.publicData();
 	if (this.debug()) {
@@ -6197,6 +6246,11 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
  */
 View.prototype.decouple = Shared.common.decouple;
 
+/**
+ * Sets the collection from which the view will assemble its data.
+ * @param {Collection} collection The collection to use to assemble view data.
+ * @returns {View}
+ */
 View.prototype.from = function (collection) {
 	if (collection !== undefined) {
 		if (typeof(collection) === 'string') {
@@ -6567,7 +6621,7 @@ View.prototype.queryOptions = function (options, refresh) {
 /**
  * Refreshes the view data such as ordering etc.
  */
-View.prototype.refresh = function (force) {
+View.prototype.refresh = function () {
 	var sortedData,
 		collection,
 		pubData = this.publicData(),
@@ -6606,13 +6660,14 @@ View.prototype.count = function () {
 };
 
 /**
- * Takes an object with the keys "enabled", "dataIn" and "dataOut":
+ * Takes the passed data and uses it to set transform methods and globally
+ * enable or disable the transform system for the view.
+ * @param {Object} obj The new transform system settings "enabled", "dataIn" and "dataOut":
  * {
  * 	"enabled": true,
  * 	"dataIn": function (data) { return data; },
  * 	"dataOut": function (data) { return data; }
  * }
- * @param obj
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
@@ -6653,7 +6708,9 @@ View.prototype.transform = function (obj) {
 };
 
 /**
- * Returns the non-transformed data the view holds.
+ * Returns the non-transformed data the view holds as a collection
+ * reference.
+ * @return {Collection} The non-transformed collection reference.
  */
 View.prototype.privateData = function () {
 	return this._privateData;
@@ -6728,15 +6785,28 @@ Collection.prototype.init = function () {
 	CollectionInit.apply(this, arguments);
 };
 
+/**
+ * Creates a view and assigns the collection as its data source.
+ * @param {String} name The name of the new view.
+ * @param {Object} query The query to apply to the new view.
+ * @param {Object} options The options object to apply to the view.
+ * @returns {*}
+ */
 Collection.prototype.view = function (name, query, options) {
-	var view = new View(name, query, options)
-		.db(this._db)
-		._addCollection(this);
+	if (this._db && this._db._views ) {
+		if (!this._db._views[name]) {
+			var view = new View(name, query, options)
+				.db(this._db)
+				._addCollection(this);
 
-	this._views = this._views || [];
-	this._views.push(view);
+			this._views = this._views || [];
+			this._views.push(view);
 
-	return view;
+			return view;
+		} else {
+			throw('Cannot create a view using this collection because one with this name already exists: ' + name);
+		}
+	}
 };
 
 /**
