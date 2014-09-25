@@ -9,7 +9,6 @@ var Core = _dereq_('../lib/Core'),
 	jsviews = _dereq_('../lib/vendor/jsviews');
 
 module.exports = Core;
-//window['ForerunnerDB'] = Core;
 },{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Document":6,"../lib/Highcharts":7,"../lib/Overview":12,"../lib/Persist":14,"../lib/View":16,"../lib/vendor/jsviews":17}],2:[function(_dereq_,module,exports){
 var Shared,
 	Core,

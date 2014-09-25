@@ -5,6 +5,8 @@ var Core = require('../lib/Core'),
 	OldViewBind = require('../lib/OldView.Bind'),
 	Highcharts = require('../lib/Highcharts'),
 	Persist = require('../lib/Persist'),
+	Document = require('../lib/Document'),
+	Overview = require('../lib/Overview'),
 	jsviews = require('../lib/vendor/jsviews');
 
 module.exports = Core;
