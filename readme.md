@@ -775,6 +775,7 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - 1.2.7
 * Rewritten data propagation system - COMPLETE
+* Added new class "Document" to allow data-binding against a single document object
 * Added new class "Overview" to allow data-binding against auto-propagated map-reduce data
 * Remove iOS from this repo, add to its own
 * Remove server from this repo, add to its own
