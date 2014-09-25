@@ -3,7 +3,9 @@
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
   "version": "1.2.6",
-  "dependencies": {},
+  "dependencies": {
+    "localforage": "^0.9.2"
+  },
   "engines": {
     "node": "*"
   },
