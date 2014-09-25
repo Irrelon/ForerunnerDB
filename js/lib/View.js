@@ -39,22 +39,51 @@ CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
-View.prototype.debug = Shared.common.debug;
-
 Shared.synthesize(View.prototype, 'name');
 
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+View.prototype.debug = Shared.common.debug;
+
+/**
+ * Executes an insert against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.insert = function () {
 	this._collectionsRun('insert', arguments);
 };
 
+/**
+ * Executes an update against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.update = function () {
 	this._collectionsRun('update', arguments);
 };
 
+/**
+ * Executes an updateById against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.updateById = function () {
 	this._collectionsRun('updateById', arguments);
 };
 
+/**
+ * Executes an remove against all data-sources (collections) this view is
+ * linked to.
+ */
 View.prototype.remove = function () {
 	this._collectionsRun('remove', arguments);
 };
@@ -73,6 +102,18 @@ View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
 };
 
+/**
+ * Data-binds the view data to the elements matched by the passed selector.
+ * @param {String} outputTargetSelector The jQuery element selector to select the element
+ * into which the data-bound rendered items will be placed. All existing HTML will be
+ * removed from this element.
+ * @param {String|Object} templateSelector This can either be a jQuery selector identifying
+ * which template element to get the template HTML from that each item in the view's data
+ * will use when rendering to the screen, or you can pass an object with a template key
+ * containing a string that represents the HTML template such as:
+ *     { template: '<div>{{:name}}</div>' }
+ * @returns {*}
+ */
 View.prototype.link = function (outputTargetSelector, templateSelector) {
 	var publicData = this.publicData();
 	if (this.debug()) {
@@ -96,6 +137,11 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
  */
 View.prototype.decouple = Shared.common.decouple;
 
+/**
+ * Sets the collection from which the view will assemble its data.
+ * @param {Collection} collection The collection to use to assemble view data.
+ * @returns {View}
+ */
 View.prototype.from = function (collection) {
 	if (collection !== undefined) {
 		if (typeof(collection) === 'string') {
@@ -466,7 +512,7 @@ View.prototype.queryOptions = function (options, refresh) {
 /**
  * Refreshes the view data such as ordering etc.
  */
-View.prototype.refresh = function (force) {
+View.prototype.refresh = function () {
 	var sortedData,
 		collection,
 		pubData = this.publicData(),
@@ -505,13 +551,14 @@ View.prototype.count = function () {
 };
 
 /**
- * Takes an object with the keys "enabled", "dataIn" and "dataOut":
+ * Takes the passed data and uses it to set transform methods and globally
+ * enable or disable the transform system for the view.
+ * @param {Object} obj The new transform system settings "enabled", "dataIn" and "dataOut":
  * {
  * 	"enabled": true,
  * 	"dataIn": function (data) { return data; },
  * 	"dataOut": function (data) { return data; }
  * }
- * @param obj
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
@@ -552,7 +599,9 @@ View.prototype.transform = function (obj) {
 };
 
 /**
- * Returns the non-transformed data the view holds.
+ * Returns the non-transformed data the view holds as a collection
+ * reference.
+ * @return {Collection} The non-transformed collection reference.
  */
 View.prototype.privateData = function () {
 	return this._privateData;
@@ -627,15 +676,28 @@ Collection.prototype.init = function () {
 	CollectionInit.apply(this, arguments);
 };
 
+/**
+ * Creates a view and assigns the collection as its data source.
+ * @param {String} name The name of the new view.
+ * @param {Object} query The query to apply to the new view.
+ * @param {Object} options The options object to apply to the view.
+ * @returns {*}
+ */
 Collection.prototype.view = function (name, query, options) {
-	var view = new View(name, query, options)
-		.db(this._db)
-		._addCollection(this);
+	if (this._db && this._db._views ) {
+		if (!this._db._views[name]) {
+			var view = new View(name, query, options)
+				.db(this._db)
+				._addCollection(this);
 
-	this._views = this._views || [];
-	this._views.push(view);
+			this._views = this._views || [];
+			this._views.push(view);
 
-	return view;
+			return view;
+		} else {
+			throw('Cannot create a view using this collection because one with this name already exists: ' + name);
+		}
+	}
 };
 
 /**
