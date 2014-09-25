@@ -26,6 +26,21 @@ Collection = require('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
+/**
+ * Gets / sets debug flag that can enable debug message output to the
+ * console if required.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+/**
+ * Sets debug flag for a particular type that can enable debug message
+ * output to the console if required.
+ * @param {String} type The name of the debug type to set flag for.
+ * @param {Boolean} val The value to set debug flag to.
+ * @return {Boolean} True if enabled, false otherwise.
+ */
+CollectionGroup.prototype.debug = Shared.common.debug;
+
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
 };
