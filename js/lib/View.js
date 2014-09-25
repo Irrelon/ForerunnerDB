@@ -3,8 +3,7 @@ var Shared,
 	Core,
 	Collection,
 	CollectionInit,
-	CoreInit,
-	Overload;
+	CoreInit;
 
 Shared = require('./Shared');
 
@@ -36,46 +35,11 @@ Shared.inherit(View.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
-Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
-View.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				this.privateData().debug(val);
-				this.publicData().debug(val);
-				return this;
-			} else {
-				return this._debug.all;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				this.privateData().debug(type, val);
-				this.publicData().debug(type, val);
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
+View.prototype.debug = Shared.common.debug;
 
 Shared.synthesize(View.prototype, 'name');
 

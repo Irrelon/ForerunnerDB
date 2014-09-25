@@ -1,6 +1,5 @@
 var Shared,
 	Core,
-	Overload,
 	Metrics,
 	KeyValueStore,
 	Path,
@@ -57,7 +56,6 @@ Collection.prototype.init = function (name) {
 Shared.addModule('Collection', Collection);
 Shared.inherit(Collection.prototype, Shared.chainSystem);
 
-Overload = require('./Overload');
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
 Path = require('./Path');
@@ -65,39 +63,7 @@ Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 
-Collection.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			} else {
-				return this._debug[val] || (this._db && this._db._debug && this._db._debug[val]) || this._debug.all;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			}
-
-			return this._debug[type] || (this._db && this._db._debug && this._db._debug[type]);
-		}
-
-		return this._debug.all;
-	}
-]);
+Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -113,117 +79,16 @@ Collection.prototype.crc = Crc;
  */
 Shared.synthesize(Collection.prototype, 'name');
 
-Collection.prototype.on = new Overload([
-	function(event, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
-		this._listeners[event]['*'].push(listener);
-
-		return this;
-	},
-
-	function(event, id, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event][id] = this._listeners[event][id] || [];
-		this._listeners[event][id].push(listener);
-
-		return this;
-	}
-]);
-
-Collection.prototype.off = new Overload([
-	function (event) {
-		if (this._listeners && this._listeners[event] && event in this._listeners) {
-			delete this._listeners[event];
-		}
-
-		return this;
-	},
-
-	function(event, listener) {
-		var arr,
-			index;
-
-		if (typeof(listener) === 'string') {
-			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-				delete this._listeners[event][listener];
-			}
-		} else {
-			if (event in this._listeners) {
-				arr = this._listeners[event]['*'];
-				index = arr.indexOf(listener);
-
-				if (index > -1) {
-					arr.splice(index, 1);
-				}
-			}
-		}
-
-		return this;
-	},
-
-	function (event, id, listener) {
-		if (this._listeners && event in this._listeners) {
-			var arr = this._listeners[event][id],
-				index = arr.indexOf(listener);
-
-			if (index > -1) {
-				arr.splice(index, 1);
-			}
-		}
-	}
-]);
-
-Collection.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		// Handle global emit
-		if (this._listeners[event]['*']) {
-			var arr = this._listeners[event]['*'],
-				arrCount = arr.length,
-				arrIndex;
-
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-			}
-		}
-
-		// Handle individual emit
-		if (data instanceof Array) {
-			// Check if the array is an array of objects in the collection
-			if (data[0] && data[0][this._primaryKey]) {
-				// Loop the array and check for listeners against the primary key
-				var listenerIdArr = this._listeners[event],
-					listenerIdCount,
-					listenerIdIndex;
-
-				arrCount = data.length;
-
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
-						// Emit for this id
-						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
-						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return this;
-};
+Collection.prototype.on = Shared.common.on;
+Collection.prototype.off = Shared.common.off;
+Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Drops a collection and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._name) {
+	if (this._db && this._db._collection && this._name) {
 		if (this.debug()) {
 			console.log('Dropping collection ' + this._name);
 		}
@@ -2955,34 +2820,7 @@ Collection.prototype.lastOp = function () {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Collection.prototype.objectId = function (str) {
-	var id,
-		pow = Math.pow(10, 17);
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-			).toString(16);
-	} else {
-		var val = 0,
-			count = str.length,
-			i;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Collection.prototype.objectId = Shared.common.objectId;
 
 /**
  * Generates a difference object that contains insert, update and remove arrays

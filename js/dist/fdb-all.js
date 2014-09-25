@@ -10,10 +10,9 @@ var Core = require('../lib/Core'),
 
 module.exports = Core;
 //window['ForerunnerDB'] = Core;
-},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Document":6,"../lib/Highcharts":7,"../lib/Overview":13,"../lib/Persist":15,"../lib/View":17,"../lib/vendor/jsviews":18}],2:[function(require,module,exports){
+},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Document":6,"../lib/Highcharts":7,"../lib/Overview":12,"../lib/Persist":14,"../lib/View":16,"../lib/vendor/jsviews":17}],2:[function(require,module,exports){
 var Shared,
 	Core,
-	Overload,
 	Metrics,
 	KeyValueStore,
 	Path,
@@ -70,7 +69,6 @@ Collection.prototype.init = function (name) {
 Shared.addModule('Collection', Collection);
 Shared.inherit(Collection.prototype, Shared.chainSystem);
 
-Overload = require('./Overload');
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
 Path = require('./Path');
@@ -78,39 +76,7 @@ Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 
-Collection.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			} else {
-				return this._debug[val] || (this._db && this._db._debug && this._db._debug[val]) || this._debug.all;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				this.chainSend('debug', this._debug);
-				return this;
-			}
-
-			return this._debug[type] || (this._db && this._db._debug && this._db._debug[type]);
-		}
-
-		return this._debug.all;
-	}
-]);
+Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -126,117 +92,16 @@ Collection.prototype.crc = Crc;
  */
 Shared.synthesize(Collection.prototype, 'name');
 
-Collection.prototype.on = new Overload([
-	function(event, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event]['*'] = this._listeners[event]['*'] || [];
-		this._listeners[event]['*'].push(listener);
-
-		return this;
-	},
-
-	function(event, id, listener) {
-		this._listeners = this._listeners || {};
-		this._listeners[event] = this._listeners[event] || {};
-		this._listeners[event][id] = this._listeners[event][id] || [];
-		this._listeners[event][id].push(listener);
-
-		return this;
-	}
-]);
-
-Collection.prototype.off = new Overload([
-	function (event) {
-		if (this._listeners && this._listeners[event] && event in this._listeners) {
-			delete this._listeners[event];
-		}
-
-		return this;
-	},
-
-	function(event, listener) {
-		var arr,
-			index;
-
-		if (typeof(listener) === 'string') {
-			if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-				delete this._listeners[event][listener];
-			}
-		} else {
-			if (event in this._listeners) {
-				arr = this._listeners[event]['*'];
-				index = arr.indexOf(listener);
-
-				if (index > -1) {
-					arr.splice(index, 1);
-				}
-			}
-		}
-
-		return this;
-	},
-
-	function (event, id, listener) {
-		if (this._listeners && event in this._listeners) {
-			var arr = this._listeners[event][id],
-				index = arr.indexOf(listener);
-
-			if (index > -1) {
-				arr.splice(index, 1);
-			}
-		}
-	}
-]);
-
-Collection.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		// Handle global emit
-		if (this._listeners[event]['*']) {
-			var arr = this._listeners[event]['*'],
-				arrCount = arr.length,
-				arrIndex;
-
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-			}
-		}
-
-		// Handle individual emit
-		if (data instanceof Array) {
-			// Check if the array is an array of objects in the collection
-			if (data[0] && data[0][this._primaryKey]) {
-				// Loop the array and check for listeners against the primary key
-				var listenerIdArr = this._listeners[event],
-					listenerIdCount,
-					listenerIdIndex;
-
-				arrCount = data.length;
-
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
-						// Emit for this id
-						listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
-						for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-							listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-						}
-					}
-				}
-			}
-		}
-	}
-
-	return this;
-};
+Collection.prototype.on = Shared.common.on;
+Collection.prototype.off = Shared.common.off;
+Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Drops a collection and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._name) {
+	if (this._db && this._db._collection && this._name) {
 		if (this.debug()) {
 			console.log('Dropping collection ' + this._name);
 		}
@@ -2968,34 +2833,7 @@ Collection.prototype.lastOp = function () {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Collection.prototype.objectId = function (str) {
-	var id,
-		pow = Math.pow(10, 17);
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-			).toString(16);
-	} else {
-		var val = 0,
-			count = str.length,
-			i;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Collection.prototype.objectId = Shared.common.objectId;
 
 /**
  * Generates a difference object that contains insert, update and remove arrays
@@ -3121,13 +2959,12 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":12,"./Path":14,"./Shared":16}],3:[function(require,module,exports){
+},{"./Crc":5,"./Index":8,"./KeyValueStore":9,"./Metrics":10,"./Path":13,"./Shared":15}],3:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	CoreInit,
-	Collection,
-	Overload;
+	Collection;
 
 Shared = require('./Shared');
 
@@ -3148,7 +2985,6 @@ Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
-Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3238,11 +3074,18 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 	return this;
 };
 
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+CollectionGroup.prototype.decouple = Shared.common.decouple;
+
 CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
 	switch (type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			data = this._data.decouple(data);
+			data = this.decouple(data);
 
 			// Remove old data
 			this._data.remove(options.oldData);
@@ -3253,7 +3096,7 @@ CollectionGroup.prototype._chainHandler = function (sender, type, data, options)
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			data = this._data.decouple(data);
+			data = this.decouple(data);
 
 			// Add new data
 			this._data.insert(data);
@@ -3370,7 +3213,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Overload":12,"./Shared":16}],4:[function(require,module,exports){
+},{"./Collection":2,"./Shared":15}],4:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3398,7 +3241,6 @@ module.exports = CollectionGroup;
  Source: https://github.com/coolbloke1324/ForerunnerDB
  */
 var Shared,
-	Overload,
 	Collection,
 	Metrics,
 	Crc;
@@ -3425,7 +3267,6 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
-Overload = require('./Overload.js');
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
 Crc = require('./Crc.js');
@@ -3470,44 +3311,14 @@ Core.prototype.isServer = function () {
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
  */
-Core.prototype.decouple = function (data) {
-	return JSON.parse(JSON.stringify(data));
-};
+Core.prototype.decouple = Shared.common.decouple;
 
 /**
  * Gets / sets the debug flag for the database.
  * @param {Boolean} val If true, debug messages will be output to the console.
  * @returns {*}
  */
-Core.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				return this;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
+Core.prototype.debug = Shared.common.debug;
 
 /**
  * Converts a normal javascript array of objects into a DB collection.
@@ -3584,36 +3395,7 @@ Core.prototype.emit = function(event, data) {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Core.prototype.objectId = function (str) {
-	var id,
-		val,
-		count,
-		pow = Math.pow(10, 17),
-		i;
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-		).toString(16);
-	} else {
-		val = 0;
-		count = str.length;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Core.prototype.objectId = Shared.common.objectId;
 
 /**
  * Find all documents across all collections in the database that match the passed
@@ -3682,7 +3464,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":10,"./Overload.js":12,"./Shared.js":16}],5:[function(require,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":10,"./Shared.js":15}],5:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3749,22 +3531,27 @@ Shared.synthesize(Document.prototype, 'db');
 Shared.synthesize(Document.prototype, 'name');
 
 Document.prototype.setData = function (data) {
-	var i;
+	var i,
+		$unset;
 
 	if (data) {
 		data = this.decouple(data);
 
 		if (this._linked) {
+			$unset = {};
+
 			// Remove keys that don't exist in the new data from the current object
 			for (i in this._data) {
-				if (this._data.hasOwnProperty(i)) {
+				if (i.substr(0, 6) !== 'jQuery' && this._data.hasOwnProperty(i)) {
 					// Check if existing data has key
 					if (data[i] === undefined) {
-						// Remove the property
-						delete this._data;
+						// Add property name to those to unset
+						$unset[i] = 1;
 					}
 				}
 			}
+
+			data.$unset = $unset;
 
 			// Now update the object with new data
 			this._updateObject(this._data, data, {});
@@ -3783,6 +3570,21 @@ Document.prototype.setData = function (data) {
  * @returns {*}
  */
 Document.prototype.decouple = Shared.common.decouple;
+
+/**
+ * Generates a new 16-character hexadecimal unique ID or
+ * generates a new 16-character hexadecimal ID based on
+ * the passed string. Will always generate the same ID
+ * for the same string.
+ * @param {String=} str A string to generate the ID from.
+ * @return {String}
+ */
+Document.prototype.objectId = Shared.common.objectId;
+
+Document.prototype.on = Shared.common.on;
+Document.prototype.off = Shared.common.off;
+Document.prototype.emit = Shared.common.emit;
+Document.prototype.debug = Shared.common.debug;
 
 /**
  * Modifies the document. This will update the document with the data held in 'update'.
@@ -3814,24 +3616,357 @@ Document.prototype.update = function (query, update, options) {
  */
 Document.prototype._updateObject = Collection.prototype._updateObject;
 
+/**
+ * Determines if the passed key has an array positional mark (a dollar at the end
+ * of its name).
+ * @param {String} key The key to check.
+ * @returns {Boolean} True if it is a positional or false if not.
+ * @private
+ */
+Document.prototype._isPositionalKey = function (key) {
+	return key.substr(key.length - 2, 2) === '.$';
+};
+
+/**
+ * Updates a property on an object depending on if the collection is
+ * currently running data-binding or not.
+ * @param {Object} doc The object whose property is to be updated.
+ * @param {String} prop The property to update.
+ * @param {*} val The new value of the property.
+ * @private
+ */
+Document.prototype._updateProperty = function (doc, prop, val) {
+	if (this._linked) {
+		jQuery.observable(doc).setProperty(prop, val);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+		}
+	} else {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+		}
+	}
+};
+
+/**
+ * Increments a value for a property on a document by the passed number.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to increment by.
+ * @private
+ */
+Document.prototype._updateIncrement = function (doc, prop, val) {
+	if (this._linked) {
+		jQuery.observable(doc).setProperty(prop, doc[prop] + val);
+	} else {
+		doc[prop] += val;
+	}
+};
+
+/**
+ * Changes the index of an item in the passed array.
+ * @param {Array} arr The array to modify.
+ * @param {Number} indexFrom The index to move the item from.
+ * @param {Number} indexTo The index to move the item to.
+ * @private
+ */
+Document.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
+	if (this._linked) {
+		jQuery.observable(arr).move(indexFrom, indexTo);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+		}
+	} else {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+		}
+	}
+};
+
+/**
+ * Inserts an item into the passed array at the specified index.
+ * @param {Array} arr The array to insert into.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
+ * @private
+ */
+Document.prototype._updateSplicePush = function (arr, index, doc) {
+	if (arr.length > index) {
+		if (this._linked) {
+			jQuery.observable(arr).insert(index, doc);
+		} else {
+			arr.splice(index, 0, doc);
+		}
+	} else {
+		if (this._linked) {
+			jQuery.observable(arr).insert(doc);
+		} else {
+			arr.push(doc);
+		}
+	}
+};
+
+/**
+ * Inserts an item at the end of an array.
+ * @param {Array} arr The array to insert the item into.
+ * @param {Object} doc The document to insert.
+ * @private
+ */
+Document.prototype._updatePush = function (arr, doc) {
+	if (this._linked) {
+		jQuery.observable(arr).insert(doc);
+	} else {
+		arr.push(doc);
+	}
+};
+
+/**
+ * Removes an item from the passed array.
+ * @param {Array} arr The array to modify.
+ * @param {Number} index The index of the item in the array to remove.
+ * @private
+ */
+Document.prototype._updatePull = function (arr, index) {
+	if (this._linked) {
+		jQuery.observable(arr).remove(index);
+	} else {
+		arr.splice(index, 1);
+	}
+};
+
+/**
+ * Multiplies a value for a property on a document by the passed number.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to multiply by.
+ * @private
+ */
+Document.prototype._updateMultiply = function (doc, prop, val) {
+	if (this._linked) {
+		jQuery.observable(doc).setProperty(prop, doc[prop] * val);
+	} else {
+		doc[prop] *= val;
+	}
+};
+
+/**
+ * Renames a property on a document to the passed property.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to rename.
+ * @param {Number} val The new property name.
+ * @private
+ */
+Document.prototype._updateRename = function (doc, prop, val) {
+	var existingVal = doc[prop];
+	if (this._linked) {
+		jQuery.observable(doc).setProperty(val, existingVal);
+		jQuery.observable(doc).removeProperty(prop);
+	} else {
+		doc[val] = existingVal;
+		delete doc[prop];
+	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @private
+ */
+Document.prototype._updateUnset = function (doc, prop) {
+	if (this._linked) {
+		jQuery.observable(doc).removeProperty(prop);
+	} else {
+		delete doc[prop];
+	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @return {Boolean}
+ * @private
+ */
+Document.prototype._updatePop = function (doc, val) {
+	var index,
+		updated = false;
+
+	if (doc.length > 0) {
+		if (this._linked) {
+			if (val === 1) {
+				index = doc.length - 1;
+			} else if (val === -1) {
+				index = 0;
+			}
+
+			if (index > -1) {
+				jQuery.observable(arr).remove(index);
+				updated = true;
+			}
+		} else {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+	}
+
+	return updated;
+};
+
+/**
+ * Creates a link to the DOM between the document data and the elements
+ * in the passed output selector. When new elements are needed or changes
+ * occur the passed templateSelector is used to get the template that is
+ * output to the DOM.
+ * @param outputTargetSelector
+ * @param templateSelector
+ */
+Document.prototype.link = function (outputTargetSelector, templateSelector) {
+	if (window.jQuery) {
+		// Make sure we have a data-binding store object to use
+		this._links = this._links || {};
+		if (!this._linked) { this._linked = 0; }
+
+		var templateId,
+			templateHtml;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+				templateHtml = templateSelector.template;
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (!this._links[templateId]) {
+			if (jQuery(outputTargetSelector).length) {
+				// Ensure the template is in memory and if not, try to get it
+				if (!jQuery.templates[templateId]) {
+					if (!templateHtml) {
+						// Grab the template
+						var template = jQuery(templateSelector);
+						if (template.length) {
+							templateHtml = jQuery(template[0]).html();
+						} else {
+							throw('Unable to bind document to target because template does not exist: ' + templateSelector);
+						}
+					}
+
+					jQuery.views.templates(templateId, templateHtml);
+				}
+
+				// Create the data binding
+				jQuery.templates[templateId].link(outputTargetSelector, this._data);
+
+				// Add link to flags
+				this._links[templateId] = outputTargetSelector;
+
+				// Set the linked flag
+				this._linked++;
+
+				if (this.debug()) {
+					console.log('ForerunnerDB.Document: Added binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
+				}
+
+				return this;
+			} else {
+				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+			}
+		}
+
+		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+	}
+};
+
+/**
+ * Removes a link to the DOM between the document data and the elements
+ * in the passed output selector that was created using the link() method.
+ * @param outputTargetSelector
+ * @param templateSelector
+ */
+Document.prototype.unlink = function (outputTargetSelector, templateSelector) {
+	if (window.jQuery) {
+		// Check for binding
+		this._links = this._links || {};
+
+		var templateId;
+
+		if (templateSelector && typeof templateSelector === 'object') {
+			// Our second argument is an object, let's inspect
+			if (templateSelector.template && typeof templateSelector.template === 'string') {
+				// The template has been given to us as a string
+				templateId = this.objectId(templateSelector.template);
+			}
+		} else {
+			templateId = templateSelector;
+		}
+
+		if (this._links[templateId]) {
+			// Remove the data binding
+			jQuery.templates[templateId].unlink(outputTargetSelector);
+
+			// Remove link from flags
+			delete this._links[templateId];
+
+			// Set the linked flag
+			this._linked--;
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.Document: Removed binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
+			}
+
+			return this;
+		}
+
+		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+	} else {
+		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+	}
+};
+
+Document.prototype.drop = function () {
+	if (this._db && this._name) {
+		if (this._db && this._db._document && this._db._document[this._name]) {
+			delete this._db._document[this._name];
+			this._data = {};
+		}
+	}
+};
+
 // Extend DB to include documents
 Core.prototype.init = function () {
-	this._document = {};
 	CoreInit.apply(this, arguments);
 };
 
 Core.prototype.document = function (documentName) {
 	if (documentName) {
+		this._document = this._document || {};
 		this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
 		return this._document[documentName];
 	} else {
-		// Return an object of collection data
+		// Return an object of document data
 		return this._document;
 	}
 };
 
 module.exports = Document;
-},{"./Collection":2,"./Shared":16}],7:[function(require,module,exports){
+},{"./Collection":2,"./Shared":15}],7:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4090,7 +4225,7 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":16}],8:[function(require,module,exports){
+},{"./Shared":15}],8:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4443,7 +4578,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":14,"./Shared":16}],9:[function(require,module,exports){
+},{"./Path":13,"./Shared":15}],9:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -4655,7 +4790,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":16}],10:[function(require,module,exports){
+},{"./Shared":15}],10:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Operation = require('./Operation');
 
@@ -4727,7 +4862,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":11,"./Shared":16}],11:[function(require,module,exports){
+},{"./Operation":11,"./Shared":15}],11:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4871,45 +5006,13 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":14,"./Shared":16}],12:[function(require,module,exports){
-var Shared = require('./Shared');
-
-/**
- * Allows a method to be overloaded.
- * @param arr
- * @returns {Function}
- * @constructor
- */
-var Overload = function (arr) {
-	if (arr) {
-		var arrIndex,
-			arrCount = arr.length;
-
-		return function () {
-			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				if (arr[arrIndex].length === arguments.length) {
-					return arr[arrIndex].apply(this, arguments);
-				}
-			}
-
-			return null;
-		};
-	}
-
-	return function () {};
-};
-
-Shared.addModule('Overload', Overload);
-
-module.exports = Overload;
-},{"./Shared":16}],13:[function(require,module,exports){
+},{"./Path":13,"./Shared":15}],12:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	CoreInit,
 	Collection,
-	Document,
-	Overload;
+	Document;
 
 Shared = require('./Shared');
 
@@ -4922,7 +5025,7 @@ Overview.prototype.init = function (name) {
 
 	this._name = name;
 	this._data = new Collection();
-	this._reducedData = new Document();
+	this._reducedData = new Document('__FDB__dc_data_' + this._name);
 	this._collections = [];
 };
 
@@ -4931,7 +5034,6 @@ Shared.inherit(Overview.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 Document = require('./Document');
-Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -4954,7 +5056,7 @@ Overview.prototype.from = function (collection) {
 
 Overview.prototype.find = function () {
 	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i][type].apply(this._collections[i], arguments);
+		this._collections[i].apply(this._collections[i], arguments);
 	}
 };
 
@@ -4979,7 +5081,7 @@ Overview.prototype._removeCollection = function (collection) {
 };
 
 Overview.prototype._refresh = function () {
-	var collData = this.find(this._querySettings.query, this._querySettings.options);
+	var collData = this.find(this._query, this._options);
 };
 
 Overview.prototype._chainHandler = function (sender, type, data, options) {
@@ -5128,7 +5230,7 @@ Core.prototype.overview = function (overviewName) {
 };
 
 module.exports = Overview;
-},{"./Collection":2,"./Document":6,"./Overload":12,"./Shared":16}],14:[function(require,module,exports){
+},{"./Collection":2,"./Document":6,"./Shared":15}],13:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -5538,7 +5640,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":16}],15:[function(require,module,exports){
+},{"./Shared":15}],14:[function(require,module,exports){
 // Import external names locally
 var Shared = require('./Shared'),
 	Core,
@@ -5547,7 +5649,6 @@ var Shared = require('./Shared'),
 	CollectionGroup,
 	CollectionInit,
 	CoreInit,
-	Overload,
 	Persist;
 
 Persist = function () {
@@ -5571,7 +5672,6 @@ Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = require('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
@@ -5728,91 +5828,283 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":12,"./Shared":16}],16:[function(require,module,exports){
-var Shared = {
-	idCounter: 0,
-	modules: {},
-	common: {
-		decouple: function (data) {
-			return JSON.parse(JSON.stringify(data));
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":15}],15:[function(require,module,exports){
+var idCounter = 0,
+	Overload = function (arr) {
+		if (arr) {
+			var arrIndex,
+				arrCount = arr.length;
+
+			return function () {
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					if (arr[arrIndex].length === arguments.length) {
+						return arr[arrIndex].apply(this, arguments);
+					}
+				}
+
+				return null;
+			};
 		}
-	},
-	_synth: {},
 
-	addModule: function (name, module) {
-		this.modules[name] = module;
+		return function () {};
 	},
+	Shared = {
+		modules: {},
+		common: {
+			decouple: function (data) {
+				return JSON.parse(JSON.stringify(data));
+			},
+			objectId: function (str) {
+				var id,
+					pow = Math.pow(10, 17);
 
-	inherit: function (obj, system) {
-		for (var i in system) {
-			if (system.hasOwnProperty(i)) {
-				obj[i] = system[i];
-			}
-		}
-	},
+				if (!str) {
+					idCounter++;
 
-	synthesize: function (obj, name) {
-		this._synth[name] = this._synth[name] || function (val) {
-			if (val !== undefined) {
-				this['_' + name] = val;
+					id = (idCounter + (
+						Math.random() * pow +
+						Math.random() * pow +
+						Math.random() * pow +
+						Math.random() * pow
+					)).toString(16);
+				} else {
+					var val = 0,
+						count = str.length,
+						i;
+
+					for (i = 0; i < count; i++) {
+						val += str.charCodeAt(i) * pow;
+					}
+
+					id = val.toString(16);
+				}
+
+				return id;
+			},
+			debug: new Overload([
+				function () {
+					return this._debug && this._debug.all;
+				},
+
+				function (val) {
+					if (val !== undefined) {
+						if (typeof val === 'boolean') {
+							this._debug = this._debug || {};
+							this._debug.all = val;
+							this.chainSend('debug', this._debug);
+							return this;
+						} else {
+							return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[val]) || (this._debug && this._debug.all);
+						}
+					}
+
+					return this._debug && this._debug.all;
+				},
+
+				function (type, val) {
+					if (type !== undefined) {
+						if (val !== undefined) {
+							this._debug = this._debug || {};
+							this._debug[type] = val;
+							this.chainSend('debug', this._debug);
+							return this;
+						}
+
+						return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[type]);
+					}
+
+					return this._debug && this._debug.all;
+				}
+			]),
+
+			on: new Overload([
+				function(event, listener) {
+					this._listeners = this._listeners || {};
+					this._listeners[event] = this._listeners[event] || {};
+					this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+					this._listeners[event]['*'].push(listener);
+
+					return this;
+				},
+
+				function(event, id, listener) {
+					this._listeners = this._listeners || {};
+					this._listeners[event] = this._listeners[event] || {};
+					this._listeners[event][id] = this._listeners[event][id] || [];
+					this._listeners[event][id].push(listener);
+
+					return this;
+				}
+			]),
+
+			off: new Overload([
+				function (event) {
+					if (this._listeners && this._listeners[event] && event in this._listeners) {
+						delete this._listeners[event];
+					}
+
+					return this;
+				},
+
+				function(event, listener) {
+					var arr,
+						index;
+
+					if (typeof(listener) === 'string') {
+						if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+							delete this._listeners[event][listener];
+						}
+					} else {
+						if (event in this._listeners) {
+							arr = this._listeners[event]['*'];
+							index = arr.indexOf(listener);
+
+							if (index > -1) {
+								arr.splice(index, 1);
+							}
+						}
+					}
+
+					return this;
+				},
+
+				function (event, id, listener) {
+					if (this._listeners && event in this._listeners) {
+						var arr = this._listeners[event][id],
+							index = arr.indexOf(listener);
+
+						if (index > -1) {
+							arr.splice(index, 1);
+						}
+					}
+				}
+			]),
+
+			emit: function (event, data) {
+				this._listeners = this._listeners || {};
+
+				if (event in this._listeners) {
+					// Handle global emit
+					if (this._listeners[event]['*']) {
+						var arr = this._listeners[event]['*'],
+							arrCount = arr.length,
+							arrIndex;
+
+						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+							arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+						}
+					}
+
+					// Handle individual emit
+					if (data instanceof Array) {
+						// Check if the array is an array of objects in the collection
+						if (data[0] && data[0][this._primaryKey]) {
+							// Loop the array and check for listeners against the primary key
+							var listenerIdArr = this._listeners[event],
+								listenerIdCount,
+								listenerIdIndex;
+
+							arrCount = data.length;
+
+							for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+								if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+									// Emit for this id
+									listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+									for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+										listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+									}
+								}
+							}
+						}
+					}
+				}
+
 				return this;
 			}
+		},
+		_synth: {},
 
-			return this['_' + name];
-		};
+		addModule: function (name, module) {
+			this.modules[name] = module;
+		},
 
-		obj[name] = this._synth[name];
-	},
-
-	// Inheritable systems
-	chainSystem: {
-		chain: function (obj) {
-			this._chain = this._chain || [];
-			var index = this._chain.indexOf(obj);
-
-			if (index === -1) {
-				this._chain.push(obj);
+		inherit: function (obj, system) {
+			for (var i in system) {
+				if (system.hasOwnProperty(i)) {
+					obj[i] = system[i];
+				}
 			}
 		},
-		unChain: function (obj) {
-			if (this._chain) {
+
+		synthesize: function (obj, name) {
+			this._synth[name] = this._synth[name] || function (val) {
+				if (val !== undefined) {
+					this['_' + name] = val;
+					return this;
+				}
+
+				return this['_' + name];
+			};
+
+			obj[name] = this._synth[name];
+		},
+
+		/**
+		 * Allows a method to be overloaded.
+		 * @param arr
+		 * @returns {Function}
+		 * @constructor
+		 */
+		overload: Overload,
+
+		// Inheritable systems
+		chainSystem: {
+			chain: function (obj) {
+				this._chain = this._chain || [];
 				var index = this._chain.indexOf(obj);
 
-				if (index > -1) {
-					this._chain.splice(index, 1);
+				if (index === -1) {
+					this._chain.push(obj);
 				}
-			}
-		},
-		chainSend: function (type, data, options) {
-			if (this._chain) {
-				var arr = this._chain,
-					count = arr.length,
-					index;
+			},
+			unChain: function (obj) {
+				if (this._chain) {
+					var index = this._chain.indexOf(obj);
 
-				for (index = 0; index < count; index++) {
-					arr[index].chainReceive(this, type, data, options);
+					if (index > -1) {
+						this._chain.splice(index, 1);
+					}
 				}
-			}
-		},
-		chainReceive: function (sender, type, data, options) {
-			// Fire our internal handler
-			if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
-				// Propagate the message down the chain
-				this.chainSend(type, data, options);
+			},
+			chainSend: function (type, data, options) {
+				if (this._chain) {
+					var arr = this._chain,
+						count = arr.length,
+						index;
+
+					for (index = 0; index < count; index++) {
+						arr[index].chainReceive(this, type, data, options);
+					}
+				}
+			},
+			chainReceive: function (sender, type, data, options) {
+				// Fire our internal handler
+				if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
+					// Propagate the message down the chain
+					this.chainSend(type, data, options);
+				}
 			}
 		}
-	}
-};
+	};
 
 module.exports = Shared;
-},{}],17:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	Collection,
 	CollectionInit,
-	CoreInit,
-	Overload;
+	CoreInit;
 
 Shared = require('./Shared');
 
@@ -5844,46 +6136,11 @@ Shared.inherit(View.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
-Overload = require('./Overload');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
-View.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				this.privateData().debug(val);
-				this.publicData().debug(val);
-				return this;
-			} else {
-				return this._debug.all;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				this.privateData().debug(type, val);
-				this.publicData().debug(type, val);
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
+View.prototype.debug = Shared.common.debug;
 
 Shared.synthesize(View.prototype, 'name');
 
@@ -5932,6 +6189,13 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 	}
 	return publicData.unlink(outputTargetSelector, templateSelector);
 };
+
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @returns {*}
+ */
+View.prototype.decouple = Shared.common.decouple;
 
 View.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -5990,7 +6254,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this._privateData.decouple(data);
+			data = this.decouple(data);
 
 			// Modify transform data
 			this._transformSetData(data);
@@ -6004,7 +6268,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this._privateData.decouple(data);
+			data = this.decouple(data);
 
 			// Check if our view has an orderBy clause
 			if (this._querySettings.options && this._querySettings.options.$orderBy) {
@@ -6559,7 +6823,7 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":2,"./CollectionGroup":3,"./Overload":12,"./Shared":16}],18:[function(require,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":15}],17:[function(require,module,exports){
 /*! jsviews.js v1.0.0-alpha single-file version:
 includes JsRender, JsObservable and JsViews  http://github.com/BorisMoore/jsrender and http://jsviews.com/jsviews
 informal pre V1.0 commit counter: 56 (Beta Candidate) */

@@ -25,7 +25,6 @@
  Source: https://github.com/coolbloke1324/ForerunnerDB
  */
 var Shared,
-	Overload,
 	Collection,
 	Metrics,
 	Crc;
@@ -52,7 +51,6 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.inherit(Core.prototype, Shared.chainSystem);
 
-Overload = require('./Overload.js');
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
 Crc = require('./Crc.js');
@@ -104,35 +102,7 @@ Core.prototype.decouple = Shared.common.decouple;
  * @param {Boolean} val If true, debug messages will be output to the console.
  * @returns {*}
  */
-Core.prototype.debug = new Overload([
-	function () {
-		return this._debug.all;
-	},
-
-	function (val) {
-		if (val !== undefined) {
-			if (typeof val === 'boolean') {
-				this._debug.all = val;
-				return this;
-			}
-		}
-
-		return this._debug.all;
-	},
-
-	function (type, val) {
-		if (type !== undefined) {
-			if (val !== undefined) {
-				this._debug[type] = val;
-				return this;
-			}
-
-			return this._debug[type];
-		}
-
-		return this._debug.all;
-	}
-]);
+Core.prototype.debug = Shared.common.debug;
 
 /**
  * Converts a normal javascript array of objects into a DB collection.
@@ -209,36 +179,7 @@ Core.prototype.emit = function(event, data) {
  * @param {String=} str A string to generate the ID from.
  * @return {String}
  */
-Core.prototype.objectId = function (str) {
-	var id,
-		val,
-		count,
-		pow = Math.pow(10, 17),
-		i;
-
-	if (!str) {
-		Shared.idCounter++;
-
-		id = (Shared.idCounter + (
-			Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow +
-				Math.random() * pow
-			)
-		).toString(16);
-	} else {
-		val = 0;
-		count = str.length;
-
-		for (i = 0; i < count; i++) {
-			val += str.charCodeAt(i) * pow;
-		}
-
-		id = val.toString(16);
-	}
-
-	return id;
-};
+Core.prototype.objectId = Shared.common.objectId;
 
 /**
  * Find all documents across all collections in the database that match the passed

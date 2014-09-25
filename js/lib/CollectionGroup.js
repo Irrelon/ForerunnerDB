@@ -2,8 +2,7 @@
 var Shared,
 	Core,
 	CoreInit,
-	Collection,
-	Overload;
+	Collection;
 
 Shared = require('./Shared');
 
@@ -24,7 +23,6 @@ Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
-Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 

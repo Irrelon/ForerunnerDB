@@ -3,8 +3,7 @@ var Shared,
 	Core,
 	CoreInit,
 	Collection,
-	Document,
-	Overload;
+	Document;
 
 Shared = require('./Shared');
 
@@ -17,7 +16,7 @@ Overview.prototype.init = function (name) {
 
 	this._name = name;
 	this._data = new Collection();
-	this._reducedData = new Document();
+	this._reducedData = new Document('__FDB__dc_data_' + this._name);
 	this._collections = [];
 };
 
@@ -26,7 +25,6 @@ Shared.inherit(Overview.prototype, Shared.chainSystem);
 
 Collection = require('./Collection');
 Document = require('./Document');
-Overload = require('./Overload');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -49,7 +47,7 @@ Overview.prototype.from = function (collection) {
 
 Overview.prototype.find = function () {
 	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i][type].apply(this._collections[i], arguments);
+		this._collections[i].apply(this._collections[i], arguments);
 	}
 };
 
@@ -74,7 +72,7 @@ Overview.prototype._removeCollection = function (collection) {
 };
 
 Overview.prototype._refresh = function () {
-	var collData = this.find(this._querySettings.query, this._querySettings.options);
+	var collData = this.find(this._query, this._options);
 };
 
 Overview.prototype._chainHandler = function (sender, type, data, options) {

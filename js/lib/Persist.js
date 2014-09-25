@@ -6,7 +6,6 @@ var Shared = require('./Shared'),
 	CollectionGroup,
 	CollectionInit,
 	CoreInit,
-	Overload,
 	Persist;
 
 Persist = function () {
@@ -30,7 +29,6 @@ Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-Overload = require('./Overload');
 CoreInit = Core.prototype.init;
 
 Persist.prototype.mode = function (type) {
