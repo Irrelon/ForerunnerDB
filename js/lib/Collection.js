@@ -124,13 +124,15 @@ Collection.prototype.drop = function () {
  */
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
-		this._primaryKey = keyName;
+		if (this._primaryKey !== keyName) {
+			this._primaryKey = keyName;
 
-		// Set the primary key index primary key
-		this._primaryIndex.primaryKey(keyName);
+			// Set the primary key index primary key
+			this._primaryIndex.primaryKey(keyName);
 
-		// Rebuild the primary key index
-		this._rebuildPrimaryKeyIndex();
+			// Rebuild the primary key index
+			this._rebuildPrimaryKeyIndex();
+		}
 		return this;
 	}
 
