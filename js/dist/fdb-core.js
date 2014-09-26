@@ -4446,19 +4446,62 @@ Path.prototype.clean = function (str) {
 module.exports = Path;
 },{"./Shared":10}],10:[function(_dereq_,module,exports){
 var idCounter = 0,
-	Overload = function (arr) {
-		if (arr) {
-			var arrIndex,
-				arrCount = arr.length;
+	Overload = function (def) {
+		if (def) {
+			var index,
+				count,
+				tmpDef;
 
-			return function () {
-				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					if (arr[arrIndex].length === arguments.length) {
-						return arr[arrIndex].apply(this, arguments);
+			if (!(def instanceof Array)) {
+				tmpDef = {};
+
+				// Def is an object, make sure all prop names are removed of spaces
+				for (index in def) {
+					if (def.hasOwnProperty(index)) {
+						tmpDef[index.replace(/ /g, '')] = def[index];
 					}
 				}
 
-				return null;
+				def = tmpDef;
+			}
+
+			return function () {
+				if (def instanceof Array) {
+					count = def.length;
+					for (index = 0; index < count; index++) {
+						if (def[index].length === arguments.length) {
+							return def[index].apply(this, arguments);
+						}
+					}
+				} else {
+					// Generate lookup key from arguments
+					var arr = [],
+						lookup;
+
+					// Copy arguments to an array
+					for (index = 0; index < arguments.length; index++) {
+						arr.push(typeof arguments[index]);
+					}
+
+					lookup = arr.join(',');
+
+					// Check for an exact lookup match
+					if (def[lookup]) {
+						return def[lookup].apply(this, arguments);
+					} else {
+						for (index = arr.length; index >= 0; index--) {
+							// Get the closest match
+							lookup = arr.slice(0, index).join(',');
+
+							if (def[lookup + ',...']) {
+								// Matched against arguments + "any other"
+								return def[lookup + ',...'].apply(this, arguments);
+							}
+						}
+					}
+				}
+
+				throw('Overloaded method does not have a matching signature for the passed arguments!');
 			};
 		}
 
