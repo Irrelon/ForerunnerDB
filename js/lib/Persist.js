@@ -55,13 +55,17 @@ Persist.prototype.save = function (key, data, callback) {
 				localStorage.setItem(key, val);
 			} catch (e) {
 				if (callback) { callback(e); }
+				else { throw e; }
+				return;
 			}
 
 			if (callback) { callback(false); }
+			else { return false;}
 			break;
+		default:
+			if (callback) { callback('No data handler.'); }
+			else {throw 'No data handler.';}
 	}
-
-	if (callback) { callback('No data handler.'); }
 };
 
 Persist.prototype.load = function (key, callback) {
@@ -91,11 +95,15 @@ Persist.prototype.load = function (key, callback) {
 				}
 
 				if (callback) { callback(false, data); }
+				else { return data;}
 			}
 			break;
+		default:
+			if (callback) { callback('No data handler or unrecognised data type.'); }
+			else { throw 'No data handler or unrecognised data type.'; }
 	}
 
-	if (callback) { callback('No data handler or unrecognised data type.'); }
+	
 };
 
 Persist.prototype.drop = function (key, callback) {
@@ -109,9 +117,10 @@ Persist.prototype.drop = function (key, callback) {
 
 			if (callback) { callback(false); }
 			break;
+		default:
+			if (callback) { callback('No data handler or unrecognised data type.'); }
 	}
-
-	if (callback) { callback('No data handler or unrecognised data type.'); }
+	
 };
 
 // Extend the Collection prototype with persist methods
@@ -140,7 +149,7 @@ Collection.prototype.save = function (callback) {
 	if (this._name) {
 		if (this._db) {
 			// Save the collection data
-			this._db.persist.save(this._name, this._data);
+			this._db.persist.save(this._name, this._data, callback);
 		} else {
 			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
 			return 'Cannot save a collection that is not attached to a database!';
