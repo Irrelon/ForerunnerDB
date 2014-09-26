@@ -6263,6 +6263,10 @@ Overview.prototype.find = function () {
 	return this._collData.find.apply(this._collData, arguments);
 };
 
+Overview.prototype.count = function () {
+	return this._collData.count.apply(this._collData, arguments);
+};
+
 Overview.prototype._addCollection = function (collection) {
 	if (this._collections.indexOf(collection) === -1) {
 		this._collections.push(collection);
