@@ -219,7 +219,7 @@ var idCounter = 0,
 			}
 		},
 
-		synthesize: function (obj, name) {
+		synthesize: function (obj, name, extend) {
 			this._synth[name] = this._synth[name] || function (val) {
 				if (val !== undefined) {
 					this['_' + name] = val;
@@ -229,7 +229,22 @@ var idCounter = 0,
 				return this['_' + name];
 			};
 
-			obj[name] = this._synth[name];
+			if (extend) {
+				var self = this;
+
+				obj[name] = function () {
+					var tmp = this.$super,
+						ret;
+
+					this.$super = self._synth[name];
+					ret = extend.apply(this, arguments);
+					this.$super = tmp;
+
+					return ret;
+				}
+			} else {
+				obj[name] = this._synth[name];
+			}
 		},
 
 		/**

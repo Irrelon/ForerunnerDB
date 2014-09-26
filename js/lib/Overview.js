@@ -30,9 +30,33 @@ CoreInit = Shared.modules.Core.prototype.init;
 
 Shared.synthesize(Overview.prototype, 'db');
 Shared.synthesize(Overview.prototype, 'name');
-Shared.synthesize(Overview.prototype, 'query');
-Shared.synthesize(Overview.prototype, 'queryOptions');
-Shared.synthesize(Overview.prototype, 'reduce');
+Shared.synthesize(Overview.prototype, 'query', function (val) {
+	var ret = this.$super(val);
+
+	if (val !== undefined) {
+		this._refresh();
+	}
+
+	return ret;
+});
+Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
+	var ret = this.$super(val);
+
+	if (val !== undefined) {
+		this._refresh();
+	}
+
+	return ret;
+});
+Shared.synthesize(Overview.prototype, 'reduce', function (val) {
+	var ret = this.$super(val);
+
+	if (val !== undefined) {
+		this._refresh();
+	}
+
+	return ret;
+});
 
 /**
  * Gets / sets debug flag that can enable debug message output to the
