@@ -323,8 +323,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
-		ok(newName === 'hello2', "Update single document");
+		var elem = $('#testTarget').find('#2342');
+		ok(elem.length === 0, "Document was removed because it does not match query");
 
 		base.viewDown();
 		base.domDown();
@@ -356,8 +356,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
-		ok(newName === 'hello2', "Update single document");
+		var elem = $('#testTarget').find('#2342');
+		ok(elem.length === 0, "Document was removed because it does not match query");
 
 		base.viewDown();
 		base.domDown();

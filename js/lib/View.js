@@ -182,10 +182,12 @@ View.prototype._removeCollection = function (collection) {
 };
 
 View.prototype._chainHandler = function (sender, type, data, options) {
-	var index,
+	var self = this,
+		index,
 		tempData,
 		dataIsArray,
 		updates,
+		finalUpdates,
 		primaryKey,
 		tQuery,
 		item,
@@ -211,7 +213,7 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
-
+//TODO: This needs to check if the item should actually exist in the view
 			// Decouple the data to ensure we are working with our own copy
 			data = this.decouple(data);
 
@@ -269,7 +271,29 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
+			primaryKey = this._privateData.primaryKey();
 			updates = this._privateData.update(data.query, data.update, data.options);
+
+			if (this._querySettings.query) {
+				// Check each item and remove if not matching
+				var hashTable = {},
+					removeList = [],
+					tmpQuery = self._querySettings.query;
+
+				updates.filter(function (doc) {
+					if (self._privateData._match(doc, tmpQuery, 'and')) {
+						hashTable[doc[primaryKey]] = true;
+					}
+				});
+
+				// Remove the ones that no longer match the query
+				for (index = updates.length; index >= 0; index--) {
+					if (!hashTable[updates[index][primaryKey]]) {
+						// Add to remove list
+
+					}
+				}
+			}
 
 			if (this._querySettings.options && this._querySettings.options.$orderBy) {
 				// Create a temp data array from existing view data
@@ -516,6 +540,7 @@ View.prototype.refresh = function () {
 	var sortedData,
 		collection,
 		pubData = this.publicData(),
+		tmpColl = new Collection(),
 		i;
 
 	// Re-grab all the data for the view from the collections
@@ -524,10 +549,10 @@ View.prototype.refresh = function () {
 
 	for (i = 0; i < this._collections.length; i++) {
 		collection = this._collections[i];
-		this._privateData.insert(collection.find(this._querySettings.query, this._querySettings.options));
+		tmpColl.insert(collection.find(this._querySettings.query, this._querySettings.options));
 	}
 
-	sortedData = this._privateData.find({}, this._querySettings.options);
+	sortedData = tmpColl.find({}, this._querySettings.options);
 
 	if (pubData._linked) {
 		// Update data and observers
