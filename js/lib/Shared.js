@@ -6,6 +6,7 @@ var idCounter = 0,
 	 * string,string,string
 	 * string,number,string
 	 * string,object,string,
+	 * string,function,string,
 	 * string,undefined,string
 	 *
 	 * @param {String} str Signature string with a wildcard in it.

@@ -45,6 +45,19 @@ Core.prototype.init = function () {
 	this._version = '1.2.7';
 };
 
+/**
+ * Checks if a module has been loaded into the database.
+ * @param {String} moduleName The name of the module to check for.
+ * @returns {Boolean} True if the module is loaded, false if not.
+ */
+Core.prototype.moduleLoaded = function (moduleName) {
+	if (moduleName !== undefined) {
+		return Boolean(Shared.modules[moduleName]);
+	}
+
+	return false;
+};
+
 // Provide public access to the Shared object
 Core.shared = Shared;
 Core.prototype.shared = Shared;
