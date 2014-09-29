@@ -627,7 +627,7 @@ collection changes. Here is a simple example of a data-bind that will keep the l
 the collection:
 
 ### Prerequisites
-* Data-binding requires jQuery and jsViews to be loaded
+* Data-binding requires jQuery to be loaded
 
 ### HTML
 	<ul id="myList">
