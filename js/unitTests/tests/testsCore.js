@@ -1171,11 +1171,11 @@ test("Core - Collection.upsert() :: Update on upsert call", function() {
 
 	var result = user.upsert(copy);
 
-	ok(result.op === 'update', "Complete");
+	ok(result && result.op === 'update', "Complete");
 
 	var after = user.findById("1");
 
-	ok(after.updated === true, "Complete");
+	ok(after && after.updated === true, "Complete");
 
 	base.dbDown();
 });
