@@ -45,18 +45,82 @@ Core.prototype.init = function () {
 	this._version = '1.2.7';
 };
 
-/**
- * Checks if a module has been loaded into the database.
- * @param {String} moduleName The name of the module to check for.
- * @returns {Boolean} True if the module is loaded, false if not.
- */
-Core.prototype.moduleLoaded = function (moduleName) {
-	if (moduleName !== undefined) {
-		return Boolean(Shared.modules[moduleName]);
-	}
+Core.prototype.moduleLoaded = Shared.overload({
+	/**
+	 * Checks if a module has been loaded into the database.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @returns {Boolean} True if the module is loaded, false if not.
+	 */
+	'string': function (moduleName) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
 
-	return false;
-};
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * callback method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} callback The callback method to call if module is loaded.
+	 */
+	'string, function': function (moduleName, callback) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					return false;
+				}
+			}
+
+			callback();
+		}
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * success method, otherwise calls the failure method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} success The callback method to call if module is loaded.
+	 * @param {Function} failure The callback method to call if module not loaded.
+	 */
+	'string, function, function': function (moduleName, success, failure) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					failure();
+					return false;
+				}
+			}
+
+			success();
+		}
+	}
+});
+
+// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+Core.moduleLoaded = Core.prototype.moduleLoaded;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
