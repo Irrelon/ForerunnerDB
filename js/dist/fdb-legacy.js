@@ -369,7 +369,6 @@ Collection.prototype.upsert = function (obj, callback) {
 	if (obj) {
 		var queue = this._deferQueue.upsert,
 			deferThreshold = this._deferThreshold.upsert;
-		//deferTime = this._deferTime.upsert;
 
 		var returnData = {},
 			query,
@@ -405,8 +404,7 @@ Collection.prototype.upsert = function (obj, callback) {
 			query = {};
 			query[this._primaryKey] = obj[this._primaryKey];
 
-			//TODO: Could be optimised to use the primary index lookup now?
-			if (this.count(query)) {
+			if (this._primaryIndex.lookup(query)[0]) {
 				// The document already exists with this id, this operation is an update
 				returnData.op = 'update';
 			} else {
@@ -1349,6 +1347,11 @@ Collection.prototype._insert = function (doc, index) {
 		if (!indexViolation) {
 			// Add the item to the collection's indexes
 			this._insertIndex(doc);
+
+			// Check index overflow
+			if (index > this._data.length) {
+				index = this._data.length;
+			}
 
 			// Insert the document
 			if (this._linked) {
@@ -3294,6 +3297,83 @@ Core.prototype.init = function () {
 	this._debug = {};
 	this._version = '1.2.7';
 };
+
+Core.prototype.moduleLoaded = Shared.overload({
+	/**
+	 * Checks if a module has been loaded into the database.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @returns {Boolean} True if the module is loaded, false if not.
+	 */
+	'string': function (moduleName) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * callback method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} callback The callback method to call if module is loaded.
+	 */
+	'string, function': function (moduleName, callback) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					return false;
+				}
+			}
+
+			callback();
+		}
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * success method, otherwise calls the failure method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} success The callback method to call if module is loaded.
+	 * @param {Function} failure The callback method to call if module not loaded.
+	 */
+	'string, function, function': function (moduleName, success, failure) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[moduleName]) {
+					failure();
+					return false;
+				}
+			}
+
+			success();
+		}
+	}
+});
+
+// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+Core.moduleLoaded = Core.prototype.moduleLoaded;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
@@ -6986,6 +7066,7 @@ var idCounter = 0,
 	 * string,string,string
 	 * string,number,string
 	 * string,object,string,
+	 * string,function,string,
 	 * string,undefined,string
 	 *
 	 * @param {String} str Signature string with a wildcard in it.
