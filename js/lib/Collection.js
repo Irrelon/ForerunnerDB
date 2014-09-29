@@ -91,6 +91,11 @@ Collection.prototype.crc = Crc;
  */
 Shared.synthesize(Collection.prototype, 'name');
 
+/**
+ * Attach an event listener to the passed event.
+ * @param {String} eventName The name of the event to listen for.
+ * @param {Function} callback The method to call when the event is fired.
+ */
 Collection.prototype.on = Shared.common.on;
 Collection.prototype.off = Shared.common.off;
 Collection.prototype.emit = Shared.common.emit;

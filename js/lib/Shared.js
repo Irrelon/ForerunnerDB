@@ -1,17 +1,71 @@
 var idCounter = 0,
+	/**
+	 * Generates an array of all the different definition signatures that can be
+	 * created from the passed string with a catch-all wildcard *. E.g. it will
+	 * convert the signature: string,*,string to all potentials:
+	 * string,string,string
+	 * string,number,string
+	 * string,object,string,
+	 * string,undefined,string
+	 *
+	 * @param {String} str Signature string with a wildcard in it.
+	 * @returns {Array} An array of signature strings that are generated.
+	 */
+	generateSignaturePermutations = function (str) {
+		var signatures = [],
+			newSignature,
+			types = ['string', 'object', 'number', 'function', 'undefined'],
+			index;
+
+		if (str.indexOf('*') > -1) {
+			// There is at least one "any" type, break out into multiple keys
+			// We could do this at query time with regular expressions but
+			// would be significantly slower
+			for (index = 0; index < types.length; index++) {
+				newSignature = str.replace('*', types[index]);
+				signatures = signatures.concat(generateSignaturePermutations(newSignature));
+			}
+		} else {
+			signatures.push(str);
+		}
+
+		return signatures;
+	},
+	/**
+	 * Allows a method to accept overloaded calls with different parameters controlling
+	 * which passed overload function is called.
+	 * @param {Object} def
+	 * @returns {Function}
+	 * @constructor
+	 */
 	Overload = function (def) {
 		if (def) {
 			var index,
 				count,
-				tmpDef;
+				tmpDef,
+				defNewKey,
+				sigIndex,
+				signatures;
 
 			if (!(def instanceof Array)) {
 				tmpDef = {};
 
-				// Def is an object, make sure all prop names are removed of spaces
+				// Def is an object, make sure all prop names are devoid of spaces
 				for (index in def) {
 					if (def.hasOwnProperty(index)) {
-						tmpDef[index.replace(/ /g, '')] = def[index];
+						defNewKey = index.replace(/ /g, '');
+
+						if (defNewKey.indexOf('*') === -1) {
+							tmpDef[defNewKey] = def[index];
+						} else {
+							signatures = generateSignaturePermutations(defNewKey);
+
+							for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
+								if (!tmpDef[signatures[sigIndex]]) {
+									tmpDef[signatures[sigIndex]] = def[index];
+								}
+							}
+						}
 					}
 				}
 
@@ -143,8 +197,13 @@ var idCounter = 0,
 				}
 			]),
 
-			on: new Overload([
-				function(event, listener) {
+			on: new Overload({
+				/**
+				 * Attach an event listener to the passed event.
+				 * @param {String} event The name of the event to listen for.
+				 * @param {Function} listener The method to call when the event is fired.
+				 */
+				'string, function': function (event, listener) {
 					this._listeners = this._listeners || {};
 					this._listeners[event] = this._listeners[event] || {};
 					this._listeners[event]['*'] = this._listeners[event]['*'] || [];
@@ -153,7 +212,14 @@ var idCounter = 0,
 					return this;
 				},
 
-				function(event, id, listener) {
+				/**
+				 * Attach an event listener to the passed event only if the passed
+				 * id matches the document id for the event being fired.
+				 * @param {String} event The name of the event to listen for.
+				 * @param {*} id The document id to match against.
+				 * @param {Function} listener The method to call when the event is fired.
+				 */
+				'string, *, function': function (event, id, listener) {
 					this._listeners = this._listeners || {};
 					this._listeners[event] = this._listeners[event] || {};
 					this._listeners[event][id] = this._listeners[event][id] || [];
@@ -161,10 +227,10 @@ var idCounter = 0,
 
 					return this;
 				}
-			]),
+			}),
 
-			off: new Overload([
-				function (event) {
+			off: new Overload({
+				'string': function (event) {
 					if (this._listeners && this._listeners[event] && event in this._listeners) {
 						delete this._listeners[event];
 					}
@@ -172,7 +238,7 @@ var idCounter = 0,
 					return this;
 				},
 
-				function(event, listener) {
+				'string, function': function (event, listener) {
 					var arr,
 						index;
 
@@ -194,7 +260,7 @@ var idCounter = 0,
 					return this;
 				},
 
-				function (event, id, listener) {
+				'string, *, function': function (event, id, listener) {
 					if (this._listeners && event in this._listeners) {
 						var arr = this._listeners[event][id],
 							index = arr.indexOf(listener);
@@ -204,7 +270,7 @@ var idCounter = 0,
 						}
 					}
 				}
-			]),
+			}),
 
 			emit: function (event, data) {
 				this._listeners = this._listeners || {};

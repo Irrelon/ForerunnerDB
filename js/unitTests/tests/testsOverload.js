@@ -19,6 +19,9 @@ test('Overload :: Type-based overloading', function () {
 		},
 		'string, string, number, ...': function (val1, val2) {
 			return 6;
+		},
+		'string, *, number, number, ...': function () {
+			return 7;
 		}
 	});
 
@@ -26,8 +29,9 @@ test('Overload :: Type-based overloading', function () {
 	ok(func('hello', function () {}) === 2, 'String, function arguments');
 	ok(func('hello', 4) === 3, 'String, number arguments');
 	ok(func('hello', 'goodbye') === 4, 'String, string arguments');
-	ok(func('hello', 'goodbye', 'useful') === 5, 'String, string, any arguments');
-	ok(func('hello', 'goodbye', 4, 'moo', 'foo') === 6, 'String, string, number, any arguments');
+	ok(func('hello', 'goodbye', 'useful') === 5, 'String, string, further arguments');
+	ok(func('hello', 'goodbye', 4, 'moo', 'foo') === 6, 'String, string, number, further arguments');
+	ok(func('hello', null, 4, 4, 'foo') === 7, 'String, any, number, number, further arguments');
 
 	base.dbDown();
 });
