@@ -356,7 +356,6 @@ Collection.prototype.upsert = function (obj, callback) {
 	if (obj) {
 		var queue = this._deferQueue.upsert,
 			deferThreshold = this._deferThreshold.upsert;
-		//deferTime = this._deferTime.upsert;
 
 		var returnData = {},
 			query,
@@ -392,8 +391,7 @@ Collection.prototype.upsert = function (obj, callback) {
 			query = {};
 			query[this._primaryKey] = obj[this._primaryKey];
 
-			//TODO: Could be optimised to use the primary index lookup now?
-			if (this.count(query)) {
+			if (this._primaryIndex.lookup(query)[0]) {
 				// The document already exists with this id, this operation is an update
 				returnData.op = 'update';
 			} else {
@@ -1336,6 +1334,11 @@ Collection.prototype._insert = function (doc, index) {
 		if (!indexViolation) {
 			// Add the item to the collection's indexes
 			this._insertIndex(doc);
+
+			// Check index overflow
+			if (index > this._data.length) {
+				index = this._data.length;
+			}
 
 			// Insert the document
 			if (this._linked) {
