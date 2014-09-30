@@ -2901,9 +2901,7 @@ Collection.prototype.diff = function (collection) {
 			}
 		}
 	} else {
-		// The primary keys of each collection are different so the primary
-		// key index cannot be used for diffing, do an old-fashioned diff
-
+		throw('Collection diffing requires that both collections have the same primary key!');
 	}
 
 	return diff;
