@@ -262,13 +262,20 @@ var idCounter = 0,
 				},
 
 				'string, *, function': function (event, id, listener) {
-					if (this._listeners && event in this._listeners) {
+					if (this._listeners && event in this._listeners && id in this.listeners[event]) {
 						var arr = this._listeners[event][id],
 							index = arr.indexOf(listener);
 
 						if (index > -1) {
 							arr.splice(index, 1);
 						}
+					}
+				},
+
+				'string, *': function (event, id) {
+					if (this._listeners && event in this._listeners && id in this._listeners[event]) {
+						// Kill all listeners for this event id
+						delete this._listeners[event][id];
 					}
 				}
 			}),
