@@ -881,9 +881,11 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 									if (this._match(doc[i][tmpIndex], update[i])) {
-										var moveToIndex = update[i].$index;
+										var moveToIndex = update.$index;
 
 										if (moveToIndex !== undefined) {
+											delete update.$index;
+
 											this._updateSpliceMove(doc[i], tmpIndex, moveToIndex);
 											updated = true;
 										} else {
