@@ -295,10 +295,13 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 				// Primary key violation
 				throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 			}
+		} else {
+			pIndex.set(arrItem[pKey], arrItem);
 		}
 
+		// Generate a CRC string
 		jString = JSON.stringify(arrItem);
-		pIndex.set(arrItem[pKey], arrItem);
+
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
 	}
