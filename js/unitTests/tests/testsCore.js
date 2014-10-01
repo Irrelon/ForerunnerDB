@@ -1001,6 +1001,30 @@ test("Core - Collection.update() :: $splicePush array operator", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $move array operator", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var before = user.findById("2");
+
+	ok(before.friends.length === 2, "Check for correct initial array length");
+	ok(before.friends[0] === "3" && before.friends[1] === "4", "Check for correct initial values");
+
+	var result = user.updateById("2", {
+		"$move": {
+			"friends": "3",
+			"$index": 1
+		}
+	});
+
+	var after = user.findById("2");
+
+	ok(after.friends.length === 2, "Check for correct new array length");
+	ok(after.friends[0] === "4" && after.friends[1] === "3", "Check for correct new values");
+
+	base.dbDown();
+});
+
 /*test("Core - Collection.update() :: $splicePush into empty array with incorrect index", function() {
 	base.dbUp();
 	base.dataUp();
