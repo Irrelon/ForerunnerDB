@@ -606,6 +606,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 				switch (i) {
 					case '$index':
 						// Ignore $index operators
+						operation = true;
 						break;
 
 					default:
