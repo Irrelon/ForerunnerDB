@@ -4,7 +4,7 @@
   "description": "A NoSQL document store database for browsers and Node.js.",
   "version": "1.2.7",
   "dependencies": {
-    "localforage": "git://github.com/mozilla/localForage"
+    "localforage": "^1.0.0"
   },
   "engines": {
     "node": "*"
