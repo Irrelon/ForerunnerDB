@@ -556,20 +556,22 @@ View.prototype.queryOptions = function (options, refresh) {
  * Refreshes the view data such as ordering etc.
  */
 View.prototype.refresh = function () {
-	var sortedData,
-		pubData = this.publicData();
+	if (this._from) {
+		var sortedData,
+			pubData = this.publicData();
 
-	// Re-grab all the data for the view from the collection
-	this._privateData.remove();
-	pubData.remove();
+		// Re-grab all the data for the view from the collection
+		this._privateData.remove();
+		pubData.remove();
 
-	this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
-	if (pubData._linked) {
-		// Update data and observers
-		var transformedData = this._privateData.find();
-		// TODO: Shouldn't this data get passed into a transformIn first?
-		jQuery.observable(pubData._data).refresh(transformedData);
+		if (pubData._linked) {
+			// Update data and observers
+			var transformedData = this._privateData.find();
+			// TODO: Shouldn't this data get passed into a transformIn first?
+			jQuery.observable(pubData._data).refresh(transformedData);
+		}
 	}
 
 	return this;
