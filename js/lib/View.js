@@ -247,6 +247,10 @@ View.prototype.from = function (collection) {
 	return this;
 };
 
+View.prototype.ensureIndex = function () {
+	return this._privateData.ensureIndex.apply(this._privateData, arguments);
+};
+
 View.prototype._chainHandler = function (chainPacket) {
 	var self = this,
 		index,
@@ -341,38 +345,52 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
-View.prototype._refreshSort = function (refreshData) {
+View.prototype._refreshSort = function () {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
-		var tempData,
-			currentIndex,
-			index,
-			i;
+		var self = this;
 
-		if (!refreshData) {
-			refreshData = this._privateData._data;
+		/*if (this._refreshSortDebounce) {
+			// Cancel the current debounce
+			clearTimeout(this._refreshSortDebounce);
 		}
 
-		// Create a temp data array from existing view data
-		tempData = [].concat(this._privateData._data);
+		// Set a timeout to do the refresh sort
+		this._refreshSortDebounce = setTimeout(function () {*/
+			self._refreshSortAction();
+		//}, 10);
+	}
+};
 
-		// Run the new array through the sorting system
-		tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+View.prototype._refreshSortAction = function () {
+	var tempData,
+		currentIndex,
+		refreshData,
+		index,
+		i;
 
-		// Now we have sorted data, determine where to move the updated documents
-		// Order updates by their index location
-		tempData.sort(function (a, b) {
-			return tempData.indexOf(a) - tempData.indexOf(b);
-		});
+	delete this._refreshSortDebounce;
+	//refreshData = this._privateData._data;
 
-		// Loop and add each one to the correct place
-		for (i = 0; i < refreshData.length; i++) {
-			currentIndex = this._privateData._data.indexOf(refreshData[i]);
-			index = tempData.indexOf(refreshData[i]);
+	// Create a temp data array from existing view data
+	//tempData = [].concat(this._privateData._data);
 
-			if (currentIndex !== index) {
-				// Modify the document position within the collection
-				this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-			}
+	// Run the new array through the sorting system
+	tempData = this._privateData.find({}, {$orderBy: this._querySettings.options.$orderBy, $decouple: false});
+
+	// Now we have sorted data, determine where to move the updated documents
+	// Order updates by their index location
+	/*tempData.sort(function (a, b) {
+		return tempData.indexOf(a) - tempData.indexOf(b);
+	});*/
+
+	// Loop and add each one to the correct place
+	for (i = 0; i < tempData.length; i++) {
+		currentIndex = this._privateData._data.indexOf(tempData[i]);
+		index = tempData.indexOf(tempData[i]);
+
+		if (currentIndex !== index) {
+			// Modify the document position within the collection
+			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
 		}
 	}
 };
