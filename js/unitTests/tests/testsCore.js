@@ -1001,6 +1001,35 @@ test("Core - Collection.update() :: $splicePush array operator", function() {
 	base.dbDown();
 });
 
+/*test("Core - Collection.update() :: $splicePush into empty array with incorrect index", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var coll = db.collection('test').setData({});
+	coll.insert({
+		_id: '1',
+		arr: []
+	});
+
+	var result = user.update({
+		_id: "1"
+	}, {
+		"$splicePush": {
+			"arr": {
+				name: 'testObj'
+			},
+			"$index": 1
+		}
+	});
+
+	var after = coll.findById("1");
+
+	ok(after.arr.length === 1, "Check for correct new array length");
+	ok(after.arr[0].name === "testObj", "Check for correct new values");
+
+	base.dbDown();
+});*/
+
 test("Core - Collection.updateById() :: $pull array operator", function() {
 	base.dbUp();
 	base.dataUp();

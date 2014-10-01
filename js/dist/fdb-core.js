@@ -852,6 +852,12 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								if (tempIndex !== undefined) {
 									delete update.$index;
+
+									// Check for out of bounds index
+									if (tempIndex > doc[i].length) {
+										tempIndex = doc[i].length;
+									}
+
 									this._updateSplicePush(doc[i], tempIndex, update[i]);
 									updated = true;
 								} else {

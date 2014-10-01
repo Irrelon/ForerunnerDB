@@ -859,6 +859,12 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								if (tempIndex !== undefined) {
 									delete update.$index;
+
+									// Check for out of bounds index
+									if (tempIndex > doc[i].length) {
+										tempIndex = doc[i].length;
+									}
+
 									this._updateSplicePush(doc[i], tempIndex, update[i]);
 									updated = true;
 								} else {
@@ -6710,7 +6716,7 @@ View.prototype._chainHandler = function (chainPacket) {
 			this._transformInsert(chainPacket.data, index);
 			this._privateData._insertHandle(chainPacket.data, index);
 
-			this._refreshOrder(chainPacket.data);
+			this._refreshSort(chainPacket.data);
 			break;
 
 		case 'update':
@@ -6727,7 +6733,7 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data.options
 			);
 
-			this._refreshOrder(updates);
+			this._refreshSort(updates);
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -6757,7 +6763,7 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
-View.prototype._refreshOrder = function (refreshData) {
+View.prototype._refreshSort = function (refreshData) {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
 		var tempData,
 			currentIndex,
@@ -6776,7 +6782,7 @@ View.prototype._refreshOrder = function (refreshData) {
 
 		// Now we have sorted data, determine where to move the updated documents
 		// Order updates by their index location
-		refreshData.sort(function (a, b) {
+		tempData.sort(function (a, b) {
 			return tempData.indexOf(a) - tempData.indexOf(b);
 		});
 
@@ -6785,8 +6791,10 @@ View.prototype._refreshOrder = function (refreshData) {
 			currentIndex = this._privateData._data.indexOf(refreshData[i]);
 			index = tempData.indexOf(refreshData[i]);
 
-			// Modify transform data
-			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+			if (currentIndex !== index) {
+				// Modify the document position within the collection
+				this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+			}
 		}
 	}
 };
@@ -6978,20 +6986,22 @@ View.prototype.queryOptions = function (options, refresh) {
  * Refreshes the view data such as ordering etc.
  */
 View.prototype.refresh = function () {
-	var sortedData,
-		pubData = this.publicData();
+	if (this._from) {
+		var sortedData,
+			pubData = this.publicData();
 
-	// Re-grab all the data for the view from the collection
-	this._privateData.remove();
-	pubData.remove();
+		// Re-grab all the data for the view from the collection
+		this._privateData.remove();
+		pubData.remove();
 
-	this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
-	if (pubData._linked) {
-		// Update data and observers
-		var transformedData = this._privateData.find();
-		// TODO: Shouldn't this data get passed into a transformIn first?
-		jQuery.observable(pubData._data).refresh(transformedData);
+		if (pubData._linked) {
+			// Update data and observers
+			var transformedData = this._privateData.find();
+			// TODO: Shouldn't this data get passed into a transformIn first?
+			jQuery.observable(pubData._data).refresh(transformedData);
+		}
 	}
 
 	return this;
