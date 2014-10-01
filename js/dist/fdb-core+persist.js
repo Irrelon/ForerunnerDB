@@ -3,7 +3,54 @@ var Core = _dereq_('../lib/Core'),
   Persist = _dereq_('../lib/Persist');
 
 module.exports = Core;
-},{"../lib/Core":4,"../lib/Persist":11}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":5,"../lib/Persist":12}],2:[function(_dereq_,module,exports){
+var ChainReactor = {
+	chain: function (obj) {
+		this._chain = this._chain || [];
+		var index = this._chain.indexOf(obj);
+
+		if (index === -1) {
+			this._chain.push(obj);
+		}
+	},
+	unChain: function (obj) {
+		if (this._chain) {
+			var index = this._chain.indexOf(obj);
+
+			if (index > -1) {
+				this._chain.splice(index, 1);
+			}
+		}
+	},
+	chainSend: function (type, data, options) {
+		if (this._chain) {
+			var arr = this._chain,
+				count = arr.length,
+				index;
+
+			for (index = 0; index < count; index++) {
+				arr[index].chainReceive(this, type, data, options);
+			}
+		}
+	},
+	chainReceive: function (sender, type, data, options) {
+		var chainPacket = {
+			sender: sender,
+			type: type,
+			data: data,
+			options: options
+		};
+
+		// Fire our internal handler
+		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+			// Propagate the message down the chain
+			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
+		}
+	}
+};
+
+module.exports = ChainReactor;
+},{}],3:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -59,7 +106,7 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainSystem);
+Shared.inherit(Collection.prototype, Shared.chainReactor);
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -2874,6 +2921,14 @@ Collection.prototype.diff = function (collection) {
 	if (pm === collection.primaryKey()) {
 		// Use the collection primary key index to do the diff (super-fast)
 		arr = collection._data;
+
+		// Check if we have an array or another collection
+		while (arr && !(arr instanceof Array)) {
+			// We don't have an array, assign collection and get data
+			collection = arr;
+			arr = collection._data;
+		}
+
 		arrCount = arr.length;
 
 		// Loop the collection's data array and check for matching items
@@ -2907,9 +2962,7 @@ Collection.prototype.diff = function (collection) {
 			}
 		}
 	} else {
-		// The primary keys of each collection are different so the primary
-		// key index cannot be used for diffing, do an old-fashioned diff
-
+		throw('Collection diffing requires that both collections have the same primary key!');
 	}
 
 	return diff;
@@ -2974,7 +3027,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Path":10,"./Shared":12}],3:[function(_dereq_,module,exports){
+},{"./Crc":6,"./Index":7,"./KeyValueStore":8,"./Metrics":9,"./Path":11,"./Shared":13}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -2997,7 +3050,7 @@ CollectionGroup.prototype.init = function (name) {
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
-Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
+Shared.inherit(CollectionGroup.prototype, Shared.chainReactor);
 
 Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
@@ -3111,34 +3164,35 @@ CollectionGroup.prototype.removeCollection = function (collection) {
  */
 CollectionGroup.prototype.decouple = Shared.common.decouple;
 
-CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
-	switch (type) {
+CollectionGroup.prototype._chainHandler = function (chainPacket) {
+	//sender = chainPacket.sender;
+	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Remove old data
-			this._data.remove(options.oldData);
+			this._data.remove(chainPacket.options.oldData);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'update':
 			// Update data
-			this._data.update(data.query, data.update, options);
+			this._data.update(chainPacket.data.query, chainPacket.data.update, chainPacket.options);
 			break;
 
 		case 'remove':
-			this._data.remove(data.query, options);
+			this._data.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
@@ -3243,7 +3297,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":12}],4:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":13}],5:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3373,7 +3427,7 @@ Core.shared = Shared;
 Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
-Shared.inherit(Core.prototype, Shared.chainSystem);
+Shared.inherit(Core.prototype, Shared.chainReactor);
 
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
@@ -3580,7 +3634,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Shared.js":12}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":9,"./Shared.js":13}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3608,7 +3662,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],6:[function(_dereq_,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -3641,7 +3695,7 @@ Index.prototype.init = function (keys, options, collection) {
 };
 
 Shared.addModule('Index', Index);
-Shared.inherit(Index.prototype, Shared.chainSystem);
+Shared.inherit(Index.prototype, Shared.chainReactor);
 
 Index.prototype.id = function () {
 	return this._id;
@@ -3961,7 +4015,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":10,"./Shared":12}],7:[function(_dereq_,module,exports){
+},{"./Path":11,"./Shared":13}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3982,7 +4036,7 @@ KeyValueStore.prototype.init = function (name) {
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
-Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
+Shared.inherit(KeyValueStore.prototype, Shared.chainReactor);
 
 /**
  * Get / set the name of the key/value store.
@@ -4173,7 +4227,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":12}],8:[function(_dereq_,module,exports){
+},{"./Shared":13}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4190,7 +4244,7 @@ Metrics.prototype.init = function () {
 };
 
 Shared.addModule('Metrics', Metrics);
-Shared.inherit(Metrics.prototype, Shared.chainSystem);
+Shared.inherit(Metrics.prototype, Shared.chainReactor);
 
 /**
  * Creates an operation within the metrics instance and if metrics
@@ -4245,7 +4299,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":9,"./Shared":12}],9:[function(_dereq_,module,exports){
+},{"./Operation":10,"./Shared":13}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4281,7 +4335,7 @@ Operation.prototype.init = function (name) {
 };
 
 Shared.addModule('Operation', Operation);
-Shared.inherit(Operation.prototype, Shared.chainSystem);
+Shared.inherit(Operation.prototype, Shared.chainReactor);
 
 /**
  * Starts the operation timer.
@@ -4389,7 +4443,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":10,"./Shared":12}],10:[function(_dereq_,module,exports){
+},{"./Path":11,"./Shared":13}],11:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4409,7 +4463,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
-Shared.inherit(Path.prototype, Shared.chainSystem);
+Shared.inherit(Path.prototype, Shared.chainReactor);
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -4799,7 +4853,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":12}],11:[function(_dereq_,module,exports){
+},{"./Shared":13}],12:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared = _dereq_('./Shared'),
 	Core,
@@ -4824,7 +4878,7 @@ Persist.prototype.init = function (db) {
 };
 
 Shared.addModule('Persist', Persist);
-Shared.inherit(Persist.prototype, Shared.chainSystem);
+Shared.inherit(Persist.prototype, Shared.chainReactor);
 
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection');
@@ -4996,7 +5050,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":12}],12:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":13}],13:[function(_dereq_,module,exports){
 var idCounter = 0,
 	/**
 	 * Generates an array of all the different definition signatures that can be
@@ -5118,7 +5172,11 @@ var idCounter = 0,
 		modules: {},
 		common: {
 			decouple: function (data) {
-				return JSON.parse(JSON.stringify(data));
+				if (data !== undefined) {
+					return JSON.parse(JSON.stringify(data));
+				}
+
+				return undefined;
 			},
 			objectId: function (str) {
 				var id,
@@ -5261,13 +5319,20 @@ var idCounter = 0,
 				},
 
 				'string, *, function': function (event, id, listener) {
-					if (this._listeners && event in this._listeners) {
+					if (this._listeners && event in this._listeners && id in this.listeners[event]) {
 						var arr = this._listeners[event][id],
 							index = arr.indexOf(listener);
 
 						if (index > -1) {
 							arr.splice(index, 1);
 						}
+					}
+				},
+
+				'string, *': function (event, id) {
+					if (this._listeners && event in this._listeners && id in this._listeners[event]) {
+						// Kill all listeners for this event id
+						delete this._listeners[event][id];
 					}
 				}
 			}),
@@ -5365,45 +5430,9 @@ var idCounter = 0,
 		overload: Overload,
 
 		// Inheritable systems
-		chainSystem: {
-			chain: function (obj) {
-				this._chain = this._chain || [];
-				var index = this._chain.indexOf(obj);
-
-				if (index === -1) {
-					this._chain.push(obj);
-				}
-			},
-			unChain: function (obj) {
-				if (this._chain) {
-					var index = this._chain.indexOf(obj);
-
-					if (index > -1) {
-						this._chain.splice(index, 1);
-					}
-				}
-			},
-			chainSend: function (type, data, options) {
-				if (this._chain) {
-					var arr = this._chain,
-						count = arr.length,
-						index;
-
-					for (index = 0; index < count; index++) {
-						arr[index].chainReceive(this, type, data, options);
-					}
-				}
-			},
-			chainReceive: function (sender, type, data, options) {
-				// Fire our internal handler
-				if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
-					// Propagate the message down the chain
-					this.chainSend(type, data, options);
-				}
-			}
-		}
+		chainReactor: _dereq_('./ChainReactor')
 	};
 
 module.exports = Shared;
-},{}]},{},[1])(1)
+},{"./ChainReactor":2}]},{},[1])(1)
 });
