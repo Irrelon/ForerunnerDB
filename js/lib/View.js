@@ -288,7 +288,7 @@ View.prototype._chainHandler = function (chainPacket) {
 			this._transformInsert(chainPacket.data, index);
 			this._privateData._insertHandle(chainPacket.data, index);
 
-			this._refreshOrder(chainPacket.data);
+			this._refreshSort(chainPacket.data);
 			break;
 
 		case 'update':
@@ -305,7 +305,7 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data.options
 			);
 
-			this._refreshOrder(updates);
+			this._refreshSort(updates);
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -335,7 +335,7 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
-View.prototype._refreshOrder = function (refreshData) {
+View.prototype._refreshSort = function (refreshData) {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
 		var tempData,
 			currentIndex,
@@ -354,7 +354,7 @@ View.prototype._refreshOrder = function (refreshData) {
 
 		// Now we have sorted data, determine where to move the updated documents
 		// Order updates by their index location
-		refreshData.sort(function (a, b) {
+		tempData.sort(function (a, b) {
 			return tempData.indexOf(a) - tempData.indexOf(b);
 		});
 
@@ -363,8 +363,10 @@ View.prototype._refreshOrder = function (refreshData) {
 			currentIndex = this._privateData._data.indexOf(refreshData[i]);
 			index = tempData.indexOf(refreshData[i]);
 
-			// Modify transform data
-			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+			if (currentIndex !== index) {
+				// Modify the document position within the collection
+				this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+			}
 		}
 	}
 };
