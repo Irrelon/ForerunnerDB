@@ -354,10 +354,13 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 				// Primary key violation
 				throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 			}
+		} else {
+			pIndex.set(arrItem[pKey], arrItem);
 		}
-		
+
+		// Generate a CRC string
 		jString = JSON.stringify(arrItem);
-		pIndex.set(arrItem[pKey], arrItem);
+
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
 	}
@@ -514,13 +517,13 @@ Collection.prototype.update = function (query, update, options) {
 		updated,
 		updateCall = function (doc) {
 			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
-				// Remove item from primary index
-				self._primaryIndex.unSet(doc[pKey]);
+				// Remove item from indexes
+				self._removeIndex(doc);
 
 				var result = self._updateObject(doc, update, query, options, '');
 
 				// Update the item in the primary index
-				if (self._primaryIndex.uniqueSet(doc[pKey], doc)) {
+				if (self._insertIndex(doc)) {
 					return result;
 				} else {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
@@ -1432,10 +1435,11 @@ Collection.prototype._insert = function (doc, index) {
 Collection.prototype._insertIndex = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
+		violated,
 		jString = JSON.stringify(doc);
 
 	// Insert to primary key index
-	this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
 	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
 	this._crcLookup.uniqueSet(jString, doc);
 
@@ -1445,6 +1449,8 @@ Collection.prototype._insertIndex = function (doc) {
 			arr[arrIndex].insert(doc);
 		}
 	}
+
+	return violated;
 };
 
 /**
