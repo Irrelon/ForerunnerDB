@@ -110,7 +110,10 @@ View.prototype.link = function (outputTargetSelector, templateSelector) {
 	if (this.debug()) {
 		console.log('ForerunnerDB.View: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 	}
-	return publicData.link(outputTargetSelector, templateSelector);
+
+	publicData.link(outputTargetSelector, templateSelector);
+
+	return this;
 };
 
 View.prototype.unlink = function (outputTargetSelector, templateSelector) {
@@ -118,7 +121,10 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 	if (this.debug()) {
 		console.log('ForerunnerDB.View: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 	}
-	return publicData.unlink(outputTargetSelector, templateSelector);
+
+	publicData.unlink(outputTargetSelector, templateSelector);
+
+	return this;
 };
 
 /**
