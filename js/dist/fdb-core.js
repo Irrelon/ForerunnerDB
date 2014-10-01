@@ -2681,6 +2681,8 @@ Collection.prototype.link = function (outputTargetSelector, templateSelector) {
 	} else {
 		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
 	}
+
+	return this;
 };
 
 /**
@@ -2727,6 +2729,8 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 	} else {
 		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
 	}
+
+	return this;
 };
 
 /**
