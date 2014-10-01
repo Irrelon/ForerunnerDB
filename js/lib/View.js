@@ -3,7 +3,8 @@ var Shared,
 	Core,
 	Collection,
 	CollectionInit,
-	CoreInit;
+	CoreInit,
+	ReactorIO;
 
 Shared = require('./Shared');
 
@@ -18,7 +19,6 @@ var View = function (name, query, options) {
 
 View.prototype.init = function (name, query, options) {
 	this._name = name;
-	this._collections = [];
 	this._groups = [];
 	this._listeners = {};
 	this._querySettings = {
@@ -31,10 +31,11 @@ View.prototype.init = function (name, query, options) {
 };
 
 Shared.addModule('View', View);
-Shared.inherit(View.prototype, Shared.chainSystem);
+Shared.inherit(View.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
+ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -57,41 +58,31 @@ Shared.synthesize(View.prototype, 'name');
 View.prototype.debug = Shared.common.debug;
 
 /**
- * Executes an insert against all data-sources (collections) this view is
- * linked to.
+ * Executes an insert against the data-source this view is linked to.
  */
 View.prototype.insert = function () {
-	this._collectionsRun('insert', arguments);
+	this._from.insert.apply(this._from, arguments);
 };
 
 /**
- * Executes an update against all data-sources (collections) this view is
- * linked to.
+ * Executes an update against the data-source this view is linked to.
  */
 View.prototype.update = function () {
-	this._collectionsRun('update', arguments);
+	this._from.update.apply(this._from, arguments);
 };
 
 /**
- * Executes an updateById against all data-sources (collections) this view is
- * linked to.
+ * Executes an updateById against the data-source this view is linked to.
  */
 View.prototype.updateById = function () {
-	this._collectionsRun('updateById', arguments);
+	this._from.updateById.apply(this._from, arguments);
 };
 
 /**
- * Executes an remove against all data-sources (collections) this view is
- * linked to.
+ * Executes a remove against the data-source this view is linked to.
  */
 View.prototype.remove = function () {
-	this._collectionsRun('remove', arguments);
-};
-
-View.prototype._collectionsRun = function (type, args) {
-	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i][type].apply(this._collections[i], args);
-	}
+	this._from.remove.apply(this._from, arguments);
 };
 
 /**
@@ -143,21 +134,100 @@ View.prototype.decouple = Shared.common.decouple;
  * @returns {View}
  */
 View.prototype.from = function (collection) {
+	var self = this;
+
 	if (collection !== undefined) {
 		if (typeof(collection) === 'string') {
 			collection = this._db.collection(collection);
 		}
 
-		this._addCollection(collection);
-	}
+		this._from = collection;
 
-	return this;
-};
+		// Create a new reactor IO graph node that intercepts chain packets from the
+		// view's "from" collection and determines how they should be interpreted by
+		// this view. If the view does not have a query then this reactor IO will
+		// simply pass along the chain packet without modifying it.
+		this._io = new ReactorIO(collection, this, function (chainPacket) {
+			var data,
+				diff,
+				query,
+				filteredData,
+				doSend,
+				pk,
+				i;
 
-View.prototype._addCollection = function (collection) {
-	if (this._collections.indexOf(collection) === -1) {
-		this._collections.push(collection);
-		collection.chain(this);
+			if (chainPacket.type === 'insert') {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					data = chainPacket.data;
+
+					// Check if the data matches our query
+					if (data instanceof Array) {
+						filteredData = [];
+
+						for (i = 0; i < data.length; i++) {
+							if (self._privateData._match(data[i], self._querySettings.query, 'and')) {
+								filteredData.push(data[i]);
+								doSend = true;
+							}
+						}
+					} else {
+						if (self._privateData._match(data, self._querySettings.query, 'and')) {
+							filteredData = data;
+							doSend = true;
+						}
+					}
+
+					if (doSend) {
+						this.chainSend('insert', filteredData);
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			if (chainPacket.type === 'update') {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					// Do a DB diff between this view's data and the underlying collection it reads from
+					// to see if something has changed
+					diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
+
+					if (diff.insert.length || diff.remove.length) {
+						// Now send out new chain packets for each operation
+						if (diff.insert.length) {
+							this.chainSend('insert', diff.insert);
+						}
+
+						if (diff.update.length) {
+							pk = self._privateData.primaryKey();
+							for (i = 0; i < diff.update.length; i++) {
+								query = {};
+								query[pk] = diff.update[i][pk];
+
+								this.chainSend('update', {
+									query: query,
+									update: diff.update[i]
+								});
+							}
+						}
+
+						if (diff.remove.length) {
+							this.chainSend('remove', diff.remove);
+						}
+
+						// Return true to stop further propagation of the chain packet
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		});
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
@@ -167,21 +237,11 @@ View.prototype._addCollection = function (collection) {
 		this._privateData.primaryKey(collection.primaryKey());
 		this._privateData.insert(collData);
 	}
-	return this;
-};
-
-View.prototype._removeCollection = function (collection) {
-	var collectionIndex = this._collections.indexOf(collection);
-	if (collectionIndex > -1) {
-		this._collections.splice(collection, 1);
-		collection.unChain(this);
-		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
-	}
 
 	return this;
 };
 
-View.prototype._chainHandler = function (sender, type, data, options) {
+View.prototype._chainHandler = function (chainPacket) {
 	var self = this,
 		index,
 		tempData,
@@ -194,76 +254,41 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 		currentIndex,
 		i;
 
-	switch (type) {
+	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Modify transform data
-			this._transformSetData(data);
-
-			this._privateData.setData(data);
+			this._transformSetData(chainPacket.data);
+			this._privateData.setData(chainPacket.data);
 			break;
 
 		case 'insert':
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
-//TODO: This needs to check if the item should actually exist in the view
+
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
-			// Check if our view has an orderBy clause
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-				dataIsArray = data instanceof Array;
-
-				// Add our new data
-				if (dataIsArray) {
-					tempData = tempData.concat(data);
-				} else {
-					tempData.push(data);
-				}
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine how to insert it in the correct locations
-				// in our existing data array for this view
-				if (dataIsArray) {
-					// We have an array of documents, order them by their index location
-					data.sort(function (a, b) {
-						return tempData.indexOf(a) - tempData.indexOf(b);
-					});
-
-					// loop and add each one to the correct place
-					for (i = 0; i < data.length; i++) {
-						index = tempData.indexOf(data[i]);
-
-						// Modify transform data
-						this._transformInsert(data, index);
-						this._privateData._insertHandle(data, index);
-					}
-				} else {
-					index = tempData.indexOf(data);
-
-					// Modify transform data
-					this._transformInsert(data, index);
-					this._privateData._insertHandle(data, index);
-				}
-			} else {
-				// Set the insert index to the passed index, or if none, the end of the view data array
-				index = options && options.index ? options.index : this._privateData._data.length;
-
-				// Modify transform data
-				this._transformInsert(data, index);
-				this._privateData._insertHandle(data, index);
+			// Make sure we are working with an array
+			if (!(chainPacket.data instanceof Array)) {
+				chainPacket.data = [chainPacket.data];
 			}
+
+			// Set the insert index to the passed index, or if none, the end of the view data array
+			index = this._privateData._data.length;
+
+			// Modify transform data
+			this._transformInsert(chainPacket.data, index);
+			this._privateData._insertHandle(chainPacket.data, index);
+
+			this._refreshOrder(chainPacket.data);
 			break;
 
 		case 'update':
@@ -272,51 +297,15 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			primaryKey = this._privateData.primaryKey();
-			updates = this._privateData.update(data.query, data.update, data.options);
 
-			if (this._querySettings.query) {
-				// Check each item and remove if not matching
-				var hashTable = {},
-					removeList = [],
-					tmpQuery = self._querySettings.query;
+			// Do the update
+			updates = this._privateData.update(
+				chainPacket.data.query,
+				chainPacket.data.update,
+				chainPacket.data.options
+			);
 
-				updates.filter(function (doc) {
-					if (self._privateData._match(doc, tmpQuery, 'and')) {
-						hashTable[doc[primaryKey]] = true;
-					}
-				});
-
-				// Remove the ones that no longer match the query
-				for (index = updates.length; index >= 0; index--) {
-					if (!hashTable[updates[index][primaryKey]]) {
-						// Add to remove list
-
-					}
-				}
-			}
-
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine where to move the updated documents
-				// Order updates by their index location
-				updates.sort(function (a, b) {
-					return tempData.indexOf(a) - tempData.indexOf(b);
-				});
-
-				// Loop and add each one to the correct place
-				for (i = 0; i < updates.length; i++) {
-					currentIndex = this._privateData._data.indexOf(updates[i]);
-					index = tempData.indexOf(updates[i]);
-
-					// Modify transform data
-					this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-				}
-			}
+			this._refreshOrder(updates);
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -337,13 +326,46 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Modify transform data
-			this._transformRemove(data.query, options);
-
-			this._privateData.remove(data.query, options);
+			this._transformRemove(chainPacket.data.query, chainPacket.options);
+			this._privateData.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
 			break;
+	}
+};
+
+View.prototype._refreshOrder = function (refreshData) {
+	if (this._querySettings.options && this._querySettings.options.$orderBy) {
+		var tempData,
+			currentIndex,
+			index,
+			i;
+
+		if (!refreshData) {
+			refreshData = this._privateData._data;
+		}
+
+		// Create a temp data array from existing view data
+		tempData = [].concat(this._privateData._data);
+
+		// Run the new array through the sorting system
+		tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+		// Now we have sorted data, determine where to move the updated documents
+		// Order updates by their index location
+		refreshData.sort(function (a, b) {
+			return tempData.indexOf(a) - tempData.indexOf(b);
+		});
+
+		// Loop and add each one to the correct place
+		for (i = 0; i < refreshData.length; i++) {
+			currentIndex = this._privateData._data.indexOf(refreshData[i]);
+			index = tempData.indexOf(refreshData[i]);
+
+			// Modify transform data
+			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+		}
 	}
 };
 
@@ -364,16 +386,13 @@ View.prototype.emit = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._collections && this._collections.length) {
+	if (this._from) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
-		// Loop collections and remove us from them
-		var arrCount = this._collections.length;
-		while (arrCount--) {
-			this._removeCollection(this._collections[arrCount]);
-		}
+		// Clear io and chains
+		this._io.drop();
 
 		// Drop the view's internal collection
 		this._privateData.drop();
@@ -538,30 +557,19 @@ View.prototype.queryOptions = function (options, refresh) {
  */
 View.prototype.refresh = function () {
 	var sortedData,
-		collection,
-		pubData = this.publicData(),
-		tmpColl = new Collection(),
-		i;
+		pubData = this.publicData();
 
-	// Re-grab all the data for the view from the collections
+	// Re-grab all the data for the view from the collection
 	this._privateData.remove();
 	pubData.remove();
 
-	for (i = 0; i < this._collections.length; i++) {
-		collection = this._collections[i];
-		tmpColl.insert(collection.find(this._querySettings.query, this._querySettings.options));
-	}
-
-	sortedData = tmpColl.find({}, this._querySettings.options);
+	this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
 	if (pubData._linked) {
 		// Update data and observers
+		var transformedData = this._privateData.find();
 		// TODO: Shouldn't this data get passed into a transformIn first?
-		jQuery.observable(pubData._data).refresh(sortedData);
-	} else {
-		// Update the underlying data with the new sorted data
-		this._privateData._data.length = 0;
-		this._privateData._data = this._privateData._data.concat(sortedData);
+		jQuery.observable(pubData._data).refresh(transformedData);
 	}
 
 	return this;

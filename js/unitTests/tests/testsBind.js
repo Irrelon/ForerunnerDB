@@ -297,6 +297,32 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
+	test("Bind - View.on() with query :: Insert from Collection With Item That Does Not Match View Query", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.query({
+			name: 'hello'
+		}).link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		user.insert({
+			_id: '2342',
+			name: "hello333"
+		});
+
+		var elem = $('#testTarget').find('#2342');
+
+		ok(elem.length === 0, "Didn't insert single document");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
+
 	test("Bind - View.on() with query :: Update from Collection", function () {
 		base.dbUp();
 		base.dataUp();

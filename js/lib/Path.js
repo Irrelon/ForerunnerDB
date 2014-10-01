@@ -17,7 +17,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
-Shared.inherit(Path.prototype, Shared.chainSystem);
+Shared.inherit(Path.prototype, Shared.chainReactor);
 
 /**
  * Gets / sets the given path for the Path instance.

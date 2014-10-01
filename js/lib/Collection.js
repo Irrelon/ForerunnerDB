@@ -53,7 +53,7 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainSystem);
+Shared.inherit(Collection.prototype, Shared.chainReactor);
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -2868,6 +2868,14 @@ Collection.prototype.diff = function (collection) {
 	if (pm === collection.primaryKey()) {
 		// Use the collection primary key index to do the diff (super-fast)
 		arr = collection._data;
+
+		// Check if we have an array or another collection
+		while (arr && !(arr instanceof Array)) {
+			// We don't have an array, assign collection and get data
+			collection = arr;
+			arr = collection._data;
+		}
+
 		arrCount = arr.length;
 
 		// Loop the collection's data array and check for matching items

@@ -24,7 +24,7 @@ test("CollectionGroup -> View - Chains CRUD - insert", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
-		group = db.collectionGroup('testView'),
+		group = db.collectionGroup('testViewGroup'),
 		view = db.view('testGroupView');
 
 	group.addCollection(coll);
@@ -46,7 +46,7 @@ test("CollectionGroup -> View - Chains CRUD - updated", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
-		group = db.collectionGroup('testView'),
+		group = db.collectionGroup('testViewGroup'),
 		view = db.view('testGroupView');
 
 	group.addCollection(coll);
@@ -74,7 +74,7 @@ test("CollectionGroup -> View - Chains CRUD - remove", function() {
 	base.dbUp();
 
 	var coll = db.collection('test'),
-		group = db.collectionGroup('testView'),
+		group = db.collectionGroup('testViewGroup'),
 		view = db.view('testGroupView');
 
 	group.addCollection(coll);

@@ -22,7 +22,7 @@ Persist.prototype.init = function (db) {
 };
 
 Shared.addModule('Persist', Persist);
-Shared.inherit(Persist.prototype, Shared.chainSystem);
+Shared.inherit(Persist.prototype, Shared.chainReactor);
 
 Core = Shared.modules.Core;
 Collection = require('./Collection');

@@ -15,7 +15,7 @@ Document.prototype.init = function (name) {
 };
 
 Shared.addModule('Document', Document);
-Shared.inherit(Document.prototype, Shared.chainSystem);
+Shared.inherit(Document.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;

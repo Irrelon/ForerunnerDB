@@ -14,7 +14,7 @@ Metrics.prototype.init = function () {
 };
 
 Shared.addModule('Metrics', Metrics);
-Shared.inherit(Metrics.prototype, Shared.chainSystem);
+Shared.inherit(Metrics.prototype, Shared.chainReactor);
 
 /**
  * Creates an operation within the metrics instance and if metrics

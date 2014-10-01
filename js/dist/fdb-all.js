@@ -9,7 +9,54 @@ var Core = require('../lib/Core'),
 	jsviews = require('../lib/vendor/jsviews');
 
 module.exports = Core;
-},{"../lib/CollectionGroup":3,"../lib/Core":4,"../lib/Document":6,"../lib/Highcharts":7,"../lib/Overview":12,"../lib/Persist":14,"../lib/View":16,"../lib/vendor/jsviews":17}],2:[function(require,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":13,"../lib/Persist":15,"../lib/View":18,"../lib/vendor/jsviews":19}],2:[function(require,module,exports){
+var ChainReactor = {
+	chain: function (obj) {
+		this._chain = this._chain || [];
+		var index = this._chain.indexOf(obj);
+
+		if (index === -1) {
+			this._chain.push(obj);
+		}
+	},
+	unChain: function (obj) {
+		if (this._chain) {
+			var index = this._chain.indexOf(obj);
+
+			if (index > -1) {
+				this._chain.splice(index, 1);
+			}
+		}
+	},
+	chainSend: function (type, data, options) {
+		if (this._chain) {
+			var arr = this._chain,
+				count = arr.length,
+				index;
+
+			for (index = 0; index < count; index++) {
+				arr[index].chainReceive(this, type, data, options);
+			}
+		}
+	},
+	chainReceive: function (sender, type, data, options) {
+		var chainPacket = {
+			sender: sender,
+			type: type,
+			data: data,
+			options: options
+		};
+
+		// Fire our internal handler
+		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+			// Propagate the message down the chain
+			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
+		}
+	}
+};
+
+module.exports = ChainReactor;
+},{}],3:[function(require,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -65,7 +112,7 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainSystem);
+Shared.inherit(Collection.prototype, Shared.chainReactor);
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -2880,6 +2927,14 @@ Collection.prototype.diff = function (collection) {
 	if (pm === collection.primaryKey()) {
 		// Use the collection primary key index to do the diff (super-fast)
 		arr = collection._data;
+
+		// Check if we have an array or another collection
+		while (arr && !(arr instanceof Array)) {
+			// We don't have an array, assign collection and get data
+			collection = arr;
+			arr = collection._data;
+		}
+
 		arrCount = arr.length;
 
 		// Loop the collection's data array and check for matching items
@@ -2913,9 +2968,7 @@ Collection.prototype.diff = function (collection) {
 			}
 		}
 	} else {
-		// The primary keys of each collection are different so the primary
-		// key index cannot be used for diffing, do an old-fashioned diff
-
+		throw('Collection diffing requires that both collections have the same primary key!');
 	}
 
 	return diff;
@@ -2980,7 +3033,7 @@ Core.prototype.collections = function () {
 };
 
 module.exports = Collection;
-},{"./Crc":5,"./Index":8,"./KeyValueStore":9,"./Metrics":10,"./Path":13,"./Shared":15}],3:[function(require,module,exports){
+},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":14,"./Shared":17}],4:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3003,7 +3056,7 @@ CollectionGroup.prototype.init = function (name) {
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
-Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
+Shared.inherit(CollectionGroup.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
@@ -3117,34 +3170,35 @@ CollectionGroup.prototype.removeCollection = function (collection) {
  */
 CollectionGroup.prototype.decouple = Shared.common.decouple;
 
-CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
-	switch (type) {
+CollectionGroup.prototype._chainHandler = function (chainPacket) {
+	//sender = chainPacket.sender;
+	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Remove old data
-			this._data.remove(options.oldData);
+			this._data.remove(chainPacket.options.oldData);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'update':
 			// Update data
-			this._data.update(data.query, data.update, options);
+			this._data.update(chainPacket.data.query, chainPacket.data.update, chainPacket.options);
 			break;
 
 		case 'remove':
-			this._data.remove(data.query, options);
+			this._data.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
@@ -3249,7 +3303,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":15}],4:[function(require,module,exports){
+},{"./Collection":3,"./Shared":17}],5:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3379,7 +3433,7 @@ Core.shared = Shared;
 Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
-Shared.inherit(Core.prototype, Shared.chainSystem);
+Shared.inherit(Core.prototype, Shared.chainReactor);
 
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
@@ -3586,7 +3640,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":10,"./Shared.js":15}],5:[function(require,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Shared.js":17}],6:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3614,7 +3668,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var Shared,
 	Collection,
 	Core,
@@ -3632,7 +3686,7 @@ Document.prototype.init = function (name) {
 };
 
 Shared.addModule('Document', Document);
-Shared.inherit(Document.prototype, Shared.chainSystem);
+Shared.inherit(Document.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
@@ -4102,7 +4156,7 @@ Core.prototype.document = function (documentName) {
 };
 
 module.exports = Document;
-},{"./Collection":2,"./Shared":15}],7:[function(require,module,exports){
+},{"./Collection":3,"./Shared":17}],8:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4361,7 +4415,7 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":15}],8:[function(require,module,exports){
+},{"./Shared":17}],9:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4394,7 +4448,7 @@ Index.prototype.init = function (keys, options, collection) {
 };
 
 Shared.addModule('Index', Index);
-Shared.inherit(Index.prototype, Shared.chainSystem);
+Shared.inherit(Index.prototype, Shared.chainReactor);
 
 Index.prototype.id = function () {
 	return this._id;
@@ -4714,7 +4768,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":13,"./Shared":15}],9:[function(require,module,exports){
+},{"./Path":14,"./Shared":17}],10:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -4735,7 +4789,7 @@ KeyValueStore.prototype.init = function (name) {
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
-Shared.inherit(KeyValueStore.prototype, Shared.chainSystem);
+Shared.inherit(KeyValueStore.prototype, Shared.chainReactor);
 
 /**
  * Get / set the name of the key/value store.
@@ -4926,7 +4980,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":15}],10:[function(require,module,exports){
+},{"./Shared":17}],11:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Operation = require('./Operation');
 
@@ -4943,7 +4997,7 @@ Metrics.prototype.init = function () {
 };
 
 Shared.addModule('Metrics', Metrics);
-Shared.inherit(Metrics.prototype, Shared.chainSystem);
+Shared.inherit(Metrics.prototype, Shared.chainReactor);
 
 /**
  * Creates an operation within the metrics instance and if metrics
@@ -4998,7 +5052,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":11,"./Shared":15}],11:[function(require,module,exports){
+},{"./Operation":12,"./Shared":17}],12:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -5034,7 +5088,7 @@ Operation.prototype.init = function (name) {
 };
 
 Shared.addModule('Operation', Operation);
-Shared.inherit(Operation.prototype, Shared.chainSystem);
+Shared.inherit(Operation.prototype, Shared.chainReactor);
 
 /**
  * Starts the operation timer.
@@ -5142,7 +5196,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":13,"./Shared":15}],12:[function(require,module,exports){
+},{"./Path":14,"./Shared":17}],13:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5166,7 +5220,7 @@ Overview.prototype.init = function (name) {
 };
 
 Shared.addModule('Overview', Overview);
-Shared.inherit(Overview.prototype, Shared.chainSystem);
+Shared.inherit(Overview.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Document = require('./Document');
@@ -5282,8 +5336,8 @@ Overview.prototype._refresh = function () {
 
 };
 
-Overview.prototype._chainHandler = function (sender, type, data, options) {
-	switch (type) {
+Overview.prototype._chainHandler = function (chainPacket) {
+	switch (chainPacket.type) {
 		case 'setData':
 		case 'insert':
 		case 'update':
@@ -5337,7 +5391,7 @@ Core.prototype.overview = function (overviewName) {
 };
 
 module.exports = Overview;
-},{"./Collection":2,"./Document":6,"./Shared":15}],13:[function(require,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":17}],14:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -5357,7 +5411,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
-Shared.inherit(Path.prototype, Shared.chainSystem);
+Shared.inherit(Path.prototype, Shared.chainReactor);
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -5747,7 +5801,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":15}],14:[function(require,module,exports){
+},{"./Shared":17}],15:[function(require,module,exports){
 // Import external names locally
 var Shared = require('./Shared'),
 	Core,
@@ -5772,7 +5826,7 @@ Persist.prototype.init = function (db) {
 };
 
 Shared.addModule('Persist', Persist);
-Shared.inherit(Persist.prototype, Shared.chainSystem);
+Shared.inherit(Persist.prototype, Shared.chainReactor);
 
 Core = Shared.modules.Core;
 Collection = require('./Collection');
@@ -5944,7 +5998,44 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":15}],15:[function(require,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":17}],16:[function(require,module,exports){
+var Shared = require('./Shared');
+
+var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
+	if (reactorIn && reactorOut && reactorProcess) {
+		this._reactorIn = reactorIn;
+		this._reactorOut = reactorOut;
+		this._chainHandler = reactorProcess;
+
+		if (!reactorIn.chain || !reactorOut.chainReceive) {
+			throw('ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
+		}
+
+		// Register the reactorIO with the input
+		reactorIn.chain(this);
+
+		// Register the output with the reactorIO
+		this.chain(reactorOut);
+	} else {
+		throw('ReactorIO requires an in, out and process argument to instantiate!');
+	}
+};
+
+ReactorIO.prototype.drop = function () {
+	// Remove links
+	this._reactorIn.unChain(this);
+	this.unChain(this._reactorOut);
+
+	delete this._reactorIn;
+	delete this._reactorOut;
+	delete this._chainHandler;
+};
+
+Shared.addModule('ReactorIO', ReactorIO);
+Shared.inherit(ReactorIO.prototype, Shared.chainReactor);
+
+module.exports = ReactorIO;
+},{"./Shared":17}],17:[function(require,module,exports){
 var idCounter = 0,
 	/**
 	 * Generates an array of all the different definition signatures that can be
@@ -6066,7 +6157,11 @@ var idCounter = 0,
 		modules: {},
 		common: {
 			decouple: function (data) {
-				return JSON.parse(JSON.stringify(data));
+				if (data !== undefined) {
+					return JSON.parse(JSON.stringify(data));
+				}
+
+				return undefined;
 			},
 			objectId: function (str) {
 				var id,
@@ -6209,13 +6304,20 @@ var idCounter = 0,
 				},
 
 				'string, *, function': function (event, id, listener) {
-					if (this._listeners && event in this._listeners) {
+					if (this._listeners && event in this._listeners && id in this.listeners[event]) {
 						var arr = this._listeners[event][id],
 							index = arr.indexOf(listener);
 
 						if (index > -1) {
 							arr.splice(index, 1);
 						}
+					}
+				},
+
+				'string, *': function (event, id) {
+					if (this._listeners && event in this._listeners && id in this._listeners[event]) {
+						// Kill all listeners for this event id
+						delete this._listeners[event][id];
 					}
 				}
 			}),
@@ -6313,53 +6415,18 @@ var idCounter = 0,
 		overload: Overload,
 
 		// Inheritable systems
-		chainSystem: {
-			chain: function (obj) {
-				this._chain = this._chain || [];
-				var index = this._chain.indexOf(obj);
-
-				if (index === -1) {
-					this._chain.push(obj);
-				}
-			},
-			unChain: function (obj) {
-				if (this._chain) {
-					var index = this._chain.indexOf(obj);
-
-					if (index > -1) {
-						this._chain.splice(index, 1);
-					}
-				}
-			},
-			chainSend: function (type, data, options) {
-				if (this._chain) {
-					var arr = this._chain,
-						count = arr.length,
-						index;
-
-					for (index = 0; index < count; index++) {
-						arr[index].chainReceive(this, type, data, options);
-					}
-				}
-			},
-			chainReceive: function (sender, type, data, options) {
-				// Fire our internal handler
-				if (!this._chainHandler || (this._chainHandler && !this._chainHandler(sender, type, data, options))) {
-					// Propagate the message down the chain
-					this.chainSend(type, data, options);
-				}
-			}
-		}
+		chainReactor: require('./ChainReactor')
 	};
 
 module.exports = Shared;
-},{}],16:[function(require,module,exports){
+},{"./ChainReactor":2}],18:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	Collection,
 	CollectionInit,
-	CoreInit;
+	CoreInit,
+	ReactorIO;
 
 Shared = require('./Shared');
 
@@ -6374,7 +6441,6 @@ var View = function (name, query, options) {
 
 View.prototype.init = function (name, query, options) {
 	this._name = name;
-	this._collections = [];
 	this._groups = [];
 	this._listeners = {};
 	this._querySettings = {
@@ -6387,10 +6453,11 @@ View.prototype.init = function (name, query, options) {
 };
 
 Shared.addModule('View', View);
-Shared.inherit(View.prototype, Shared.chainSystem);
+Shared.inherit(View.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
+ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -6413,41 +6480,31 @@ Shared.synthesize(View.prototype, 'name');
 View.prototype.debug = Shared.common.debug;
 
 /**
- * Executes an insert against all data-sources (collections) this view is
- * linked to.
+ * Executes an insert against the data-source this view is linked to.
  */
 View.prototype.insert = function () {
-	this._collectionsRun('insert', arguments);
+	this._from.insert.apply(this._from, arguments);
 };
 
 /**
- * Executes an update against all data-sources (collections) this view is
- * linked to.
+ * Executes an update against the data-source this view is linked to.
  */
 View.prototype.update = function () {
-	this._collectionsRun('update', arguments);
+	this._from.update.apply(this._from, arguments);
 };
 
 /**
- * Executes an updateById against all data-sources (collections) this view is
- * linked to.
+ * Executes an updateById against the data-source this view is linked to.
  */
 View.prototype.updateById = function () {
-	this._collectionsRun('updateById', arguments);
+	this._from.updateById.apply(this._from, arguments);
 };
 
 /**
- * Executes an remove against all data-sources (collections) this view is
- * linked to.
+ * Executes a remove against the data-source this view is linked to.
  */
 View.prototype.remove = function () {
-	this._collectionsRun('remove', arguments);
-};
-
-View.prototype._collectionsRun = function (type, args) {
-	for (var i = 0; i < this._collections.length; i++) {
-		this._collections[i][type].apply(this._collections[i], args);
-	}
+	this._from.remove.apply(this._from, arguments);
 };
 
 /**
@@ -6499,21 +6556,100 @@ View.prototype.decouple = Shared.common.decouple;
  * @returns {View}
  */
 View.prototype.from = function (collection) {
+	var self = this;
+
 	if (collection !== undefined) {
 		if (typeof(collection) === 'string') {
 			collection = this._db.collection(collection);
 		}
 
-		this._addCollection(collection);
-	}
+		this._from = collection;
 
-	return this;
-};
+		// Create a new reactor IO graph node that intercepts chain packets from the
+		// view's "from" collection and determines how they should be interpreted by
+		// this view. If the view does not have a query then this reactor IO will
+		// simply pass along the chain packet without modifying it.
+		this._io = new ReactorIO(collection, this, function (chainPacket) {
+			var data,
+				diff,
+				query,
+				filteredData,
+				doSend,
+				pk,
+				i;
 
-View.prototype._addCollection = function (collection) {
-	if (this._collections.indexOf(collection) === -1) {
-		this._collections.push(collection);
-		collection.chain(this);
+			if (chainPacket.type === 'insert') {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					data = chainPacket.data;
+
+					// Check if the data matches our query
+					if (data instanceof Array) {
+						filteredData = [];
+
+						for (i = 0; i < data.length; i++) {
+							if (self._privateData._match(data[i], self._querySettings.query, 'and')) {
+								filteredData.push(data[i]);
+								doSend = true;
+							}
+						}
+					} else {
+						if (self._privateData._match(data, self._querySettings.query, 'and')) {
+							filteredData = data;
+							doSend = true;
+						}
+					}
+
+					if (doSend) {
+						this.chainSend('insert', filteredData);
+					}
+
+					return true;
+				}
+
+				return false;
+			}
+
+			if (chainPacket.type === 'update') {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					// Do a DB diff between this view's data and the underlying collection it reads from
+					// to see if something has changed
+					diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
+
+					if (diff.insert.length || diff.remove.length) {
+						// Now send out new chain packets for each operation
+						if (diff.insert.length) {
+							this.chainSend('insert', diff.insert);
+						}
+
+						if (diff.update.length) {
+							pk = self._privateData.primaryKey();
+							for (i = 0; i < diff.update.length; i++) {
+								query = {};
+								query[pk] = diff.update[i][pk];
+
+								this.chainSend('update', {
+									query: query,
+									update: diff.update[i]
+								});
+							}
+						}
+
+						if (diff.remove.length) {
+							this.chainSend('remove', diff.remove);
+						}
+
+						// Return true to stop further propagation of the chain packet
+						return true;
+					} else {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			}
+		});
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
@@ -6523,21 +6659,11 @@ View.prototype._addCollection = function (collection) {
 		this._privateData.primaryKey(collection.primaryKey());
 		this._privateData.insert(collData);
 	}
-	return this;
-};
-
-View.prototype._removeCollection = function (collection) {
-	var collectionIndex = this._collections.indexOf(collection);
-	if (collectionIndex > -1) {
-		this._collections.splice(collection, 1);
-		collection.unChain(this);
-		this._privateData.remove(collection.find(this._querySettings.query, this._querySettings.options));
-	}
 
 	return this;
 };
 
-View.prototype._chainHandler = function (sender, type, data, options) {
+View.prototype._chainHandler = function (chainPacket) {
 	var self = this,
 		index,
 		tempData,
@@ -6550,76 +6676,41 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 		currentIndex,
 		i;
 
-	switch (type) {
+	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Modify transform data
-			this._transformSetData(data);
-
-			this._privateData.setData(data);
+			this._transformSetData(chainPacket.data);
+			this._privateData.setData(chainPacket.data);
 			break;
 
 		case 'insert':
 			if (this.debug()) {
 				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
-//TODO: This needs to check if the item should actually exist in the view
+
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
-			// Check if our view has an orderBy clause
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-				dataIsArray = data instanceof Array;
-
-				// Add our new data
-				if (dataIsArray) {
-					tempData = tempData.concat(data);
-				} else {
-					tempData.push(data);
-				}
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine how to insert it in the correct locations
-				// in our existing data array for this view
-				if (dataIsArray) {
-					// We have an array of documents, order them by their index location
-					data.sort(function (a, b) {
-						return tempData.indexOf(a) - tempData.indexOf(b);
-					});
-
-					// loop and add each one to the correct place
-					for (i = 0; i < data.length; i++) {
-						index = tempData.indexOf(data[i]);
-
-						// Modify transform data
-						this._transformInsert(data, index);
-						this._privateData._insertHandle(data, index);
-					}
-				} else {
-					index = tempData.indexOf(data);
-
-					// Modify transform data
-					this._transformInsert(data, index);
-					this._privateData._insertHandle(data, index);
-				}
-			} else {
-				// Set the insert index to the passed index, or if none, the end of the view data array
-				index = options && options.index ? options.index : this._privateData._data.length;
-
-				// Modify transform data
-				this._transformInsert(data, index);
-				this._privateData._insertHandle(data, index);
+			// Make sure we are working with an array
+			if (!(chainPacket.data instanceof Array)) {
+				chainPacket.data = [chainPacket.data];
 			}
+
+			// Set the insert index to the passed index, or if none, the end of the view data array
+			index = this._privateData._data.length;
+
+			// Modify transform data
+			this._transformInsert(chainPacket.data, index);
+			this._privateData._insertHandle(chainPacket.data, index);
+
+			this._refreshOrder(chainPacket.data);
 			break;
 
 		case 'update':
@@ -6628,51 +6719,15 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			primaryKey = this._privateData.primaryKey();
-			updates = this._privateData.update(data.query, data.update, data.options);
 
-			if (this._querySettings.query) {
-				// Check each item and remove if not matching
-				var hashTable = {},
-					removeList = [],
-					tmpQuery = self._querySettings.query;
+			// Do the update
+			updates = this._privateData.update(
+				chainPacket.data.query,
+				chainPacket.data.update,
+				chainPacket.data.options
+			);
 
-				updates.filter(function (doc) {
-					if (this._privateData._match(doc, tmpQuery, 'and')) {
-						hashTable[doc[primaryKey]] = true;
-					}
-				});
-
-				// Remove the ones that no longer match the query
-				for (index = updates.length; index >= 0; index--) {
-					if (!hashTable[updates[index][primaryKey]]) {
-						// Add to remove list
-
-					}
-				}
-			}
-
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Create a temp data array from existing view data
-				tempData = [].concat(this._privateData._data);
-
-				// Run the new array through the sorting system
-				tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
-
-				// Now we have sorted data, determine where to move the updated documents
-				// Order updates by their index location
-				updates.sort(function (a, b) {
-					return tempData.indexOf(a) - tempData.indexOf(b);
-				});
-
-				// Loop and add each one to the correct place
-				for (i = 0; i < updates.length; i++) {
-					currentIndex = this._privateData._data.indexOf(updates[i]);
-					index = tempData.indexOf(updates[i]);
-
-					// Modify transform data
-					this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-				}
-			}
+			this._refreshOrder(updates);
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -6693,13 +6748,46 @@ View.prototype._chainHandler = function (sender, type, data, options) {
 			}
 
 			// Modify transform data
-			this._transformRemove(data.query, options);
-
-			this._privateData.remove(data.query, options);
+			this._transformRemove(chainPacket.data.query, chainPacket.options);
+			this._privateData.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
 			break;
+	}
+};
+
+View.prototype._refreshOrder = function (refreshData) {
+	if (this._querySettings.options && this._querySettings.options.$orderBy) {
+		var tempData,
+			currentIndex,
+			index,
+			i;
+
+		if (!refreshData) {
+			refreshData = this._privateData._data;
+		}
+
+		// Create a temp data array from existing view data
+		tempData = [].concat(this._privateData._data);
+
+		// Run the new array through the sorting system
+		tempData = this._privateData.sort(this._querySettings.options.$orderBy, tempData);
+
+		// Now we have sorted data, determine where to move the updated documents
+		// Order updates by their index location
+		refreshData.sort(function (a, b) {
+			return tempData.indexOf(a) - tempData.indexOf(b);
+		});
+
+		// Loop and add each one to the correct place
+		for (i = 0; i < refreshData.length; i++) {
+			currentIndex = this._privateData._data.indexOf(refreshData[i]);
+			index = tempData.indexOf(refreshData[i]);
+
+			// Modify transform data
+			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
+		}
 	}
 };
 
@@ -6720,16 +6808,13 @@ View.prototype.emit = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._collections && this._collections.length) {
+	if (this._from) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
-		// Loop collections and remove us from them
-		var arrCount = this._collections.length;
-		while (arrCount--) {
-			this._removeCollection(this._collections[arrCount]);
-		}
+		// Clear io and chains
+		this._io.drop();
 
 		// Drop the view's internal collection
 		this._privateData.drop();
@@ -6894,30 +6979,19 @@ View.prototype.queryOptions = function (options, refresh) {
  */
 View.prototype.refresh = function () {
 	var sortedData,
-		collection,
-		pubData = this.publicData(),
-		tmpColl = new Collection(),
-		i;
+		pubData = this.publicData();
 
-	// Re-grab all the data for the view from the collections
+	// Re-grab all the data for the view from the collection
 	this._privateData.remove();
 	pubData.remove();
 
-	for (i = 0; i < this._collections.length; i++) {
-		collection = this._collections[i];
-		tmpColl.insert(collection.find(this._querySettings.query, this._querySettings.options));
-	}
-
-	sortedData = tmpColl.find({}, this._querySettings.options);
+	this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
 	if (pubData._linked) {
 		// Update data and observers
+		var transformedData = this._privateData.find();
 		// TODO: Shouldn't this data get passed into a transformIn first?
-		jQuery.observable(pubData._data).refresh(sortedData);
-	} else {
-		// Update the underlying data with the new sorted data
-		this._privateData._data.length = 0;
-		this._privateData._data = this._privateData._data.concat(sortedData);
+		jQuery.observable(pubData._data).refresh(transformedData);
 	}
 
 	return this;
@@ -7165,7 +7239,7 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":15}],17:[function(require,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":16,"./Shared":17}],19:[function(require,module,exports){
 /*! jsviews.js v1.0.0-alpha single-file version:
 includes JsRender, JsObservable and JsViews  http://github.com/BorisMoore/jsrender and http://jsviews.com/jsviews
 informal pre V1.0 commit counter: 56 (Beta Candidate) */

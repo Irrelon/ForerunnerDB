@@ -21,7 +21,7 @@ Overview.prototype.init = function (name) {
 };
 
 Shared.addModule('Overview', Overview);
-Shared.inherit(Overview.prototype, Shared.chainSystem);
+Shared.inherit(Overview.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Document = require('./Document');
@@ -137,8 +137,8 @@ Overview.prototype._refresh = function () {
 
 };
 
-Overview.prototype._chainHandler = function (sender, type, data, options) {
-	switch (type) {
+Overview.prototype._chainHandler = function (chainPacket) {
+	switch (chainPacket.type) {
 		case 'setData':
 		case 'insert':
 		case 'update':

@@ -127,7 +127,7 @@ Core.shared = Shared;
 Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
-Shared.inherit(Core.prototype, Shared.chainSystem);
+Shared.inherit(Core.prototype, Shared.chainReactor);
 
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');

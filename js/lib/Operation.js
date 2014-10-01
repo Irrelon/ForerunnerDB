@@ -33,7 +33,7 @@ Operation.prototype.init = function (name) {
 };
 
 Shared.addModule('Operation', Operation);
-Shared.inherit(Operation.prototype, Shared.chainSystem);
+Shared.inherit(Operation.prototype, Shared.chainReactor);
 
 /**
  * Starts the operation timer.

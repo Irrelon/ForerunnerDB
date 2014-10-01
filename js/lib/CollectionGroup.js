@@ -20,7 +20,7 @@ CollectionGroup.prototype.init = function (name) {
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
-Shared.inherit(CollectionGroup.prototype, Shared.chainSystem);
+Shared.inherit(CollectionGroup.prototype, Shared.chainReactor);
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
@@ -134,34 +134,35 @@ CollectionGroup.prototype.removeCollection = function (collection) {
  */
 CollectionGroup.prototype.decouple = Shared.common.decouple;
 
-CollectionGroup.prototype._chainHandler = function (sender, type, data, options) {
-	switch (type) {
+CollectionGroup.prototype._chainHandler = function (chainPacket) {
+	//sender = chainPacket.sender;
+	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Remove old data
-			this._data.remove(options.oldData);
+			this._data.remove(chainPacket.options.oldData);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			data = this.decouple(data);
+			chainPacket.data = this.decouple(chainPacket.data);
 
 			// Add new data
-			this._data.insert(data);
+			this._data.insert(chainPacket.data);
 			break;
 
 		case 'update':
 			// Update data
-			this._data.update(data.query, data.update, options);
+			this._data.update(chainPacket.data.query, chainPacket.data.update, chainPacket.options);
 			break;
 
 		case 'remove':
-			this._data.remove(data.query, options);
+			this._data.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
