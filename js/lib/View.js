@@ -349,15 +349,15 @@ View.prototype._refreshSort = function () {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
 		var self = this;
 
-		/*if (this._refreshSortDebounce) {
+		if (this._refreshSortDebounce) {
 			// Cancel the current debounce
 			clearTimeout(this._refreshSortDebounce);
 		}
 
 		// Set a timeout to do the refresh sort
-		this._refreshSortDebounce = setTimeout(function () {*/
+		this._refreshSortDebounce = setTimeout(function () {
 			self._refreshSortAction();
-		//}, 10);
+		}, 10);
 	}
 };
 
