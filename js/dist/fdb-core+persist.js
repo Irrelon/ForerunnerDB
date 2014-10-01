@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
   Persist = _dereq_('../lib/Persist');
 
@@ -349,11 +349,14 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 				throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 			}
 		} else {
-			jString = JSON.stringify(arrItem);
 			pIndex.set(arrItem[pKey], arrItem);
-			crcIndex.set(arrItem[pKey], jString);
-			crcLookup.set(jString, arrItem);
 		}
+
+		// Generate a CRC string
+		jString = JSON.stringify(arrItem);
+
+		crcIndex.set(arrItem[pKey], jString);
+		crcLookup.set(jString, arrItem);
 	}
 };
 
@@ -508,13 +511,13 @@ Collection.prototype.update = function (query, update, options) {
 		updated,
 		updateCall = function (doc) {
 			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
-				// Remove item from primary index
-				self._primaryIndex.unSet(doc[pKey]);
+				// Remove item from indexes
+				self._removeIndex(doc);
 
 				var result = self._updateObject(doc, update, query, options, '');
 
 				// Update the item in the primary index
-				if (self._primaryIndex.uniqueSet(doc[pKey], doc)) {
+				if (self._insertIndex(doc)) {
 					return result;
 				} else {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
@@ -1426,10 +1429,11 @@ Collection.prototype._insert = function (doc, index) {
 Collection.prototype._insertIndex = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
+		violated,
 		jString = JSON.stringify(doc);
 
 	// Insert to primary key index
-	this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
 	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
 	this._crcLookup.uniqueSet(jString, doc);
 
@@ -1439,6 +1443,8 @@ Collection.prototype._insertIndex = function (doc) {
 			arr[arrIndex].insert(doc);
 		}
 	}
+
+	return violated;
 };
 
 /**
@@ -5447,5 +5453,6 @@ var idCounter = 0,
 	};
 
 module.exports = Shared;
-},{"./ChainReactor":2}]},{},[1])(1)
+},{"./ChainReactor":2}]},{},[1])
+(1)
 });
