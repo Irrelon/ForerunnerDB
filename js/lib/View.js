@@ -349,7 +349,7 @@ View.prototype._refreshSort = function () {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
 		var self = this;
 
-		if (this._refreshSortDebounce) {
+		/*if (this._refreshSortDebounce) {
 			// Cancel the current debounce
 			clearTimeout(this._refreshSortDebounce);
 		}
@@ -357,7 +357,9 @@ View.prototype._refreshSort = function () {
 		// Set a timeout to do the refresh sort
 		this._refreshSortDebounce = setTimeout(function () {
 			self._refreshSortAction();
-		}, 10);
+		}, 10);*/
+
+		self._refreshSortAction();
 	}
 };
 
@@ -594,9 +596,10 @@ View.prototype.refresh = function () {
 
 		if (pubData._linked) {
 			// Update data and observers
-			var transformedData = this._privateData.find();
+			//var transformedData = this._privateData.find();
 			// TODO: Shouldn't this data get passed into a transformIn first?
-			jQuery.observable(pubData._data).refresh(transformedData);
+			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
+			//jQuery.observable(pubData._data).refresh(transformedData);
 		}
 	}
 
