@@ -1988,7 +1988,7 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
-	} else {
+	} else if (dataPath.value === -1) {
 		// Sort descending
 		sorterMethod = function (a, b) {
 			var valA = pathSolver.value(a)[0],
@@ -2006,6 +2006,8 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
+	} else {
+		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
