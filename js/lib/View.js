@@ -230,7 +230,16 @@ View.prototype.from = function (collection) {
 						}
 
 						if (diff.remove.length) {
-							this.chainSend('remove', diff.remove);
+							var $or = [],
+								removeQuery = {
+									$or: $or
+								};
+
+							for (i = 0; i < diff.remove.length; i++) {
+								$or.push({_id: diff.remove[i][pk]});
+							}
+
+							this.chainSend('remove', removeQuery);
 						}
 
 						// Return true to stop further propagation of the chain packet
