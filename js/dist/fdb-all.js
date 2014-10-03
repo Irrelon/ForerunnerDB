@@ -6691,6 +6691,7 @@ View.prototype.from = function (collection) {
 						}
 
 						if (diff.remove.length) {
+							pk = self._privateData.primaryKey();
 							var $or = [],
 								removeQuery = {
 									$or: $or
