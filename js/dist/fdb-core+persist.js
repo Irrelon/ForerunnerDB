@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
   Persist = _dereq_('../lib/Persist');
 
@@ -2041,7 +2041,7 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
-	} else {
+	} else if (dataPath.value === -1) {
 		// Sort descending
 		sorterMethod = function (a, b) {
 			var valA = pathSolver.value(a)[0],
@@ -2059,6 +2059,8 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
+	} else {
+		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2741,6 +2743,15 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 	}
 
 	return this;
+};
+
+/**
+ * If the collection has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Collection.prototype.isLinked = function () {
+	return Boolean(this._data._linked);
 };
 
 /**
@@ -5453,6 +5464,5 @@ var idCounter = 0,
 	};
 
 module.exports = Shared;
-},{"./ChainReactor":2}]},{},[1])
-(1)
+},{"./ChainReactor":2}]},{},[1])(1)
 });

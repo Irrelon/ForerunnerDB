@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	View = _dereq_('../lib/View');
 
@@ -2041,7 +2041,7 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
-	} else {
+	} else if (dataPath.value === -1) {
 		// Sort descending
 		sorterMethod = function (a, b) {
 			var valA = pathSolver.value(a)[0],
@@ -2059,6 +2059,8 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
+	} else {
+		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2741,6 +2743,15 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 	}
 
 	return this;
+};
+
+/**
+ * If the collection has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Collection.prototype.isLinked = function () {
+	return Boolean(this._data._linked);
 };
 
 /**
@@ -5424,6 +5435,15 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 };
 
 /**
+ * If the view has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+View.prototype.isLinked = function () {
+	return this._privateData.isLinked();
+};
+
+/**
  * Returns a non-referenced version of the passed object / array.
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
@@ -5517,7 +5537,16 @@ View.prototype.from = function (collection) {
 						}
 
 						if (diff.remove.length) {
-							this.chainSend('remove', diff.remove);
+							var $or = [],
+								removeQuery = {
+									$or: $or
+								};
+
+							for (i = 0; i < diff.remove.length; i++) {
+								$or.push({_id: diff.remove[i][pk]});
+							}
+
+							this.chainSend('remove', removeQuery);
 						}
 
 						// Return true to stop further propagation of the chain packet
@@ -5645,7 +5674,7 @@ View.prototype._refreshSort = function () {
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
 		var self = this;
 
-		if (this._refreshSortDebounce) {
+		/*if (this._refreshSortDebounce) {
 			// Cancel the current debounce
 			clearTimeout(this._refreshSortDebounce);
 		}
@@ -5653,7 +5682,9 @@ View.prototype._refreshSort = function () {
 		// Set a timeout to do the refresh sort
 		this._refreshSortDebounce = setTimeout(function () {
 			self._refreshSortAction();
-		}, 10);
+		}, 10);*/
+
+		self._refreshSortAction();
 	}
 };
 
@@ -5890,9 +5921,10 @@ View.prototype.refresh = function () {
 
 		if (pubData._linked) {
 			// Update data and observers
-			var transformedData = this._privateData.find();
+			//var transformedData = this._privateData.find();
 			// TODO: Shouldn't this data get passed into a transformIn first?
-			jQuery.observable(pubData._data).refresh(transformedData);
+			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
+			//jQuery.observable(pubData._data).refresh(transformedData);
 		}
 	}
 
@@ -6141,6 +6173,5 @@ Core.prototype.views = function () {
 };
 
 module.exports = View;
-},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":12,"./Shared":13}]},{},[1])
-(1)
+},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":12,"./Shared":13}]},{},[1])(1)
 });

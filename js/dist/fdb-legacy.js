@@ -2048,7 +2048,7 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
-	} else {
+	} else if (dataPath.value === -1) {
 		// Sort descending
 		sorterMethod = function (a, b) {
 			var valA = pathSolver.value(a)[0],
@@ -2066,6 +2066,8 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
+	} else {
+		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2748,6 +2750,15 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 	}
 
 	return this;
+};
+
+/**
+ * If the collection has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Collection.prototype.isLinked = function () {
+	return Boolean(this._data._linked);
 };
 
 /**
@@ -6506,6 +6517,15 @@ Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
 	this._refresh();
 };
 
+/**
+ * If the overview has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Overview.prototype.isLinked = function () {
+	return this._data.isLinked();
+};
+
 // Extend DB to include collection groups
 Core.prototype.init = function () {
 	this._overview = {};
@@ -7682,6 +7702,15 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 };
 
 /**
+ * If the view has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+View.prototype.isLinked = function () {
+	return this._privateData.isLinked();
+};
+
+/**
  * Returns a non-referenced version of the passed object / array.
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
@@ -7775,7 +7804,16 @@ View.prototype.from = function (collection) {
 						}
 
 						if (diff.remove.length) {
-							this.chainSend('remove', diff.remove);
+							var $or = [],
+								removeQuery = {
+									$or: $or
+								};
+
+							for (i = 0; i < diff.remove.length; i++) {
+								$or.push({_id: diff.remove[i][pk]});
+							}
+
+							this.chainSend('remove', removeQuery);
 						}
 
 						// Return true to stop further propagation of the chain packet

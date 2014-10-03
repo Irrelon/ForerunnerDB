@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	Persist = _dereq_('../lib/LocalForage');
 
@@ -2041,7 +2041,7 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
-	} else {
+	} else if (dataPath.value === -1) {
 		// Sort descending
 		sorterMethod = function (a, b) {
 			var valA = pathSolver.value(a)[0],
@@ -2059,6 +2059,8 @@ Collection.prototype._sort = function (key, arr) {
 
 			return 0;
 		};
+	} else {
+		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2741,6 +2743,15 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 	}
 
 	return this;
+};
+
+/**
+ * If the collection has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Collection.prototype.isLinked = function () {
+	return Boolean(this._data._linked);
 };
 
 /**
@@ -5947,8 +5958,8 @@ function asap(task) {
 module.exports = asap;
 
 
-}).call(this,_dereq_("lppjwH"))
-},{"lppjwH":22}],18:[function(_dereq_,module,exports){
+}).call(this,_dereq_('_process'))
+},{"_process":22}],18:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -5959,6 +5970,9 @@ module.exports = asap;
     // Promises!
     var Promise = (typeof module !== 'undefined' && module.exports) ?
                   _dereq_('promise') : this.Promise;
+
+    var db = null;
+    var dbInfo = {};
 
     // Initialize IndexedDB; fall back to vendor-prefixed versions if needed.
     var indexedDB = indexedDB || this.indexedDB || this.webkitIndexedDB ||
@@ -5973,11 +5987,6 @@ module.exports = asap;
     // Open the IndexedDB database (automatically creates one if one didn't
     // previously exist), using any options set in the config.
     function _initStorage(options) {
-        var _this = this;
-        var dbInfo = {
-            db: null
-        };
-
         if (options) {
             for (var i in options) {
                 dbInfo[i] = options[i];
@@ -5994,8 +6003,7 @@ module.exports = asap;
                 openreq.result.createObjectStore(dbInfo.storeName);
             };
             openreq.onsuccess = function() {
-                dbInfo.db = openreq.result;
-                _this._dbInfo = dbInfo;
+                db = openreq.result;
                 resolve();
             };
         });
@@ -6003,18 +6011,9 @@ module.exports = asap;
 
     function getItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                var store = db.transaction(dbInfo.storeName, 'readonly')
                               .objectStore(dbInfo.storeName);
                 var req = store.get(key);
 
@@ -6039,18 +6038,9 @@ module.exports = asap;
 
     function setItem(key, value, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
+                var store = db.transaction(dbInfo.storeName, 'readwrite')
                               .objectStore(dbInfo.storeName);
 
                 // The reason we don't _save_ null is because IE 10 does
@@ -6087,18 +6077,9 @@ module.exports = asap;
 
     function removeItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
+                var store = db.transaction(dbInfo.storeName, 'readwrite')
                               .objectStore(dbInfo.storeName);
 
                 // We use a Grunt task to make this safe for IE and some
@@ -6126,18 +6107,16 @@ module.exports = asap;
                 };
             }).catch(reject);
         });
-
+    
         executeDeferedCallback(promise, callback);
         return promise;
     }
 
     function clear(callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
+                var store = db.transaction(dbInfo.storeName, 'readwrite')
                               .objectStore(dbInfo.storeName);
                 var req = store.clear();
 
@@ -6157,11 +6136,9 @@ module.exports = asap;
 
     function length(callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                var store = db.transaction(dbInfo.storeName, 'readonly')
                               .objectStore(dbInfo.storeName);
                 var req = store.count();
 
@@ -6181,7 +6158,6 @@ module.exports = asap;
 
     function key(n, callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             if (n < 0) {
                 resolve(null);
@@ -6190,8 +6166,7 @@ module.exports = asap;
             }
 
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                var store = db.transaction(dbInfo.storeName, 'readonly')
                               .objectStore(dbInfo.storeName);
 
                 var advanced = false;
@@ -6237,8 +6212,7 @@ module.exports = asap;
 
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                var store = db.transaction(dbInfo.storeName, 'readonly')
                               .objectStore(dbInfo.storeName);
 
                 var req = store.openCursor();
@@ -6268,10 +6242,8 @@ module.exports = asap;
 
     function executeCallback(promise, callback) {
         if (callback) {
-            promise.then(function(result) {
-                callback(null, result);
-            }, function(error) {
-                callback(error);
+            promise.then(callback, function(error) {
+                callback(null, error);
             });
         }
     }
@@ -6281,7 +6253,7 @@ module.exports = asap;
             promise.then(function(result) {
                 deferCallback(callback, result);
             }, function(error) {
-                callback(error);
+                    callback(null, error);
             });
         }
     }
@@ -6291,10 +6263,10 @@ module.exports = asap;
     // call stack to be empty.
     // For more info : https://github.com/mozilla/localForage/issues/175
     // Pull request : https://github.com/mozilla/localForage/pull/178
-    function deferCallback(callback, result) {
+    function deferCallback(callback, value) {
         if (callback) {
             return setTimeout(function() {
-                return callback(null, result);
+                return callback(value);
             }, 0);
         }
     }
@@ -6330,6 +6302,8 @@ module.exports = asap;
 (function() {
     'use strict';
 
+    var keyPrefix = '';
+    var dbInfo = {};
     // Promises!
     var Promise = (typeof module !== 'undefined' && module.exports) ?
                   _dereq_('promise') : this.Promise;
@@ -6355,17 +6329,14 @@ module.exports = asap;
 
     // Config the localStorage backend, using options set in the config.
     function _initStorage(options) {
-        var _this = this;
-        var dbInfo = {};
         if (options) {
             for (var i in options) {
                 dbInfo[i] = options[i];
             }
         }
 
-        dbInfo.keyPrefix = dbInfo.name + '/';
+        keyPrefix = dbInfo.name + '/';
 
-        _this._dbInfo = dbInfo;
         return Promise.resolve();
     }
 
@@ -6408,19 +6379,10 @@ module.exports = asap;
     // is `undefined`, we pass that value to the callback function.
     function getItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
                 try {
-                    var dbInfo = _this._dbInfo;
-                    var result = localStorage.getItem(dbInfo.keyPrefix + key);
+                    var result = localStorage.getItem(keyPrefix + key);
 
                     // If a result was found, parse it from the serialized
                     // string into a JS object. If result isn't truthy, the key
@@ -6446,7 +6408,6 @@ module.exports = asap;
         var _this = this;
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
                 var result;
                 try {
                     result = localStorage.key(n);
@@ -6456,7 +6417,7 @@ module.exports = asap;
 
                 // Remove the prefix from the key, if a key is found.
                 if (result) {
-                    result = result.substring(dbInfo.keyPrefix.length);
+                    result = result.substring(keyPrefix.length);
                 }
 
                 resolve(result);
@@ -6471,13 +6432,11 @@ module.exports = asap;
         var _this = this;
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
                 var length = localStorage.length;
                 var keys = [];
 
                 for (var i = 0; i < length; i++) {
-                    keys.push(localStorage.key(i)
-                                          .substring(dbInfo.keyPrefix.length));
+                    keys.push(localStorage.key(i).substring(keyPrefix.length));
                 }
 
                 resolve(keys);
@@ -6506,18 +6465,9 @@ module.exports = asap;
     // Remove an item from the store, nice and simple.
     function removeItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                localStorage.removeItem(dbInfo.keyPrefix + key);
+                localStorage.removeItem(keyPrefix + key);
 
                 resolve();
             }).catch(reject);
@@ -6622,8 +6572,7 @@ module.exports = asap;
         //
         // TODO: See why those tests fail and use a better solution.
         if (value && (value.toString() === '[object ArrayBuffer]' ||
-                      value.buffer &&
-                      value.buffer.toString() === '[object ArrayBuffer]')) {
+                      value.buffer && value.buffer.toString() === '[object ArrayBuffer]')) {
             // Convert binary arrays to a string and prefix the string with
             // a special marker.
             var buffer;
@@ -6654,12 +6603,12 @@ module.exports = asap;
                 } else if (valueString === '[object Float64Array]') {
                     marker += TYPE_FLOAT64ARRAY;
                 } else {
-                    callback(new Error('Failed to get type for BinaryArray'));
+                    callback(new Error("Failed to get type for BinaryArray"));
                 }
             }
 
             callback(marker + _bufferToString(buffer));
-        } else if (valueString === '[object Blob]') {
+        } else if (valueString === "[object Blob]") {
             // Conver the blob to a binaryArray and then to a string.
             var fileReader = new FileReader();
 
@@ -6674,10 +6623,11 @@ module.exports = asap;
             try {
                 callback(JSON.stringify(value));
             } catch (e) {
-                window.console.error("Couldn't convert value into a JSON " +
-                                     'string: ', value);
+                if (this.console && this.console.error) {
+                    this.console.error("Couldn't convert value into a JSON string: ", value);
+                }
 
-                callback(e);
+                callback(null, e);
             }
         }
     }
@@ -6688,14 +6638,6 @@ module.exports = asap;
     // saved, or something like that.
     function setItem(key, value, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
                 // Convert undefined values to null.
@@ -6712,8 +6654,7 @@ module.exports = asap;
                         reject(error);
                     } else {
                         try {
-                            var dbInfo = _this._dbInfo;
-                            localStorage.setItem(dbInfo.keyPrefix + key, value);
+                            localStorage.setItem(keyPrefix + key, value);
                         } catch (e) {
                             // localStorage capacity exceeded.
                             // TODO: Make this a specific error/event.
@@ -6722,7 +6663,7 @@ module.exports = asap;
                                 reject(e);
                             }
                         }
-
+                        
                         resolve(originalValue);
                     }
                 });
@@ -6735,10 +6676,8 @@ module.exports = asap;
 
     function executeCallback(promise, callback) {
         if (callback) {
-            promise.then(function(result) {
-                callback(null, result);
-            }, function(error) {
-                callback(error);
+            promise.then(callback, function(error) {
+                callback(null, error);
             });
         }
     }
@@ -6790,6 +6729,8 @@ module.exports = asap;
                   _dereq_('promise') : this.Promise;
 
     var openDatabase = this.openDatabase;
+    var db = null;
+    var dbInfo = {};
 
     var SERIALIZED_MARKER = '__lfsc__:';
     var SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER.length;
@@ -6806,8 +6747,7 @@ module.exports = asap;
     var TYPE_UINT32ARRAY = 'ui32';
     var TYPE_FLOAT32ARRAY = 'fl32';
     var TYPE_FLOAT64ARRAY = 'fl64';
-    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
-                                        TYPE_ARRAYBUFFER.length;
+    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH + TYPE_ARRAYBUFFER.length;
 
     // If WebSQL methods aren't available, we can stop now.
     if (!openDatabase) {
@@ -6818,14 +6758,10 @@ module.exports = asap;
     // previously exist), using any options set in the config.
     function _initStorage(options) {
         var _this = this;
-        var dbInfo = {
-            db: null
-        };
 
         if (options) {
             for (var i in options) {
-                dbInfo[i] = typeof(options[i]) !== 'string' ?
-                            options[i].toString() : options[i];
+                dbInfo[i] = typeof(options[i]) !== 'string' ? options[i].toString() : options[i];
             }
         }
 
@@ -6833,23 +6769,16 @@ module.exports = asap;
             // Open the database; the openDatabase API will automatically
             // create it for us if it doesn't exist.
             try {
-                dbInfo.db = openDatabase(dbInfo.name, String(dbInfo.version),
-                                         dbInfo.description, dbInfo.size);
+                db = openDatabase(dbInfo.name, dbInfo.version,
+                                  dbInfo.description, dbInfo.size);
             } catch (e) {
-                return _this.setDriver('localStorageWrapper')
-                    .then(function() {
-                        return _this._initStorage(options);
-                    })
-                    .then(resolve)
-                    .catch(reject);
+                return _this.setDriver('localStorageWrapper').then(resolve, reject);
             }
 
             // Create our key/value table if it doesn't exist.
-            dbInfo.db.transaction(function(t) {
+            db.transaction(function(t) {
                 t.executeSql('CREATE TABLE IF NOT EXISTS ' + dbInfo.storeName +
-                             ' (id INTEGER PRIMARY KEY, key unique, value)', [],
-                             function() {
-                    _this._dbInfo = dbInfo;
+                             ' (id INTEGER PRIMARY KEY, key unique, value)', [], function() {
                     resolve();
                 }, function(t, error) {
                     reject(error);
@@ -6860,23 +6789,12 @@ module.exports = asap;
 
     function getItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
+                db.transaction(function(t) {
                     t.executeSql('SELECT * FROM ' + dbInfo.storeName +
-                                 ' WHERE key = ? LIMIT 1', [key],
-                                 function(t, results) {
-                        var result = results.rows.length ?
-                                     results.rows.item(0).value : null;
+                                 ' WHERE key = ? LIMIT 1', [key], function(t, results) {
+                        var result = results.rows.length ? results.rows.item(0).value : null;
 
                         // Check to see if this is serialized content we need to
                         // unpack.
@@ -6899,14 +6817,6 @@ module.exports = asap;
 
     function setItem(key, value, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
                 // The localStorage API doesn't return undefined values in an
@@ -6923,14 +6833,13 @@ module.exports = asap;
                     if (error) {
                         reject(error);
                     } else {
-                        var dbInfo = _this._dbInfo;
-                        dbInfo.db.transaction(function(t) {
-                            t.executeSql('INSERT OR REPLACE INTO ' +
-                                         dbInfo.storeName +
-                                         ' (key, value) VALUES (?, ?)',
-                                         [key, value], function() {
+                        db.transaction(function(t) {
+                            t.executeSql('INSERT OR REPLACE INTO ' + dbInfo.storeName +
+                                         ' (key, value) VALUES (?, ?)', [key, value], function() {
+
                                 resolve(originalValue);
                             }, function(t, error) {
+
                                 reject(error);
                             });
                         }, function(sqlError) { // The transaction failed; check
@@ -6957,18 +6866,9 @@ module.exports = asap;
 
     function removeItem(key, callback) {
         var _this = this;
-
-        // Cast the key to a string, as that's all we can set as a key.
-        if (typeof key !== 'string') {
-            window.console.warn(key +
-                                ' used as a key, but it is not a string.');
-            key = String(key);
-        }
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
+                db.transaction(function(t) {
                     t.executeSql('DELETE FROM ' + dbInfo.storeName +
                                  ' WHERE key = ?', [key], function() {
 
@@ -6989,15 +6889,14 @@ module.exports = asap;
     // TODO: Find out if this resets the AUTO_INCREMENT number.
     function clear(callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
-                    t.executeSql('DELETE FROM ' + dbInfo.storeName, [],
-                                 function() {
+                db.transaction(function(t) {
+                    t.executeSql('DELETE FROM ' + dbInfo.storeName, [], function() {
+
                         resolve();
                     }, function(t, error) {
+
                         reject(error);
                     });
                 });
@@ -7012,11 +6911,9 @@ module.exports = asap;
     // localForage.
     function length(callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
+                db.transaction(function(t) {
                     // Ahhh, SQL makes this one soooooo easy.
                     t.executeSql('SELECT COUNT(key) as c FROM ' +
                                  dbInfo.storeName, [], function(t, results) {
@@ -7044,18 +6941,16 @@ module.exports = asap;
     // TODO: Don't change ID on `setItem()`.
     function key(n, callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
+                db.transaction(function(t) {
                     t.executeSql('SELECT key FROM ' + dbInfo.storeName +
-                                 ' WHERE id = ? LIMIT 1', [n + 1],
-                                 function(t, results) {
-                        var result = results.rows.length ?
-                                     results.rows.item(0).key : null;
+                                 ' WHERE id = ? LIMIT 1', [n + 1], function(t, results) {
+                        var result = results.rows.length ? results.rows.item(0).key : null;
+
                         resolve(result);
                     }, function(t, error) {
+
                         reject(error);
                     });
                 });
@@ -7068,16 +6963,15 @@ module.exports = asap;
 
     function keys(callback) {
         var _this = this;
-
         var promise = new Promise(function(resolve, reject) {
             _this.ready().then(function() {
-                var dbInfo = _this._dbInfo;
-                dbInfo.db.transaction(function(t) {
+                db.transaction(function(t) {
                     t.executeSql('SELECT key FROM ' + dbInfo.storeName, [],
                                  function(t, results) {
+                        var length = results.rows.length;
                         var keys = [];
 
-                        for (var i = 0; i < results.rows.length; i++) {
+                        for (var i = 0; i < length; i++) {
                             keys.push(results.rows.item(i).key);
                         }
 
@@ -7111,9 +7005,9 @@ module.exports = asap;
         }
 
         if ((bytes.length % 3) === 2) {
-            base64String = base64String.substring(0, base64String.length - 1) + '=';
+            base64String = base64String.substring(0, base64String.length - 1) + "=";
         } else if (bytes.length % 3 === 1) {
-            base64String = base64String.substring(0, base64String.length - 2) + '==';
+            base64String = base64String.substring(0, base64String.length - 2) + "==";
         }
 
         return base64String;
@@ -7131,8 +7025,7 @@ module.exports = asap;
         // If we haven't marked this string as being specially serialized (i.e.
         // something other than serialized JSON), we can just return it and be
         // done with it.
-        if (value.substring(0,
-                            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
+        if (value.substring(0, SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
             return JSON.parse(value);
         }
 
@@ -7140,8 +7033,7 @@ module.exports = asap;
         // TypedArray. First we separate out the type of data we're dealing
         // with from the data itself.
         var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
-        var type = value.substring(SERIALIZED_MARKER_LENGTH,
-                                   TYPE_SERIALIZED_MARKER_LENGTH);
+        var type = value.substring(SERIALIZED_MARKER_LENGTH, TYPE_SERIALIZED_MARKER_LENGTH);
 
         // Fill the string into a ArrayBuffer.
         var bufferLength = serializedString.length * 0.75;
@@ -7150,9 +7042,9 @@ module.exports = asap;
         var p = 0;
         var encoded1, encoded2, encoded3, encoded4;
 
-        if (serializedString[serializedString.length - 1] === '=') {
+        if (serializedString[serializedString.length - 1] === "=") {
             bufferLength--;
-            if (serializedString[serializedString.length - 2] === '=') {
+            if (serializedString[serializedString.length - 2] === "=") {
                 bufferLength--;
             }
         }
@@ -7216,8 +7108,7 @@ module.exports = asap;
         //
         // TODO: See why those tests fail and use a better solution.
         if (value && (value.toString() === '[object ArrayBuffer]' ||
-                      value.buffer &&
-                      value.buffer.toString() === '[object ArrayBuffer]')) {
+                      value.buffer && value.buffer.toString() === '[object ArrayBuffer]')) {
             // Convert binary arrays to a string and prefix the string with
             // a special marker.
             var buffer;
@@ -7248,12 +7139,12 @@ module.exports = asap;
                 } else if (valueString === '[object Float64Array]') {
                     marker += TYPE_FLOAT64ARRAY;
                 } else {
-                    callback(new Error('Failed to get type for BinaryArray'));
+                    callback(new Error("Failed to get type for BinaryArray"));
                 }
             }
 
             callback(marker + _bufferToString(buffer));
-        } else if (valueString === '[object Blob]') {
+        } else if (valueString === "[object Blob]") {
             // Conver the blob to a binaryArray and then to a string.
             var fileReader = new FileReader();
 
@@ -7268,8 +7159,9 @@ module.exports = asap;
             try {
                 callback(JSON.stringify(value));
             } catch (e) {
-                window.console.error("Couldn't convert value into a JSON " +
-                                     'string: ', value);
+                if (this.console && this.console.error) {
+                    this.console.error("Couldn't convert value into a JSON string: ", value);
+                }
 
                 callback(null, e);
             }
@@ -7278,10 +7170,8 @@ module.exports = asap;
 
     function executeCallback(promise, callback) {
         if (callback) {
-            promise.then(function(result) {
-                callback(null, result);
-            }, function(error) {
-                callback(error);
+            promise.then(callback, function(error) {
+                callback(null, error);
             });
         }
     }
@@ -7323,7 +7213,7 @@ module.exports = asap;
         WEBSQL: 'webSQLStorage'
     };
 
-    var DefaultDriverOrder = [
+    var DEFAULT_DRIVER_ORDER = [
         DriverType.INDEXEDDB,
         DriverType.WEBSQL,
         DriverType.LOCALSTORAGE
@@ -7343,16 +7233,6 @@ module.exports = asap;
         DEFINE: 1,
         EXPORT: 2,
         WINDOW: 3
-    };
-
-    var DefaultConfig = {
-        description: '',
-        name: 'localforage',
-        // Default DB size is _JUST UNDER_ 5MB, as it's the highest size
-        // we can use without a prompt.
-        size: 4980736,
-        storeName: 'keyvaluepairs',
-        version: 1.0
     };
 
     // Attaching to window (i.e. no module loader) is the assumed,
@@ -7405,202 +7285,187 @@ module.exports = asap;
         return result;
     })(this);
 
-    function extend(/*...*/) {
-        for (var i = 1; i < arguments.length; i++) {
-            var arg = arguments[i];
-            if (arg) {
-                for (var key in arg) {
-                    if (arg.hasOwnProperty(key)) {
-                        arguments[0][key] = arg[key];
+    // The actual localForage object that we expose as a module or via a
+    // global. It's extended by pulling in one of our other libraries.
+    var _this = this;
+    var localForage = {
+        INDEXEDDB: DriverType.INDEXEDDB,
+        LOCALSTORAGE: DriverType.LOCALSTORAGE,
+        WEBSQL: DriverType.WEBSQL,
+
+        _config: {
+            description: '',
+            name: 'localforage',
+            // Default DB size is _JUST UNDER_ 5MB, as it's the highest size
+            // we can use without a prompt.
+            size: 4980736,
+            storeName: 'keyvaluepairs',
+            version: 1.0
+        },
+        _driverSet: null,
+        _ready: false,
+
+        // Set any config values for localForage; can be called anytime before
+        // the first API call (e.g. `getItem`, `setItem`).
+        // We loop through options so we don't overwrite existing config
+        // values.
+        config: function(options) {
+            // If the options argument is an object, we use it to set values.
+            // Otherwise, we return either a specified config value or all
+            // config values.
+            if (typeof(options) === 'object') {
+                // If localforage is ready and fully initialized, we can't set
+                // any new configuration values. Instead, we return an error.
+                if (this._ready) {
+                    return new Error("Can't call config() after localforage " +
+                                     "has been used.");
+                }
+
+                for (var i in options) {
+                    this._config[i] = options[i];
+                }
+
+                return true;
+            } else if (typeof(options) === 'string') {
+                return this._config[options];
+            } else {
+                return this._config;
+            }
+        },
+
+        driver: function() {
+            return this._driver || null;
+        },
+
+        ready: function(callback) {
+            var ready = new Promise(function(resolve, reject) {
+                localForage._driverSet.then(function() {
+                    if (localForage._ready === null) {
+                        localForage._ready = localForage._initStorage(
+                            localForage._config);
+                    }
+
+                    localForage._ready.then(resolve, reject);
+                }).catch(reject);
+            });
+
+            ready.then(callback, callback);
+
+            return ready;
+        },
+
+        setDriver: function(drivers, callback, errorCallback) {
+            var self = this;
+
+            if (typeof drivers === 'string') {
+                drivers = [drivers];
+            }
+
+            this._driverSet = new Promise(function(resolve, reject) {
+                var driverName = self._getFirstSupportedDriver(drivers);
+
+                if (!driverName) {
+                    var error = new Error('No available storage method found.');
+                    self._driverSet = Promise.reject(error);
+
+                    reject(error);
+
+                    return;
+                }
+
+                self._ready = null;
+
+                // We allow localForage to be declared as a module or as a
+                // library available without AMD/require.js.
+                if (moduleType === ModuleType.DEFINE) {
+                    _dereq_([driverName], function(lib) {
+                        self._extend(lib);
+
+                        resolve();
+                    });
+
+                    return;
+                } else if (moduleType === ModuleType.EXPORT) {
+                    // Making it browserify friendly
+                    var driver;
+                    switch (driverName) {
+                        case self.INDEXEDDB:
+                            driver = _dereq_('./drivers/indexeddb');
+                            break;
+                        case self.LOCALSTORAGE:
+                            driver = _dereq_('./drivers/localstorage');
+                            break;
+                        case self.WEBSQL:
+                            driver = _dereq_('./drivers/websql');
+                    }
+
+                    self._extend(driver);
+                } else {
+                    self._extend(_this[driverName]);
+                }
+
+                resolve();
+            });
+
+            this._driverSet.then(callback, errorCallback);
+
+            return this._driverSet;
+        },
+
+        supports: function(driverName) {
+            return !!driverSupport[driverName];
+        },
+
+        _extend: function(libraryMethodsAndProperties) {
+            for (var i in libraryMethodsAndProperties) {
+                if (libraryMethodsAndProperties.hasOwnProperty(i)) {
+                    this[i] = libraryMethodsAndProperties[i];
+                }
+            }
+        },
+
+        _getFirstSupportedDriver: function(drivers) {
+            var isArray = Array.isArray || function(arg) {
+                return Object.prototype.toString.call(arg) === '[object Array]';
+            };
+
+            if (drivers && isArray(drivers)) {
+                for (var i = 0; i < drivers.length; i++) {
+                    var driver = drivers[i];
+
+                    if (this.supports(driver)) {
+                        return driver;
                     }
                 }
             }
-        }
-        return arguments[0];
-    }
 
-    function callWhenReady(localForageInstance, libraryMethod) {
-        localForageInstance[libraryMethod] = function() {
+            return null;
+        }
+    };
+
+    function callWhenReady(libraryMethod) {
+        localForage[libraryMethod] = function() {
             var _args = arguments;
-            return localForageInstance.ready().then(function() {
-                return localForageInstance[libraryMethod].apply(localForageInstance, _args);
+            return localForage.ready().then(function() {
+                return localForage[libraryMethod].apply(localForage, _args);
             });
         };
     }
 
-    // The actual localForage object that we expose as a module or via a
-    // global. It's extended by pulling in one of our other libraries.
-    var _this = this;
-
-    function LocalForage(options) {
-        this._config = extend({}, DefaultConfig, options);
-        this._driverSet = null;
-        this._ready = false;
-        this._dbInfo = null;
-
-        // Add a stub for each driver API method that delays the call to the
-        // corresponding driver method until localForage is ready. These stubs
-        // will be replaced by the driver methods as soon as the driver is
-        // loaded, so there is no performance impact.
-        for (var i = 0; i < LibraryMethods.length; i++) {
-            callWhenReady(this, LibraryMethods[i]);
-        }
-
-        this.setDriver(DefaultDriverOrder);
+    // Add a stub for each driver API method that delays the call to the
+    // corresponding driver method until localForage is ready. These stubs will
+    // be replaced by the driver methods as soon as the driver is loaded, so
+    // there is no performance impact.
+    for (var i = 0; i < LibraryMethods.length; i++) {
+        callWhenReady(LibraryMethods[i]);
     }
 
-    LocalForage.prototype.INDEXEDDB = DriverType.INDEXEDDB;
-    LocalForage.prototype.LOCALSTORAGE = DriverType.LOCALSTORAGE;
-    LocalForage.prototype.WEBSQL = DriverType.WEBSQL;
-
-    // Set any config values for localForage; can be called anytime before
-    // the first API call (e.g. `getItem`, `setItem`).
-    // We loop through options so we don't overwrite existing config
-    // values.
-    LocalForage.prototype.config = function(options) {
-        // If the options argument is an object, we use it to set values.
-        // Otherwise, we return either a specified config value or all
-        // config values.
-        if (typeof(options) === 'object') {
-            // If localforage is ready and fully initialized, we can't set
-            // any new configuration values. Instead, we return an error.
-            if (this._ready) {
-                return new Error("Can't call config() after localforage " +
-                                 'has been used.');
-            }
-
-            for (var i in options) {
-                if (i === 'storeName') {
-                    options[i] = options[i].replace(/\W/g, '_');
-                }
-
-                this._config[i] = options[i];
-            }
-
-            return true;
-        } else if (typeof(options) === 'string') {
-            return this._config[options];
-        } else {
-            return this._config;
-        }
-    };
-
-    LocalForage.prototype.driver = function() {
-        return this._driver || null;
-    };
-
-    LocalForage.prototype.ready = function(callback) {
-        var self = this;
-
-        var ready = new Promise(function(resolve, reject) {
-            self._driverSet.then(function() {
-                if (self._ready === null) {
-                    self._ready = self._initStorage(self._config);
-                }
-
-                self._ready.then(resolve, reject);
-            }).catch(reject);
-        });
-
-        ready.then(callback, callback);
-        return ready;
-    };
-
-    LocalForage.prototype.setDriver = function(drivers, callback,
-                                               errorCallback) {
-        var self = this;
-
-        if (typeof drivers === 'string') {
-            drivers = [drivers];
-        }
-
-        this._driverSet = new Promise(function(resolve, reject) {
-            var driverName = self._getFirstSupportedDriver(drivers);
-
-            if (!driverName) {
-                var error = new Error('No available storage method found.');
-                self._driverSet = Promise.reject(error);
-
-                reject(error);
-
-                return;
-            }
-
-            self._dbInfo = null;
-            self._ready = null;
-
-            // We allow localForage to be declared as a module or as a
-            // library available without AMD/require.js.
-            if (moduleType === ModuleType.DEFINE) {
-                _dereq_([driverName], function(lib) {
-                    self._extend(lib);
-
-                    resolve();
-                });
-
-                return;
-            } else if (moduleType === ModuleType.EXPORT) {
-                // Making it browserify friendly
-                var driver;
-                switch (driverName) {
-                    case self.INDEXEDDB:
-                        driver = _dereq_('./drivers/indexeddb');
-                        break;
-                    case self.LOCALSTORAGE:
-                        driver = _dereq_('./drivers/localstorage');
-                        break;
-                    case self.WEBSQL:
-                        driver = _dereq_('./drivers/websql');
-                }
-
-                self._extend(driver);
-            } else {
-                self._extend(_this[driverName]);
-            }
-
-            resolve();
-        });
-
-        this._driverSet.then(callback, errorCallback);
-        return this._driverSet;
-    };
-
-    LocalForage.prototype.supports = function(driverName) {
-        return !!driverSupport[driverName];
-    };
-
-    LocalForage.prototype._extend = function(libraryMethodsAndProperties) {
-        extend(this, libraryMethodsAndProperties);
-    };
-
-    LocalForage.prototype._getFirstSupportedDriver = function(drivers) {
-        var isArray = Array.isArray || function(arg) {
-            return Object.prototype.toString.call(arg) === '[object Array]';
-        };
-
-        if (drivers && isArray(drivers)) {
-            for (var i = 0; i < drivers.length; i++) {
-                var driver = drivers[i];
-
-                if (this.supports(driver)) {
-                    return driver;
-                }
-            }
-        }
-
-        return null;
-    };
-
-    LocalForage.prototype.createInstance = function(options) {
-        return new LocalForage(options);
-    };
-
-    var localForage = new LocalForage();
+    localForage.setDriver(DEFAULT_DRIVER_ORDER);
 
     // We allow localForage to be declared as a module or as a library
     // available without AMD/require.js.
     if (moduleType === ModuleType.DEFINE) {
-        define('localforage', function() {
+        define(function() {
             return localForage;
         });
     } else if (moduleType === ModuleType.EXPORT) {
@@ -7675,6 +7540,5 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}]},{},[1])
-(1)
+},{}]},{},[1])(1)
 });
