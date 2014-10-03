@@ -2693,6 +2693,15 @@ Collection.prototype.unlink = function (outputTargetSelector, templateSelector) 
 };
 
 /**
+ * If the collection has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Collection.prototype.isLinked = function () {
+	return Boolean(this._data._linked);
+};
+
+/**
  * Finds sub-documents from the collection's documents.
  * @param match
  * @param path

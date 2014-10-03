@@ -175,6 +175,15 @@ Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
 	this._refresh();
 };
 
+/**
+ * If the overview has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+Overview.prototype.isLinked = function () {
+	return this._data.isLinked();
+};
+
 // Extend DB to include collection groups
 Core.prototype.init = function () {
 	this._overview = {};

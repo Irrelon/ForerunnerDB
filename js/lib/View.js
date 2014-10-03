@@ -128,6 +128,15 @@ View.prototype.unlink = function (outputTargetSelector, templateSelector) {
 };
 
 /**
+ * If the view has been data-bound to a DOM element this call
+ * will return true.
+ * @returns {Boolean} True if data-bound, false otherwise.
+ */
+View.prototype.isLinked = function () {
+	return this._privateData.isLinked();
+};
+
+/**
  * Returns a non-referenced version of the passed object / array.
  * @param {Object} data The object or array to return as a non-referenced version.
  * @returns {*}
