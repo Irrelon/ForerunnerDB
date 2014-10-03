@@ -5540,7 +5540,9 @@ View.prototype.from = function (collection) {
 							pk = self._privateData.primaryKey();
 							var $or = [],
 								removeQuery = {
-									$or: $or
+									query: {
+										$or: $or
+									}
 								};
 
 							for (i = 0; i < diff.remove.length; i++) {
