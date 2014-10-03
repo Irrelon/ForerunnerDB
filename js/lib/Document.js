@@ -343,122 +343,6 @@ Document.prototype._updatePop = function (doc, val) {
 	return updated;
 };
 
-/**
- * Creates a link to the DOM between the document data and the elements
- * in the passed output selector. When new elements are needed or changes
- * occur the passed templateSelector is used to get the template that is
- * output to the DOM.
- * @param outputTargetSelector
- * @param templateSelector
- */
-Document.prototype.link = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Make sure we have a data-binding store object to use
-		this._links = this._links || {};
-		if (!this._linked) { this._linked = 0; }
-
-		var templateId,
-			templateHtml;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-				templateHtml = templateSelector.template;
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (!this._links[templateId]) {
-			if (jQuery(outputTargetSelector).length) {
-				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateId]) {
-					if (!templateHtml) {
-						// Grab the template
-						var template = jQuery(templateSelector);
-						if (template.length) {
-							templateHtml = jQuery(template[0]).html();
-						} else {
-							throw('Unable to bind document to target because template does not exist: ' + templateSelector);
-						}
-					}
-
-					jQuery.views.templates(templateId, templateHtml);
-				}
-
-				// Create the data binding
-				jQuery.templates[templateId].link(outputTargetSelector, this._data);
-
-				// Add link to flags
-				this._links[templateId] = outputTargetSelector;
-
-				// Set the linked flag
-				this._linked++;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.Document: Added binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
-				}
-
-				return this;
-			} else {
-				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
-			}
-		}
-
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
-};
-
-/**
- * Removes a link to the DOM between the document data and the elements
- * in the passed output selector that was created using the link() method.
- * @param outputTargetSelector
- * @param templateSelector
- */
-Document.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Check for binding
-		this._links = this._links || {};
-
-		var templateId;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (this._links[templateId]) {
-			// Remove the data binding
-			jQuery.templates[templateId].unlink(outputTargetSelector);
-
-			// Remove link from flags
-			delete this._links[templateId];
-
-			// Set the linked flag
-			this._linked--;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Document: Removed binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
-			}
-
-			return this;
-		}
-
-		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
-};
-
 Document.prototype.drop = function () {
 	if (this._db && this._name) {
 		if (this._db && this._db._document && this._db._document[this._name]) {
@@ -484,4 +368,5 @@ Core.prototype.document = function (documentName) {
 	}
 };
 
+Shared.finishModule('Document');
 module.exports = Document;

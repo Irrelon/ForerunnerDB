@@ -58,28 +58,28 @@ Shared.synthesize(View.prototype, 'name');
 View.prototype.debug = Shared.common.debug;
 
 /**
- * Executes an insert against the data-source this view is linked to.
+ * Executes an insert against the view's underlying data-source.
  */
 View.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
 };
 
 /**
- * Executes an update against the data-source this view is linked to.
+ * Executes an update against the view's underlying data-source.
  */
 View.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
 };
 
 /**
- * Executes an updateById against the data-source this view is linked to.
+ * Executes an updateById against the view's underlying data-source.
  */
 View.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
 };
 
 /**
- * Executes a remove against the data-source this view is linked to.
+ * Executes a remove against the view's underlying data-source.
  */
 View.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
@@ -94,46 +94,11 @@ View.prototype.find = function (query, options) {
 };
 
 /**
- * Data-binds the view data to the elements matched by the passed selector.
- * @param {String} outputTargetSelector The jQuery element selector to select the element
- * into which the data-bound rendered items will be placed. All existing HTML will be
- * removed from this element.
- * @param {String|Object} templateSelector This can either be a jQuery selector identifying
- * which template element to get the template HTML from that each item in the view's data
- * will use when rendering to the screen, or you can pass an object with a template key
- * containing a string that represents the HTML template such as:
- *     { template: '<div>{{:name}}</div>' }
- * @returns {*}
+ * Gets the module's internal data collection.
+ * @returns {Collection}
  */
-View.prototype.link = function (outputTargetSelector, templateSelector) {
-	var publicData = this.publicData();
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-	}
-
-	publicData.link(outputTargetSelector, templateSelector);
-
-	return this;
-};
-
-View.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	var publicData = this.publicData();
-	if (this.debug()) {
-		console.log('ForerunnerDB.View: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-	}
-
-	publicData.unlink(outputTargetSelector, templateSelector);
-
-	return this;
-};
-
-/**
- * If the view has been data-bound to a DOM element this call
- * will return true.
- * @returns {Boolean} True if data-bound, false otherwise.
- */
-View.prototype.isLinked = function () {
-	return this._privateData.isLinked();
+View.prototype.data = function () {
+	return this._privateData;
 };
 
 /**
@@ -865,4 +830,5 @@ Core.prototype.views = function () {
 	return arr;
 };
 
+Shared.finishModule('View');
 module.exports = View;

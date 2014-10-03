@@ -4,7 +4,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
-
+userView.debug(true);
 		userView.link('#testTarget', {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
@@ -658,7 +658,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	/*test("Bind - View() with query :: View order large number of items", function() {
+	test("Bind - View() with query :: View order large number of items", function() {
 		base.dbUp();
 		base.domUp();
 
@@ -666,6 +666,73 @@ ForerunnerDB.moduleLoaded('View', function () {
 			i,
 			count = 1000,
 			arr = [];
+
+		coll._deferThreshold.insert = 10000;
+		coll._deferThreshold.update = 10000;
+		coll._deferThreshold.remove = 10000;
+
+		var view = db.view('test');
+
+		view._privateData._deferThreshold.insert = 10000;
+		view._privateData._deferThreshold.update = 10000;
+		view._privateData._deferThreshold.remove = 10000;
+
+		view
+			.from(coll)
+			.query({
+				active: true
+			})
+			.queryOptions({
+				$orderBy: {
+					i: 1
+				}
+			});
+
+		view.link('#testTarget', {
+			template: '<li class="item" data-link="id{:_id}"><div><div><div><div><div><div><div>{^{:i}}</div></div></div></div></div></div></div></li>'
+		});
+
+		var timeStart = new Date().getTime();
+		for (i = 0; i < count; i++) {
+			if (i !== count / 2) {
+				coll.upsert({
+					i: i,
+					active: true
+				});
+			}
+		}
+		var totalTime = new Date().getTime() - timeStart;
+		ok(totalTime < 200, 'Time taken to insert and build DOM linked view from data is acceptable: ' + totalTime + 'ms');
+
+		var timeStart = new Date().getTime();
+		coll.insert({
+			i: count / 2,
+			active: true
+		});
+		var totalTime = new Date().getTime() - timeStart;
+
+		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
+
+		var elems = $('#testTarget').find('.item');
+		ok(elems.length === count, "Document count " + count + ": " + elems.length);
+
+		base.domDown();
+		base.dbDown();
+	});
+
+	test("Bind - View() with query :: View order large number of items before linking", function() {
+		base.dbUp();
+		base.domUp();
+
+		var coll = db.collection('test'),
+			view = db.view('test'),
+			i,
+			count = 1000,
+			arr = [];
+
+		coll._deferThreshold.insert = 10000;
+		coll._deferThreshold.update = 10000;
+		coll._deferThreshold.remove = 10000;
 
 		for (i = 0; i < count; i++) {
 			if (i !== count / 2) {
@@ -679,7 +746,13 @@ ForerunnerDB.moduleLoaded('View', function () {
 		coll.setData(arr);
 
 		var timeStart = new Date().getTime();
-		var view = db.view('test')
+		view = db.view('test');
+
+		view._privateData._deferThreshold.insert = 10000;
+		view._privateData._deferThreshold.update = 10000;
+		view._privateData._deferThreshold.remove = 10000;
+
+		view
 			.from(coll)
 			.query({
 				active: true
@@ -688,10 +761,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 				$orderBy: {
 					i: 1
 				}
-			}, false);
-
-
-		view.refresh();
+			});
 
 		view.link('#testTarget', {
 			template: '<li class="item" data-link="id{:_id}"><div><div><div><div><div><div><div>{^{:i}}</div></div></div></div></div></div></div></li>'
@@ -715,67 +785,6 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.domDown();
 		base.dbDown();
 	});
-
-	test("Bind - View() with query :: View order large number of items with index", function() {
-		base.dbUp();
-		base.domUp();
-
-		var coll = db.collection('test'),
-			view = db.view('test'),
-			i,
-			count = 1000,
-			arr = [];
-
-		for (i = 0; i < count; i++) {
-			if (i !== count / 2) {
-				arr.push({
-					i: i,
-					active: true
-				});
-			}
-		}
-
-		coll.setData(arr);
-		view.ensureIndex({
-			i: 1
-		});
-
-		var timeStart = new Date().getTime();
-		view = db.view('test')
-			.from(coll)
-			.query({
-				active: true
-			}, false)
-			.queryOptions({
-				$orderBy: {
-					i: 1
-				}
-			});
-
-		//view.refresh();
-
-		view.link('#testTarget', {
-			template: '<li class="item" data-link="id{:_id}"><div><div><div><div><div><div><div>{^{:i}}</div></div></div></div></div></div></div></li>'
-		});
-
-		var totalTime = new Date().getTime() - timeStart;
-		ok(totalTime < 200, 'Time taken to build DOM linked view from data is acceptable: ' + totalTime + 'ms');
-
-		var timeStart = new Date().getTime();
-		coll.insert({
-			i: count / 2,
-			active: true
-		});
-		var totalTime = new Date().getTime() - timeStart;
-
-		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
-
-		var elems = $('#testTarget').find('.item');
-		ok(elems.length === count, "Document count " + count + ": " + elems.length);
-
-		base.domDown();
-		base.dbDown();
-	});*/
 });
 
 ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {

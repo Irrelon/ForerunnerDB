@@ -330,6 +330,24 @@ var idCounter = 0,
 
 		addModule: function (name, module) {
 			this.modules[name] = module;
+			this.emit('moduleLoad', [name, module]);
+		},
+
+		finishModule: function (name) {
+			if (this.modules[name]) {
+				this.modules[name]._fdbFinished = true;
+				this.emit('moduleFinished', [name, this.modules[name]]);
+			} else {
+				throw('finishModule called on a module that has not been registered with addModule(): ' + name);
+			}
+		},
+
+		moduleFinished: function (name, callback) {
+			if (this.modules[name] && this.modules[name]._fdbFinished) {
+				callback(name, this.modules[name]);
+			} else {
+				this.on('moduleFinished', callback);
+			}
 		},
 
 		inherit: function (obj, system) {
@@ -379,5 +397,10 @@ var idCounter = 0,
 		// Inheritable systems
 		chainReactor: require('./ChainReactor')
 	};
+
+// Add event handling to shared
+Shared.on = Shared.common.on;
+Shared.off = Shared.common.off;
+Shared.emit = Shared.common.emit;
 
 module.exports = Shared;

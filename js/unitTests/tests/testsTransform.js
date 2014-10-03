@@ -53,7 +53,7 @@ test("Transform - View.transform() :: Assign a transform-in method to a view fro
 			}
 		}
 	});
-
+debugger;
 	result = view.find();
 	ok(result[0].moo === 1 && result[0].goo === 2, "View insert 1 transformed");
 

@@ -4,7 +4,6 @@ var Core = require('../lib/Core'),
 	Highcharts = require('../lib/Highcharts'),
 	Persist = require('../lib/Persist'),
 	Document = require('../lib/Document'),
-	Overview = require('../lib/Overview'),
-	jsviews = require('../lib/vendor/jsviews');
+	Overview = require('../lib/Overview');
 
 module.exports = Core;

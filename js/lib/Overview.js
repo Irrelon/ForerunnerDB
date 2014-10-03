@@ -152,36 +152,11 @@ Overview.prototype._chainHandler = function (chainPacket) {
 };
 
 /**
- * Creates a link to the DOM between the overview data and the elements
- * in the passed output selector. When new elements are needed or changes
- * occur the passed templateSelector is used to get the template that is
- * output to the DOM.
- * @param outputTargetSelector
- * @param templateSelector
+ * Gets the module's internal data collection.
+ * @returns {Collection}
  */
-Overview.prototype.link = function (outputTargetSelector, templateSelector) {
-	this._data.link.apply(this._data, arguments);
-	this._refresh();
-};
-
-/**
- * Removes a link to the DOM between the overview data and the elements
- * in the passed output selector that was created using the link() method.
- * @param outputTargetSelector
- * @param templateSelector
- */
-Overview.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	this._data.unlink.apply(this._data, arguments);
-	this._refresh();
-};
-
-/**
- * If the overview has been data-bound to a DOM element this call
- * will return true.
- * @returns {Boolean} True if data-bound, false otherwise.
- */
-Overview.prototype.isLinked = function () {
-	return this._data.isLinked();
+Overview.prototype.data = function () {
+	return this._data;
 };
 
 // Extend DB to include collection groups
@@ -200,4 +175,5 @@ Core.prototype.overview = function (overviewName) {
 	}
 };
 
+Shared.finishModule('Overview');
 module.exports = Overview;

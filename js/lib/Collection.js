@@ -25,7 +25,6 @@ Collection.prototype.init = function (name) {
 	this._data = [];
 	this._groups = [];
 	this._metrics = new Metrics();
-	this._linked = 0;
 
 	this._deferQueue = {
 		insert: [],
@@ -99,6 +98,14 @@ Shared.synthesize(Collection.prototype, 'name');
 Collection.prototype.on = Shared.common.on;
 Collection.prototype.off = Shared.common.off;
 Collection.prototype.emit = Shared.common.emit;
+
+/**
+ * Get the internal data
+ * @returns {Array}
+ */
+Collection.prototype.data = function () {
+	return this._data;
+};
 
 /**
  * Drops a collection and all it's stored data from the database.
@@ -218,23 +225,9 @@ Collection.prototype.setData = function (data, options, callback) {
 		data = this.transformIn(data);
 		op.time('transformIn');
 
-		var oldData = this._data;
+		var oldData = [].concat(this._data);
 
-		if (this._linked) {
-			// The collection is data-bound so do a .remove() instead of just clearing the data
-			this.remove();
-		} else {
-			// Overwrite the data
-			this._data = [];
-		}
-
-		if (data.length) {
-			if (this._linked) {
-				this.insert(data);
-			} else {
-				this._data = this._data.concat(data);
-			}
-		}
+		this._dataReplace(data);
 
 		// Update the primary key index
 		op.time('Rebuild Primary Key Index');
@@ -1132,12 +1125,7 @@ Collection.prototype.remove = function (query, options, callback) {
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
-
-				if (this._linked) {
-					jQuery.observable(this._data).remove(index);
-				} else {
-					this._data.splice(index, 1);
-				}
+				this._dataRemoveIndex(index);
 			}
 
 			//op.time('Resolve chains');
@@ -1353,11 +1341,7 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			// Insert the document
-			if (this._linked) {
-				jQuery.observable(this._data).insert(index, doc);
-			} else {
-				this._data.splice(index, 0, doc);
-			}
+			this._dataInsertIndex(index, doc);
 
 			return true;
 		} else {
@@ -1366,6 +1350,41 @@ Collection.prototype._insert = function (doc, index) {
 	}
 
 	return 'No document passed to insert';
+};
+
+Collection.prototype._dataInsertIndex = function (index, doc) {
+	if (this._linked) {
+		jQuery.observable(this._data).insert(index, doc);
+	} else {
+		this._data.splice(index, 0, doc);
+	}
+};
+
+Collection.prototype._dataRemoveIndex = function (index) {
+	if (this._linked) {
+		jQuery.observable(this._data).remove(index);
+	} else {
+		this._data.splice(index, 1);
+	}
+};
+
+Collection.prototype._dataReplace = function (data) {
+	if (this._linked) {
+		// Remove all items
+		jQuery.observable(this._data).remove(0, this._data.length);
+
+		if (data.length) {
+			this.insert(data);
+		}
+	} else {
+		this.remove();
+
+		if (data.length) {
+			this.insert(data);
+		}
+	}
+
+
 };
 
 /**
@@ -2574,134 +2593,6 @@ Collection.prototype.count = function (query, options) {
 };
 
 /**
- * Creates a link to the DOM between the collection data and the elements
- * in the passed output selector. When new elements are needed or changes
- * occur the passed templateSelector is used to get the template that is
- * output to the DOM.
- * @param outputTargetSelector
- * @param templateSelector
- */
-Collection.prototype.link = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Make sure we have a data-binding store object to use
-		this._links = this._links || {};
-
-		var templateId,
-			templateHtml;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-				templateHtml = templateSelector.template;
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (!this._links[templateId]) {
-			if (jQuery(outputTargetSelector).length) {
-				// Ensure the template is in memory and if not, try to get it
-				if (!jQuery.templates[templateId]) {
-					if (!templateHtml) {
-						// Grab the template
-						var template = jQuery(templateSelector);
-						if (template.length) {
-							templateHtml = jQuery(template[0]).html();
-						} else {
-							throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
-						}
-					}
-
-					jQuery.views.templates(templateId, templateHtml);
-				}
-
-				// Create the data binding
-				jQuery.templates[templateId].link(outputTargetSelector, this._data);
-
-				// Add link to flags
-				this._links[templateId] = outputTargetSelector;
-
-				// Set the linked flag
-				this._linked++;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.Collection: Added binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
-				}
-
-				return this;
-			} else {
-				throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
-			}
-		}
-
-		throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
-
-	return this;
-};
-
-/**
- * Removes a link to the DOM between the collection data and the elements
- * in the passed output selector that was created using the link() method.
- * @param outputTargetSelector
- * @param templateSelector
- */
-Collection.prototype.unlink = function (outputTargetSelector, templateSelector) {
-	if (window.jQuery) {
-		// Check for binding
-		this._links = this._links || {};
-
-		var templateId;
-
-		if (templateSelector && typeof templateSelector === 'object') {
-			// Our second argument is an object, let's inspect
-			if (templateSelector.template && typeof templateSelector.template === 'string') {
-				// The template has been given to us as a string
-				templateId = this.objectId(templateSelector.template);
-			}
-		} else {
-			templateId = templateSelector;
-		}
-
-		if (this._links[templateId]) {
-			// Remove the data binding
-			jQuery.templates[templateId].unlink(outputTargetSelector);
-
-			// Remove link from flags
-			delete this._links[templateId];
-
-			// Set the linked flag
-			this._linked--;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Collection: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
-			}
-
-			return this;
-		}
-
-		console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-	} else {
-		throw('Cannot data-bind without jQuery, please add jQuery to your page!');
-	}
-
-	return this;
-};
-
-/**
- * If the collection has been data-bound to a DOM element this call
- * will return true.
- * @returns {Boolean} True if data-bound, false otherwise.
- */
-Collection.prototype.isLinked = function () {
-	return Boolean(this._data._linked);
-};
-
-/**
  * Finds sub-documents from the collection's documents.
  * @param match
  * @param path
@@ -3003,4 +2894,5 @@ Core.prototype.collections = function () {
 	return arr;
 };
 
+Shared.finishModule('Collection');
 module.exports = Collection;
