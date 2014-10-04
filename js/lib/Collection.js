@@ -52,7 +52,10 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainReactor);
+Shared.mixin(Collection.prototype, 'Mixin.Common');
+Shared.mixin(Collection.prototype, 'Mixin.Events');
+Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -60,21 +63,6 @@ Path = require('./Path');
 Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -89,15 +77,6 @@ Collection.prototype.crc = Crc;
  * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'name');
-
-/**
- * Attach an event listener to the passed event.
- * @param {String} eventName The name of the event to listen for.
- * @param {Function} callback The method to call when the event is fired.
- */
-Collection.prototype.on = Shared.common.on;
-Collection.prototype.off = Shared.common.off;
-Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Get the internal data
@@ -207,8 +186,9 @@ Shared.synthesize(Collection.prototype, 'db');
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
 		var op = this._metrics.create('setData');
-
 		op.start();
+		
+		this.preSetData(data, options, callback);
 
 		options = options || {};
 		options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
@@ -1502,13 +1482,6 @@ Collection.prototype.distinct = function (key, query, options) {
 };
 
 /**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Collection.prototype.decouple = Shared.common.decouple;
-
-/**
  * Helper method to find a document by it's id.
  * @param {String} id The id of the document.
  * @param {Object=} options The options object, allowed keys are sort and limit.
@@ -2754,16 +2727,6 @@ Collection.prototype.index = function (name) {
 Collection.prototype.lastOp = function () {
 	return this._metrics.list();
 };
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Collection.prototype.objectId = Shared.common.objectId;
 
 /**
  * Generates a difference object that contains insert, update and remove arrays

@@ -10,7 +10,9 @@ Shared = require('./Shared');
 
 /**
  * The view constructor.
- * @param viewName
+ * @param name
+ * @param query
+ * @param options
  * @constructor
  */
 var View = function (name, query, options) {
@@ -31,7 +33,8 @@ View.prototype.init = function (name, query, options) {
 };
 
 Shared.addModule('View', View);
-Shared.inherit(View.prototype, Shared.chainReactor);
+Shared.mixin(View.prototype, 'Mixin.Common');
+Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
@@ -41,21 +44,6 @@ Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
 Shared.synthesize(View.prototype, 'name');
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-View.prototype.debug = Shared.common.debug;
 
 /**
  * Executes an insert against the view's underlying data-source.
@@ -100,13 +88,6 @@ View.prototype.find = function (query, options) {
 View.prototype.data = function () {
 	return this._privateData;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-View.prototype.decouple = Shared.common.decouple;
 
 /**
  * Sets the collection from which the view will assemble its data.

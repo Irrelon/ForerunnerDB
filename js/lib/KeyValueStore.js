@@ -18,7 +18,7 @@ KeyValueStore.prototype.init = function (name) {
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
-Shared.inherit(KeyValueStore.prototype, Shared.chainReactor);
+Shared.mixin(KeyValueStore.prototype, 'Mixin.ChainReactor');
 
 /**
  * Get / set the name of the key/value store.

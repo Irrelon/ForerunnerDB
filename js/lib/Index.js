@@ -30,7 +30,7 @@ Index.prototype.init = function (keys, options, collection) {
 };
 
 Shared.addModule('Index', Index);
-Shared.inherit(Index.prototype, Shared.chainReactor);
+Shared.mixin(Index.prototype, 'Mixin.ChainReactor');
 
 Index.prototype.id = function () {
 	return this._id;

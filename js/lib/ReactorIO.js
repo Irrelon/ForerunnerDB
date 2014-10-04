@@ -31,6 +31,6 @@ ReactorIO.prototype.drop = function () {
 };
 
 Shared.addModule('ReactorIO', ReactorIO);
-Shared.inherit(ReactorIO.prototype, Shared.chainReactor);
+Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
 module.exports = ReactorIO;

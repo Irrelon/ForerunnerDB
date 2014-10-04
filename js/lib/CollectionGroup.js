@@ -20,26 +20,12 @@ CollectionGroup.prototype.init = function (name) {
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
-Shared.inherit(CollectionGroup.prototype, Shared.chainReactor);
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-CollectionGroup.prototype.debug = Shared.common.debug;
 
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
@@ -126,13 +112,6 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 
 	return this;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-CollectionGroup.prototype.decouple = Shared.common.decouple;
 
 CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	//sender = chainPacket.sender;
