@@ -8,7 +8,7 @@ ForerunnerDB is a NoSQL database for your browser. It supports the same query la
 You can see an interactive demo at http://www.forerunnerdb.com/demo.html
 
 ## Tutorials
-(Tutorial 1: A Simple Todo List)[http://www.forerunnerdb.com/tutorial/todoList.html]
+[Tutorial 1: A Simple Todo List](http://www.forerunnerdb.com/tutorial/todoList.html)
 
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
