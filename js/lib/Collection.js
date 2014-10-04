@@ -188,10 +188,8 @@ Collection.prototype.setData = function (data, options, callback) {
 		var op = this._metrics.create('setData');
 		op.start();
 		
+		options = this.options(options);
 		this.preSetData(data, options, callback);
-
-		options = options || {};
-		options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
 
 		if (options.$decouple) {
 			data = this.decouple(data);
@@ -1540,6 +1538,13 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+Collection.prototype.options = function (obj) {
+	obj = obj || {};
+	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
+	
+	return obj;
+};
+
 /**
  * Queries the collection based on the query object passed.
  * @param {Object} query The query key/values that a document must match in
@@ -1551,9 +1556,8 @@ Collection.prototype.explain = function (query, options) {
  */
 Collection.prototype.find = function (query, options) {
 	query = query || {};
-	options = options || {};
-
-	options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
+	
+	options = this.options(options);
 
 	var op = this._metrics.create('find'),
 		self = this,
