@@ -61,7 +61,7 @@ Document.prototype.setData = function (data) {
 			data.$unset = $unset;
 
 			// Now update the object with new data
-			this._updateObject(this._data, data, {});
+			this.updateObject(this._data, data, {});
 		} else {
 			// Straight data assignment
 			this._data = data;
@@ -83,7 +83,7 @@ Document.prototype.setData = function (data) {
  * @returns {Array} The items that were updated.
  */
 Document.prototype.update = function (query, update, options) {
-	this._updateObject(this._data, update, query, options);
+	this.updateObject(this._data, update, query, options);
 };
 
 /**
@@ -99,7 +99,7 @@ Document.prototype.update = function (query, update, options) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Document.prototype._updateObject = Collection.prototype._updateObject;
+Document.prototype.updateObject = Collection.prototype.updateObject;
 
 /**
  * Determines if the passed key has an array positional mark (a dollar at the end

@@ -134,7 +134,7 @@ Collection.prototype.primaryKey = function (keyName) {
 			this._primaryIndex.primaryKey(keyName);
 
 			// Rebuild the primary key index
-			this._rebuildPrimaryKeyIndex();
+			this.rebuildPrimaryKeyIndex();
 		}
 		return this;
 	}
@@ -209,7 +209,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		// Update the primary key index
 		op.time('Rebuild Primary Key Index');
-		this._rebuildPrimaryKeyIndex(options);
+		this.rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
 		op.time('Resolve chains');
@@ -231,9 +231,9 @@ Collection.prototype.setData = function (data, options, callback) {
  * @param {Object=} options An optional options object.
  * @private
  */
-Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
-	var ensureKeys = options && options.ensureKeys !== undefined ? options.ensureKeys : true,
-		violationCheck = options && options.violationCheck !== undefined ? options.violationCheck : true,
+Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
+		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
 		arrCount,
 		arrItem,
@@ -257,7 +257,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 
 		if (ensureKeys) {
 			// Make sure the item has a primary key
-			this._ensurePrimaryKey(arrItem);
+			this.ensurePrimaryKey(arrItem);
 		}
 
 		if (violationCheck) {
@@ -284,7 +284,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
  * @param {Object} obj The object to check a primary key against.
  * @private
  */
-Collection.prototype._ensurePrimaryKey = function (obj) {
+Collection.prototype.ensurePrimaryKey = function (obj) {
 	if (obj[this._primaryKey] === undefined) {
 		// Assign a primary key automatically
 		obj[this._primaryKey] = this.objectId();
@@ -432,7 +432,7 @@ Collection.prototype.update = function (query, update, options) {
 				// Remove item from indexes
 				self._removeIndex(doc);
 
-				var result = self._updateObject(doc, update, query, options, '');
+				var result = self.updateObject(doc, update, query, options, '');
 
 				// Update the item in the primary index
 				if (self._insertIndex(doc)) {
@@ -441,7 +441,7 @@ Collection.prototype.update = function (query, update, options) {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
 				}
 			} else {
-				return self._updateObject(doc, update, query, options, '');
+				return self.updateObject(doc, update, query, options, '');
 			}
 		};
 
@@ -499,7 +499,7 @@ Collection.prototype.updateById = function (id, update) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Collection.prototype._updateObject = function (doc, update, query, options, path, opType) {
+Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -533,7 +533,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					default:
 						operation = true;
-						recurseUpdated = this._updateObject(doc, update[i], query, options, path, i);
+						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -563,7 +563,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
+						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -586,7 +586,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
+									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
 
 									if (recurseUpdated) {
 										updated = true;
@@ -603,7 +603,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 						} else {
 							// The doc key is an object so traverse the
 							// update further
-							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
 
 							if (recurseUpdated) {
 								updated = true;
@@ -1304,7 +1304,7 @@ Collection.prototype._insert = function (doc, index) {
 	if (doc) {
 		var indexViolation;
 
-		this._ensurePrimaryKey(doc);
+		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
@@ -1541,6 +1541,7 @@ Collection.prototype.explain = function (query, options) {
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
+	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
 	
 	return obj;
 };
