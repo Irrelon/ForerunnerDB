@@ -896,18 +896,10 @@ Collection.prototype._isPositionalKey = function (key) {
  * @private
  */
 Collection.prototype._updateProperty = function (doc, prop, val) {
-	if (this._linked) {
-		jQuery.observable(doc).setProperty(prop, val);
+	doc[prop] = val;
 
-		if (this.debug()) {
-			console.log('ForerunnerDB.Collection: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-		}
-	} else {
-		doc[prop] = val;
-
-		if (this.debug()) {
-			console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-		}
+	if (this.debug()) {
+		console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
 	}
 };
 
@@ -919,11 +911,7 @@ Collection.prototype._updateProperty = function (doc, prop, val) {
  * @private
  */
 Collection.prototype._updateIncrement = function (doc, prop, val) {
-	if (this._linked) {
-		jQuery.observable(doc).setProperty(prop, doc[prop] + val);
-	} else {
-		doc[prop] += val;
-	}
+	doc[prop] += val;
 };
 
 /**
@@ -934,18 +922,10 @@ Collection.prototype._updateIncrement = function (doc, prop, val) {
  * @private
  */
 Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
-	if (this._linked) {
-		jQuery.observable(arr).move(indexFrom, indexTo);
+	arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
 
-		if (this.debug()) {
-			console.log('ForerunnerDB.Collection: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-		}
-	} else {
-		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
-
-		if (this.debug()) {
-			console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-		}
+	if (this.debug()) {
+		console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
 	}
 };
 
@@ -958,17 +938,9 @@ Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
  */
 Collection.prototype._updateSplicePush = function (arr, index, doc) {
 	if (arr.length > index) {
-		if (this._linked) {
-			jQuery.observable(arr).insert(index, doc);
-		} else {
-			arr.splice(index, 0, doc);
-		}
+		arr.splice(index, 0, doc);
 	} else {
-		if (this._linked) {
-			jQuery.observable(arr).insert(doc);
-		} else {
-			arr.push(doc);
-		}
+		arr.push(doc);
 	}
 };
 
@@ -979,11 +951,7 @@ Collection.prototype._updateSplicePush = function (arr, index, doc) {
  * @private
  */
 Collection.prototype._updatePush = function (arr, doc) {
-	if (this._linked) {
-		jQuery.observable(arr).insert(doc);
-	} else {
-		arr.push(doc);
-	}
+	arr.push(doc);
 };
 
 /**
@@ -993,11 +961,7 @@ Collection.prototype._updatePush = function (arr, doc) {
  * @private
  */
 Collection.prototype._updatePull = function (arr, index) {
-	if (this._linked) {
-		jQuery.observable(arr).remove(index);
-	} else {
-		arr.splice(index, 1);
-	}
+	arr.splice(index, 1);
 };
 
 /**
@@ -1008,11 +972,7 @@ Collection.prototype._updatePull = function (arr, index) {
  * @private
  */
 Collection.prototype._updateMultiply = function (doc, prop, val) {
-	if (this._linked) {
-		jQuery.observable(doc).setProperty(prop, doc[prop] * val);
-	} else {
-		doc[prop] *= val;
-	}
+	doc[prop] *= val;
 };
 
 /**
@@ -1023,14 +983,8 @@ Collection.prototype._updateMultiply = function (doc, prop, val) {
  * @private
  */
 Collection.prototype._updateRename = function (doc, prop, val) {
-	var existingVal = doc[prop];
-	if (this._linked) {
-		jQuery.observable(doc).setProperty(val, existingVal);
-		jQuery.observable(doc).removeProperty(prop);
-	} else {
-		doc[val] = existingVal;
-		delete doc[prop];
-	}
+	doc[val] = doc[prop];
+	delete doc[prop];
 };
 
 /**
@@ -1040,44 +994,26 @@ Collection.prototype._updateRename = function (doc, prop, val) {
  * @private
  */
 Collection.prototype._updateUnset = function (doc, prop) {
-	if (this._linked) {
-		jQuery.observable(doc).removeProperty(prop);
-	} else {
-		delete doc[prop];
-	}
+	delete doc[prop];
 };
 
 /**
- * Deletes a property on a document.
+ * Pops an item from the array stack.
  * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
+ * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
  * @return {Boolean}
  * @private
  */
 Collection.prototype._updatePop = function (doc, val) {
-	var index,
-		updated = false;
+	var updated = false;
 
 	if (doc.length > 0) {
-		if (this._linked) {
-			if (val === 1) {
-				index = doc.length - 1;
-			} else if (val === -1) {
-				index = 0;
-			}
-
-			if (index > -1) {
-				jQuery.observable(arr).remove(index);
-				updated = true;
-			}
-		} else {
-			if (val === 1) {
-				doc.pop();
-				updated = true;
-			} else if (val === -1) {
-				doc.shift();
-				updated = true;
-			}
+		if (val === 1) {
+			doc.pop();
+			updated = true;
+		} else if (val === -1) {
+			doc.shift();
+			updated = true;
 		}
 	}
 
@@ -1353,35 +1289,22 @@ Collection.prototype._insert = function (doc, index) {
 };
 
 Collection.prototype._dataInsertIndex = function (index, doc) {
-	if (this._linked) {
-		jQuery.observable(this._data).insert(index, doc);
-	} else {
-		this._data.splice(index, 0, doc);
-	}
+	this._data.splice(index, 0, doc);
 };
 
 Collection.prototype._dataRemoveIndex = function (index) {
-	if (this._linked) {
-		jQuery.observable(this._data).remove(index);
-	} else {
-		this._data.splice(index, 1);
-	}
+	this._data.splice(index, 1);
 };
 
 Collection.prototype._dataReplace = function (data) {
-	if (this._linked) {
-		// Remove all items
-		jQuery.observable(this._data).refresh(data);
-	} else {
-		// Clear the array - using a while loop with pop is by far the
-		// fastest way to clear an array currently
-		while (this._data.length) {
-			this._data.pop();
-		}
-
-		// Append new items to the array
-		this._data = this._data.concat(data);
+	// Clear the array - using a while loop with pop is by far the
+	// fastest way to clear an array currently
+	while (this._data.length) {
+		this._data.pop();
 	}
+
+	// Append new items to the array
+	this._data = this._data.concat(data);
 };
 
 /**
