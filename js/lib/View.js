@@ -136,9 +136,9 @@ View.prototype.from = function (collection) {
 				pk,
 				i;
 
-			if (chainPacket.type === 'insert') {
-				// Check if we have a constraining query
-				if (self._querySettings.query) {
+			// Check if we have a constraining query
+			if (self._querySettings.query) {
+				if (chainPacket.type === 'insert') {
 					data = chainPacket.data;
 
 					// Check if the data matches our query
@@ -165,12 +165,7 @@ View.prototype.from = function (collection) {
 					return true;
 				}
 
-				return false;
-			}
-
-			if (chainPacket.type === 'update') {
-				// Check if we have a constraining query
-				if (self._querySettings.query) {
+				if (chainPacket.type === 'update') {
 					// Do a DB diff between this view's data and the underlying collection it reads from
 					// to see if something has changed
 					diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
@@ -212,10 +207,10 @@ View.prototype.from = function (collection) {
 					} else {
 						return false;
 					}
-				} else {
-					return false;
 				}
 			}
+
+			return false;
 		});
 
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
@@ -224,7 +219,7 @@ View.prototype.from = function (collection) {
 		this._transformInsert(collData);
 
 		this._privateData.primaryKey(collection.primaryKey());
-		this._privateData.insert(collData);
+		this._privateData.setData(collData);
 	}
 
 	return this;
