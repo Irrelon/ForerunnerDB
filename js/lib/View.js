@@ -216,7 +216,7 @@ View.prototype.from = function (collection) {
 		var collData = collection.find(this._querySettings.query, this._querySettings.options);
 
 		this._transformPrimaryKey(collection.primaryKey());
-		this._transformInsert(collData);
+		this._transformSetData(collData);
 
 		this._privateData.primaryKey(collection.primaryKey());
 		this._privateData.setData(collData);
