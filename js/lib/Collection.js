@@ -1371,20 +1371,17 @@ Collection.prototype._dataRemoveIndex = function (index) {
 Collection.prototype._dataReplace = function (data) {
 	if (this._linked) {
 		// Remove all items
-		jQuery.observable(this._data).remove(0, this._data.length);
-
-		if (data.length) {
-			this.insert(data);
-		}
+		jQuery.observable(this._data).refresh(data);
 	} else {
-		this.remove();
-
-		if (data.length) {
-			this.insert(data);
+		// Clear the array - using a while loop with pop is by far the
+		// fastest way to clear an array currently
+		while (this._data.length) {
+			this._data.pop();
 		}
+
+		// Append new items to the array
+		this._data = this._data.concat(data);
 	}
-
-
 };
 
 /**
