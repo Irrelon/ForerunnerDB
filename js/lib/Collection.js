@@ -481,7 +481,8 @@ Collection.prototype.update = function (query, update, options) {
 			op.time('Resolve chains');
 			this.chainSend('update', {
 				query: query,
-				update: update
+				update: update,
+				dataSet: dataSet
 			}, options);
 			op.time('Resolve chains');
 
@@ -1066,7 +1067,8 @@ Collection.prototype.remove = function (query, options, callback) {
 
 			//op.time('Resolve chains');
 			this.chainSend('remove', {
-				query: query
+				query: query,
+				dataSet: dataSet
 			}, options);
 			//op.time('Resolve chains');
 
