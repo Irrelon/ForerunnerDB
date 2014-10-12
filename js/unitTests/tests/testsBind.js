@@ -4,7 +4,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
-userView.debug(true);
+
 		userView.link('#testTarget', {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
@@ -747,7 +747,7 @@ userView.debug(true);
 
 		var timeStart = new Date().getTime();
 		view = db.view('test');
-
+		view.debug(true);
 		view._privateData._deferThreshold.insert = 10000;
 		view._privateData._deferThreshold.update = 10000;
 		view._privateData._deferThreshold.remove = 10000;
@@ -768,7 +768,7 @@ userView.debug(true);
 		});
 
 		var totalTime = new Date().getTime() - timeStart;
-		ok(totalTime < 200, 'Time taken to build DOM linked view from data is acceptable: ' + totalTime + 'ms');
+		ok(totalTime < 1000, 'Time taken to build DOM linked view from data is acceptable: ' + totalTime + 'ms');
 
 		var timeStart = new Date().getTime();
 		coll.insert({
@@ -777,7 +777,7 @@ userView.debug(true);
 		});
 		var totalTime = new Date().getTime() - timeStart;
 
-		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
+		ok(totalTime < 50, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
 
 		var elems = $('#testTarget').find('.item');
 		ok(elems.length === count, "Document count " + count + ": " + elems.length);
