@@ -5,10 +5,190 @@ var Core = require('../lib/Core'),
 	Highcharts = require('../lib/Highcharts'),
 	Persist = require('../lib/Persist'),
 	Document = require('../lib/Document'),
-	Overview = require('../lib/Overview');
+	Overview = require('../lib/Overview'),
+	ActiveBucket = require('../lib/ActiveBucket');
 
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":13,"../lib/Persist":15,"../lib/View":18}],2:[function(require,module,exports){
+},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":5,"../lib/Core":6,"../lib/Document":8,"../lib/Highcharts":9,"../lib/Overview":14,"../lib/Persist":16,"../lib/View":19}],2:[function(require,module,exports){
+var Shared = require('./Shared'),
+	Path = require('./Path');
+
+var ActiveBucket = function (orderBy) {
+	this._keyArr = [];
+	this._bucketData = {};
+
+	var sortKey,
+		sortSingleObj,
+		bucket;
+
+	this._count = 0;
+
+	for (sortKey in orderBy) {
+		if (orderBy.hasOwnProperty(sortKey)) {
+			/*sortSingleObj = {};
+			sortSingleObj[sortKey] = orderBy[sortKey];
+			sortSingleObj.___fdbKey = sortKey;*/
+			this._keyArr.push(sortKey);
+
+			bucket = this._bucketData[sortKey] = new BucketData();
+			bucket._path = sortKey;
+			bucket._dir = orderBy[sortKey];
+		}
+	}
+};
+
+Shared.addModule('ActiveBucket', ActiveBucket);
+
+ActiveBucket.prototype.add = function (obj) {
+	var index,
+		arr = this._keyArr,
+		count = arr.length;
+
+	for (index = 0; index < count; index++) {
+		this._bucketData[arr[index]].add(obj);
+	}
+
+	this._count++;
+};
+
+ActiveBucket.prototype.remove = function (obj) {
+	this._bucket.remove(obj);
+	this._count--;
+};
+
+ActiveBucket.prototype.index = function (obj) {
+	var index,
+		positionArr = [],
+		arr = this._keyArr,
+		count = arr.length;
+
+	for (index = 0; index < count; index++) {
+		positionArr.push(this._bucketData[arr[index]].index(obj));
+	}
+
+	return positionArr;
+};
+
+ActiveBucket.prototype.count = function () {
+	return this._count;
+};
+
+BucketData = function () {
+	this._path = ''; // The name of the key to sort on
+	this._dir = 1; // The direction to sort in (defaults to ascending)
+	this._data = {}; // The bucket's data
+	this._order = []; // The sorted keys
+	this._count = 0; // The overall number of objects held in reference
+};
+
+BucketData.prototype.add = function (obj) {
+	var keyValue = obj[this._path],
+		currentIndex,
+		node;
+
+	// Check if the object has the path we need to sort on
+	if (keyValue !== undefined) {
+		// Check if this is a new key or existing one
+		if (this._data[keyValue] === undefined) {
+			// Add the new key as an object we can store further data against
+			this._data[keyValue] = 1;
+
+			// Add the key to the order array
+			this._order.push(keyValue);
+
+			// Sort the key array so it's always up to date
+			if (this._dir === 1) {
+				// Sort ascending
+				this._order.sort(this._sortAsc);
+			} else if (this._dir === -1) {
+				// Sort descending
+				this._order.sort(this._sortDesc);
+			}
+		} else {
+			// Add to the existing reference count
+			this._data[keyValue]++;
+		}
+
+		this._count++;
+	}
+};
+
+BucketData.prototype.remove = function (obj) {
+	var keyValue = obj[this._path],
+		keyIndex,
+		index,
+		node;
+
+	// Check if the object has the path we need to sort on
+	if (keyValue !== undefined) {
+		// Check if this is a new key or existing one
+		if (this._data[keyValue]) {
+			// Dereference this object from the ref counter
+			this._data[keyValue]--;
+
+			// Check if the key is no longer referenced
+			if (this._data[keyValue] === 0) {
+				// The key is no longer referenced, remove it
+				keyIndex = this._order.indexOf(keyValue);
+
+				if (keyIndex > -1) {
+					this._order.splice(keyIndex, 1);
+				}
+
+				delete this._data[keyValue];
+			}
+		}
+
+		this._count--;
+	}
+};
+
+BucketData.prototype.index = function (obj) {
+	return this._order.indexOf(obj[this._path]);
+};
+
+BucketData.prototype.count = function  () {
+	return this._count;
+};
+
+BucketData.prototype.keyCount = function () {
+	if (this._subBucket) {
+		return this._order.length + this._subBucket._order.length;
+	}
+
+	return this._order.length;
+};
+
+BucketData.prototype._sortAsc = function (a, b) {
+	if (typeof(a) === 'string' && typeof(b) === 'string') {
+		return a.localeCompare(b);
+	} else {
+		if (a > b) {
+			return 1;
+		} else if (a < b) {
+			return -1;
+		}
+	}
+
+	return 0;
+};
+
+BucketData.prototype._sortDesc = function (a, b) {
+	if (typeof(a) === 'string' && typeof(b) === 'string') {
+		return a.localeCompare(b) === 1 ? -1 : 1;
+	} else {
+		if (a > b) {
+			return -1;
+		} else if (a < b) {
+			return 1;
+		}
+	}
+
+	return 0;
+};
+
+Shared.addModule('BucketData', BucketData);
+},{"./Path":15,"./Shared":18}],3:[function(require,module,exports){
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -55,7 +235,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -539,7 +719,8 @@ Collection.prototype.update = function (query, update, options) {
 			op.time('Resolve chains');
 			this.chainSend('update', {
 				query: query,
-				update: update
+				update: update,
+				dataSet: dataSet
 			}, options);
 			op.time('Resolve chains');
 
@@ -1124,7 +1305,8 @@ Collection.prototype.remove = function (query, options, callback) {
 
 			//op.time('Resolve chains');
 			this.chainSend('remove', {
-				query: query
+				query: query,
+				dataSet: dataSet
 			}, options);
 			//op.time('Resolve chains');
 
@@ -1973,7 +2155,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof(valA) === 'string' && typeof(valB) === 'string') {
+			if (typeof valA === 'string' && typeof valB === 'string') {
 				return valA.localeCompare(valB);
 			} else {
 				if (valA > valB) {
@@ -1991,7 +2173,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof(valA) === 'string' && typeof(valB) === 'string') {
+			if (typeof valA === 'string' && typeof valB === 'string') {
 				return valA.localeCompare(valB) === 1 ? -1 : 1;
 			} else {
 				if (valA > valB) {
@@ -2874,7 +3056,7 @@ Core.prototype.collections = function () {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":14,"./Shared":17}],4:[function(require,module,exports){
+},{"./Crc":7,"./Index":10,"./KeyValueStore":11,"./Metrics":12,"./Path":15,"./Shared":18}],5:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3144,7 +3326,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":17}],5:[function(require,module,exports){
+},{"./Collection":4,"./Shared":18}],6:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3481,7 +3663,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Shared.js":17}],6:[function(require,module,exports){
+},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":12,"./Shared.js":18}],7:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3509,7 +3691,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var Shared,
 	Collection,
 	Core,
@@ -3882,7 +4064,7 @@ Core.prototype.document = function (documentName) {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":3,"./Shared":17}],8:[function(require,module,exports){
+},{"./Collection":4,"./Shared":18}],9:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4141,7 +4323,7 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":17}],9:[function(require,module,exports){
+},{"./Shared":18}],10:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4494,7 +4676,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":14,"./Shared":17}],10:[function(require,module,exports){
+},{"./Path":15,"./Shared":18}],11:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -4706,7 +4888,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":17}],11:[function(require,module,exports){
+},{"./Shared":18}],12:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Operation = require('./Operation');
 
@@ -4778,7 +4960,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":12,"./Shared":17}],12:[function(require,module,exports){
+},{"./Operation":13,"./Shared":18}],13:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4922,7 +5104,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":14,"./Shared":17}],13:[function(require,module,exports){
+},{"./Path":15,"./Shared":18}],14:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5102,7 +5284,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":17}],14:[function(require,module,exports){
+},{"./Collection":4,"./Document":8,"./Shared":18}],15:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -5512,7 +5694,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":17}],15:[function(require,module,exports){
+},{"./Shared":18}],16:[function(require,module,exports){
 // Import external names locally
 var Shared = require('./Shared'),
 	Core,
@@ -5709,7 +5891,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":17}],16:[function(require,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./Shared":18}],17:[function(require,module,exports){
 var Shared = require('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -5746,7 +5928,7 @@ Shared.addModule('ReactorIO', ReactorIO);
 Shared.inherit(ReactorIO.prototype, Shared.chainReactor);
 
 module.exports = ReactorIO;
-},{"./Shared":17}],17:[function(require,module,exports){
+},{"./Shared":18}],18:[function(require,module,exports){
 var idCounter = 0,
 	/**
 	 * Generates an array of all the different definition signatures that can be
@@ -6153,7 +6335,7 @@ Shared.off = Shared.common.off;
 Shared.emit = Shared.common.emit;
 
 module.exports = Shared;
-},{"./ChainReactor":2}],18:[function(require,module,exports){
+},{"./ChainReactor":3}],19:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6404,12 +6586,12 @@ View.prototype._chainHandler = function (chainPacket) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			// Get the new data from our underlying data source sorted as we want
+			var collData = this._from.find(this._querySettings.query, this._querySettings.options);
 
 			// Modify transform data
-			this._transformSetData(chainPacket.data);
-			this._privateData.setData(chainPacket.data);
+			this._transformSetData(collData);
+			this._privateData.setData(collData);
 			break;
 
 		case 'insert':
@@ -6983,5 +7165,5 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":16,"./Shared":17}]},{},[1])(1)
+},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":17,"./Shared":18}]},{},[1])(1)
 });

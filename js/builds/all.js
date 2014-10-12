@@ -4,6 +4,7 @@ var Core = require('../lib/Core'),
 	Highcharts = require('../lib/Highcharts'),
 	Persist = require('../lib/Persist'),
 	Document = require('../lib/Document'),
-	Overview = require('../lib/Overview');
+	Overview = require('../lib/Overview'),
+	ActiveBucket = require('../lib/ActiveBucket');
 
 module.exports = Core;

@@ -2,13 +2,27 @@
 var AutoBind = _dereq_('../lib/AutoBind');
 
 module.exports = AutoBind;
+
 },{"../lib/AutoBind":2}],2:[function(_dereq_,module,exports){
 var Shared = ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
 AutoBind.extendCollection = function (Module) {
-	var superInit = Module.prototype.init;
+	var superInit = Module.prototype.init,
+		superDataReplace = Module.prototype._dataReplace,
+		superDataInsertIndex = Module.prototype._dataInsertIndex,
+		superDataRemoveIndex = Module.prototype._dataRemoveIndex,
+		superUpdateProperty = Module.prototype._updateProperty,
+		superUpdateIncrement = Module.prototype._updateIncrement,
+		superUpdateSpliceMove = Module.prototype._updateSpliceMove,
+		superUpdateSplicePush = Module.prototype._updateSplicePush,
+		superUpdatePush = Module.prototype._updatePush,
+		superUpdatePull = Module.prototype._updatePull,
+		superUpdateMultiply = Module.prototype._updateMultiply,
+		superUpdateRename = Module.prototype._updateRename,
+		superUpdateUnset = Module.prototype._updateUnset,
+		superUpdatePop = Module.prototype._updatePop;
 
 	Module.prototype.init = function () {
 		this._linked = 0;
@@ -136,6 +150,209 @@ AutoBind.extendCollection = function (Module) {
 		}
 
 		return this;
+	};
+
+	Module.prototype._dataReplace = function (data) {
+		if (this._linked) {
+			// Remove all items
+			jQuery.observable(this._data).refresh(data);
+		} else {
+			superDataReplace.apply(this, arguments);
+		}
+	};
+
+	Module.prototype._dataInsertIndex = function (index, doc) {
+		if (this._linked) {
+			jQuery.observable(this._data).insert(index, doc);
+		} else {
+			superDataInsertIndex.apply(this, arguments);
+		}
+	};
+
+	Module.prototype._dataRemoveIndex = function (index) {
+		if (this._linked) {
+			jQuery.observable(this._data).remove(index);
+		} else {
+			superDataRemoveIndex.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Updates a property on an object depending on if the collection is
+	 * currently running data-binding or not.
+	 * @param {Object} doc The object whose property is to be updated.
+	 * @param {String} prop The property to update.
+	 * @param {*} val The new value of the property.
+	 * @private
+	 */
+	Module.prototype._updateProperty = function (doc, prop, val) {
+		if (this._linked) {
+			jQuery.observable(doc).setProperty(prop, val);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.Collection: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+			}
+		} else {
+			superUpdateProperty.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Increments a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to increment by.
+	 * @private
+	 */
+	Module.prototype._updateIncrement = function (doc, prop, val) {
+		if (this._linked) {
+			jQuery.observable(doc).setProperty(prop, doc[prop] + val);
+		} else {
+			superUpdateIncrement.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Changes the index of an item in the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} indexFrom The index to move the item from.
+	 * @param {Number} indexTo The index to move the item to.
+	 * @private
+	 */
+	Module.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
+		if (this._linked) {
+			jQuery.observable(arr).move(indexFrom, indexTo);
+
+			if (this.debug()) {
+				console.log('ForerunnerDB.Collection: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+			}
+		} else {
+			superUpdateSpliceMove.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Inserts an item into the passed array at the specified index.
+	 * @param {Array} arr The array to insert into.
+	 * @param {Number} index The index to insert at.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	Module.prototype._updateSplicePush = function (arr, index, doc) {
+		if (this._linked) {
+			if (arr.length > index) {
+				jQuery.observable(arr).insert(index, doc);
+			} else {
+				jQuery.observable(arr).insert(doc);
+			}
+		} else {
+			superUpdateSplicePush.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Inserts an item at the end of an array.
+	 * @param {Array} arr The array to insert the item into.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	Module.prototype._updatePush = function (arr, doc) {
+		if (this._linked) {
+			jQuery.observable(arr).insert(doc);
+		} else {
+			superUpdatePush.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Removes an item from the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} index The index of the item in the array to remove.
+	 * @private
+	 */
+	Module.prototype._updatePull = function (arr, index) {
+		if (this._linked) {
+			jQuery.observable(arr).remove(index);
+		} else {
+			superUpdatePull.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Multiplies a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to multiply by.
+	 * @private
+	 */
+	Module.prototype._updateMultiply = function (doc, prop, val) {
+		if (this._linked) {
+			jQuery.observable(doc).setProperty(prop, doc[prop] * val);
+		} else {
+			superUpdateMultiply.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Renames a property on a document to the passed property.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to rename.
+	 * @param {Number} val The new property name.
+	 * @private
+	 */
+	Module.prototype._updateRename = function (doc, prop, val) {
+		if (this._linked) {
+			jQuery.observable(doc).setProperty(val, doc[prop]);
+			jQuery.observable(doc).removeProperty(prop);
+		} else {
+			superUpdateRename.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Deletes a property on a document.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @private
+	 */
+	Module.prototype._updateUnset = function (doc, prop) {
+		if (this._linked) {
+			jQuery.observable(doc).removeProperty(prop);
+		} else {
+			superUpdateUnset.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	Module.prototype._updatePop = function (doc, val) {
+		var index,
+			updated = false;
+
+		if (this._linked) {
+			if (doc.length > 0) {
+
+				if (val === 1) {
+					index = doc.length - 1;
+				} else if (val === -1) {
+					index = 0;
+				}
+
+				if (index > -1) {
+					jQuery.observable(arr).remove(index);
+					updated = true;
+				}
+			}
+		} else {
+			updated = superUpdatePop.apply(this, arguments);
+		}
+
+		return updated;
 	};
 };
 
@@ -365,6 +582,7 @@ if (typeof jQuery !== 'undefined') {
 }
 
 module.exports = AutoBind;
+
 },{"../lib/vendor/jsviews":3}],3:[function(_dereq_,module,exports){
 var init = (function () {
 	/*! jsviews.js v1.0.0-alpha single-file version:
