@@ -10,7 +10,9 @@ Shared = require('./Shared');
 
 /**
  * The view constructor.
- * @param viewName
+ * @param name
+ * @param query
+ * @param options
  * @constructor
  */
 var View = function (name, query, options) {
@@ -248,12 +250,12 @@ View.prototype._chainHandler = function (chainPacket) {
 				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			// Get the new data from our underlying data source sorted as we want
+			var collData = this._from.find(this._querySettings.query, this._querySettings.options);
 
 			// Modify transform data
-			this._transformSetData(chainPacket.data);
-			this._privateData.setData(chainPacket.data);
+			this._transformSetData(collData);
+			this._privateData.setData(collData);
 			break;
 
 		case 'insert':
