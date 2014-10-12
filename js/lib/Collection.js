@@ -1917,7 +1917,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof(valA) === 'string' && typeof(valB) === 'string') {
+			if (typeof valA === 'string' && typeof valB === 'string') {
 				return valA.localeCompare(valB);
 			} else {
 				if (valA > valB) {
@@ -1935,7 +1935,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof(valA) === 'string' && typeof(valB) === 'string') {
+			if (typeof valA === 'string' && typeof valB === 'string') {
 				return valA.localeCompare(valB) === 1 ? -1 : 1;
 			} else {
 				if (valA > valB) {
