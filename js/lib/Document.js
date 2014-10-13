@@ -15,7 +15,9 @@ Document.prototype.init = function (name) {
 };
 
 Shared.addModule('Document', Document);
-Shared.inherit(Document.prototype, Shared.chainReactor);
+Shared.mixin(Document.prototype, 'Mixin.Common');
+Shared.mixin(Document.prototype, 'Mixin.Events');
+Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
@@ -59,7 +61,7 @@ Document.prototype.setData = function (data) {
 			data.$unset = $unset;
 
 			// Now update the object with new data
-			this._updateObject(this._data, data, {});
+			this.updateObject(this._data, data, {});
 		} else {
 			// Straight data assignment
 			this._data = data;
@@ -68,42 +70,6 @@ Document.prototype.setData = function (data) {
 
 	return this;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Document.prototype.decouple = Shared.common.decouple;
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Document.prototype.objectId = Shared.common.objectId;
-
-Document.prototype.on = Shared.common.on;
-Document.prototype.off = Shared.common.off;
-Document.prototype.emit = Shared.common.emit;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Document.prototype.debug = Shared.common.debug;
 
 /**
  * Modifies the document. This will update the document with the data held in 'update'.
@@ -117,7 +83,7 @@ Document.prototype.debug = Shared.common.debug;
  * @returns {Array} The items that were updated.
  */
 Document.prototype.update = function (query, update, options) {
-	this._updateObject(this._data, update, query, options);
+	this.updateObject(this._data, update, query, options);
 };
 
 /**
@@ -133,7 +99,7 @@ Document.prototype.update = function (query, update, options) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Document.prototype._updateObject = Collection.prototype._updateObject;
+Document.prototype.updateObject = Collection.prototype.updateObject;
 
 /**
  * Determines if the passed key has an array positional mark (a dollar at the end

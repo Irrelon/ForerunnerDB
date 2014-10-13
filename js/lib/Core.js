@@ -27,9 +27,11 @@
 var Shared,
 	Collection,
 	Metrics,
-	Crc;
+	Crc,
+	Overload;
 
-Shared = require('./Shared.js');
+Shared = require('./Shared');
+Overload = require('./Overload');
 
 /**
  * The main ForerunnerDB core object.
@@ -45,7 +47,7 @@ Core.prototype.init = function () {
 	this._version = '1.2.7';
 };
 
-Core.prototype.moduleLoaded = Shared.overload({
+Core.prototype.moduleLoaded = Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
 	 * @param {String} moduleName The name of the module to check for.
@@ -127,7 +129,8 @@ Core.shared = Shared;
 Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
-Shared.inherit(Core.prototype, Shared.chainReactor);
+Shared.mixin(Core.prototype, 'Mixin.Common');
+Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
@@ -167,28 +170,6 @@ Core.prototype.isClient = function () {
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Core.prototype.decouple = Shared.common.decouple;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Core.prototype.debug = Shared.common.debug;
 
 /**
  * Converts a normal javascript array of objects into a DB collection.
@@ -256,16 +237,6 @@ Core.prototype.emit = function(event, data) {
 
 	return this;
 };
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Core.prototype.objectId = Shared.common.objectId;
 
 /**
  * Find all documents across all collections in the database that match the passed

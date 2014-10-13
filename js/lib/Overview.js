@@ -21,7 +21,8 @@ Overview.prototype.init = function (name) {
 };
 
 Shared.addModule('Overview', Overview);
-Shared.inherit(Overview.prototype, Shared.chainReactor);
+Shared.mixin(Overview.prototype, 'Mixin.Common');
+Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Document = require('./Document');
@@ -57,22 +58,6 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 
 	return ret;
 });
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Overview.prototype.debug = Shared.common.debug;
-Overview.prototype.objectId = Shared.common.objectId;
 
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {

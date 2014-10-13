@@ -52,7 +52,10 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainReactor);
+Shared.mixin(Collection.prototype, 'Mixin.Common');
+Shared.mixin(Collection.prototype, 'Mixin.Events');
+Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -60,21 +63,6 @@ Path = require('./Path');
 Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -89,15 +77,6 @@ Collection.prototype.crc = Crc;
  * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'name');
-
-/**
- * Attach an event listener to the passed event.
- * @param {String} eventName The name of the event to listen for.
- * @param {Function} callback The method to call when the event is fired.
- */
-Collection.prototype.on = Shared.common.on;
-Collection.prototype.off = Shared.common.off;
-Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Get the internal data
@@ -155,7 +134,7 @@ Collection.prototype.primaryKey = function (keyName) {
 			this._primaryIndex.primaryKey(keyName);
 
 			// Rebuild the primary key index
-			this._rebuildPrimaryKeyIndex();
+			this.rebuildPrimaryKeyIndex();
 		}
 		return this;
 	}
@@ -207,11 +186,10 @@ Shared.synthesize(Collection.prototype, 'db');
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
 		var op = this._metrics.create('setData');
-
 		op.start();
-
-		options = options || {};
-		options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
+		
+		options = this.options(options);
+		this.preSetData(data, options, callback);
 
 		if (options.$decouple) {
 			data = this.decouple(data);
@@ -231,7 +209,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		// Update the primary key index
 		op.time('Rebuild Primary Key Index');
-		this._rebuildPrimaryKeyIndex(options);
+		this.rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
 		op.time('Resolve chains');
@@ -253,9 +231,9 @@ Collection.prototype.setData = function (data, options, callback) {
  * @param {Object=} options An optional options object.
  * @private
  */
-Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
-	var ensureKeys = options && options.ensureKeys !== undefined ? options.ensureKeys : true,
-		violationCheck = options && options.violationCheck !== undefined ? options.violationCheck : true,
+Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
+		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
 		arrCount,
 		arrItem,
@@ -279,7 +257,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 
 		if (ensureKeys) {
 			// Make sure the item has a primary key
-			this._ensurePrimaryKey(arrItem);
+			this.ensurePrimaryKey(arrItem);
 		}
 
 		if (violationCheck) {
@@ -306,7 +284,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
  * @param {Object} obj The object to check a primary key against.
  * @private
  */
-Collection.prototype._ensurePrimaryKey = function (obj) {
+Collection.prototype.ensurePrimaryKey = function (obj) {
 	if (obj[this._primaryKey] === undefined) {
 		// Assign a primary key automatically
 		obj[this._primaryKey] = this.objectId();
@@ -454,7 +432,7 @@ Collection.prototype.update = function (query, update, options) {
 				// Remove item from indexes
 				self._removeIndex(doc);
 
-				var result = self._updateObject(doc, update, query, options, '');
+				var result = self.updateObject(doc, update, query, options, '');
 
 				// Update the item in the primary index
 				if (self._insertIndex(doc)) {
@@ -463,7 +441,7 @@ Collection.prototype.update = function (query, update, options) {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
 				}
 			} else {
-				return self._updateObject(doc, update, query, options, '');
+				return self.updateObject(doc, update, query, options, '');
 			}
 		};
 
@@ -522,7 +500,7 @@ Collection.prototype.updateById = function (id, update) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Collection.prototype._updateObject = function (doc, update, query, options, path, opType) {
+Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -556,7 +534,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					default:
 						operation = true;
-						recurseUpdated = this._updateObject(doc, update[i], query, options, path, i);
+						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -586,7 +564,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
+						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -609,7 +587,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
+									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
 
 									if (recurseUpdated) {
 										updated = true;
@@ -626,7 +604,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 						} else {
 							// The doc key is an object so traverse the
 							// update further
-							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
 
 							if (recurseUpdated) {
 								updated = true;
@@ -1264,7 +1242,7 @@ Collection.prototype._insert = function (doc, index) {
 	if (doc) {
 		var indexViolation;
 
-		this._ensurePrimaryKey(doc);
+		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
@@ -1424,13 +1402,6 @@ Collection.prototype.distinct = function (key, query, options) {
 };
 
 /**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Collection.prototype.decouple = Shared.common.decouple;
-
-/**
  * Helper method to find a document by it's id.
  * @param {String} id The id of the document.
  * @param {Object=} options The options object, allowed keys are sort and limit.
@@ -1489,6 +1460,14 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+Collection.prototype.options = function (obj) {
+	obj = obj || {};
+	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
+	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
+	
+	return obj;
+};
+
 /**
  * Queries the collection based on the query object passed.
  * @param {Object} query The query key/values that a document must match in
@@ -1500,9 +1479,8 @@ Collection.prototype.explain = function (query, options) {
  */
 Collection.prototype.find = function (query, options) {
 	query = query || {};
-	options = options || {};
-
-	options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
+	
+	options = this.options(options);
 
 	var op = this._metrics.create('find'),
 		self = this,
@@ -2676,16 +2654,6 @@ Collection.prototype.index = function (name) {
 Collection.prototype.lastOp = function () {
 	return this._metrics.list();
 };
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Collection.prototype.objectId = Shared.common.objectId;
 
 /**
  * Generates a difference object that contains insert, update and remove arrays

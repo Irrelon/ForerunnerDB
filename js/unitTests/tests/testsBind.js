@@ -4,7 +4,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
-
+userView.debug(true);
 		userView.link('#testTarget', {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
