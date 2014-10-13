@@ -1914,7 +1914,7 @@ Collection.prototype._sort = function (key, arr) {
 				valB = pathSolver.value(b)[0];
 
 			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valA.localeCompare(valB) === 1 ? -1 : 1;
+				return valA.localeCompare(valB);
 			} else {
 				if (valA > valB) {
 					return -1;
