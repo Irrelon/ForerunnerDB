@@ -5,9 +5,12 @@ var ActiveBucket = function (orderBy) {
 	var sortKey,
 		bucketData;
 
+	this._primaryKey = '_id';
 	this._keyArr = [];
 	this._bucketData = {};
 	this._count = 0;
+	this._order = [];
+	this._ref = {};
 
 	for (sortKey in orderBy) {
 		if (orderBy.hasOwnProperty(sortKey)) {
@@ -24,9 +27,11 @@ var ActiveBucket = function (orderBy) {
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
+Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
 ActiveBucket.prototype.add = function (obj) {
 	var index,
+		docIndex,
 		arr = this._keyArr,
 		count = arr.length;
 
@@ -34,7 +39,34 @@ ActiveBucket.prototype.add = function (obj) {
 		this._bucketData[arr[index]].add(obj);
 	}
 
+	// Create a reference to the document
+	this._addRef(obj);
+
 	this._count++;
+};
+
+ActiveBucket.prototype._addRef = function (obj) {
+	var index,
+		arr = this._keyArr,
+		arrCount = arr.length,
+		currRef = this._ref,
+		key,
+		keyValue;
+
+	for (index = 0; index < arrCount; index++) {
+		key = arr[index];
+		keyValue = obj[key];
+
+		if (index === arrCount - 1) {
+			// This is the last key, assign the object
+			currRef = currRef[keyValue] = currRef[keyValue] || [];
+
+			// Push the object to the array
+			currRef.push(obj);
+		} else {
+			currRef = currRef[keyValue] = currRef[keyValue] || {};
+		}
+	}
 };
 
 ActiveBucket.prototype.remove = function (obj) {
@@ -47,14 +79,33 @@ ActiveBucket.prototype.index = function (obj) {
 		positionArr = [],
 		arr = this._keyArr,
 		count = arr.length,
-		multiplier;
+		docIndex,
+		key,
+		currRef = this._ref,
+		finalIndex;
 
 	for (index = 0; index < count; index++) {
-		multiplier = index === 0 ? 1 : index * 1000;
-		positionArr.push((this._bucketData[arr[index]].index(obj) * multiplier));
+		key = arr[index];
+		currRef = currRef[obj[key]];
+
+		docIndex = this._bucketData[key].index(obj);
+		docIndex = index === 0 ? docIndex : ("000000" + docIndex).slice(-6);
+
+		if (index === count - 1) {
+			// Assign the array index to the index
+			finalIndex = currRef.indexOf(obj);
+
+			if (finalIndex === -1) {
+				finalIndex = currRef.length;
+			}
+
+			docIndex += '.' + ("000000" + finalIndex).slice(-6);
+		}
+
+		positionArr.push(docIndex);
 	}
 
-	return positionArr;
+	return positionArr.join('.');
 };
 
 ActiveBucket.prototype.count = function () {
