@@ -46,10 +46,12 @@ ActiveBucket.prototype.index = function (obj) {
 	var index,
 		positionArr = [],
 		arr = this._keyArr,
-		count = arr.length;
+		count = arr.length,
+		multiplier;
 
 	for (index = 0; index < count; index++) {
-		positionArr.push(this._bucketData[arr[index]].index(obj));
+		multiplier = index === 0 ? 1 : index * 1000;
+		positionArr.push((this._bucketData[arr[index]].index(obj) * multiplier));
 	}
 
 	return positionArr;
