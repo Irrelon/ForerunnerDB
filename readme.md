@@ -710,6 +710,7 @@ So to summarise:
 
 * Always check unit tests are running and passing
 * Create new tests when you add or modify functionality that is not currently under test coverage
+* Make sure you document your code with JSDoc comments
 
 # iOS Version
 You may notice in the repo that there is an iOS folder containing a version of Forerunner for iOS. This project is still at an alpha level and should be considered non-production code, however you are welcome to play around with it and get a feel for what will be available soon.
@@ -781,6 +782,7 @@ ForerunnerDB's project road-map:
 * Added new class "Document" to allow data-binding against a single document object - COMPLETE
 * Added new class "Overview" to allow data-binding against auto-propagated map-reduce data - COMPLETE
 * Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
+* Rewritten view sync system for performance
 * Remove iOS from this repo, add to its own
 * Remove server from this repo, add to its own
 
