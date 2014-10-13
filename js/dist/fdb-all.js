@@ -9,19 +9,20 @@ var Core = require('../lib/Core'),
 	ActiveBucket = require('../lib/ActiveBucket');
 
 module.exports = Core;
-},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":5,"../lib/Core":6,"../lib/Document":8,"../lib/Highcharts":9,"../lib/Overview":14,"../lib/Persist":16,"../lib/View":19}],2:[function(require,module,exports){
+},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
 var ActiveBucket = function (orderBy) {
+	var sortKey,
+		bucketData;
+
+	this._primaryKey = '_id';
 	this._keyArr = [];
 	this._bucketData = {};
-
-	var sortKey,
-		sortSingleObj,
-		bucket;
-
 	this._count = 0;
+	this._order = [];
+	this._ref = {};
 
 	for (sortKey in orderBy) {
 		if (orderBy.hasOwnProperty(sortKey)) {
@@ -30,17 +31,49 @@ var ActiveBucket = function (orderBy) {
 			sortSingleObj.___fdbKey = sortKey;*/
 			this._keyArr.push(sortKey);
 
-			bucket = this._bucketData[sortKey] = new BucketData();
-			bucket._path = sortKey;
-			bucket._dir = orderBy[sortKey];
+			bucketData = this._bucketData[sortKey] = new BucketData();
+			bucketData._path = sortKey;
+			bucketData._dir = orderBy[sortKey];
 		}
 	}
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
+Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
+
+ActiveBucket.prototype.arr = function () {
+	// Build the order array
+	var index,
+		arr = this._keyArr,
+		arrCount = arr.length,
+		currRef = this._ref,
+		key,
+		keyValue,
+		bucketData,
+		bucketIndex;
+
+	for (index = 0; index < arrCount; index++) {
+		key = arr[index];
+		bucketData = this._bucketData[key];
+
+		for (bucketIndex = 0; bucketIndex < bucketData._order.length; bucketIndex++) {
+			keyValue = bucketData._order[bucketIndex];
+			currRef = currRef[keyValue];
+		}
+
+		if (index === arrCount - 1) {
+			// This is the last key
+
+		}
+	}
+
+	this._order.sort(this._sortAsc);
+	return this._order;
+};
 
 ActiveBucket.prototype.add = function (obj) {
 	var index,
+		docIndex,
 		arr = this._keyArr,
 		count = arr.length;
 
@@ -48,11 +81,38 @@ ActiveBucket.prototype.add = function (obj) {
 		this._bucketData[arr[index]].add(obj);
 	}
 
+	// Create a reference to the document
+	this._addRef(obj);
+
 	this._count++;
 };
 
+ActiveBucket.prototype._addRef = function (obj) {
+	var index,
+		arr = this._keyArr,
+		arrCount = arr.length,
+		currRef = this._ref,
+		key,
+		keyValue;
+
+	for (index = 0; index < arrCount; index++) {
+		key = arr[index];
+		keyValue = obj[key];
+
+		if (index === arrCount - 1) {
+			// This is the last key, assign the object
+			currRef = currRef[keyValue] = currRef[keyValue] || [];
+
+			// Push the object to the array
+			currRef.push(obj);
+		} else {
+			currRef = currRef[keyValue] = currRef[keyValue] || {};
+		}
+	}
+};
+
 ActiveBucket.prototype.remove = function (obj) {
-	this._bucket.remove(obj);
+	this._bucketData.remove(obj);
 	this._count--;
 };
 
@@ -60,13 +120,34 @@ ActiveBucket.prototype.index = function (obj) {
 	var index,
 		positionArr = [],
 		arr = this._keyArr,
-		count = arr.length;
+		count = arr.length,
+		docIndex,
+		key,
+		currRef = this._ref,
+		finalIndex;
 
 	for (index = 0; index < count; index++) {
-		positionArr.push(this._bucketData[arr[index]].index(obj));
+		key = arr[index];
+		currRef = currRef[obj[key]];
+
+		docIndex = this._bucketData[key].index(obj);
+		docIndex = index === 0 ? docIndex : ("000000" + docIndex).slice(-6);
+
+		if (index === count - 1) {
+			// Assign the array index to the index
+			finalIndex = currRef.indexOf(obj);
+
+			if (finalIndex === -1) {
+				finalIndex = currRef.length;
+			}
+
+			docIndex += '.' + ("000000" + finalIndex).slice(-6);
+		}
+
+		positionArr.push(docIndex);
 	}
 
-	return positionArr;
+	return positionArr.join('.');
 };
 
 ActiveBucket.prototype.count = function () {
@@ -82,9 +163,7 @@ BucketData = function () {
 };
 
 BucketData.prototype.add = function (obj) {
-	var keyValue = obj[this._path],
-		currentIndex,
-		node;
+	var keyValue = obj[this._path];
 
 	// Check if the object has the path we need to sort on
 	if (keyValue !== undefined) {
@@ -115,9 +194,7 @@ BucketData.prototype.add = function (obj) {
 
 BucketData.prototype.remove = function (obj) {
 	var keyValue = obj[this._path],
-		keyIndex,
-		index,
-		node;
+		keyIndex;
 
 	// Check if the object has the path we need to sort on
 	if (keyValue !== undefined) {
@@ -152,10 +229,6 @@ BucketData.prototype.count = function  () {
 };
 
 BucketData.prototype.keyCount = function () {
-	if (this._subBucket) {
-		return this._order.length + this._subBucket._order.length;
-	}
-
 	return this._order.length;
 };
 
@@ -175,7 +248,7 @@ BucketData.prototype._sortAsc = function (a, b) {
 
 BucketData.prototype._sortDesc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
-		return a.localeCompare(b) === 1 ? -1 : 1;
+		return a.localeCompare(b) === true ? -1 : 1;
 	} else {
 		if (a > b) {
 			return -1;
@@ -188,54 +261,7 @@ BucketData.prototype._sortDesc = function (a, b) {
 };
 
 Shared.addModule('BucketData', BucketData);
-},{"./Path":15,"./Shared":18}],3:[function(require,module,exports){
-var ChainReactor = {
-	chain: function (obj) {
-		this._chain = this._chain || [];
-		var index = this._chain.indexOf(obj);
-
-		if (index === -1) {
-			this._chain.push(obj);
-		}
-	},
-	unChain: function (obj) {
-		if (this._chain) {
-			var index = this._chain.indexOf(obj);
-
-			if (index > -1) {
-				this._chain.splice(index, 1);
-			}
-		}
-	},
-	chainSend: function (type, data, options) {
-		if (this._chain) {
-			var arr = this._chain,
-				count = arr.length,
-				index;
-
-			for (index = 0; index < count; index++) {
-				arr[index].chainReceive(this, type, data, options);
-			}
-		}
-	},
-	chainReceive: function (sender, type, data, options) {
-		var chainPacket = {
-			sender: sender,
-			type: type,
-			data: data,
-			options: options
-		};
-
-		// Fire our internal handler
-		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
-			// Propagate the message down the chain
-			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
-		}
-	}
-};
-
-module.exports = ChainReactor;
-},{}],4:[function(require,module,exports){
+},{"./Path":19,"./Shared":22}],3:[function(require,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -290,7 +316,10 @@ Collection.prototype.init = function (name) {
 };
 
 Shared.addModule('Collection', Collection);
-Shared.inherit(Collection.prototype, Shared.chainReactor);
+Shared.mixin(Collection.prototype, 'Mixin.Common');
+Shared.mixin(Collection.prototype, 'Mixin.Events');
+Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -298,21 +327,6 @@ Path = require('./Path');
 Index = require('./Index');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Collection.prototype.debug = Shared.common.debug;
 
 /**
  * Returns a checksum of a string.
@@ -327,15 +341,6 @@ Collection.prototype.crc = Crc;
  * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'name');
-
-/**
- * Attach an event listener to the passed event.
- * @param {String} eventName The name of the event to listen for.
- * @param {Function} callback The method to call when the event is fired.
- */
-Collection.prototype.on = Shared.common.on;
-Collection.prototype.off = Shared.common.off;
-Collection.prototype.emit = Shared.common.emit;
 
 /**
  * Get the internal data
@@ -393,7 +398,7 @@ Collection.prototype.primaryKey = function (keyName) {
 			this._primaryIndex.primaryKey(keyName);
 
 			// Rebuild the primary key index
-			this._rebuildPrimaryKeyIndex();
+			this.rebuildPrimaryKeyIndex();
 		}
 		return this;
 	}
@@ -445,11 +450,10 @@ Shared.synthesize(Collection.prototype, 'db');
 Collection.prototype.setData = function (data, options, callback) {
 	if (data) {
 		var op = this._metrics.create('setData');
-
 		op.start();
-
-		options = options || {};
-		options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
+		
+		options = this.options(options);
+		this.preSetData(data, options, callback);
 
 		if (options.$decouple) {
 			data = this.decouple(data);
@@ -469,7 +473,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		// Update the primary key index
 		op.time('Rebuild Primary Key Index');
-		this._rebuildPrimaryKeyIndex(options);
+		this.rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
 		op.time('Resolve chains');
@@ -491,9 +495,9 @@ Collection.prototype.setData = function (data, options, callback) {
  * @param {Object=} options An optional options object.
  * @private
  */
-Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
-	var ensureKeys = options && options.ensureKeys !== undefined ? options.ensureKeys : true,
-		violationCheck = options && options.violationCheck !== undefined ? options.violationCheck : true,
+Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
+		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
 		arrCount,
 		arrItem,
@@ -517,7 +521,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
 
 		if (ensureKeys) {
 			// Make sure the item has a primary key
-			this._ensurePrimaryKey(arrItem);
+			this.ensurePrimaryKey(arrItem);
 		}
 
 		if (violationCheck) {
@@ -544,7 +548,7 @@ Collection.prototype._rebuildPrimaryKeyIndex = function (options) {
  * @param {Object} obj The object to check a primary key against.
  * @private
  */
-Collection.prototype._ensurePrimaryKey = function (obj) {
+Collection.prototype.ensurePrimaryKey = function (obj) {
 	if (obj[this._primaryKey] === undefined) {
 		// Assign a primary key automatically
 		obj[this._primaryKey] = this.objectId();
@@ -692,7 +696,7 @@ Collection.prototype.update = function (query, update, options) {
 				// Remove item from indexes
 				self._removeIndex(doc);
 
-				var result = self._updateObject(doc, update, query, options, '');
+				var result = self.updateObject(doc, update, query, options, '');
 
 				// Update the item in the primary index
 				if (self._insertIndex(doc)) {
@@ -701,7 +705,7 @@ Collection.prototype.update = function (query, update, options) {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
 				}
 			} else {
-				return self._updateObject(doc, update, query, options, '');
+				return self.updateObject(doc, update, query, options, '');
 			}
 		};
 
@@ -760,7 +764,7 @@ Collection.prototype.updateById = function (id, update) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Collection.prototype._updateObject = function (doc, update, query, options, path, opType) {
+Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -794,7 +798,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					default:
 						operation = true;
-						recurseUpdated = this._updateObject(doc, update[i], query, options, path, i);
+						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -824,7 +828,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
-						recurseUpdated = this._updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
+						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
 						if (recurseUpdated) {
 							updated = true;
 						}
@@ -847,7 +851,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									recurseUpdated = this._updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
+									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
 
 									if (recurseUpdated) {
 										updated = true;
@@ -864,7 +868,7 @@ Collection.prototype._updateObject = function (doc, update, query, options, path
 						} else {
 							// The doc key is an object so traverse the
 							// update further
-							recurseUpdated = this._updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
 
 							if (recurseUpdated) {
 								updated = true;
@@ -1502,7 +1506,7 @@ Collection.prototype._insert = function (doc, index) {
 	if (doc) {
 		var indexViolation;
 
-		this._ensurePrimaryKey(doc);
+		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
@@ -1662,13 +1666,6 @@ Collection.prototype.distinct = function (key, query, options) {
 };
 
 /**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Collection.prototype.decouple = Shared.common.decouple;
-
-/**
  * Helper method to find a document by it's id.
  * @param {String} id The id of the document.
  * @param {Object=} options The options object, allowed keys are sort and limit.
@@ -1727,6 +1724,14 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+Collection.prototype.options = function (obj) {
+	obj = obj || {};
+	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
+	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
+	
+	return obj;
+};
+
 /**
  * Queries the collection based on the query object passed.
  * @param {Object} query The query key/values that a document must match in
@@ -1738,9 +1743,8 @@ Collection.prototype.explain = function (query, options) {
  */
 Collection.prototype.find = function (query, options) {
 	query = query || {};
-	options = options || {};
-
-	options.$decouple = options.$decouple !== undefined ? options.$decouple : true;
+	
+	options = this.options(options);
 
 	var op = this._metrics.create('find'),
 		self = this,
@@ -2916,16 +2920,6 @@ Collection.prototype.lastOp = function () {
 };
 
 /**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Collection.prototype.objectId = Shared.common.objectId;
-
-/**
  * Generates a difference object that contains insert, update and remove arrays
  * representing the operations to execute to make this collection have the same
  * data as the one passed.
@@ -3056,7 +3050,7 @@ Core.prototype.collections = function () {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./Index":10,"./KeyValueStore":11,"./Metrics":12,"./Path":15,"./Shared":18}],5:[function(require,module,exports){
+},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":19,"./Shared":22}],4:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3079,26 +3073,12 @@ CollectionGroup.prototype.init = function (name) {
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
-Shared.inherit(CollectionGroup.prototype, Shared.chainReactor);
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-CollectionGroup.prototype.debug = Shared.common.debug;
 
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
@@ -3185,13 +3165,6 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 
 	return this;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-CollectionGroup.prototype.decouple = Shared.common.decouple;
 
 CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	//sender = chainPacket.sender;
@@ -3326,7 +3299,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":18}],6:[function(require,module,exports){
+},{"./Collection":3,"./Shared":22}],5:[function(require,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3356,9 +3329,11 @@ module.exports = CollectionGroup;
 var Shared,
 	Collection,
 	Metrics,
-	Crc;
+	Crc,
+	Overload;
 
-Shared = require('./Shared.js');
+Shared = require('./Shared');
+Overload = require('./Overload');
 
 /**
  * The main ForerunnerDB core object.
@@ -3374,7 +3349,7 @@ Core.prototype.init = function () {
 	this._version = '1.2.7';
 };
 
-Core.prototype.moduleLoaded = Shared.overload({
+Core.prototype.moduleLoaded = Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
 	 * @param {String} moduleName The name of the module to check for.
@@ -3456,7 +3431,8 @@ Core.shared = Shared;
 Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
-Shared.inherit(Core.prototype, Shared.chainReactor);
+Shared.mixin(Core.prototype, 'Mixin.Common');
+Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
@@ -3496,28 +3472,6 @@ Core.prototype.isClient = function () {
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Core.prototype.decouple = Shared.common.decouple;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Core.prototype.debug = Shared.common.debug;
 
 /**
  * Converts a normal javascript array of objects into a DB collection.
@@ -3587,16 +3541,6 @@ Core.prototype.emit = function(event, data) {
 };
 
 /**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Core.prototype.objectId = Shared.common.objectId;
-
-/**
  * Find all documents across all collections in the database that match the passed
  * string or search object.
  * @param search String or search object.
@@ -3663,7 +3607,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":12,"./Shared.js":18}],7:[function(require,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":17,"./Shared":22}],6:[function(require,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3691,7 +3635,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],8:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 var Shared,
 	Collection,
 	Core,
@@ -3709,7 +3653,9 @@ Document.prototype.init = function (name) {
 };
 
 Shared.addModule('Document', Document);
-Shared.inherit(Document.prototype, Shared.chainReactor);
+Shared.mixin(Document.prototype, 'Mixin.Common');
+Shared.mixin(Document.prototype, 'Mixin.Events');
+Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;
@@ -3753,7 +3699,7 @@ Document.prototype.setData = function (data) {
 			data.$unset = $unset;
 
 			// Now update the object with new data
-			this._updateObject(this._data, data, {});
+			this.updateObject(this._data, data, {});
 		} else {
 			// Straight data assignment
 			this._data = data;
@@ -3762,42 +3708,6 @@ Document.prototype.setData = function (data) {
 
 	return this;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-Document.prototype.decouple = Shared.common.decouple;
-
-/**
- * Generates a new 16-character hexadecimal unique ID or
- * generates a new 16-character hexadecimal ID based on
- * the passed string. Will always generate the same ID
- * for the same string.
- * @param {String=} str A string to generate the ID from.
- * @return {String}
- */
-Document.prototype.objectId = Shared.common.objectId;
-
-Document.prototype.on = Shared.common.on;
-Document.prototype.off = Shared.common.off;
-Document.prototype.emit = Shared.common.emit;
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Document.prototype.debug = Shared.common.debug;
 
 /**
  * Modifies the document. This will update the document with the data held in 'update'.
@@ -3811,7 +3721,7 @@ Document.prototype.debug = Shared.common.debug;
  * @returns {Array} The items that were updated.
  */
 Document.prototype.update = function (query, update, options) {
-	this._updateObject(this._data, update, query, options);
+	this.updateObject(this._data, update, query, options);
 };
 
 /**
@@ -3827,7 +3737,7 @@ Document.prototype.update = function (query, update, options) {
  * false if it was not updated because the data was the same.
  * @private
  */
-Document.prototype._updateObject = Collection.prototype._updateObject;
+Document.prototype.updateObject = Collection.prototype.updateObject;
 
 /**
  * Determines if the passed key has an array positional mark (a dollar at the end
@@ -4064,7 +3974,7 @@ Core.prototype.document = function (documentName) {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":4,"./Shared":18}],9:[function(require,module,exports){
+},{"./Collection":3,"./Shared":22}],8:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4323,7 +4233,7 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":18}],10:[function(require,module,exports){
+},{"./Shared":22}],9:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4356,7 +4266,7 @@ Index.prototype.init = function (keys, options, collection) {
 };
 
 Shared.addModule('Index', Index);
-Shared.inherit(Index.prototype, Shared.chainReactor);
+Shared.mixin(Index.prototype, 'Mixin.ChainReactor');
 
 Index.prototype.id = function () {
 	return this._id;
@@ -4676,7 +4586,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":15,"./Shared":18}],11:[function(require,module,exports){
+},{"./Path":19,"./Shared":22}],10:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -4697,7 +4607,7 @@ KeyValueStore.prototype.init = function (name) {
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
-Shared.inherit(KeyValueStore.prototype, Shared.chainReactor);
+Shared.mixin(KeyValueStore.prototype, 'Mixin.ChainReactor');
 
 /**
  * Get / set the name of the key/value store.
@@ -4888,7 +4798,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":18}],12:[function(require,module,exports){
+},{"./Shared":22}],11:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Operation = require('./Operation');
 
@@ -4905,7 +4815,7 @@ Metrics.prototype.init = function () {
 };
 
 Shared.addModule('Metrics', Metrics);
-Shared.inherit(Metrics.prototype, Shared.chainReactor);
+Shared.mixin(Metrics.prototype, 'Mixin.ChainReactor');
 
 /**
  * Creates an operation within the metrics instance and if metrics
@@ -4960,7 +4870,300 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":13,"./Shared":18}],13:[function(require,module,exports){
+},{"./Operation":16,"./Shared":22}],12:[function(require,module,exports){
+var CRUD = {
+	preSetData: function () {
+		
+	},
+	
+	postSetData: function () {
+		
+	}
+};
+
+module.exports = CRUD;
+},{}],13:[function(require,module,exports){
+var ChainReactor = {
+	chain: function (obj) {
+		this._chain = this._chain || [];
+		var index = this._chain.indexOf(obj);
+
+		if (index === -1) {
+			this._chain.push(obj);
+		}
+	},
+	unChain: function (obj) {
+		if (this._chain) {
+			var index = this._chain.indexOf(obj);
+
+			if (index > -1) {
+				this._chain.splice(index, 1);
+			}
+		}
+	},
+	chainSend: function (type, data, options) {
+		if (this._chain) {
+			var arr = this._chain,
+				count = arr.length,
+				index;
+
+			for (index = 0; index < count; index++) {
+				arr[index].chainReceive(this, type, data, options);
+			}
+		}
+	},
+	chainReceive: function (sender, type, data, options) {
+		var chainPacket = {
+			sender: sender,
+			type: type,
+			data: data,
+			options: options
+		};
+
+		// Fire our internal handler
+		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+			// Propagate the message down the chain
+			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
+		}
+	}
+};
+
+module.exports = ChainReactor;
+},{}],14:[function(require,module,exports){
+var idCounter = 0,
+	Overload = require('./Overload'),
+	Common;
+
+Common = {
+	/**
+	 * Returns a non-referenced version of the passed object / array.
+	 * @param {Object} data The object or array to return as a non-referenced version.
+	 * @returns {*}
+	 */	
+	decouple: function (data) {
+		if (data !== undefined) {
+			return JSON.parse(JSON.stringify(data));
+		}
+
+		return undefined;
+	},
+	
+	/**
+	 * Generates a new 16-character hexadecimal unique ID or
+	 * generates a new 16-character hexadecimal ID based on
+	 * the passed string. Will always generate the same ID
+	 * for the same string.
+	 * @param {String=} str A string to generate the ID from.
+	 * @return {String}
+	 */
+	objectId: function (str) {
+		var id,
+			pow = Math.pow(10, 17);
+
+		if (!str) {
+			idCounter++;
+
+			id = (idCounter + (
+				Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow +
+				Math.random() * pow
+			)).toString(16);
+		} else {
+			var val = 0,
+				count = str.length,
+				i;
+
+			for (i = 0; i < count; i++) {
+				val += str.charCodeAt(i) * pow;
+			}
+
+			id = val.toString(16);
+		}
+
+		return id;
+	},
+
+	/**
+	 * Gets / sets debug flag that can enable debug message output to the
+	 * console if required.
+	 * @param {Boolean} val The value to set debug flag to.
+	 * @return {Boolean} True if enabled, false otherwise.
+	 */
+	/**
+	 * Sets debug flag for a particular type that can enable debug message
+	 * output to the console if required.
+	 * @param {String} type The name of the debug type to set flag for.
+	 * @param {Boolean} val The value to set debug flag to.
+	 * @return {Boolean} True if enabled, false otherwise.
+	 */
+	debug: Overload([
+		function () {
+			return this._debug && this._debug.all;
+		},
+
+		function (val) {
+			if (val !== undefined) {
+				if (typeof val === 'boolean') {
+					this._debug = this._debug || {};
+					this._debug.all = val;
+					this.chainSend('debug', this._debug);
+					return this;
+				} else {
+					return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[val]) || (this._debug && this._debug.all);
+				}
+			}
+
+			return this._debug && this._debug.all;
+		},
+
+		function (type, val) {
+			if (type !== undefined) {
+				if (val !== undefined) {
+					this._debug = this._debug || {};
+					this._debug[type] = val;
+					this.chainSend('debug', this._debug);
+					return this;
+				}
+
+				return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[type]);
+			}
+
+			return this._debug && this._debug.all;
+		}
+	])
+};
+
+module.exports = Common;
+},{"./Overload":17}],15:[function(require,module,exports){
+var Events = {
+	on: new Overload({
+		/**
+		 * Attach an event listener to the passed event.
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The method to call when the event is fired.
+		 */
+		'string, function': function (event, listener) {
+			this._listeners = this._listeners || {};
+			this._listeners[event] = this._listeners[event] || {};
+			this._listeners[event]['*'] = this._listeners[event]['*'] || [];
+			this._listeners[event]['*'].push(listener);
+
+			return this;
+		},
+
+		/**
+		 * Attach an event listener to the passed event only if the passed
+		 * id matches the document id for the event being fired.
+		 * @param {String} event The name of the event to listen for.
+		 * @param {*} id The document id to match against.
+		 * @param {Function} listener The method to call when the event is fired.
+		 */
+		'string, *, function': function (event, id, listener) {
+			this._listeners = this._listeners || {};
+			this._listeners[event] = this._listeners[event] || {};
+			this._listeners[event][id] = this._listeners[event][id] || [];
+			this._listeners[event][id].push(listener);
+
+			return this;
+		}
+	}),
+
+	off: new Overload({
+		'string': function (event) {
+			if (this._listeners && this._listeners[event] && event in this._listeners) {
+				delete this._listeners[event];
+			}
+
+			return this;
+		},
+
+		'string, function': function (event, listener) {
+			var arr,
+				index;
+
+			if (typeof(listener) === 'string') {
+				if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+					delete this._listeners[event][listener];
+				}
+			} else {
+				if (event in this._listeners) {
+					arr = this._listeners[event]['*'];
+					index = arr.indexOf(listener);
+
+					if (index > -1) {
+						arr.splice(index, 1);
+					}
+				}
+			}
+
+			return this;
+		},
+
+		'string, *, function': function (event, id, listener) {
+			if (this._listeners && event in this._listeners && id in this.listeners[event]) {
+				var arr = this._listeners[event][id],
+					index = arr.indexOf(listener);
+
+				if (index > -1) {
+					arr.splice(index, 1);
+				}
+			}
+		},
+
+		'string, *': function (event, id) {
+			if (this._listeners && event in this._listeners && id in this._listeners[event]) {
+				// Kill all listeners for this event id
+				delete this._listeners[event][id];
+			}
+		}
+	}),
+
+	emit: function (event, data) {
+		this._listeners = this._listeners || {};
+
+		if (event in this._listeners) {
+			// Handle global emit
+			if (this._listeners[event]['*']) {
+				var arr = this._listeners[event]['*'],
+					arrCount = arr.length,
+					arrIndex;
+
+				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+				}
+			}
+
+			// Handle individual emit
+			if (data instanceof Array) {
+				// Check if the array is an array of objects in the collection
+				if (data[0] && data[0][this._primaryKey]) {
+					// Loop the array and check for listeners against the primary key
+					var listenerIdArr = this._listeners[event],
+						listenerIdCount,
+						listenerIdIndex;
+
+					arrCount = data.length;
+
+					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+						if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
+							// Emit for this id
+							listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
+							for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
+								listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+							}
+						}
+					}
+				}
+			}
+		}
+
+		return this;
+	}
+};
+
+module.exports = Events;
+},{}],16:[function(require,module,exports){
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
@@ -4996,7 +5199,7 @@ Operation.prototype.init = function (name) {
 };
 
 Shared.addModule('Operation', Operation);
-Shared.inherit(Operation.prototype, Shared.chainReactor);
+Shared.mixin(Operation.prototype, 'Mixin.ChainReactor');
 
 /**
  * Starts the operation timer.
@@ -5104,7 +5307,127 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":15,"./Shared":18}],14:[function(require,module,exports){
+},{"./Path":19,"./Shared":22}],17:[function(require,module,exports){
+/**
+ * Allows a method to accept overloaded calls with different parameters controlling
+ * which passed overload function is called.
+ * @param {Object} def
+ * @returns {Function}
+ * @constructor
+ */
+Overload = function (def) {
+	if (def) {
+		var index,
+			count,
+			tmpDef,
+			defNewKey,
+			sigIndex,
+			signatures;
+
+		if (!(def instanceof Array)) {
+			tmpDef = {};
+
+			// Def is an object, make sure all prop names are devoid of spaces
+			for (index in def) {
+				if (def.hasOwnProperty(index)) {
+					defNewKey = index.replace(/ /g, '');
+
+					if (defNewKey.indexOf('*') === -1) {
+						tmpDef[defNewKey] = def[index];
+					} else {
+						signatures = generateSignaturePermutations(defNewKey);
+
+						for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
+							if (!tmpDef[signatures[sigIndex]]) {
+								tmpDef[signatures[sigIndex]] = def[index];
+							}
+						}
+					}
+				}
+			}
+
+			def = tmpDef;
+		}
+
+		return function () {
+			if (def instanceof Array) {
+				count = def.length;
+				for (index = 0; index < count; index++) {
+					if (def[index].length === arguments.length) {
+						return def[index].apply(this, arguments);
+					}
+				}
+			} else {
+				// Generate lookup key from arguments
+				var arr = [],
+					lookup;
+
+				// Copy arguments to an array
+				for (index = 0; index < arguments.length; index++) {
+					arr.push(typeof arguments[index]);
+				}
+
+				lookup = arr.join(',');
+
+				// Check for an exact lookup match
+				if (def[lookup]) {
+					return def[lookup].apply(this, arguments);
+				} else {
+					for (index = arr.length; index >= 0; index--) {
+						// Get the closest match
+						lookup = arr.slice(0, index).join(',');
+
+						if (def[lookup + ',...']) {
+							// Matched against arguments + "any other"
+							return def[lookup + ',...'].apply(this, arguments);
+						}
+					}
+				}
+			}
+
+			throw('Overloaded method does not have a matching signature for the passed arguments!');
+		};
+	}
+
+	return function () {};
+};
+
+/**
+ * Generates an array of all the different definition signatures that can be
+ * created from the passed string with a catch-all wildcard *. E.g. it will
+ * convert the signature: string,*,string to all potentials:
+ * string,string,string
+ * string,number,string
+ * string,object,string,
+ * string,function,string,
+ * string,undefined,string
+ *
+ * @param {String} str Signature string with a wildcard in it.
+ * @returns {Array} An array of signature strings that are generated.
+ */
+generateSignaturePermutations = function (str) {
+	var signatures = [],
+		newSignature,
+		types = ['string', 'object', 'number', 'function', 'undefined'],
+		index;
+
+	if (str.indexOf('*') > -1) {
+		// There is at least one "any" type, break out into multiple keys
+		// We could do this at query time with regular expressions but
+		// would be significantly slower
+		for (index = 0; index < types.length; index++) {
+			newSignature = str.replace('*', types[index]);
+			signatures = signatures.concat(generateSignaturePermutations(newSignature));
+		}
+	} else {
+		signatures.push(str);
+	}
+
+	return signatures;
+};
+
+module.exports = Overload;
+},{}],18:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5128,7 +5451,8 @@ Overview.prototype.init = function (name) {
 };
 
 Shared.addModule('Overview', Overview);
-Shared.inherit(Overview.prototype, Shared.chainReactor);
+Shared.mixin(Overview.prototype, 'Mixin.Common');
+Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 Document = require('./Document');
@@ -5164,22 +5488,6 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 
 	return ret;
 });
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-Overview.prototype.debug = Shared.common.debug;
-Overview.prototype.objectId = Shared.common.objectId;
 
 Overview.prototype.from = function (collection) {
 	if (collection !== undefined) {
@@ -5284,7 +5592,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":4,"./Document":8,"./Shared":18}],15:[function(require,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":22}],19:[function(require,module,exports){
 var Shared = require('./Shared');
 
 /**
@@ -5304,7 +5612,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
-Shared.inherit(Path.prototype, Shared.chainReactor);
+Shared.mixin(Path.prototype, 'Mixin.ChainReactor');
 
 /**
  * Gets / sets the given path for the Path instance.
@@ -5694,7 +6002,7 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":18}],16:[function(require,module,exports){
+},{"./Shared":22}],20:[function(require,module,exports){
 // Import external names locally
 var Shared = require('./Shared'),
 	Core,
@@ -5719,7 +6027,7 @@ Persist.prototype.init = function (db) {
 };
 
 Shared.addModule('Persist', Persist);
-Shared.inherit(Persist.prototype, Shared.chainReactor);
+Shared.mixin(Persist.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
 Collection = require('./Collection');
@@ -5891,7 +6199,7 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":18}],17:[function(require,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":22}],21:[function(require,module,exports){
 var Shared = require('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -5925,338 +6233,12 @@ ReactorIO.prototype.drop = function () {
 };
 
 Shared.addModule('ReactorIO', ReactorIO);
-Shared.inherit(ReactorIO.prototype, Shared.chainReactor);
+Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
 module.exports = ReactorIO;
-},{"./Shared":18}],18:[function(require,module,exports){
-var idCounter = 0,
-	/**
-	 * Generates an array of all the different definition signatures that can be
-	 * created from the passed string with a catch-all wildcard *. E.g. it will
-	 * convert the signature: string,*,string to all potentials:
-	 * string,string,string
-	 * string,number,string
-	 * string,object,string,
-	 * string,function,string,
-	 * string,undefined,string
-	 *
-	 * @param {String} str Signature string with a wildcard in it.
-	 * @returns {Array} An array of signature strings that are generated.
-	 */
-	generateSignaturePermutations = function (str) {
-		var signatures = [],
-			newSignature,
-			types = ['string', 'object', 'number', 'function', 'undefined'],
-			index;
-
-		if (str.indexOf('*') > -1) {
-			// There is at least one "any" type, break out into multiple keys
-			// We could do this at query time with regular expressions but
-			// would be significantly slower
-			for (index = 0; index < types.length; index++) {
-				newSignature = str.replace('*', types[index]);
-				signatures = signatures.concat(generateSignaturePermutations(newSignature));
-			}
-		} else {
-			signatures.push(str);
-		}
-
-		return signatures;
-	},
-	/**
-	 * Allows a method to accept overloaded calls with different parameters controlling
-	 * which passed overload function is called.
-	 * @param {Object} def
-	 * @returns {Function}
-	 * @constructor
-	 */
-	Overload = function (def) {
-		if (def) {
-			var index,
-				count,
-				tmpDef,
-				defNewKey,
-				sigIndex,
-				signatures;
-
-			if (!(def instanceof Array)) {
-				tmpDef = {};
-
-				// Def is an object, make sure all prop names are devoid of spaces
-				for (index in def) {
-					if (def.hasOwnProperty(index)) {
-						defNewKey = index.replace(/ /g, '');
-
-						if (defNewKey.indexOf('*') === -1) {
-							tmpDef[defNewKey] = def[index];
-						} else {
-							signatures = generateSignaturePermutations(defNewKey);
-
-							for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
-								if (!tmpDef[signatures[sigIndex]]) {
-									tmpDef[signatures[sigIndex]] = def[index];
-								}
-							}
-						}
-					}
-				}
-
-				def = tmpDef;
-			}
-
-			return function () {
-				if (def instanceof Array) {
-					count = def.length;
-					for (index = 0; index < count; index++) {
-						if (def[index].length === arguments.length) {
-							return def[index].apply(this, arguments);
-						}
-					}
-				} else {
-					// Generate lookup key from arguments
-					var arr = [],
-						lookup;
-
-					// Copy arguments to an array
-					for (index = 0; index < arguments.length; index++) {
-						arr.push(typeof arguments[index]);
-					}
-
-					lookup = arr.join(',');
-
-					// Check for an exact lookup match
-					if (def[lookup]) {
-						return def[lookup].apply(this, arguments);
-					} else {
-						for (index = arr.length; index >= 0; index--) {
-							// Get the closest match
-							lookup = arr.slice(0, index).join(',');
-
-							if (def[lookup + ',...']) {
-								// Matched against arguments + "any other"
-								return def[lookup + ',...'].apply(this, arguments);
-							}
-						}
-					}
-				}
-
-				throw('Overloaded method does not have a matching signature for the passed arguments!');
-			};
-		}
-
-		return function () {};
-	},
-	Shared = {
+},{"./Shared":22}],22:[function(require,module,exports){
+var Shared = {
 		modules: {},
-		common: {
-			decouple: function (data) {
-				if (data !== undefined) {
-					return JSON.parse(JSON.stringify(data));
-				}
-
-				return undefined;
-			},
-			objectId: function (str) {
-				var id,
-					pow = Math.pow(10, 17);
-
-				if (!str) {
-					idCounter++;
-
-					id = (idCounter + (
-						Math.random() * pow +
-						Math.random() * pow +
-						Math.random() * pow +
-						Math.random() * pow
-					)).toString(16);
-				} else {
-					var val = 0,
-						count = str.length,
-						i;
-
-					for (i = 0; i < count; i++) {
-						val += str.charCodeAt(i) * pow;
-					}
-
-					id = val.toString(16);
-				}
-
-				return id;
-			},
-
-			/**
-			 * Gets / sets debug flag that can enable debug message output to the
-			 * console if required.
-			 * @param {Boolean} val The value to set debug flag to.
-			 * @return {Boolean} True if enabled, false otherwise.
-			 */
-			/**
-			 * Sets debug flag for a particular type that can enable debug message
-			 * output to the console if required.
-			 * @param {String} type The name of the debug type to set flag for.
-			 * @param {Boolean} val The value to set debug flag to.
-			 * @return {Boolean} True if enabled, false otherwise.
-			 */
-			debug: new Overload([
-				function () {
-					return this._debug && this._debug.all;
-				},
-
-				function (val) {
-					if (val !== undefined) {
-						if (typeof val === 'boolean') {
-							this._debug = this._debug || {};
-							this._debug.all = val;
-							this.chainSend('debug', this._debug);
-							return this;
-						} else {
-							return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[val]) || (this._debug && this._debug.all);
-						}
-					}
-
-					return this._debug && this._debug.all;
-				},
-
-				function (type, val) {
-					if (type !== undefined) {
-						if (val !== undefined) {
-							this._debug = this._debug || {};
-							this._debug[type] = val;
-							this.chainSend('debug', this._debug);
-							return this;
-						}
-
-						return (this._debug && this._debug[val]) || (this._db && this._db._debug && this._db._debug[type]);
-					}
-
-					return this._debug && this._debug.all;
-				}
-			]),
-
-			on: new Overload({
-				/**
-				 * Attach an event listener to the passed event.
-				 * @param {String} event The name of the event to listen for.
-				 * @param {Function} listener The method to call when the event is fired.
-				 */
-				'string, function': function (event, listener) {
-					this._listeners = this._listeners || {};
-					this._listeners[event] = this._listeners[event] || {};
-					this._listeners[event]['*'] = this._listeners[event]['*'] || [];
-					this._listeners[event]['*'].push(listener);
-
-					return this;
-				},
-
-				/**
-				 * Attach an event listener to the passed event only if the passed
-				 * id matches the document id for the event being fired.
-				 * @param {String} event The name of the event to listen for.
-				 * @param {*} id The document id to match against.
-				 * @param {Function} listener The method to call when the event is fired.
-				 */
-				'string, *, function': function (event, id, listener) {
-					this._listeners = this._listeners || {};
-					this._listeners[event] = this._listeners[event] || {};
-					this._listeners[event][id] = this._listeners[event][id] || [];
-					this._listeners[event][id].push(listener);
-
-					return this;
-				}
-			}),
-
-			off: new Overload({
-				'string': function (event) {
-					if (this._listeners && this._listeners[event] && event in this._listeners) {
-						delete this._listeners[event];
-					}
-
-					return this;
-				},
-
-				'string, function': function (event, listener) {
-					var arr,
-						index;
-
-					if (typeof(listener) === 'string') {
-						if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-							delete this._listeners[event][listener];
-						}
-					} else {
-						if (event in this._listeners) {
-							arr = this._listeners[event]['*'];
-							index = arr.indexOf(listener);
-
-							if (index > -1) {
-								arr.splice(index, 1);
-							}
-						}
-					}
-
-					return this;
-				},
-
-				'string, *, function': function (event, id, listener) {
-					if (this._listeners && event in this._listeners && id in this.listeners[event]) {
-						var arr = this._listeners[event][id],
-							index = arr.indexOf(listener);
-
-						if (index > -1) {
-							arr.splice(index, 1);
-						}
-					}
-				},
-
-				'string, *': function (event, id) {
-					if (this._listeners && event in this._listeners && id in this._listeners[event]) {
-						// Kill all listeners for this event id
-						delete this._listeners[event][id];
-					}
-				}
-			}),
-
-			emit: function (event, data) {
-				this._listeners = this._listeners || {};
-
-				if (event in this._listeners) {
-					// Handle global emit
-					if (this._listeners[event]['*']) {
-						var arr = this._listeners[event]['*'],
-							arrCount = arr.length,
-							arrIndex;
-
-						for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-							arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-						}
-					}
-
-					// Handle individual emit
-					if (data instanceof Array) {
-						// Check if the array is an array of objects in the collection
-						if (data[0] && data[0][this._primaryKey]) {
-							// Loop the array and check for listeners against the primary key
-							var listenerIdArr = this._listeners[event],
-								listenerIdCount,
-								listenerIdIndex;
-
-							arrCount = data.length;
-
-							for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-								if (listenerIdArr[data[arrIndex][this._primaryKey]]) {
-									// Emit for this id
-									listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
-									for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-										listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-									}
-								}
-							}
-						}
-					}
-				}
-
-				return this;
-			}
-		},
 		_synth: {},
 
 		addModule: function (name, module) {
@@ -6281,11 +6263,17 @@ var idCounter = 0,
 			}
 		},
 
-		inherit: function (obj, system) {
-			for (var i in system) {
-				if (system.hasOwnProperty(i)) {
-					obj[i] = system[i];
+		mixin: function (obj, mixinName) {
+			var system = this.mixins[mixinName];
+			
+			if (system) {
+				for (var i in system) {
+					if (system.hasOwnProperty(i)) {
+						obj[i] = system[i];
+					}
 				}
+			} else {
+				throw('Cannot find mixin named: ' + mixinName);
 			}
 		},
 
@@ -6323,19 +6311,24 @@ var idCounter = 0,
 		 * @returns {Function}
 		 * @constructor
 		 */
-		overload: Overload,
+		overload: require('./Overload'),
 
-		// Inheritable systems
-		chainReactor: require('./ChainReactor')
+		/**
+		 * Define the mixins that other modules can use as required.
+		 */
+		mixins: {
+			'Mixin.Common': require('./Mixin.Common'),
+			'Mixin.Events': require('./Mixin.Events'),
+			'Mixin.ChainReactor': require('./Mixin.ChainReactor'),
+			'Mixin.CRUD': require('./Mixin.CRUD')
+		}
 	};
 
 // Add event handling to shared
-Shared.on = Shared.common.on;
-Shared.off = Shared.common.off;
-Shared.emit = Shared.common.emit;
+Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./ChainReactor":3}],19:[function(require,module,exports){
+},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Events":15,"./Overload":17}],23:[function(require,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6348,7 +6341,9 @@ Shared = require('./Shared');
 
 /**
  * The view constructor.
- * @param viewName
+ * @param name
+ * @param query
+ * @param options
  * @constructor
  */
 var View = function (name, query, options) {
@@ -6369,7 +6364,8 @@ View.prototype.init = function (name, query, options) {
 };
 
 Shared.addModule('View', View);
-Shared.inherit(View.prototype, Shared.chainReactor);
+Shared.mixin(View.prototype, 'Mixin.Common');
+Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
@@ -6379,21 +6375,6 @@ Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
 Shared.synthesize(View.prototype, 'name');
-
-/**
- * Gets / sets debug flag that can enable debug message output to the
- * console if required.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-/**
- * Sets debug flag for a particular type that can enable debug message
- * output to the console if required.
- * @param {String} type The name of the debug type to set flag for.
- * @param {Boolean} val The value to set debug flag to.
- * @return {Boolean} True if enabled, false otherwise.
- */
-View.prototype.debug = Shared.common.debug;
 
 /**
  * Executes an insert against the view's underlying data-source.
@@ -6438,13 +6419,6 @@ View.prototype.find = function (query, options) {
 View.prototype.data = function () {
 	return this._privateData;
 };
-
-/**
- * Returns a non-referenced version of the passed object / array.
- * @param {Object} data The object or array to return as a non-referenced version.
- * @returns {*}
- */
-View.prototype.decouple = Shared.common.decouple;
 
 /**
  * Sets the collection from which the view will assemble its data.
@@ -7165,5 +7139,5 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":17,"./Shared":18}]},{},[1])(1)
+},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":21,"./Shared":22}]},{},[1])(1)
 });
