@@ -23,6 +23,10 @@ Highchart.prototype.init = function (collection, options) {
 	// Setup the chart
 	this._options.series = [];
 
+	// Disable attribution on highcharts
+	options.chartOptions = options.chartOptions || {};
+	options.chartOptions.credits = false;
+
 	// Set the data for the chart
 	var data,
 		seriesObj,
