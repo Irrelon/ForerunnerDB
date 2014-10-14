@@ -506,6 +506,7 @@ Collection.prototype.updateById = function (id, update) {
  * @private
  */
 Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
+	// TODO: This method is long, try to break it into smaller pieces
 	update = this.decouple(update);
 
 	// Clear leading dots from path
