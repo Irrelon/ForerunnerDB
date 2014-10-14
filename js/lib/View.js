@@ -4,7 +4,8 @@ var Shared,
 	Collection,
 	CollectionInit,
 	CoreInit,
-	ReactorIO;
+	ReactorIO,
+	ActiveBucket;
 
 Shared = require('./Shared');
 
@@ -23,11 +24,11 @@ View.prototype.init = function (name, query, options) {
 	this._name = name;
 	this._groups = [];
 	this._listeners = {};
-	this._querySettings = {
-		query: query,
-		options: options
-	};
+	this._querySettings = {};
 	this._debug = {};
+
+	this.query(query, false);
+	this.queryOptions(options, false);
 
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
@@ -38,6 +39,7 @@ Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
+ActiveBucket = require('./ActiveBucket');
 ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
@@ -212,7 +214,10 @@ View.prototype.ensureIndex = function () {
 
 View.prototype._chainHandler = function (chainPacket) {
 	var self = this,
+		arr,
+		count,
 		index,
+		insertIndex,
 		tempData,
 		dataIsArray,
 		updates,
@@ -250,14 +255,26 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data = [chainPacket.data];
 			}
 
-			// Set the insert index to the passed index, or if none, the end of the view data array
-			index = this._privateData._data.length;
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Loop the insert data and find each item's index
+				arr = chainPacket.data;
+				count = arr.length;
 
-			// Modify transform data
-			this._transformInsert(chainPacket.data, index);
-			this._privateData._insertHandle(chainPacket.data, index);
+				for (index = 0; index < count; index++) {
+					insertIndex = this._activeBucket.insert(arr[index]);
 
-			this._refreshSort(chainPacket.data);
+					// Modify transform data
+					this._transformInsert(chainPacket.data, insertIndex);
+					this._privateData._insertHandle(chainPacket.data, insertIndex);
+				}
+			} else {
+				// Set the insert index to the passed index, or if none, the end of the view data array
+				insertIndex = this._privateData._data.length;
+
+				// Modify transform data
+				this._transformInsert(chainPacket.data, insertIndex);
+				this._privateData._insertHandle(chainPacket.data, insertIndex);
+			}
 			break;
 
 		case 'update':
@@ -274,7 +291,31 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data.options
 			);
 
-			this._refreshSort(updates);
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// TODO: This would be a good place to improve performance by somehow
+				// TODO: inspecting the change that occurred when update was performed
+				// TODO: above and determining if it affected the order clause keys
+				// TODO: and if not, skipping the active bucket updates here
+
+				// Loop the updated items and work out their new sort locations
+				count = updates.length;
+				for (index = 0; index < count; index++) {
+					item = updates[index];
+					insertIndex = this._activeBucket.index(item);
+					currentIndex = this._privateData._data.indexOf(item);
+
+					if (insertIndex !== currentIndex) {
+						// Remove the previous entry for the item
+						this._activeBucket.remove(item);
+
+						// Add the item back in to the active bucket
+						insertIndex = this._activeBucket.insert(item);
+
+						// Move the updated item to the new index
+						this._privateData._updateSpliceMove(this._privateData._data, currentIndex, insertIndex);
+					}
+				}
+			}
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -301,58 +342,6 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		default:
 			break;
-	}
-};
-
-View.prototype._refreshSort = function () {
-	if (this._querySettings.options && this._querySettings.options.$orderBy) {
-		var self = this;
-
-		/*if (this._refreshSortDebounce) {
-			// Cancel the current debounce
-			clearTimeout(this._refreshSortDebounce);
-		}
-
-		// Set a timeout to do the refresh sort
-		this._refreshSortDebounce = setTimeout(function () {
-			self._refreshSortAction();
-		}, 10);*/
-
-		self._refreshSortAction();
-	}
-};
-
-View.prototype._refreshSortAction = function () {
-	var tempData,
-		currentIndex,
-		refreshData,
-		index,
-		i;
-
-	delete this._refreshSortDebounce;
-	//refreshData = this._privateData._data;
-
-	// Create a temp data array from existing view data
-	//tempData = [].concat(this._privateData._data);
-
-	// Run the new array through the sorting system
-	tempData = this._privateData.find({}, {$orderBy: this._querySettings.options.$orderBy, $decouple: false});
-
-	// Now we have sorted data, determine where to move the updated documents
-	// Order updates by their index location
-	/*tempData.sort(function (a, b) {
-		return tempData.indexOf(a) - tempData.indexOf(b);
-	});*/
-
-	// Loop and add each one to the correct place
-	for (i = 0; i < tempData.length; i++) {
-		currentIndex = this._privateData._data.indexOf(tempData[i]);
-		index = tempData.indexOf(tempData[i]);
-
-		if (currentIndex !== index) {
-			// Modify the document position within the collection
-			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-		}
 	}
 };
 
@@ -532,11 +521,32 @@ View.prototype.queryOptions = function (options, refresh) {
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
+		} else {
+			this.rebuildActiveBucket(options.$orderBy);
 		}
 		return this;
 	}
 
 	return this._querySettings.options;
+};
+
+View.prototype.rebuildActiveBucket = function (orderBy) {
+	if (orderBy) {
+		var arr = this._privateData._data,
+			arrCount = arr.length;
+
+		// Build a new active bucket
+		this._activeBucket = new ActiveBucket(orderBy);
+		this._activeBucket.primaryKey(this._privateData.primaryKey());
+
+		// Loop the current view data and add each item
+		for (var i = 0; i < arrCount; i++) {
+			this._activeBucket.insert(arr[i]);
+		}
+	} else {
+		// Remove any existing active bucket
+		delete this._activeBucket;
+	}
 };
 
 /**
@@ -552,6 +562,11 @@ View.prototype.refresh = function () {
 		pubData.remove();
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		if (this._querySettings.options && this._querySettings.options.$orderBy) {
+			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+		} else {
+			this.rebuildActiveBucket();
+		}
 
 		if (pubData._linked) {
 			// Update data and observers
