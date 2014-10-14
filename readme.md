@@ -624,6 +624,22 @@ Examining the output from an explain() call will provide you with the most insig
 
 Keep in mind that indices require memory to maintain hash tables and there is always a trade-off between speed and memory usage.
 
+## Data Persistence (Save and Load Between Pages)
+Data persistence allows your database to survive the browser being closed, page reloads and navigation away
+from the current url. When you return to the page your data can be reloaded.
+
+Persistence is handled by a very simple interface in the Collection class. You can save the current state
+of any collection by calling:
+
+    collection.save();
+
+You can then load the collection's data back again via:
+
+    collection.load();
+
+If you call collection.load() when your application starts and collection.save() when you make changes
+to your collection you can ensure that your application always has up-to-date data.
+
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
 collection changes. Here is a simple example of a data-bind that will keep the list of items up-to-date if you modify
@@ -781,14 +797,14 @@ ForerunnerDB's project road-map:
 * Rewritten data propagation system - COMPLETE
 * Added new class "Document" to allow data-binding against a single document object - COMPLETE
 * Added new class "Overview" to allow data-binding against auto-propagated map-reduce data - COMPLETE
-* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
-* Rewritten view sync system for performance
-* Remove iOS from this repo, add to its own
-* Remove server from this repo, add to its own
+* Rewritten view sync system for performance - COMPLETE
 
 #### Scheduled Features - 1.2.8
+* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6) - COMPLETE
 * Data persistence added to documentation
-* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6)
+* Remove iOS from this repo, add to its own
+* Remove server from this repo, add to its own
+* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
 
 #### Scheduled Features - 1.2.9
 * Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
