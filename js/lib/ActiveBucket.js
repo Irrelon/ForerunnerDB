@@ -1,6 +1,16 @@
+/**
+ * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
+ * know the index that a document will occupy in an array with minimal
+ * processing, speeding up things like sorted views.
+ */
 var Shared = require('./Shared'),
 	Path = require('./Path');
 
+/**
+ * The active bucket class.
+ * @param {object} orderBy An order object.
+ * @constructor
+ */
 var ActiveBucket = function (orderBy) {
 	var sortKey,
 		bucketData;
@@ -24,7 +34,21 @@ var ActiveBucket = function (orderBy) {
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
+/**
+ * Quicksorts a single document into the passed array and
+ * returns the index that the document should occupy.
+ * @param {object} obj The document to calculate index for.
+ * @param {array} arr The array the document index will be
+ * calculated for.
+ * @param {string} item The string key representation of the
+ * document whose index is being calculated.
+ * @param {function} fn The comparison function that is used
+ * to determine if a document is sorted below or above the
+ * document we are calculating the index for.
+ * @returns {number} The index the document should occupy.
+ */
 ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
+	// If the array is empty then return index zero
 	if (!arr.length) {
 		return 0;
 	}
@@ -33,12 +57,17 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 		lookupItem,
 		result,
 		start = 0,
-		end = arr.length - 1,
-		count = 0;
+		end = arr.length - 1;
 
-	while (count < 100 && end >= start) {
+	// Loop the data until our range overlaps
+	while (end >= start) {
+		// Calculate the midway point (divide and conquer)
 		midwayIndex = Math.floor((start + end) / 2);
+
+		// Get the item to compare against
 		lookupItem = arr[midwayIndex];
+
+		// Compare items
 		result = fn(this, obj, item, lookupItem);
 
 		if (result > 0) {
@@ -48,7 +77,6 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 		if (result < 0) {
 			end = midwayIndex - 1;
 		}
-		count++;
 	}
 
 	if (result > 0) {
@@ -59,6 +87,17 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 
 };
 
+/**
+ * Calculates the sort position of an item against another item.
+ * @param {object} sorter An object or instance that contains
+ * sortAsc and sortDesc methods.
+ * @param {object} obj The document to compare.
+ * @param {string} a The first key to compare.
+ * @param {string} b The second key to compare.
+ * @returns {number} Either 1 for sort a after b or -1 to sort
+ * a before b.
+ * @private
+ */
 ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 	var aVals = a.split('.:.'),
 		bVals = b.split('.:.'),
@@ -91,6 +130,11 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 	}
 };
 
+/**
+ * Inserts a document into the active bucket.
+ * @param {object} obj The document to insert.
+ * @returns {number} The index the document now occupies.
+ */
 ActiveBucket.prototype.insert = function (obj) {
 	var key,
 		keyIndex;
@@ -113,6 +157,13 @@ ActiveBucket.prototype.insert = function (obj) {
 	return keyIndex;
 };
 
+/**
+ * Removes a document from the active bucket.
+ * @param {object} obj The document to remove.
+ * @returns {boolean} True if the document was removed
+ * successfully or false if it wasn't found in the active
+ * bucket.
+ */
 ActiveBucket.prototype.remove = function (obj) {
 	var key,
 		keyIndex;
@@ -131,6 +182,12 @@ ActiveBucket.prototype.remove = function (obj) {
 	return false;
 };
 
+/**
+ * Get the index that the passed document currently occupies
+ * or the index it will occupy if added to the active bucket.
+ * @param {object} obj The document to get the index for.
+ * @returns {number} The index.
+ */
 ActiveBucket.prototype.index = function (obj) {
 	var key,
 		keyIndex;
@@ -146,6 +203,11 @@ ActiveBucket.prototype.index = function (obj) {
 	return keyIndex;
 };
 
+/**
+ * The key that represents the passed document.
+ * @param {object} obj The document to get the key for.
+ * @returns {string} The document key.
+ */
 ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
 		arr = this._keyArr,
@@ -168,10 +230,21 @@ ActiveBucket.prototype.documentKey = function (obj) {
 	return key;
 };
 
+/**
+ * Get the number of documents currently indexed in the active
+ * bucket instance.
+ * @returns {number} The number of documents.
+ */
 ActiveBucket.prototype.count = function () {
 	return this._count;
 };
 
+/**
+ * Sorts the passed value a against the passed value b ascending.
+ * @param {*} a The first value to compare.
+ * @param {*} b The second value to compare.
+ * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+ */
 ActiveBucket.prototype.sortAsc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return a.localeCompare(b);
@@ -186,6 +259,12 @@ ActiveBucket.prototype.sortAsc = function (a, b) {
 	return 0;
 };
 
+/**
+ * Sorts the passed value a against the passed value b descending.
+ * @param {*} a The first value to compare.
+ * @param {*} b The second value to compare.
+ * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+ */
 ActiveBucket.prototype.sortDesc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return b.localeCompare(a);
