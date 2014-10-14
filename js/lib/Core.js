@@ -8,6 +8,9 @@
  non-profit use. If you are doing something commercial please visit the license page to
  see which license best suits your requirements:
  http://www.forerunnerdb.com/licensing.html
+
+ Commercial licenses help to continue development of ForerunnerDB and pay for developers,
+ equipment, offices and electricity, without them ForerunnerDB would not exist!
  */
 var Shared,
 	Collection,
