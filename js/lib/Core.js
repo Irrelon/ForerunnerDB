@@ -138,10 +138,18 @@ Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
 
+/**
+ * Returns true if ForerunnerDB is running on a client browser.
+ * @returns {boolean}
+ */
 Core.prototype.isClient = function () {
 	return !this._isServer;
 };
 
+/**
+ * Returns true if ForerunnerDB is running on a server.
+ * @returns {boolean}
+ */
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
@@ -186,7 +194,7 @@ Core.prototype.arrayToCollection = function (arr) {
  * @param {String} event The name of the event to listen for.
  * @param {Function} listener The listener method to call when
  * the event is fired.
- * @returns {init}
+ * @returns {*}
  */
 Core.prototype.on = function(event, listener) {
 	this._listeners = this._listeners || {};
@@ -271,7 +279,7 @@ Core.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {Array}
+ * @returns {object}
  */
 Core.prototype.peekCat = function (search) {
 	var i,
