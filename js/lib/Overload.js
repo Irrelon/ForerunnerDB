@@ -50,11 +50,20 @@ Overload = function (def) {
 			} else {
 				// Generate lookup key from arguments
 				var arr = [],
-					lookup;
+					lookup,
+					type;
 
 				// Copy arguments to an array
 				for (index = 0; index < arguments.length; index++) {
-					arr.push(typeof arguments[index]);
+					type = typeof arguments[index];
+
+					// Handle detecting arrays
+					if (type === 'object' && arguments[index] instanceof Array) {
+						type = 'array';
+					}
+
+					// Add the type to the argument types array
+					arr.push(type);
 				}
 
 				lookup = arr.join(',');
@@ -75,7 +84,7 @@ Overload = function (def) {
 				}
 			}
 
-			throw('Overloaded method does not have a matching signature for the passed arguments!');
+			throw('Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
 		};
 	}
 
