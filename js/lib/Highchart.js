@@ -93,6 +93,8 @@ Highchart.prototype.init = function (collection, options) {
 	this._hookEvents();
 };
 
+Shared.addModule('Highchart', Highchart);
+
 Collection = Shared.modules.Collection;
 CollectionInit = Collection.prototype.init;
 
@@ -259,4 +261,5 @@ Collection.prototype.dropChart = function (selector) {
 	}
 };
 
+Shared.finishModule('Highchart');
 module.exports = Highchart;

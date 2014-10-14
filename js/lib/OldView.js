@@ -52,7 +52,7 @@ OldView.prototype.init = function (viewName) {
 	};
 };
 
-Shared.modules.OldView = OldView;
+Shared.addModule('OldView', OldView);
 
 CollectionGroup = require('./CollectionGroup');
 Collection = require('./Collection');
@@ -61,9 +61,7 @@ CollectionGroupInit = CollectionGroup.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
-OldView.prototype.on = Shared.common.on;
-OldView.prototype.off = Shared.common.off;
-OldView.prototype.emit = Shared.common.emit;
+Shared.mixin(OldView.prototype, 'Mixin.Events');
 
 /**
  * Drops a view and all it's stored data from the database.
@@ -697,4 +695,5 @@ Core.prototype.oldViews = function () {
 	return arr;
 };
 
+Shared.finishModule('OldView');
 module.exports = OldView;

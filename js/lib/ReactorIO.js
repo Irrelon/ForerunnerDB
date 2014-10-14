@@ -20,6 +20,8 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 	}
 };
 
+Shared.addModule('ReactorIO', ReactorIO);
+
 ReactorIO.prototype.drop = function () {
 	// Remove links
 	this._reactorIn.unChain(this);
@@ -30,7 +32,8 @@ ReactorIO.prototype.drop = function () {
 	delete this._chainHandler;
 };
 
-Shared.addModule('ReactorIO', ReactorIO);
+
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
+Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;

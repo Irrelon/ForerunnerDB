@@ -349,4 +349,5 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+Shared.finishModule('Index');
 module.exports = Index;

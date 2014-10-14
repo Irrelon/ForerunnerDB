@@ -68,4 +68,5 @@ Metrics.prototype.list = function () {
 	return this._data;
 };
 
+Shared.finishModule('Metrics');
 module.exports = Metrics;

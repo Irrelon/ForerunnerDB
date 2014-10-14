@@ -568,6 +568,8 @@ if (typeof jQuery !== 'undefined') {
 				}
 			});
 		}
+
+		Shared.finishModule('AutoBind');
 	} else {
 		throw('AutoBind plugin cannot continue because jsViews is not loaded - check your error log for url errors.');
 	}

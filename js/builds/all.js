@@ -1,10 +1,9 @@
 var Core = require('../lib/Core'),
 	CollectionGroup = require('../lib/CollectionGroup'),
 	View = require('../lib/View'),
-	Highcharts = require('../lib/Highcharts'),
+	Highchart = require('../lib/Highchart'),
 	Persist = require('../lib/Persist'),
 	Document = require('../lib/Document'),
-	Overview = require('../lib/Overview'),
-	ActiveBucket = require('../lib/ActiveBucket');
+	Overview = require('../lib/Overview');
 
 module.exports = Core;

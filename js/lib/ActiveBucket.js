@@ -200,4 +200,5 @@ ActiveBucket.prototype.sortDesc = function (a, b) {
 	return 0;
 };
 
+Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;

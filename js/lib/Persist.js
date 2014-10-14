@@ -193,4 +193,5 @@ Core.prototype.init = function () {
 	CoreInit.apply(this, arguments);
 };
 
+Shared.finishModule('Persist');
 module.exports = Persist;

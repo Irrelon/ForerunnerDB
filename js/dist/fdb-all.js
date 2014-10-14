@@ -5,11 +5,10 @@ var Core = _dereq_('../lib/Core'),
 	Highcharts = _dereq_('../lib/Highcharts'),
 	Persist = _dereq_('../lib/Persist'),
 	Document = _dereq_('../lib/Document'),
-	Overview = _dereq_('../lib/Overview'),
-	ActiveBucket = _dereq_('../lib/ActiveBucket');
+	Overview = _dereq_('../lib/Overview');
 
 module.exports = Core;
-},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 

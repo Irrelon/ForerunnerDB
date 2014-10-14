@@ -140,4 +140,5 @@ Operation.prototype.stop = function () {
 	this._data.time.totalMs = this._data.time.stopMs - this._data.time.startMs;
 };
 
+Shared.finishModule('Operation');
 module.exports = Operation;

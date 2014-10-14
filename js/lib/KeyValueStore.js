@@ -208,4 +208,5 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 	return false;
 };
 
+Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;

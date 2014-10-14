@@ -406,4 +406,5 @@ Path.prototype.clean = function (str) {
 	return str;
 };
 
+Shared.finishModule('Path');
 module.exports = Path;
