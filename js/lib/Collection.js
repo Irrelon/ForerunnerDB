@@ -1267,14 +1267,33 @@ Collection.prototype._insert = function (doc, index) {
 	return 'No document passed to insert';
 };
 
+/**
+ * Inserts a document into the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to insert at.
+ * @param {object} doc The document to insert.
+ * @private
+ */
 Collection.prototype._dataInsertIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
+/**
+ * Removes a document from the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to remove from.
+ * @private
+ */
 Collection.prototype._dataRemoveIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
+/**
+ * Replaces all data in the collection's internal data array with
+ * the passed array of data.
+ * @param {array} data The array of data to replace existing data with.
+ * @private
+ */
 Collection.prototype._dataReplace = function (data) {
 	// Clear the array - using a while loop with pop is by far the
 	// fastest way to clear an array currently
@@ -1459,6 +1478,13 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+/**
+ * Generates an options object with default values or adds default
+ * values to a passed object if those values are not currently set
+ * to anything.
+ * @param {object=} obj Optional options object to modify.
+ * @returns {object} The options object.
+ */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
@@ -1477,6 +1503,7 @@ Collection.prototype.options = function (obj) {
  * documents that matched the query.
  */
 Collection.prototype.find = function (query, options) {
+	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
 	
 	options = this.options(options);
@@ -2143,6 +2170,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
  * @private
  */
 Collection.prototype._match = function (source, test, opToApply) {
+	// TODO: This method is quite long, break into smaller pieces
 	var operation,
 		applyOp,
 		recurseVal,
