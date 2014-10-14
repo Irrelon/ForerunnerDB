@@ -1,4 +1,4 @@
-ForerunnerDB.moduleLoaded('View', function () {
+ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 	test("Bind - View.on() :: setData from Collection", function () {
 		base.dbUp();
 		base.dataUp();
@@ -787,7 +787,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 	});
 });
 
-ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
+ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 	test("Bind - View.on() :: Insert from CollectionGroup via Collection Interface", function () {
 		base.dbUp();
 		base.dataUp();
