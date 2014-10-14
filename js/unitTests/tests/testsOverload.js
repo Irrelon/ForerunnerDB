@@ -22,6 +22,9 @@ test('Overload :: Type-based overloading', function () {
 		},
 		'string, *, number, number, ...': function () {
 			return 7;
+		},
+		'array, *': function () {
+			return 8;
 		}
 	});
 
@@ -32,6 +35,7 @@ test('Overload :: Type-based overloading', function () {
 	ok(func('hello', 'goodbye', 'useful') === 5, 'String, string, further arguments');
 	ok(func('hello', 'goodbye', 4, 'moo', 'foo') === 6, 'String, string, number, further arguments');
 	ok(func('hello', null, 4, 4, 'foo') === 7, 'String, any, number, number, further arguments');
+	ok(func([], 'foo') === 8, 'Array, any');
 
 	base.dbDown();
 });
