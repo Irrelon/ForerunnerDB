@@ -523,6 +523,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		updateIsArray,
 		i, k;
 
+	// Loop each key in the update object
 	for (i in update) {
 		if (update.hasOwnProperty(i)) {
 			// Reset operation flag
@@ -539,10 +540,10 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					default:
 						operation = true;
+
+						// Now run the operation
 						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 						break;
 				}
 			}
@@ -570,9 +571,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 					}
 				}
 			}
@@ -593,10 +592,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
-
-									if (recurseUpdated) {
-										updated = true;
-									}
+									updated = updated || recurseUpdated;
 								}
 							} else {
 								// Either both source and update are arrays or the update is
@@ -610,10 +606,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// The doc key is an object so traverse the
 							// update further
 							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-
-							if (recurseUpdated) {
-								updated = true;
-							}
+							updated = updated || recurseUpdated;
 						}
 					} else {
 						if (doc[i] !== update[i]) {
