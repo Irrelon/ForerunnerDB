@@ -10,7 +10,7 @@
  http://www.forerunnerdb.com/licensing.html
 
  Commercial licenses help to continue development of ForerunnerDB and pay for developers,
- equipment, offices and electricity, without them ForerunnerDB would not exist!
+ equipment, offices and electricity and without them ForerunnerDB would not exist!
  */
 var Shared,
 	Collection,
