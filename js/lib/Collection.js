@@ -1,3 +1,8 @@
+/**
+ * The main collection class. Collections store multiple documents and
+ * can operate on them using the query language to insert, read, update
+ * and delete.
+ */
 var Shared,
 	Core,
 	Metrics,
@@ -344,7 +349,7 @@ Collection.prototype.upsert = function (obj, callback) {
 				// Fire off the insert queue handler
 				this.processQueue('upsert', callback);
 
-				return;
+				return {};
 			} else {
 				// Loop the array and upsert each item
 				returnData = [];
@@ -395,7 +400,7 @@ Collection.prototype.upsert = function (obj, callback) {
 		if (callback) { callback(); }
 	}
 
-	return;
+	return {};
 };
 
 /**
