@@ -4,7 +4,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
-userView.debug(true);
+
 		userView.link('#testTarget', {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
@@ -157,7 +157,7 @@ userView.debug(true);
 				$orderBy: {
 					name: 1
 				}
-			}, false)
+			})
 			.link('#testTarget', {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
@@ -210,7 +210,7 @@ userView.debug(true);
 				$orderBy: {
 					name: 1
 				}
-			}, false)
+			})
 			.link('#testTarget', {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
@@ -220,10 +220,10 @@ userView.debug(true);
 		ok(elems.length === 4, "Document count");
 
 		// Check sort order
-		ok($(elems[0]).attr('id') === '2', "Alphabetical 1");
-		ok($(elems[1]).attr('id') === '3', "Alphabetical 2");
-		ok($(elems[2]).attr('id') === '4', "Alphabetical 3");
-		ok($(elems[3]).attr('id') === '5', "Alphabetical 4");
+		ok($(elems[0]).attr('id') === '4', "Alphabetical 1");
+		ok($(elems[1]).attr('id') === '5', "Alphabetical 2");
+		ok($(elems[2]).attr('id') === '2', "Alphabetical 3");
+		ok($(elems[3]).attr('id') === '3', "Alphabetical 4");
 
 		user.update({
 			_id: '2'
@@ -579,7 +579,7 @@ userView.debug(true);
 				$orderBy: {
 					name: 1
 				}
-			}, false)
+			})
 			.link('#testTarget', {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
@@ -702,7 +702,7 @@ userView.debug(true);
 			}
 		}
 		var totalTime = new Date().getTime() - timeStart;
-		ok(totalTime < 200, 'Time taken to insert and build DOM linked view from data is acceptable: ' + totalTime + 'ms');
+		ok(totalTime < 3000, 'Time taken to insert and build DOM linked view from data is acceptable: ' + totalTime + 'ms');
 
 		var timeStart = new Date().getTime();
 		coll.insert({
@@ -747,7 +747,7 @@ userView.debug(true);
 
 		var timeStart = new Date().getTime();
 		view = db.view('test');
-		view.debug(true);
+
 		view._privateData._deferThreshold.insert = 10000;
 		view._privateData._deferThreshold.update = 10000;
 		view._privateData._deferThreshold.remove = 10000;
