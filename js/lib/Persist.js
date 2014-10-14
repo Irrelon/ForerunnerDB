@@ -1,3 +1,4 @@
+// TODO: Add doc comments to this class
 // Import external names locally
 var Shared = require('./Shared'),
 	Core,
@@ -191,6 +192,56 @@ Collection.prototype.load = function (callback) {
 Core.prototype.init = function () {
 	this.persist = new Persist(this);
 	CoreInit.apply(this, arguments);
+};
+
+Core.prototype.load = function (callback) {
+	// Loop the collections in the database
+	var obj = this._collection,
+		keys = obj.keys(),
+		keyCount = keys.length,
+		index;
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection load method
+			obj[index].load(function (err) {
+				if (!err) {
+					keyCount--;
+
+					if (keyCount === 0) {
+						callback(false);
+					}
+				} else {
+					callback(err);
+				}
+			});
+		}
+	}
+};
+
+Core.prototype.save = function (callback) {
+	// Loop the collections in the database
+	var obj = this._collection,
+		keys = obj.keys(),
+		keyCount = keys.length,
+		index;
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection save method
+			obj[index].save(function (err) {
+				if (!err) {
+					keyCount--;
+
+					if (keyCount === 0) {
+						callback(false);
+					}
+				} else {
+					callback(err);
+				}
+			});
+		}
+	}
 };
 
 Shared.finishModule('Persist');
