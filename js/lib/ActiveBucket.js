@@ -53,7 +53,8 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 		return 0;
 	}
 
-	var midwayIndex,
+	var lastMidwayIndex = -1,
+		midwayIndex,
 		lookupItem,
 		result,
 		start = 0,
@@ -64,19 +65,28 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 		// Calculate the midway point (divide and conquer)
 		midwayIndex = Math.floor((start + end) / 2);
 
+		if (lastMidwayIndex === midwayIndex) {
+			// No more items to scan
+			break;
+		}
+
 		// Get the item to compare against
 		lookupItem = arr[midwayIndex];
 
-		// Compare items
-		result = fn(this, obj, item, lookupItem);
+		if (lookupItem !== undefined) {
+			// Compare items
+			result = fn(this, obj, item, lookupItem);
 
-		if (result > 0) {
-			start = midwayIndex + 1;
+			if (result > 0) {
+				start = midwayIndex + 1;
+			}
+
+			if (result < 0) {
+				end = midwayIndex - 1;
+			}
 		}
 
-		if (result < 0) {
-			end = midwayIndex - 1;
-		}
+		lastMidwayIndex = midwayIndex;
 	}
 
 	if (result > 0) {
