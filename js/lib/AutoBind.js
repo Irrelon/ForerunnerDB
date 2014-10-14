@@ -1,7 +1,13 @@
+/**
+ * Provides data-binding functionality to ForerunnerDB. Allows collections
+ * and views to link to selectors and automatically generate DOM elements
+ * from jsViews (jsRender) templates.
+ */
 var Shared = ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
+Shared.addModule('AutoBind', AutoBind);
 AutoBind.extendCollection = function (Module) {
 	var superInit = Module.prototype.init,
 		superDataReplace = Module.prototype._dataReplace,
@@ -577,4 +583,5 @@ if (typeof jQuery !== 'undefined') {
 	throw('Cannot use AutoBind plugin without jQuery - please ensure jQuery is loaded first!');
 }
 
+Shared.finishModule('AutoBind');
 module.exports = AutoBind;
