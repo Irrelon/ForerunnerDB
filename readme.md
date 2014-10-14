@@ -20,6 +20,9 @@ npm install forerunnerdb
 
 This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/coolbloke1324/ForerunnerDB/archive/master.zip).
 
+## License
+Forerunner is free for use if you are using it for non-commercial, non-governmental or non-profit use. If you are doing something commercial please visit the license page to see which license best suits your requirements: http://www.forerunnerdb.com/licensing.html
+
 ## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
 
@@ -814,28 +817,3 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - 1.3.0
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
-
-## License
-The MIT License (MIT)
-
-Copyright (c) 2014 Irrelon Software Limited
-http://www.irrelon.com
-http://www.forerunnerdb.com
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
