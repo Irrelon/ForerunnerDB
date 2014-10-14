@@ -4,6 +4,11 @@ var Core = _dereq_('../lib/Core'),
 
 module.exports = Core;
 },{"../lib/Core":4,"../lib/LocalForage":8}],2:[function(_dereq_,module,exports){
+/**
+ * The main collection class. Collections store multiple documents and
+ * can operate on them using the query language to insert, read, update
+ * and delete.
+ */
 var Shared,
 	Core,
 	Metrics,
@@ -350,7 +355,7 @@ Collection.prototype.upsert = function (obj, callback) {
 				// Fire off the insert queue handler
 				this.processQueue('upsert', callback);
 
-				return;
+				return {};
 			} else {
 				// Loop the array and upsert each item
 				returnData = [];
@@ -401,7 +406,7 @@ Collection.prototype.upsert = function (obj, callback) {
 		if (callback) { callback(); }
 	}
 
-	return;
+	return {};
 };
 
 /**
@@ -507,6 +512,7 @@ Collection.prototype.updateById = function (id, update) {
  * @private
  */
 Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
+	// TODO: This method is long, try to break it into smaller pieces
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -524,6 +530,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		updateIsArray,
 		i, k;
 
+	// Loop each key in the update object
 	for (i in update) {
 		if (update.hasOwnProperty(i)) {
 			// Reset operation flag
@@ -540,10 +547,10 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					default:
 						operation = true;
+
+						// Now run the operation
 						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 						break;
 				}
 			}
@@ -571,9 +578,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 					}
 				}
 			}
@@ -594,10 +599,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
-
-									if (recurseUpdated) {
-										updated = true;
-									}
+									updated = updated || recurseUpdated;
 								}
 							} else {
 								// Either both source and update are arrays or the update is
@@ -611,10 +613,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// The doc key is an object so traverse the
 							// update further
 							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-
-							if (recurseUpdated) {
-								updated = true;
-							}
+							updated = updated || recurseUpdated;
 						}
 					} else {
 						if (doc[i] !== update[i]) {
@@ -1274,14 +1273,33 @@ Collection.prototype._insert = function (doc, index) {
 	return 'No document passed to insert';
 };
 
+/**
+ * Inserts a document into the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to insert at.
+ * @param {object} doc The document to insert.
+ * @private
+ */
 Collection.prototype._dataInsertIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
+/**
+ * Removes a document from the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to remove from.
+ * @private
+ */
 Collection.prototype._dataRemoveIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
+/**
+ * Replaces all data in the collection's internal data array with
+ * the passed array of data.
+ * @param {array} data The array of data to replace existing data with.
+ * @private
+ */
 Collection.prototype._dataReplace = function (data) {
 	// Clear the array - using a while loop with pop is by far the
 	// fastest way to clear an array currently
@@ -1466,6 +1484,13 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+/**
+ * Generates an options object with default values or adds default
+ * values to a passed object if those values are not currently set
+ * to anything.
+ * @param {object=} obj Optional options object to modify.
+ * @returns {object} The options object.
+ */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
@@ -1484,6 +1509,7 @@ Collection.prototype.options = function (obj) {
  * documents that matched the query.
  */
 Collection.prototype.find = function (query, options) {
+	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
 	
 	options = this.options(options);
@@ -2150,6 +2176,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
  * @private
  */
 Collection.prototype._match = function (source, test, opToApply) {
+	// TODO: This method is quite long, break into smaller pieces
 	var operation,
 		applyOp,
 		recurseVal,
@@ -3182,10 +3209,18 @@ Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
 
+/**
+ * Returns true if ForerunnerDB is running on a client browser.
+ * @returns {boolean}
+ */
 Core.prototype.isClient = function () {
 	return !this._isServer;
 };
 
+/**
+ * Returns true if ForerunnerDB is running on a server.
+ * @returns {boolean}
+ */
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
@@ -3230,7 +3265,7 @@ Core.prototype.arrayToCollection = function (arr) {
  * @param {String} event The name of the event to listen for.
  * @param {Function} listener The listener method to call when
  * the event is fired.
- * @returns {init}
+ * @returns {*}
  */
 Core.prototype.on = function(event, listener) {
 	this._listeners = this._listeners || {};
@@ -3315,7 +3350,7 @@ Core.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {Array}
+ * @returns {object}
  */
 Core.prototype.peekCat = function (search) {
 	var i,
@@ -3729,6 +3764,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+Shared.finishModule('Index');
 module.exports = Index;
 },{"./Path":16,"./Shared":18}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
@@ -3941,6 +3977,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 	return false;
 };
 
+Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
 },{"./Shared":18}],8:[function(_dereq_,module,exports){
 /*
@@ -4102,6 +4139,7 @@ Metrics.prototype.list = function () {
 	return this._data;
 };
 
+Shared.finishModule('Metrics');
 module.exports = Metrics;
 },{"./Operation":14,"./Shared":18}],10:[function(_dereq_,module,exports){
 var CRUD = {
@@ -4539,6 +4577,7 @@ Operation.prototype.stop = function () {
 	this._data.time.totalMs = this._data.time.stopMs - this._data.time.startMs;
 };
 
+Shared.finishModule('Operation');
 module.exports = Operation;
 },{"./Path":16,"./Shared":18}],15:[function(_dereq_,module,exports){
 /**
@@ -4593,11 +4632,20 @@ Overload = function (def) {
 			} else {
 				// Generate lookup key from arguments
 				var arr = [],
-					lookup;
+					lookup,
+					type;
 
 				// Copy arguments to an array
 				for (index = 0; index < arguments.length; index++) {
-					arr.push(typeof arguments[index]);
+					type = typeof arguments[index];
+
+					// Handle detecting arrays
+					if (type === 'object' && arguments[index] instanceof Array) {
+						type = 'array';
+					}
+
+					// Add the type to the argument types array
+					arr.push(type);
 				}
 
 				lookup = arr.join(',');
@@ -4618,7 +4666,7 @@ Overload = function (def) {
 				}
 			}
 
-			throw('Overloaded method does not have a matching signature for the passed arguments!');
+			throw('Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
 		};
 	}
 
@@ -5069,8 +5117,10 @@ Path.prototype.clean = function (str) {
 	return str;
 };
 
+Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":18}],17:[function(_dereq_,module,exports){
+// TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
 	Core,
@@ -5266,6 +5316,57 @@ Core.prototype.init = function () {
 	CoreInit.apply(this, arguments);
 };
 
+Core.prototype.load = function (callback) {
+	// Loop the collections in the database
+	var obj = this._collection,
+		keys = obj.keys(),
+		keyCount = keys.length,
+		index;
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection load method
+			obj[index].load(function (err) {
+				if (!err) {
+					keyCount--;
+
+					if (keyCount === 0) {
+						callback(false);
+					}
+				} else {
+					callback(err);
+				}
+			});
+		}
+	}
+};
+
+Core.prototype.save = function (callback) {
+	// Loop the collections in the database
+	var obj = this._collection,
+		keys = obj.keys(),
+		keyCount = keys.length,
+		index;
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection save method
+			obj[index].save(function (err) {
+				if (!err) {
+					keyCount--;
+
+					if (keyCount === 0) {
+						callback(false);
+					}
+				} else {
+					callback(err);
+				}
+			});
+		}
+	}
+};
+
+Shared.finishModule('Persist');
 module.exports = Persist;
 },{"./Collection":2,"./CollectionGroup":3,"./Shared":18}],18:[function(_dereq_,module,exports){
 var Shared = {

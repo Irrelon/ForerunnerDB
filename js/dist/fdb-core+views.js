@@ -4,9 +4,19 @@ var Core = _dereq_('../lib/Core'),
 
 module.exports = Core;
 },{"../lib/Core":5,"../lib/View":19}],2:[function(_dereq_,module,exports){
+/**
+ * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
+ * know the index that a document will occupy in an array with minimal
+ * processing, speeding up things like sorted views.
+ */
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
+/**
+ * The active bucket class.
+ * @param {object} orderBy An order object.
+ * @constructor
+ */
 var ActiveBucket = function (orderBy) {
 	var sortKey,
 		bucketData;
@@ -30,31 +40,59 @@ var ActiveBucket = function (orderBy) {
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
+/**
+ * Quicksorts a single document into the passed array and
+ * returns the index that the document should occupy.
+ * @param {object} obj The document to calculate index for.
+ * @param {array} arr The array the document index will be
+ * calculated for.
+ * @param {string} item The string key representation of the
+ * document whose index is being calculated.
+ * @param {function} fn The comparison function that is used
+ * to determine if a document is sorted below or above the
+ * document we are calculating the index for.
+ * @returns {number} The index the document should occupy.
+ */
 ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
+	// If the array is empty then return index zero
 	if (!arr.length) {
 		return 0;
 	}
 
-	var midwayIndex,
+	var lastMidwayIndex = -1,
+		midwayIndex,
 		lookupItem,
 		result,
 		start = 0,
-		end = arr.length - 1,
-		count = 0;
+		end = arr.length - 1;
 
-	while (count < 100 && end >= start) {
+	// Loop the data until our range overlaps
+	while (end >= start) {
+		// Calculate the midway point (divide and conquer)
 		midwayIndex = Math.floor((start + end) / 2);
+
+		if (lastMidwayIndex === midwayIndex) {
+			// No more items to scan
+			break;
+		}
+
+		// Get the item to compare against
 		lookupItem = arr[midwayIndex];
-		result = fn(this, obj, item, lookupItem);
 
-		if (result > 0) {
-			start = midwayIndex + 1;
+		if (lookupItem !== undefined) {
+			// Compare items
+			result = fn(this, obj, item, lookupItem);
+
+			if (result > 0) {
+				start = midwayIndex + 1;
+			}
+
+			if (result < 0) {
+				end = midwayIndex - 1;
+			}
 		}
 
-		if (result < 0) {
-			end = midwayIndex - 1;
-		}
-		count++;
+		lastMidwayIndex = midwayIndex;
 	}
 
 	if (result > 0) {
@@ -65,6 +103,17 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 
 };
 
+/**
+ * Calculates the sort position of an item against another item.
+ * @param {object} sorter An object or instance that contains
+ * sortAsc and sortDesc methods.
+ * @param {object} obj The document to compare.
+ * @param {string} a The first key to compare.
+ * @param {string} b The second key to compare.
+ * @returns {number} Either 1 for sort a after b or -1 to sort
+ * a before b.
+ * @private
+ */
 ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 	var aVals = a.split('.:.'),
 		bVals = b.split('.:.'),
@@ -97,6 +146,11 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 	}
 };
 
+/**
+ * Inserts a document into the active bucket.
+ * @param {object} obj The document to insert.
+ * @returns {number} The index the document now occupies.
+ */
 ActiveBucket.prototype.insert = function (obj) {
 	var key,
 		keyIndex;
@@ -119,6 +173,13 @@ ActiveBucket.prototype.insert = function (obj) {
 	return keyIndex;
 };
 
+/**
+ * Removes a document from the active bucket.
+ * @param {object} obj The document to remove.
+ * @returns {boolean} True if the document was removed
+ * successfully or false if it wasn't found in the active
+ * bucket.
+ */
 ActiveBucket.prototype.remove = function (obj) {
 	var key,
 		keyIndex;
@@ -137,6 +198,12 @@ ActiveBucket.prototype.remove = function (obj) {
 	return false;
 };
 
+/**
+ * Get the index that the passed document currently occupies
+ * or the index it will occupy if added to the active bucket.
+ * @param {object} obj The document to get the index for.
+ * @returns {number} The index.
+ */
 ActiveBucket.prototype.index = function (obj) {
 	var key,
 		keyIndex;
@@ -152,6 +219,11 @@ ActiveBucket.prototype.index = function (obj) {
 	return keyIndex;
 };
 
+/**
+ * The key that represents the passed document.
+ * @param {object} obj The document to get the key for.
+ * @returns {string} The document key.
+ */
 ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
 		arr = this._keyArr,
@@ -174,10 +246,21 @@ ActiveBucket.prototype.documentKey = function (obj) {
 	return key;
 };
 
+/**
+ * Get the number of documents currently indexed in the active
+ * bucket instance.
+ * @returns {number} The number of documents.
+ */
 ActiveBucket.prototype.count = function () {
 	return this._count;
 };
 
+/**
+ * Sorts the passed value a against the passed value b ascending.
+ * @param {*} a The first value to compare.
+ * @param {*} b The second value to compare.
+ * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+ */
 ActiveBucket.prototype.sortAsc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return a.localeCompare(b);
@@ -192,6 +275,12 @@ ActiveBucket.prototype.sortAsc = function (a, b) {
 	return 0;
 };
 
+/**
+ * Sorts the passed value a against the passed value b descending.
+ * @param {*} a The first value to compare.
+ * @param {*} b The second value to compare.
+ * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+ */
 ActiveBucket.prototype.sortDesc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return b.localeCompare(a);
@@ -206,8 +295,14 @@ ActiveBucket.prototype.sortDesc = function (a, b) {
 	return 0;
 };
 
+Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
 },{"./Path":16,"./Shared":18}],3:[function(_dereq_,module,exports){
+/**
+ * The main collection class. Collections store multiple documents and
+ * can operate on them using the query language to insert, read, update
+ * and delete.
+ */
 var Shared,
 	Core,
 	Metrics,
@@ -554,7 +649,7 @@ Collection.prototype.upsert = function (obj, callback) {
 				// Fire off the insert queue handler
 				this.processQueue('upsert', callback);
 
-				return;
+				return {};
 			} else {
 				// Loop the array and upsert each item
 				returnData = [];
@@ -605,7 +700,7 @@ Collection.prototype.upsert = function (obj, callback) {
 		if (callback) { callback(); }
 	}
 
-	return;
+	return {};
 };
 
 /**
@@ -711,6 +806,7 @@ Collection.prototype.updateById = function (id, update) {
  * @private
  */
 Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
+	// TODO: This method is long, try to break it into smaller pieces
 	update = this.decouple(update);
 
 	// Clear leading dots from path
@@ -728,6 +824,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		updateIsArray,
 		i, k;
 
+	// Loop each key in the update object
 	for (i in update) {
 		if (update.hasOwnProperty(i)) {
 			// Reset operation flag
@@ -744,10 +841,10 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					default:
 						operation = true;
+
+						// Now run the operation
 						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 						break;
 				}
 			}
@@ -775,9 +872,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 					// Loop the items that matched and update them
 					for (tmpIndex = 0; tmpIndex < tmpArray.length; tmpIndex++) {
 						recurseUpdated = this.updateObject(doc[i][tmpArray[tmpIndex]], update[i + '.$'], query, options, path + '.' + i, opType);
-						if (recurseUpdated) {
-							updated = true;
-						}
+						updated = updated || recurseUpdated;
 					}
 				}
 			}
@@ -798,10 +893,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
 									recurseUpdated = this.updateObject(doc[i][tmpIndex], update[i], query, options, path + '.' + i, opType);
-
-									if (recurseUpdated) {
-										updated = true;
-									}
+									updated = updated || recurseUpdated;
 								}
 							} else {
 								// Either both source and update are arrays or the update is
@@ -815,10 +907,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// The doc key is an object so traverse the
 							// update further
 							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-
-							if (recurseUpdated) {
-								updated = true;
-							}
+							updated = updated || recurseUpdated;
 						}
 					} else {
 						if (doc[i] !== update[i]) {
@@ -1478,14 +1567,33 @@ Collection.prototype._insert = function (doc, index) {
 	return 'No document passed to insert';
 };
 
+/**
+ * Inserts a document into the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to insert at.
+ * @param {object} doc The document to insert.
+ * @private
+ */
 Collection.prototype._dataInsertIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
+/**
+ * Removes a document from the internal collection data array at
+ * the specified index.
+ * @param {number} index The index to remove from.
+ * @private
+ */
 Collection.prototype._dataRemoveIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
+/**
+ * Replaces all data in the collection's internal data array with
+ * the passed array of data.
+ * @param {array} data The array of data to replace existing data with.
+ * @private
+ */
 Collection.prototype._dataReplace = function (data) {
 	// Clear the array - using a while loop with pop is by far the
 	// fastest way to clear an array currently
@@ -1670,6 +1778,13 @@ Collection.prototype.explain = function (query, options) {
 	return result.__fdbOp._data;
 };
 
+/**
+ * Generates an options object with default values or adds default
+ * values to a passed object if those values are not currently set
+ * to anything.
+ * @param {object=} obj Optional options object to modify.
+ * @returns {object} The options object.
+ */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
@@ -1688,6 +1803,7 @@ Collection.prototype.options = function (obj) {
  * documents that matched the query.
  */
 Collection.prototype.find = function (query, options) {
+	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
 	
 	options = this.options(options);
@@ -2354,6 +2470,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
  * @private
  */
 Collection.prototype._match = function (source, test, opToApply) {
+	// TODO: This method is quite long, break into smaller pieces
 	var operation,
 		applyOp,
 		recurseVal,
@@ -3386,10 +3503,18 @@ Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
 
+/**
+ * Returns true if ForerunnerDB is running on a client browser.
+ * @returns {boolean}
+ */
 Core.prototype.isClient = function () {
 	return !this._isServer;
 };
 
+/**
+ * Returns true if ForerunnerDB is running on a server.
+ * @returns {boolean}
+ */
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
@@ -3434,7 +3559,7 @@ Core.prototype.arrayToCollection = function (arr) {
  * @param {String} event The name of the event to listen for.
  * @param {Function} listener The listener method to call when
  * the event is fired.
- * @returns {init}
+ * @returns {*}
  */
 Core.prototype.on = function(event, listener) {
 	this._listeners = this._listeners || {};
@@ -3519,7 +3644,7 @@ Core.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {Array}
+ * @returns {object}
  */
 Core.prototype.peekCat = function (search) {
 	var i,
@@ -3933,6 +4058,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+Shared.finishModule('Index');
 module.exports = Index;
 },{"./Path":16,"./Shared":18}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
@@ -4145,6 +4271,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 	return false;
 };
 
+Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
 },{"./Shared":18}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
@@ -4217,6 +4344,7 @@ Metrics.prototype.list = function () {
 	return this._data;
 };
 
+Shared.finishModule('Metrics');
 module.exports = Metrics;
 },{"./Operation":14,"./Shared":18}],10:[function(_dereq_,module,exports){
 var CRUD = {
@@ -4654,6 +4782,7 @@ Operation.prototype.stop = function () {
 	this._data.time.totalMs = this._data.time.stopMs - this._data.time.startMs;
 };
 
+Shared.finishModule('Operation');
 module.exports = Operation;
 },{"./Path":16,"./Shared":18}],15:[function(_dereq_,module,exports){
 /**
@@ -4708,11 +4837,20 @@ Overload = function (def) {
 			} else {
 				// Generate lookup key from arguments
 				var arr = [],
-					lookup;
+					lookup,
+					type;
 
 				// Copy arguments to an array
 				for (index = 0; index < arguments.length; index++) {
-					arr.push(typeof arguments[index]);
+					type = typeof arguments[index];
+
+					// Handle detecting arrays
+					if (type === 'object' && arguments[index] instanceof Array) {
+						type = 'array';
+					}
+
+					// Add the type to the argument types array
+					arr.push(type);
 				}
 
 				lookup = arr.join(',');
@@ -4733,7 +4871,7 @@ Overload = function (def) {
 				}
 			}
 
-			throw('Overloaded method does not have a matching signature for the passed arguments!');
+			throw('Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
 		};
 	}
 
@@ -5184,6 +5322,7 @@ Path.prototype.clean = function (str) {
 	return str;
 };
 
+Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":18}],17:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
@@ -5208,6 +5347,8 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 	}
 };
 
+Shared.addModule('ReactorIO', ReactorIO);
+
 ReactorIO.prototype.drop = function () {
 	// Remove links
 	this._reactorIn.unChain(this);
@@ -5218,9 +5359,10 @@ ReactorIO.prototype.drop = function () {
 	delete this._chainHandler;
 };
 
-Shared.addModule('ReactorIO', ReactorIO);
+
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
+Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":18}],18:[function(_dereq_,module,exports){
 var Shared = {

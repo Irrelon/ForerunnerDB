@@ -4,10 +4,16 @@ var AutoBind = _dereq_('../lib/AutoBind');
 module.exports = AutoBind;
 
 },{"../lib/AutoBind":2}],2:[function(_dereq_,module,exports){
+/**
+ * Provides data-binding functionality to ForerunnerDB. Allows collections
+ * and views to link to selectors and automatically generate DOM elements
+ * from jsViews (jsRender) templates.
+ */
 var Shared = ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
+Shared.addModule('AutoBind', AutoBind);
 AutoBind.extendCollection = function (Module) {
 	var superInit = Module.prototype.init,
 		superDataReplace = Module.prototype._dataReplace,
@@ -574,6 +580,8 @@ if (typeof jQuery !== 'undefined') {
 				}
 			});
 		}
+
+		Shared.finishModule('AutoBind');
 	} else {
 		throw('AutoBind plugin cannot continue because jsViews is not loaded - check your error log for url errors.');
 	}
@@ -581,6 +589,7 @@ if (typeof jQuery !== 'undefined') {
 	throw('Cannot use AutoBind plugin without jQuery - please ensure jQuery is loaded first!');
 }
 
+Shared.finishModule('AutoBind');
 module.exports = AutoBind;
 
 },{"../lib/vendor/jsviews":3}],3:[function(_dereq_,module,exports){
