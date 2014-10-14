@@ -1,17 +1,17 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-var Core = require('../lib/Core'),
-	CollectionGroup = require('../lib/CollectionGroup'),
-	View = require('../lib/View'),
-	Highcharts = require('../lib/Highcharts'),
-	Persist = require('../lib/Persist'),
-	Document = require('../lib/Document'),
-	Overview = require('../lib/Overview'),
-	ActiveBucket = require('../lib/ActiveBucket');
+!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+var Core = _dereq_('../lib/Core'),
+	CollectionGroup = _dereq_('../lib/CollectionGroup'),
+	View = _dereq_('../lib/View'),
+	Highcharts = _dereq_('../lib/Highcharts'),
+	Persist = _dereq_('../lib/Persist'),
+	Document = _dereq_('../lib/Document'),
+	Overview = _dereq_('../lib/Overview'),
+	ActiveBucket = _dereq_('../lib/ActiveBucket');
 
 module.exports = Core;
-},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{"../lib/ActiveBucket":2,"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highcharts":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 var ActiveBucket = function (orderBy) {
 	var sortKey,
@@ -19,21 +19,16 @@ var ActiveBucket = function (orderBy) {
 
 	this._primaryKey = '_id';
 	this._keyArr = [];
-	this._bucketData = {};
+	this._data = [];
+	this._objLookup = {};
 	this._count = 0;
-	this._order = [];
-	this._ref = {};
 
 	for (sortKey in orderBy) {
 		if (orderBy.hasOwnProperty(sortKey)) {
-			/*sortSingleObj = {};
-			sortSingleObj[sortKey] = orderBy[sortKey];
-			sortSingleObj.___fdbKey = sortKey;*/
-			this._keyArr.push(sortKey);
-
-			bucketData = this._bucketData[sortKey] = new BucketData();
-			bucketData._path = sortKey;
-			bucketData._dir = orderBy[sortKey];
+			this._keyArr.push({
+				key: sortKey,
+				dir: orderBy[sortKey]
+			});
 		}
 	}
 };
@@ -41,198 +36,155 @@ var ActiveBucket = function (orderBy) {
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
-ActiveBucket.prototype.arr = function () {
-	// Build the order array
-	var index,
-		arr = this._keyArr,
-		arrCount = arr.length,
-		currRef = this._ref,
-		key,
-		keyValue,
-		bucketData,
-		bucketIndex;
-
-	for (index = 0; index < arrCount; index++) {
-		key = arr[index];
-		bucketData = this._bucketData[key];
-
-		for (bucketIndex = 0; bucketIndex < bucketData._order.length; bucketIndex++) {
-			keyValue = bucketData._order[bucketIndex];
-			currRef = currRef[keyValue];
-		}
-
-		if (index === arrCount - 1) {
-			// This is the last key
-
-		}
+ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
+	if (!arr.length) {
+		return 0;
 	}
 
-	this._order.sort(this._sortAsc);
-	return this._order;
+	var midwayIndex,
+		lookupItem,
+		result,
+		start = 0,
+		end = arr.length - 1,
+		count = 0;
+
+	while (count < 100 && end >= start) {
+		midwayIndex = Math.floor((start + end) / 2);
+		lookupItem = arr[midwayIndex];
+		result = fn(this, obj, item, lookupItem);
+
+		if (result > 0) {
+			start = midwayIndex + 1;
+		}
+
+		if (result < 0) {
+			end = midwayIndex - 1;
+		}
+		count++;
+	}
+
+	if (result > 0) {
+		return midwayIndex + 1;
+	} else {
+		return midwayIndex;
+	}
+
 };
 
-ActiveBucket.prototype.add = function (obj) {
-	var index,
-		docIndex,
-		arr = this._keyArr,
-		count = arr.length;
+ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
+	var aVals = a.split('.:.'),
+		bVals = b.split('.:.'),
+		arr = sorter._keyArr,
+		count = arr.length,
+		index,
+		sortType,
+		castType;
 
 	for (index = 0; index < count; index++) {
-		this._bucketData[arr[index]].add(obj);
-	}
+		sortType = arr[index];
+		castType = typeof obj[sortType.key];
 
-	// Create a reference to the document
-	this._addRef(obj);
+		if (castType === 'number') {
+			aVals[index] = Number(aVals[index]);
+			bVals[index] = Number(bVals[index]);
+		}
 
-	this._count++;
-};
+		// Check for non-equal items
+		if (aVals[index] !== bVals[index]) {
+			// Return the sorted items
+			if (sortType.dir === 1) {
+				return sorter.sortAsc(aVals[index], bVals[index]);
+			}
 
-ActiveBucket.prototype._addRef = function (obj) {
-	var index,
-		arr = this._keyArr,
-		arrCount = arr.length,
-		currRef = this._ref,
-		key,
-		keyValue;
-
-	for (index = 0; index < arrCount; index++) {
-		key = arr[index];
-		keyValue = obj[key];
-
-		if (index === arrCount - 1) {
-			// This is the last key, assign the object
-			currRef = currRef[keyValue] = currRef[keyValue] || [];
-
-			// Push the object to the array
-			currRef.push(obj);
-		} else {
-			currRef = currRef[keyValue] = currRef[keyValue] || {};
+			if (sortType.dir === -1) {
+				return sorter.sortDesc(aVals[index], bVals[index]);
+			}
 		}
 	}
+};
+
+ActiveBucket.prototype.insert = function (obj) {
+	var key,
+		keyIndex;
+
+	key = this.documentKey(obj);
+	keyIndex = this._data.indexOf(key);
+
+	if (keyIndex === -1) {
+		// Insert key
+		keyIndex = this.qs(obj, this._data, key, this._sortFunc);
+
+		this._data.splice(keyIndex, 0, key);
+	} else {
+		this._data.splice(keyIndex, 0, key);
+	}
+
+	this._objLookup[obj[this._primaryKey]] = key;
+
+	this._count++;
+	return keyIndex;
 };
 
 ActiveBucket.prototype.remove = function (obj) {
-	this._bucketData.remove(obj);
-	this._count--;
+	var key,
+		keyIndex;
+
+	key = this._objLookup[obj[this._primaryKey]];
+
+	if (key) {
+		keyIndex = this._data.indexOf(key);
+		this._data.splice(keyIndex, 0, key);
+		delete this._objLookup[obj[this._primaryKey]];
+
+		this._count--;
+		return true;
+	}
+
+	return false;
 };
 
 ActiveBucket.prototype.index = function (obj) {
-	var index,
-		positionArr = [],
-		arr = this._keyArr,
-		count = arr.length,
-		docIndex,
-		key,
-		currRef = this._ref,
-		finalIndex;
+	var key,
+		keyIndex;
 
-	for (index = 0; index < count; index++) {
-		key = arr[index];
-		currRef = currRef[obj[key]];
+	key = this.documentKey(obj);
+	keyIndex = this._data.indexOf(key);
 
-		docIndex = this._bucketData[key].index(obj);
-		docIndex = index === 0 ? docIndex : ("000000" + docIndex).slice(-6);
-
-		if (index === count - 1) {
-			// Assign the array index to the index
-			finalIndex = currRef.indexOf(obj);
-
-			if (finalIndex === -1) {
-				finalIndex = currRef.length;
-			}
-
-			docIndex += '.' + ("000000" + finalIndex).slice(-6);
-		}
-
-		positionArr.push(docIndex);
+	if (keyIndex === -1) {
+		// Get key index
+		keyIndex = this.qs(obj, this._data, key, this._sortFunc);
 	}
 
-	return positionArr.join('.');
+	return keyIndex;
+};
+
+ActiveBucket.prototype.documentKey = function (obj) {
+	var key = '',
+		arr = this._keyArr,
+		count = arr.length,
+		index,
+		sortType;
+
+	for (index = 0; index < count; index++) {
+		sortType = arr[index];
+		if (key) {
+			key += '.:.';
+		}
+
+		key += obj[sortType.key];
+	}
+
+	// Add the unique identifier on the end of the key
+	key += '.:.' + obj[this._primaryKey];
+
+	return key;
 };
 
 ActiveBucket.prototype.count = function () {
 	return this._count;
 };
 
-BucketData = function () {
-	this._path = ''; // The name of the key to sort on
-	this._dir = 1; // The direction to sort in (defaults to ascending)
-	this._data = {}; // The bucket's data
-	this._order = []; // The sorted keys
-	this._count = 0; // The overall number of objects held in reference
-};
-
-BucketData.prototype.add = function (obj) {
-	var keyValue = obj[this._path];
-
-	// Check if the object has the path we need to sort on
-	if (keyValue !== undefined) {
-		// Check if this is a new key or existing one
-		if (this._data[keyValue] === undefined) {
-			// Add the new key as an object we can store further data against
-			this._data[keyValue] = 1;
-
-			// Add the key to the order array
-			this._order.push(keyValue);
-
-			// Sort the key array so it's always up to date
-			if (this._dir === 1) {
-				// Sort ascending
-				this._order.sort(this._sortAsc);
-			} else if (this._dir === -1) {
-				// Sort descending
-				this._order.sort(this._sortDesc);
-			}
-		} else {
-			// Add to the existing reference count
-			this._data[keyValue]++;
-		}
-
-		this._count++;
-	}
-};
-
-BucketData.prototype.remove = function (obj) {
-	var keyValue = obj[this._path],
-		keyIndex;
-
-	// Check if the object has the path we need to sort on
-	if (keyValue !== undefined) {
-		// Check if this is a new key or existing one
-		if (this._data[keyValue]) {
-			// Dereference this object from the ref counter
-			this._data[keyValue]--;
-
-			// Check if the key is no longer referenced
-			if (this._data[keyValue] === 0) {
-				// The key is no longer referenced, remove it
-				keyIndex = this._order.indexOf(keyValue);
-
-				if (keyIndex > -1) {
-					this._order.splice(keyIndex, 1);
-				}
-
-				delete this._data[keyValue];
-			}
-		}
-
-		this._count--;
-	}
-};
-
-BucketData.prototype.index = function (obj) {
-	return this._order.indexOf(obj[this._path]);
-};
-
-BucketData.prototype.count = function  () {
-	return this._count;
-};
-
-BucketData.prototype.keyCount = function () {
-	return this._order.length;
-};
-
-BucketData.prototype._sortAsc = function (a, b) {
+ActiveBucket.prototype.sortAsc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return a.localeCompare(b);
 	} else {
@@ -246,9 +198,9 @@ BucketData.prototype._sortAsc = function (a, b) {
 	return 0;
 };
 
-BucketData.prototype._sortDesc = function (a, b) {
+ActiveBucket.prototype.sortDesc = function (a, b) {
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
-		return a.localeCompare(b) === true ? -1 : 1;
+		return b.localeCompare(a);
 	} else {
 		if (a > b) {
 			return -1;
@@ -260,8 +212,8 @@ BucketData.prototype._sortDesc = function (a, b) {
 	return 0;
 };
 
-Shared.addModule('BucketData', BucketData);
-},{"./Path":19,"./Shared":22}],3:[function(require,module,exports){
+module.exports = ActiveBucket;
+},{"./Path":19,"./Shared":22}],3:[function(_dereq_,module,exports){
 var Shared,
 	Core,
 	Metrics,
@@ -270,7 +222,7 @@ var Shared,
 	Index,
 	Crc;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * Collection object used to store data.
@@ -321,11 +273,11 @@ Shared.mixin(Collection.prototype, 'Mixin.Events');
 Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 
-Metrics = require('./Metrics');
-KeyValueStore = require('./KeyValueStore');
-Path = require('./Path');
-Index = require('./Index');
-Crc = require('./Crc');
+Metrics = _dereq_('./Metrics');
+KeyValueStore = _dereq_('./KeyValueStore');
+Path = _dereq_('./Path');
+Index = _dereq_('./Index');
+Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
 /**
@@ -2178,7 +2130,7 @@ Collection.prototype._sort = function (key, arr) {
 				valB = pathSolver.value(b)[0];
 
 			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valA.localeCompare(valB) === 1 ? -1 : 1;
+				return valB.localeCompare(valA);
 			} else {
 				if (valA > valB) {
 					return -1;
@@ -3050,14 +3002,14 @@ Core.prototype.collections = function () {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":19,"./Shared":22}],4:[function(require,module,exports){
+},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":19,"./Shared":22}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	CoreInit,
 	Collection;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
@@ -3076,7 +3028,7 @@ Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 
-Collection = require('./Collection');
+Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3299,7 +3251,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":22}],5:[function(require,module,exports){
+},{"./Collection":3,"./Shared":22}],5:[function(_dereq_,module,exports){
 /*
  The MIT License (MIT)
 
@@ -3332,8 +3284,8 @@ var Shared,
 	Crc,
 	Overload;
 
-Shared = require('./Shared');
-Overload = require('./Overload');
+Shared = _dereq_('./Shared');
+Overload = _dereq_('./Overload');
 
 /**
  * The main ForerunnerDB core object.
@@ -3434,9 +3386,9 @@ Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
 Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
 
-Collection = require('./Collection.js');
-Metrics = require('./Metrics.js');
-Crc = require('./Crc.js');
+Collection = _dereq_('./Collection.js');
+Metrics = _dereq_('./Metrics.js');
+Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
 
@@ -3607,7 +3559,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":17,"./Shared":22}],6:[function(require,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":17,"./Shared":22}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3635,13 +3587,13 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0;
 };
-},{}],7:[function(require,module,exports){
+},{}],7:[function(_dereq_,module,exports){
 var Shared,
 	Collection,
 	Core,
 	CoreInit;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 var Document = function () {
 	this.init.apply(this, arguments);
@@ -3657,7 +3609,7 @@ Shared.mixin(Document.prototype, 'Mixin.Common');
 Shared.mixin(Document.prototype, 'Mixin.Events');
 Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 
-Collection = require('./Collection');
+Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -3974,13 +3926,13 @@ Core.prototype.document = function (documentName) {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":3,"./Shared":22}],8:[function(require,module,exports){
+},{"./Collection":3,"./Shared":22}],8:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
 	CollectionInit;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * The constructor.
@@ -3999,6 +3951,10 @@ Highchart.prototype.init = function (collection, options) {
 
 	// Setup the chart
 	this._options.series = [];
+
+	// Disable attribution on highcharts
+	options.chartOptions = options.chartOptions || {};
+	options.chartOptions.credits = false;
 
 	// Set the data for the chart
 	var data,
@@ -4233,9 +4189,9 @@ Collection.prototype.dropChart = function (selector) {
 };
 
 module.exports = Highchart;
-},{"./Shared":22}],9:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{"./Shared":22}],9:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The index class used to instantiate indexes that the database can
@@ -4586,8 +4542,8 @@ Index.prototype._itemHashArr = function (item, keys) {
 };
 
 module.exports = Index;
-},{"./Path":19,"./Shared":22}],10:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Path":19,"./Shared":22}],10:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * The key value store class used when storing basic in-memory KV data,
@@ -4798,9 +4754,9 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 };
 
 module.exports = KeyValueStore;
-},{"./Shared":22}],11:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Operation = require('./Operation');
+},{"./Shared":22}],11:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Operation = _dereq_('./Operation');
 
 /**
  * The metrics class used to store details about operations.
@@ -4870,7 +4826,7 @@ Metrics.prototype.list = function () {
 };
 
 module.exports = Metrics;
-},{"./Operation":16,"./Shared":22}],12:[function(require,module,exports){
+},{"./Operation":16,"./Shared":22}],12:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -4882,7 +4838,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],13:[function(require,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -4929,9 +4885,9 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],14:[function(require,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var idCounter = 0,
-	Overload = require('./Overload'),
+	Overload = _dereq_('./Overload'),
 	Common;
 
 Common = {
@@ -5035,7 +4991,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":17}],15:[function(require,module,exports){
+},{"./Overload":17}],15:[function(_dereq_,module,exports){
 var Events = {
 	on: new Overload({
 		/**
@@ -5163,9 +5119,9 @@ var Events = {
 };
 
 module.exports = Events;
-},{}],16:[function(require,module,exports){
-var Shared = require('./Shared'),
-	Path = require('./Path');
+},{}],16:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 /**
  * The operation class, used to store details about an operation being
@@ -5307,7 +5263,7 @@ Operation.prototype.stop = function () {
 };
 
 module.exports = Operation;
-},{"./Path":19,"./Shared":22}],17:[function(require,module,exports){
+},{"./Path":19,"./Shared":22}],17:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -5427,7 +5383,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],18:[function(require,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5435,7 +5391,7 @@ var Shared,
 	Collection,
 	Document;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 var Overview = function () {
 	this.init.apply(this, arguments);
@@ -5454,8 +5410,8 @@ Shared.addModule('Overview', Overview);
 Shared.mixin(Overview.prototype, 'Mixin.Common');
 Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
 
-Collection = require('./Collection');
-Document = require('./Document');
+Collection = _dereq_('./Collection');
+Document = _dereq_('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
@@ -5592,8 +5548,8 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":22}],19:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Collection":3,"./Document":7,"./Shared":22}],19:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 /**
  * Path object used to resolve object paths and retrieve data from
@@ -6002,9 +5958,9 @@ Path.prototype.clean = function (str) {
 };
 
 module.exports = Path;
-},{"./Shared":22}],20:[function(require,module,exports){
+},{"./Shared":22}],20:[function(_dereq_,module,exports){
 // Import external names locally
-var Shared = require('./Shared'),
+var Shared = _dereq_('./Shared'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -6030,9 +5986,9 @@ Shared.addModule('Persist', Persist);
 Shared.mixin(Persist.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
-Collection = require('./Collection');
+Collection = _dereq_('./Collection');
 CollectionDrop = Collection.prototype.drop;
-CollectionGroup = require('./CollectionGroup');
+CollectionGroup = _dereq_('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
 CoreInit = Core.prototype.init;
 
@@ -6199,8 +6155,8 @@ Core.prototype.init = function () {
 };
 
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":22}],21:[function(require,module,exports){
-var Shared = require('./Shared');
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":22}],21:[function(_dereq_,module,exports){
+var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 	if (reactorIn && reactorOut && reactorProcess) {
@@ -6236,7 +6192,7 @@ Shared.addModule('ReactorIO', ReactorIO);
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
 module.exports = ReactorIO;
-},{"./Shared":22}],22:[function(require,module,exports){
+},{"./Shared":22}],22:[function(_dereq_,module,exports){
 var Shared = {
 		modules: {},
 		_synth: {},
@@ -6311,16 +6267,16 @@ var Shared = {
 		 * @returns {Function}
 		 * @constructor
 		 */
-		overload: require('./Overload'),
+		overload: _dereq_('./Overload'),
 
 		/**
 		 * Define the mixins that other modules can use as required.
 		 */
 		mixins: {
-			'Mixin.Common': require('./Mixin.Common'),
-			'Mixin.Events': require('./Mixin.Events'),
-			'Mixin.ChainReactor': require('./Mixin.ChainReactor'),
-			'Mixin.CRUD': require('./Mixin.CRUD')
+			'Mixin.Common': _dereq_('./Mixin.Common'),
+			'Mixin.Events': _dereq_('./Mixin.Events'),
+			'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
+			'Mixin.CRUD': _dereq_('./Mixin.CRUD')
 		}
 	};
 
@@ -6328,16 +6284,17 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Events":15,"./Overload":17}],23:[function(require,module,exports){
+},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Events":15,"./Overload":17}],23:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	Collection,
 	CollectionInit,
 	CoreInit,
-	ReactorIO;
+	ReactorIO,
+	ActiveBucket;
 
-Shared = require('./Shared');
+Shared = _dereq_('./Shared');
 
 /**
  * The view constructor.
@@ -6354,11 +6311,11 @@ View.prototype.init = function (name, query, options) {
 	this._name = name;
 	this._groups = [];
 	this._listeners = {};
-	this._querySettings = {
-		query: query,
-		options: options
-	};
+	this._querySettings = {};
 	this._debug = {};
+
+	this.query(query, false);
+	this.queryOptions(options, false);
 
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
@@ -6367,9 +6324,10 @@ Shared.addModule('View', View);
 Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 
-Collection = require('./Collection');
-CollectionGroup = require('./CollectionGroup');
-ReactorIO = require('./ReactorIO');
+Collection = _dereq_('./Collection');
+CollectionGroup = _dereq_('./CollectionGroup');
+ActiveBucket = _dereq_('./ActiveBucket');
+ReactorIO = _dereq_('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
@@ -6543,7 +6501,10 @@ View.prototype.ensureIndex = function () {
 
 View.prototype._chainHandler = function (chainPacket) {
 	var self = this,
+		arr,
+		count,
 		index,
+		insertIndex,
 		tempData,
 		dataIsArray,
 		updates,
@@ -6581,14 +6542,26 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data = [chainPacket.data];
 			}
 
-			// Set the insert index to the passed index, or if none, the end of the view data array
-			index = this._privateData._data.length;
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Loop the insert data and find each item's index
+				arr = chainPacket.data;
+				count = arr.length;
 
-			// Modify transform data
-			this._transformInsert(chainPacket.data, index);
-			this._privateData._insertHandle(chainPacket.data, index);
+				for (index = 0; index < count; index++) {
+					insertIndex = this._activeBucket.insert(arr[index]);
 
-			this._refreshSort(chainPacket.data);
+					// Modify transform data
+					this._transformInsert(chainPacket.data, insertIndex);
+					this._privateData._insertHandle(chainPacket.data, insertIndex);
+				}
+			} else {
+				// Set the insert index to the passed index, or if none, the end of the view data array
+				insertIndex = this._privateData._data.length;
+
+				// Modify transform data
+				this._transformInsert(chainPacket.data, insertIndex);
+				this._privateData._insertHandle(chainPacket.data, insertIndex);
+			}
 			break;
 
 		case 'update':
@@ -6605,7 +6578,31 @@ View.prototype._chainHandler = function (chainPacket) {
 				chainPacket.data.options
 			);
 
-			this._refreshSort(updates);
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// TODO: This would be a good place to improve performance by somehow
+				// TODO: inspecting the change that occurred when update was performed
+				// TODO: above and determining if it affected the order clause keys
+				// TODO: and if not, skipping the active bucket updates here
+
+				// Loop the updated items and work out their new sort locations
+				count = updates.length;
+				for (index = 0; index < count; index++) {
+					item = updates[index];
+					insertIndex = this._activeBucket.index(item);
+					currentIndex = this._privateData._data.indexOf(item);
+
+					if (insertIndex !== currentIndex) {
+						// Remove the previous entry for the item
+						this._activeBucket.remove(item);
+
+						// Add the item back in to the active bucket
+						insertIndex = this._activeBucket.insert(item);
+
+						// Move the updated item to the new index
+						this._privateData._updateSpliceMove(this._privateData._data, currentIndex, insertIndex);
+					}
+				}
+			}
 
 			if (this._transformEnabled && this._transformIn) {
 				primaryKey = this._publicData.primaryKey();
@@ -6632,58 +6629,6 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		default:
 			break;
-	}
-};
-
-View.prototype._refreshSort = function () {
-	if (this._querySettings.options && this._querySettings.options.$orderBy) {
-		var self = this;
-
-		/*if (this._refreshSortDebounce) {
-			// Cancel the current debounce
-			clearTimeout(this._refreshSortDebounce);
-		}
-
-		// Set a timeout to do the refresh sort
-		this._refreshSortDebounce = setTimeout(function () {
-			self._refreshSortAction();
-		}, 10);*/
-
-		self._refreshSortAction();
-	}
-};
-
-View.prototype._refreshSortAction = function () {
-	var tempData,
-		currentIndex,
-		refreshData,
-		index,
-		i;
-
-	delete this._refreshSortDebounce;
-	//refreshData = this._privateData._data;
-
-	// Create a temp data array from existing view data
-	//tempData = [].concat(this._privateData._data);
-
-	// Run the new array through the sorting system
-	tempData = this._privateData.find({}, {$orderBy: this._querySettings.options.$orderBy, $decouple: false});
-
-	// Now we have sorted data, determine where to move the updated documents
-	// Order updates by their index location
-	/*tempData.sort(function (a, b) {
-		return tempData.indexOf(a) - tempData.indexOf(b);
-	});*/
-
-	// Loop and add each one to the correct place
-	for (i = 0; i < tempData.length; i++) {
-		currentIndex = this._privateData._data.indexOf(tempData[i]);
-		index = tempData.indexOf(tempData[i]);
-
-		if (currentIndex !== index) {
-			// Modify the document position within the collection
-			this._privateData._updateSpliceMove(this._privateData._data, currentIndex, index);
-		}
 	}
 };
 
@@ -6863,11 +6808,32 @@ View.prototype.queryOptions = function (options, refresh) {
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
+		} else {
+			this.rebuildActiveBucket(options.$orderBy);
 		}
 		return this;
 	}
 
 	return this._querySettings.options;
+};
+
+View.prototype.rebuildActiveBucket = function (orderBy) {
+	if (orderBy) {
+		var arr = this._privateData._data,
+			arrCount = arr.length;
+
+		// Build a new active bucket
+		this._activeBucket = new ActiveBucket(orderBy);
+		this._activeBucket.primaryKey(this._privateData.primaryKey());
+
+		// Loop the current view data and add each item
+		for (var i = 0; i < arrCount; i++) {
+			this._activeBucket.insert(arr[i]);
+		}
+	} else {
+		// Remove any existing active bucket
+		delete this._activeBucket;
+	}
 };
 
 /**
@@ -6883,6 +6849,11 @@ View.prototype.refresh = function () {
 		pubData.remove();
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		if (this._querySettings.options && this._querySettings.options.$orderBy) {
+			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+		} else {
+			this.rebuildActiveBucket();
+		}
 
 		if (pubData._linked) {
 			// Update data and observers
@@ -7139,5 +7110,5 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":21,"./Shared":22}]},{},[1])(1)
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":21,"./Shared":22}]},{},[1])(1)
 });
