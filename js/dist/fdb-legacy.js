@@ -3371,30 +3371,19 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 module.exports = CollectionGroup;
 },{"./Collection":3,"./Shared":24}],5:[function(_dereq_,module,exports){
 /*
- The MIT License (MIT)
+ License
 
  Copyright (c) 2014 Irrelon Software Limited
  http://www.irrelon.com
+ http://www.forerunnerdb.com
 
- Permission is hereby granted, free of charge, to any person obtaining a copy
- of this software and associated documentation files (the "Software"), to deal
- in the Software without restriction, including without limitation the rights
- to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- copies of the Software, and to permit persons to whom the Software is
- furnished to do so, subject to the following conditions:
+ Forerunner is free for use if you are using it for non-commercial, non-governmental or
+ non-profit use. If you are doing something commercial please visit the license page to
+ see which license best suits your requirements:
+ http://www.forerunnerdb.com/licensing.html
 
- The above copyright notice, url and this permission notice shall be included in
- all copies or substantial portions of the Software.
-
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- THE SOFTWARE.
-
- Source: https://github.com/coolbloke1324/ForerunnerDB
+ Commercial licenses help to continue development of ForerunnerDB and pay for developers,
+ equipment, offices and electricity and without them ForerunnerDB would not exist!
  */
 var Shared,
 	Collection,
@@ -7769,9 +7758,12 @@ View.prototype.from = function (collection) {
 						}
 
 						if (diff.remove.length) {
+							pk = self._privateData.primaryKey();
 							var $or = [],
 								removeQuery = {
-									$or: $or
+									query: {
+										$or: $or
+									}
 								};
 
 							for (i = 0; i < diff.remove.length; i++) {
@@ -7799,6 +7791,12 @@ View.prototype.from = function (collection) {
 
 		this._privateData.primaryKey(collection.primaryKey());
 		this._privateData.setData(collData);
+
+		if (this._querySettings.options && this._querySettings.options.$orderBy) {
+			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+		} else {
+			this.rebuildActiveBucket();
+		}
 	}
 
 	return this;
@@ -8158,11 +8156,6 @@ View.prototype.refresh = function () {
 		pubData.remove();
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
-		if (this._querySettings.options && this._querySettings.options.$orderBy) {
-			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
-		} else {
-			this.rebuildActiveBucket();
-		}
 
 		if (pubData._linked) {
 			// Update data and observers
@@ -8171,6 +8164,12 @@ View.prototype.refresh = function () {
 			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}
+	}
+
+	if (this._querySettings.options && this._querySettings.options.$orderBy) {
+		this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+	} else {
+		this.rebuildActiveBucket();
 	}
 
 	return this;
