@@ -798,22 +798,22 @@ ForerunnerDB's project road-map:
 * $bit
 * $isolated
 
-#### Scheduled Features - 1.2.7
+#### Scheduled Features - 1.2
 * Rewritten data propagation system - COMPLETE
 * Added new class "Document" to allow data-binding against a single document object - COMPLETE
 * Added new class "Overview" to allow data-binding against auto-propagated map-reduce data - COMPLETE
 * Rewritten view sync system for performance - COMPLETE
 
-#### Scheduled Features - 1.2.8
+#### Scheduled Features - 1.3
 * Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6) - COMPLETE
 * Data persistence added to documentation
 * Remove iOS from this repo, add to its own
 * Remove server from this repo, add to its own
 * Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
 
-#### Scheduled Features - 1.2.9
+#### Scheduled Features - 1.4
 * Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
 
-#### Scheduled Features - 1.3.0
+#### Scheduled Features - 1.5
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
