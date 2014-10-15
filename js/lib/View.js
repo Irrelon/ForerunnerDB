@@ -565,11 +565,6 @@ View.prototype.refresh = function () {
 		pubData.remove();
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
-		if (this._querySettings.options && this._querySettings.options.$orderBy) {
-			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
-		} else {
-			this.rebuildActiveBucket();
-		}
 
 		if (pubData._linked) {
 			// Update data and observers
@@ -578,6 +573,12 @@ View.prototype.refresh = function () {
 			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}
+	}
+
+	if (this._querySettings.options && this._querySettings.options.$orderBy) {
+		this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+	} else {
+		this.rebuildActiveBucket();
 	}
 
 	return this;
