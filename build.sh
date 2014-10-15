@@ -23,6 +23,7 @@ browserify ./js/builds/core+localforage.js -s ForerunnerDB | derequire > ./js/di
 browserify ./js/builds/legacy.js -s ForerunnerDB | derequire > ./js/dist/fdb-legacy.js
 
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-all.js > ./js/dist/fdb-all.min.js
+java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-autobind.js > ./js/dist/fdb-autobind.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-core.js > ./js/dist/fdb-core.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-core+views.js > ./js/dist/fdb-core+views.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-core+persist.js > ./js/dist/fdb-core+persist.min.js
