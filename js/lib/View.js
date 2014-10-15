@@ -206,6 +206,12 @@ View.prototype.from = function (collection) {
 
 		this._privateData.primaryKey(collection.primaryKey());
 		this._privateData.setData(collData);
+
+		if (this._querySettings.options && this._querySettings.options.$orderBy) {
+			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
+		} else {
+			this.rebuildActiveBucket();
+		}
 	}
 
 	return this;
