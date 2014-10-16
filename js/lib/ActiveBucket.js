@@ -182,11 +182,16 @@ ActiveBucket.prototype.remove = function (obj) {
 
 	if (key) {
 		keyIndex = this._data.indexOf(key);
-		this._data.splice(keyIndex, 0, key);
-		delete this._objLookup[obj[this._primaryKey]];
 
-		this._count--;
-		return true;
+		if (keyIndex > -1) {
+			this._data.splice(keyIndex, 1);
+			delete this._objLookup[obj[this._primaryKey]];
+
+			this._count--;
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	return false;
