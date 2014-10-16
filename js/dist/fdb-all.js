@@ -193,11 +193,16 @@ ActiveBucket.prototype.remove = function (obj) {
 
 	if (key) {
 		keyIndex = this._data.indexOf(key);
-		this._data.splice(keyIndex, 0, key);
-		delete this._objLookup[obj[this._primaryKey]];
 
-		this._count--;
-		return true;
+		if (keyIndex > -1) {
+			this._data.splice(keyIndex, 1);
+			delete this._objLookup[obj[this._primaryKey]];
+
+			this._count--;
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	return false;
@@ -6782,16 +6787,17 @@ View.prototype._chainHandler = function (chainPacket) {
 				count = updates.length;
 				for (index = 0; index < count; index++) {
 					item = updates[index];
-					insertIndex = this._activeBucket.index(item);
+
+					// Remove the item from the active bucket (via it's id)
+					this._activeBucket.remove(item);
+
+					// Get the current location of the item
 					currentIndex = this._privateData._data.indexOf(item);
 
-					if (insertIndex !== currentIndex) {
-						// Remove the previous entry for the item
-						this._activeBucket.remove(item);
+					// Add the item back in to the active bucket
+					insertIndex = this._activeBucket.insert(item);
 
-						// Add the item back in to the active bucket
-						insertIndex = this._activeBucket.insert(item);
-
+					if (currentIndex !== insertIndex) {
 						// Move the updated item to the new index
 						this._privateData._updateSpliceMove(this._privateData._data, currentIndex, insertIndex);
 					}
