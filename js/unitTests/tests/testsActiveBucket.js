@@ -23,6 +23,139 @@ test('ActiveBucket - Add document', function () {
 	ok(ab.count() === total, 'Correct number of items (' + total + '): ' + ab.count());
 });
 
+test('ActiveBucket - Update Document', function () {
+	base.dbUp();
+	base.domUp();
+
+	var names = ['Rob', 'Jim', 'Alice', 'Sam', 'Bob'],
+		ages = [15, 18, 22, 27, 33],
+		total = 5,
+		count = total,
+		coll,
+		view,
+		obj;
+
+	coll = db.collection('test');
+	view = db.view('test')
+		.queryOptions({
+			$orderBy: {
+				name: 1,
+				age: -1
+			}
+		})
+		.from(coll)
+		.link('#testTarget', {
+			template: '<li class="item" data-link="id{:_id}">{^{:name}} : {^{:age}}</li>'
+		});
+
+	count = total;
+	while (count--) {
+		obj = {
+			name: names[count],
+			age: ages[count]
+		};
+
+		coll.insert(obj);
+	}
+
+	count = total;
+	while (count--) {
+		obj = {
+			name: names[count],
+			age: ages[count]
+		};
+
+		coll.insert(obj);
+	}
+
+	count = total;
+	while (count--) {
+		obj = {
+			name: names[count],
+			age: ages[count]
+		};
+
+		coll.insert(obj);
+	}
+
+	// Check items
+	var elems = $('#testTarget').find('.item');
+
+	ok(elems.length === 15, "Insert documents");
+
+	// Check sort order
+	ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
+	ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
+	ok($(elems[2]).text() === 'Alice : 22', "Alphabetical 3");
+	ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
+	ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
+	ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
+	ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
+	ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
+	ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
+	ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
+	ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
+	ok($(elems[11]).text() === 'Rob : 15', "Alphabetical 12");
+	ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
+	ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
+	ok($(elems[14]).text() === 'Sam : 27', "Alphabetical 15");
+
+	// Remove an item from the collection
+	var items = coll.find(),
+		item = items[14];
+
+	coll.remove({_id: item._id});
+
+	// Check items
+	var elems = $('#testTarget').find('.item');
+
+	ok(elems.length === 14, "Insert documents");
+
+	// Check sort order
+	ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
+	ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
+	ok($(elems[2]).text() === 'Alice : 22', "Alphabetical 3");
+	ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
+	ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
+	ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
+	ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
+	ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
+	ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
+	ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
+	ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
+	ok($(elems[11]).text() === 'Sam : 27', "Alphabetical 12");
+	ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
+	ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
+
+	items = view.find();
+	item = items[1];
+
+	coll.update(item, {name: 'Alice', age: 21});
+
+	// Check items
+	var elems = $('#testTarget').find('.item');
+
+	// Check sort order
+	ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
+	ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
+	ok($(elems[2]).text() === 'Alice : 21', "Alphabetical 3");
+	ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
+	ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
+	ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
+	ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
+	ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
+	ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
+	ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
+	ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
+	ok($(elems[11]).text() === 'Sam : 27', "Alphabetical 12");
+	ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
+	ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
+	debugger;
+
+	base.domDown();
+	base.dbDown();
+});
+
 test('ActiveBucket - Add documents, check correct indexes', function () {
 	var ab = new ForerunnerDB.shared.modules.ActiveBucket({
 			name: 1,
