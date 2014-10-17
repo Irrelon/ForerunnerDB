@@ -801,6 +801,7 @@ ForerunnerDB's project road-map:
 * $sort
 * $bit
 * $isolated
+* $ array positional in sub arrays of objects inside arrays e.g. arr.$.idArr
 
 #### Scheduled Features - Version 1.3
 * Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6) - COMPLETE
