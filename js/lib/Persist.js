@@ -1,6 +1,7 @@
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = require('./Shared'),
+	localforage = require('localforage'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -17,7 +18,16 @@ Persist.prototype.init = function (db) {
 	// Check environment
 	if (db.isClient()) {
 		if (Storage !== undefined) {
-			this.mode('localStorage');
+			this.mode('localforage');
+			localforage.config({
+				driver: [
+					localforage.INDEXEDDB,
+					localforage.WEBSQL,
+					localforage.LOCALSTORAGE
+				],
+				name: 'ForerunnerDB',
+				storeName: 'FDB'
+			});
 		}
 	}
 };
@@ -41,87 +51,106 @@ Persist.prototype.mode = function (type) {
 	return this._mode;
 };
 
+Persist.prototype.driver = function () {
+	return localforage.driver();
+};
+
 Persist.prototype.save = function (key, data, callback) {
-	var val;
+	var val,
+		encode;
+
+	encode = function (val, finished) {
+		if (typeof val === 'object') {
+			val = 'json::fdb::' + JSON.stringify(val);
+		} else {
+			val = 'raw::fdb::' + val;
+		}
+
+		if (finished) {
+			finished(false, val);
+		}
+	};
 
 	switch (this.mode()) {
-		case 'localStorage':
-			if (typeof data === 'object') {
-				val = 'json::fdb::' + JSON.stringify(data);
-			} else {
-				val = 'raw::fdb::' + data;
-			}
-
-			try {
-				localStorage.setItem(key, val);
-			} catch (e) {
-				if (callback) { callback(e); }
-				else { throw e; }
-				return;
-			}
-
-			if (callback) { callback(false); }
-			else { return false;}
+		case 'localforage':
+			encode(val, function (err, data) {
+				localforage.setItem(key, val).then(function (data) {
+					callback(data);
+				}, function (err) {
+					callback(err);
+				});
+			});
 			break;
+
 		default:
-			if (callback) { callback('No data handler.'); }
-			else {throw 'No data handler.';}
+			if (callback) {
+				callback('No data handler.');
+			}
+			break;
 	}
 };
 
 Persist.prototype.load = function (key, callback) {
 	var val,
 		parts,
-		data;
+		data,
+		decode;
+
+	decode = function (val, finished) {
+		if (val) {
+			parts = val.split('::fdb::');
+
+			switch (parts[0]) {
+				case 'json':
+					data = JSON.parse(parts[1]);
+					break;
+
+				case 'raw':
+					data = parts[1];
+					break;
+			}
+
+			if (finished) {
+				finished(false, data);
+			}
+		} else {
+			finished(false, val);
+		}
+	};
 
 	switch (this.mode()) {
-		case 'localStorage':
-			try {
-				val = localStorage.getItem(key);
-			} catch (e) {
-				callback(e, null);
-			}
+		case 'localforage':
+			localforage.getItem(key).then(function (val) {
+				decode(val, callback);
+			}, function (err) {
+					callback(err);
+			});
+			break;
 
-			if (val) {
-				parts = val.split('::fdb::');
-
-				switch (parts[0]) {
-					case 'json':
-						data = JSON.parse(parts[1]);
-						break;
-
-					case 'raw':
-						data = parts[1];
-						break;
-				}
-
-				if (callback) { callback(false, data); }
-				else { return data;}
+		default:
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
 			}
 			break;
-		default:
-			if (callback) { callback('No data handler or unrecognised data type.'); }
-			else { throw 'No data handler or unrecognised data type.'; }
 	}
-
-	
 };
 
 Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
-		case 'localStorage':
-			try {
-				localStorage.removeItem(key);
-			} catch (e) {
-				if (callback) { callback(e); }
-			}
-
-			if (callback) { callback(false); }
+		case 'localforage':
+			localforage.removeItem(key).then(function () {
+				callback(false);
+			}, function (err) {
+				callback(err);
+			});
 			break;
 		default:
-			if (callback) { callback('No data handler or unrecognised data type.'); }
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
+			}
+			break;
 	}
-	
+
 };
 
 // Extend the Collection prototype with persist methods
@@ -133,17 +162,19 @@ Collection.prototype.drop = function (removePersistent) {
 				// Save the collection data
 				this._db.persist.drop(this._name);
 			} else {
-				if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
-				return 'Cannot drop a collection\'s persistent storage when the collection is not attached to a database!';
+				if (callback) {
+					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+				}
 			}
 		} else {
-			if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
-			return 'Cannot drop a collection\'s persistent storage when no name assigned to collection!';
+			if (callback) {
+				callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
+			}
 		}
 	}
 
 	// Call the original method
-	CollectionDrop.apply(this);
+	CollectionDrop.apply(this, arguments);
 };
 
 Collection.prototype.save = function (callback) {
@@ -152,18 +183,20 @@ Collection.prototype.save = function (callback) {
 			// Save the collection data
 			this._db.persist.save(this._name, this._data, callback);
 		} else {
-			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
-			return 'Cannot save a collection that is not attached to a database!';
+			if (callback) {
+				callback('Cannot save a collection that is not attached to a database!');
+			}
 		}
 	} else {
-		if (callback) { callback('Cannot save a collection with no assigned name!'); }
-		return 'Cannot save a collection with no assigned name!';
+		if (callback) {
+			callback('Cannot save a collection with no assigned name!');
+		}
 	}
 };
 
 Collection.prototype.load = function (callback) {
 	var self = this;
-
+debugger;
 	if (this._name) {
 		if (this._db) {
 			// Load the collection data
@@ -172,19 +205,25 @@ Collection.prototype.load = function (callback) {
 					if (data) {
 						self.setData(data);
 					}
-					if (callback) { callback(false); }
+
+					if (callback) {
+						callback(false);
+					}
 				} else {
-					if (callback) { callback(err); }
-					return err;
+					if (callback) {
+						callback(err);
+					}
 				}
 			});
 		} else {
-			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
-			return 'Cannot load a collection that is not attached to a database!';
+			if (callback) {
+				callback('Cannot load a collection that is not attached to a database!');
+			}
 		}
 	} else {
-		if (callback) { callback('Cannot load a collection with no assigned name!'); }
-		return 'Cannot load a collection with no assigned name!';
+		if (callback) {
+			callback('Cannot load a collection with no assigned name!');
+		}
 	}
 };
 

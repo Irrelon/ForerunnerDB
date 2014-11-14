@@ -150,7 +150,6 @@ test('ActiveBucket - Update Document', function () {
 	ok($(elems[11]).text() === 'Sam : 27', "Alphabetical 12");
 	ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
 	ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
-	debugger;
 
 	base.domDown();
 	base.dbDown();

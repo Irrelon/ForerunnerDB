@@ -5112,6 +5112,7 @@ module.exports = Path;
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
+	localForage = _dereq_('localforage'),
 	Core,
 	Collection,
 	CollectionDrop,
@@ -5128,7 +5129,11 @@ Persist.prototype.init = function (db) {
 	// Check environment
 	if (db.isClient()) {
 		if (Storage !== undefined) {
-			this.mode('localStorage');
+			// This is a fallback priority list, use localForage first if available
+			// and then go down the list until a module is available to use
+			this.provider([
+				'localForage'
+			]);
 		}
 	}
 };
@@ -5143,96 +5148,122 @@ CollectionGroup = _dereq_('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
 CoreInit = Core.prototype.init;
 
-Persist.prototype.mode = function (type) {
+/**
+ * Get / set the provider array. This array lists the names of the modules in
+ * priority order and each module will be checked for in order. If a module is
+ * not found the next on the list is checked until one of them is found.
+ * @param {Array=} arr The array of provider module names.
+ * @returns {*}
+ */
+Persist.prototype.provider = function (arr) {
 	if (type !== undefined) {
-		this._mode = type;
+		this._provider = arr;
 		return this;
 	}
 
-	return this._mode;
+	return this._provider;
+};
+
+Persist.prototype.providerExists = function (provider) {
+
 };
 
 Persist.prototype.save = function (key, data, callback) {
-	var val;
+	var val,
+		encode;
 
-	switch (this.mode()) {
-		case 'localStorage':
-			if (typeof data === 'object') {
-				val = 'json::fdb::' + JSON.stringify(data);
-			} else {
-				val = 'raw::fdb::' + data;
-			}
+	encode = function (val, finished) {
+		if (typeof val === 'object') {
+			val = 'json::fdb::' + JSON.stringify(val);
+		} else {
+			val = 'raw::fdb::' + val;
+		}
 
-			try {
-				localStorage.setItem(key, val);
-			} catch (e) {
-				if (callback) { callback(e); }
-				else { throw e; }
-				return;
-			}
+		if (finished) {
+			finished(false, val);
+		}
+	};
 
-			if (callback) { callback(false); }
-			else { return false;}
+	switch (this.provider()) {
+		case 'localForage':
+			encode(data, function (err, val) {
+				if (!err) {
+					localForage.setItem(key, val, callback);
+				} else {
+					if (callback) {
+						callback(err);
+					}
+				}
+			});
 			break;
+
 		default:
-			if (callback) { callback('No data handler.'); }
-			else {throw 'No data handler.';}
+			if (callback) {
+				callback('No data handler.');
+			}
+			break;
 	}
 };
 
 Persist.prototype.load = function (key, callback) {
 	var val,
 		parts,
-		data;
+		data,
+		decode;
+
+	decode = function (val, finished) {
+		if (val) {
+			parts = val.split('::fdb::');
+
+			switch (parts[0]) {
+				case 'json':
+					data = JSON.parse(parts[1]);
+					break;
+
+				case 'raw':
+					data = parts[1];
+					break;
+			}
+
+			if (finished) {
+				finished(false, data);
+			}
+		} else {
+			finished(false, val);
+		}
+	};
 
 	switch (this.mode()) {
-		case 'localStorage':
-			try {
-				val = localStorage.getItem(key);
-			} catch (e) {
-				callback(e, null);
-			}
-
-			if (val) {
-				parts = val.split('::fdb::');
-
-				switch (parts[0]) {
-					case 'json':
-						data = JSON.parse(parts[1]);
-						break;
-
-					case 'raw':
-						data = parts[1];
-						break;
+		case 'localForage':
+			localForage.getItem(key, function (val) {
+				if (val) {
+					decode(val, callback);
+				} else {
+					callback(false, val);
 				}
+			});
+			break;
 
-				if (callback) { callback(false, data); }
-				else { return data;}
+		default:
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
 			}
 			break;
-		default:
-			if (callback) { callback('No data handler or unrecognised data type.'); }
-			else { throw 'No data handler or unrecognised data type.'; }
 	}
-
-	
 };
 
 Persist.prototype.drop = function (key, callback) {
-	switch (this.mode()) {
-		case 'localStorage':
-			try {
-				localStorage.removeItem(key);
-			} catch (e) {
-				if (callback) { callback(e); }
-			}
-
-			if (callback) { callback(false); }
+	switch (this.provider()) {
+		case 'localForage':
+			localStorage.removeItem(key, callback);
 			break;
 		default:
-			if (callback) { callback('No data handler or unrecognised data type.'); }
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
+			}
+			break;
 	}
-	
+
 };
 
 // Extend the Collection prototype with persist methods
@@ -5244,17 +5275,19 @@ Collection.prototype.drop = function (removePersistent) {
 				// Save the collection data
 				this._db.persist.drop(this._name);
 			} else {
-				if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
-				return 'Cannot drop a collection\'s persistent storage when the collection is not attached to a database!';
+				if (callback) {
+					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+				}
 			}
 		} else {
-			if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
-			return 'Cannot drop a collection\'s persistent storage when no name assigned to collection!';
+			if (callback) {
+				callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
+			}
 		}
 	}
 
 	// Call the original method
-	CollectionDrop.apply(this);
+	CollectionDrop.apply(this, arguments);
 };
 
 Collection.prototype.save = function (callback) {
@@ -5263,12 +5296,14 @@ Collection.prototype.save = function (callback) {
 			// Save the collection data
 			this._db.persist.save(this._name, this._data, callback);
 		} else {
-			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
-			return 'Cannot save a collection that is not attached to a database!';
+			if (callback) {
+				callback('Cannot save a collection that is not attached to a database!');
+			}
 		}
 	} else {
-		if (callback) { callback('Cannot save a collection with no assigned name!'); }
-		return 'Cannot save a collection with no assigned name!';
+		if (callback) {
+			callback('Cannot save a collection with no assigned name!');
+		}
 	}
 };
 
@@ -5283,19 +5318,25 @@ Collection.prototype.load = function (callback) {
 					if (data) {
 						self.setData(data);
 					}
-					if (callback) { callback(false); }
+
+					if (callback) {
+						callback(false);
+					}
 				} else {
-					if (callback) { callback(err); }
-					return err;
+					if (callback) {
+						callback(err);
+					}
 				}
 			});
 		} else {
-			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
-			return 'Cannot load a collection that is not attached to a database!';
+			if (callback) {
+				callback('Cannot load a collection that is not attached to a database!');
+			}
 		}
 	} else {
-		if (callback) { callback('Cannot load a collection with no assigned name!'); }
-		return 'Cannot load a collection with no assigned name!';
+		if (callback) {
+			callback('Cannot load a collection with no assigned name!');
+		}
 	}
 };
 
@@ -5357,7 +5398,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":18}],18:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":18,"localforage":25}],18:[function(_dereq_,module,exports){
 var Shared = {
 		modules: {},
 		_synth: {},
