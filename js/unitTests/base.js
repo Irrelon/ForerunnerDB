@@ -51,11 +51,13 @@ Base.prototype.viewGroupDown = function () {
 Base.prototype.domUp = function () {
 	$('<ul id="testTarget"></ul>').appendTo('body');
 	$('<div id="testTarget2"></div>').appendTo('body');
+	$('<div id="demo-chart" style="width: 400px; height: 300px;"></div>').appendTo('body');
 };
 
 Base.prototype.domDown = function () {
 	$('#testTarget').remove();
 	$('#testTarget2').remove();
+	$('#demo-chart').remove();
 };
 
 // Declare a global for ForerunnerDB

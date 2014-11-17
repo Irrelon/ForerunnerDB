@@ -613,8 +613,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
 Collection.prototype.truncate = function () {
 	this.emit('truncate', this._data);
 	this._data.length = 0;
-
-	this.deferEmit('change');
+	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
 
@@ -4064,6 +4063,12 @@ var Highchart = function (collection, options) {
 Highchart.prototype.init = function (collection, options) {
 	this._options = options;
 	this._selector = $(this._options.selector);
+
+	if (!this._selector[0]) {
+		throw('Chart target element does not exist via selector: ' + this._options.selector);
+		return;
+	}
+
 	this._listeners = {};
 	this._collection = collection;
 
@@ -4111,7 +4116,7 @@ Highchart.prototype.init = function (collection, options) {
 				data: chartData
 			});
 
-			this._chart.addSeries(seriesObj);
+			this._chart.addSeries(seriesObj, true, true);
 			break;
 
 		case 'line':
@@ -4220,10 +4225,10 @@ Highchart.prototype.lineDataFromCollectionData = function (seriesField, keyField
 Highchart.prototype._hookEvents = function () {
 	var self = this;
 
-	self._collection.on('change', self._changeListener);
+	self._collection.on('change', function () { self._changeListener.apply(self, arguments); });
 
 	// If the collection is dropped, clean up after ourselves
-	self._collection.on('drop', self._dropListener);
+	self._collection.on('drop', function () { self._dropListener.apply(self, arguments); });
 };
 
 Highchart.prototype._changeListener = function () {
@@ -4240,7 +4245,9 @@ Highchart.prototype._changeListener = function () {
 						data,
 						self._options.keyField,
 						self._options.valField
-					)
+					),
+					true,
+					true
 				);
 				break;
 
@@ -4258,7 +4265,9 @@ Highchart.prototype._changeListener = function () {
 
 				for (var i = 0; i < lineSeriesData.series.length; i++) {
 					self._chart.series[i].setData(
-						lineSeriesData.series[i].data
+						lineSeriesData.series[i].data,
+						true,
+						true
 					);
 				}
 				break;

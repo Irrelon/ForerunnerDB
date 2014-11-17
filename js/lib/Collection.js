@@ -303,8 +303,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
 Collection.prototype.truncate = function () {
 	this.emit('truncate', this._data);
 	this._data.length = 0;
-
-	this.deferEmit('change');
+	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
 
