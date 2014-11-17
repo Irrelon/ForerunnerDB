@@ -687,6 +687,28 @@ Note that the selector string that a bind uses can match multiple elements, allo
 
 The result of this is that both UL elements will get data binding updates when the underlying data changes.
 
+## Highcharts: Charts & Visualisations
+ForerunnerDB can utilise the popular Highcharts JavaScript library to generate charts from collection data
+and automatically keep the charts in sync with changes to the collection.
+
+### Prerequisites
+The popular Highcharts JavaScript library is required to use the ForerunnerDB Highcharts plugin. You can
+get Highcharts from http://www.highcharts.com
+
+### Usage
+To use the chart plugin you call the .chart() method on a collection object, passing the element selector
+that you want to render your chart inside, the type of chart to render and the key and value fields that
+you want the chart data to be extrapolated from.
+
+#### Pie Chart Example
+
+	coll.pieChart({
+		selector: '#demo-chart',
+		keyField: 'name',
+		valField: 'val',
+		seriesName: 'Food'
+	});
+
 # Development
 
 ## Unit Tests

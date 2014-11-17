@@ -4047,9 +4047,11 @@ module.exports = Document;
 // Import external names locally
 var Shared,
 	Collection,
-	CollectionInit;
+	CollectionInit,
+	Overload;
 
 Shared = _dereq_('./Shared');
+Overload = _dereq_('./Overload');
 
 /**
  * The constructor.
@@ -4120,13 +4122,11 @@ Highchart.prototype.init = function (collection, options) {
 			break;
 
 		case 'line':
+		case 'area':
+		case 'column':
+		case 'bar':
 			// Generate graph data from collection data
-			/*seriesObj = {
-				allowPointSelect: true,
-				cursor: 'pointer'
-			};*/
-
-			chartData = this.lineDataFromCollectionData(
+			chartData = this.seriesDataFromCollectionData(
 				this._options.seriesField,
 				this._options.keyField,
 				this._options.valField,
@@ -4138,6 +4138,10 @@ Highchart.prototype.init = function (collection, options) {
 
 			this._selector.highcharts(this._options.chartOptions);
 			this._chart = this._selector.highcharts();
+			break;
+
+		default:
+			throw('Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
 			break;
 	}
 
@@ -4175,7 +4179,7 @@ Highchart.prototype.pieDataFromCollectionData = function (data, keyField, valFie
  * @param valField
  * @param orderBy
  */
-Highchart.prototype.lineDataFromCollectionData = function (seriesField, keyField, valField, orderBy) {
+Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyField, valField, orderBy) {
 	var data = this._collection.distinct(seriesField),
 		seriesData = [],
 		xAxis = {
@@ -4252,7 +4256,7 @@ Highchart.prototype._changeListener = function () {
 				break;
 
 			case 'line':
-				var lineSeriesData = self.lineDataFromCollectionData(
+				var seriesData = self.seriesDataFromCollectionData(
 					self._options.seriesField,
 					self._options.keyField,
 					self._options.valField,
@@ -4260,17 +4264,62 @@ Highchart.prototype._changeListener = function () {
 				);
 
 				self._chart.xAxis[0].setCategories(
-					lineSeriesData.xAxis.categories
+					seriesData.xAxis.categories
 				);
 
-				for (var i = 0; i < lineSeriesData.series.length; i++) {
+				for (var i = 0; i < seriesData.series.length; i++) {
 					self._chart.series[i].setData(
-						lineSeriesData.series[i].data,
+						seriesData.series[i].data,
 						true,
 						true
 					);
 				}
 				break;
+
+			case 'area':
+				var seriesData = self.seriesDataFromCollectionData(
+					self._options.seriesField,
+					self._options.keyField,
+					self._options.valField,
+					self._options.orderBy
+				);
+
+				self._chart.xAxis[0].setCategories(
+					seriesData.xAxis.categories
+				);
+
+				for (var i = 0; i < seriesData.series.length; i++) {
+					self._chart.series[i].setData(
+						seriesData.series[i].data,
+						true,
+						true
+					);
+				}
+				break;
+
+			case 'column':
+				var seriesData = self.seriesDataFromCollectionData(
+					self._options.seriesField,
+					self._options.keyField,
+					self._options.valField,
+					self._options.orderBy
+				);
+
+				self._chart.xAxis[0].setCategories(
+					seriesData.xAxis.categories
+				);
+
+				for (var i = 0; i < seriesData.series.length; i++) {
+					self._chart.series[i].setData(
+						seriesData.series[i].data,
+						true,
+						true
+					);
+				}
+				break;
+
+			default:
+				breal;
 		}
 	}
 };
@@ -4302,14 +4351,255 @@ Collection.prototype.init = function () {
 	CollectionInit.apply(this, arguments);
 };
 
-Collection.prototype.chart = function (options) {
-	if (!this._highcharts[options.selector]) {
-		// Store new chart in charts array
-		this._highcharts[options.selector] = new Highchart(this, options);
-	}
+Collection.prototype.pieChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'pie';
 
-	return this._highcharts[options.selector];
-};
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, keyField, valField, options) {
+		options = options || {};
+
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
+
+Collection.prototype.lineChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'line';
+
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'line';
+
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} seriesField The name of the series to plot.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+		options = options || {};
+
+		options.seriesField = seriesField;
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
+
+Collection.prototype.areaChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'area';
+
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'area';
+
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} seriesField The name of the series to plot.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+		options = options || {};
+
+		options.seriesField = seriesField;
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
+
+Collection.prototype.columnChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'column';
+
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'column';
+
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} seriesField The name of the series to plot.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+		options = options || {};
+
+		options.seriesField = seriesField;
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
+
+Collection.prototype.barChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'bar';
+
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'bar';
+
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} seriesField The name of the series to plot.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+		options = options || {};
+
+		options.seriesField = seriesField;
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
+
+Collection.prototype.stackedBarChart = new Overload({
+	/**
+	 * Chart via options object.
+	 * @param {Object} options The options object.
+	 * @returns {*}
+	 */
+	'object': function (options) {
+		options.type = 'bar';
+
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'bar';
+
+		options.plotOptions = options.plotOptions || {};
+		options.plotOptions.series = options.plotOptions.series || {};
+		options.plotOptions.series.stacking = options.plotOptions.series.stacking || 'normal';
+
+		if (!this._highcharts[options.selector]) {
+			// Store new chart in charts array
+			this._highcharts[options.selector] = new Highchart(this, options);
+		}
+
+		return this._highcharts[options.selector];
+	},
+
+	/**
+	 * Chart via defined params and an options object.
+	 * @param {String|jQuery} selector The element to render the chart to.
+	 * @param {String} seriesField The name of the series to plot.
+	 * @param {String} keyField The field to use as the data key.
+	 * @param {String} valField The field to use as the data value.
+	 * @param {Object} options The options object.
+	 */
+	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+		options = options || {};
+
+		options.seriesField = seriesField;
+		options.selector = selector;
+		options.keyField = keyField;
+		options.valField = valField;
+
+		// Call the main chart method
+		this.chart(options);
+	}
+});
 
 Collection.prototype.dropChart = function (selector) {
 	if (this._highcharts[selector]) {
@@ -4319,7 +4609,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Shared":22}],9:[function(_dereq_,module,exports){
+},{"./Overload":17,"./Shared":22}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5422,9 +5712,13 @@ Overload = function (def) {
 				if (def.hasOwnProperty(index)) {
 					defNewKey = index.replace(/ /g, '');
 
+					// Check if the definition array has a * string in it
 					if (defNewKey.indexOf('*') === -1) {
+						// No * found
 						tmpDef[defNewKey] = def[index];
 					} else {
+						// A * was found, generate the different signatures that this
+						// definition could represent
 						signatures = generateSignaturePermutations(defNewKey);
 
 						for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
@@ -5440,7 +5734,9 @@ Overload = function (def) {
 		}
 
 		return function () {
+			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
+				// We were passed an array of functions
 				count = def.length;
 				for (index = 0; index < count; index++) {
 					if (def[index].length === arguments.length) {

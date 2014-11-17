@@ -22,9 +22,13 @@ Overload = function (def) {
 				if (def.hasOwnProperty(index)) {
 					defNewKey = index.replace(/ /g, '');
 
+					// Check if the definition array has a * string in it
 					if (defNewKey.indexOf('*') === -1) {
+						// No * found
 						tmpDef[defNewKey] = def[index];
 					} else {
+						// A * was found, generate the different signatures that this
+						// definition could represent
 						signatures = generateSignaturePermutations(defNewKey);
 
 						for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
@@ -40,7 +44,9 @@ Overload = function (def) {
 		}
 
 		return function () {
+			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
+				// We were passed an array of functions
 				count = def.length;
 				for (index = 0; index < count; index++) {
 					if (def[index].length === arguments.length) {
