@@ -6152,8 +6152,7 @@ Persist.prototype.driver = function () {
 };
 
 Persist.prototype.save = function (key, data, callback) {
-	var val,
-		encode;
+	var encode;
 
 	encode = function (val, finished) {
 		if (typeof val === 'object') {
@@ -6169,9 +6168,9 @@ Persist.prototype.save = function (key, data, callback) {
 
 	switch (this.mode()) {
 		case 'localforage':
-			encode(val, function (err, data) {
-				localforage.setItem(key, val).then(function (data) {
-					callback(data);
+			encode(data, function (err, data) {
+				localforage.setItem(key, data).then(function (data) {
+					callback(false, data);
 				}, function (err) {
 					callback(err);
 				});
@@ -6187,8 +6186,7 @@ Persist.prototype.save = function (key, data, callback) {
 };
 
 Persist.prototype.load = function (key, callback) {
-	var val,
-		parts,
+	var parts,
 		data,
 		decode;
 
@@ -6203,6 +6201,9 @@ Persist.prototype.load = function (key, callback) {
 
 				case 'raw':
 					data = parts[1];
+					break;
+
+				default:
 					break;
 			}
 
@@ -6219,7 +6220,7 @@ Persist.prototype.load = function (key, callback) {
 			localforage.getItem(key).then(function (val) {
 				decode(val, callback);
 			}, function (err) {
-					callback(err);
+				callback(err);
 			});
 			break;
 
@@ -6292,7 +6293,7 @@ Collection.prototype.save = function (callback) {
 
 Collection.prototype.load = function (callback) {
 	var self = this;
-debugger;
+
 	if (this._name) {
 		if (this._db) {
 			// Load the collection data
