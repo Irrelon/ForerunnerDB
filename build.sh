@@ -19,12 +19,12 @@ browserify ./js/builds/core+views.js -s ForerunnerDB | derequire > ./js/dist/fdb
 browserify ./js/builds/core+persist.js -s ForerunnerDB | derequire > ./js/dist/fdb-core+persist.js
 browserify ./js/builds/legacy.js -s ForerunnerDB | derequire > ./js/dist/fdb-legacy.js
 
-browserify ./js/builds/all.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-all.js
-browserify ./js/builds/autobind.js -t uglifyify -s ForerunnerDB_AutoBind | derequire > ./js/dist/fdb-autobind.js
-browserify ./js/builds/core.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core.js
-browserify ./js/builds/core+views.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core+views.js
-browserify ./js/builds/core+persist.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core+persist.js
-browserify ./js/builds/legacy.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-legacy.js
+browserify ./js/builds/all.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-all.min.js
+browserify ./js/builds/autobind.js -t uglifyify -s ForerunnerDB_AutoBind | derequire > ./js/dist/fdb-autobind.min.js
+browserify ./js/builds/core.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core.min.js
+browserify ./js/builds/core+views.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core+views.min.js
+browserify ./js/builds/core+persist.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-core+persist.min.js
+browserify ./js/builds/legacy.js -t uglifyify -s ForerunnerDB | derequire > ./js/dist/fdb-legacy.min.js
 
 #java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-all.js > ./js/dist/fdb-all.min.js
 #java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-autobind.js > ./js/dist/fdb-autobind.min.js
