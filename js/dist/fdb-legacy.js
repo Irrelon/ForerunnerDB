@@ -4242,64 +4242,25 @@ Highchart.prototype._changeListener = function () {
 
 	// Update the series data on the chart
 	if(typeof self._collection !== 'undefined' && self._chart) {
-		var data = self._collection.find();
+		var data = self._collection.find(),
+			i;
 
 		switch (self._options.type) {
 			case 'pie':
 				self._chart.series[0].setData(
-					self.seriesDataFromCollectionData(
-						self._options.seriesField,
+					self.pieDataFromCollectionData(
+						data,
 						self._options.keyField,
-						self._options.valField,
-						self._options.orderBy
+						self._options.valField
 					),
 					true,
 					true
 				);
 				break;
 
+			case 'bar':
 			case 'line':
-				var seriesData = self.seriesDataFromCollectionData(
-					self._options.seriesField,
-					self._options.keyField,
-					self._options.valField,
-					self._options.orderBy
-				);
-
-				self._chart.xAxis[0].setCategories(
-					seriesData.xAxis.categories
-				);
-
-				for (var i = 0; i < seriesData.series.length; i++) {
-					self._chart.series[i].setData(
-						seriesData.series[i].data,
-						true,
-						true
-					);
-				}
-				break;
-
 			case 'area':
-				var seriesData = self.seriesDataFromCollectionData(
-					self._options.seriesField,
-					self._options.keyField,
-					self._options.valField,
-					self._options.orderBy
-				);
-
-				self._chart.xAxis[0].setCategories(
-					seriesData.xAxis.categories
-				);
-
-				for (var i = 0; i < seriesData.series.length; i++) {
-					self._chart.series[i].setData(
-						seriesData.series[i].data,
-						true,
-						true
-					);
-				}
-				break;
-
 			case 'column':
 				var seriesData = self.seriesDataFromCollectionData(
 					self._options.seriesField,
@@ -4312,7 +4273,7 @@ Highchart.prototype._changeListener = function () {
 					seriesData.xAxis.categories
 				);
 
-				for (var i = 0; i < seriesData.series.length; i++) {
+				for (i = 0; i < seriesData.series.length; i++) {
 					self._chart.series[i].setData(
 						seriesData.series[i].data,
 						true,
