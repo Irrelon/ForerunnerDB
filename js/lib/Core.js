@@ -33,7 +33,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.7';
+	this._version = '1.2.10';
 };
 
 Core.prototype.moduleLoaded = Overload({
