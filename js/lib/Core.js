@@ -50,7 +50,7 @@ Core.prototype.moduleLoaded = Overload({
 				index;
 
 			for (index = 0; index < modules.length; index++) {
-				if (!Shared.modules[moduleName]) {
+				if (!Shared.modules[modules[index]]) {
 					return false;
 				}
 			}
@@ -75,7 +75,7 @@ Core.prototype.moduleLoaded = Overload({
 				index;
 
 			for (index = 0; index < modules.length; index++) {
-				if (!Shared.modules[moduleName]) {
+				if (!Shared.modules[modules[index]]) {
 					return false;
 				}
 			}
@@ -99,7 +99,7 @@ Core.prototype.moduleLoaded = Overload({
 				index;
 
 			for (index = 0; index < modules.length; index++) {
-				if (!Shared.modules[moduleName]) {
+				if (!Shared.modules[modules[index]]) {
 					failure();
 					return false;
 				}
