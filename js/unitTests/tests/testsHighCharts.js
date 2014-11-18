@@ -7,7 +7,7 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		var coll = db.collection('chartData');
 
 		// Set the collection data
-		coll.setData([{
+		/*coll.setData([{
 			type: 'Jam',
 			date: String(new Date('2014-09-13')).substr(0, 15),
 			val: 100
@@ -19,7 +19,7 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 			type: 'Jam',
 			date: String(new Date('2014-09-15')).substr(0, 15),
 			val: 24
-		}]);
+		}]);*/
 
 		// Create a pie chart on the element with the id "demo-chart"
 		/*coll.lineChart('#demo-chart', 'type', 'date', 'val', {
@@ -30,8 +30,8 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 			}
 		});*/
 
-		coll.pieChart('#demo-chart', 'name', 'val', 'Food');
-		/*coll.lineChart('#demo-chart', 'type', 'date', 'val');*/
+		/*coll.pieChart('#demo-chart', 'name', 'val', 'Food');*/
+		coll.lineChart('#demo-chart', 'type', 'date', 'val');
 		/*coll.areaChart('#demo-chart', 'type', 'date', 'val');*/
 		/*coll.columnChart('#demo-chart', 'type', 'date', 'val');*/
 		/*coll.barChart('#demo-chart', 'type', 'date', 'val');*/
@@ -42,8 +42,20 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		// Attempt to insert data
 		coll.insert({
 			type: 'Jam',
-			date: String(new Date('2014-09-16')).substr(0, 15),
+			date: String(new Date('2014-09-13')).substr(0, 15),
 			val: 100
+		});
+
+		coll.insert({
+			type: 'Jam',
+			date: String(new Date('2014-09-14')).substr(0, 15),
+			val: 120
+		});
+
+		coll.insert({
+			type: 'Jam',
+			date: String(new Date('2014-09-15')).substr(0, 15),
+			val: 80
 		});
 
 		ok(true, 'Inserting ok');
@@ -51,9 +63,9 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		// Attempt to update data
 		coll.update({
 			type: 'Jam',
-			date: String(new Date('2014-09-16')).substr(0, 15)
+			date: String(new Date('2014-09-14')).substr(0, 15)
 		}, {
-			val: 150
+			val: 60
 		});
 
 		ok(true, 'Updating ok');
@@ -61,7 +73,7 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		// Attempt to remove data
 		coll.remove({
 			type: 'Jam',
-			date: String(new Date('2014-09-16')).substr(0, 15)
+			date: String(new Date('2014-09-13')).substr(0, 15)
 		});
 
 		ok(true, 'Removing ok');

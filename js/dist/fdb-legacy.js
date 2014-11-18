@@ -4115,7 +4115,6 @@ Highchart.prototype.init = function (collection, options) {
 			$.extend(seriesObj, this._options.seriesOptions);
 
 			$.extend(seriesObj, {
-				type: 'pie',
 				name: this._options.seriesName,
 				data: chartData
 			});
@@ -4274,11 +4273,21 @@ Highchart.prototype._changeListener = function () {
 				);
 
 				for (i = 0; i < seriesData.series.length; i++) {
-					self._chart.series[i].setData(
-						seriesData.series[i].data,
-						true,
-						true
-					);
+					if (self._chart.series[i]) {
+						// Series exists, set it's data
+						self._chart.series[i].setData(
+							seriesData.series[i].data,
+							true,
+							true
+						);
+					} else {
+						// Series data does not yet exist, add a new series
+						self._chart.addSeries(
+							seriesData.series[i],
+							true,
+							true
+						);
+					}
 				}
 				break;
 
