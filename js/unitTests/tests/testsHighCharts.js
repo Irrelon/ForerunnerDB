@@ -3,76 +3,39 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		base.dbUp();
 		base.domUp();
 
-		var coll = db.collection('test');
+		// Create the collection
+		var coll = db.collection('chartData');
 
+		// Set the collection data
 		coll.setData([{
-			name: 'Jam',
+			type: 'Jam',
 			date: String(new Date('2014-09-13')).substr(0, 15),
-			type: 'Food',
 			val: 100
 		}, {
-			name: 'Pie',
+			type: 'Jam',
 			date: String(new Date('2014-09-14')).substr(0, 15),
-			type: 'Food',
 			val: 33
 		}, {
-			name: 'Jam',
-			date: String(new Date('2014-09-13')).substr(0, 15),
-			type: 'Money',
+			type: 'Jam',
+			date: String(new Date('2014-09-15')).substr(0, 15),
 			val: 24
-		}, {
-			name: 'Pie',
-			date: String(new Date('2014-09-14')).substr(0, 15),
-			type: 'Money',
-			val: 53
 		}]);
 
-		/*coll.pieChart({
-			selector: '#demo-chart',
-			keyField: 'name',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
+		// Create a pie chart on the element with the id "demo-chart"
+		coll.lineChart('#demo-chart', 'type', 'date', 'val', {
+			chartOptions: {
+				title: {
+					text: 'Jam Stores Over Time'
+				}
+			}
+		});
 
-		/*coll.lineChart({
-			selector: '#demo-chart',
-			seriesField: 'type',
-			keyField: 'date',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
-
-		/*coll.areaChart({
-			selector: '#demo-chart',
-			seriesField: 'type',
-			keyField: 'date',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
-
-		/*coll.columnChart({
-			selector: '#demo-chart',
-			seriesField: 'type',
-			keyField: 'date',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
-
-		/*coll.barChart({
-			selector: '#demo-chart',
-			seriesField: 'type',
-			keyField: 'date',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
-
-		/*coll.stackedBarChart({
-			selector: '#demo-chart',
-			seriesField: 'type',
-			keyField: 'date',
-			valField: 'val',
-			seriesName: 'Food'
-		});*/
+		/*coll.pieChart('#demo-chart', 'name', 'val', 'Food');*/
+		//coll.lineChart('#demo-chart', 'type', 'date', 'val');
+		/*coll.areaChart('#demo-chart', 'type', 'date', 'val');*/
+		/*coll.columnChart('#demo-chart', 'type', 'date', 'val');*/
+		/*coll.barChart('#demo-chart', 'type', 'date', 'val');*/
+		/*coll.stackedBarChart('#demo-chart', 'type', 'date', 'val');*/
 
 		ok(true, 'Moo');
 		//base.domDown();

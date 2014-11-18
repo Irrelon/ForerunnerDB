@@ -4245,10 +4245,11 @@ Highchart.prototype._changeListener = function () {
 		switch (self._options.type) {
 			case 'pie':
 				self._chart.series[0].setData(
-					self.pieDataFromCollectionData(
-						data,
+					self.seriesDataFromCollectionData(
+						self._options.seriesField,
 						self._options.keyField,
-						self._options.valField
+						self._options.valField,
+						self._options.orderBy
 					),
 					true,
 					true
@@ -4319,7 +4320,7 @@ Highchart.prototype._changeListener = function () {
 				break;
 
 			default:
-				breal;
+				break;
 		}
 	}
 };
@@ -4360,6 +4361,10 @@ Collection.prototype.pieChart = new Overload({
 	'object': function (options) {
 		options.type = 'pie';
 
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'pie';
+
 		if (!this._highcharts[options.selector]) {
 			// Store new chart in charts array
 			this._highcharts[options.selector] = new Highchart(this, options);
@@ -4375,15 +4380,16 @@ Collection.prototype.pieChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, keyField, valField, seriesName, options) {
 		options = options || {};
 
 		options.selector = selector;
 		options.keyField = keyField;
 		options.valField = valField;
+		options.seriesName = seriesName;
 
 		// Call the main chart method
-		this.chart(options);
+		this.pieChart(options);
 	}
 });
 
@@ -4416,7 +4422,7 @@ Collection.prototype.lineChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -4425,7 +4431,7 @@ Collection.prototype.lineChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.lineChart(options);
 	}
 });
 
@@ -4458,7 +4464,7 @@ Collection.prototype.areaChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -4467,7 +4473,7 @@ Collection.prototype.areaChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.areaChart(options);
 	}
 });
 
@@ -4500,7 +4506,7 @@ Collection.prototype.columnChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -4509,7 +4515,7 @@ Collection.prototype.columnChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.columnChart(options);
 	}
 });
 
@@ -4542,7 +4548,7 @@ Collection.prototype.barChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -4551,7 +4557,7 @@ Collection.prototype.barChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.barChart(options);
 	}
 });
 
@@ -4588,7 +4594,7 @@ Collection.prototype.stackedBarChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -4597,7 +4603,7 @@ Collection.prototype.stackedBarChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.stackedBarChart(options);
 	}
 });
 
@@ -6729,91 +6735,129 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":22}],22:[function(_dereq_,module,exports){
 var Shared = {
-		modules: {},
-		_synth: {},
+	modules: {},
+	_synth: {},
 
-		addModule: function (name, module) {
-			this.modules[name] = module;
-			this.emit('moduleLoad', [name, module]);
-		},
+	/**
+	 * Adds a module to ForerunnerDB.
+	 * @param {String} name The name of the module.
+	 * @param {Function} module The module class.
+	 */
+	addModule: function (name, module) {
+		this.modules[name] = module;
+		this.emit('moduleLoad', [name, module]);
+	},
 
-		finishModule: function (name) {
-			if (this.modules[name]) {
-				this.modules[name]._fdbFinished = true;
-				this.emit('moduleFinished', [name, this.modules[name]]);
-			} else {
-				throw('finishModule called on a module that has not been registered with addModule(): ' + name);
-			}
-		},
-
-		moduleFinished: function (name, callback) {
-			if (this.modules[name] && this.modules[name]._fdbFinished) {
-				callback(name, this.modules[name]);
-			} else {
-				this.on('moduleFinished', callback);
-			}
-		},
-
-		mixin: function (obj, mixinName) {
-			var system = this.mixins[mixinName];
-			
-			if (system) {
-				for (var i in system) {
-					if (system.hasOwnProperty(i)) {
-						obj[i] = system[i];
-					}
-				}
-			} else {
-				throw('Cannot find mixin named: ' + mixinName);
-			}
-		},
-
-		synthesize: function (obj, name, extend) {
-			this._synth[name] = this._synth[name] || function (val) {
-				if (val !== undefined) {
-					this['_' + name] = val;
-					return this;
-				}
-
-				return this['_' + name];
-			};
-
-			if (extend) {
-				var self = this;
-
-				obj[name] = function () {
-					var tmp = this.$super,
-						ret;
-
-					this.$super = self._synth[name];
-					ret = extend.apply(this, arguments);
-					this.$super = tmp;
-
-					return ret;
-				}
-			} else {
-				obj[name] = this._synth[name];
-			}
-		},
-
-		/**
-		 * Allows a method to be overloaded.
-		 * @param arr
-		 * @returns {Function}
-		 * @constructor
-		 */
-		overload: _dereq_('./Overload'),
-
-		/**
-		 * Define the mixins that other modules can use as required.
-		 */
-		mixins: {
-			'Mixin.Common': _dereq_('./Mixin.Common'),
-			'Mixin.Events': _dereq_('./Mixin.Events'),
-			'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
-			'Mixin.CRUD': _dereq_('./Mixin.CRUD')
+	/**
+	 * Called by the module once all processing has been completed. Used to determine
+	 * if the module is ready for use by other modules.
+	 * @param {String} name The name of the module.
+	 */
+	finishModule: function (name) {
+		if (this.modules[name]) {
+			this.modules[name]._fdbFinished = true;
+			this.emit('moduleFinished', [name, this.modules[name]]);
+		} else {
+			throw('finishModule called on a module that has not been registered with addModule(): ' + name);
 		}
-	};
+	},
+
+	/**
+	 * Will call your callback method when the specified module has loaded. If the module
+	 * is already loaded the callback is called immediately.
+	 * @param {String} name The name of the module.
+	 * @param {Function} callback The callback method to call when the module is loaded.
+	 */
+	moduleFinished: function (name, callback) {
+		if (this.modules[name] && this.modules[name]._fdbFinished) {
+			callback(name, this.modules[name]);
+		} else {
+			this.on('moduleFinished', callback);
+		}
+	},
+
+	/**
+	 * Determines if a module has been added to ForerunnerDB or not.
+	 * @param {String} name The name of the module.
+	 * @returns {Boolean} True if the module exists or false if not.
+	 */
+	moduleExists: function (name) {
+		return Boolean(this.modules[name]);
+	},
+
+	/**
+	 * Adds the properties and methods defined in the mixin to the passed object.
+	 * @param {Object} obj The target object to add mixin key/values to.
+	 * @param {String} mixinName The name of the mixin to add to the object.
+	 */
+	mixin: function (obj, mixinName) {
+		var system = this.mixins[mixinName];
+
+		if (system) {
+			for (var i in system) {
+				if (system.hasOwnProperty(i)) {
+					obj[i] = system[i];
+				}
+			}
+		} else {
+			throw('Cannot find mixin named: ' + mixinName);
+		}
+	},
+
+	/**
+	 * Generates a generic getter/setter method for the passed method name.
+	 * @param {Object} obj The object to add the getter/setter to.
+	 * @param {String} name The name of the getter/setter to generate.
+	 * @param {Function=} extend A method to call before executing the getter/setter.
+	 * The existing getter/setter can be accessed from the extend method via the
+	 * $super e.g. this.$super();
+	 */
+	synthesize: function (obj, name, extend) {
+		this._synth[name] = this._synth[name] || function (val) {
+			if (val !== undefined) {
+				this['_' + name] = val;
+				return this;
+			}
+
+			return this['_' + name];
+		};
+
+		if (extend) {
+			var self = this;
+
+			obj[name] = function () {
+				var tmp = this.$super,
+					ret;
+
+				this.$super = self._synth[name];
+				ret = extend.apply(this, arguments);
+				this.$super = tmp;
+
+				return ret;
+			}
+		} else {
+			obj[name] = this._synth[name];
+		}
+	},
+
+	/**
+	 * Allows a method to be overloaded.
+	 * @param arr
+	 * @returns {Function}
+	 * @constructor
+	 */
+	overload: _dereq_('./Overload'),
+
+	/**
+	 * Define the mixins that other modules can use as required.
+	 */
+	mixins: {
+		'Mixin.Common': _dereq_('./Mixin.Common'),
+		'Mixin.Events': _dereq_('./Mixin.Events'),
+		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
+		'Mixin.CRUD': _dereq_('./Mixin.CRUD')
+	}
+};
 
 // Add event handling to shared
 Shared.mixin(Shared, 'Mixin.Events');

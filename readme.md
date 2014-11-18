@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.9
+## Version 1.2.10
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -692,22 +692,113 @@ ForerunnerDB can utilise the popular Highcharts JavaScript library to generate c
 and automatically keep the charts in sync with changes to the collection.
 
 ### Prerequisites
-The popular Highcharts JavaScript library is required to use the ForerunnerDB Highcharts plugin. You can
+The Highcharts JavaScript library is required to use the ForerunnerDB Highcharts module. You can
 get Highcharts from http://www.highcharts.com
 
 ### Usage
-To use the chart plugin you call the .chart() method on a collection object, passing the element selector
-that you want to render your chart inside, the type of chart to render and the key and value fields that
-you want the chart data to be extrapolated from.
+To use the chart module you call one of the chart methods on a collection object. Charts are an optional
+module so make sure that your version of ForerunnerDB has the Highcharts module included.
 
-#### Pie Chart Example
+#### collection.pieChart()
 
-	coll.pieChart({
-		selector: '#demo-chart',
-		keyField: 'name',
-		valField: 'val',
-		seriesName: 'Food'
+Function definition:
+
+	collection.pieChart(selector, keyField, valField, seriesName);
+	
+Example:
+
+	// Create the collection
+	var coll = db.collection('chartData');
+	
+	// Set the collection data
+	coll.setData([{
+		name: 'Jam',
+		val: 100
+	}, {
+		name: 'Pie',
+		val: 33
+	}, {
+		name: 'Cake',
+		val: 24
+	}]);
+	
+	// Create a pie chart on the element with the id "demo-chart"
+	coll.pieChart('#demo-chart', 'name', 'val', 'Food', {
+		chartOptions: {
+			title: {
+				text: 'Food Eaten at Event'
+			}
+		}
 	});
+
+> Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
+ key is passed to Highcharts directly so any options that are described in the Highcharts documentation
+ should be added inside the chartOptions object. You'll notice that we set the chart title in the call
+ above using this object.
+
+#### collection.lineChart()
+
+Function definition:
+
+	collection.lineChart(selector, seriesField, keyField, valField);
+
+Example:
+
+	// Create the collection
+	var coll = db.collection('chartData');
+
+	// Set the collection data
+	coll.setData([{
+		type: 'Jam',
+		date: String(new Date('2014-09-13')).substr(0, 15),
+		val: 100
+	}, {
+		type: 'Jam',
+		date: String(new Date('2014-09-14')).substr(0, 15),
+		val: 33
+	}, {
+		type: 'Jam',
+		date: String(new Date('2014-09-15')).substr(0, 15),
+		val: 24
+	}]);
+
+	// Create a pie chart on the element with the id "demo-chart"
+	coll.lineChart('#demo-chart', 'type', 'date', 'val', {
+		chartOptions: {
+			title: {
+				text: 'Jam Stores Over Time'
+			}
+		}
+	});
+
+> Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
+ key is passed to Highcharts directly so any options that are described in the Highcharts documentation
+ should be added inside the chartOptions object. You'll notice that we set the chart title in the call
+ above using this object.
+
+#### Other Chart Types
+
+The lineChart() function uses the same parameters as the rest of the chart types currently supported by
+ForerunnerDB:
+
+* collection.barChart()
+* collection.columnChart()
+* collection.areaChart()
+
+### Removing a Chart
+
+You can drop a chart using the dropChart() method on the collection the chart is assigned to:
+
+Function definition:
+
+	collection.dropChart(selector);
+	
+Example:
+
+	coll.dropChart('#demo-chart);
+	
+> Dropping a chart will remove it from the DOM and stop all further collection updates from propagating
+to Highcharts.
 
 # Development
 

@@ -199,10 +199,11 @@ Highchart.prototype._changeListener = function () {
 		switch (self._options.type) {
 			case 'pie':
 				self._chart.series[0].setData(
-					self.pieDataFromCollectionData(
-						data,
+					self.seriesDataFromCollectionData(
+						self._options.seriesField,
 						self._options.keyField,
-						self._options.valField
+						self._options.valField,
+						self._options.orderBy
 					),
 					true,
 					true
@@ -273,7 +274,7 @@ Highchart.prototype._changeListener = function () {
 				break;
 
 			default:
-				breal;
+				break;
 		}
 	}
 };
@@ -314,6 +315,10 @@ Collection.prototype.pieChart = new Overload({
 	'object': function (options) {
 		options.type = 'pie';
 
+		options.chartOptions = options.chartOptions || {};
+		options.chartOptions.chart = options.chartOptions.chart || {};
+		options.chartOptions.chart.type = 'pie';
+
 		if (!this._highcharts[options.selector]) {
 			// Store new chart in charts array
 			this._highcharts[options.selector] = new Highchart(this, options);
@@ -329,15 +334,16 @@ Collection.prototype.pieChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, keyField, valField, seriesName, options) {
 		options = options || {};
 
 		options.selector = selector;
 		options.keyField = keyField;
 		options.valField = valField;
+		options.seriesName = seriesName;
 
 		// Call the main chart method
-		this.chart(options);
+		this.pieChart(options);
 	}
 });
 
@@ -370,7 +376,7 @@ Collection.prototype.lineChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -379,7 +385,7 @@ Collection.prototype.lineChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.lineChart(options);
 	}
 });
 
@@ -412,7 +418,7 @@ Collection.prototype.areaChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -421,7 +427,7 @@ Collection.prototype.areaChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.areaChart(options);
 	}
 });
 
@@ -454,7 +460,7 @@ Collection.prototype.columnChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -463,7 +469,7 @@ Collection.prototype.columnChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.columnChart(options);
 	}
 });
 
@@ -496,7 +502,7 @@ Collection.prototype.barChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -505,7 +511,7 @@ Collection.prototype.barChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.barChart(options);
 	}
 });
 
@@ -542,7 +548,7 @@ Collection.prototype.stackedBarChart = new Overload({
 	 * @param {String} valField The field to use as the data value.
 	 * @param {Object} options The options object.
 	 */
-	'*, string, string, object': function (selector, seriesField, keyField, valField, options) {
+	'*, string, string, string, ...': function (selector, seriesField, keyField, valField, options) {
 		options = options || {};
 
 		options.seriesField = seriesField;
@@ -551,7 +557,7 @@ Collection.prototype.stackedBarChart = new Overload({
 		options.valField = valField;
 
 		// Call the main chart method
-		this.chart(options);
+		this.stackedBarChart(options);
 	}
 });
 
