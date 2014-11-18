@@ -877,7 +877,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		var newName = $('#testTarget').find('#2342').text();
 		ok(newName === 'hello2', "Update single document");
 
-		//base.domDown();
+		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
 		base.dbDown();
@@ -1020,7 +1020,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		var newName = $('#testTarget').find('#2342').text();
 		ok(newName === 'hello2', "Update single document");
 
-		//base.domDown();
+		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
 		base.dbDown();
