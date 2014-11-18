@@ -37,8 +37,8 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		/*coll.barChart('#demo-chart', 'type', 'date', 'val');*/
 		/*coll.stackedBarChart('#demo-chart', 'type', 'date', 'val');*/
 
-		ok(true, 'Moo');
-		//base.domDown();
-		//base.dbDown();
+		ok(true, 'No errors');
+		base.domDown();
+		base.dbDown();
 	});
 });
