@@ -3103,19 +3103,37 @@ Core.prototype.collectionExists = function (viewName) {
 
 /**
  * Returns an array of collections the DB currently has.
+ * @param {String|RegExp=} search The optional search string or regular expression to use
+ * to match collection names against.
  * @returns {Array} An array of objects containing details of each collection
  * the database is currently managing.
  */
-Core.prototype.collections = function () {
+Core.prototype.collections = function (search) {
 	var arr = [],
 		i;
 
+	if (search) {
+		if (!(search instanceof RegExp)) {
+			// Turn the search into a regular expression
+			search = new RegExp(search);
+		}
+	}
+
 	for (i in this._collection) {
 		if (this._collection.hasOwnProperty(i)) {
-			arr.push({
-				name: i,
-				count: this._collection[i].count()
-			});
+			if (search) {
+				if (search.exec(i)) {
+					arr.push({
+						name: i,
+						count: this._collection[i].count()
+					});
+				}
+			} else {
+				arr.push({
+					name: i,
+					count: this._collection[i].count()
+				});
+			}
 		}
 	}
 
