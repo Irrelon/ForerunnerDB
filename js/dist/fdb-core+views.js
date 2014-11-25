@@ -6251,7 +6251,7 @@ Collection.prototype.view = function (name, query, options) {
 		if (!this._db._views[name]) {
 			var view = new View(name, query, options)
 				.db(this._db)
-				._addCollection(this);
+				.from(this);
 
 			this._views = this._views || [];
 			this._views.push(view);

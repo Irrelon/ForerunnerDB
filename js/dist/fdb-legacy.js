@@ -2,12 +2,12 @@
 var Core = _dereq_('../lib/Core'),
 	CollectionGroup = _dereq_('../lib/CollectionGroup'),
 	View = _dereq_('../lib/View'),
-	OldView = _dereq_('../lib/OldView'),
-	OldViewBind = _dereq_('../lib/OldView.Bind'),
 	Highchart = _dereq_('../lib/Highchart'),
 	Persist = _dereq_('../lib/Persist'),
 	Document = _dereq_('../lib/Document'),
-	Overview = _dereq_('../lib/Overview');
+	Overview = _dereq_('../lib/Overview'),
+	OldView = _dereq_('../lib/OldView'),
+	OldViewBind = _dereq_('../lib/OldView.Bind');
 
 module.exports = Core;
 },{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":17,"../lib/OldView.Bind":16,"../lib/Overview":20,"../lib/Persist":22,"../lib/View":25}],2:[function(_dereq_,module,exports){
@@ -8704,7 +8704,7 @@ Collection.prototype.view = function (name, query, options) {
 		if (!this._db._views[name]) {
 			var view = new View(name, query, options)
 				.db(this._db)
-				._addCollection(this);
+				.from(this);
 
 			this._views = this._views || [];
 			this._views.push(view);
