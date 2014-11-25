@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.12 (25th Nov 2014)
+## Version 1.2.13 (25th Nov 2014)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -658,6 +658,25 @@ You can then load the collection's data back again via:
 
 If you call collection.load() when your application starts and collection.save() when you make changes
 to your collection you can ensure that your application always has up-to-date data.
+
+### Manually Specifying Storage Engine
+If you would like to manually specify the storage engine that ForerunnerDB will use you can call the
+driver() method:
+
+#### IndexedDB
+
+	var db = new ForerunnerDB();
+	db.persist.driver('IndexedDB');
+
+#### WebSQL
+
+	var db = new ForerunnerDB();
+	db.persist.driver('WebSQL');
+
+#### LocalStorage
+
+	var db = new ForerunnerDB();
+	db.persist.driver('LocalStorage');
 
 ## Data Binding
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
