@@ -21,7 +21,7 @@ npm install forerunnerdb
 This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/coolbloke1324/ForerunnerDB/archive/master.zip).
 
 ## License
-Forerunner is free for use if you are using it for non-commercial, non-governmental or non-profit use. If you are doing something commercial please visit the license page to see which license best suits your requirements: http://www.forerunnerdb.com/licensing.html
+Please see licensing page for latest information: http://www.forerunnerdb.com/licensing.html
 
 ## Use Forerunner in Browser
 Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
