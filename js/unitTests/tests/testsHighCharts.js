@@ -7,7 +7,7 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 		var coll = db.collection('chartData');
 
 		// Set the collection data
-		/*coll.setData([{
+		coll.setData([{
 			type: 'Jam',
 			date: String(new Date('2014-09-13')).substr(0, 15),
 			val: 100
@@ -19,7 +19,19 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 			type: 'Jam',
 			date: String(new Date('2014-09-15')).substr(0, 15),
 			val: 24
-		}]);*/
+		}, {
+			type: 'Tea',
+			date: String(new Date('2014-09-13')).substr(0, 15),
+			val: 28
+		}, {
+			type: 'Tea',
+			date: String(new Date('2014-09-14')).substr(0, 15),
+			val: 49
+		}, {
+			type: 'Tea',
+			date: String(new Date('2014-09-15')).substr(0, 15),
+			val: 12
+		}]);
 
 		// Create a pie chart on the element with the id "demo-chart"
 		/*coll.lineChart('#demo-chart', 'type', 'date', 'val', {
@@ -56,6 +68,12 @@ ForerunnerDB.moduleLoaded('Highchart', function () {
 			type: 'Jam',
 			date: String(new Date('2014-09-15')).substr(0, 15),
 			val: 80
+		});
+
+		coll.insert({
+			type: 'Tea',
+			date: String(new Date('2014-09-15')).substr(0, 15),
+			val: 66
 		});
 
 		ok(true, 'Inserting ok');
