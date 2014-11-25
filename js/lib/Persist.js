@@ -51,7 +51,29 @@ Persist.prototype.mode = function (type) {
 	return this._mode;
 };
 
-Persist.prototype.driver = function () {
+Persist.prototype.driver = function (val) {
+	if (val !== undefined) {
+		switch (val.toUpperCase()) {
+			case 'LOCALSTORAGE':
+				localforage.setDriver(localforage.LOCALSTORAGE);
+				break;
+
+			case 'WEBSQL':
+				localforage.setDriver(localforage.WEBSQL);
+				break;
+
+			case 'INDEXEDDB':
+				localforage.setDriver(localforage.INDEXEDDB);
+				break;
+
+			default:
+				throw('The persistence driver you have specified is not found. Please use either IndexedDB, WebSQL or LocalStorage!');
+				break;
+		}
+
+		return this;
+	}
+
 	return localforage.driver();
 };
 
