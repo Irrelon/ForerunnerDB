@@ -105,6 +105,20 @@ Supported search operators:
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
+### Ordering / Sorting Results
+You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
+
+	itemCollection.find({
+		price: {
+			'$gt': 90,
+			'$lt': 150
+		}
+	}, {
+		$orderBy: {
+			price: 1 // Sort ascending or -1 for descending
+		}
+	});
+
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
