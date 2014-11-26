@@ -1191,6 +1191,50 @@ test("Core - Collection.update() :: $unset operator", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $unset operator inside sub-array", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	coll.setData([{
+		_id: '1',
+		arr: [{
+			_id: 22,
+			remaining: 20,
+			count: 10
+		}, {
+			_id: 33,
+			remaining: 15,
+			count: 7
+		}]
+	}]);
+
+	var before = coll.find()[0];
+
+	ok(before.arr[0].remaining === 20, "Check initial numbers");
+	ok(before.arr[1].remaining === 15, "Check initial numbers");
+
+	coll.update({
+		_id: "1",
+		arr: {
+			_id: 22
+		}
+	}, {
+		"arr.$": {
+			$unset: {
+				remaining: 1
+			}
+		}
+	});
+
+	var after = coll.find()[0];
+
+	ok(after.arr[0].remaining === undefined, "Check final properties");
+	ok(after.arr[1].remaining === 15, "Check final properties");
+
+	base.dbDown();
+});
+
 test("Core - Collection.upsert() :: Insert on upsert call", function() {
 	base.dbUp();
 	base.dataUp();

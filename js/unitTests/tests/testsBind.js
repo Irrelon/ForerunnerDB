@@ -1,4 +1,70 @@
 ForerunnerDB.moduleLoaded('View, AutoBind', function () {
+	test("Core - Collection.update() :: $unset operator inside sub-array", function() {
+		base.dbUp();
+		base.domUp();
+
+		var coll = db.collection('test');
+
+		coll.link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:slots[0].arr[0].count}}:{^{if slots[0].arr[0].remaining}}{^{:slots[0].arr[0].remaining.val}}{{/if}}, {^{:slots[0].arr[1].count}}:{^{:slots[0].arr[1].remaining.val}}</li>'
+		});
+
+		coll.setData([{
+			_id: '1',
+			slots: [{
+				_id: 44,
+				arr: [{
+					_id: 22,
+					remaining: {
+						val: 20
+					},
+					count: 10
+				}, {
+					_id: 33,
+					remaining: {
+						val: 15
+					},
+					count: 7
+				}]
+			}]
+		}]);
+
+		var before = coll.find()[0];
+		var beforeElem = $('#testTarget').find('#1');
+
+		ok(before.slots[0].arr[0].remaining.val === 20, "Check initial numbers");
+		ok(before.slots[0].arr[1].remaining.val === 15, "Check initial numbers");
+		ok(beforeElem.text() === '10:20, 7:15', "Check initial link data");
+
+		coll.update({
+			_id: "1",
+			slots: {
+				_id: 44,
+				arr: {
+					_id: 22
+				}
+			}
+		}, {
+			"slots.$": {
+				"arr.$": {
+					$unset: {
+						remaining: 1
+					}
+				}
+			}
+		});
+
+		var after = coll.find()[0];
+		var afterElem = $('#testTarget').find('#1');
+
+		ok(after.slots[0].arr[0].remaining === undefined, "Check final properties");
+		ok(after.slots[0].arr[1].remaining.val === 15, "Check final properties");
+		ok(afterElem.text() === '10:, 7:15', "Check final link data");
+
+		base.domDown();
+		base.dbDown();
+	});
+
 	test("Bind - View.on() :: setData from Collection", function () {
 		base.dbUp();
 		base.dataUp();
