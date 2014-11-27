@@ -18,6 +18,8 @@ Shared.addModule('Document', Document);
 Shared.mixin(Document.prototype, 'Mixin.Common');
 Shared.mixin(Document.prototype, 'Mixin.Events');
 Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Document.prototype, 'Mixin.Constants');
+Shared.mixin(Document.prototype, 'Mixin.Triggers');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;

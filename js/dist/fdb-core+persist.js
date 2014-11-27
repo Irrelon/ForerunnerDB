@@ -3,7 +3,7 @@ var Core = _dereq_('../lib/Core'),
   Persist = _dereq_('../lib/Persist');
 
 module.exports = Core;
-},{"../lib/Core":4,"../lib/Persist":16}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/Persist":18}],2:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -67,6 +67,8 @@ Shared.mixin(Collection.prototype, 'Mixin.Common');
 Shared.mixin(Collection.prototype, 'Mixin.Events');
 Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
+Shared.mixin(Collection.prototype, 'Mixin.Constants');
+Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -518,7 +520,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var updated = false,
+	var oldDoc = this.decouple(doc),
+		updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -856,6 +859,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		}
 	}
 
+	if (updated) {
+		this.processTrigger(this.TYPE_UPDATE, this.PHASE_AFTER, oldDoc, doc);
+	}
 	return updated;
 };
 
@@ -1044,7 +1050,7 @@ Collection.prototype.remove = function (query, options, callback) {
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
-				this._dataRemoveIndex(index);
+				this._dataRemoveAtIndex(index);
 			}
 
 			//op.time('Resolve chains');
@@ -1261,7 +1267,8 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			// Insert the document
-			this._dataInsertIndex(index, doc);
+			this._dataInsertAtIndex(index, doc);
+			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
 
 			return true;
 		} else {
@@ -1279,7 +1286,7 @@ Collection.prototype._insert = function (doc, index) {
  * @param {object} doc The document to insert.
  * @private
  */
-Collection.prototype._dataInsertIndex = function (index, doc) {
+Collection.prototype._dataInsertAtIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
@@ -1289,7 +1296,7 @@ Collection.prototype._dataInsertIndex = function (index, doc) {
  * @param {number} index The index to remove from.
  * @private
  */
-Collection.prototype._dataRemoveIndex = function (index) {
+Collection.prototype._dataRemoveAtIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
@@ -2836,7 +2843,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Path":15,"./Shared":17}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index":6,"./KeyValueStore":7,"./Metrics":8,"./Path":17,"./Shared":19}],3:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -2861,6 +2868,8 @@ CollectionGroup.prototype.init = function (name) {
 Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
@@ -3085,7 +3094,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":17}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Shared":19}],4:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3121,7 +3130,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.13';
+	this._version = '1.2.14';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3208,6 +3217,7 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
 Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Core.prototype, 'Mixin.Constants');
 
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
@@ -3390,7 +3400,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Overload":14,"./Shared":17}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":8,"./Overload":16,"./Shared":19}],5:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3772,7 +3782,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('Index');
 module.exports = Index;
-},{"./Path":15,"./Shared":17}],7:[function(_dereq_,module,exports){
+},{"./Path":17,"./Shared":19}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3985,7 +3995,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":17}],8:[function(_dereq_,module,exports){
+},{"./Shared":19}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4058,7 +4068,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":13,"./Shared":17}],9:[function(_dereq_,module,exports){
+},{"./Operation":15,"./Shared":19}],9:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -4223,7 +4233,18 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":14}],12:[function(_dereq_,module,exports){
+},{"./Overload":16}],12:[function(_dereq_,module,exports){
+var Constants = {
+	TYPE_INSERT: 0,
+	TYPE_UPDATE: 1,
+	TYPE_REMOVE: 2,
+
+	PHASE_BEFORE: 0,
+	PHASE_AFTER: 1
+};
+
+module.exports = Constants;
+},{}],13:[function(_dereq_,module,exports){
 var Events = {
 	on: new Overload({
 		/**
@@ -4351,7 +4372,88 @@ var Events = {
 };
 
 module.exports = Events;
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
+var Triggers = {
+	addTrigger: function (id, type, phase, method) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex === -1) {
+			self._trigger = self._trigger || {};
+			self._trigger[type] = self._trigger[type] || {};
+			self._trigger[type][phase] = self._trigger[type][phase] || [];
+
+			self._trigger[type][phase].push({
+				id: id,
+				method: method
+			});
+
+			return true;
+		}
+
+		return false;
+	},
+
+	removeTrigger: function (id, type, phase) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex > -1) {
+			self._trigger[type][phase].splice(triggerIndex, 1);
+		}
+
+		return false;
+	},
+
+	processTrigger: function (type, phase, oldDoc, newDoc) {
+		var self = this,
+			triggerArr,
+			triggerIndex,
+			triggerCount,
+			triggerItem;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				triggerItem = triggerArr[triggerIndex];
+
+				if (this.debug()) {
+					console.log('Triggers: Processing trigger ""')
+				}
+				triggerItem.method.apply(self, [oldDoc, newDoc]);
+			}
+		}
+	},
+
+	_triggerIndex: function (id, type, phase) {
+		var self = this,
+			triggerArr,
+			triggerCount,
+			triggerIndex;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				if (triggerArr[triggerIndex].id === id) {
+					return triggerIndex;
+				}
+			}
+		}
+
+		return -1;
+	}
+};
+
+module.exports = Triggers;
+},{}],15:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4496,7 +4598,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":15,"./Shared":17}],14:[function(_dereq_,module,exports){
+},{"./Path":17,"./Shared":19}],16:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -4631,7 +4733,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],15:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5042,7 +5144,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":17}],16:[function(_dereq_,module,exports){
+},{"./Shared":19}],18:[function(_dereq_,module,exports){
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
@@ -5353,7 +5455,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":17,"localforage":24}],17:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":19,"localforage":26}],19:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -5475,7 +5577,9 @@ var Shared = {
 		'Mixin.Common': _dereq_('./Mixin.Common'),
 		'Mixin.Events': _dereq_('./Mixin.Events'),
 		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
-		'Mixin.CRUD': _dereq_('./Mixin.CRUD')
+		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
+		'Mixin.Constants': _dereq_('./Mixin.Constants'),
+		'Mixin.Triggers': _dereq_('./Mixin.Triggers')
 	}
 };
 
@@ -5483,7 +5587,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":9,"./Mixin.ChainReactor":10,"./Mixin.Common":11,"./Mixin.Events":12,"./Overload":14}],18:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":9,"./Mixin.ChainReactor":10,"./Mixin.Common":11,"./Mixin.Constants":12,"./Mixin.Events":13,"./Mixin.Triggers":14,"./Overload":16}],20:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -5590,7 +5694,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":20}],19:[function(_dereq_,module,exports){
+},{"asap":22}],21:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -5772,7 +5876,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":18,"asap":20}],20:[function(_dereq_,module,exports){
+},{"./core.js":20,"asap":22}],22:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -5889,7 +5993,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":25}],21:[function(_dereq_,module,exports){
+},{"_process":27}],23:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -6263,7 +6367,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":19}],22:[function(_dereq_,module,exports){
+},{"promise":21}],24:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -6715,7 +6819,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":19}],23:[function(_dereq_,module,exports){
+},{"promise":21}],25:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -7257,7 +7361,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":19}],24:[function(_dereq_,module,exports){
+},{"promise":21}],26:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -7678,7 +7782,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":21,"./drivers/localstorage":22,"./drivers/websql":23,"promise":19}],25:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":23,"./drivers/localstorage":24,"./drivers/websql":25,"promise":21}],27:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};

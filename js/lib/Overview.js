@@ -23,6 +23,8 @@ Overview.prototype.init = function (name) {
 Shared.addModule('Overview', Overview);
 Shared.mixin(Overview.prototype, 'Mixin.Common');
 Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Overview.prototype, 'Mixin.Constants');
+Shared.mixin(Overview.prototype, 'Mixin.Triggers');
 
 Collection = require('./Collection');
 Document = require('./Document');

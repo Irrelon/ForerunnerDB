@@ -33,7 +33,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.13';
+	this._version = '1.2.14';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -120,6 +120,7 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
 Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Core.prototype, 'Mixin.Constants');
 
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');

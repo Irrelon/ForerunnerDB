@@ -61,6 +61,8 @@ Shared.mixin(Collection.prototype, 'Mixin.Common');
 Shared.mixin(Collection.prototype, 'Mixin.Events');
 Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
+Shared.mixin(Collection.prototype, 'Mixin.Constants');
+Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -512,7 +514,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var updated = false,
+	var oldDoc = this.decouple(doc),
+		updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -850,6 +853,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		}
 	}
 
+	if (updated) {
+		this.processTrigger(this.TYPE_UPDATE, this.PHASE_AFTER, oldDoc, doc);
+	}
 	return updated;
 };
 
@@ -1038,7 +1044,7 @@ Collection.prototype.remove = function (query, options, callback) {
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
-				this._dataRemoveIndex(index);
+				this._dataRemoveAtIndex(index);
 			}
 
 			//op.time('Resolve chains');
@@ -1255,7 +1261,8 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			// Insert the document
-			this._dataInsertIndex(index, doc);
+			this._dataInsertAtIndex(index, doc);
+			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
 
 			return true;
 		} else {
@@ -1273,7 +1280,7 @@ Collection.prototype._insert = function (doc, index) {
  * @param {object} doc The document to insert.
  * @private
  */
-Collection.prototype._dataInsertIndex = function (index, doc) {
+Collection.prototype._dataInsertAtIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
@@ -1283,7 +1290,7 @@ Collection.prototype._dataInsertIndex = function (index, doc) {
  * @param {number} index The index to remove from.
  * @private
  */
-Collection.prototype._dataRemoveIndex = function (index) {
+Collection.prototype._dataRemoveAtIndex = function (index) {
 	this._data.splice(index, 1);
 };
 

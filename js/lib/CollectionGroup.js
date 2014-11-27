@@ -22,6 +22,8 @@ CollectionGroup.prototype.init = function (name) {
 Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 
 Collection = require('./Collection');
 Core = Shared.modules.Core;

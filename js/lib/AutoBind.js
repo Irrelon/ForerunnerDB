@@ -11,8 +11,8 @@ Shared.addModule('AutoBind', AutoBind);
 AutoBind.extendCollection = function (Module) {
 	var superInit = Module.prototype.init,
 		superDataReplace = Module.prototype._dataReplace,
-		superDataInsertIndex = Module.prototype._dataInsertIndex,
-		superDataRemoveIndex = Module.prototype._dataRemoveIndex,
+		superDataInsertIndex = Module.prototype._dataInsertAtIndex,
+		superDataRemoveIndex = Module.prototype._dataRemoveAtIndex,
 		superUpdateProperty = Module.prototype._updateProperty,
 		superUpdateIncrement = Module.prototype._updateIncrement,
 		superUpdateSpliceMove = Module.prototype._updateSpliceMove,
@@ -161,7 +161,7 @@ AutoBind.extendCollection = function (Module) {
 		}
 	};
 
-	Module.prototype._dataInsertIndex = function (index, doc) {
+	Module.prototype._dataInsertAtIndex = function (index, doc) {
 		if (this._linked) {
 			jQuery.observable(this._data).insert(index, doc);
 		} else {
@@ -169,7 +169,7 @@ AutoBind.extendCollection = function (Module) {
 		}
 	};
 
-	Module.prototype._dataRemoveIndex = function (index) {
+	Module.prototype._dataRemoveAtIndex = function (index) {
 		if (this._linked) {
 			jQuery.observable(this._data).remove(index);
 		} else {

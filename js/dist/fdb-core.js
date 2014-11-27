@@ -66,6 +66,8 @@ Shared.mixin(Collection.prototype, 'Mixin.Common');
 Shared.mixin(Collection.prototype, 'Mixin.Events');
 Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
+Shared.mixin(Collection.prototype, 'Mixin.Constants');
+Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -517,7 +519,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var updated = false,
+	var oldDoc = this.decouple(doc),
+		updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -855,6 +858,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		}
 	}
 
+	if (updated) {
+		this.processTrigger(this.TYPE_UPDATE, this.PHASE_AFTER, oldDoc, doc);
+	}
 	return updated;
 };
 
@@ -1043,7 +1049,7 @@ Collection.prototype.remove = function (query, options, callback) {
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
-				this._dataRemoveIndex(index);
+				this._dataRemoveAtIndex(index);
 			}
 
 			//op.time('Resolve chains');
@@ -1260,7 +1266,8 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			// Insert the document
-			this._dataInsertIndex(index, doc);
+			this._dataInsertAtIndex(index, doc);
+			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
 
 			return true;
 		} else {
@@ -1278,7 +1285,7 @@ Collection.prototype._insert = function (doc, index) {
  * @param {object} doc The document to insert.
  * @private
  */
-Collection.prototype._dataInsertIndex = function (index, doc) {
+Collection.prototype._dataInsertAtIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
@@ -1288,7 +1295,7 @@ Collection.prototype._dataInsertIndex = function (index, doc) {
  * @param {number} index The index to remove from.
  * @private
  */
-Collection.prototype._dataRemoveIndex = function (index) {
+Collection.prototype._dataRemoveAtIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
@@ -2835,7 +2842,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Path":14,"./Shared":15}],3:[function(_dereq_,module,exports){
+},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Path":16,"./Shared":17}],3:[function(_dereq_,module,exports){
 /*
  License
 
@@ -2871,7 +2878,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.13';
+	this._version = '1.2.14';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -2958,6 +2965,7 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
 Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Core.prototype, 'Mixin.Constants');
 
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
@@ -3140,7 +3148,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload":13,"./Shared":15}],4:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload":15,"./Shared":17}],4:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3522,7 +3530,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('Index');
 module.exports = Index;
-},{"./Path":14,"./Shared":15}],6:[function(_dereq_,module,exports){
+},{"./Path":16,"./Shared":17}],6:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3735,7 +3743,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":15}],7:[function(_dereq_,module,exports){
+},{"./Shared":17}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -3808,7 +3816,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":12,"./Shared":15}],8:[function(_dereq_,module,exports){
+},{"./Operation":14,"./Shared":17}],8:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -3973,7 +3981,18 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":13}],11:[function(_dereq_,module,exports){
+},{"./Overload":15}],11:[function(_dereq_,module,exports){
+var Constants = {
+	TYPE_INSERT: 0,
+	TYPE_UPDATE: 1,
+	TYPE_REMOVE: 2,
+
+	PHASE_BEFORE: 0,
+	PHASE_AFTER: 1
+};
+
+module.exports = Constants;
+},{}],12:[function(_dereq_,module,exports){
 var Events = {
 	on: new Overload({
 		/**
@@ -4101,7 +4120,88 @@ var Events = {
 };
 
 module.exports = Events;
-},{}],12:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
+var Triggers = {
+	addTrigger: function (id, type, phase, method) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex === -1) {
+			self._trigger = self._trigger || {};
+			self._trigger[type] = self._trigger[type] || {};
+			self._trigger[type][phase] = self._trigger[type][phase] || [];
+
+			self._trigger[type][phase].push({
+				id: id,
+				method: method
+			});
+
+			return true;
+		}
+
+		return false;
+	},
+
+	removeTrigger: function (id, type, phase) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex > -1) {
+			self._trigger[type][phase].splice(triggerIndex, 1);
+		}
+
+		return false;
+	},
+
+	processTrigger: function (type, phase, oldDoc, newDoc) {
+		var self = this,
+			triggerArr,
+			triggerIndex,
+			triggerCount,
+			triggerItem;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				triggerItem = triggerArr[triggerIndex];
+
+				if (this.debug()) {
+					console.log('Triggers: Processing trigger ""')
+				}
+				triggerItem.method.apply(self, [oldDoc, newDoc]);
+			}
+		}
+	},
+
+	_triggerIndex: function (id, type, phase) {
+		var self = this,
+			triggerArr,
+			triggerCount,
+			triggerIndex;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				if (triggerArr[triggerIndex].id === id) {
+					return triggerIndex;
+				}
+			}
+		}
+
+		return -1;
+	}
+};
+
+module.exports = Triggers;
+},{}],14:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4246,7 +4346,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":14,"./Shared":15}],13:[function(_dereq_,module,exports){
+},{"./Path":16,"./Shared":17}],15:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -4381,7 +4481,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],14:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4792,7 +4892,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":15}],15:[function(_dereq_,module,exports){
+},{"./Shared":17}],17:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -4914,7 +5014,9 @@ var Shared = {
 		'Mixin.Common': _dereq_('./Mixin.Common'),
 		'Mixin.Events': _dereq_('./Mixin.Events'),
 		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
-		'Mixin.CRUD': _dereq_('./Mixin.CRUD')
+		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
+		'Mixin.Constants': _dereq_('./Mixin.Constants'),
+		'Mixin.Triggers': _dereq_('./Mixin.Triggers')
 	}
 };
 
@@ -4922,5 +5024,5 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":8,"./Mixin.ChainReactor":9,"./Mixin.Common":10,"./Mixin.Events":11,"./Overload":13}]},{},[1])(1)
+},{"./Mixin.CRUD":8,"./Mixin.ChainReactor":9,"./Mixin.Common":10,"./Mixin.Constants":11,"./Mixin.Events":12,"./Mixin.Triggers":13,"./Overload":15}]},{},[1])(1)
 });

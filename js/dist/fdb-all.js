@@ -8,7 +8,7 @@ var Core = _dereq_('../lib/Core'),
 	Overview = _dereq_('../lib/Overview');
 
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/Overview":18,"../lib/Persist":20,"../lib/View":23}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/Overview":20,"../lib/Persist":22,"../lib/View":25}],2:[function(_dereq_,module,exports){
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -307,7 +307,7 @@ ActiveBucket.prototype.sortDesc = function (a, b) {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":19,"./Shared":22}],3:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],3:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -371,6 +371,8 @@ Shared.mixin(Collection.prototype, 'Mixin.Common');
 Shared.mixin(Collection.prototype, 'Mixin.Events');
 Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
+Shared.mixin(Collection.prototype, 'Mixin.Constants');
+Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -822,7 +824,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var updated = false,
+	var oldDoc = this.decouple(doc),
+		updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -1160,6 +1163,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		}
 	}
 
+	if (updated) {
+		this.processTrigger(this.TYPE_UPDATE, this.PHASE_AFTER, oldDoc, doc);
+	}
 	return updated;
 };
 
@@ -1348,7 +1354,7 @@ Collection.prototype.remove = function (query, options, callback) {
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
-				this._dataRemoveIndex(index);
+				this._dataRemoveAtIndex(index);
 			}
 
 			//op.time('Resolve chains');
@@ -1565,7 +1571,8 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			// Insert the document
-			this._dataInsertIndex(index, doc);
+			this._dataInsertAtIndex(index, doc);
+			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
 
 			return true;
 		} else {
@@ -1583,7 +1590,7 @@ Collection.prototype._insert = function (doc, index) {
  * @param {object} doc The document to insert.
  * @private
  */
-Collection.prototype._dataInsertIndex = function (index, doc) {
+Collection.prototype._dataInsertAtIndex = function (index, doc) {
 	this._data.splice(index, 0, doc);
 };
 
@@ -1593,7 +1600,7 @@ Collection.prototype._dataInsertIndex = function (index, doc) {
  * @param {number} index The index to remove from.
  * @private
  */
-Collection.prototype._dataRemoveIndex = function (index) {
+Collection.prototype._dataRemoveAtIndex = function (index) {
 	this._data.splice(index, 1);
 };
 
@@ -3140,7 +3147,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":19,"./Shared":22}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":21,"./Shared":24}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3165,6 +3172,8 @@ CollectionGroup.prototype.init = function (name) {
 Shared.addModule('CollectionGroup', CollectionGroup);
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
@@ -3389,7 +3398,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":22}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":24}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3425,7 +3434,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.13';
+	this._version = '1.2.14';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3512,6 +3521,7 @@ Core.prototype.shared = Shared;
 Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
 Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Core.prototype, 'Mixin.Constants');
 
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
@@ -3694,7 +3704,7 @@ Core.prototype.peekCat = function (search) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":17,"./Shared":22}],6:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":19,"./Shared":24}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3743,6 +3753,8 @@ Shared.addModule('Document', Document);
 Shared.mixin(Document.prototype, 'Mixin.Common');
 Shared.mixin(Document.prototype, 'Mixin.Events');
 Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Document.prototype, 'Mixin.Constants');
+Shared.mixin(Document.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
@@ -4061,7 +4073,7 @@ Core.prototype.document = function (documentName) {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":3,"./Shared":22}],8:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":24}],8:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4603,7 +4615,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":17,"./Shared":22}],9:[function(_dereq_,module,exports){
+},{"./Overload":19,"./Shared":24}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4957,7 +4969,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('Index');
 module.exports = Index;
-},{"./Path":19,"./Shared":22}],10:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5170,7 +5182,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":22}],11:[function(_dereq_,module,exports){
+},{"./Shared":24}],11:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -5243,7 +5255,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":16,"./Shared":22}],12:[function(_dereq_,module,exports){
+},{"./Operation":18,"./Shared":24}],12:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -5408,7 +5420,18 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":17}],15:[function(_dereq_,module,exports){
+},{"./Overload":19}],15:[function(_dereq_,module,exports){
+var Constants = {
+	TYPE_INSERT: 0,
+	TYPE_UPDATE: 1,
+	TYPE_REMOVE: 2,
+
+	PHASE_BEFORE: 0,
+	PHASE_AFTER: 1
+};
+
+module.exports = Constants;
+},{}],16:[function(_dereq_,module,exports){
 var Events = {
 	on: new Overload({
 		/**
@@ -5536,7 +5559,88 @@ var Events = {
 };
 
 module.exports = Events;
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
+var Triggers = {
+	addTrigger: function (id, type, phase, method) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex === -1) {
+			self._trigger = self._trigger || {};
+			self._trigger[type] = self._trigger[type] || {};
+			self._trigger[type][phase] = self._trigger[type][phase] || [];
+
+			self._trigger[type][phase].push({
+				id: id,
+				method: method
+			});
+
+			return true;
+		}
+
+		return false;
+	},
+
+	removeTrigger: function (id, type, phase) {
+		var self = this,
+			triggerIndex;
+
+		triggerIndex = self._triggerIndex(id, type, phase);
+
+		if (triggerIndex > -1) {
+			self._trigger[type][phase].splice(triggerIndex, 1);
+		}
+
+		return false;
+	},
+
+	processTrigger: function (type, phase, oldDoc, newDoc) {
+		var self = this,
+			triggerArr,
+			triggerIndex,
+			triggerCount,
+			triggerItem;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				triggerItem = triggerArr[triggerIndex];
+
+				if (this.debug()) {
+					console.log('Triggers: Processing trigger ""')
+				}
+				triggerItem.method.apply(self, [oldDoc, newDoc]);
+			}
+		}
+	},
+
+	_triggerIndex: function (id, type, phase) {
+		var self = this,
+			triggerArr,
+			triggerCount,
+			triggerIndex;
+
+		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+			triggerArr = self._trigger[type][phase];
+			triggerCount = triggerArr.length;
+
+			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
+				if (triggerArr[triggerIndex].id === id) {
+					return triggerIndex;
+				}
+			}
+		}
+
+		return -1;
+	}
+};
+
+module.exports = Triggers;
+},{}],18:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5681,7 +5785,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":19,"./Shared":22}],17:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],19:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -5816,7 +5920,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],18:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -5842,6 +5946,8 @@ Overview.prototype.init = function (name) {
 Shared.addModule('Overview', Overview);
 Shared.mixin(Overview.prototype, 'Mixin.Common');
 Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Overview.prototype, 'Mixin.Constants');
+Shared.mixin(Overview.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
 Document = _dereq_('./Document');
@@ -5981,7 +6087,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":22}],19:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":24}],21:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -6392,7 +6498,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":22}],20:[function(_dereq_,module,exports){
+},{"./Shared":24}],22:[function(_dereq_,module,exports){
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
@@ -6703,7 +6809,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":22,"localforage":30}],21:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":24,"localforage":32}],23:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -6743,7 +6849,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":22}],22:[function(_dereq_,module,exports){
+},{"./Shared":24}],24:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -6865,7 +6971,9 @@ var Shared = {
 		'Mixin.Common': _dereq_('./Mixin.Common'),
 		'Mixin.Events': _dereq_('./Mixin.Events'),
 		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
-		'Mixin.CRUD': _dereq_('./Mixin.CRUD')
+		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
+		'Mixin.Constants': _dereq_('./Mixin.Constants'),
+		'Mixin.Triggers': _dereq_('./Mixin.Triggers')
 	}
 };
 
@@ -6873,7 +6981,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Events":15,"./Overload":17}],23:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Constants":15,"./Mixin.Events":16,"./Mixin.Triggers":17,"./Overload":19}],25:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6912,6 +7020,8 @@ View.prototype.init = function (name, query, options) {
 Shared.addModule('View', View);
 Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
+Shared.mixin(View.prototype, 'Mixin.Constants');
+Shared.mixin(View.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
 CollectionGroup = _dereq_('./CollectionGroup');
@@ -7710,7 +7820,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":21,"./Shared":22}],24:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":23,"./Shared":24}],26:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -7817,7 +7927,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":26}],25:[function(_dereq_,module,exports){
+},{"asap":28}],27:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -7999,7 +8109,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":24,"asap":26}],26:[function(_dereq_,module,exports){
+},{"./core.js":26,"asap":28}],28:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -8116,7 +8226,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":31}],27:[function(_dereq_,module,exports){
+},{"_process":33}],29:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -8490,7 +8600,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":25}],28:[function(_dereq_,module,exports){
+},{"promise":27}],30:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -8942,7 +9052,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":25}],29:[function(_dereq_,module,exports){
+},{"promise":27}],31:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -9484,7 +9594,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":25}],30:[function(_dereq_,module,exports){
+},{"promise":27}],32:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -9905,7 +10015,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":27,"./drivers/localstorage":28,"./drivers/websql":29,"promise":25}],31:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":29,"./drivers/localstorage":30,"./drivers/websql":31,"promise":27}],33:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};

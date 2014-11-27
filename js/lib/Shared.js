@@ -119,7 +119,9 @@ var Shared = {
 		'Mixin.Common': require('./Mixin.Common'),
 		'Mixin.Events': require('./Mixin.Events'),
 		'Mixin.ChainReactor': require('./Mixin.ChainReactor'),
-		'Mixin.CRUD': require('./Mixin.CRUD')
+		'Mixin.CRUD': require('./Mixin.CRUD'),
+		'Mixin.Constants': require('./Mixin.Constants'),
+		'Mixin.Triggers': require('./Mixin.Triggers')
 	}
 };
 

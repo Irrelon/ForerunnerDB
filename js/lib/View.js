@@ -36,6 +36,8 @@ View.prototype.init = function (name, query, options) {
 Shared.addModule('View', View);
 Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
+Shared.mixin(View.prototype, 'Mixin.Constants');
+Shared.mixin(View.prototype, 'Mixin.Triggers');
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');
