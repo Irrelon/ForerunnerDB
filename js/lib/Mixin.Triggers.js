@@ -49,7 +49,42 @@ var Triggers = {
 				triggerItem = triggerArr[triggerIndex];
 
 				if (this.debug()) {
-					console.log('Triggers: Processing trigger ""')
+					var typeName,
+						phaseName;
+
+					switch (type) {
+						case this.TYPE_INSERT:
+							typeName = 'insert';
+							break;
+
+						case this.TYPE_UPDATE:
+							typeName = 'update';
+							break;
+
+						case this.TYPE_REMOVE:
+							typeName = 'remove';
+							break;
+
+						default:
+							typeName = '';
+							break;
+					}
+
+					switch (phase) {
+						case this.PHASE_BEFORE:
+							phaseName = 'before';
+							break;
+
+						case this.PHASE_AFTER:
+							phaseName = 'after';
+							break;
+
+						default:
+							phaseName = '';
+							break;
+					}
+
+					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
 				triggerItem.method.apply(self, [oldDoc, newDoc]);
 			}

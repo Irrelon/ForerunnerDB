@@ -439,11 +439,17 @@ Collection.prototype.update = function (query, update, options) {
 		dataSet,
 		updated,
 		updateCall = function (doc) {
+			var oldDoc = self.decouple(doc),
+				result;
+
 			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
 				// Remove item from indexes
 				self._removeIndex(doc);
 
-				var result = self.updateObject(doc, update, query, options, '');
+				result = self.updateObject(doc, update, query, options, '');
+				if (result) {
+					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
+				}
 
 				// Update the item in the primary index
 				if (self._insertIndex(doc)) {
@@ -452,7 +458,12 @@ Collection.prototype.update = function (query, update, options) {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
 				}
 			} else {
-				return self.updateObject(doc, update, query, options, '');
+				result = self.updateObject(doc, update, query, options, '');
+				if (result) {
+					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
+				}
+
+				return result;
 			}
 		};
 
@@ -541,8 +552,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 			if (i.substr(0, 1) === '$') {
 				// Check for commands
 				switch (i) {
+					case '$key':
 					case '$index':
-						// Ignore $index operators
+						// Ignore some operators
 						operation = true;
 						break;
 
@@ -733,7 +745,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									pathSolver;
 
 								// Check if we have an options object for our operation
-								if (optionObj && optionObj.key) {
+								if (update[i].$key) {
+									hashMode = false;
+									pathSolver = new Path(update[i].$key);
+									objHash = pathSolver.value(update[i])[0];
+								} else if (optionObj && optionObj.key) {
 									hashMode = false;
 									pathSolver = new Path(optionObj.key);
 									objHash = pathSolver.value(update[i])[0];
@@ -858,9 +874,6 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		}
 	}
 
-	if (updated) {
-		this.processTrigger(this.TYPE_UPDATE, this.PHASE_AFTER, oldDoc, doc);
-	}
 	return updated;
 };
 
@@ -2878,7 +2891,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.14';
+	this._version = '1.2.15';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -4172,7 +4185,42 @@ var Triggers = {
 				triggerItem = triggerArr[triggerIndex];
 
 				if (this.debug()) {
-					console.log('Triggers: Processing trigger ""')
+					var typeName,
+						phaseName;
+
+					switch (type) {
+						case this.TYPE_INSERT:
+							typeName = 'insert';
+							break;
+
+						case this.TYPE_UPDATE:
+							typeName = 'update';
+							break;
+
+						case this.TYPE_REMOVE:
+							typeName = 'remove';
+							break;
+
+						default:
+							typeName = '';
+							break;
+					}
+
+					switch (phase) {
+						case this.PHASE_BEFORE:
+							phaseName = 'before';
+							break;
+
+						case this.PHASE_AFTER:
+							phaseName = 'after';
+							break;
+
+						default:
+							phaseName = '';
+							break;
+					}
+
+					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
 				triggerItem.method.apply(self, [oldDoc, newDoc]);
 			}
