@@ -1058,6 +1058,8 @@ Collection.prototype.remove = function (query, options, callback) {
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
 				this._dataRemoveAtIndex(index);
+
+				self.processTrigger(self.TYPE_REMOVE, self.PHASE_AFTER, dataItem, {});
 			}
 
 			//op.time('Resolve chains');
