@@ -698,6 +698,88 @@ test("Core - Collection.update() :: $addToSet operator for unique push operation
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: $addToSet operator for unique push operation against a specific key path using new $key", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var temp = db.collection('temp').truncate(),
+		updated,
+		before;
+
+	temp.insert({
+		_id: '1',
+		arr: []
+	});
+
+	before = temp.find();
+
+	ok(before.length === 1 && before[0].arr.length === 0, "Check existing document count is correct");
+
+	// Now push an entry into the array using $addToSet
+	updated = temp.update({
+		_id: '1'
+	}, {
+		$addToSet: {
+			arr: {
+				$key: 'moo.foo',
+				name: 'Fufu',
+				test: '1',
+				moo: {
+					foo: 1
+				}
+			}
+		}
+	});
+
+	before = temp.find();
+
+	ok(before.length === 1 && before[0].arr.length === 1, "Check updated document count is correct");
+	ok(updated.length === 1, "Check that the update operation returned correct count");
+	ok(before[0].arr[0].$key === undefined, "Check that the $key property does not exist in the pushed object: " + before[0].arr[0].$key);
+
+	// Now push the same entry into the array using $addToSet but only checking against moo.foo - this should pass
+	updated = temp.update({
+		_id: '1'
+	}, {
+		$addToSet: {
+			arr: {
+				$key: 'moo.foo',
+				name: 'Fufu',
+				test: '2',
+				moo: {
+					foo: 2
+				}
+			}
+		}
+	});
+
+	before = temp.find();
+
+	ok(before.length === 1 && before[0].arr.length === 2, "Check updated document count is correct");
+	ok(updated.length === 1, "Check that the update operation returned correct count");
+	ok(updated && updated[0] && updated[0].arr.length === 2, "Check that the update operation returned correct count");
+	ok(before[0].arr[1].$key === undefined, "Check that the $key property does not exist in the pushed object: " + before[0].arr[1].$key);
+
+	// Now push the same entry into the array using $addToSet but test against the "name" field, should fail
+	updated = temp.update({
+		_id: '1'
+	}, {
+		$addToSet: {
+			arr: {
+				$key: 'name',
+				name: 'Fufu'
+			}
+		}
+	});
+
+	before = temp.find();
+
+	ok(before.length === 1 && before[0].arr.length === 2, "Check updated document count is correct");
+	ok(updated.length === 0, "Check that the update operation returned correct count");
+
+	base.dbDown();
+});
+
 test("Core - Collection.find() :: Value in array of strings", function() {
 	base.dbUp();
 	base.dataUp();
