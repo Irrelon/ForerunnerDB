@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.15 (27th Nov 2014)
+## Version 1.2.16 (27th Nov 2014)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -210,7 +210,7 @@ The following example inserts "Milk" to the "shoppingList" array at index 1 in t
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array.
 
-ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check uniqueness against.
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check uniqueness against by using the $key property.
 
 In the following example $addToSet is used to check uniqueness against the whole document being added:
 
@@ -272,13 +272,10 @@ Now in the example below we specify which key to test uniqueness against:
     }, {
         $addToSet: {
             arr: {
+            	$key: 'test',
                 name: 'Fufu',
                 test: '2'
             }
-        }
-    }, {
-        $addToSet: {
-            key: 'test'
         }
     });
 
