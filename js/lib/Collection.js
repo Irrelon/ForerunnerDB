@@ -1043,7 +1043,6 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
-
 		return returnArr;
 	} else {
 		dataSet = this.find(query, {$decouple: false});
