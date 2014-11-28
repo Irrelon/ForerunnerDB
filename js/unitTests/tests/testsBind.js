@@ -1139,4 +1139,48 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewDown();
 		base.dbDown();
 	});
+
+	/*test("Bind - View.on() :: Update from Collection", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{for arr}}{^{if show}}{^{for subjects}}<p>{^{:name}}</p>{{/for}}{{/if}}{{/for}}</li>'
+		});
+
+		user.setData({
+			_id: '2342',
+			arr: [{
+				show: false,
+				subjects: [{
+					name: "hello1",
+					available: 0
+				}, {
+					name: "hello2",
+					available: 0
+				}, {
+					name: "hello3",
+					available: 0
+				}]
+			}]
+		});
+
+		var currentName = $('#testTarget').find('#2342').text();
+		ok(currentName === 'hello', "Insert single document");
+
+		user.update({
+			_id: '2342'
+		}, {
+			name: "hello2"
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'hello2', "Update single document");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});*/
 });

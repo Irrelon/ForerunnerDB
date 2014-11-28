@@ -750,6 +750,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									hashMode = false;
 									pathSolver = new Path(update[i].$key);
 									objHash = pathSolver.value(update[i])[0];
+
+									// Remove the key from the object before we add it
+									delete update[i].$key;
 								} else if (optionObj && optionObj.key) {
 									hashMode = false;
 									pathSolver = new Path(optionObj.key);
@@ -1049,7 +1052,6 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
-
 		return returnArr;
 	} else {
 		dataSet = this.find(query, {$decouple: false});
@@ -1064,6 +1066,8 @@ Collection.prototype.remove = function (query, options, callback) {
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
 				this._dataRemoveAtIndex(index);
+
+				self.processTrigger(self.TYPE_REMOVE, self.PHASE_AFTER, dataItem, {});
 			}
 
 			//op.time('Resolve chains');
@@ -3143,7 +3147,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.15';
+	this._version = '1.2.16';
 };
 
 Core.prototype.moduleLoaded = Overload({
