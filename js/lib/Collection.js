@@ -744,6 +744,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									hashMode = false;
 									pathSolver = new Path(update[i].$key);
 									objHash = pathSolver.value(update[i])[0];
+
+									// Remove the key from the object before we add it
+									delete update[i].$key;
 								} else if (optionObj && optionObj.key) {
 									hashMode = false;
 									pathSolver = new Path(optionObj.key);
