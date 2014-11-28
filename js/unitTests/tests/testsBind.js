@@ -1140,14 +1140,14 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	/*test("Bind - View.on() :: Update from Collection", function () {
+	test("Bind - View.on() :: Update with binding library logic check", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
 
 		userView.link('#testTarget', {
-			template: '<li data-link="id{:_id}">{^{for arr}}{^{if show}}{^{for subjects}}<p>{^{:name}}</p>{{/for}}{{/if}}{{/for}}</li>'
+			template: '<li data-link="id{:_id}">{^{for arr}}{^{if show}}{^{for subjects}}{^{:name}}:{^{:available}},{{/for}}{{/if}}{{/for}}</li>'
 		});
 
 		user.setData({
@@ -1155,12 +1155,15 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			arr: [{
 				show: false,
 				subjects: [{
+					_id: 1,
 					name: "hello1",
 					available: 0
 				}, {
+					_id: 2,
 					name: "hello2",
 					available: 0
 				}, {
+					_id: 3,
 					name: "hello3",
 					available: 0
 				}]
@@ -1168,19 +1171,131 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		});
 
 		var currentName = $('#testTarget').find('#2342').text();
-		ok(currentName === 'hello', "Insert single document");
+		ok(currentName === '', "Bind is currently blank");
 
 		user.update({
 			_id: '2342'
 		}, {
-			name: "hello2"
+			arr: {
+				show: true
+			}
 		});
 
 		var newName = $('#testTarget').find('#2342').text();
-		ok(newName === 'hello2', "Update single document");
+		ok(newName === 'hello1:0,hello2:0,hello3:0,', "Update single document");
+
+		user.update({
+			_id: '2342',
+			arr: {
+				subjects: {
+					_id: 2
+				}
+			}
+		}, {
+			arr: {
+				'subjects.$': {
+					available: 1
+				}
+			}
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'hello1:0,hello2:1,hello3:0,', "Update single document");
 
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
-	});*/
+	});
+
+	test("Bind - Collection.on() :: Bind then modify then unbind then modify check unbind is working", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		user.link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		user.setData({
+			_id: '2342',
+			name: 'moo1'
+		});
+
+		var currentName = $('#testTarget').find('#2342').text();
+		ok(currentName === 'moo1', "Bind is currently moo1");
+
+		user.update({
+			_id: '2342'
+		}, {
+			name: 'moo2'
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'moo2', "Update name is now moo2");
+
+		// Unlink
+		user.unlink('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		user.update({
+			_id: '2342'
+		}, {
+			name: 'moo3'
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'moo2', "After unlink, name updated in data but HTML should still be moo2");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
+
+	test("Bind - View.on() :: Bind then modify then unbind then modify check unbind is working", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		user.setData({
+			_id: '2342',
+			name: 'moo1'
+		});
+
+		var currentName = $('#testTarget').find('#2342').text();
+		ok(currentName === 'moo1', "Bind is currently moo1");
+
+		user.update({
+			_id: '2342'
+		}, {
+			name: 'moo2'
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'moo2', "Update name is now moo2");
+
+		// Unlink
+		userView.unlink('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		user.update({
+			_id: '2342'
+		}, {
+			name: 'moo3'
+		});
+
+		var newName = $('#testTarget').find('#2342').text();
+		ok(newName === 'moo2', "After unlink, name updated in data but HTML should still be moo2");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
 });
