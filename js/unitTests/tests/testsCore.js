@@ -26,6 +26,25 @@ test("Core - Collection.setData() :: Single Document Object", function() {
 	base.dbDown();
 });
 
+test("Core - Collection.update() :: Update a document", function() {
+	base.dbUp();
+
+	user.setData(singleUserObject);
+	ok(user.find({_id: '1'})[0], "Doc exists");
+	ok(user.find({_id: '1'})[0].name === 'Sam', "Original value === Sam: " + user.find({_id: '1'})[0].name);
+
+	user.update({
+		_id: '1'
+	}, {
+		name: 'MooFoo'
+	});
+
+	ok(user.find({_id: '1'})[0], "Doc exists");
+	ok(user.find({_id: '1'})[0].name === 'MooFoo', "New value === MooFoo: " + user.find({_id: '1'})[0].name);
+
+	base.dbDown();
+});
+
 test("Core - Collection.remove() :: Remove Single Document via Find", function() {
 	base.dbUp();
 

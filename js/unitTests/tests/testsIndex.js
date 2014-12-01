@@ -270,6 +270,42 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 	base.dbDown();
 });
 
+test("Index - Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
+	base.dbUp();
+
+	var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+		collection = db.collection('test').truncate(),
+		tempName,
+		tempAge,
+		i;
+
+	for (i = 0; i < 1000; i++) {
+		tempName = names[Math.ceil(Math.random() * names.length) - 1];
+		tempAge = Math.ceil(Math.random() * 100);
+
+		collection.insert({
+			name: tempName,
+			age: tempAge
+		});
+	}
+
+	collection.ensureIndex({
+		age: 1
+	});
+
+	var explain = collection.explain({
+		age: {
+			'$gte': 30,
+			'$lte': 40
+		}
+	});
+
+	ok(explain, 'Query explanation shows range is using index: ');
+	console.log(explain);
+
+	base.dbDown();
+});
+
 /*
 test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 	base.dbUp();

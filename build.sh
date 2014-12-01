@@ -7,6 +7,7 @@ rm ./js/dist/fdb-core+persist.js
 rm ./js/dist/fdb-legacy.js
 
 rm ./js/dist/fdb-all.min.js
+rm ./js/dist/fdb-autobind.min.js
 rm ./js/dist/fdb-core.min.js
 rm ./js/dist/fdb-core+views.min.js
 rm ./js/dist/fdb-core+persist.min.js
