@@ -430,36 +430,49 @@ Collection.prototype.update = function (query, update, options) {
 
 	var self = this,
 		op = this._metrics.create('update'),
-		pKey = this._primaryKey,
 		dataSet,
 		updated,
-		updateCall = function (doc) {
-			var oldDoc = self.decouple(doc),
+		updateCall = function (originalDoc) {
+			var newDoc = self.decouple(originalDoc),
+				triggerOperation,
 				result;
 
-			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
-				// Remove item from indexes
-				self._removeFromIndexes(doc);
+			if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_UPDATE, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'update',
+					query: self.decouple(query),
+					update: self.decouple(update),
+					options: self.decouple(options),
+					op: op
+				};
 
-				result = self.updateObject(doc, update, query, options, '');
-				if (result) {
-					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, newDoc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
 				}
 
-				// Update the item in the primary index
-				if (self._insertIntoIndexes(doc)) {
-					return result;
-				} else {
-					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
+				if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE)) {
+					// Process the update against the newDoc so that the after-update trigger will see
+					// the new document as it would exist after update has been processed
+					result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+
+					// Execute triggers if update changed any data
+					if (result && self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
+						// The trigger just wants to cancel the operation
+						return false;
+					}
 				}
+
+				// No triggers complained so let's execute the replacement of the existing
+				// object with the new one
+				result = self.updateObject(originalDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
 			} else {
-				result = self.updateObject(doc, update, query, options, '');
-				if (result) {
-					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
-				}
-
-				return result;
+				// No triggers complained so let's execute the replacement of the existing
+				// object with the new one
+				result = self.updateObject(originalDoc, update, query, options, '');
 			}
+
+			return result;
 		};
 
 	op.start();
@@ -490,6 +503,38 @@ Collection.prototype.update = function (query, update, options) {
 
 	// TODO: Should we decouple the updated array before return by default?
 	return updated || [];
+};
+
+Collection.prototype._replaceObj = function (currentObj, newObj) {
+	var i;
+
+	// Check if the new document has a different primary key value from the existing one
+	// Remove item from indexes
+	this._removeFromIndexes(currentObj);
+
+	// Remove existing keys from current object
+	for (i in currentObj) {
+		if (currentObj.hasOwnProperty(i)) {
+			delete currentObj[i];
+		}
+	}
+
+	// Add new keys to current object
+	for (i in newObj) {
+		if (newObj.hasOwnProperty(i)) {
+			currentObj[i] = newObj[i];
+		}
+	}
+
+	// Update the item in the primary index
+	if (!this._insertIntoIndexes(currentObj)) {
+		throw('Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
+	}
+
+	// Update the object in the collection data
+	//this._data.splice(this._data.indexOf(currentObj), 1, newObj);
+
+	return true;
 };
 
 /**
@@ -1292,6 +1337,7 @@ Collection.prototype._insert = function (doc, index) {
 
 /**
  * Inserts a document into the internal collection data array at
+ * Inserts a document into the internal collection data array at
  * the specified index.
  * @param {number} index The index to insert at.
  * @param {object} doc The document to insert.
@@ -1341,16 +1387,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
+	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
+	this._crcLookup.uniqueSet(jString, doc);
 
-	if (!violated) {
-		this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-		this._crcLookup.uniqueSet(jString, doc);
-
-		// Insert into other indexes
-		for (arrIndex in arr) {
-			if (arr.hasOwnProperty(arrIndex)) {
-				arr[arrIndex].insert(doc);
-			}
+	// Insert into other indexes
+	for (arrIndex in arr) {
+		if (arr.hasOwnProperty(arrIndex)) {
+			arr[arrIndex].insert(doc);
 		}
 	}
 
@@ -1378,6 +1421,19 @@ Collection.prototype._removeFromIndexes = function (doc) {
 			arr[arrIndex].remove(doc);
 		}
 	}
+};
+
+/**
+ * Returns the index of the document identified by the passed item's primary key.
+ * @param {Object} item The item whose primary key should be used to lookup.
+ * @returns {Number} The index the item with the matching primary key is occupying.
+ */
+Collection.prototype.indexOfDocById = function (item) {
+	return this._data.indexOf(
+		this._primaryIndex.get(
+			item[this._primaryKey]
+		)
+	);
 };
 
 /**
