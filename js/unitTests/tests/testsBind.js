@@ -1,5 +1,5 @@
 ForerunnerDB.moduleLoaded('View, AutoBind', function () {
-	test("Core - Collection.update() :: $unset operator inside sub-array", function() {
+	test("Bind - Collection.update() :: $unset operator inside sub-array propagates to bound data", function() {
 		base.dbUp();
 		base.domUp();
 
