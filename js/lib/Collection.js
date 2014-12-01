@@ -447,7 +447,7 @@ Collection.prototype.update = function (query, update, options) {
 				}
 
 				// Update the item in the primary index
-				if (self._insertIndex(doc)) {
+				if (self._insertIntoIndexes(doc)) {
 					return result;
 				} else {
 					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
@@ -1270,7 +1270,7 @@ Collection.prototype._insert = function (doc, index) {
 
 		if (!indexViolation) {
 			// Add the item to the collection's indexes
-			this._insertIndex(doc);
+			this._insertIntoIndexes(doc);
 
 			// Check index overflow
 			if (index > this._data.length) {
@@ -1333,7 +1333,7 @@ Collection.prototype._dataReplace = function (data) {
  * @param {Object} doc The document to insert.
  * @private
  */
-Collection.prototype._insertIndex = function (doc) {
+Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
