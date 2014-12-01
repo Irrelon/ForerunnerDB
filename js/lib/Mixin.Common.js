@@ -6,11 +6,25 @@ Common = {
 	/**
 	 * Returns a non-referenced version of the passed object / array.
 	 * @param {Object} data The object or array to return as a non-referenced version.
+	 * @param {Number=} copies Optional number of copies to produce. If specified, the return
+	 * value will be an array of decoupled objects, each distinct from the other.
 	 * @returns {*}
 	 */	
-	decouple: function (data) {
+	decouple: function (data, copies) {
 		if (data !== undefined) {
-			return JSON.parse(JSON.stringify(data));
+			if (!copies) {
+				return JSON.parse(JSON.stringify(data));
+			} else {
+				var i,
+					json = JSON.stringify(data),
+					copyArr = [];
+
+				for (i = 0; i < copies; i++) {
+					copyArr.push(JSON.parse(json));
+				}
+
+				return copyArr;
+			}
 		}
 
 		return undefined;
