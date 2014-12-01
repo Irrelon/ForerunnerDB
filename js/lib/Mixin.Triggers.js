@@ -34,7 +34,11 @@ var Triggers = {
 		return false;
 	},
 
-	processTrigger: function (type, phase, oldDoc, newDoc) {
+	willTrigger: function (type, phase) {
+		return this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length;
+	},
+
+	processTrigger: function (operation, type, phase, oldDoc, newDoc) {
 		var self = this,
 			triggerArr,
 			triggerIndex,
@@ -89,7 +93,7 @@ var Triggers = {
 				}
 
 				// Run the trigger's method and store the response
-				response = triggerItem.method.call(self, oldDoc, newDoc);
+				response = triggerItem.method.call(self, operation, oldDoc, newDoc);
 
 				// Check the response for a non-expected result (anything other than
 				// undefined, true or false is considered a throwable error)
