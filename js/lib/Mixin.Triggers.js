@@ -39,7 +39,8 @@ var Triggers = {
 			triggerArr,
 			triggerIndex,
 			triggerCount,
-			triggerItem;
+			triggerItem,
+			response;
 
 		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
 			triggerArr = self._trigger[type][phase];
@@ -86,8 +87,25 @@ var Triggers = {
 
 					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
-				triggerItem.method.apply(self, [oldDoc, newDoc]);
+
+				// Run the trigger's method and store the response
+				response = triggerItem.method.call(self, oldDoc, newDoc);
+
+				// Check the response for a non-expected result (anything other than
+				// undefined, true or false is considered a throwable error)
+				if (response === false) {
+					// The trigger wants us to cancel operations
+					return false;
+				}
+
+				if (response !== undefined && response !== true && response !== false) {
+					// Trigger responded with error, throw the error
+					throw('Trigger error: ' + response);
+				}
 			}
+
+			// Triggers all ran without issue, return a success (true)
+			return true;
 		}
 	},
 
