@@ -439,7 +439,7 @@ Collection.prototype.update = function (query, update, options) {
 
 			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
 				// Remove item from indexes
-				self._removeIndex(doc);
+				self._removeFromIndexes(doc);
 
 				result = self.updateObject(doc, update, query, options, '');
 				if (result) {
@@ -1055,7 +1055,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				dataItem = dataSet[i];
 
 				// Remove the item from the collection's indexes
-				this._removeIndex(dataItem);
+				this._removeFromIndexes(dataItem);
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
@@ -1341,13 +1341,16 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
 
-	// Insert into other indexes
-	for (arrIndex in arr) {
-		if (arr.hasOwnProperty(arrIndex)) {
-			arr[arrIndex].insert(doc);
+	if (!violated) {
+		this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
+		this._crcLookup.uniqueSet(jString, doc);
+
+		// Insert into other indexes
+		for (arrIndex in arr) {
+			if (arr.hasOwnProperty(arrIndex)) {
+				arr[arrIndex].insert(doc);
+			}
 		}
 	}
 
@@ -1359,7 +1362,7 @@ Collection.prototype._insertIntoIndexes = function (doc) {
  * @param {Object} doc The document to remove.
  * @private
  */
-Collection.prototype._removeIndex = function (doc) {
+Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		jString = JSON.stringify(doc);
