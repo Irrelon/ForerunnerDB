@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.16 (27th Nov 2014)
+## Version 1.2.17 (2nd Dec 2014)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -682,6 +682,7 @@ the collection:
 
 ### Prerequisites
 * Data-binding requires jQuery to be loaded
+* The AutoBind module must be loaded
 
 ### HTML
 	<ul id="myList">
@@ -948,10 +949,11 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - Version 1.3
 * Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6) - COMPLETE
-* Data persistence added to documentation
-* Remove iOS from this repo, add to its own
-* Remove server from this repo, add to its own
-* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5)
+* Data persistence added to documentation - COMPLETE
+* Remove iOS from this repo, add to its own - COMPLETE
+* Remove server from this repo, add to its own - COMPLETE
+* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5) - COMPLETE
+* Trigger support
 
 #### Scheduled Features - Version 1.4
 * Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)

@@ -740,36 +740,49 @@ Collection.prototype.update = function (query, update, options) {
 
 	var self = this,
 		op = this._metrics.create('update'),
-		pKey = this._primaryKey,
 		dataSet,
 		updated,
-		updateCall = function (doc) {
-			var oldDoc = self.decouple(doc),
+		updateCall = function (originalDoc) {
+			var newDoc = self.decouple(originalDoc),
+				triggerOperation,
 				result;
 
-			if (update && update[pKey] !== undefined && update[pKey] != doc[pKey]) {
-				// Remove item from indexes
-				self._removeIndex(doc);
+			if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_UPDATE, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'update',
+					query: self.decouple(query),
+					update: self.decouple(update),
+					options: self.decouple(options),
+					op: op
+				};
 
-				result = self.updateObject(doc, update, query, options, '');
-				if (result) {
-					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, newDoc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
 				}
 
-				// Update the item in the primary index
-				if (self._insertIndex(doc)) {
-					return result;
-				} else {
-					throw('Primary key violation in update! Key violated: ' + doc[pKey]);
+				if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE)) {
+					// Process the update against the newDoc so that the after-update trigger will see
+					// the new document as it would exist after update has been processed
+					result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+
+					// Execute triggers if update changed any data
+					if (result && self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
+						// The trigger just wants to cancel the operation
+						return false;
+					}
 				}
+
+				// No triggers complained so let's execute the replacement of the existing
+				// object with the new one
+				result = self.updateObject(originalDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
 			} else {
-				result = self.updateObject(doc, update, query, options, '');
-				if (result) {
-					self.processTrigger(self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, doc);
-				}
-
-				return result;
+				// No triggers complained so let's execute the replacement of the existing
+				// object with the new one
+				result = self.updateObject(originalDoc, update, query, options, '');
 			}
+
+			return result;
 		};
 
 	op.start();
@@ -800,6 +813,38 @@ Collection.prototype.update = function (query, update, options) {
 
 	// TODO: Should we decouple the updated array before return by default?
 	return updated || [];
+};
+
+Collection.prototype._replaceObj = function (currentObj, newObj) {
+	var i;
+
+	// Check if the new document has a different primary key value from the existing one
+	// Remove item from indexes
+	this._removeFromIndexes(currentObj);
+
+	// Remove existing keys from current object
+	for (i in currentObj) {
+		if (currentObj.hasOwnProperty(i)) {
+			delete currentObj[i];
+		}
+	}
+
+	// Add new keys to current object
+	for (i in newObj) {
+		if (newObj.hasOwnProperty(i)) {
+			currentObj[i] = newObj[i];
+		}
+	}
+
+	// Update the item in the primary index
+	if (!this._insertIntoIndexes(currentObj)) {
+		throw('Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
+	}
+
+	// Update the object in the collection data
+	//this._data.splice(this._data.indexOf(currentObj), 1, newObj);
+
+	return true;
 };
 
 /**
@@ -1365,7 +1410,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				dataItem = dataSet[i];
 
 				// Remove the item from the collection's indexes
-				this._removeIndex(dataItem);
+				this._removeFromIndexes(dataItem);
 
 				// Remove data from internal stores
 				index = this._data.indexOf(dataItem);
@@ -1580,7 +1625,7 @@ Collection.prototype._insert = function (doc, index) {
 
 		if (!indexViolation) {
 			// Add the item to the collection's indexes
-			this._insertIndex(doc);
+			this._insertIntoIndexes(doc);
 
 			// Check index overflow
 			if (index > this._data.length) {
@@ -1601,6 +1646,7 @@ Collection.prototype._insert = function (doc, index) {
 };
 
 /**
+ * Inserts a document into the internal collection data array at
  * Inserts a document into the internal collection data array at
  * the specified index.
  * @param {number} index The index to insert at.
@@ -1643,7 +1689,7 @@ Collection.prototype._dataReplace = function (data) {
  * @param {Object} doc The document to insert.
  * @private
  */
-Collection.prototype._insertIndex = function (doc) {
+Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
@@ -1669,7 +1715,7 @@ Collection.prototype._insertIndex = function (doc) {
  * @param {Object} doc The document to remove.
  * @private
  */
-Collection.prototype._removeIndex = function (doc) {
+Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		jString = JSON.stringify(doc);
@@ -1685,6 +1731,19 @@ Collection.prototype._removeIndex = function (doc) {
 			arr[arrIndex].remove(doc);
 		}
 	}
+};
+
+/**
+ * Returns the index of the document identified by the passed item's primary key.
+ * @param {Object} item The item whose primary key should be used to lookup.
+ * @returns {Number} The index the item with the matching primary key is occupying.
+ */
+Collection.prototype.indexOfDocById = function (item) {
+	return this._data.indexOf(
+		this._primaryIndex.get(
+			item[this._primaryKey]
+		)
+	);
 };
 
 /**
@@ -3451,7 +3510,7 @@ var Core = function () {
 Core.prototype.init = function () {
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.16';
+	this._version = '1.2.17';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -5340,11 +5399,25 @@ Common = {
 	/**
 	 * Returns a non-referenced version of the passed object / array.
 	 * @param {Object} data The object or array to return as a non-referenced version.
+	 * @param {Number=} copies Optional number of copies to produce. If specified, the return
+	 * value will be an array of decoupled objects, each distinct from the other.
 	 * @returns {*}
 	 */	
-	decouple: function (data) {
+	decouple: function (data, copies) {
 		if (data !== undefined) {
-			return JSON.parse(JSON.stringify(data));
+			if (!copies) {
+				return JSON.parse(JSON.stringify(data));
+			} else {
+				var i,
+					json = JSON.stringify(data),
+					copyArr = [];
+
+				for (i = 0; i < copies; i++) {
+					copyArr.push(JSON.parse(json));
+				}
+
+				return copyArr;
+			}
 		}
 
 		return undefined;
@@ -5613,12 +5686,17 @@ var Triggers = {
 		return false;
 	},
 
-	processTrigger: function (type, phase, oldDoc, newDoc) {
+	willTrigger: function (type, phase) {
+		return this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length;
+	},
+
+	processTrigger: function (operation, type, phase, oldDoc, newDoc) {
 		var self = this,
 			triggerArr,
 			triggerIndex,
 			triggerCount,
-			triggerItem;
+			triggerItem,
+			response;
 
 		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
 			triggerArr = self._trigger[type][phase];
@@ -5665,8 +5743,25 @@ var Triggers = {
 
 					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
-				triggerItem.method.apply(self, [oldDoc, newDoc]);
+
+				// Run the trigger's method and store the response
+				response = triggerItem.method.call(self, operation, oldDoc, newDoc);
+
+				// Check the response for a non-expected result (anything other than
+				// undefined, true or false is considered a throwable error)
+				if (response === false) {
+					// The trigger wants us to cancel operations
+					return false;
+				}
+
+				if (response !== undefined && response !== true && response !== false) {
+					// Trigger responded with error, throw the error
+					throw('Trigger error: ' + response);
+				}
 			}
+
+			// Triggers all ran without issue, return a success (true)
+			return true;
 		}
 	},
 

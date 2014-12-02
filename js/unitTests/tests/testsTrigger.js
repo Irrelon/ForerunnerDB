@@ -3,7 +3,7 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 	var coll = db.collection('transformColl').truncate(),
 		triggerMethod;
 
-	triggerMethod = function (oldData, newData) {
+	triggerMethod = function (operation, oldData, newData) {
 		var slotsIndex,
 			slotsArr = newData.slots,
 			slotsCount,
@@ -22,6 +22,11 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 				slotItem = slotsArr[slotsIndex];
 				subjectsArr = slotItem.subjects;
 
+				/*update({
+					slots: {
+
+					}
+				})*/
 				slotItem.anyAvailable = false;
 
 				if (subjectsArr && subjectsArr.length) {
