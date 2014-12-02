@@ -3,7 +3,7 @@ ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/)
 ## Version 1.2.17 (2nd Dec 2014)
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL database for your browser. It supports the same query language as MongoDB and runs on browsers and Node.js.
+ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
 
 ## Demo
 You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http://www.forerunnerdb.com/demo.html)
