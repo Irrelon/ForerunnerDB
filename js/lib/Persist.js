@@ -177,13 +177,13 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 // Extend the Collection prototype with persist methods
-Collection.prototype.drop = function (removePersistent) {
+Collection.prototype.drop = function (removePersistent, callback) {
 	// Remove persistent storage
 	if (removePersistent) {
 		if (this._name) {
 			if (this._db) {
 				// Save the collection data
-				this._db.persist.drop(this._name);
+				this._db.persist.drop(this._name, callback);
 			} else {
 				if (callback) {
 					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
