@@ -26,11 +26,12 @@ Overload = require('./Overload');
  * The main ForerunnerDB core object.
  * @constructor
  */
-var Core = function () {
+var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
+	this._name = name;
 	this._collection = {};
 	this._debug = {};
 	this._version = '1.2.17';
