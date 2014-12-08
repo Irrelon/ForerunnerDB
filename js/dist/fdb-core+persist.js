@@ -3199,14 +3199,15 @@ Overload = _dereq_('./Overload');
  * The main ForerunnerDB core object.
  * @constructor
  */
-var Core = function () {
+var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
+	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.17';
+	this._version = '1.2.18';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -5471,13 +5472,13 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 // Extend the Collection prototype with persist methods
-Collection.prototype.drop = function (removePersistent) {
+Collection.prototype.drop = function (removePersistent, callback) {
 	// Remove persistent storage
 	if (removePersistent) {
 		if (this._name) {
 			if (this._db) {
 				// Save the collection data
-				this._db.persist.drop(this._name);
+				this._db.persist.drop(this._name, callback);
 			} else {
 				if (callback) {
 					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');

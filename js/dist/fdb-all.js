@@ -3503,14 +3503,15 @@ Overload = _dereq_('./Overload');
  * The main ForerunnerDB core object.
  * @constructor
  */
-var Core = function () {
+var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
+	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.17';
+	this._version = '1.2.18';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -4331,15 +4332,24 @@ Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyFie
 	};
 };
 
+/**
+ * Hook the events the chart needs to know about from the internal collection.
+ * @private
+ */
 Highchart.prototype._hookEvents = function () {
 	var self = this;
 
 	self._collection.on('change', function () { self._changeListener.apply(self, arguments); });
 
 	// If the collection is dropped, clean up after ourselves
-	self._collection.on('drop', function () { self._dropListener.apply(self, arguments); });
+	self._collection.on('drop', function () { self.drop.apply(self, arguments); });
 };
 
+/**
+ * Handles changes to the collection data that the chart is reading from and then
+ * updates the data in the chart display.
+ * @private
+ */
 Highchart.prototype._changeListener = function () {
 	var self = this;
 
@@ -4401,18 +4411,15 @@ Highchart.prototype._changeListener = function () {
 	}
 };
 
-Highchart.prototype._dropListener = function () {
-	var self = this;
-
-	self._collection.off('change', self._changeListener);
-	self._collection.off('drop', self._dropListener);
-};
-
+/**
+ * Destroys the chart and all internal references.
+ * @returns {Highchart}
+ */
 Highchart.prototype.drop = function () {
 	this._chart.destroy();
 
 	this._collection.off('change', this._changeListener);
-	this._collection.off('drop', this._dropListener);
+	this._collection.off('drop', this.drop);
 
 	delete this._collection._highcharts[this._options.selector];
 	delete this._chart;
@@ -4428,6 +4435,10 @@ Collection.prototype.init = function () {
 	CollectionInit.apply(this, arguments);
 };
 
+/**
+ * Creates a pie chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.pieChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4469,6 +4480,10 @@ Collection.prototype.pieChart = new Overload({
 	}
 });
 
+/**
+ * Creates a line chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.lineChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4511,6 +4526,10 @@ Collection.prototype.lineChart = new Overload({
 	}
 });
 
+/**
+ * Creates an area chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.areaChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4553,6 +4572,10 @@ Collection.prototype.areaChart = new Overload({
 	}
 });
 
+/**
+ * Creates a column chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.columnChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4595,6 +4618,10 @@ Collection.prototype.columnChart = new Overload({
 	}
 });
 
+/**
+ * Creates a bar chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.barChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4637,6 +4664,10 @@ Collection.prototype.barChart = new Overload({
 	}
 });
 
+/**
+ * Creates a stacked bar chart from the collection.
+ * @type {Overload}
+ */
 Collection.prototype.stackedBarChart = new Overload({
 	/**
 	 * Chart via options object.
@@ -4683,6 +4714,10 @@ Collection.prototype.stackedBarChart = new Overload({
 	}
 });
 
+/**
+ * Removes a chart from the page by it's selector.
+ * @param {String} selector The chart selector.
+ */
 Collection.prototype.dropChart = function (selector) {
 	if (this._highcharts[selector]) {
 		this._highcharts[selector].drop();
@@ -6825,13 +6860,13 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 // Extend the Collection prototype with persist methods
-Collection.prototype.drop = function (removePersistent) {
+Collection.prototype.drop = function (removePersistent, callback) {
 	// Remove persistent storage
 	if (removePersistent) {
 		if (this._name) {
 			if (this._db) {
 				// Save the collection data
-				this._db.persist.drop(this._name);
+				this._db.persist.drop(this._name, callback);
 			} else {
 				if (callback) {
 					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');

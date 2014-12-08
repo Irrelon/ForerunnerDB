@@ -34,7 +34,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.17';
+	this._version = '1.2.18';
 };
 
 Core.prototype.moduleLoaded = Overload({

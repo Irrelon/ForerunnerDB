@@ -4,6 +4,7 @@ var AutoBind = _dereq_('../lib/AutoBind');
 module.exports = AutoBind;
 
 },{"../lib/AutoBind":2}],2:[function(_dereq_,module,exports){
+// TODO: Make sure all logs start with ForerunnerDB.AutoBind:
 /**
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements

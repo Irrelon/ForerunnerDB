@@ -2947,14 +2947,15 @@ Overload = _dereq_('./Overload');
  * The main ForerunnerDB core object.
  * @constructor
  */
-var Core = function () {
+var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
+	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.17';
+	this._version = '1.2.18';
 };
 
 Core.prototype.moduleLoaded = Overload({
