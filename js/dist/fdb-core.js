@@ -3235,7 +3235,7 @@ Core.prototype.drop = function (callback) {
 		finishCount = 0;
 
 	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-		this.collection(arr[arrIndex]).drop(function () {
+		this.collection(arr[arrIndex].name).drop(function () {
 			finishCount++;
 
 			if (finishCount === arrCount) {

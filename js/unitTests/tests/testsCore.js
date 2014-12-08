@@ -6,6 +6,22 @@ test("Core - Init DB", function() {
 	base.dbDown();
 });
 
+test("Core - Drop DB", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+	coll.insert({moo: true});
+
+	ok(coll.find().length === 1, 'Check collection has been set up correctly');
+
+	db.drop();
+
+	var coll = db.collection('test');
+	ok(coll.find().length === 0, 'Check db had dropped collections');
+
+	base.dbDown();
+});
+
 test("Core - DB.collection() :: Create Collection", function() {
 	base.dbUp();
 
