@@ -3506,7 +3506,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.18';
+	this._version = '1.2.19';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3773,6 +3773,27 @@ Core.prototype.peekCat = function (search) {
 	}
 
 	return cat;
+};
+
+/**
+ * Drops all collections in the database.
+ * @param {Function=} callback Optional callback method.
+ */
+Core.prototype.drop = function (callback) {
+	var arr = this.collections(),
+		arrCount = arr.length,
+		arrIndex,
+		finishCount = 0;
+
+	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+		this.collection(arr[arrIndex]).drop(function () {
+			finishCount++;
+
+			if (finishCount === arrCount) {
+				if (callback) { callback(); }
+			}
+		});
+	}
 };
 
 module.exports = Core;

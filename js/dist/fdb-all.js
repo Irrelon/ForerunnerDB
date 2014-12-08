@@ -3511,7 +3511,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.18';
+	this._version = '1.2.19';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3778,6 +3778,27 @@ Core.prototype.peekCat = function (search) {
 	}
 
 	return cat;
+};
+
+/**
+ * Drops all collections in the database.
+ * @param {Function=} callback Optional callback method.
+ */
+Core.prototype.drop = function (callback) {
+	var arr = this.collections(),
+		arrCount = arr.length,
+		arrIndex,
+		finishCount = 0;
+
+	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+		this.collection(arr[arrIndex]).drop(function () {
+			finishCount++;
+
+			if (finishCount === arrCount) {
+				if (callback) { callback(); }
+			}
+		});
+	}
 };
 
 module.exports = Core;
@@ -6691,7 +6712,8 @@ var Shared = _dereq_('./Shared'),
 	CollectionGroup,
 	CollectionInit,
 	CoreInit,
-	Persist;
+	Persist,
+	Overload;
 
 Persist = function () {
 	this.init.apply(this, arguments);
@@ -6724,6 +6746,7 @@ CollectionDrop = Collection.prototype.drop;
 CollectionGroup = _dereq_('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
 CoreInit = Core.prototype.init;
+Overload = Shared.overload;
 
 Persist.prototype.mode = function (type) {
 	if (type !== undefined) {
@@ -6860,28 +6883,50 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 // Extend the Collection prototype with persist methods
-Collection.prototype.drop = function (removePersistent, callback) {
-	// Remove persistent storage
-	if (removePersistent) {
-		if (this._name) {
-			if (this._db) {
-				// Save the collection data
-				this._db.persist.drop(this._name, callback);
+Collection.prototype.drop = new Overload({
+	/**
+	 * Drop collection and persistent storage.
+	 */
+	'': function () {
+		this.drop(true);
+	},
+
+	/**
+	 * Drop collection and persistent storage with callback.
+	 * @param {Function} callback Callback method.
+	 */
+	'function': function (callback) {
+		this.drop(true, callback);
+	},
+
+	/**
+	 * Drop collections and optionally drop persistent storage with callback.
+	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
+	 * @param {Function} callback Callback method.
+	 */
+	'boolean, function': function (removePersistent, callback) {
+		// Remove persistent storage
+		if (removePersistent) {
+			if (this._name) {
+				if (this._db) {
+					// Save the collection data
+					this._db.persist.drop(this._name, callback);
+				} else {
+					if (callback) {
+						callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					}
+				}
 			} else {
 				if (callback) {
-					callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 				}
 			}
-		} else {
-			if (callback) {
-				callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
-			}
 		}
-	}
 
-	// Call the original method
-	CollectionDrop.apply(this, arguments);
-};
+		// Call the original method
+		CollectionDrop.apply(this, arguments);
+	}
+});
 
 Collection.prototype.save = function (callback) {
 	if (this._name) {
