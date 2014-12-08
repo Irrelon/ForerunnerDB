@@ -196,6 +196,29 @@ Collection.prototype.drop = new Overload({
 	},
 
 	/**
+	 * Drop collection and optionally drop persistent storage.
+	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
+	 */
+	'boolean': function (removePersistent) {
+		// Remove persistent storage
+		if (removePersistent) {
+			if (this._name) {
+				if (this._db) {
+					// Save the collection data
+					this._db.persist.drop(this._name);
+				} else {
+					throw('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+				}
+			} else {
+				throw('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
+			}
+		}
+
+		// Call the original method
+		CollectionDrop.apply(this, arguments);
+	},
+
+	/**
 	 * Drop collections and optionally drop persistent storage with callback.
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
