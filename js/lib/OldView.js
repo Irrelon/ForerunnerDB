@@ -122,7 +122,7 @@ OldView.prototype.from = function (collection) {
 			if (this._db.collectionExists(collection)) {
 				collection = this._db.collection(collection);
 			} else {
-				throw('Invalid collection in view.from() call.');
+				throw('ForerunnerDB.OldView "' + this.name() + '": Invalid collection in view.from() call.');
 			}
 		}
 
@@ -162,7 +162,7 @@ OldView.prototype.addFrom = function (collection) {
 		this.refresh();
 		return this;
 	} else {
-		throw('Cannot determine collection type in view.from()');
+		throw('ForerunnerDB.OldView "' + this.name() + '": Cannot determine collection type in view.from()');
 	}
 };
 

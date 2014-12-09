@@ -77,7 +77,7 @@ AutoBind.extendCollection = function (Module) {
 							if (template.length) {
 								templateHtml = jQuery(template[0]).html();
 							} else {
-								throw('Unable to bind collection to target because template does not exist: ' + templateSelector);
+								throw('ForerunnerDB.AutoBind "' + this.name() + '": Unable to bind collection to target because template "' + templateSelector + '" does not exist');
 							}
 						}
 
@@ -99,13 +99,13 @@ AutoBind.extendCollection = function (Module) {
 
 					return this;
 				} else {
-					throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot bind collection to target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 				}
 			}
 
-			throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Attempt to bind a duplicate link from collection to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 		} else {
-			throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 
 		return this;
@@ -151,9 +151,9 @@ AutoBind.extendCollection = function (Module) {
 				return this;
 			}
 
-			console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+			console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		} else {
-			throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 
 		return this;
@@ -514,7 +514,7 @@ AutoBind.extendDocument = function (Module) {
 							if (template.length) {
 								templateHtml = jQuery(template[0]).html();
 							} else {
-								throw('Unable to bind document to target because template does not exist: ' + templateSelector);
+								throw('ForerunnerDB.AutoBind "' + this.name() + '": Unable to bind document to target because template does not exist: ' + templateSelector);
 							}
 						}
 
@@ -531,18 +531,18 @@ AutoBind.extendDocument = function (Module) {
 					this._linked++;
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.AutoBind: Added binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
+						console.log('ForerunnerDB.AutoBind: Added binding document "' + this.name() + '" to target: ' + outputTargetSelector);
 					}
 
 					return this;
 				} else {
-					throw('Cannot bind view data to output target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot bind document to target "' + outputTargetSelector + '" because it does not exist in the DOM!');
 				}
 			}
 
-			throw('Cannot create a duplicate link to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot create a duplicate link from document to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 		} else {
-			throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 	};
 
@@ -580,15 +580,15 @@ AutoBind.extendDocument = function (Module) {
 				this._linked--;
 
 				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind: Removed binding document "' + this.name() + '" to output target: ' + outputTargetSelector);
+					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Removed binding document to target: ' + outputTargetSelector);
 				}
 
 				return this;
 			}
 
-			console.log('Cannot remove link, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+			console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		} else {
-			throw('Cannot data-bind without jQuery, please add jQuery to your page!');
+			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 	};
 };
@@ -615,10 +615,10 @@ if (typeof jQuery !== 'undefined') {
 
 		Shared.finishModule('AutoBind');
 	} else {
-		throw('AutoBind plugin cannot continue because jsViews is not loaded - check your error log for url errors.');
+		throw('ForerunnerDB.AutoBind "' + this.name() + '": Plugin cannot continue because jsViews is not loaded. Check your error log for url errors; it should have automatically loaded with this plugin.');
 	}
 } else {
-	throw('Cannot use AutoBind plugin without jQuery - please ensure jQuery is loaded first!');
+	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 }
 
 Shared.finishModule('AutoBind');

@@ -79,7 +79,7 @@ OldView.prototype.bind = function (selector, options) {
 	if (options && options.template) {
 		this._binds[selector] = options;
 	} else {
-		throw('Cannot bind data to element, missing options information!');
+		throw('ForerunnerDB.OldView "' + this.name() + '": Cannot bind data to element, missing options information!');
 	}
 
 	return this;

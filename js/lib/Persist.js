@@ -69,7 +69,7 @@ Persist.prototype.driver = function (val) {
 				break;
 
 			default:
-				throw('The persistence driver you have specified is not found. Please use either IndexedDB, WebSQL or LocalStorage!');
+				throw('ForerunnerDB.Persist: The persistence driver you have specified is not found. Please use either IndexedDB, WebSQL or LocalStorage!');
 				break;
 		}
 
@@ -207,10 +207,10 @@ Collection.prototype.drop = new Overload({
 					// Save the collection data
 					this._db.persist.drop(this._name);
 				} else {
-					throw('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 				}
 			} else {
-				throw('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
+				throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 			}
 		}
 

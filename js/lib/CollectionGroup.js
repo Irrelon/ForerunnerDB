@@ -70,7 +70,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			// Check for compatible primary keys
 			if (this._collections.length) {
 				if (this._primaryKey !== collection.primaryKey()) {
-					throw("All collections in a collection group must have the same primary key!");
+					throw('ForerunnerDB.CollectionGroup "' + this.name() + '": All collections in a collection group must have the same primary key!');
 				}
 			} else {
 				// Set the primary key to the first collection added

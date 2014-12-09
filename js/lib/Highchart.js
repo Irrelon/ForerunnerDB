@@ -21,7 +21,7 @@ Highchart.prototype.init = function (collection, options) {
 	this._selector = $(this._options.selector);
 
 	if (!this._selector[0]) {
-		throw('Chart target element does not exist via selector: ' + this._options.selector);
+		throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart target element does not exist via selector: ' + this._options.selector);
 		return;
 	}
 
@@ -94,7 +94,7 @@ Highchart.prototype.init = function (collection, options) {
 			break;
 
 		default:
-			throw('Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
+			throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
 			break;
 	}
 

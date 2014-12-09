@@ -750,7 +750,7 @@ Collection.prototype.view = function (name, query, options) {
 
 			return view;
 		} else {
-			throw('Cannot create a view using this collection because one with this name already exists: ' + name);
+			throw('ForerunnerDB.Collection "' + this.name() + '": Cannot create a view using this collection because a view with this name already exists: ' + name);
 		}
 	}
 };

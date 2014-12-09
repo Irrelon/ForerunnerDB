@@ -34,7 +34,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.21';
+	this._version = '1.2.22';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -128,6 +128,13 @@ Metrics = require('./Metrics.js');
 Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the name of the database.
+ * @param {String=} val The name of the database to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'name');
 
 /**
  * Returns true if ForerunnerDB is running on a client browser.

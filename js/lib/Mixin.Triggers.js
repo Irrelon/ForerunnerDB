@@ -104,7 +104,7 @@ var Triggers = {
 
 				if (response !== undefined && response !== true && response !== false) {
 					// Trigger responded with error, throw the error
-					throw('Trigger error: ' + response);
+					throw('ForerunnerDB.Mixin.Triggers: Trigger error: ' + response);
 				}
 			}
 

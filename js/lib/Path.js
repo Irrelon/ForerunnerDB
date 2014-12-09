@@ -346,7 +346,7 @@ Path.prototype.push = function (obj, path, val) {
 			if (obj[part] instanceof Array) {
 				obj[part].push(val);
 			} else {
-				throw('Cannot push to a path whose endpoint is not an array!');
+				throw('ForerunnerDB.Path: Cannot push to a path whose endpoint is not an array!');
 			}
 		}
 	}

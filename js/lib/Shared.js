@@ -22,7 +22,7 @@ var Shared = {
 			this.modules[name]._fdbFinished = true;
 			this.emit('moduleFinished', [name, this.modules[name]]);
 		} else {
-			throw('finishModule called on a module that has not been registered with addModule(): ' + name);
+			throw('ForerunnerDB.Shared: finishModule called on a module that has not been registered with addModule(): ' + name);
 		}
 	},
 
@@ -64,7 +64,7 @@ var Shared = {
 				}
 			}
 		} else {
-			throw('Cannot find mixin named: ' + mixinName);
+			throw('ForerunnerDB.Shared: Cannot find mixin named: ' + mixinName);
 		}
 	},
 

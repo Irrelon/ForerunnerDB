@@ -7,7 +7,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		this._chainHandler = reactorProcess;
 
 		if (!reactorIn.chain || !reactorOut.chainReceive) {
-			throw('ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
+			throw('ForerunnerDB.ReactorIO: ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
 		}
 
 		// Register the reactorIO with the input
@@ -16,7 +16,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		// Register the output with the reactorIO
 		this.chain(reactorOut);
 	} else {
-		throw('ReactorIO requires an in, out and process argument to instantiate!');
+		throw('ForerunnerDB.ReactorIO: ReactorIO requires an in, out and process argument to instantiate!');
 	}
 };
 

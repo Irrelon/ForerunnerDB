@@ -278,7 +278,7 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			// Check for primary key violation
 			if (!pIndex.uniqueSet(arrItem[pKey], arrItem)) {
 				// Primary key violation
-				throw('Call to setData failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
+				throw('ForerunnerDB.Collection "' + this.name() + '": Call to setData on collection failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 			}
 		} else {
 			pIndex.set(arrItem[pKey], arrItem);
@@ -535,7 +535,7 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
 
 	// Update the item in the primary index
 	if (!this._insertIntoIndexes(currentObj)) {
-		throw('Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
+		throw('ForerunnerDB.Collection "' + this.name() + '": Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
 	}
 
 	// Update the object in the collection data
@@ -719,7 +719,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								}
 								updated = true;
 							} else {
-								throw("Cannot push to a key that is not an array! (" + i + ")");
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot push to a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -767,7 +767,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 										}
 									}
 								} else {
-									throw("Cannot pullAll without being given an array of values to pull! (" + i + ")");
+									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot pullAll without being given an array of values to pull! (' + i + ')');
 								}
 							}
 							break;
@@ -831,7 +831,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw("Cannot addToSet on a key that is not an array! (" + k + ")!");
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + k + ')');
 							}
 							break;
 
@@ -857,10 +857,10 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									this._updateSplicePush(doc[i], tempIndex, update[i]);
 									updated = true;
 								} else {
-									throw("Cannot splicePush without a $index integer value!");
+									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot splicePush without a $index integer value!');
 								}
 							} else {
-								throw("Cannot splicePush with a key that is not an array! (" + i + ")");
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot splicePush with a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -877,13 +877,13 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 											this._updateSpliceMove(doc[i], tmpIndex, moveToIndex);
 											updated = true;
 										} else {
-											throw("Cannot move without a $index integer value!");
+											throw('ForerunnerDB.Collection "' + this.name() + '": Cannot move without a $index integer value!');
 										}
 										break;
 									}
 								}
 							} else {
-								throw("Cannot move on a key that is not an array! (" + i + ")");
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot move on a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -908,7 +908,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw("Cannot pop from a key that is not an array! (" + i + ")");
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot pop from a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -2041,7 +2041,7 @@ Collection.prototype._sort = function (key, arr) {
 			return 0;
 		};
 	} else {
-		throw(this._name + ': $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
+		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2395,7 +2395,7 @@ Collection.prototype._match = function (source, test, opToApply) {
 									matchedAll = false;
 								}
 							} else {
-								throw('Cannot use a $nin operator on a non-array key: ' + i);
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + i);
 							}
 
 							operation = true;
@@ -2426,7 +2426,7 @@ Collection.prototype._match = function (source, test, opToApply) {
 									matchedAll = false;
 								}
 							} else {
-								throw('Cannot use a $nin operator on a non-array key: ' + i);
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + i);
 							}
 
 							operation = true;
@@ -2836,7 +2836,7 @@ Collection.prototype.diff = function (collection) {
 			}
 		}
 	} else {
-		throw('Collection diffing requires that both collections have the same primary key!');
+		throw('ForerunnerDB.Collection "' + this.name() + '": Collection diffing requires that both collections have the same primary key!');
 	}
 
 	return diff;
@@ -2866,7 +2866,7 @@ Core.prototype.collection = function (collectionName, primaryKey) {
 
 		return this._collection[collectionName];
 	} else {
-		throw('Cannot get collection with undefined name!');
+		throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
 	}
 };
 
@@ -2957,7 +2957,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.21';
+	this._version = '1.2.22';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3051,6 +3051,13 @@ Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the name of the database.
+ * @param {String=} val The name of the database to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'name');
 
 /**
  * Returns true if ForerunnerDB is running on a client browser.
@@ -4341,7 +4348,7 @@ var Triggers = {
 
 				if (response !== undefined && response !== true && response !== false) {
 					// Trigger responded with error, throw the error
-					throw('Trigger error: ' + response);
+					throw('ForerunnerDB.Mixin.Triggers: Trigger error: ' + response);
 				}
 			}
 
@@ -4610,7 +4617,7 @@ Overload = function (def) {
 				}
 			}
 
-			throw('Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
+			throw('ForerunnerDB.Overload "' + this.name() + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
 		};
 	}
 
@@ -5001,7 +5008,7 @@ Path.prototype.push = function (obj, path, val) {
 			if (obj[part] instanceof Array) {
 				obj[part].push(val);
 			} else {
-				throw('Cannot push to a path whose endpoint is not an array!');
+				throw('ForerunnerDB.Path: Cannot push to a path whose endpoint is not an array!');
 			}
 		}
 	}
@@ -5088,7 +5095,7 @@ var Shared = {
 			this.modules[name]._fdbFinished = true;
 			this.emit('moduleFinished', [name, this.modules[name]]);
 		} else {
-			throw('finishModule called on a module that has not been registered with addModule(): ' + name);
+			throw('ForerunnerDB.Shared: finishModule called on a module that has not been registered with addModule(): ' + name);
 		}
 	},
 
@@ -5130,7 +5137,7 @@ var Shared = {
 				}
 			}
 		} else {
-			throw('Cannot find mixin named: ' + mixinName);
+			throw('ForerunnerDB.Shared: Cannot find mixin named: ' + mixinName);
 		}
 	},
 
