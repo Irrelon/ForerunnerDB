@@ -3511,7 +3511,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.19';
+	this._version = '1.2.20';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -4437,12 +4437,19 @@ Highchart.prototype._changeListener = function () {
  * @returns {Highchart}
  */
 Highchart.prototype.drop = function () {
-	this._chart.destroy();
+	if (this._chart) {
+		this._chart.destroy();
+	}
 
-	this._collection.off('change', this._changeListener);
-	this._collection.off('drop', this.drop);
+	if (this._collection) {
+		this._collection.off('change', this._changeListener);
+		this._collection.off('drop', this.drop);
 
-	delete this._collection._highcharts[this._options.selector];
+		if (this._collection._highcharts) {
+			delete this._collection._highcharts[this._options.selector];
+		}
+	}
+
 	delete this._chart;
 	delete this._options;
 	delete this._collection;

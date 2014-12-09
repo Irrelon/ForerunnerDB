@@ -3207,7 +3207,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.19';
+	this._version = '1.2.20';
 };
 
 Core.prototype.moduleLoaded = Overload({
