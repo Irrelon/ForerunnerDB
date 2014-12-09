@@ -107,18 +107,20 @@ Collection.prototype.drop = function () {
 
 		delete this._db._collection[this._name];
 
-		var groupArr = [],
-			i;
+		if (this._groups && this._groups.length) {
+			var groupArr = [],
+				i;
 
-		// Copy the group array because if we call removeCollection on a group
-		// it will alter the groups array of this collection mid-loop!
-		for (i = 0; i < this._groups.length; i++) {
-			groupArr.push(this._groups[i]);
-		}
+			// Copy the group array because if we call removeCollection on a group
+			// it will alter the groups array of this collection mid-loop!
+			for (i = 0; i < this._groups.length; i++) {
+				groupArr.push(this._groups[i]);
+			}
 
-		// Loop any groups we are part of and remove ourselves from them
-		for (i = 0; i < groupArr.length; i++) {
-			this._groups[i].removeCollection(this);
+			// Loop any groups we are part of and remove ourselves from them
+			for (i = 0; i < groupArr.length; i++) {
+				this._groups[i].removeCollection(this);
+			}
 		}
 
 		return true;

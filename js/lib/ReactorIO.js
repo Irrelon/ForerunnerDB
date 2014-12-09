@@ -24,8 +24,13 @@ Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
 	// Remove links
-	this._reactorIn.unChain(this);
-	this.unChain(this._reactorOut);
+	if (this._reactorIn) {
+		this._reactorIn.unChain(this);
+	}
+
+	if (this._reactorOut) {
+		this.unChain(this._reactorOut);
+	}
 
 	delete this._reactorIn;
 	delete this._reactorOut;

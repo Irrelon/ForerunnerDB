@@ -412,18 +412,20 @@ Collection.prototype.drop = function () {
 
 		delete this._db._collection[this._name];
 
-		var groupArr = [],
-			i;
+		if (this._groups && this._groups.length) {
+			var groupArr = [],
+				i;
 
-		// Copy the group array because if we call removeCollection on a group
-		// it will alter the groups array of this collection mid-loop!
-		for (i = 0; i < this._groups.length; i++) {
-			groupArr.push(this._groups[i]);
-		}
+			// Copy the group array because if we call removeCollection on a group
+			// it will alter the groups array of this collection mid-loop!
+			for (i = 0; i < this._groups.length; i++) {
+				groupArr.push(this._groups[i]);
+			}
 
-		// Loop any groups we are part of and remove ourselves from them
-		for (i = 0; i < groupArr.length; i++) {
-			this._groups[i].removeCollection(this);
+			// Loop any groups we are part of and remove ourselves from them
+			for (i = 0; i < groupArr.length; i++) {
+				this._groups[i].removeCollection(this);
+			}
 		}
 
 		return true;
@@ -3432,19 +3434,27 @@ CollectionGroup.prototype.subset = function (query, options) {
  */
 CollectionGroup.prototype.drop = function () {
 	var i,
-		collArr = [].concat(this._collections),
-		viewArr = [].concat(this._views);
+		collArr,
+		viewArr;
 
 	if (this._debug) {
 		console.log('Dropping collection group ' + this._name);
 	}
 
-	for (i = 0; i < collArr.length; i++) {
-		this.removeCollection(collArr[i]);
+	if (this._collections && this._collections.length) {
+		collArr = [].concat(this._collections);
+
+		for (i = 0; i < collArr.length; i++) {
+			this.removeCollection(collArr[i]);
+		}
 	}
 
-	for (i = 0; i < viewArr.length; i++) {
-		this._removeView(viewArr[i]);
+	if (this._views && this._views.length) {
+		viewArr = [].concat(this._views);
+
+		for (i = 0; i < viewArr.length; i++) {
+			this._removeView(viewArr[i]);
+		}
 	}
 
 	this.emit('drop');
@@ -3506,7 +3516,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.20';
+	this._version = '1.2.21';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -5639,8 +5649,13 @@ Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
 	// Remove links
-	this._reactorIn.unChain(this);
-	this.unChain(this._reactorOut);
+	if (this._reactorIn) {
+		this._reactorIn.unChain(this);
+	}
+
+	if (this._reactorOut) {
+		this.unChain(this._reactorOut);
+	}
 
 	delete this._reactorIn;
 	delete this._reactorOut;
@@ -6167,10 +6182,14 @@ View.prototype.drop = function () {
 		}
 
 		// Clear io and chains
-		this._io.drop();
+		if (this._io) {
+			this._io.drop();
+		}
 
 		// Drop the view's internal collection
-		this._privateData.drop();
+		if (this._privateData) {
+			this._privateData.drop();
+		}
 
 		return true;
 	}

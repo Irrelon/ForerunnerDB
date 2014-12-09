@@ -380,10 +380,14 @@ View.prototype.drop = function () {
 		}
 
 		// Clear io and chains
-		this._io.drop();
+		if (this._io) {
+			this._io.drop();
+		}
 
 		// Drop the view's internal collection
-		this._privateData.drop();
+		if (this._privateData) {
+			this._privateData.drop();
+		}
 
 		return true;
 	}

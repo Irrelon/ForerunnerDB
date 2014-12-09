@@ -573,7 +573,7 @@ Collection.prototype.stackedBarChart = new Overload({
  * @param {String} selector The chart selector.
  */
 Collection.prototype.dropChart = function (selector) {
-	if (this._highcharts[selector]) {
+	if (this._highcharts && this._highcharts[selector]) {
 		this._highcharts[selector].drop();
 	}
 };

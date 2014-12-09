@@ -211,19 +211,27 @@ CollectionGroup.prototype.subset = function (query, options) {
  */
 CollectionGroup.prototype.drop = function () {
 	var i,
-		collArr = [].concat(this._collections),
-		viewArr = [].concat(this._views);
+		collArr,
+		viewArr;
 
 	if (this._debug) {
 		console.log('Dropping collection group ' + this._name);
 	}
 
-	for (i = 0; i < collArr.length; i++) {
-		this.removeCollection(collArr[i]);
+	if (this._collections && this._collections.length) {
+		collArr = [].concat(this._collections);
+
+		for (i = 0; i < collArr.length; i++) {
+			this.removeCollection(collArr[i]);
+		}
 	}
 
-	for (i = 0; i < viewArr.length; i++) {
-		this._removeView(viewArr[i]);
+	if (this._views && this._views.length) {
+		viewArr = [].concat(this._views);
+
+		for (i = 0; i < viewArr.length; i++) {
+			this._removeView(viewArr[i]);
+		}
 	}
 
 	this.emit('drop');

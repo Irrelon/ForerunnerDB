@@ -75,11 +75,11 @@ OldView.prototype.drop = function () {
 
 		this.emit('drop');
 
-		if (this._db) {
+		if (this._db && this._db._oldViews) {
 			delete this._db._oldViews[this._name];
 		}
 
-		if (this._from) {
+		if (this._from && this._from._oldViews) {
 			delete this._from._oldViews[this._name];
 		}
 
