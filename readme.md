@@ -646,14 +646,25 @@ speed and memory usage.
 Data persistence allows your database to survive the browser being closed, page reloads and navigation
 away from the current url. When you return to the page your data can be reloaded.
 
+> Persistence calls are async so a callback should be passed to ensure the operation has completed before
+relying on data either being saved or loaded.
+
 Persistence is handled by a very simple interface in the Collection class. You can save the current state
 of any collection by calling:
 
-    collection.save();
+    collection.save(function (err) {
+    	if (!err) {
+    		// Save was successful
+    	}
+    });
 
 You can then load the collection's data back again via:
 
-    collection.load();
+    collection.load(function (err) {
+		if (!err) {
+			// Load was successful
+		}
+	});
 
 If you call collection.load() when your application starts and collection.save() when you make changes
 to your collection you can ensure that your application always has up-to-date data.
