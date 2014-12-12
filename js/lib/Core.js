@@ -328,6 +328,8 @@ Core.prototype.drop = function (callback) {
 				if (callback) { callback(); }
 			}
 		});
+
+		delete this._collection[arr[arrIndex].name];
 	}
 };
 
