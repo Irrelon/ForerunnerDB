@@ -123,6 +123,15 @@ Collection.prototype.drop = function () {
 			}
 		}
 
+		delete this._primaryKey;
+		delete this._primaryIndex;
+		delete this._primaryCrc;
+		delete this._crcLookup;
+		delete this._name;
+		delete this._data;
+		delete this._groups;
+		delete this._metrics;
+
 		return true;
 	}
 
