@@ -110,26 +110,27 @@ Overview.prototype._removeCollection = function (collection) {
 };
 
 Overview.prototype._refresh = function () {
-	if (this._collections && this._collections[0]) {
-		this._collData.primaryKey(this._collections[0].primaryKey());
-		var tempArr = [],
-			i;
+	if (this._state !== 'dropped') {
+		if (this._collections && this._collections[0]) {
+			this._collData.primaryKey(this._collections[0].primaryKey());
+			var tempArr = [],
+				i;
 
-		for (i = 0; i < this._collections.length; i++) {
-			tempArr = tempArr.concat(this._collections[i].find(this._query, this._queryOptions));
+			for (i = 0; i < this._collections.length; i++) {
+				tempArr = tempArr.concat(this._collections[i].find(this._query, this._queryOptions));
+			}
+
+			this._collData.setData(tempArr);
 		}
 
-		this._collData.setData(tempArr);
+		// Now execute the reduce method
+		if (this._reduce) {
+			var reducedData = this._reduce();
+
+			// Update the document with the newly returned data
+			this._data.setData(reducedData);
+		}
 	}
-
-	// Now execute the reduce method
-	if (this._reduce) {
-		var reducedData = this._reduce();
-
-		// Update the document with the newly returned data
-		this._data.setData(reducedData);
-	}
-
 };
 
 Overview.prototype._chainHandler = function (chainPacket) {
