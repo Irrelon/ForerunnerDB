@@ -343,6 +343,8 @@ Core.prototype.drop = function (callback) {
 
 			delete this._collection[arr[arrIndex].name];
 		}
+
+		this.emit('drop', this);
 	}
 
 	return true;

@@ -119,7 +119,7 @@ Collection.prototype.drop = function () {
 
 			this._state = 'dropped';
 
-			this.emit('drop');
+			this.emit('drop', this);
 
 			delete this._db._collection[this._name];
 
@@ -3190,7 +3190,7 @@ CollectionGroup.prototype.drop = function () {
 			}
 		}
 
-		this.emit('drop');
+		this.emit('drop', this);
 	}
 
 	return true;
@@ -3559,6 +3559,8 @@ Core.prototype.drop = function (callback) {
 
 			delete this._collection[arr[arrIndex].name];
 		}
+
+		this.emit('drop', this);
 	}
 
 	return true;

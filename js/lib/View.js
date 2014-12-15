@@ -399,6 +399,8 @@ View.prototype.drop = function () {
 				this._privateData.drop();
 			}
 
+			this.emit('drop', this);
+
 			return true;
 		}
 	} else {

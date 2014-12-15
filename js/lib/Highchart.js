@@ -107,6 +107,8 @@ Shared.addModule('Highchart', Highchart);
 Collection = Shared.modules.Collection;
 CollectionInit = Collection.prototype.init;
 
+Shared.mixin(Highchart.prototype, 'Mixin.Events');
+
 /**
  * Gets / sets the current state.
  * @param {String=} val The name of the state to set.
@@ -289,6 +291,8 @@ Highchart.prototype.drop = function () {
 		delete this._chart;
 		delete this._options;
 		delete this._collection;
+
+		this.emit('drop', this);
 
 		return true;
 	} else {

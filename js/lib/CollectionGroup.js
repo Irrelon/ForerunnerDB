@@ -244,7 +244,7 @@ CollectionGroup.prototype.drop = function () {
 			}
 		}
 
-		this.emit('drop');
+		this.emit('drop', this);
 	}
 
 	return true;

@@ -25,6 +25,7 @@ Shared.mixin(Overview.prototype, 'Mixin.Common');
 Shared.mixin(Overview.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Overview.prototype, 'Mixin.Constants');
 Shared.mixin(Overview.prototype, 'Mixin.Triggers');
+Shared.mixin(Overview.prototype, 'Mixin.Events');
 
 Collection = require('./Collection');
 Document = require('./Document');
@@ -93,6 +94,9 @@ Overview.prototype._addCollection = function (collection) {
 	if (this._collections.indexOf(collection) === -1) {
 		this._collections.push(collection);
 		collection.chain(this);
+
+		collection.on('drop', this._collectionDropped);
+
 		this._refresh();
 	}
 	return this;
@@ -100,13 +104,24 @@ Overview.prototype._addCollection = function (collection) {
 
 Overview.prototype._removeCollection = function (collection) {
 	var collectionIndex = this._collections.indexOf(collection);
+
 	if (collectionIndex > -1) {
 		this._collections.splice(collection, 1);
 		collection.unChain(this);
+
+		collection.off('drop', this._collectionDropped);
+
 		this._refresh();
 	}
 
 	return this;
+};
+
+Overview.prototype._collectionDropped = function (collection) {
+	if (collection) {
+		// Collection was dropped, remove from overview
+		this._removeCollection(collection);
+	}
 };
 
 Overview.prototype._refresh = function () {
@@ -159,7 +174,6 @@ Overview.prototype.drop = function () {
 	if (this._state !== 'dropped') {
 		this._state = 'dropped';
 
-		delete this._name;
 		delete this._data;
 		delete this._collData;
 
@@ -169,6 +183,14 @@ Overview.prototype.drop = function () {
 		}
 
 		delete this._collections;
+
+		if (this._db && this._name) {
+			delete this._db._overview[this._name];
+		}
+
+		delete this._name;
+
+		this.emit('drop', this);
 	}
 
 	return true;

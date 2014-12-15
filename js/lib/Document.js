@@ -327,6 +327,8 @@ Document.prototype.drop = function () {
 				delete this._db._document[this._name];
 				delete this._data;
 
+				this.emit('drop', this);
+
 				return true;
 			}
 		}
