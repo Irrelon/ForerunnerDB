@@ -18,6 +18,10 @@ Overview.prototype.init = function (name) {
 	this._data = new Document('__FDB__dc_data_' + this._name);
 	this._collData = new Collection();
 	this._collections = [];
+
+	this._collectionDroppedWrap = function () {
+		self._collectionDropped.apply(self, arguments);
+	};
 };
 
 Shared.addModule('Overview', Overview);
@@ -95,7 +99,7 @@ Overview.prototype._addCollection = function (collection) {
 		this._collections.push(collection);
 		collection.chain(this);
 
-		collection.on('drop', this._collectionDropped);
+		collection.on('drop', this._collectionDroppedWrap);
 
 		this._refresh();
 	}
@@ -109,7 +113,7 @@ Overview.prototype._removeCollection = function (collection) {
 		this._collections.splice(collection, 1);
 		collection.unChain(this);
 
-		collection.off('drop', this._collectionDropped);
+		collection.off('drop', this._collectionDroppedWrap);
 
 		this._refresh();
 	}
