@@ -47,6 +47,13 @@ CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'state');
+
 Shared.synthesize(View.prototype, 'name');
 
 /**

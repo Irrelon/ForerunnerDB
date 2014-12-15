@@ -34,7 +34,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.22';
+	this._version = '1.2.23';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -128,6 +128,13 @@ Metrics = require('./Metrics.js');
 Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'state');
 
 /**
  * Gets / sets the name of the database.

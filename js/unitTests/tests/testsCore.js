@@ -1615,7 +1615,9 @@ test("Core - Collection.setData() :: Drop a collection and then set data against
 
 	coll.drop();
 
+	coll = undefined;
 
+	var coll = db.collection('test');
 
 	coll.setData([{'test': 1}]);
 

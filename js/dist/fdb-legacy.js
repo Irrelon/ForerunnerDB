@@ -391,6 +391,13 @@ Core = Shared.modules.Core;
 Collection.prototype.crc = Crc;
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Collection.prototype, 'state');
+
+/**
  * Gets / sets the name of the collection.
  * @param {String=} val The name of the collection to set.
  * @returns {*}
@@ -415,6 +422,8 @@ Collection.prototype.drop = function () {
 			console.log('Dropping collection ' + this._name);
 		}
 
+		this._state = 'dropped';
+
 		this.emit('drop');
 
 		delete this._db._collection[this._name];
@@ -434,6 +443,15 @@ Collection.prototype.drop = function () {
 				this._groups[i].removeCollection(this);
 			}
 		}
+
+		delete this._primaryKey;
+		delete this._primaryIndex;
+		delete this._primaryCrc;
+		delete this._crcLookup;
+		delete this._name;
+		delete this._data;
+		delete this._groups;
+		delete this._metrics;
 
 		return true;
 	}
@@ -3286,6 +3304,13 @@ CollectionGroup.prototype.primaryKey = function (keyName) {
 };
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(CollectionGroup.prototype, 'state');
+
+/**
  * Gets / sets the db instance the collection group belongs to.
  * @param {Core=} db The db instance.
  * @returns {*}
@@ -3448,6 +3473,8 @@ CollectionGroup.prototype.drop = function () {
 		console.log('Dropping collection group ' + this._name);
 	}
 
+	this._state = 'dropped';
+
 	if (this._collections && this._collections.length) {
 		collArr = [].concat(this._collections);
 
@@ -3523,7 +3550,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.22';
+	this._version = '1.2.23';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3617,6 +3644,13 @@ Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'state');
 
 /**
  * Gets / sets the name of the database.
@@ -3809,6 +3843,8 @@ Core.prototype.drop = function (callback) {
 		arrIndex,
 		finishCount = 0;
 
+	this._state = 'dropped';
+
 	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 		this.collection(arr[arrIndex].name).drop(function () {
 			finishCount++;
@@ -3817,6 +3853,8 @@ Core.prototype.drop = function (callback) {
 				if (callback) { callback(); }
 			}
 		});
+
+		delete this._collection[arr[arrIndex].name];
 	}
 };
 
@@ -3876,6 +3914,13 @@ Shared.mixin(Document.prototype, 'Mixin.Triggers');
 Collection = _dereq_('./Collection');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'state');
 
 /**
  * Gets / sets the db instance this class instance belongs to.
@@ -4166,8 +4211,10 @@ Document.prototype._updatePop = function (doc, val) {
 Document.prototype.drop = function () {
 	if (this._db && this._name) {
 		if (this._db && this._db._document && this._db._document[this._name]) {
+			this._state = 'dropped';
+
 			delete this._db._document[this._name];
-			this._data = {};
+			delete this._data;
 		}
 	}
 };
@@ -4299,6 +4346,13 @@ Shared.addModule('Highchart', Highchart);
 
 Collection = Shared.modules.Collection;
 CollectionInit = Collection.prototype.init;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Highchart.prototype, 'state');
 
 /**
  * Generate pie-chart series data from the given collection data array.
@@ -4456,6 +4510,8 @@ Highchart.prototype._changeListener = function () {
  * @returns {Highchart}
  */
 Highchart.prototype.drop = function () {
+	this._state = 'dropped';
+
 	if (this._chart) {
 		this._chart.destroy();
 	}
@@ -6356,6 +6412,8 @@ OldView.prototype.drop = function () {
 			console.log('ForerunnerDB.OldView: Dropping view ' + this._name);
 		}
 
+		this._state = 'dropped';
+
 		this.emit('drop');
 
 		if (this._db && this._db._oldViews) {
@@ -7294,6 +7352,13 @@ Document = _dereq_('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Overview.prototype, 'state');
+
 Shared.synthesize(Overview.prototype, 'db');
 Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'query', function (val) {
@@ -7333,7 +7398,7 @@ Overview.prototype.from = function (collection) {
 		this._addCollection(collection);
 	}
 
-	return this;
+	return this._collections;
 };
 
 Overview.prototype.find = function () {
@@ -7407,6 +7472,21 @@ Overview.prototype._chainHandler = function (chainPacket) {
  */
 Overview.prototype.data = function () {
 	return this._data;
+};
+
+Overview.prototype.drop = function () {
+	this._state = 'dropped';
+
+	delete this._name;
+	delete this._data;
+	delete this._collData;
+
+	// Remove all collection references
+	while (this._collections.length) {
+		this._removeCollection(this._collections[0]);
+	}
+
+	delete this._collections;
 };
 
 // Extend DB to include collection groups
@@ -8222,6 +8302,8 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
+	this._state = 'dropped';
+
 	// Remove links
 	if (this._reactorIn) {
 		this._reactorIn.unChain(this);
@@ -8236,6 +8318,12 @@ ReactorIO.prototype.drop = function () {
 	delete this._chainHandler;
 };
 
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(ReactorIO.prototype, 'state');
 
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 
@@ -8422,6 +8510,13 @@ ReactorIO = _dereq_('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'state');
 
 Shared.synthesize(View.prototype, 'name');
 
@@ -8754,6 +8849,8 @@ View.prototype.drop = function () {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
+
+		this._state = 'dropped';
 
 		// Clear io and chains
 		if (this._io) {

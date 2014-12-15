@@ -31,6 +31,13 @@ Document = require('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Overview.prototype, 'state');
+
 Shared.synthesize(Overview.prototype, 'db');
 Shared.synthesize(Overview.prototype, 'name');
 Shared.synthesize(Overview.prototype, 'query', function (val) {
@@ -70,7 +77,7 @@ Overview.prototype.from = function (collection) {
 		this._addCollection(collection);
 	}
 
-	return this;
+	return this._collections;
 };
 
 Overview.prototype.find = function () {

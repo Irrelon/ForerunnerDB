@@ -56,6 +56,13 @@ CollectionGroup.prototype.primaryKey = function (keyName) {
 };
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(CollectionGroup.prototype, 'state');
+
+/**
  * Gets / sets the db instance the collection group belongs to.
  * @param {Core=} db The db instance.
  * @returns {*}

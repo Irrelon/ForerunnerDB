@@ -79,6 +79,13 @@ Core = Shared.modules.Core;
 Collection.prototype.crc = Crc;
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Collection.prototype, 'state');
+
+/**
  * Gets / sets the name of the collection.
  * @param {String=} val The name of the collection to set.
  * @returns {*}

@@ -108,6 +108,13 @@ Collection = Shared.modules.Collection;
 CollectionInit = Collection.prototype.init;
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Highchart.prototype, 'state');
+
+/**
  * Generate pie-chart series data from the given collection data array.
  * @param data
  * @param keyField

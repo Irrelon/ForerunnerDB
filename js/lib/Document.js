@@ -26,6 +26,13 @@ Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 
 /**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Document.prototype, 'state');
+
+/**
  * Gets / sets the db instance this class instance belongs to.
  * @param {Core=} db The db instance.
  * @returns {*}

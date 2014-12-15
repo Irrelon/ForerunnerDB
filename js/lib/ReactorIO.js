@@ -39,6 +39,12 @@ ReactorIO.prototype.drop = function () {
 	delete this._chainHandler;
 };
 
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(ReactorIO.prototype, 'state');
 
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 

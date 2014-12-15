@@ -58,7 +58,7 @@ test('Overview - Overview.drop() :: Create overview assign a collection then dro
 
 	ov.from(coll);
 
-	ok(ov.from() === coll, 'Check that the collection reference exists');
+	ok(ov.from()[0] === coll, 'Check that the collection reference exists');
 
 	ov.drop();
 
