@@ -410,42 +410,46 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._db._collection && this._name) {
-		if (this.debug()) {
-			console.log('Dropping collection ' + this._name);
-		}
-
-		this._state = 'dropped';
-
-		this.emit('drop');
-
-		delete this._db._collection[this._name];
-
-		if (this._groups && this._groups.length) {
-			var groupArr = [],
-				i;
-
-			// Copy the group array because if we call removeCollection on a group
-			// it will alter the groups array of this collection mid-loop!
-			for (i = 0; i < this._groups.length; i++) {
-				groupArr.push(this._groups[i]);
+	if (this._state !== 'dropped') {
+		if (this._db && this._db._collection && this._name) {
+			if (this.debug()) {
+				console.log('Dropping collection ' + this._name);
 			}
 
-			// Loop any groups we are part of and remove ourselves from them
-			for (i = 0; i < groupArr.length; i++) {
-				this._groups[i].removeCollection(this);
+			this._state = 'dropped';
+
+			this.emit('drop');
+
+			delete this._db._collection[this._name];
+
+			if (this._groups && this._groups.length) {
+				var groupArr = [],
+					i;
+
+				// Copy the group array because if we call removeCollection on a group
+				// it will alter the groups array of this collection mid-loop!
+				for (i = 0; i < this._groups.length; i++) {
+					groupArr.push(this._groups[i]);
+				}
+
+				// Loop any groups we are part of and remove ourselves from them
+				for (i = 0; i < groupArr.length; i++) {
+					this._groups[i].removeCollection(this);
+				}
 			}
+
+			delete this._primaryKey;
+			delete this._primaryIndex;
+			delete this._primaryCrc;
+			delete this._crcLookup;
+			delete this._name;
+			delete this._data;
+			delete this._groups;
+			delete this._metrics;
+
+			return true;
 		}
-
-		delete this._primaryKey;
-		delete this._primaryIndex;
-		delete this._primaryCrc;
-		delete this._crcLookup;
-		delete this._name;
-		delete this._data;
-		delete this._groups;
-		delete this._metrics;
-
+	} else {
 		return true;
 	}
 
@@ -3458,33 +3462,35 @@ CollectionGroup.prototype.subset = function (query, options) {
  * @returns {boolean} True on success, false on failure.
  */
 CollectionGroup.prototype.drop = function () {
-	var i,
-		collArr,
-		viewArr;
+	if (this._state !== 'dropped') {
+		var i,
+			collArr,
+			viewArr;
 
-	if (this._debug) {
-		console.log('Dropping collection group ' + this._name);
-	}
-
-	this._state = 'dropped';
-
-	if (this._collections && this._collections.length) {
-		collArr = [].concat(this._collections);
-
-		for (i = 0; i < collArr.length; i++) {
-			this.removeCollection(collArr[i]);
+		if (this._debug) {
+			console.log('Dropping collection group ' + this._name);
 		}
-	}
 
-	if (this._views && this._views.length) {
-		viewArr = [].concat(this._views);
+		this._state = 'dropped';
 
-		for (i = 0; i < viewArr.length; i++) {
-			this._removeView(viewArr[i]);
+		if (this._collections && this._collections.length) {
+			collArr = [].concat(this._collections);
+
+			for (i = 0; i < collArr.length; i++) {
+				this.removeCollection(collArr[i]);
+			}
 		}
-	}
 
-	this.emit('drop');
+		if (this._views && this._views.length) {
+			viewArr = [].concat(this._views);
+
+			for (i = 0; i < viewArr.length; i++) {
+				this._removeView(viewArr[i]);
+			}
+		}
+
+		this.emit('drop');
+	}
 
 	return true;
 };
@@ -3831,24 +3837,30 @@ Core.prototype.peekCat = function (search) {
  * @param {Function=} callback Optional callback method.
  */
 Core.prototype.drop = function (callback) {
-	var arr = this.collections(),
-		arrCount = arr.length,
-		arrIndex,
-		finishCount = 0;
+	if (this._state !== 'dropped') {
+		var arr = this.collections(),
+			arrCount = arr.length,
+			arrIndex,
+			finishCount = 0;
 
-	this._state = 'dropped';
+		this._state = 'dropped';
 
-	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-		this.collection(arr[arrIndex].name).drop(function () {
-			finishCount++;
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			this.collection(arr[arrIndex].name).drop(function () {
+				finishCount++;
 
-			if (finishCount === arrCount) {
-				if (callback) { callback(); }
-			}
-		});
+				if (finishCount === arrCount) {
+					if (callback) {
+						callback();
+					}
+				}
+			});
 
-		delete this._collection[arr[arrIndex].name];
+			delete this._collection[arr[arrIndex].name];
+		}
 	}
+
+	return true;
 };
 
 module.exports = Core;
@@ -5693,20 +5705,24 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	// Remove links
-	if (this._reactorIn) {
-		this._reactorIn.unChain(this);
+		// Remove links
+		if (this._reactorIn) {
+			this._reactorIn.unChain(this);
+		}
+
+		if (this._reactorOut) {
+			this.unChain(this._reactorOut);
+		}
+
+		delete this._reactorIn;
+		delete this._reactorOut;
+		delete this._chainHandler;
 	}
 
-	if (this._reactorOut) {
-		this.unChain(this._reactorOut);
-	}
-
-	delete this._reactorIn;
-	delete this._reactorOut;
-	delete this._chainHandler;
+	return true;
 };
 
 /**
@@ -6236,23 +6252,27 @@ View.prototype.emit = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._from) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('ForerunnerDB.View: Dropping view ' + this._name);
+	if (this._state !== 'dropped') {
+		if (this._from) {
+			if (this.debug() || (this._db && this._db.debug())) {
+				console.log('ForerunnerDB.View: Dropping view ' + this._name);
+			}
+
+			this._state = 'dropped';
+
+			// Clear io and chains
+			if (this._io) {
+				this._io.drop();
+			}
+
+			// Drop the view's internal collection
+			if (this._privateData) {
+				this._privateData.drop();
+			}
+
+			return true;
 		}
-
-		this._state = 'dropped';
-
-		// Clear io and chains
-		if (this._io) {
-			this._io.drop();
-		}
-
-		// Drop the view's internal collection
-		if (this._privateData) {
-			this._privateData.drop();
-		}
-
+	} else {
 		return true;
 	}
 

@@ -267,29 +267,35 @@ Highchart.prototype._changeListener = function () {
 
 /**
  * Destroys the chart and all internal references.
- * @returns {Highchart}
+ * @returns {Boolean}
  */
 Highchart.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	if (this._chart) {
-		this._chart.destroy();
-	}
-
-	if (this._collection) {
-		this._collection.off('change', this._changeListener);
-		this._collection.off('drop', this.drop);
-
-		if (this._collection._highcharts) {
-			delete this._collection._highcharts[this._options.selector];
+		if (this._chart) {
+			this._chart.destroy();
 		}
+
+		if (this._collection) {
+			this._collection.off('change', this._changeListener);
+			this._collection.off('drop', this.drop);
+
+			if (this._collection._highcharts) {
+				delete this._collection._highcharts[this._options.selector];
+			}
+		}
+
+		delete this._chart;
+		delete this._options;
+		delete this._collection;
+
+		return true;
+	} else {
+		return true;
 	}
 
-	delete this._chart;
-	delete this._options;
-	delete this._collection;
-
-	return this;
+	return false;
 };
 
 // Extend collection with view init

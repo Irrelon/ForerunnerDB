@@ -217,33 +217,35 @@ CollectionGroup.prototype.subset = function (query, options) {
  * @returns {boolean} True on success, false on failure.
  */
 CollectionGroup.prototype.drop = function () {
-	var i,
-		collArr,
-		viewArr;
+	if (this._state !== 'dropped') {
+		var i,
+			collArr,
+			viewArr;
 
-	if (this._debug) {
-		console.log('Dropping collection group ' + this._name);
-	}
-
-	this._state = 'dropped';
-
-	if (this._collections && this._collections.length) {
-		collArr = [].concat(this._collections);
-
-		for (i = 0; i < collArr.length; i++) {
-			this.removeCollection(collArr[i]);
+		if (this._debug) {
+			console.log('Dropping collection group ' + this._name);
 		}
-	}
 
-	if (this._views && this._views.length) {
-		viewArr = [].concat(this._views);
+		this._state = 'dropped';
 
-		for (i = 0; i < viewArr.length; i++) {
-			this._removeView(viewArr[i]);
+		if (this._collections && this._collections.length) {
+			collArr = [].concat(this._collections);
+
+			for (i = 0; i < collArr.length; i++) {
+				this.removeCollection(collArr[i]);
+			}
 		}
-	}
 
-	this.emit('drop');
+		if (this._views && this._views.length) {
+			viewArr = [].concat(this._views);
+
+			for (i = 0; i < viewArr.length; i++) {
+				this._removeView(viewArr[i]);
+			}
+		}
+
+		this.emit('drop');
+	}
 
 	return true;
 };

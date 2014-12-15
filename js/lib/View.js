@@ -381,23 +381,27 @@ View.prototype.emit = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._from) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('ForerunnerDB.View: Dropping view ' + this._name);
+	if (this._state !== 'dropped') {
+		if (this._from) {
+			if (this.debug() || (this._db && this._db.debug())) {
+				console.log('ForerunnerDB.View: Dropping view ' + this._name);
+			}
+
+			this._state = 'dropped';
+
+			// Clear io and chains
+			if (this._io) {
+				this._io.drop();
+			}
+
+			// Drop the view's internal collection
+			if (this._privateData) {
+				this._privateData.drop();
+			}
+
+			return true;
 		}
-
-		this._state = 'dropped';
-
-		// Clear io and chains
-		if (this._io) {
-			this._io.drop();
-		}
-
-		// Drop the view's internal collection
-		if (this._privateData) {
-			this._privateData.drop();
-		}
-
+	} else {
 		return true;
 	}
 

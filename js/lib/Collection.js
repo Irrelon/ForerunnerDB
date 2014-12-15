@@ -105,42 +105,46 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._db._collection && this._name) {
-		if (this.debug()) {
-			console.log('Dropping collection ' + this._name);
-		}
-
-		this._state = 'dropped';
-
-		this.emit('drop');
-
-		delete this._db._collection[this._name];
-
-		if (this._groups && this._groups.length) {
-			var groupArr = [],
-				i;
-
-			// Copy the group array because if we call removeCollection on a group
-			// it will alter the groups array of this collection mid-loop!
-			for (i = 0; i < this._groups.length; i++) {
-				groupArr.push(this._groups[i]);
+	if (this._state !== 'dropped') {
+		if (this._db && this._db._collection && this._name) {
+			if (this.debug()) {
+				console.log('Dropping collection ' + this._name);
 			}
 
-			// Loop any groups we are part of and remove ourselves from them
-			for (i = 0; i < groupArr.length; i++) {
-				this._groups[i].removeCollection(this);
+			this._state = 'dropped';
+
+			this.emit('drop');
+
+			delete this._db._collection[this._name];
+
+			if (this._groups && this._groups.length) {
+				var groupArr = [],
+					i;
+
+				// Copy the group array because if we call removeCollection on a group
+				// it will alter the groups array of this collection mid-loop!
+				for (i = 0; i < this._groups.length; i++) {
+					groupArr.push(this._groups[i]);
+				}
+
+				// Loop any groups we are part of and remove ourselves from them
+				for (i = 0; i < groupArr.length; i++) {
+					this._groups[i].removeCollection(this);
+				}
 			}
+
+			delete this._primaryKey;
+			delete this._primaryIndex;
+			delete this._primaryCrc;
+			delete this._crcLookup;
+			delete this._name;
+			delete this._data;
+			delete this._groups;
+			delete this._metrics;
+
+			return true;
 		}
-
-		delete this._primaryKey;
-		delete this._primaryIndex;
-		delete this._primaryCrc;
-		delete this._crcLookup;
-		delete this._name;
-		delete this._data;
-		delete this._groups;
-		delete this._metrics;
-
+	} else {
 		return true;
 	}
 

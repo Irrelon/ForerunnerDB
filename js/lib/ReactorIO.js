@@ -23,20 +23,24 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	// Remove links
-	if (this._reactorIn) {
-		this._reactorIn.unChain(this);
+		// Remove links
+		if (this._reactorIn) {
+			this._reactorIn.unChain(this);
+		}
+
+		if (this._reactorOut) {
+			this.unChain(this._reactorOut);
+		}
+
+		delete this._reactorIn;
+		delete this._reactorOut;
+		delete this._chainHandler;
 	}
 
-	if (this._reactorOut) {
-		this.unChain(this._reactorOut);
-	}
-
-	delete this._reactorIn;
-	delete this._reactorOut;
-	delete this._chainHandler;
+	return true;
 };
 
 /**

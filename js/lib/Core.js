@@ -322,24 +322,30 @@ Core.prototype.peekCat = function (search) {
  * @param {Function=} callback Optional callback method.
  */
 Core.prototype.drop = function (callback) {
-	var arr = this.collections(),
-		arrCount = arr.length,
-		arrIndex,
-		finishCount = 0;
+	if (this._state !== 'dropped') {
+		var arr = this.collections(),
+			arrCount = arr.length,
+			arrIndex,
+			finishCount = 0;
 
-	this._state = 'dropped';
+		this._state = 'dropped';
 
-	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-		this.collection(arr[arrIndex].name).drop(function () {
-			finishCount++;
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			this.collection(arr[arrIndex].name).drop(function () {
+				finishCount++;
 
-			if (finishCount === arrCount) {
-				if (callback) { callback(); }
-			}
-		});
+				if (finishCount === arrCount) {
+					if (callback) {
+						callback();
+					}
+				}
+			});
 
-		delete this._collection[arr[arrIndex].name];
+			delete this._collection[arr[arrIndex].name];
+		}
 	}
+
+	return true;
 };
 
 module.exports = Core;

@@ -417,42 +417,46 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
-	if (this._db && this._db._collection && this._name) {
-		if (this.debug()) {
-			console.log('Dropping collection ' + this._name);
-		}
-
-		this._state = 'dropped';
-
-		this.emit('drop');
-
-		delete this._db._collection[this._name];
-
-		if (this._groups && this._groups.length) {
-			var groupArr = [],
-				i;
-
-			// Copy the group array because if we call removeCollection on a group
-			// it will alter the groups array of this collection mid-loop!
-			for (i = 0; i < this._groups.length; i++) {
-				groupArr.push(this._groups[i]);
+	if (this._state !== 'dropped') {
+		if (this._db && this._db._collection && this._name) {
+			if (this.debug()) {
+				console.log('Dropping collection ' + this._name);
 			}
 
-			// Loop any groups we are part of and remove ourselves from them
-			for (i = 0; i < groupArr.length; i++) {
-				this._groups[i].removeCollection(this);
+			this._state = 'dropped';
+
+			this.emit('drop');
+
+			delete this._db._collection[this._name];
+
+			if (this._groups && this._groups.length) {
+				var groupArr = [],
+					i;
+
+				// Copy the group array because if we call removeCollection on a group
+				// it will alter the groups array of this collection mid-loop!
+				for (i = 0; i < this._groups.length; i++) {
+					groupArr.push(this._groups[i]);
+				}
+
+				// Loop any groups we are part of and remove ourselves from them
+				for (i = 0; i < groupArr.length; i++) {
+					this._groups[i].removeCollection(this);
+				}
 			}
+
+			delete this._primaryKey;
+			delete this._primaryIndex;
+			delete this._primaryCrc;
+			delete this._crcLookup;
+			delete this._name;
+			delete this._data;
+			delete this._groups;
+			delete this._metrics;
+
+			return true;
 		}
-
-		delete this._primaryKey;
-		delete this._primaryIndex;
-		delete this._primaryCrc;
-		delete this._crcLookup;
-		delete this._name;
-		delete this._data;
-		delete this._groups;
-		delete this._metrics;
-
+	} else {
 		return true;
 	}
 
@@ -3465,33 +3469,35 @@ CollectionGroup.prototype.subset = function (query, options) {
  * @returns {boolean} True on success, false on failure.
  */
 CollectionGroup.prototype.drop = function () {
-	var i,
-		collArr,
-		viewArr;
+	if (this._state !== 'dropped') {
+		var i,
+			collArr,
+			viewArr;
 
-	if (this._debug) {
-		console.log('Dropping collection group ' + this._name);
-	}
-
-	this._state = 'dropped';
-
-	if (this._collections && this._collections.length) {
-		collArr = [].concat(this._collections);
-
-		for (i = 0; i < collArr.length; i++) {
-			this.removeCollection(collArr[i]);
+		if (this._debug) {
+			console.log('Dropping collection group ' + this._name);
 		}
-	}
 
-	if (this._views && this._views.length) {
-		viewArr = [].concat(this._views);
+		this._state = 'dropped';
 
-		for (i = 0; i < viewArr.length; i++) {
-			this._removeView(viewArr[i]);
+		if (this._collections && this._collections.length) {
+			collArr = [].concat(this._collections);
+
+			for (i = 0; i < collArr.length; i++) {
+				this.removeCollection(collArr[i]);
+			}
 		}
-	}
 
-	this.emit('drop');
+		if (this._views && this._views.length) {
+			viewArr = [].concat(this._views);
+
+			for (i = 0; i < viewArr.length; i++) {
+				this._removeView(viewArr[i]);
+			}
+		}
+
+		this.emit('drop');
+	}
 
 	return true;
 };
@@ -3838,24 +3844,30 @@ Core.prototype.peekCat = function (search) {
  * @param {Function=} callback Optional callback method.
  */
 Core.prototype.drop = function (callback) {
-	var arr = this.collections(),
-		arrCount = arr.length,
-		arrIndex,
-		finishCount = 0;
+	if (this._state !== 'dropped') {
+		var arr = this.collections(),
+			arrCount = arr.length,
+			arrIndex,
+			finishCount = 0;
 
-	this._state = 'dropped';
+		this._state = 'dropped';
 
-	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-		this.collection(arr[arrIndex].name).drop(function () {
-			finishCount++;
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			this.collection(arr[arrIndex].name).drop(function () {
+				finishCount++;
 
-			if (finishCount === arrCount) {
-				if (callback) { callback(); }
-			}
-		});
+				if (finishCount === arrCount) {
+					if (callback) {
+						callback();
+					}
+				}
+			});
 
-		delete this._collection[arr[arrIndex].name];
+			delete this._collection[arr[arrIndex].name];
+		}
 	}
+
+	return true;
 };
 
 module.exports = Core;
@@ -4209,14 +4221,22 @@ Document.prototype._updatePop = function (doc, val) {
 };
 
 Document.prototype.drop = function () {
-	if (this._db && this._name) {
-		if (this._db && this._db._document && this._db._document[this._name]) {
-			this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		if (this._db && this._name) {
+			if (this._db && this._db._document && this._db._document[this._name]) {
+				this._state = 'dropped';
 
-			delete this._db._document[this._name];
-			delete this._data;
+				delete this._db._document[this._name];
+				delete this._data;
+
+				return true;
+			}
 		}
+	} else {
+		return true;
 	}
+
+	return false;
 };
 
 // Extend DB to include documents
@@ -4507,29 +4527,35 @@ Highchart.prototype._changeListener = function () {
 
 /**
  * Destroys the chart and all internal references.
- * @returns {Highchart}
+ * @returns {Boolean}
  */
 Highchart.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	if (this._chart) {
-		this._chart.destroy();
-	}
-
-	if (this._collection) {
-		this._collection.off('change', this._changeListener);
-		this._collection.off('drop', this.drop);
-
-		if (this._collection._highcharts) {
-			delete this._collection._highcharts[this._options.selector];
+		if (this._chart) {
+			this._chart.destroy();
 		}
+
+		if (this._collection) {
+			this._collection.off('change', this._changeListener);
+			this._collection.off('drop', this.drop);
+
+			if (this._collection._highcharts) {
+				delete this._collection._highcharts[this._options.selector];
+			}
+		}
+
+		delete this._chart;
+		delete this._options;
+		delete this._collection;
+
+		return true;
+	} else {
+		return true;
 	}
 
-	delete this._chart;
-	delete this._options;
-	delete this._collection;
-
-	return this;
+	return false;
 };
 
 // Extend collection with view init
@@ -7396,6 +7422,7 @@ Overview.prototype.from = function (collection) {
 		}
 
 		this._addCollection(collection);
+		return this;
 	}
 
 	return this._collections;
@@ -7475,18 +7502,22 @@ Overview.prototype.data = function () {
 };
 
 Overview.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	delete this._name;
-	delete this._data;
-	delete this._collData;
+		delete this._name;
+		delete this._data;
+		delete this._collData;
 
-	// Remove all collection references
-	while (this._collections.length) {
-		this._removeCollection(this._collections[0]);
+		// Remove all collection references
+		while (this._collections.length) {
+			this._removeCollection(this._collections[0]);
+		}
+
+		delete this._collections;
 	}
 
-	delete this._collections;
+	return true;
 };
 
 // Extend DB to include collection groups
@@ -8105,7 +8136,9 @@ Collection.prototype.drop = new Overload({
 	 * Drop collection and persistent storage.
 	 */
 	'': function () {
-		this.drop(true);
+		if (this._state !== 'dropped') {
+			this.drop(true);
+		}
 	},
 
 	/**
@@ -8113,7 +8146,9 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
-		this.drop(true, callback);
+		if (this._state !== 'dropped') {
+			this.drop(true, callback);
+		}
 	},
 
 	/**
@@ -8121,22 +8156,24 @@ Collection.prototype.drop = new Overload({
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
-		// Remove persistent storage
-		if (removePersistent) {
-			if (this._name) {
-				if (this._db) {
-					// Save the collection data
-					this._db.persist.drop(this._name);
+		if (this._state !== 'dropped') {
+			// Remove persistent storage
+			if (removePersistent) {
+				if (this._name) {
+					if (this._db) {
+						// Save the collection data
+						this._db.persist.drop(this._name);
+					} else {
+						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					}
 				} else {
-					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 				}
-			} else {
-				throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 			}
-		}
 
-		// Call the original method
-		CollectionDrop.apply(this, arguments);
+			// Call the original method
+			CollectionDrop.apply(this, arguments);
+		}
 	},
 
 	/**
@@ -8145,26 +8182,28 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'boolean, function': function (removePersistent, callback) {
-		// Remove persistent storage
-		if (removePersistent) {
-			if (this._name) {
-				if (this._db) {
-					// Save the collection data
-					this._db.persist.drop(this._name, callback);
+		if (this._state !== 'dropped') {
+			// Remove persistent storage
+			if (removePersistent) {
+				if (this._name) {
+					if (this._db) {
+						// Save the collection data
+						this._db.persist.drop(this._name, callback);
+					} else {
+						if (callback) {
+							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+						}
+					}
 				} else {
 					if (callback) {
-						callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 					}
 				}
-			} else {
-				if (callback) {
-					callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
-				}
 			}
-		}
 
-		// Call the original method
-		CollectionDrop.apply(this, arguments);
+			// Call the original method
+			CollectionDrop.apply(this, arguments);
+		}
 	}
 });
 
@@ -8302,20 +8341,24 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	// Remove links
-	if (this._reactorIn) {
-		this._reactorIn.unChain(this);
+		// Remove links
+		if (this._reactorIn) {
+			this._reactorIn.unChain(this);
+		}
+
+		if (this._reactorOut) {
+			this.unChain(this._reactorOut);
+		}
+
+		delete this._reactorIn;
+		delete this._reactorOut;
+		delete this._chainHandler;
 	}
 
-	if (this._reactorOut) {
-		this.unChain(this._reactorOut);
-	}
-
-	delete this._reactorIn;
-	delete this._reactorOut;
-	delete this._chainHandler;
+	return true;
 };
 
 /**
@@ -8845,23 +8888,27 @@ View.prototype.emit = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._from) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('ForerunnerDB.View: Dropping view ' + this._name);
+	if (this._state !== 'dropped') {
+		if (this._from) {
+			if (this.debug() || (this._db && this._db.debug())) {
+				console.log('ForerunnerDB.View: Dropping view ' + this._name);
+			}
+
+			this._state = 'dropped';
+
+			// Clear io and chains
+			if (this._io) {
+				this._io.drop();
+			}
+
+			// Drop the view's internal collection
+			if (this._privateData) {
+				this._privateData.drop();
+			}
+
+			return true;
 		}
-
-		this._state = 'dropped';
-
-		// Clear io and chains
-		if (this._io) {
-			this._io.drop();
-		}
-
-		// Drop the view's internal collection
-		if (this._privateData) {
-			this._privateData.drop();
-		}
-
+	} else {
 		return true;
 	}
 

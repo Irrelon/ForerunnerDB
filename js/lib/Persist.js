@@ -184,7 +184,9 @@ Collection.prototype.drop = new Overload({
 	 * Drop collection and persistent storage.
 	 */
 	'': function () {
-		this.drop(true);
+		if (this._state !== 'dropped') {
+			this.drop(true);
+		}
 	},
 
 	/**
@@ -192,7 +194,9 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
-		this.drop(true, callback);
+		if (this._state !== 'dropped') {
+			this.drop(true, callback);
+		}
 	},
 
 	/**
@@ -200,22 +204,24 @@ Collection.prototype.drop = new Overload({
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
-		// Remove persistent storage
-		if (removePersistent) {
-			if (this._name) {
-				if (this._db) {
-					// Save the collection data
-					this._db.persist.drop(this._name);
+		if (this._state !== 'dropped') {
+			// Remove persistent storage
+			if (removePersistent) {
+				if (this._name) {
+					if (this._db) {
+						// Save the collection data
+						this._db.persist.drop(this._name);
+					} else {
+						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					}
 				} else {
-					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 				}
-			} else {
-				throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 			}
-		}
 
-		// Call the original method
-		CollectionDrop.apply(this, arguments);
+			// Call the original method
+			CollectionDrop.apply(this, arguments);
+		}
 	},
 
 	/**
@@ -224,26 +230,28 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'boolean, function': function (removePersistent, callback) {
-		// Remove persistent storage
-		if (removePersistent) {
-			if (this._name) {
-				if (this._db) {
-					// Save the collection data
-					this._db.persist.drop(this._name, callback);
+		if (this._state !== 'dropped') {
+			// Remove persistent storage
+			if (removePersistent) {
+				if (this._name) {
+					if (this._db) {
+						// Save the collection data
+						this._db.persist.drop(this._name, callback);
+					} else {
+						if (callback) {
+							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+						}
+					}
 				} else {
 					if (callback) {
-						callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
+						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 					}
 				}
-			} else {
-				if (callback) {
-					callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
-				}
 			}
-		}
 
-		// Call the original method
-		CollectionDrop.apply(this, arguments);
+			// Call the original method
+			CollectionDrop.apply(this, arguments);
+		}
 	}
 });
 

@@ -75,6 +75,7 @@ Overview.prototype.from = function (collection) {
 		}
 
 		this._addCollection(collection);
+		return this;
 	}
 
 	return this._collections;
@@ -154,18 +155,22 @@ Overview.prototype.data = function () {
 };
 
 Overview.prototype.drop = function () {
-	this._state = 'dropped';
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
 
-	delete this._name;
-	delete this._data;
-	delete this._collData;
+		delete this._name;
+		delete this._data;
+		delete this._collData;
 
-	// Remove all collection references
-	while (this._collections.length) {
-		this._removeCollection(this._collections[0]);
+		// Remove all collection references
+		while (this._collections.length) {
+			this._removeCollection(this._collections[0]);
+		}
+
+		delete this._collections;
 	}
 
-	delete this._collections;
+	return true;
 };
 
 // Extend DB to include collection groups
