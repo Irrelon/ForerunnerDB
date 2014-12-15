@@ -146,6 +146,21 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
+Overview.prototype.drop = function () {
+	this._state = 'dropped';
+
+	delete this._name;
+	delete this._data;
+	delete this._collData;
+
+	// Remove all collection references
+	while (this._collections.length) {
+		this._removeCollection(this._collections[0]);
+	}
+
+	delete this._collections;
+};
+
 // Extend DB to include collection groups
 Core.prototype.init = function () {
 	this._overview = {};
