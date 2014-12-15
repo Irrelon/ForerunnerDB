@@ -23,7 +23,8 @@ AutoBind.extendCollection = function (Module) {
 		superUpdateMultiply = Module.prototype._updateMultiply,
 		superUpdateRename = Module.prototype._updateRename,
 		superUpdateUnset = Module.prototype._updateUnset,
-		superUpdatePop = Module.prototype._updatePop;
+		superUpdatePop = Module.prototype._updatePop,
+		superDrop = Module.prototype.drop;
 
 	Module.prototype.init = function () {
 		this._linked = 0;
@@ -385,6 +386,21 @@ AutoBind.extendCollection = function (Module) {
 		}
 
 		return updated;
+	};
+
+	Module.prototype.drop = function () {
+		// Unlink all linked data
+		var i;
+
+		if (this._linked) {
+			for (i in this._links) {
+				if (this._links.hasOwnProperty(i)) {
+					this.unlink(this._links[i], i);
+				}
+			}
+		}
+
+		return superDrop.apply(this, arguments);
 	};
 };
 

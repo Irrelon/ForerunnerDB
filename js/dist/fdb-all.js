@@ -7451,6 +7451,8 @@ var View = function (name, query, options) {
 };
 
 View.prototype.init = function (name, query, options) {
+	var self = this;
+
 	this._name = name;
 	this._groups = [];
 	this._listeners = {};
@@ -7459,6 +7461,10 @@ View.prototype.init = function (name, query, options) {
 
 	this.query(query, false);
 	this.queryOptions(options, false);
+
+	this._collectionDroppedWrap = function () {
+		self._collectionDropped.apply(self, arguments);
+	};
 
 	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
 };
@@ -7539,6 +7545,13 @@ View.prototype.from = function (collection) {
 	var self = this;
 
 	if (collection !== undefined) {
+		// Check if we have an existing from
+		if (this._from) {
+			// Remove the listener to the drop event
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeView(this);
+		}
+
 		if (typeof(collection) === 'string') {
 			collection = this._db.collection(collection);
 		}
@@ -7654,6 +7667,13 @@ View.prototype.from = function (collection) {
 	}
 
 	return this;
+};
+
+View.prototype._collectionDropped = function (collection) {
+	if (collection) {
+		// Collection was dropped, remove from view
+		delete this._from;
+	}
 };
 
 View.prototype.ensureIndex = function () {
@@ -7813,6 +7833,9 @@ View.prototype.emit = function () {
 View.prototype.drop = function () {
 	if (this._state !== 'dropped') {
 		if (this._from) {
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeView(this);
+
 			if (this.debug() || (this._db && this._db.debug())) {
 				console.log('ForerunnerDB.View: Dropping view ' + this._name);
 			}
@@ -7829,7 +7852,16 @@ View.prototype.drop = function () {
 				this._privateData.drop();
 			}
 
+			if (this._db && this._name) {
+				delete this._db._views[this._name];
+			}
+
 			this.emit('drop', this);
+
+			delete this._from;
+			delete this._privateData;
+			delete this._io;
+			delete this._db;
 
 			return true;
 		}
