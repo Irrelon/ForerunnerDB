@@ -379,6 +379,8 @@ View.prototype.drop = function () {
 			console.log('ForerunnerDB.View: Dropping view ' + this._name);
 		}
 
+		this._state = 'dropped';
+
 		// Clear io and chains
 		if (this._io) {
 			this._io.drop();

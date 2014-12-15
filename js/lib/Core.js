@@ -320,6 +320,8 @@ Core.prototype.drop = function (callback) {
 		arrIndex,
 		finishCount = 0;
 
+	this._state = 'dropped';
+
 	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 		this.collection(arr[arrIndex].name).drop(function () {
 			finishCount++;

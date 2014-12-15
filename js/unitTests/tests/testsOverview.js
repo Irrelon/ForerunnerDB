@@ -47,3 +47,22 @@ test('Overview - Overview.reduce() :: Correct data reduced for overview', functi
 	base.domDown();
 	base.dbDown();
 });
+
+test('Overview - Overview.drop() :: Create overview assign a collection then drop the overview', function () {
+	base.dbUp();
+
+	var coll = db.collection('test');
+	coll.setData([{'test': 1}]);
+
+	var ov = db.overview('test');
+
+	ov.from(coll);
+
+	ok(ov.from() === coll, 'Check that the collection reference exists');
+
+	ov.drop();
+
+	ok(ov.from() === undefined, 'Check that the collection reference has been released');
+
+	base.dbDown();
+});

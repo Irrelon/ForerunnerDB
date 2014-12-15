@@ -263,6 +263,8 @@ Highchart.prototype._changeListener = function () {
  * @returns {Highchart}
  */
 Highchart.prototype.drop = function () {
+	this._state = 'dropped';
+
 	if (this._chart) {
 		this._chart.destroy();
 	}

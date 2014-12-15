@@ -314,8 +314,10 @@ Document.prototype._updatePop = function (doc, val) {
 Document.prototype.drop = function () {
 	if (this._db && this._name) {
 		if (this._db && this._db._document && this._db._document[this._name]) {
+			this._state = 'dropped';
+
 			delete this._db._document[this._name];
-			this._data = {};
+			delete this._data;
 		}
 	}
 };

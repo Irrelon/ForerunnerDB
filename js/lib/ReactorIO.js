@@ -23,6 +23,8 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 Shared.addModule('ReactorIO', ReactorIO);
 
 ReactorIO.prototype.drop = function () {
+	this._state = 'dropped';
+
 	// Remove links
 	if (this._reactorIn) {
 		this._reactorIn.unChain(this);

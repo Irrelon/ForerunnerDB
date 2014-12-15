@@ -1603,3 +1603,23 @@ test("Core - CollectionGroup.find() :: Single collection, descending sort", func
 
 	base.dbDown();
 });
+
+test("Core - Collection.setData() :: Drop a collection and then set data against it", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	coll.setData([{'test': 1}]);
+
+	ok(coll.find()[0].test === 1, 'Check data inserted correctly');
+
+	coll.drop();
+
+
+
+	coll.setData([{'test': 1}]);
+
+	ok(coll.find()[0].test === 1, 'Check data inserted correctly');
+
+	base.dbDown();
+});

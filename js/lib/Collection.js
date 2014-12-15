@@ -103,6 +103,8 @@ Collection.prototype.drop = function () {
 			console.log('Dropping collection ' + this._name);
 		}
 
+		this._state = 'dropped';
+
 		this.emit('drop');
 
 		delete this._db._collection[this._name];

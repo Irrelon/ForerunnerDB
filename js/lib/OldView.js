@@ -73,6 +73,8 @@ OldView.prototype.drop = function () {
 			console.log('ForerunnerDB.OldView: Dropping view ' + this._name);
 		}
 
+		this._state = 'dropped';
+
 		this.emit('drop');
 
 		if (this._db && this._db._oldViews) {

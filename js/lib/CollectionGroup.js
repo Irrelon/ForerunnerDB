@@ -218,6 +218,8 @@ CollectionGroup.prototype.drop = function () {
 		console.log('Dropping collection group ' + this._name);
 	}
 
+	this._state = 'dropped';
+
 	if (this._collections && this._collections.length) {
 		collArr = [].concat(this._collections);
 
