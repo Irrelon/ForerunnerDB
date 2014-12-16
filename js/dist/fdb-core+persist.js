@@ -2962,7 +2962,7 @@ CollectionGroup.prototype.init = function (name) {
 	this._name = name;
 	this._data = new Collection('__FDB__cg_data_' + this._name);
 	this._collections = [];
-	this._views = [];
+	this._view = [];
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
@@ -3182,8 +3182,8 @@ CollectionGroup.prototype.drop = function () {
 			}
 		}
 
-		if (this._views && this._views.length) {
-			viewArr = [].concat(this._views);
+		if (this._view && this._view.length) {
+			viewArr = [].concat(this._view);
 
 			for (i = 0; i < viewArr.length; i++) {
 				this._removeView(viewArr[i]);
@@ -3210,6 +3210,26 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 		// Return an object of collection data
 		return this._collectionGroup;
 	}
+};
+
+/**
+ * Returns an array of collection groups the DB currently has.
+ * @returns {Array} An array of objects containing details of each collection group
+ * the database is currently managing.
+ */
+Core.prototype.collectionGroups = function () {
+	var arr = [],
+		i;
+
+	for (i in this._collectionGroup) {
+		if (this._collectionGroup.hasOwnProperty(i)) {
+			arr.push({
+				name: i
+			});
+		}
+	}
+
+	return arr;
 };
 
 module.exports = CollectionGroup;
@@ -3250,7 +3270,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.23';
+	this._version = '1.2.24';
 };
 
 Core.prototype.moduleLoaded = Overload({

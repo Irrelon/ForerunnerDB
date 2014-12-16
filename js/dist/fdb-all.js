@@ -3266,7 +3266,7 @@ CollectionGroup.prototype.init = function (name) {
 	this._name = name;
 	this._data = new Collection('__FDB__cg_data_' + this._name);
 	this._collections = [];
-	this._views = [];
+	this._view = [];
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
@@ -3486,8 +3486,8 @@ CollectionGroup.prototype.drop = function () {
 			}
 		}
 
-		if (this._views && this._views.length) {
-			viewArr = [].concat(this._views);
+		if (this._view && this._view.length) {
+			viewArr = [].concat(this._view);
 
 			for (i = 0; i < viewArr.length; i++) {
 				this._removeView(viewArr[i]);
@@ -3514,6 +3514,26 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
 		// Return an object of collection data
 		return this._collectionGroup;
 	}
+};
+
+/**
+ * Returns an array of collection groups the DB currently has.
+ * @returns {Array} An array of objects containing details of each collection group
+ * the database is currently managing.
+ */
+Core.prototype.collectionGroups = function () {
+	var arr = [],
+		i;
+
+	for (i in this._collectionGroup) {
+		if (this._collectionGroup.hasOwnProperty(i)) {
+			arr.push({
+				name: i
+			});
+		}
+	}
+
+	return arr;
 };
 
 module.exports = CollectionGroup;
@@ -3554,7 +3574,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.23';
+	this._version = '1.2.24';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -4255,6 +4275,26 @@ Core.prototype.document = function (documentName) {
 		// Return an object of document data
 		return this._document;
 	}
+};
+
+/**
+ * Returns an array of documents the DB currently has.
+ * @returns {Array} An array of objects containing details of each document
+ * the database is currently managing.
+ */
+Core.prototype.documents = function () {
+	var arr = [],
+		i;
+
+	for (i in this._document) {
+		if (this._document.hasOwnProperty(i)) {
+			arr.push({
+				name: i
+			});
+		}
+	}
+
+	return arr;
 };
 
 Shared.finishModule('Document');
@@ -7853,14 +7893,18 @@ View.prototype.drop = function () {
 			}
 
 			if (this._db && this._name) {
-				delete this._db._views[this._name];
+				delete this._db._view[this._name];
 			}
 
 			this.emit('drop', this);
 
+			delete this._chain;
 			delete this._from;
 			delete this._privateData;
 			delete this._io;
+			delete this._groups;
+			delete this._listeners;
+			delete this._querySettings;
 			delete this._db;
 
 			return true;
@@ -8204,7 +8248,7 @@ View.prototype._transformPrimaryKey = function (key) {
 
 // Extend collection with view init
 Collection.prototype.init = function () {
-	this._views = [];
+	this._view = [];
 	CollectionInit.apply(this, arguments);
 };
 
@@ -8216,14 +8260,14 @@ Collection.prototype.init = function () {
  * @returns {*}
  */
 Collection.prototype.view = function (name, query, options) {
-	if (this._db && this._db._views ) {
-		if (!this._db._views[name]) {
+	if (this._db && this._db._view ) {
+		if (!this._db._view[name]) {
 			var view = new View(name, query, options)
 				.db(this._db)
 				.from(this);
 
-			this._views = this._views || [];
-			this._views.push(view);
+			this._view = this._view || [];
+			this._view.push(view);
 
 			return view;
 		} else {
@@ -8240,7 +8284,7 @@ Collection.prototype.view = function (name, query, options) {
  */
 Collection.prototype._addView = CollectionGroup.prototype._addView = function (view) {
 	if (view !== undefined) {
-		this._views.push(view);
+		this._view.push(view);
 	}
 
 	return this;
@@ -8254,9 +8298,9 @@ Collection.prototype._addView = CollectionGroup.prototype._addView = function (v
  */
 Collection.prototype._removeView = CollectionGroup.prototype._removeView = function (view) {
 	if (view !== undefined) {
-		var index = this._views.indexOf(view);
+		var index = this._view.indexOf(view);
 		if (index > -1) {
-			this._views.splice(index, 1);
+			this._view.splice(index, 1);
 		}
 	}
 
@@ -8265,7 +8309,7 @@ Collection.prototype._removeView = CollectionGroup.prototype._removeView = funct
 
 // Extend DB with views init
 Core.prototype.init = function () {
-	this._views = {};
+	this._view = {};
 	CoreInit.apply(this, arguments);
 };
 
@@ -8275,14 +8319,14 @@ Core.prototype.init = function () {
  * @returns {*}
  */
 Core.prototype.view = function (viewName) {
-	if (!this._views[viewName]) {
+	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Core.View: Creating view ' + viewName);
 		}
 	}
 
-	this._views[viewName] = this._views[viewName] || new View(viewName).db(this);
-	return this._views[viewName];
+	this._view[viewName] = this._view[viewName] || new View(viewName).db(this);
+	return this._view[viewName];
 };
 
 /**
@@ -8291,7 +8335,7 @@ Core.prototype.view = function (viewName) {
  * @returns {boolean}
  */
 Core.prototype.viewExists = function (viewName) {
-	return Boolean(this._views[viewName]);
+	return Boolean(this._view[viewName]);
 };
 
 /**
@@ -8303,11 +8347,11 @@ Core.prototype.views = function () {
 	var arr = [],
 		i;
 
-	for (i in this._views) {
-		if (this._views.hasOwnProperty(i)) {
+	for (i in this._view) {
+		if (this._view.hasOwnProperty(i)) {
 			arr.push({
 				name: i,
-				count: this._views[i].count()
+				count: this._view[i].count()
 			});
 		}
 	}
