@@ -355,5 +355,25 @@ Core.prototype.document = function (documentName) {
 	}
 };
 
+/**
+ * Returns an array of documents the DB currently has.
+ * @returns {Array} An array of objects containing details of each document
+ * the database is currently managing.
+ */
+Core.prototype.documents = function () {
+	var arr = [],
+		i;
+
+	for (i in this._document) {
+		if (this._document.hasOwnProperty(i)) {
+			arr.push({
+				name: i
+			});
+		}
+	}
+
+	return arr;
+};
+
 Shared.finishModule('Document');
 module.exports = Document;
