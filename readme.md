@@ -975,3 +975,4 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - Version 1.5
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
+* Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
