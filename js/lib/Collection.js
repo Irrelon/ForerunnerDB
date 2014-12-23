@@ -2412,7 +2412,7 @@ Collection.prototype._match = function (source, test, opToApply) {
 									matchedAll = false;
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + i);
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + i);
 							}
 
 							operation = true;
