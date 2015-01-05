@@ -2285,6 +2285,7 @@ Collection.prototype._match = function (source, test, opToApply) {
 		sourceType = typeof source,
 		testType = typeof test,
 		matchedAll = true,
+		opResult,
 		i;
 
 	// Check if the comparison data are both strings or numbers
@@ -2302,165 +2303,25 @@ Collection.prototype._match = function (source, test, opToApply) {
 
 				// Check if the property starts with a dollar (function)
 				if (i.substr(0, 1) === '$') {
-					// Check for commands
-					switch (i) {
-						case '$gt':
-							// Greater than
-							if (source > test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
+					// Ask the _matchOp method to handle the operation
+					opResult = this._matchOp(i, source, test);
+
+					// Check the result of the matchOp operation
+					// If the result is -1 then no operation took place, otherwise the result
+					// will be a boolean denoting a match (true) or no match (false)
+					if (opResult > -1) {
+						if (opResult) {
+							if (opToApply === 'or') {
+								return true;
 							}
-							operation = true;
-							break;
+						} else {
+							// Set the matchedAll flag to the result of the operation
+							// because the operation did not return true
+							matchedAll = opResult;
+						}
 
-						case '$gte':
-							// Greater than or equal
-							if (source >= test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
-
-						case '$lt':
-							// Less than
-							if (source < test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
-
-						case '$lte':
-							// Less than or equal
-							if (source <= test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
-
-						case '$exists':
-							// Property exists
-							if ((source === undefined) !== test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
-
-						case '$or':
-							// Match true on ANY check to pass
-							operation = true;
-
-							for (var orIndex = 0; orIndex < test[i].length; orIndex++) {
-								if (this._match(source, test[i][orIndex], 'and')) {
-									return true;
-								} else {
-									matchedAll = false;
-								}
-							}
-							break;
-
-						case '$and':
-							// Match true on ALL checks to pass
-							operation = true;
-
-							for (var andIndex = 0; andIndex < test[i].length; andIndex++) {
-								if (!this._match(source, test[i][andIndex], 'and')) {
-									return false;
-								}
-							}
-							break;
-
-						case '$in':
-							// In
-
-							// Check that the in test is an array
-							if (test[i] instanceof Array) {
-								var inArr = test[i],
-									inArrCount = inArr.length,
-									inArrIndex,
-									isIn = false;
-
-								for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-									if (inArr[inArrIndex] === source) {
-										isIn = true;
-										break;
-									}
-								}
-
-								if (isIn) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + i);
-							}
-
-							operation = true;
-							break;
-
-						case '$nin':
-							// Not in
-
-							// Check that the not-in test is an array
-							if (test[i] instanceof Array) {
-								var notInArr = test[i],
-									notInArrCount = notInArr.length,
-									notInArrIndex,
-									notIn = true;
-
-								for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
-									if (notInArr[notInArrIndex] === source) {
-										notIn = false;
-										break;
-									}
-								}
-
-								if (notIn) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + i);
-							}
-
-							operation = true;
-							break;
-
-						case '$ne':
-							// Not equals
-							if (source != test[i]) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-							operation = true;
-							break;
+						// Record that an operation was handled
+						operation = true;
 					}
 				}
 
@@ -2611,6 +2472,111 @@ Collection.prototype._match = function (source, test, opToApply) {
 	}
 
 	return matchedAll;
+};
+
+/**
+ * Internal method, performs a matching process against a query operator such as $gt or $nin.
+ * @param {String} key The property name in the test that matches the operator to perform
+ * matching against.
+ * @param {*} source The source data to match the query against.
+ * @param {*} test The query to match the source against.
+ * @returns {*}
+ * @private
+ */
+Collection.prototype._matchOp = function (key, source, test) {
+	// Check for commands
+	switch (key) {
+		case '$gt':
+			// Greater than
+			return source > test[key];
+			break;
+
+		case '$gte':
+			// Greater than or equal
+			return source >= test[key];
+			break;
+
+		case '$lt':
+			// Less than
+			return source < test[key];
+			break;
+
+		case '$lte':
+			// Less than or equal
+			return source <= test[key];
+			break;
+
+		case '$exists':
+			// Property exists
+			return (source === undefined) !== test[key];
+			break;
+
+		case '$ne': // Not equals
+			return source != test[key];
+			break;
+
+		case '$or':
+			// Match true on ANY check to pass
+			for (var orIndex = 0; orIndex < test[key].length; orIndex++) {
+				if (this._match(source, test[key][orIndex], 'and')) {
+					return true;
+				}
+			}
+
+			return false;
+			break;
+
+		case '$and':
+			// Match true on ALL checks to pass
+			for (var andIndex = 0; andIndex < test[key].length; andIndex++) {
+				if (!this._match(source, test[key][andIndex], 'and')) {
+					return false;
+				}
+			}
+
+			return true;
+			break;
+
+		case '$in': // In
+			// Check that the in test is an array
+			if (test[key] instanceof Array) {
+				var inArr = test[key],
+					inArrCount = inArr.length,
+					inArrIndex;
+
+				for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
+					if (inArr[inArrIndex] === source) {
+						return true;
+					}
+				}
+
+				return false;
+			} else {
+				throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
+			}
+			break;
+
+		case '$nin': // Not in
+			// Check that the not-in test is an array
+			if (test[key] instanceof Array) {
+				var notInArr = test[key],
+					notInArrCount = notInArr.length,
+					notInArrIndex;
+
+				for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
+					if (notInArr[notInArrIndex] === source) {
+						return false;
+					}
+				}
+
+				return true;
+			} else {
+				throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
+			}
+			break;
+	}
+
+	return -1;
 };
 
 /**
