@@ -2142,10 +2142,11 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 			op.time('checkIndexMatch: ' + indexRefName);
 			indexMatchData = indexRef.match(query, options);
-			indexLookup = indexRef.lookup(query, options);
 
 			if (indexMatchData.matchedKeyCount > 0) {
 				// This index can be used, store it
+				indexLookup = indexRef.lookup(query, options);
+
 				analysis.indexMatch.push({
 					lookup: indexLookup,
 					keyData: indexMatchData,
