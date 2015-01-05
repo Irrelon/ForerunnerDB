@@ -1,7 +1,7 @@
 /*
  License
 
- Copyright (c) 2014 Irrelon Software Limited
+ Copyright (c) 2015 Irrelon Software Limited
  http://www.irrelon.com
  http://www.forerunnerdb.com
 
@@ -34,7 +34,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.24';
+	this._version = '1.2.25';
 };
 
 Core.prototype.moduleLoaded = Overload({
