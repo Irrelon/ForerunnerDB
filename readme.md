@@ -967,6 +967,7 @@ ForerunnerDB's project road-map:
 * Remove server from this repo, add to its own - COMPLETE
 * Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5) - COMPLETE
 * Trigger support
+* Fix bug in relation to index usage with range queries as per (https://github.com/coolbloke1324/ForerunnerDB/issues/20)
 
 #### Scheduled Features - Version 1.4
 * Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
@@ -974,3 +975,4 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - Version 1.5
 * Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
+* Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
