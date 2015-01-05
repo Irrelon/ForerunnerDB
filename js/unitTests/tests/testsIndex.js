@@ -300,7 +300,7 @@ test("Index - Collection.find() :: Test index based on range search ($gt, $lt et
 		}
 	});
 
-	ok(explain, 'Query explanation shows range is using index: ');
+	ok(explain.index.used === true, 'Query explanation shows index in use');
 	console.log(explain);
 
 	base.dbDown();
