@@ -966,6 +966,7 @@ ForerunnerDB's project road-map:
 * Remove iOS from this repo, add to its own - COMPLETE
 * Remove server from this repo, add to its own - COMPLETE
 * Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5) - COMPLETE
+* Highcharts support from views instead of only collections
 * Trigger support
 * Fix bug in relation to index usage with range queries as per (https://github.com/coolbloke1324/ForerunnerDB/issues/20)
 
