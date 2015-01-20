@@ -169,7 +169,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._dataInsertAtIndex = function (index, doc) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Inserting some data in document sub-array for collection "' + this.name() + '"');
+				console.log('ForerunnerDB.AutoBind: Inserting some data for collection "' + this.name() + '"');
 			}
 			jQuery.observable(this._data).insert(index, doc);
 		} else {
@@ -180,7 +180,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._dataRemoveAtIndex = function (index) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Removing some data from document sub-array for collection "' + this.name() + '"');
+				console.log('ForerunnerDB.AutoBind: Removing some data for collection "' + this.name() + '"');
 			}
 			jQuery.observable(this._data).remove(index);
 		} else {
