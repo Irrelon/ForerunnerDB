@@ -709,7 +709,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
@@ -793,7 +793,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
@@ -856,7 +856,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
