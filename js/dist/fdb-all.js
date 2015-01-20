@@ -1019,7 +1019,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
@@ -1103,7 +1103,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
@@ -1166,7 +1166,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							// Check if the target key is undefined and if so, create an array
 							if (doc[i] === undefined) {
 								// Initialise a new array
-								doc[i] = [];
+								this._updateProperty(doc, i, []);
 							}
 
 							// Check that the target key is an array
@@ -3541,7 +3541,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.25';
+	this._version = '1.2.26';
 };
 
 Core.prototype.moduleLoaded = Overload({
