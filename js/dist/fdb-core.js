@@ -333,7 +333,15 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  */
 Collection.prototype.truncate = function () {
 	this.emit('truncate', this._data);
+
+	// Clear all the data from the collection
 	this._data.length = 0;
+
+	// Re-create the primary index data
+	this._primaryIndex = new KeyValueStore('primary');
+	this._primaryCrc = new KeyValueStore('primaryCrc');
+	this._crcLookup = new KeyValueStore('crcLookup');
+
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -2946,7 +2954,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.26';
+	this._version = '1.2.27';
 };
 
 Core.prototype.moduleLoaded = Overload({
