@@ -5,6 +5,19 @@ ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/)
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
 
+## What is ForerunnerDB's Primary Use Case?
+ForerunnerDB was created primarily to allow web application developers to easily store, query and manipulate JSON data
+in the browser via a simple query language. It provides the ability to store data passed by an API to the front-end and
+query it throughout your application making handling JSON data client-side significantly easier.
+
+Furthermore, if you use the optional data-binding module, changes to your JSON data stored in ForerunnerDB are
+automatically propagated to the DOM. Some web application frameworks provide similar functionality which is why
+data-binding is an optional module.
+
+Many web applications take data from an API and then represent that on screen to the user. ForerunnerDB allows you to 
+sort that data and filter it so that you don't have to make API calls whenever you want data in a different order or
+filtered by specific fields and values.
+
 ## Demo
 You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http://www.forerunnerdb.com/demo.html)
 
@@ -20,13 +33,13 @@ If you are using Node.js (or have it installed) you can use NPM to download Fore
 npm install forerunnerdb
 ```
 
-This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/coolbloke1324/ForerunnerDB/archive/master.zip).
+This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 ## License
 Please see licensing page for latest information: http://www.forerunnerdb.com/licensing.html
 
 ## Use Forerunner in Browser
-Include the ForerunnerDB.js file in your HTML (change path to the location you put forerunner):
+Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
 
 	<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
 
@@ -689,6 +702,9 @@ driver() method:
 	db.persist.driver('LocalStorage');
 
 ## Data Binding
+>Data binding is an optional module that is handled via the fdb-autobind.min.js file. If you wish to use data-binding 
+please ensure you include that file in your page after the main fdb-all.min.js file.
+
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
 collection changes. Here is a simple example of a data-bind that will keep the list of items up-to-date if you modify
 the collection:
@@ -961,19 +977,19 @@ ForerunnerDB's project road-map:
 * $ array positional in sub arrays of objects inside arrays e.g. arr.$.idArr
 
 #### Scheduled Features - Version 1.3
-* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/coolbloke1324/ForerunnerDB/issues/6) - COMPLETE
+* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6) - COMPLETE
 * Data persistence added to documentation - COMPLETE
 * Remove iOS from this repo, add to its own - COMPLETE
 * Remove server from this repo, add to its own - COMPLETE
-* Support localforage for storage instead of relying on localStorage (https://github.com/coolbloke1324/ForerunnerDB/issues/5) - COMPLETE
+* Support localforage for storage instead of relying on localStorage (https://github.com/irrelon/ForerunnerDB/issues/5) - COMPLETE
 * Highcharts support from views instead of only collections
-* Fix bug in relation to index usage with range queries as per (https://github.com/coolbloke1324/ForerunnerDB/issues/20)
+* Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
 * Trigger support
 
 #### Scheduled Features - Version 1.4
-* Add further build files to handle different combinations of modules (https://github.com/coolbloke1324/ForerunnerDB/issues/7)
+* Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
 
 #### Scheduled Features - Version 1.5
-* Support Angular.js by registering as a module if ajs exists (https://github.com/coolbloke1324/ForerunnerDB/issues/4)
+* Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4)
 * Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
