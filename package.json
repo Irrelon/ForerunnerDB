@@ -25,6 +25,6 @@
     "request": "^2.44.0",
     "socket.io": "^1.1.0"
   },
-  "main": "./js/dist/builds/core",
-  "browserify": "./js/dist/builds/core"
+  "main": "./js/builds/core",
+  "browserify": "./js/builds/core"
 }
