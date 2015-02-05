@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.27 (21st Jan 2015)
+## Version 1.2.28 (5th Feb 2015)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -38,10 +38,15 @@ This will also work for browser-based development, however if you prefer a more 
 ## License
 Please see licensing page for latest information: http://www.forerunnerdb.com/licensing.html
 
-## Use Forerunner in Browser
+## Use ForerunnerDB in Browser
 Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
 
 	<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
+	
+## Use ForerunnerDB in Node.js
+After installing via npm (see above) you can require ForerunnerDB in your code:
+
+	var ForerunnerDB = require('forerunnerdb');
 
 ## Create a Database
 

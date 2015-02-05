@@ -2925,13 +2925,8 @@ module.exports = Collection;
  http://www.irrelon.com
  http://www.forerunnerdb.com
 
- Forerunner is free for use if you are using it for non-commercial, non-governmental or
- non-profit use. If you are doing something commercial please visit the license page to
- see which license best suits your requirements:
+ Please visit the license page to see latest license information:
  http://www.forerunnerdb.com/licensing.html
-
- Commercial licenses help to continue development of ForerunnerDB and pay for developers,
- equipment, offices and electricity and without them ForerunnerDB would not exist!
  */
 var Shared,
 	Collection,
@@ -2954,7 +2949,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.27';
+	this._version = '1.2.28';
 };
 
 Core.prototype.moduleLoaded = Overload({
