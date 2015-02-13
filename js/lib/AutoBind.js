@@ -1,4 +1,3 @@
-// TODO: Make sure all logs start with ForerunnerDB.AutoBind:
 /**
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements
