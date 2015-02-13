@@ -8,7 +8,46 @@ var Shared,
 	CoreInit,
 	ReactorIO;
 
+//Shared = ForerunnerDB.shared;
 Shared = require('./Shared');
+
+/*
+// As this is a separate module, use the external loader flow
+if (typeof jQuery !== 'undefined') {
+	// Define modules that we wish to work on (or wait for to load)
+	var modules = ['Collection', 'View'],
+		loaded = [],
+		moduleIndex;
+
+	// Extend modules that are finished loading
+	for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+		Shared.moduleFinished(modules[moduleIndex], function (name, module) {
+			switch (name) {
+				case 'Collection':
+					Collection = module;
+					loaded.push(name);
+					break;
+
+				case 'View':
+					View = module;
+					loaded.push(name);
+					break;
+
+				default:
+					break;
+			}
+
+			if (loaded.length === modules.length) {
+				gridInit();
+			}
+		});
+	}
+
+	Shared.finishModule('AutoBind');
+} else {
+	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+}
+*/
 
 /**
  * The grid constructor.
