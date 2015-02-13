@@ -33,7 +33,36 @@
 	<script src="tests/testsOverload.js"></script>
 	<script src="tests/testsPersist.js"></script>
 	<script src="tests/testsHighCharts.js"></script>
+	<script src="tests/testsGrid.js"></script>
 	<!--<script src="tests/testsTrigger.js"></script>-->
 	<!--<script src="tests/testsPaging.js"></script>-->
+
+	<script type="text/x-jsrender" id="gridTable">
+		<table class="gridTable">
+			<thead class="gridHead">
+				<tr>
+					<td data-grid-sort="firstName">First Name</td>
+					<td data-grid-sort="lastName">Last Name</td>
+					<td data-grid-sort="age">Age</td>
+				</tr>
+			</thead>
+			<tbody class="gridBody">
+				{^{for gridRow}}
+				<tr data-link="id{:_id}">
+					<td>{^{:firstName}}</td>
+					<td>{^{:lastName}}</td>
+					<td>{^{:age}}</td>
+				</tr>
+				{^{/for}}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</tfoot>
+		</table>
+	</script>
 </body>
 </html>

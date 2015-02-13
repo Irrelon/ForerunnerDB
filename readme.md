@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.2.28 (5th Feb 2015)
+## Version 1.3.0 (13th Feb 2015)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -705,9 +705,84 @@ driver() method:
 
 	var db = new ForerunnerDB();
 	db.persist.driver('LocalStorage');
+	
+## Grid / Table Output
+ForerunnerDB 1.3 includes a grid / table module that allows you to output data from a collection or view to
+an HTML table that can be sorted and is data-bound so the table will react to changes in the underlying
+data inside the collection / view.
+
+### Grid Template
+
+Grids work via a jsRender template that describes how your grid should be rendered to the browser. An
+example template called "gridTable" looks like this:
+
+	<script type="text/x-jsrender" id="gridTable">
+		<table class="gridTable">
+			<thead class="gridHead">
+				<tr>
+					<td data-grid-sort="firstName">First Name</td>
+					<td data-grid-sort="lastName">Last Name</td>
+					<td data-grid-sort="age">Age</td>
+				</tr>
+			</thead>
+			<tbody class="gridBody">
+				{^{for gridRow}}
+				<tr data-link="id{:_id}">
+					<td>{^{:firstName}}</td>
+					<td>{^{:lastName}}</td>
+					<td>{^{:age}}</td>
+				</tr>
+				{^{/for}}
+			</tbody>
+			<tfoot>
+				<tr>
+					<td></td>
+					<td></td>
+					<td></td>
+				</tr>
+			</tfoot>
+		</table>
+	</script>
+
+You'll note that the main body section of the table has a *for-loop* looping over the special gridRow
+array. This array is the data inside your collection / view that the grid has been told to read from
+and is automatically passed to your template by the grid module. Use this array to loop over and
+output the row data for each row in your collection.
+  
+### Creating a Grid
+First you need to identify a target element that will contain the rendered grid:
+
+	<div id="myGridContainer"></div>
+
+You can create a grid on screen via the .grid() method, passing it your target jQuery selector as a
+string:
+
+	// Create our instances
+	var db = new ForerunnerDB(),
+		coll = db.collection('testGrid'),
+		grid;
+	
+	// Insert some data into our collection
+	coll.insert({
+		firstName: 'Fred',
+		lastName: 'Jones',
+		age: 15
+	});
+	
+	// Create a grid from the collection using the template we defined earlier
+	coll.grid('#myGridContainer', '#gridTable');
+
+### Auto-Sorting Tools
+The table can automatically handle sort requests when a column header is tapped/clicked on. To enable
+this functionality simply add the *data-grid-sort="{column name}"* attribute to elements you wish to
+use as sort elements. A good example is to use the table column header for sorting and you can see
+the correct usage above in the HTML of the table template.
+
+### Prerequisites
+* The AutoBind module must be loaded
 
 ## Data Binding
->Data binding is an optional module that is handled via the fdb-autobind.min.js file. If you wish to use data-binding 
+>Data binding is an optional module that is included via the fdb-autobind.min.js file. If you wish to use data-binding 
 please ensure you include that file in your page after the main fdb-all.min.js file.
 
 The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
@@ -982,6 +1057,9 @@ ForerunnerDB's project road-map:
 * $ array positional in sub arrays of objects inside arrays e.g. arr.$.idArr
 
 #### Scheduled Features - Version 1.3
+* Data-bound grid (table) output of collection / view data - COMPLETE
+
+#### Scheduled Features - Version 1.4
 * Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6) - COMPLETE
 * Data persistence added to documentation - COMPLETE
 * Remove iOS from this repo, add to its own - COMPLETE
@@ -991,10 +1069,10 @@ ForerunnerDB's project road-map:
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
 * Trigger support
 
-#### Scheduled Features - Version 1.4
+#### Scheduled Features - Version 1.5
 * Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
 
-#### Scheduled Features - Version 1.5
+#### Scheduled Features - Version 1.6
 * Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4)
 * Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
