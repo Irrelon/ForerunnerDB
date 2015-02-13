@@ -4,7 +4,6 @@ var AutoBind = _dereq_('../lib/AutoBind');
 module.exports = AutoBind;
 
 },{"../lib/AutoBind":2}],2:[function(_dereq_,module,exports){
-// TODO: Make sure all logs start with ForerunnerDB.AutoBind:
 /**
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements
@@ -48,8 +47,9 @@ AutoBind.extendCollection = function (Module) {
 	 * output to the DOM.
 	 * @param outputTargetSelector
 	 * @param templateSelector
+	 * @param {Object=} options Optional extra options.
 	 */
-	Module.prototype.link = function (outputTargetSelector, templateSelector) {
+	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
 			this._links = this._links || {};
@@ -85,8 +85,20 @@ AutoBind.extendCollection = function (Module) {
 						jQuery.views.templates(templateId, templateHtml);
 					}
 
-					// Create the data binding
-					jQuery.templates[templateId].link(outputTargetSelector, this._data);
+					if (options && options.wrap) {
+						// Create the data binding wrapped in an object
+						var wrapper = {};
+						wrapper[options.wrap] = this._data;
+
+						if (this.debug()) {
+							console.log('ForerunnerDB.AutoBind: Binding with data wrapper "' + options.wrap + '" for collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+						}
+
+						jQuery.templates[templateId].link(outputTargetSelector, wrapper);
+					} else {
+						// Create the data binding
+						jQuery.templates[templateId].link(outputTargetSelector, this._data);
+					}
 
 					// Add link to flags
 					this._links[templateId] = outputTargetSelector;
@@ -434,13 +446,13 @@ AutoBind.extendView = function (Module) {
 	 *     { template: '<div>{{:name}}</div>' }
 	 * @returns {*}
 	 */
-	Module.prototype.link = function (outputTargetSelector, templateSelector) {
+	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		var publicData = this.publicData();
 		if (this.debug()) {
 			console.log('ForerunnerDB.AutoBind: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 		}
 
-		publicData.link(outputTargetSelector, templateSelector);
+		publicData.link(outputTargetSelector, templateSelector, options);
 
 		return this;
 	};
@@ -470,7 +482,7 @@ AutoBind.extendOverview = function (Module) {
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 */
-	Module.prototype.link = function (outputTargetSelector, templateSelector) {
+	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		this._data.link.apply(this._data, arguments);
 		this._refresh();
 	};
@@ -500,7 +512,7 @@ AutoBind.extendDocument = function (Module) {
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 */
-	Module.prototype.link = function (outputTargetSelector, templateSelector) {
+	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
 			this._links = this._links || {};
@@ -537,8 +549,16 @@ AutoBind.extendDocument = function (Module) {
 						jQuery.views.templates(templateId, templateHtml);
 					}
 
-					// Create the data binding
-					jQuery.templates[templateId].link(outputTargetSelector, this._data);
+					if (options && options.wrap) {
+						// Create the data binding wrapped in an object
+						var wrapper = {};
+						wrapper[options.wrap] = this._data;
+
+						jQuery.templates[templateId].link(outputTargetSelector, wrapper);
+					} else {
+						// Create the data binding
+						jQuery.templates[templateId].link(outputTargetSelector, this._data);
+					}
 
 					// Add link to flags
 					this._links[templateId] = outputTargetSelector;

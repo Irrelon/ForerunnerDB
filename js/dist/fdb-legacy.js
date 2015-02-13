@@ -3546,7 +3546,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.28';
+	this._version = '1.3.0';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -8557,6 +8557,7 @@ module.exports = Shared;
 var Shared,
 	Core,
 	Collection,
+	CollectionGroup,
 	CollectionInit,
 	CoreInit,
 	ReactorIO,
@@ -9126,6 +9127,23 @@ View.prototype.query = function (query, refresh) {
 	}
 
 	return this._querySettings.query;
+};
+
+/**
+ * Gets / sets the orderBy clause in the query options for the view.
+ * @param {Object=} val The order object.
+ * @returns {*}
+ */
+View.prototype.orderBy = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+		queryOptions.$orderBy = val;
+
+		this.queryOptions(queryOptions);
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$orderBy;
 };
 
 /**

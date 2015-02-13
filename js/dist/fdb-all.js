@@ -5,10 +5,11 @@ var Core = _dereq_('../lib/Core'),
 	Highchart = _dereq_('../lib/Highchart'),
 	Persist = _dereq_('../lib/Persist'),
 	Document = _dereq_('../lib/Document'),
-	Overview = _dereq_('../lib/Overview');
+	Overview = _dereq_('../lib/Overview'),
+	Grid = _dereq_('../lib/Grid');
 
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/Overview":20,"../lib/Persist":22,"../lib/View":25}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Grid":8,"../lib/Highchart":9,"../lib/Overview":21,"../lib/Persist":23,"../lib/View":26}],2:[function(_dereq_,module,exports){
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -307,7 +308,7 @@ ActiveBucket.prototype.sortDesc = function (a, b) {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":21,"./Shared":24}],3:[function(_dereq_,module,exports){
+},{"./Path":22,"./Shared":25}],3:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -3222,7 +3223,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":21,"./Shared":24}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./Index":10,"./KeyValueStore":11,"./Metrics":12,"./Path":22,"./Shared":25}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3512,7 +3513,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":24}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":25}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3544,7 +3545,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.2.28';
+	this._version = '1.3.0';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3861,7 +3862,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":19,"./Shared":24}],6:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":12,"./Overload":20,"./Shared":25}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -4269,7 +4270,394 @@ Core.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":3,"./Shared":24}],8:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":25}],8:[function(_dereq_,module,exports){
+// Import external names locally
+var Shared,
+	Core,
+	Collection,
+	CollectionGroup,
+	View,
+	CollectionInit,
+	CoreInit,
+	ReactorIO;
+
+//Shared = ForerunnerDB.shared;
+Shared = _dereq_('./Shared');
+
+/*
+// As this is a separate module, use the external loader flow
+if (typeof jQuery !== 'undefined') {
+	// Define modules that we wish to work on (or wait for to load)
+	var modules = ['Collection', 'View'],
+		loaded = [],
+		moduleIndex;
+
+	// Extend modules that are finished loading
+	for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+		Shared.moduleFinished(modules[moduleIndex], function (name, module) {
+			switch (name) {
+				case 'Collection':
+					Collection = module;
+					loaded.push(name);
+					break;
+
+				case 'View':
+					View = module;
+					loaded.push(name);
+					break;
+
+				default:
+					break;
+			}
+
+			if (loaded.length === modules.length) {
+				gridInit();
+			}
+		});
+	}
+
+	Shared.finishModule('AutoBind');
+} else {
+	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+}
+*/
+
+/**
+ * The grid constructor.
+ * @param {String} selector jQuery selector.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @constructor
+ */
+var Grid = function (selector, options) {
+	this.init.apply(this, arguments);
+};
+
+Grid.prototype.init = function (selector, template, options) {
+	var self = this;
+
+	this._selector = selector;
+	this._template = template;
+	this._options = options;
+	this._debug = {};
+
+	this._collectionDroppedWrap = function () {
+		self._collectionDropped.apply(self, arguments);
+	};
+};
+
+Shared.addModule('Grid', Grid);
+Shared.mixin(Grid.prototype, 'Mixin.Common');
+Shared.mixin(Grid.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Grid.prototype, 'Mixin.Constants');
+Shared.mixin(Grid.prototype, 'Mixin.Triggers');
+Shared.mixin(Grid.prototype, 'Mixin.Events');
+
+Collection = _dereq_('./Collection');
+CollectionGroup = _dereq_('./CollectionGroup');
+View = _dereq_('./View');
+ReactorIO = _dereq_('./ReactorIO');
+CollectionInit = Collection.prototype.init;
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Grid.prototype, 'state');
+
+Shared.synthesize(Grid.prototype, 'name');
+
+/**
+ * Executes an insert against the grid's underlying data-source.
+ */
+Grid.prototype.insert = function () {
+	this._from.insert.apply(this._from, arguments);
+};
+
+/**
+ * Executes an update against the grid's underlying data-source.
+ */
+Grid.prototype.update = function () {
+	this._from.update.apply(this._from, arguments);
+};
+
+/**
+ * Executes an updateById against the grid's underlying data-source.
+ */
+Grid.prototype.updateById = function () {
+	this._from.updateById.apply(this._from, arguments);
+};
+
+/**
+ * Executes a remove against the grid's underlying data-source.
+ */
+Grid.prototype.remove = function () {
+	this._from.remove.apply(this._from, arguments);
+};
+
+/**
+ * Sets the collection from which the grid will assemble its data.
+ * @param {Collection} collection The collection to use to assemble grid data.
+ * @returns {Grid}
+ */
+Grid.prototype.from = function (collection) {
+	var self = this;
+
+	if (collection !== undefined) {
+		// Check if we have an existing from
+		if (this._from) {
+			// Remove the listener to the drop event
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeGrid(this);
+		}
+
+		if (typeof(collection) === 'string') {
+			collection = this._db.collection(collection);
+		}
+
+		this._from = collection;
+		this.refresh();
+	}
+
+	return this;
+};
+
+/**
+ * Gets / sets the DB the grid is bound against.
+ * @param db
+ * @returns {*}
+ */
+Grid.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		return this;
+	}
+
+	return this._db;
+};
+
+Grid.prototype._collectionDropped = function (collection) {
+	if (collection) {
+		// Collection was dropped, remove from grid
+		delete this._from;
+	}
+};
+
+/**
+ * Drops a grid and all it's stored data from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+Grid.prototype.drop = function () {
+	if (this._state !== 'dropped') {
+		if (this._from) {
+			// Remove data-binding
+			this._from.unlink(this._selector, this.template());
+
+			// Kill listeners and references
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeGrid(this);
+
+			if (this.debug() || (this._db && this._db.debug())) {
+				console.log('ForerunnerDB.Grid: Dropping grid ' + this._selector);
+			}
+
+			this._state = 'dropped';
+
+			if (this._db && this._selector) {
+				delete this._db._grid[this._selector];
+			}
+
+			this.emit('drop', this);
+
+			delete this._selector;
+			delete this._template;
+			delete this._from;
+			delete this._db;
+
+			return true;
+		}
+	} else {
+		return true;
+	}
+
+	return false;
+};
+
+Grid.prototype.template = function (template) {
+	if (template !== undefined) {
+		this._template = template;
+		return this;
+	}
+
+	return this._template;
+};
+
+Grid.prototype._sortGridClick = function (e) {
+	var sortColText = $(e.currentTarget).attr('data-grid-sort') || '',
+		sortCols = sortColText.split(','),
+		sortObj = {},
+		i;
+
+	for (i = 0; i < sortCols.length; i++) {
+		sortObj[sortCols] = 1;
+	}
+
+	this._from.orderBy(sortObj);
+};
+
+/**
+ * Refreshes the grid data such as ordering etc.
+ */
+Grid.prototype.refresh = function () {
+	if (this._from) {
+		if (this._from.link) {
+			var self = this,
+				elem = $(this._selector),
+				clickListener = function () {
+					self._sortGridClick.apply(self, arguments);
+				};
+
+			// Clear the container
+			elem.html('');
+
+			if (this._from.orderBy) {
+				// Remove listeners
+				elem.off('click', '[data-grid-sort]', clickListener);
+			}
+
+			// Auto-bind the data to the grid template
+			this._from.link(this._selector, this.template(), {
+				wrap: 'gridRow'
+			});
+
+			if (this._from.orderBy) {
+				// Listen for sort requests
+				elem.on('click', '[data-grid-sort]', clickListener);
+			}
+		} else {
+			throw('Grid requires the AutoBind module in order to operate!');
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Creates a grid and assigns the collection as its data source.
+ * @param {String} selector jQuery selector of grid output target.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Collection.prototype.grid = View.prototype.grid = function (selector, template, options) {
+	if (this._db && this._db._grid ) {
+		if (!this._db._grid[selector]) {
+			var grid = new Grid(selector, template, options)
+				.db(this._db)
+				.from(this);
+
+			this._grid = this._grid || [];
+			this._grid.push(grid);
+
+			return grid;
+		} else {
+			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
+		}
+	}
+};
+
+/**
+ * Adds a grid to the internal grid lookup.
+ * @param {Grid} grid The grid to add.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._addGrid = CollectionGroup.prototype._addGrid = View.prototype._addGrid = function (grid) {
+	if (grid !== undefined) {
+		this._grid = this._grid || [];
+		this._grid.push(grid);
+	}
+
+	return this;
+};
+
+/**
+ * Removes a grid from the internal grid lookup.
+ * @param {Grid} grid The grid to remove.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._removeGrid = CollectionGroup.prototype._removeGrid = View.prototype._removeGrid = function (grid) {
+	if (grid !== undefined && this._grid) {
+		var index = this._grid.indexOf(grid);
+		if (index > -1) {
+			this._grid.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+// Extend DB with grids init
+Core.prototype.init = function () {
+	this._grid = {};
+	CoreInit.apply(this, arguments);
+};
+
+/**
+ * Gets a grid by it's name.
+ * @param {String} selector The jQuery selector of the grid to retrieve.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Core.prototype.grid = function (selector, template, options) {
+	if (!this._grid[selector]) {
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log('Core.Grid: Creating grid ' + selector);
+		}
+	}
+
+	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
+	return this._grid[selector];
+};
+
+/**
+ * Determine if a grid with the passed name already exists.
+ * @param {String} selector The jQuery selector to bind the grid to.
+ * @returns {boolean}
+ */
+Core.prototype.gridExists = function (selector) {
+	return Boolean(this._grid[selector]);
+};
+
+/**
+ * Returns an array of grids the DB currently has.
+ * @returns {Array} An array of objects containing details of each grid
+ * the database is currently managing.
+ */
+Core.prototype.grids = function () {
+	var arr = [],
+		i;
+
+	for (i in this._grid) {
+		if (this._grid.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._grid[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
+Shared.finishModule('Grid');
+module.exports = Grid;
+},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":24,"./Shared":25,"./View":26}],9:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4871,7 +5259,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":19,"./Shared":24}],9:[function(_dereq_,module,exports){
+},{"./Overload":20,"./Shared":25}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5225,7 +5613,7 @@ Index.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('Index');
 module.exports = Index;
-},{"./Path":21,"./Shared":24}],10:[function(_dereq_,module,exports){
+},{"./Path":22,"./Shared":25}],11:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5438,7 +5826,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":24}],11:[function(_dereq_,module,exports){
+},{"./Shared":25}],12:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -5511,7 +5899,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":18,"./Shared":24}],12:[function(_dereq_,module,exports){
+},{"./Operation":19,"./Shared":25}],13:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -5523,7 +5911,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -5570,7 +5958,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Common;
@@ -5690,7 +6078,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":19}],15:[function(_dereq_,module,exports){
+},{"./Overload":20}],16:[function(_dereq_,module,exports){
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -5701,7 +6089,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var Events = {
 	on: new Overload({
 		/**
@@ -5829,7 +6217,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -5967,7 +6355,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -6112,7 +6500,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":21,"./Shared":24}],19:[function(_dereq_,module,exports){
+},{"./Path":22,"./Shared":25}],20:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -6247,7 +6635,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -6468,7 +6856,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":24}],21:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":25}],22:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -6879,7 +7267,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":24}],22:[function(_dereq_,module,exports){
+},{"./Shared":25}],23:[function(_dereq_,module,exports){
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
@@ -7245,7 +7633,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":24,"localforage":32}],23:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":25,"localforage":33}],24:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -7305,7 +7693,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":24}],24:[function(_dereq_,module,exports){
+},{"./Shared":25}],25:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -7437,11 +7825,12 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Constants":15,"./Mixin.Events":16,"./Mixin.Triggers":17,"./Overload":19}],25:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Triggers":18,"./Overload":20}],26:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
 	Collection,
+	CollectionGroup,
 	CollectionInit,
 	CoreInit,
 	ReactorIO,
@@ -8014,6 +8403,23 @@ View.prototype.query = function (query, refresh) {
 };
 
 /**
+ * Gets / sets the orderBy clause in the query options for the view.
+ * @param {Object=} val The order object.
+ * @returns {*}
+ */
+View.prototype.orderBy = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+		queryOptions.$orderBy = val;
+
+		this.queryOptions(queryOptions);
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$orderBy;
+};
+
+/**
  * Gets / sets the query options used when applying sorting etc to the
  * view data set.
  * @param {Object=} options An options object.
@@ -8331,7 +8737,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":23,"./Shared":24}],26:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":24,"./Shared":25}],27:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -8438,7 +8844,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":28}],27:[function(_dereq_,module,exports){
+},{"asap":29}],28:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -8620,7 +9026,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":26,"asap":28}],28:[function(_dereq_,module,exports){
+},{"./core.js":27,"asap":29}],29:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -8737,7 +9143,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":33}],29:[function(_dereq_,module,exports){
+},{"_process":34}],30:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -9111,7 +9517,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":27}],30:[function(_dereq_,module,exports){
+},{"promise":28}],31:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -9563,7 +9969,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":27}],31:[function(_dereq_,module,exports){
+},{"promise":28}],32:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -10105,7 +10511,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":27}],32:[function(_dereq_,module,exports){
+},{"promise":28}],33:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -10526,7 +10932,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":29,"./drivers/localstorage":30,"./drivers/websql":31,"promise":27}],33:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":30,"./drivers/localstorage":31,"./drivers/websql":32,"promise":28}],34:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
