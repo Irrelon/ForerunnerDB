@@ -2,6 +2,7 @@
 var Shared,
 	Core,
 	Collection,
+	CollectionGroup,
 	CollectionInit,
 	CoreInit,
 	ReactorIO,
