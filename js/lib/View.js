@@ -575,6 +575,23 @@ View.prototype.query = function (query, refresh) {
 };
 
 /**
+ * Gets / sets the orderBy clause in the query options for the view.
+ * @param {Object=} val The order object.
+ * @returns {*}
+ */
+View.prototype.orderBy = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+		queryOptions.$orderBy = val;
+
+		this.queryOptions(queryOptions);
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$orderBy;
+};
+
+/**
  * Gets / sets the query options used when applying sorting etc to the
  * view data set.
  * @param {Object=} options An options object.
