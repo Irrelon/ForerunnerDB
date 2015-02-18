@@ -1689,7 +1689,7 @@ Collection.prototype.find = function (query, options) {
 			op.time('indexLookup');
 
 			// Check if the index coverage is all keys, if not we still need to table scan it
-			if (analysis.indexMatch[0].keyData.totalKeyCount === analysis.indexMatch[0].keyData.matchedKeyCount) {
+			if (analysis.indexMatch[0].keyData.totalKeyCount === analysis.indexMatch[0].keyData.score) {
 				// Require a table scan to find relevant documents
 				requiresTableScan = false;
 			}
@@ -2128,83 +2128,82 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		indexRefName,
 		indexLookup,
 		pathSolver,
+		queryKeyCount,
 		i;
 
 	// Check if the query is a primary key lookup
 	op.time('checkIndexes');
-	if (query[this._primaryKey] !== undefined) {
-		// Return item via primary key possible
-		op.time('checkIndexMatch: Primary Key');
-		pathSolver = new Path();
-		analysis.indexMatch.push({
-			lookup: this._primaryIndex.lookup(query, options),
-			keyData: {
-				matchedKeys: [this._primaryKey],
-				matchedKeyCount: 1,
-				totalKeyCount: pathSolver.countKeys(query)
-			},
-			index: this._primaryIndex
-		});
-		op.time('checkIndexMatch: Primary Key');
-	}
+	pathSolver = new Path();
+	queryKeyCount = pathSolver.countKeys(query);
 
-	// Check if an index can speed up the query
-	for (i in this._indexById) {
-		if (this._indexById.hasOwnProperty(i)) {
-			indexRef = this._indexById[i];
-			indexRefName = indexRef.name();
+	if (queryKeyCount) {
+		if (query[this._primaryKey] !== undefined) {
+			// Return item via primary key possible
+			op.time('checkIndexMatch: Primary Key');
+			analysis.indexMatch.push({
+				lookup: this._primaryIndex.lookup(query, options),
+				keyData: {
+					matchedKeys: [this._primaryKey],
+					totalKeyCount: queryKeyCount,
+					score: 1
+				},
+				index: this._primaryIndex
+			});
+			op.time('checkIndexMatch: Primary Key');
+		}
 
-			op.time('checkIndexMatch: ' + indexRefName);
-			indexMatchData = indexRef.match(query, options);
+		// Check if an index can speed up the query
+		for (i in this._indexById) {
+			if (this._indexById.hasOwnProperty(i)) {
+				indexRef = this._indexById[i];
+				indexRefName = indexRef.name();
 
-			if (indexMatchData.matchedKeyCount > 0) {
-				// This index can be used, store it
-				indexLookup = indexRef.lookup(query, options);
+				op.time('checkIndexMatch: ' + indexRefName);
+				indexMatchData = indexRef.match(query, options);
 
-				analysis.indexMatch.push({
-					lookup: indexLookup,
-					keyData: indexMatchData,
-					index: indexRef
-				});
-			}
-			op.time('checkIndexMatch: ' + indexRefName);
+				if (indexMatchData.score > 0) {
+					// This index can be used, store it
+					indexLookup = indexRef.lookup(query, options);
 
-			if (indexMatchData.totalKeyCount === indexMatchData.matchedKeyCount) {
-				// Found an optimal index, do not check for any more
-				break;
+					analysis.indexMatch.push({
+						lookup: indexLookup,
+						keyData: indexMatchData,
+						index: indexRef
+					});
+				}
+				op.time('checkIndexMatch: ' + indexRefName);
+
+				if (indexMatchData.score === queryKeyCount) {
+					// Found an optimal index, do not check for any more
+					break;
+				}
 			}
 		}
-	}
-	op.time('checkIndexes');
+		op.time('checkIndexes');
 
-	// Sort array descending on index key count (effectively a measure of relevance to the query)
-	if (analysis.indexMatch.length > 1) {
-		op.time('findOptimalIndex');
-		analysis.indexMatch.sort(function (a, b) {
-			if (a.keyData.totalKeyCount === a.keyData.matchedKeyCount) {
-				// This index matches all query keys so will return the correct result instantly
-				return -1;
-			}
+		// Sort array descending on index key count (effectively a measure of relevance to the query)
+		if (analysis.indexMatch.length > 1) {
+			op.time('findOptimalIndex');
+			analysis.indexMatch.sort(function (a, b) {
+				if (a.keyData.score > b.keyData.score) {
+					// This index has a higher score than the other
+					return -1;
+				}
 
-			if (b.keyData.totalKeyCount === b.keyData.matchedKeyCount) {
-				// This index matches all query keys so will return the correct result instantly
-				return 1;
-			}
+				if (a.keyData.score < b.keyData.score) {
+					// This index has a lower score than the other
+					return 1;
+				}
 
-			// The indexes don't match all the query keys, check if both these indexes match
-			// the same number of keys and if so they are technically equal from a key point
-			// of view, but can still be compared by the number of records they return from
-			// the query. The fewer records they return the better so order by record count
-			if (a.keyData.matchedKeyCount === b.keyData.matchedKeyCount) {
-				return a.lookup.length - b.lookup.length;
-			}
-
-			// The indexes don't match all the query keys and they don't have matching key
-			// counts, so order them by key count. The index with the most matching keys
-			// should return the query results the fastest
-			return b.keyData.matchedKeyCount - a.keyData.matchedKeyCount; // index._keyCount
-		});
-		op.time('findOptimalIndex');
+				// The indexes have the same score but can still be compared by the number of records
+				// they return from the query. The fewer records they return the better so order by
+				// record count
+				if (a.keyData.score === b.keyData.score) {
+					return a.lookup.length - b.lookup.length;
+				}
+			});
+			op.time('findOptimalIndex');
+		}
 	}
 
 	// Check for join data
@@ -3240,7 +3239,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.3.0';
+	this._version = '1.3.1';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3873,7 +3872,36 @@ Index.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path();
-	return pathSolver.countObjectPaths(this._keys, query);
+	var indexKeyArr = pathSolver.parseArr(this._keys),
+		queryArr = pathSolver.parseArr(query),
+		matchedKeys = [],
+		matchedKeyCount = 0,
+		i;
+
+	// Loop the query array and check the order of keys against the
+	// index key array to see if this index can be used
+	for (i = 0; i < indexKeyArr.length; i++) {
+		if (queryArr[i] === indexKeyArr[i]) {
+			matchedKeyCount++;
+			matchedKeys.push(queryArr[i]);
+		} else {
+			// Query match failed - this is a hash map index so partial key match won't work
+			return {
+				matchedKeys: [],
+				totalKeyCount: queryArr.length,
+				score: 0
+			};
+			break;
+		}
+	}
+
+	return {
+		matchedKeys: matchedKeys,
+		totalKeyCount: queryArr.length,
+		score: matchedKeyCount
+	};
+
+	//return pathSolver.countObjectPaths(this._keys, query);
 };
 
 Index.prototype._itemHash = function (item, keys) {
