@@ -59,7 +59,7 @@ test("Index - Index.lookup() :: Test optimal query index detection", function ()
 		}
 	}, {
 		unique: true,
-		name: 'testArr'
+		name: 'testArrVal'
 	});
 
 	user.ensureIndex({
@@ -70,10 +70,10 @@ test("Index - Index.lookup() :: Test optimal query index detection", function ()
 	});
 
 	user.ensureIndex({
-		orgId: 1,
 		arr: {
 			val: 1
-		}
+		},
+		orgId: 1
 	}, {
 		unique: false,
 		name: 'testArrValAndOrgId'
@@ -86,7 +86,7 @@ test("Index - Index.lookup() :: Test optimal query index detection", function ()
 		orgId: "3"
 	});
 
-	ok(a && a.index.used && a.index.potential.length === 3, "Query analyser returned correct number of indexes to use");
+	ok(a && a.index.used && a.index.potential.length === 2, "Query analyser returned correct number of indexes to use");
 	ok(a.index.used._name === 'testArrValAndOrgId', "Check index name: " + a.index.used._name);
 
 	base.dbDown();
@@ -147,6 +147,49 @@ test("Index - Collection.find() :: Test query that should use an index", functio
 
 	ok(result && result.length === 2, "Check correct number of results returned");
 	ok(result[0]._id === "4", "Check returned data 1 id");
+	ok(result[1]._id === "5", "Check returned data 2 id");
+
+	base.dbDown();
+});
+
+test("Index - Collection.find() :: Test index doesn't interfere with other queries", function () {
+	base.dbUp();
+
+	var coll = db.collection('testIndexColl').truncate();
+
+	coll.insert([{
+		_id: '1',
+		name: 'jim',
+		age: 13
+	}, {
+		_id: '2',
+		name: 'rice',
+		age: 14
+	}, {
+		_id: '3',
+		name: 'paddy',
+		age: 11
+	}, {
+		_id: '4',
+		name: 'alan',
+		age: 19
+	}, {
+		_id: '5',
+		name: 'moon',
+		age: 14
+	}]);
+
+	coll.ensureIndex({
+		age: 1,
+		name: 1
+	});
+
+	var result = coll.find({
+		age: 14
+	});
+
+	ok(result && result.length === 2, "Check correct number of results returned : " + result.length);
+	ok(result[0]._id === "2", "Check returned data 1 id");
 	ok(result[1]._id === "5", "Check returned data 2 id");
 
 	base.dbDown();
@@ -306,7 +349,6 @@ test("Index - Collection.find() :: Test index based on range search ($gt, $lt et
 	base.dbDown();
 });
 
-/*
 test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 	base.dbUp();
 
@@ -342,4 +384,4 @@ test("Index - Collection.ensureIndex() :: Test index against a key in a sub-arra
 	ok(index.size() === 1, "Check index size");
 
 	base.dbDown();
-});*/
+});
