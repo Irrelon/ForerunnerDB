@@ -285,7 +285,36 @@ Index.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path();
-	return pathSolver.countObjectPaths(this._keys, query);
+	var indexKeyArr = pathSolver.parseArr(this._keys),
+		queryArr = pathSolver.parseArr(query),
+		matchedKeys = [],
+		matchedKeyCount = 0,
+		i;
+
+	// Loop the query array and check the order of keys against the
+	// index key array to see if this index can be used
+	for (i = 0; i < indexKeyArr.length; i++) {
+		if (queryArr[i] === indexKeyArr[i]) {
+			matchedKeyCount++;
+			matchedKeys.push(queryArr[i]);
+		} else {
+			// Query match failed - this is a hash map index so partial key match won't work
+			return {
+				matchedKeys: [],
+				totalKeyCount: queryArr.length,
+				score: 0
+			};
+			break;
+		}
+	}
+
+	return {
+		matchedKeys: matchedKeys,
+		totalKeyCount: queryArr.length,
+		score: matchedKeyCount
+	};
+
+	//return pathSolver.countObjectPaths(this._keys, query);
 };
 
 Index.prototype._itemHash = function (item, keys) {
