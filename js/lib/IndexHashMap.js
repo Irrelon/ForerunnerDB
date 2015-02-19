@@ -44,25 +44,11 @@ IndexHashMap.prototype.size = function () {
 	return this._size;
 };
 
-IndexHashMap.prototype.data = function (val) {
-	if (val !== undefined) {
-		this._data = val;
-		return this;
-	}
-
-	return this._data;
-};
-
+Shared.synthesize(IndexHashMap.prototype, 'data');
 Shared.synthesize(IndexHashMap.prototype, 'name');
-
-IndexHashMap.prototype.collection = function (val) {
-	if (val !== undefined) {
-		this._collection = val;
-		return this;
-	}
-
-	return this._collection;
-};
+Shared.synthesize(IndexHashMap.prototype, 'collection');
+Shared.synthesize(IndexHashMap.prototype, 'type');
+Shared.synthesize(IndexHashMap.prototype, 'unique');
 
 IndexHashMap.prototype.keys = function (val) {
 	if (val !== undefined) {
@@ -74,24 +60,6 @@ IndexHashMap.prototype.keys = function (val) {
 	}
 
 	return this._keys;
-};
-
-IndexHashMap.prototype.type = function (val) {
-	if (val !== undefined) {
-		this._type = val;
-		return this;
-	}
-
-	return this._type;
-};
-
-IndexHashMap.prototype.unique = function (val) {
-	if (val !== undefined) {
-		this._unique = val;
-		return this;
-	}
-
-	return this._unique;
 };
 
 IndexHashMap.prototype.rebuild = function () {
