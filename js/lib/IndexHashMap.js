@@ -2,7 +2,7 @@ var Shared = require('./Shared'),
 	Path = require('./Path');
 
 /**
- * The index class used to instantiate indexes that the database can
+ * The index class used to instantiate hash map indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
