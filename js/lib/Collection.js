@@ -63,6 +63,7 @@ Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
+Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
@@ -2035,17 +2036,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valA.localeCompare(valB);
-			} else {
-				if (valA > valB) {
-					return 1;
-				} else if (valA < valB) {
-					return -1;
-				}
-			}
-
-			return 0;
+			return this.sortAsc(valA, valB);
 		};
 	} else if (dataPath.value === -1) {
 		// Sort descending
@@ -2053,17 +2044,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valB.localeCompare(valA);
-			} else {
-				if (valA > valB) {
-					return -1;
-				} else if (valA < valB) {
-					return 1;
-				}
-			}
-
-			return 0;
+			return this.sortDesc(valA, valB);
 		};
 	} else {
 		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
