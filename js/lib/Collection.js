@@ -8,7 +8,7 @@ var Shared,
 	Metrics,
 	KeyValueStore,
 	Path,
-	Index,
+	IndexHashMap,
 	Crc;
 
 Shared = require('./Shared');
@@ -68,7 +68,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
 Path = require('./Path');
-Index = require('./Index');
+IndexHashMap = require('./IndexHashMap');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 
@@ -2679,7 +2679,7 @@ Collection.prototype.ensureIndex = function (keys, options) {
 	this._indexByName = this._indexByName || {};
 	this._indexById = this._indexById || {};
 
-	var index = new Index(keys, options, this),
+	var index = new IndexHashMap(keys, options, this),
 		time = {
 			start: new Date().getTime()
 		};

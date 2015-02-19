@@ -6,11 +6,11 @@ var Shared = require('./Shared'),
  * use to speed up queries on collections and views.
  * @constructor
  */
-var Index = function () {
+var IndexHashMap = function () {
 	this.init.apply(this, arguments);
 };
 
-Index.prototype.init = function (keys, options, collection) {
+IndexHashMap.prototype.init = function (keys, options, collection) {
 	this._crossRef = {};
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
@@ -29,22 +29,22 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.addModule('Index', Index);
-Shared.mixin(Index.prototype, 'Mixin.ChainReactor');
+Shared.addModule('IndexHashMap', IndexHashMap);
+Shared.mixin(IndexHashMap.prototype, 'Mixin.ChainReactor');
 
-Index.prototype.id = function () {
+IndexHashMap.prototype.id = function () {
 	return this._id;
 };
 
-Index.prototype.state = function () {
+IndexHashMap.prototype.state = function () {
 	return this._state;
 };
 
-Index.prototype.size = function () {
+IndexHashMap.prototype.size = function () {
 	return this._size;
 };
 
-Index.prototype.data = function (val) {
+IndexHashMap.prototype.data = function (val) {
 	if (val !== undefined) {
 		this._data = val;
 		return this;
@@ -53,9 +53,9 @@ Index.prototype.data = function (val) {
 	return this._data;
 };
 
-Shared.synthesize(Index.prototype, 'name');
+Shared.synthesize(IndexHashMap.prototype, 'name');
 
-Index.prototype.collection = function (val) {
+IndexHashMap.prototype.collection = function (val) {
 	if (val !== undefined) {
 		this._collection = val;
 		return this;
@@ -64,7 +64,7 @@ Index.prototype.collection = function (val) {
 	return this._collection;
 };
 
-Index.prototype.keys = function (val) {
+IndexHashMap.prototype.keys = function (val) {
 	if (val !== undefined) {
 		this._keys = val;
 
@@ -76,7 +76,7 @@ Index.prototype.keys = function (val) {
 	return this._keys;
 };
 
-Index.prototype.type = function (val) {
+IndexHashMap.prototype.type = function (val) {
 	if (val !== undefined) {
 		this._type = val;
 		return this;
@@ -85,7 +85,7 @@ Index.prototype.type = function (val) {
 	return this._type;
 };
 
-Index.prototype.unique = function (val) {
+IndexHashMap.prototype.unique = function (val) {
 	if (val !== undefined) {
 		this._unique = val;
 		return this;
@@ -94,7 +94,7 @@ Index.prototype.unique = function (val) {
 	return this._unique;
 };
 
-Index.prototype.rebuild = function () {
+IndexHashMap.prototype.rebuild = function () {
 	// Do we have a collection?
 	if (this._collection) {
 		// Get sorted data
@@ -129,7 +129,7 @@ Index.prototype.rebuild = function () {
 	};
 };
 
-Index.prototype.insert = function (dataItem, options) {
+IndexHashMap.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -149,7 +149,7 @@ Index.prototype.insert = function (dataItem, options) {
 	}
 };
 
-Index.prototype.remove = function (dataItem, options) {
+IndexHashMap.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -169,7 +169,7 @@ Index.prototype.remove = function (dataItem, options) {
 	}
 };
 
-Index.prototype.violation = function (dataItem) {
+IndexHashMap.prototype.violation = function (dataItem) {
 	// Generate item hash
 	var uniqueHash = this._itemHash(dataItem, this._keys);
 
@@ -177,12 +177,12 @@ Index.prototype.violation = function (dataItem) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.hashViolation = function (uniqueHash) {
+IndexHashMap.prototype.hashViolation = function (uniqueHash) {
 	// Check if the item breaks the unique constraint
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.pushToPathValue = function (hash, obj) {
+IndexHashMap.prototype.pushToPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash] = this._data[hash] || [];
 
 	// Make sure we have not already indexed this object at this path/value
@@ -198,7 +198,7 @@ Index.prototype.pushToPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pullFromPathValue = function (hash, obj) {
+IndexHashMap.prototype.pullFromPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash],
 		indexOfObject;
 
@@ -223,7 +223,7 @@ Index.prototype.pullFromPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pull = function (obj) {
+IndexHashMap.prototype.pull = function (obj) {
 	// Get all places the object has been used and remove them
 	var id = obj[this._collection.primaryKey()],
 		crossRefArr = this._crossRef[id],
@@ -245,7 +245,7 @@ Index.prototype.pull = function (obj) {
 	delete this._crossRef[id];
 };
 
-Index.prototype._pullFromArray = function (arr, obj) {
+IndexHashMap.prototype._pullFromArray = function (arr, obj) {
 	var arrCount = arr.length;
 
 	while (arrCount--) {
@@ -255,7 +255,7 @@ Index.prototype._pullFromArray = function (arr, obj) {
 	}
 };
 
-Index.prototype.pushToCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
@@ -270,18 +270,18 @@ Index.prototype.pushToCrossRef = function (obj, pathValArr) {
 	}
 };
 
-Index.prototype.pullFromCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
 	delete this._crossRef[id];
 };
 
-Index.prototype.lookup = function (query) {
+IndexHashMap.prototype.lookup = function (query) {
 	return this._data[this._itemHash(query, this._keys)] || [];
 };
 
-Index.prototype.match = function (query, options) {
+IndexHashMap.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path();
@@ -317,7 +317,7 @@ Index.prototype.match = function (query, options) {
 	//return pathSolver.countObjectPaths(this._keys, query);
 };
 
-Index.prototype._itemHash = function (item, keys) {
+IndexHashMap.prototype._itemHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -333,7 +333,7 @@ Index.prototype._itemHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemKeyHash = function (item, keys) {
+IndexHashMap.prototype._itemKeyHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -349,7 +349,7 @@ Index.prototype._itemKeyHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemHashArr = function (item, keys) {
+IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -378,5 +378,5 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
-Shared.finishModule('Index');
-module.exports = Index;
+Shared.finishModule('IndexHashMap');
+module.exports = IndexHashMap;
