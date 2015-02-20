@@ -5,19 +5,19 @@ ForerunnerDB.moduleLoaded('Overview', function () {
 
 		var coll = db.collection('moo')
 			.setData([{
-				new: false
+				"new": false
 			}, {
-				new: true
+				"new": true
 			}, {
-				new: false
+				"new": false
 			}, {
-				new: false
+				"new": false
 			}, {
-				new: false
+				"new": false
 			}, {
-				new: false
+				"new": false
 			}, {
-				new: true
+				"new": true
 			}]);
 
 		db.overview('mooOverview')
