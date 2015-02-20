@@ -1,99 +1,101 @@
-test("CollectionGroup -> View - Chains CRUD - setData", function() {
-	base.dbUp();
+ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
+	test("CollectionGroup -> View - Chains CRUD - setData", function () {
+		base.dbUp();
 
-	var coll = db.collection('test'),
-		group = db.collectionGroup('testGroup'),
-		view = db.view('testGroupView');
+		var coll = db.collection('test'),
+			group = db.collectionGroup('testGroup'),
+			view = db.view('testGroupView');
 
-	group.addCollection(coll);
-	view.from(group);
+		group.addCollection(coll);
+		view.from(group);
 
-	coll.setData({
-		name: 'Fred'
+		coll.setData({
+			name: 'Fred'
+		});
+
+		var result = view.find();
+
+		ok(result.length === 1, "Correct number of results in group find");
+		ok(result.length && result[0].name === 'Fred', "Correct entry data");
+
+		base.dbDown();
 	});
 
-	var result = view.find();
+	test("CollectionGroup -> View - Chains CRUD - insert", function () {
+		base.dbUp();
 
-	ok(result.length === 1, "Correct number of results in group find");
-	ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		var coll = db.collection('test'),
+			group = db.collectionGroup('testViewGroup'),
+			view = db.view('testGroupView');
 
-	base.dbDown();
-});
+		group.addCollection(coll);
+		view.from(group);
 
-test("CollectionGroup -> View - Chains CRUD - insert", function() {
-	base.dbUp();
+		coll.insert({
+			name: 'Fred'
+		});
 
-	var coll = db.collection('test'),
-		group = db.collectionGroup('testViewGroup'),
-		view = db.view('testGroupView');
+		var result = view.find();
 
-	group.addCollection(coll);
-	view.from(group);
+		ok(result.length === 1, "Correct number of results in group find: " + result.length);
+		ok(result.length && result[0].name === 'Fred', "Correct entry data");
 
-	coll.insert({
-		name: 'Fred'
+		base.dbDown();
 	});
 
-	var result = view.find();
+	test("CollectionGroup -> View - Chains CRUD - updated", function () {
+		base.dbUp();
 
-	ok(result.length === 1, "Correct number of results in group find: " + result.length);
-	ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		var coll = db.collection('test'),
+			group = db.collectionGroup('testViewGroup'),
+			view = db.view('testGroupView');
 
-	base.dbDown();
-});
+		group.addCollection(coll);
+		view.from(group);
 
-test("CollectionGroup -> View - Chains CRUD - updated", function() {
-	base.dbUp();
+		coll.insert({
+			name: 'Fred'
+		});
 
-	var coll = db.collection('test'),
-		group = db.collectionGroup('testViewGroup'),
-		view = db.view('testGroupView');
+		coll.insert({
+			name: 'Joe'
+		});
 
-	group.addCollection(coll);
-	view.from(group);
+		coll.update({name: 'Fred'}, {name: 'Jim'});
 
-	coll.insert({
-		name: 'Fred'
+		var result = view.find();
+
+		ok(result.length === 2, "Correct number of results in group find: " + result.length);
+		ok(result.length && result[0].name === 'Jim', "Correct entry data");
+
+		base.dbDown();
 	});
 
-	coll.insert({
-		name: 'Joe'
+	test("CollectionGroup -> View - Chains CRUD - remove", function () {
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			group = db.collectionGroup('testViewGroup'),
+			view = db.view('testGroupView');
+
+		group.addCollection(coll);
+		view.from(group);
+
+		coll.insert({
+			name: 'Fred'
+		});
+
+		coll.insert({
+			name: 'Joe'
+		});
+
+		coll.remove({name: 'Fred'});
+
+		var result = view.find();
+
+		ok(result.length === 1, "Correct number of results in group find: " + result.length);
+		ok(result.length && result[0].name === 'Joe', "Correct entry data");
+
+		base.dbDown();
 	});
-
-	coll.update({name: 'Fred'}, {name: 'Jim'});
-
-	var result = view.find();
-
-	ok(result.length === 2, "Correct number of results in group find: " + result.length);
-	ok(result.length && result[0].name === 'Jim', "Correct entry data");
-
-	base.dbDown();
-});
-
-test("CollectionGroup -> View - Chains CRUD - remove", function() {
-	base.dbUp();
-
-	var coll = db.collection('test'),
-		group = db.collectionGroup('testViewGroup'),
-		view = db.view('testGroupView');
-
-	group.addCollection(coll);
-	view.from(group);
-
-	coll.insert({
-		name: 'Fred'
-	});
-
-	coll.insert({
-		name: 'Joe'
-	});
-
-	coll.remove({name: 'Fred'});
-
-	var result = view.find();
-
-	ok(result.length === 1, "Correct number of results in group find: " + result.length);
-	ok(result.length && result[0].name === 'Joe', "Correct entry data");
-
-	base.dbDown();
 });

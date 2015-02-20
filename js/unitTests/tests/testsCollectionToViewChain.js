@@ -1,91 +1,93 @@
-test("Collection -> View - Chains CRUD - setData", function() {
-	base.dbUp();
+ForerunnerDB.moduleLoaded('View', function () {
+	test("Collection -> View - Chains CRUD - setData", function () {
+		base.dbUp();
 
-	var coll = db.collection('test'),
-		view = db.view('testView');
+		var coll = db.collection('test'),
+			view = db.view('testView');
 
-	view.from(coll);
+		view.from(coll);
 
-	coll.setData({
-		name: 'Fred'
+		coll.setData({
+			name: 'Fred'
+		});
+
+		var result = view.find();
+
+		ok(result.length === 1, "Correct number of results in view find");
+		ok(result.length && result[0].name === 'Fred', "Correct entry data");
+
+		base.dbDown();
 	});
 
-	var result = view.find();
+	test("Collection -> View - Chains CRUD - insert", function () {
+		base.dbUp();
 
-	ok(result.length === 1, "Correct number of results in view find");
-	ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		var coll = db.collection('test'),
+			view = db.view('testView');
 
-	base.dbDown();
-});
+		view.from(coll);
 
-test("Collection -> View - Chains CRUD - insert", function() {
-	base.dbUp();
+		coll.insert({
+			name: 'Fred'
+		});
 
-	var coll = db.collection('test'),
-		view = db.view('testView');
+		var result = view.find();
 
-	view.from(coll);
+		ok(result.length === 1, "Correct number of results in view find: " + result.length);
+		ok(result.length && result[0].name === 'Fred', "Correct entry data");
 
-	coll.insert({
-		name: 'Fred'
+		base.dbDown();
 	});
 
-	var result = view.find();
+	test("Collection -> View - Chains CRUD - updated", function () {
+		base.dbUp();
 
-	ok(result.length === 1, "Correct number of results in view find: " + result.length);
-	ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		var coll = db.collection('test'),
+			view = db.view('testView');
 
-	base.dbDown();
-});
+		view.from(coll);
 
-test("Collection -> View - Chains CRUD - updated", function() {
-	base.dbUp();
+		coll.insert({
+			name: 'Fred'
+		});
 
-	var coll = db.collection('test'),
-		view = db.view('testView');
+		coll.insert({
+			name: 'Joe'
+		});
 
-	view.from(coll);
+		coll.update({name: 'Fred'}, {name: 'Jim'});
 
-	coll.insert({
-		name: 'Fred'
+		var result = view.find();
+
+		ok(result.length === 2, "Correct number of results in view find: " + result.length);
+		ok(result.length && result[0].name === 'Jim', "Correct entry data");
+
+		base.dbDown();
 	});
 
-	coll.insert({
-		name: 'Joe'
+	test("Collection -> View - Chains CRUD - remove", function () {
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view = db.view('testView');
+
+		view.from(coll);
+
+		coll.insert({
+			name: 'Fred'
+		});
+
+		coll.insert({
+			name: 'Joe'
+		});
+
+		coll.remove({name: 'Fred'});
+
+		var result = view.find();
+
+		ok(result.length === 1, "Correct number of results in view find: " + result.length);
+		ok(result.length && result[0].name === 'Joe', "Correct entry data");
+
+		base.dbDown();
 	});
-
-	coll.update({name: 'Fred'}, {name: 'Jim'});
-
-	var result = view.find();
-
-	ok(result.length === 2, "Correct number of results in view find: " + result.length);
-	ok(result.length && result[0].name === 'Jim', "Correct entry data");
-
-	base.dbDown();
-});
-
-test("Collection -> View - Chains CRUD - remove", function() {
-	base.dbUp();
-
-	var coll = db.collection('test'),
-		view = db.view('testView');
-
-	view.from(coll);
-
-	coll.insert({
-		name: 'Fred'
-	});
-
-	coll.insert({
-		name: 'Joe'
-	});
-
-	coll.remove({name: 'Fred'});
-
-	var result = view.find();
-
-	ok(result.length === 1, "Correct number of results in view find: " + result.length);
-	ok(result.length && result[0].name === 'Joe', "Correct entry data");
-
-	base.dbDown();
 });
