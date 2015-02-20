@@ -2024,7 +2024,8 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
  * @private
  */
 Collection.prototype._sort = function (key, arr) {
-	var sorterMethod,
+	var self = this,
+		sorterMethod,
 		pathSolver = new Path(),
 		dataPath = pathSolver.parse(key, true)[0];
 
@@ -2036,7 +2037,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			return this.sortAsc(valA, valB);
+			return self.sortAsc(valA, valB);
 		};
 	} else if (dataPath.value === -1) {
 		// Sort descending
@@ -2044,7 +2045,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			return this.sortDesc(valA, valB);
+			return self.sortDesc(valA, valB);
 		};
 	} else {
 		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
