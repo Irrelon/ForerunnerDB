@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.3.1 (18th Feb 2015)
+## Version 1.3.2 (20th Feb 2015)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
