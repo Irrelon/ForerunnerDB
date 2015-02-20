@@ -64,45 +64,5 @@
 			</tfoot>
 		</table>
 	</script>
-<script>
-	// With the value will_12 allow match against any substring in a tree structure
-	var TreeNode = function () {
-		this._children = {};
-		this._data = [];
-	};
-
-	var Tree = function () {
-		this._root = new TreeNode();
-	};
-
-	Tree.prototype.insert = function (val, obj, node) {
-		this._root._data.push(obj);
-		this._insert(val.split(''), obj, this._root);
-	};
-
-	Tree.prototype._insert = function (arr, obj, node) {
-		var char = arr.shift(),
-			charNode = node._children[char] = node._children[char] || new TreeNode();
-
-		charNode._data.push(obj);
-
-		if (arr.length) {
-			this._insert(arr, obj, charNode);
-		}
-	};
-
-	var tree = new Tree();
-	tree.insert('will_12', {
-		name: 'will',
-		age: 12
-	});
-
-	tree.insert('will_13', {
-		name: 'will',
-		age: 13
-	});
-
-	console.log(tree);
-</script>
 </body>
 </html>
