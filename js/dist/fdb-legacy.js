@@ -10,7 +10,7 @@ var Core = _dereq_('../lib/Core'),
 	OldViewBind = _dereq_('../lib/OldView.Bind');
 
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":19,"../lib/OldView.Bind":18,"../lib/Overview":22,"../lib/Persist":24,"../lib/View":27}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":20,"../lib/OldView.Bind":19,"../lib/Overview":23,"../lib/Persist":25,"../lib/View":28}],2:[function(_dereq_,module,exports){
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -46,6 +46,7 @@ var ActiveBucket = function (orderBy) {
 
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
+Shared.mixin(ActiveBucket.prototype, 'Mixin.Sorting');
 
 /**
  * Quicksorts a single document into the passed array and
@@ -267,49 +268,9 @@ ActiveBucket.prototype.count = function () {
 	return this._count;
 };
 
-/**
- * Sorts the passed value a against the passed value b ascending.
- * @param {*} a The first value to compare.
- * @param {*} b The second value to compare.
- * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
- */
-ActiveBucket.prototype.sortAsc = function (a, b) {
-	if (typeof(a) === 'string' && typeof(b) === 'string') {
-		return a.localeCompare(b);
-	} else {
-		if (a > b) {
-			return 1;
-		} else if (a < b) {
-			return -1;
-		}
-	}
-
-	return 0;
-};
-
-/**
- * Sorts the passed value a against the passed value b descending.
- * @param {*} a The first value to compare.
- * @param {*} b The second value to compare.
- * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
- */
-ActiveBucket.prototype.sortDesc = function (a, b) {
-	if (typeof(a) === 'string' && typeof(b) === 'string') {
-		return b.localeCompare(a);
-	} else {
-		if (a > b) {
-			return -1;
-		} else if (a < b) {
-			return 1;
-		}
-	}
-
-	return 0;
-};
-
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":23,"./Shared":26}],3:[function(_dereq_,module,exports){
+},{"./Path":24,"./Shared":27}],3:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -320,7 +281,7 @@ var Shared,
 	Metrics,
 	KeyValueStore,
 	Path,
-	Index,
+	IndexHashMap,
 	Crc;
 
 Shared = _dereq_('./Shared');
@@ -375,11 +336,12 @@ Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
+Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
 Path = _dereq_('./Path');
-Index = _dereq_('./Index');
+IndexHashMap = _dereq_('./IndexHashMap');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
@@ -2335,7 +2297,8 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
  * @private
  */
 Collection.prototype._sort = function (key, arr) {
-	var sorterMethod,
+	var self = this,
+		sorterMethod,
 		pathSolver = new Path(),
 		dataPath = pathSolver.parse(key, true)[0];
 
@@ -2347,17 +2310,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valA.localeCompare(valB);
-			} else {
-				if (valA > valB) {
-					return 1;
-				} else if (valA < valB) {
-					return -1;
-				}
-			}
-
-			return 0;
+			return self.sortAsc(valA, valB);
 		};
 	} else if (dataPath.value === -1) {
 		// Sort descending
@@ -2365,17 +2318,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valB.localeCompare(valA);
-			} else {
-				if (valA > valB) {
-					return -1;
-				} else if (valA < valB) {
-					return 1;
-				}
-			}
-
-			return 0;
+			return self.sortDesc(valA, valB);
 		};
 	} else {
 		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
@@ -3010,7 +2953,7 @@ Collection.prototype.ensureIndex = function (keys, options) {
 	this._indexByName = this._indexByName || {};
 	this._indexById = this._indexById || {};
 
-	var index = new Index(keys, options, this),
+	var index = new IndexHashMap(keys, options, this),
 		time = {
 			start: new Date().getTime()
 		};
@@ -3223,7 +3166,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./Index":9,"./KeyValueStore":10,"./Metrics":11,"./Path":23,"./Shared":26}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexHashMap":9,"./KeyValueStore":10,"./Metrics":11,"./Path":24,"./Shared":27}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3513,7 +3456,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":26}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":27}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3545,7 +3488,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.3.1';
+	this._version = '1.3.2';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3862,7 +3805,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":21,"./Shared":26}],6:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":22,"./Shared":27}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -4270,7 +4213,7 @@ Core.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = Document;
-},{"./Collection":3,"./Shared":26}],8:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":27}],8:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Collection,
@@ -4872,20 +4815,20 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":21,"./Shared":26}],9:[function(_dereq_,module,exports){
+},{"./Overload":22,"./Shared":27}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
 /**
- * The index class used to instantiate indexes that the database can
+ * The index class used to instantiate hash map indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
-var Index = function () {
+var IndexHashMap = function () {
 	this.init.apply(this, arguments);
 };
 
-Index.prototype.init = function (keys, options, collection) {
+IndexHashMap.prototype.init = function (keys, options, collection) {
 	this._crossRef = {};
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
@@ -4904,42 +4847,28 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.addModule('Index', Index);
-Shared.mixin(Index.prototype, 'Mixin.ChainReactor');
+Shared.addModule('IndexHashMap', IndexHashMap);
+Shared.mixin(IndexHashMap.prototype, 'Mixin.ChainReactor');
 
-Index.prototype.id = function () {
+IndexHashMap.prototype.id = function () {
 	return this._id;
 };
 
-Index.prototype.state = function () {
+IndexHashMap.prototype.state = function () {
 	return this._state;
 };
 
-Index.prototype.size = function () {
+IndexHashMap.prototype.size = function () {
 	return this._size;
 };
 
-Index.prototype.data = function (val) {
-	if (val !== undefined) {
-		this._data = val;
-		return this;
-	}
+Shared.synthesize(IndexHashMap.prototype, 'data');
+Shared.synthesize(IndexHashMap.prototype, 'name');
+Shared.synthesize(IndexHashMap.prototype, 'collection');
+Shared.synthesize(IndexHashMap.prototype, 'type');
+Shared.synthesize(IndexHashMap.prototype, 'unique');
 
-	return this._data;
-};
-
-Shared.synthesize(Index.prototype, 'name');
-
-Index.prototype.collection = function (val) {
-	if (val !== undefined) {
-		this._collection = val;
-		return this;
-	}
-
-	return this._collection;
-};
-
-Index.prototype.keys = function (val) {
+IndexHashMap.prototype.keys = function (val) {
 	if (val !== undefined) {
 		this._keys = val;
 
@@ -4951,25 +4880,7 @@ Index.prototype.keys = function (val) {
 	return this._keys;
 };
 
-Index.prototype.type = function (val) {
-	if (val !== undefined) {
-		this._type = val;
-		return this;
-	}
-
-	return this._type;
-};
-
-Index.prototype.unique = function (val) {
-	if (val !== undefined) {
-		this._unique = val;
-		return this;
-	}
-
-	return this._unique;
-};
-
-Index.prototype.rebuild = function () {
+IndexHashMap.prototype.rebuild = function () {
 	// Do we have a collection?
 	if (this._collection) {
 		// Get sorted data
@@ -5004,7 +4915,7 @@ Index.prototype.rebuild = function () {
 	};
 };
 
-Index.prototype.insert = function (dataItem, options) {
+IndexHashMap.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -5024,7 +4935,7 @@ Index.prototype.insert = function (dataItem, options) {
 	}
 };
 
-Index.prototype.remove = function (dataItem, options) {
+IndexHashMap.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -5044,7 +4955,7 @@ Index.prototype.remove = function (dataItem, options) {
 	}
 };
 
-Index.prototype.violation = function (dataItem) {
+IndexHashMap.prototype.violation = function (dataItem) {
 	// Generate item hash
 	var uniqueHash = this._itemHash(dataItem, this._keys);
 
@@ -5052,12 +4963,12 @@ Index.prototype.violation = function (dataItem) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.hashViolation = function (uniqueHash) {
+IndexHashMap.prototype.hashViolation = function (uniqueHash) {
 	// Check if the item breaks the unique constraint
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.pushToPathValue = function (hash, obj) {
+IndexHashMap.prototype.pushToPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash] = this._data[hash] || [];
 
 	// Make sure we have not already indexed this object at this path/value
@@ -5073,7 +4984,7 @@ Index.prototype.pushToPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pullFromPathValue = function (hash, obj) {
+IndexHashMap.prototype.pullFromPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash],
 		indexOfObject;
 
@@ -5098,7 +5009,7 @@ Index.prototype.pullFromPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pull = function (obj) {
+IndexHashMap.prototype.pull = function (obj) {
 	// Get all places the object has been used and remove them
 	var id = obj[this._collection.primaryKey()],
 		crossRefArr = this._crossRef[id],
@@ -5120,7 +5031,7 @@ Index.prototype.pull = function (obj) {
 	delete this._crossRef[id];
 };
 
-Index.prototype._pullFromArray = function (arr, obj) {
+IndexHashMap.prototype._pullFromArray = function (arr, obj) {
 	var arrCount = arr.length;
 
 	while (arrCount--) {
@@ -5130,7 +5041,7 @@ Index.prototype._pullFromArray = function (arr, obj) {
 	}
 };
 
-Index.prototype.pushToCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
@@ -5145,18 +5056,18 @@ Index.prototype.pushToCrossRef = function (obj, pathValArr) {
 	}
 };
 
-Index.prototype.pullFromCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
 	delete this._crossRef[id];
 };
 
-Index.prototype.lookup = function (query) {
+IndexHashMap.prototype.lookup = function (query) {
 	return this._data[this._itemHash(query, this._keys)] || [];
 };
 
-Index.prototype.match = function (query, options) {
+IndexHashMap.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path();
@@ -5192,7 +5103,7 @@ Index.prototype.match = function (query, options) {
 	//return pathSolver.countObjectPaths(this._keys, query);
 };
 
-Index.prototype._itemHash = function (item, keys) {
+IndexHashMap.prototype._itemHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -5208,7 +5119,7 @@ Index.prototype._itemHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemKeyHash = function (item, keys) {
+IndexHashMap.prototype._itemKeyHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -5224,7 +5135,7 @@ Index.prototype._itemKeyHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemHashArr = function (item, keys) {
+IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -5253,9 +5164,9 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
-Shared.finishModule('Index');
-module.exports = Index;
-},{"./Path":23,"./Shared":26}],10:[function(_dereq_,module,exports){
+Shared.finishModule('IndexHashMap');
+module.exports = IndexHashMap;
+},{"./Path":24,"./Shared":27}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5468,7 +5379,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":26}],11:[function(_dereq_,module,exports){
+},{"./Shared":27}],11:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -5541,7 +5452,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":20,"./Shared":26}],12:[function(_dereq_,module,exports){
+},{"./Operation":21,"./Shared":27}],12:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -5720,7 +5631,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":21}],15:[function(_dereq_,module,exports){
+},{"./Overload":22}],15:[function(_dereq_,module,exports){
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -5860,6 +5771,50 @@ var Events = {
 
 module.exports = Events;
 },{}],17:[function(_dereq_,module,exports){
+var Sorting = {
+	/**
+	 * Sorts the passed value a against the passed value b ascending.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortAsc: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return a.localeCompare(b);
+		} else {
+			if (a > b) {
+				return 1;
+			} else if (a < b) {
+				return -1;
+			}
+		}
+
+		return 0;
+	},
+
+	/**
+	 * Sorts the passed value a against the passed value b descending.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortDesc: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return b.localeCompare(a);
+		} else {
+			if (a > b) {
+				return -1;
+			} else if (a < b) {
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+};
+
+module.exports = Sorting;
+},{}],18:[function(_dereq_,module,exports){
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -5997,7 +5952,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 // Grab the view class
 var Shared,
 	Core,
@@ -6408,7 +6363,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./Shared":26}],19:[function(_dereq_,module,exports){
+},{"./Shared":27}],20:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -7110,7 +7065,7 @@ Core.prototype.oldViews = function () {
 
 Shared.finishModule('OldView');
 module.exports = OldView;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":26}],20:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":27}],21:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -7255,7 +7210,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":23,"./Shared":26}],21:[function(_dereq_,module,exports){
+},{"./Path":24,"./Shared":27}],22:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -7390,7 +7345,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -7611,7 +7566,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":26}],23:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":27}],24:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -8022,7 +7977,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":26}],24:[function(_dereq_,module,exports){
+},{"./Shared":27}],25:[function(_dereq_,module,exports){
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
@@ -8388,7 +8343,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":26,"localforage":34}],25:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":27,"localforage":35}],26:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -8448,7 +8403,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":26}],26:[function(_dereq_,module,exports){
+},{"./Shared":27}],27:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -8572,7 +8527,8 @@ var Shared = {
 		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
 		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
-		'Mixin.Triggers': _dereq_('./Mixin.Triggers')
+		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
+		'Mixin.Sorting': _dereq_('./Mixin.Sorting')
 	}
 };
 
@@ -8580,7 +8536,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Constants":15,"./Mixin.Events":16,"./Mixin.Triggers":17,"./Overload":21}],27:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Constants":15,"./Mixin.Events":16,"./Mixin.Sorting":17,"./Mixin.Triggers":18,"./Overload":22}],28:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -9492,7 +9448,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":25,"./Shared":26}],28:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":26,"./Shared":27}],29:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -9599,7 +9555,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":30}],29:[function(_dereq_,module,exports){
+},{"asap":31}],30:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -9781,7 +9737,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":28,"asap":30}],30:[function(_dereq_,module,exports){
+},{"./core.js":29,"asap":31}],31:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -9898,7 +9854,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":35}],31:[function(_dereq_,module,exports){
+},{"_process":37}],32:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -9965,7 +9921,7 @@ module.exports = asap;
             self.ready().then(function() {
                 var dbInfo = self._dbInfo;
                 var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
-                              .objectStore(dbInfo.storeName);
+                    .objectStore(dbInfo.storeName);
                 var req = store.get(key);
 
                 req.onsuccess = function() {
@@ -9987,6 +9943,46 @@ module.exports = asap;
         return promise;
     }
 
+    // Iterate over all items stored in database.
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+                var store = dbInfo.db.transaction(dbInfo.storeName, 'readonly')
+                                     .objectStore(dbInfo.storeName);
+
+                var req = store.openCursor();
+                var iterationNumber = 1;
+
+                req.onsuccess = function() {
+                    var cursor = req.result;
+
+                    if (cursor) {
+                        var result = iterator(cursor.value, cursor.key, iterationNumber++);
+
+                        if (result !== void(0)) {
+                            resolve(result);
+                        } else {
+                            cursor.continue();
+                        }
+                    } else {
+                        resolve();
+                    }
+                };
+
+                req.onerror = function() {
+                    reject(req.error);
+                };
+            }).catch(reject);
+        });
+
+        executeDeferedCallback(promise, callback);
+
+        return promise;
+    }
+
     function setItem(key, value, callback) {
         var self = this;
 
@@ -10000,8 +9996,8 @@ module.exports = asap;
         var promise = new Promise(function(resolve, reject) {
             self.ready().then(function() {
                 var dbInfo = self._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
-                              .objectStore(dbInfo.storeName);
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
 
                 // The reason we don't _save_ null is because IE 10 does
                 // not support saving the `null` type in IndexedDB. How
@@ -10012,7 +10008,7 @@ module.exports = asap;
                 }
 
                 var req = store.put(value, key);
-                req.onsuccess = function() {
+                transaction.oncomplete = function() {
                     // Cast to undefined so the value passed to
                     // callback/promise is the same as what one would get out
                     // of `getItem()` later. This leads to some weirdness
@@ -10025,7 +10021,7 @@ module.exports = asap;
 
                     resolve(value);
                 };
-                req.onerror = function() {
+                transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
             }).catch(reject);
@@ -10048,8 +10044,8 @@ module.exports = asap;
         var promise = new Promise(function(resolve, reject) {
             self.ready().then(function() {
                 var dbInfo = self._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
-                              .objectStore(dbInfo.storeName);
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
 
                 // We use a Grunt task to make this safe for IE and some
                 // versions of Android (including those used by Cordova).
@@ -10057,18 +10053,18 @@ module.exports = asap;
                 // using `['delete']()`, but we have a build step that
                 // fixes this for us now.
                 var req = store.delete(key);
-                req.onsuccess = function() {
+                transaction.oncomplete = function() {
                     resolve();
                 };
 
-                req.onerror = function() {
+                transaction.onerror = function() {
                     reject(req.error);
                 };
 
                 // The request will be aborted if we've exceeded our storage
                 // space. In this case, we will reject with a specific
                 // "QuotaExceededError".
-                req.onabort = function(event) {
+                transaction.onabort = function(event) {
                     var error = event.target.error;
                     if (error === 'QuotaExceededError') {
                         reject(error);
@@ -10087,15 +10083,15 @@ module.exports = asap;
         var promise = new Promise(function(resolve, reject) {
             self.ready().then(function() {
                 var dbInfo = self._dbInfo;
-                var store = dbInfo.db.transaction(dbInfo.storeName, 'readwrite')
-                              .objectStore(dbInfo.storeName);
+                var transaction = dbInfo.db.transaction(dbInfo.storeName, 'readwrite');
+                var store = transaction.objectStore(dbInfo.storeName);
                 var req = store.clear();
 
-                req.onsuccess = function() {
+                transaction.oncomplete = function() {
                     resolve();
                 };
 
-                req.onerror = function() {
+                transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
             }).catch(reject);
@@ -10252,6 +10248,7 @@ module.exports = asap;
     var asyncStorage = {
         _driver: 'asyncStorage',
         _initStorage: _initStorage,
+        iterate: iterate,
         getItem: getItem,
         setItem: setItem,
         removeItem: removeItem,
@@ -10261,18 +10258,18 @@ module.exports = asap;
         keys: keys
     };
 
-    if (typeof define === 'function' && define.amd) {
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = asyncStorage;
+    } else if (typeof define === 'function' && define.amd) {
         define('asyncStorage', function() {
             return asyncStorage;
         });
-    } else if (typeof module !== 'undefined' && module.exports) {
-        module.exports = asyncStorage;
     } else {
         this.asyncStorage = asyncStorage;
     }
 }).call(window);
 
-},{"promise":29}],32:[function(_dereq_,module,exports){
+},{"promise":30}],33:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -10283,6 +10280,9 @@ module.exports = asap;
     // Promises!
     var Promise = (typeof module !== 'undefined' && module.exports) ?
                   _dereq_('promise') : this.Promise;
+
+    var globalObject = this;
+    var serializer = null;
     var localStorage = null;
 
     // If the app is running inside a Google Chrome packaged webapp, or some
@@ -10303,6 +10303,24 @@ module.exports = asap;
         return;
     }
 
+    var ModuleType = {
+        DEFINE: 1,
+        EXPORT: 2,
+        WINDOW: 3
+    };
+
+    // Attaching to window (i.e. no module loader) is the assumed,
+    // simple default.
+    var moduleType = ModuleType.WINDOW;
+
+    // Find out what kind of module setup we have; if none, we'll just attach
+    // localForage to the main window.
+    if (typeof module !== 'undefined' && module.exports) {
+        moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
+    }
+
     // Config the localStorage backend, using options set in the config.
     function _initStorage(options) {
         var self = this;
@@ -10316,45 +10334,40 @@ module.exports = asap;
         dbInfo.keyPrefix = dbInfo.name + '/';
 
         self._dbInfo = dbInfo;
-        return Promise.resolve();
+
+        var serializerPromise = new Promise(function(resolve/*, reject*/) {
+            // We allow localForage to be declared as a module or as a
+            // library available without AMD/require.js.
+            if (moduleType === ModuleType.DEFINE) {
+                _dereq_(['localforageSerializer'], resolve);
+            } else if (moduleType === ModuleType.EXPORT) {
+                // Making it browserify friendly
+                resolve(_dereq_('./../utils/serializer'));
+            } else {
+                resolve(globalObject.localforageSerializer);
+            }
+        });
+
+        return serializerPromise.then(function(lib) {
+            serializer = lib;
+            return Promise.resolve();
+        });
     }
-
-    var SERIALIZED_MARKER = '__lfsc__:';
-    var SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER.length;
-
-    // OMG the serializations!
-    var TYPE_ARRAYBUFFER = 'arbf';
-    var TYPE_BLOB = 'blob';
-    var TYPE_INT8ARRAY = 'si08';
-    var TYPE_UINT8ARRAY = 'ui08';
-    var TYPE_UINT8CLAMPEDARRAY = 'uic8';
-    var TYPE_INT16ARRAY = 'si16';
-    var TYPE_INT32ARRAY = 'si32';
-    var TYPE_UINT16ARRAY = 'ur16';
-    var TYPE_UINT32ARRAY = 'ui32';
-    var TYPE_FLOAT32ARRAY = 'fl32';
-    var TYPE_FLOAT64ARRAY = 'fl64';
-    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
-                                        TYPE_ARRAYBUFFER.length;
 
     // Remove all keys from the datastore, effectively destroying all data in
     // the app's key/value store!
     function clear(callback) {
         var self = this;
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                var keyPrefix = self._dbInfo.keyPrefix;
+        var promise = self.ready().then(function() {
+            var keyPrefix = self._dbInfo.keyPrefix;
 
-                for (var i = localStorage.length - 1; i >= 0; i--) {
-                    var key = localStorage.key(i);
+            for (var i = localStorage.length - 1; i >= 0; i--) {
+                var key = localStorage.key(i);
 
-                    if (key.indexOf(keyPrefix) === 0) {
-                        localStorage.removeItem(key);
-                    }
+                if (key.indexOf(keyPrefix) === 0) {
+                    localStorage.removeItem(key);
                 }
-
-                resolve();
-            }).catch(reject);
+            }
         });
 
         executeCallback(promise, callback);
@@ -10374,25 +10387,52 @@ module.exports = asap;
             key = String(key);
         }
 
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                try {
-                    var dbInfo = self._dbInfo;
-                    var result = localStorage.getItem(dbInfo.keyPrefix + key);
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var result = localStorage.getItem(dbInfo.keyPrefix + key);
 
-                    // If a result was found, parse it from the serialized
-                    // string into a JS object. If result isn't truthy, the key
-                    // is likely undefined and we'll pass it straight to the
-                    // callback.
-                    if (result) {
-                        result = _deserialize(result);
-                    }
+            // If a result was found, parse it from the serialized
+            // string into a JS object. If result isn't truthy, the key
+            // is likely undefined and we'll pass it straight to the
+            // callback.
+            if (result) {
+                result = serializer.deserialize(result);
+            }
 
-                    resolve(result);
-                } catch (e) {
-                    reject(e);
+            return result;
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    // Iterate over all items in the store.
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = self.ready().then(function() {
+            var keyPrefix = self._dbInfo.keyPrefix;
+            var keyPrefixLength = keyPrefix.length;
+            var length = localStorage.length;
+
+            for (var i = 0; i < length; i++) {
+                var key = localStorage.key(i);
+                var value = localStorage.getItem(key);
+
+                // If a result was found, parse it from the serialized
+                // string into a JS object. If result isn't truthy, the
+                // key is likely undefined and we'll pass it straight
+                // to the iterator.
+                if (value) {
+                    value = serializer.deserialize(value);
                 }
-            }).catch(reject);
+
+                value = iterator(value, key.substring(keyPrefixLength), i + 1);
+
+                if (value !== void(0)) {
+                    return value;
+                }
+            }
         });
 
         executeCallback(promise, callback);
@@ -10402,23 +10442,21 @@ module.exports = asap;
     // Same as localStorage's key() method, except takes a callback.
     function key(n, callback) {
         var self = this;
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                var dbInfo = self._dbInfo;
-                var result;
-                try {
-                    result = localStorage.key(n);
-                } catch (error) {
-                    result = null;
-                }
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var result;
+            try {
+                result = localStorage.key(n);
+            } catch (error) {
+                result = null;
+            }
 
-                // Remove the prefix from the key, if a key is found.
-                if (result) {
-                    result = result.substring(dbInfo.keyPrefix.length);
-                }
+            // Remove the prefix from the key, if a key is found.
+            if (result) {
+                result = result.substring(dbInfo.keyPrefix.length);
+            }
 
-                resolve(result);
-            }).catch(reject);
+            return result;
         });
 
         executeCallback(promise, callback);
@@ -10427,20 +10465,18 @@ module.exports = asap;
 
     function keys(callback) {
         var self = this;
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                var dbInfo = self._dbInfo;
-                var length = localStorage.length;
-                var keys = [];
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            var length = localStorage.length;
+            var keys = [];
 
-                for (var i = 0; i < length; i++) {
-                    if (localStorage.key(i).indexOf(dbInfo.keyPrefix) === 0) {
-                        keys.push(localStorage.key(i).substring(dbInfo.keyPrefix.length));
-                    }
+            for (var i = 0; i < length; i++) {
+                if (localStorage.key(i).indexOf(dbInfo.keyPrefix) === 0) {
+                    keys.push(localStorage.key(i).substring(dbInfo.keyPrefix.length));
                 }
+            }
 
-                resolve(keys);
-            }).catch(reject);
+            return keys;
         });
 
         executeCallback(promise, callback);
@@ -10450,10 +10486,8 @@ module.exports = asap;
     // Supply the number of keys in the datastore to the callback function.
     function length(callback) {
         var self = this;
-        var promise = new Promise(function(resolve, reject) {
-            self.keys().then(function(keys) {
-                resolve(keys.length);
-            }).catch(reject);
+        var promise = self.keys().then(function(keys) {
+            return keys.length;
         });
 
         executeCallback(promise, callback);
@@ -10471,172 +10505,13 @@ module.exports = asap;
             key = String(key);
         }
 
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                var dbInfo = self._dbInfo;
-                localStorage.removeItem(dbInfo.keyPrefix + key);
-
-                resolve();
-            }).catch(reject);
+        var promise = self.ready().then(function() {
+            var dbInfo = self._dbInfo;
+            localStorage.removeItem(dbInfo.keyPrefix + key);
         });
 
         executeCallback(promise, callback);
         return promise;
-    }
-
-    // Deserialize data we've inserted into a value column/field. We place
-    // special markers into our strings to mark them as encoded; this isn't
-    // as nice as a meta field, but it's the only sane thing we can do whilst
-    // keeping localStorage support intact.
-    //
-    // Oftentimes this will just deserialize JSON content, but if we have a
-    // special marker (SERIALIZED_MARKER, defined above), we will extract
-    // some kind of arraybuffer/binary data/typed array out of the string.
-    function _deserialize(value) {
-        // If we haven't marked this string as being specially serialized (i.e.
-        // something other than serialized JSON), we can just return it and be
-        // done with it.
-        if (value.substring(0,
-            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
-            return JSON.parse(value);
-        }
-
-        // The following code deals with deserializing some kind of Blob or
-        // TypedArray. First we separate out the type of data we're dealing
-        // with from the data itself.
-        var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
-        var type = value.substring(SERIALIZED_MARKER_LENGTH,
-                                   TYPE_SERIALIZED_MARKER_LENGTH);
-
-        // Fill the string into a ArrayBuffer.
-        // 2 bytes for each char.
-        var buffer = new ArrayBuffer(serializedString.length * 2);
-        var bufferView = new Uint16Array(buffer);
-        for (var i = serializedString.length - 1; i >= 0; i--) {
-            bufferView[i] = serializedString.charCodeAt(i);
-        }
-
-        // Return the right type based on the code/type set during
-        // serialization.
-        switch (type) {
-            case TYPE_ARRAYBUFFER:
-                return buffer;
-            case TYPE_BLOB:
-                return new Blob([buffer]);
-            case TYPE_INT8ARRAY:
-                return new Int8Array(buffer);
-            case TYPE_UINT8ARRAY:
-                return new Uint8Array(buffer);
-            case TYPE_UINT8CLAMPEDARRAY:
-                return new Uint8ClampedArray(buffer);
-            case TYPE_INT16ARRAY:
-                return new Int16Array(buffer);
-            case TYPE_UINT16ARRAY:
-                return new Uint16Array(buffer);
-            case TYPE_INT32ARRAY:
-                return new Int32Array(buffer);
-            case TYPE_UINT32ARRAY:
-                return new Uint32Array(buffer);
-            case TYPE_FLOAT32ARRAY:
-                return new Float32Array(buffer);
-            case TYPE_FLOAT64ARRAY:
-                return new Float64Array(buffer);
-            default:
-                throw new Error('Unkown type: ' + type);
-        }
-    }
-
-    // Converts a buffer to a string to store, serialized, in the backend
-    // storage library.
-    function _bufferToString(buffer) {
-        var str = '';
-        var uint16Array = new Uint16Array(buffer);
-
-        try {
-            str = String.fromCharCode.apply(null, uint16Array);
-        } catch (e) {
-            // This is a fallback implementation in case the first one does
-            // not work. This is required to get the phantomjs passing...
-            for (var i = 0; i < uint16Array.length; i++) {
-                str += String.fromCharCode(uint16Array[i]);
-            }
-        }
-
-        return str;
-    }
-
-    // Serialize a value, afterwards executing a callback (which usually
-    // instructs the `setItem()` callback/promise to be executed). This is how
-    // we store binary data with localStorage.
-    function _serialize(value, callback) {
-        var valueString = '';
-        if (value) {
-            valueString = value.toString();
-        }
-
-        // Cannot use `value instanceof ArrayBuffer` or such here, as these
-        // checks fail when running the tests using casper.js...
-        //
-        // TODO: See why those tests fail and use a better solution.
-        if (value && (value.toString() === '[object ArrayBuffer]' ||
-                      value.buffer &&
-                      value.buffer.toString() === '[object ArrayBuffer]')) {
-            // Convert binary arrays to a string and prefix the string with
-            // a special marker.
-            var buffer;
-            var marker = SERIALIZED_MARKER;
-
-            if (value instanceof ArrayBuffer) {
-                buffer = value;
-                marker += TYPE_ARRAYBUFFER;
-            } else {
-                buffer = value.buffer;
-
-                if (valueString === '[object Int8Array]') {
-                    marker += TYPE_INT8ARRAY;
-                } else if (valueString === '[object Uint8Array]') {
-                    marker += TYPE_UINT8ARRAY;
-                } else if (valueString === '[object Uint8ClampedArray]') {
-                    marker += TYPE_UINT8CLAMPEDARRAY;
-                } else if (valueString === '[object Int16Array]') {
-                    marker += TYPE_INT16ARRAY;
-                } else if (valueString === '[object Uint16Array]') {
-                    marker += TYPE_UINT16ARRAY;
-                } else if (valueString === '[object Int32Array]') {
-                    marker += TYPE_INT32ARRAY;
-                } else if (valueString === '[object Uint32Array]') {
-                    marker += TYPE_UINT32ARRAY;
-                } else if (valueString === '[object Float32Array]') {
-                    marker += TYPE_FLOAT32ARRAY;
-                } else if (valueString === '[object Float64Array]') {
-                    marker += TYPE_FLOAT64ARRAY;
-                } else {
-                    callback(new Error('Failed to get type for BinaryArray'));
-                }
-            }
-
-            callback(marker + _bufferToString(buffer));
-        } else if (valueString === '[object Blob]') {
-            // Conver the blob to a binaryArray and then to a string.
-            var fileReader = new FileReader();
-
-            fileReader.onload = function() {
-                var str = _bufferToString(this.result);
-
-                callback(SERIALIZED_MARKER + TYPE_BLOB + str);
-            };
-
-            fileReader.readAsArrayBuffer(value);
-        } else {
-            try {
-                callback(JSON.stringify(value));
-            } catch (e) {
-                window.console.error("Couldn't convert value into a JSON " +
-                                     'string: ', value);
-
-                callback(e);
-            }
-        }
     }
 
     // Set a key's value and run an optional callback once the value is set.
@@ -10653,24 +10528,25 @@ module.exports = asap;
             key = String(key);
         }
 
-        var promise = new Promise(function(resolve, reject) {
-            self.ready().then(function() {
-                // Convert undefined values to null.
-                // https://github.com/mozilla/localForage/pull/42
-                if (value === undefined) {
-                    value = null;
-                }
+        var promise = self.ready().then(function() {
+            // Convert undefined values to null.
+            // https://github.com/mozilla/localForage/pull/42
+            if (value === undefined) {
+                value = null;
+            }
 
-                // Save the original value to pass to the callback.
-                var originalValue = value;
+            // Save the original value to pass to the callback.
+            var originalValue = value;
 
-                _serialize(value, function(value, error) {
+            return new Promise(function(resolve, reject) {
+                serializer.serialize(value, function(value, error) {
                     if (error) {
                         reject(error);
                     } else {
                         try {
                             var dbInfo = self._dbInfo;
                             localStorage.setItem(dbInfo.keyPrefix + key, value);
+                            resolve(originalValue);
                         } catch (e) {
                             // localStorage capacity exceeded.
                             // TODO: Make this a specific error/event.
@@ -10678,12 +10554,11 @@ module.exports = asap;
                                 e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
                                 reject(e);
                             }
+                            reject(e);
                         }
-
-                        resolve(originalValue);
                     }
                 });
-            }).catch(reject);
+            });
         });
 
         executeCallback(promise, callback);
@@ -10704,6 +10579,7 @@ module.exports = asap;
         _driver: 'localStorageWrapper',
         _initStorage: _initStorage,
         // Default API, from Gaia/localStorage.
+        iterate: iterate,
         getItem: getItem,
         setItem: setItem,
         removeItem: removeItem,
@@ -10713,18 +10589,18 @@ module.exports = asap;
         keys: keys
     };
 
-    if (typeof define === 'function' && define.amd) {
+    if (moduleType === ModuleType.EXPORT) {
+        module.exports = localStorageWrapper;
+    } else if (moduleType === ModuleType.DEFINE) {
         define('localStorageWrapper', function() {
             return localStorageWrapper;
         });
-    } else if (typeof module !== 'undefined' && module.exports) {
-        module.exports = localStorageWrapper;
     } else {
         this.localStorageWrapper = localStorageWrapper;
     }
 }).call(window);
 
-},{"promise":29}],33:[function(_dereq_,module,exports){
+},{"./../utils/serializer":36,"promise":30}],34:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -10737,38 +10613,35 @@ module.exports = asap;
 (function() {
     'use strict';
 
-    // Sadly, the best way to save binary data in WebSQL is Base64 serializing
-    // it, so this is how we store it to prevent very strange errors with less
-    // verbose ways of binary <-> string data storage.
-    var BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
     // Promises!
     var Promise = (typeof module !== 'undefined' && module.exports) ?
                   _dereq_('promise') : this.Promise;
 
+    var globalObject = this;
+    var serializer = null;
     var openDatabase = this.openDatabase;
-
-    var SERIALIZED_MARKER = '__lfsc__:';
-    var SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER.length;
-
-    // OMG the serializations!
-    var TYPE_ARRAYBUFFER = 'arbf';
-    var TYPE_BLOB = 'blob';
-    var TYPE_INT8ARRAY = 'si08';
-    var TYPE_UINT8ARRAY = 'ui08';
-    var TYPE_UINT8CLAMPEDARRAY = 'uic8';
-    var TYPE_INT16ARRAY = 'si16';
-    var TYPE_INT32ARRAY = 'si32';
-    var TYPE_UINT16ARRAY = 'ur16';
-    var TYPE_UINT32ARRAY = 'ui32';
-    var TYPE_FLOAT32ARRAY = 'fl32';
-    var TYPE_FLOAT64ARRAY = 'fl64';
-    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
-                                        TYPE_ARRAYBUFFER.length;
 
     // If WebSQL methods aren't available, we can stop now.
     if (!openDatabase) {
         return;
+    }
+
+    var ModuleType = {
+        DEFINE: 1,
+        EXPORT: 2,
+        WINDOW: 3
+    };
+
+    // Attaching to window (i.e. no module loader) is the assumed,
+    // simple default.
+    var moduleType = ModuleType.WINDOW;
+
+    // Find out what kind of module setup we have; if none, we'll just attach
+    // localForage to the main window.
+    if (typeof module !== 'undefined' && module.exports) {
+        moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
     }
 
     // Open the WebSQL database (automatically creates one if one didn't
@@ -10786,19 +10659,29 @@ module.exports = asap;
             }
         }
 
-        return new Promise(function(resolve, reject) {
+        var serializerPromise = new Promise(function(resolve/*, reject*/) {
+            // We allow localForage to be declared as a module or as a
+            // library available without AMD/require.js.
+            if (moduleType === ModuleType.DEFINE) {
+                _dereq_(['localforageSerializer'], resolve);
+            } else if (moduleType === ModuleType.EXPORT) {
+                // Making it browserify friendly
+                resolve(_dereq_('./../utils/serializer'));
+            } else {
+                resolve(globalObject.localforageSerializer);
+            }
+        });
+
+        var dbInfoPromise = new Promise(function(resolve, reject) {
             // Open the database; the openDatabase API will automatically
             // create it for us if it doesn't exist.
             try {
                 dbInfo.db = openDatabase(dbInfo.name, String(dbInfo.version),
                                          dbInfo.description, dbInfo.size);
             } catch (e) {
-                return self.setDriver('localStorageWrapper')
-                    .then(function() {
-                        return self._initStorage(options);
-                    })
-                    .then(resolve)
-                    .catch(reject);
+                return self.setDriver(self.LOCALSTORAGE).then(function() {
+                    return self._initStorage(options);
+                }).then(resolve).catch(reject);
             }
 
             // Create our key/value table if it doesn't exist.
@@ -10812,6 +10695,11 @@ module.exports = asap;
                     reject(error);
                 });
             });
+        });
+
+        return serializerPromise.then(function(lib) {
+            serializer = lib;
+            return dbInfoPromise;
         });
     }
 
@@ -10838,7 +10726,7 @@ module.exports = asap;
                         // Check to see if this is serialized content we need to
                         // unpack.
                         if (result) {
-                            result = _deserialize(result);
+                            result = serializer.deserialize(result);
                         }
 
                         resolve(result);
@@ -10846,6 +10734,51 @@ module.exports = asap;
 
                         reject(error);
                     });
+                });
+            }).catch(reject);
+        });
+
+        executeCallback(promise, callback);
+        return promise;
+    }
+
+    function iterate(iterator, callback) {
+        var self = this;
+
+        var promise = new Promise(function(resolve, reject) {
+            self.ready().then(function() {
+                var dbInfo = self._dbInfo;
+
+                dbInfo.db.transaction(function(t) {
+                    t.executeSql('SELECT * FROM ' + dbInfo.storeName, [],
+                        function(t, results) {
+                            var rows = results.rows;
+                            var length = rows.length;
+
+                            for (var i = 0; i < length; i++) {
+                                var item = rows.item(i);
+                                var result = item.value;
+
+                                // Check to see if this is serialized content
+                                // we need to unpack.
+                                if (result) {
+                                    result = serializer.deserialize(result);
+                                }
+
+                                result = iterator(result, item.key, i + 1);
+
+                                // void(0) prevents problems with redefinition
+                                // of `undefined`.
+                                if (result !== void(0)) {
+                                    resolve(result);
+                                    return;
+                                }
+                            }
+
+                            resolve();
+                        }, function(t, error) {
+                            reject(error);
+                        });
                 });
             }).catch(reject);
         });
@@ -10876,7 +10809,7 @@ module.exports = asap;
                 // Save the original value to pass to the callback.
                 var originalValue = value;
 
-                _serialize(value, function(value, error) {
+                serializer.serialize(value, function(value, error) {
                     if (error) {
                         reject(error);
                     } else {
@@ -11051,188 +10984,6 @@ module.exports = asap;
         return promise;
     }
 
-    // Converts a buffer to a string to store, serialized, in the backend
-    // storage library.
-    function _bufferToString(buffer) {
-        // base64-arraybuffer
-        var bytes = new Uint8Array(buffer);
-        var i;
-        var base64String = '';
-
-        for (i = 0; i < bytes.length; i += 3) {
-            /*jslint bitwise: true */
-            base64String += BASE_CHARS[bytes[i] >> 2];
-            base64String += BASE_CHARS[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
-            base64String += BASE_CHARS[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
-            base64String += BASE_CHARS[bytes[i + 2] & 63];
-        }
-
-        if ((bytes.length % 3) === 2) {
-            base64String = base64String.substring(0, base64String.length - 1) + '=';
-        } else if (bytes.length % 3 === 1) {
-            base64String = base64String.substring(0, base64String.length - 2) + '==';
-        }
-
-        return base64String;
-    }
-
-    // Deserialize data we've inserted into a value column/field. We place
-    // special markers into our strings to mark them as encoded; this isn't
-    // as nice as a meta field, but it's the only sane thing we can do whilst
-    // keeping localStorage support intact.
-    //
-    // Oftentimes this will just deserialize JSON content, but if we have a
-    // special marker (SERIALIZED_MARKER, defined above), we will extract
-    // some kind of arraybuffer/binary data/typed array out of the string.
-    function _deserialize(value) {
-        // If we haven't marked this string as being specially serialized (i.e.
-        // something other than serialized JSON), we can just return it and be
-        // done with it.
-        if (value.substring(0,
-                            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
-            return JSON.parse(value);
-        }
-
-        // The following code deals with deserializing some kind of Blob or
-        // TypedArray. First we separate out the type of data we're dealing
-        // with from the data itself.
-        var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
-        var type = value.substring(SERIALIZED_MARKER_LENGTH,
-                                   TYPE_SERIALIZED_MARKER_LENGTH);
-
-        // Fill the string into a ArrayBuffer.
-        var bufferLength = serializedString.length * 0.75;
-        var len = serializedString.length;
-        var i;
-        var p = 0;
-        var encoded1, encoded2, encoded3, encoded4;
-
-        if (serializedString[serializedString.length - 1] === '=') {
-            bufferLength--;
-            if (serializedString[serializedString.length - 2] === '=') {
-                bufferLength--;
-            }
-        }
-
-        var buffer = new ArrayBuffer(bufferLength);
-        var bytes = new Uint8Array(buffer);
-
-        for (i = 0; i < len; i+=4) {
-            encoded1 = BASE_CHARS.indexOf(serializedString[i]);
-            encoded2 = BASE_CHARS.indexOf(serializedString[i+1]);
-            encoded3 = BASE_CHARS.indexOf(serializedString[i+2]);
-            encoded4 = BASE_CHARS.indexOf(serializedString[i+3]);
-
-            /*jslint bitwise: true */
-            bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
-            bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
-            bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
-        }
-
-        // Return the right type based on the code/type set during
-        // serialization.
-        switch (type) {
-            case TYPE_ARRAYBUFFER:
-                return buffer;
-            case TYPE_BLOB:
-                return new Blob([buffer]);
-            case TYPE_INT8ARRAY:
-                return new Int8Array(buffer);
-            case TYPE_UINT8ARRAY:
-                return new Uint8Array(buffer);
-            case TYPE_UINT8CLAMPEDARRAY:
-                return new Uint8ClampedArray(buffer);
-            case TYPE_INT16ARRAY:
-                return new Int16Array(buffer);
-            case TYPE_UINT16ARRAY:
-                return new Uint16Array(buffer);
-            case TYPE_INT32ARRAY:
-                return new Int32Array(buffer);
-            case TYPE_UINT32ARRAY:
-                return new Uint32Array(buffer);
-            case TYPE_FLOAT32ARRAY:
-                return new Float32Array(buffer);
-            case TYPE_FLOAT64ARRAY:
-                return new Float64Array(buffer);
-            default:
-                throw new Error('Unkown type: ' + type);
-        }
-    }
-
-    // Serialize a value, afterwards executing a callback (which usually
-    // instructs the `setItem()` callback/promise to be executed). This is how
-    // we store binary data with localStorage.
-    function _serialize(value, callback) {
-        var valueString = '';
-        if (value) {
-            valueString = value.toString();
-        }
-
-        // Cannot use `value instanceof ArrayBuffer` or such here, as these
-        // checks fail when running the tests using casper.js...
-        //
-        // TODO: See why those tests fail and use a better solution.
-        if (value && (value.toString() === '[object ArrayBuffer]' ||
-                      value.buffer &&
-                      value.buffer.toString() === '[object ArrayBuffer]')) {
-            // Convert binary arrays to a string and prefix the string with
-            // a special marker.
-            var buffer;
-            var marker = SERIALIZED_MARKER;
-
-            if (value instanceof ArrayBuffer) {
-                buffer = value;
-                marker += TYPE_ARRAYBUFFER;
-            } else {
-                buffer = value.buffer;
-
-                if (valueString === '[object Int8Array]') {
-                    marker += TYPE_INT8ARRAY;
-                } else if (valueString === '[object Uint8Array]') {
-                    marker += TYPE_UINT8ARRAY;
-                } else if (valueString === '[object Uint8ClampedArray]') {
-                    marker += TYPE_UINT8CLAMPEDARRAY;
-                } else if (valueString === '[object Int16Array]') {
-                    marker += TYPE_INT16ARRAY;
-                } else if (valueString === '[object Uint16Array]') {
-                    marker += TYPE_UINT16ARRAY;
-                } else if (valueString === '[object Int32Array]') {
-                    marker += TYPE_INT32ARRAY;
-                } else if (valueString === '[object Uint32Array]') {
-                    marker += TYPE_UINT32ARRAY;
-                } else if (valueString === '[object Float32Array]') {
-                    marker += TYPE_FLOAT32ARRAY;
-                } else if (valueString === '[object Float64Array]') {
-                    marker += TYPE_FLOAT64ARRAY;
-                } else {
-                    callback(new Error('Failed to get type for BinaryArray'));
-                }
-            }
-
-            callback(marker + _bufferToString(buffer));
-        } else if (valueString === '[object Blob]') {
-            // Conver the blob to a binaryArray and then to a string.
-            var fileReader = new FileReader();
-
-            fileReader.onload = function() {
-                var str = _bufferToString(this.result);
-
-                callback(SERIALIZED_MARKER + TYPE_BLOB + str);
-            };
-
-            fileReader.readAsArrayBuffer(value);
-        } else {
-            try {
-                callback(JSON.stringify(value));
-            } catch (e) {
-                window.console.error("Couldn't convert value into a JSON " +
-                                     'string: ', value);
-
-                callback(null, e);
-            }
-        }
-    }
-
     function executeCallback(promise, callback) {
         if (callback) {
             promise.then(function(result) {
@@ -11246,6 +10997,7 @@ module.exports = asap;
     var webSQLStorage = {
         _driver: 'webSQLStorage',
         _initStorage: _initStorage,
+        iterate: iterate,
         getItem: getItem,
         setItem: setItem,
         removeItem: removeItem,
@@ -11255,18 +11007,18 @@ module.exports = asap;
         keys: keys
     };
 
-    if (typeof define === 'function' && define.amd) {
+    if (moduleType === ModuleType.DEFINE) {
         define('webSQLStorage', function() {
             return webSQLStorage;
         });
-    } else if (typeof module !== 'undefined' && module.exports) {
+    } else if (moduleType === ModuleType.EXPORT) {
         module.exports = webSQLStorage;
     } else {
         this.webSQLStorage = webSQLStorage;
     }
 }).call(window);
 
-},{"promise":29}],34:[function(_dereq_,module,exports){
+},{"./../utils/serializer":36,"promise":30}],35:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -11293,6 +11045,7 @@ module.exports = asap;
     var LibraryMethods = [
         'clear',
         'getItem',
+        'iterate',
         'key',
         'keys',
         'length',
@@ -11323,10 +11076,10 @@ module.exports = asap;
 
     // Find out what kind of module setup we have; if none, we'll just attach
     // localForage to the main window.
-    if (typeof define === 'function' && define.amd) {
-        moduleType = ModuleType.DEFINE;
-    } else if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports) {
         moduleType = ModuleType.EXPORT;
+    } else if (typeof define === 'function' && define.amd) {
+        moduleType = ModuleType.DEFINE;
     }
 
     // Check to see if IndexedDB is available and if it is the latest
@@ -11687,7 +11440,239 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":31,"./drivers/localstorage":32,"./drivers/websql":33,"promise":29}],35:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":32,"./drivers/localstorage":33,"./drivers/websql":34,"promise":30}],36:[function(_dereq_,module,exports){
+(function() {
+    'use strict';
+
+    // Sadly, the best way to save binary data in WebSQL/localStorage is serializing
+    // it to Base64, so this is how we store it to prevent very strange errors with less
+    // verbose ways of binary <-> string data storage.
+    var BASE_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+
+    var SERIALIZED_MARKER = '__lfsc__:';
+    var SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER.length;
+
+    // OMG the serializations!
+    var TYPE_ARRAYBUFFER = 'arbf';
+    var TYPE_BLOB = 'blob';
+    var TYPE_INT8ARRAY = 'si08';
+    var TYPE_UINT8ARRAY = 'ui08';
+    var TYPE_UINT8CLAMPEDARRAY = 'uic8';
+    var TYPE_INT16ARRAY = 'si16';
+    var TYPE_INT32ARRAY = 'si32';
+    var TYPE_UINT16ARRAY = 'ur16';
+    var TYPE_UINT32ARRAY = 'ui32';
+    var TYPE_FLOAT32ARRAY = 'fl32';
+    var TYPE_FLOAT64ARRAY = 'fl64';
+    var TYPE_SERIALIZED_MARKER_LENGTH = SERIALIZED_MARKER_LENGTH +
+                                        TYPE_ARRAYBUFFER.length;
+
+    // Serialize a value, afterwards executing a callback (which usually
+    // instructs the `setItem()` callback/promise to be executed). This is how
+    // we store binary data with localStorage.
+    function serialize(value, callback) {
+        var valueString = '';
+        if (value) {
+            valueString = value.toString();
+        }
+
+        // Cannot use `value instanceof ArrayBuffer` or such here, as these
+        // checks fail when running the tests using casper.js...
+        //
+        // TODO: See why those tests fail and use a better solution.
+        if (value && (value.toString() === '[object ArrayBuffer]' ||
+                      value.buffer &&
+                      value.buffer.toString() === '[object ArrayBuffer]')) {
+            // Convert binary arrays to a string and prefix the string with
+            // a special marker.
+            var buffer;
+            var marker = SERIALIZED_MARKER;
+
+            if (value instanceof ArrayBuffer) {
+                buffer = value;
+                marker += TYPE_ARRAYBUFFER;
+            } else {
+                buffer = value.buffer;
+
+                if (valueString === '[object Int8Array]') {
+                    marker += TYPE_INT8ARRAY;
+                } else if (valueString === '[object Uint8Array]') {
+                    marker += TYPE_UINT8ARRAY;
+                } else if (valueString === '[object Uint8ClampedArray]') {
+                    marker += TYPE_UINT8CLAMPEDARRAY;
+                } else if (valueString === '[object Int16Array]') {
+                    marker += TYPE_INT16ARRAY;
+                } else if (valueString === '[object Uint16Array]') {
+                    marker += TYPE_UINT16ARRAY;
+                } else if (valueString === '[object Int32Array]') {
+                    marker += TYPE_INT32ARRAY;
+                } else if (valueString === '[object Uint32Array]') {
+                    marker += TYPE_UINT32ARRAY;
+                } else if (valueString === '[object Float32Array]') {
+                    marker += TYPE_FLOAT32ARRAY;
+                } else if (valueString === '[object Float64Array]') {
+                    marker += TYPE_FLOAT64ARRAY;
+                } else {
+                    callback(new Error('Failed to get type for BinaryArray'));
+                }
+            }
+
+            callback(marker + bufferToString(buffer));
+        } else if (valueString === '[object Blob]') {
+            // Conver the blob to a binaryArray and then to a string.
+            var fileReader = new FileReader();
+
+            fileReader.onload = function() {
+                var str = bufferToString(this.result);
+
+                callback(SERIALIZED_MARKER + TYPE_BLOB + str);
+            };
+
+            fileReader.readAsArrayBuffer(value);
+        } else {
+            try {
+                callback(JSON.stringify(value));
+            } catch (e) {
+                window.console.error("Couldn't convert value into a JSON " +
+                                     'string: ', value);
+
+                callback(null, e);
+            }
+        }
+    }
+
+    // Deserialize data we've inserted into a value column/field. We place
+    // special markers into our strings to mark them as encoded; this isn't
+    // as nice as a meta field, but it's the only sane thing we can do whilst
+    // keeping localStorage support intact.
+    //
+    // Oftentimes this will just deserialize JSON content, but if we have a
+    // special marker (SERIALIZED_MARKER, defined above), we will extract
+    // some kind of arraybuffer/binary data/typed array out of the string.
+    function deserialize(value) {
+        // If we haven't marked this string as being specially serialized (i.e.
+        // something other than serialized JSON), we can just return it and be
+        // done with it.
+        if (value.substring(0,
+            SERIALIZED_MARKER_LENGTH) !== SERIALIZED_MARKER) {
+            return JSON.parse(value);
+        }
+
+        // The following code deals with deserializing some kind of Blob or
+        // TypedArray. First we separate out the type of data we're dealing
+        // with from the data itself.
+        var serializedString = value.substring(TYPE_SERIALIZED_MARKER_LENGTH);
+        var type = value.substring(SERIALIZED_MARKER_LENGTH,
+                                   TYPE_SERIALIZED_MARKER_LENGTH);
+
+        var buffer = stringToBuffer(serializedString);
+
+        // Return the right type based on the code/type set during
+        // serialization.
+        switch (type) {
+            case TYPE_ARRAYBUFFER:
+                return buffer;
+            case TYPE_BLOB:
+                return new Blob([buffer]);
+            case TYPE_INT8ARRAY:
+                return new Int8Array(buffer);
+            case TYPE_UINT8ARRAY:
+                return new Uint8Array(buffer);
+            case TYPE_UINT8CLAMPEDARRAY:
+                return new Uint8ClampedArray(buffer);
+            case TYPE_INT16ARRAY:
+                return new Int16Array(buffer);
+            case TYPE_UINT16ARRAY:
+                return new Uint16Array(buffer);
+            case TYPE_INT32ARRAY:
+                return new Int32Array(buffer);
+            case TYPE_UINT32ARRAY:
+                return new Uint32Array(buffer);
+            case TYPE_FLOAT32ARRAY:
+                return new Float32Array(buffer);
+            case TYPE_FLOAT64ARRAY:
+                return new Float64Array(buffer);
+            default:
+                throw new Error('Unkown type: ' + type);
+        }
+    }
+
+    function stringToBuffer(serializedString) {
+        // Fill the string into a ArrayBuffer.
+        var bufferLength = serializedString.length * 0.75;
+        var len = serializedString.length;
+        var i;
+        var p = 0;
+        var encoded1, encoded2, encoded3, encoded4;
+
+        if (serializedString[serializedString.length - 1] === '=') {
+            bufferLength--;
+            if (serializedString[serializedString.length - 2] === '=') {
+                bufferLength--;
+            }
+        }
+
+        var buffer = new ArrayBuffer(bufferLength);
+        var bytes = new Uint8Array(buffer);
+
+        for (i = 0; i < len; i+=4) {
+            encoded1 = BASE_CHARS.indexOf(serializedString[i]);
+            encoded2 = BASE_CHARS.indexOf(serializedString[i+1]);
+            encoded3 = BASE_CHARS.indexOf(serializedString[i+2]);
+            encoded4 = BASE_CHARS.indexOf(serializedString[i+3]);
+
+            /*jslint bitwise: true */
+            bytes[p++] = (encoded1 << 2) | (encoded2 >> 4);
+            bytes[p++] = ((encoded2 & 15) << 4) | (encoded3 >> 2);
+            bytes[p++] = ((encoded3 & 3) << 6) | (encoded4 & 63);
+        }
+        return buffer;
+    }
+
+    // Converts a buffer to a string to store, serialized, in the backend
+    // storage library.
+    function bufferToString(buffer) {
+        // base64-arraybuffer
+        var bytes = new Uint8Array(buffer);
+        var base64String = '';
+        var i;
+
+        for (i = 0; i < bytes.length; i += 3) {
+            /*jslint bitwise: true */
+            base64String += BASE_CHARS[bytes[i] >> 2];
+            base64String += BASE_CHARS[((bytes[i] & 3) << 4) | (bytes[i + 1] >> 4)];
+            base64String += BASE_CHARS[((bytes[i + 1] & 15) << 2) | (bytes[i + 2] >> 6)];
+            base64String += BASE_CHARS[bytes[i + 2] & 63];
+        }
+
+        if ((bytes.length % 3) === 2) {
+            base64String = base64String.substring(0, base64String.length - 1) + '=';
+        } else if (bytes.length % 3 === 1) {
+            base64String = base64String.substring(0, base64String.length - 2) + '==';
+        }
+
+        return base64String;
+    }
+
+    var localforageSerializer = {
+        serialize: serialize,
+        deserialize: deserialize,
+        stringToBuffer: stringToBuffer,
+        bufferToString: bufferToString
+    };
+
+    if (typeof module !== 'undefined' && module.exports) {
+        module.exports = localforageSerializer;
+    } else if (typeof define === 'function' && define.amd) {
+        define('localforageSerializer', function() {
+            return localforageSerializer;
+        });
+    } else {
+        this.localforageSerializer = localforageSerializer;
+    }
+}).call(window);
+
+},{}],37:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};

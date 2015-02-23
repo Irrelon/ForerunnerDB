@@ -13,7 +13,7 @@ var Shared,
 	Metrics,
 	KeyValueStore,
 	Path,
-	Index,
+	IndexHashMap,
 	Crc;
 
 Shared = _dereq_('./Shared');
@@ -68,11 +68,12 @@ Shared.mixin(Collection.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
+Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
 Path = _dereq_('./Path');
-Index = _dereq_('./Index');
+IndexHashMap = _dereq_('./IndexHashMap');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 
@@ -2028,7 +2029,8 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
  * @private
  */
 Collection.prototype._sort = function (key, arr) {
-	var sorterMethod,
+	var self = this,
+		sorterMethod,
 		pathSolver = new Path(),
 		dataPath = pathSolver.parse(key, true)[0];
 
@@ -2040,17 +2042,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valA.localeCompare(valB);
-			} else {
-				if (valA > valB) {
-					return 1;
-				} else if (valA < valB) {
-					return -1;
-				}
-			}
-
-			return 0;
+			return self.sortAsc(valA, valB);
 		};
 	} else if (dataPath.value === -1) {
 		// Sort descending
@@ -2058,17 +2050,7 @@ Collection.prototype._sort = function (key, arr) {
 			var valA = pathSolver.value(a)[0],
 				valB = pathSolver.value(b)[0];
 
-			if (typeof valA === 'string' && typeof valB === 'string') {
-				return valB.localeCompare(valA);
-			} else {
-				if (valA > valB) {
-					return -1;
-				} else if (valA < valB) {
-					return 1;
-				}
-			}
-
-			return 0;
+			return self.sortDesc(valA, valB);
 		};
 	} else {
 		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
@@ -2703,7 +2685,7 @@ Collection.prototype.ensureIndex = function (keys, options) {
 	this._indexByName = this._indexByName || {};
 	this._indexById = this._indexById || {};
 
-	var index = new Index(keys, options, this),
+	var index = new IndexHashMap(keys, options, this),
 		time = {
 			start: new Date().getTime()
 		};
@@ -2916,7 +2898,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":4,"./Index":5,"./KeyValueStore":6,"./Metrics":7,"./Path":16,"./Shared":17}],3:[function(_dereq_,module,exports){
+},{"./Crc":4,"./IndexHashMap":5,"./KeyValueStore":6,"./Metrics":7,"./Path":17,"./Shared":18}],3:[function(_dereq_,module,exports){
 /*
  License
 
@@ -2948,7 +2930,7 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.3.1';
+	this._version = '1.3.2';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -3265,7 +3247,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload":15,"./Shared":17}],4:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":7,"./Overload":16,"./Shared":18}],4:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3298,15 +3280,15 @@ var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
 /**
- * The index class used to instantiate indexes that the database can
+ * The index class used to instantiate hash map indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
-var Index = function () {
+var IndexHashMap = function () {
 	this.init.apply(this, arguments);
 };
 
-Index.prototype.init = function (keys, options, collection) {
+IndexHashMap.prototype.init = function (keys, options, collection) {
 	this._crossRef = {};
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
@@ -3325,42 +3307,28 @@ Index.prototype.init = function (keys, options, collection) {
 	this.name(options && options.name ? options.name : this._id);
 };
 
-Shared.addModule('Index', Index);
-Shared.mixin(Index.prototype, 'Mixin.ChainReactor');
+Shared.addModule('IndexHashMap', IndexHashMap);
+Shared.mixin(IndexHashMap.prototype, 'Mixin.ChainReactor');
 
-Index.prototype.id = function () {
+IndexHashMap.prototype.id = function () {
 	return this._id;
 };
 
-Index.prototype.state = function () {
+IndexHashMap.prototype.state = function () {
 	return this._state;
 };
 
-Index.prototype.size = function () {
+IndexHashMap.prototype.size = function () {
 	return this._size;
 };
 
-Index.prototype.data = function (val) {
-	if (val !== undefined) {
-		this._data = val;
-		return this;
-	}
+Shared.synthesize(IndexHashMap.prototype, 'data');
+Shared.synthesize(IndexHashMap.prototype, 'name');
+Shared.synthesize(IndexHashMap.prototype, 'collection');
+Shared.synthesize(IndexHashMap.prototype, 'type');
+Shared.synthesize(IndexHashMap.prototype, 'unique');
 
-	return this._data;
-};
-
-Shared.synthesize(Index.prototype, 'name');
-
-Index.prototype.collection = function (val) {
-	if (val !== undefined) {
-		this._collection = val;
-		return this;
-	}
-
-	return this._collection;
-};
-
-Index.prototype.keys = function (val) {
+IndexHashMap.prototype.keys = function (val) {
 	if (val !== undefined) {
 		this._keys = val;
 
@@ -3372,25 +3340,7 @@ Index.prototype.keys = function (val) {
 	return this._keys;
 };
 
-Index.prototype.type = function (val) {
-	if (val !== undefined) {
-		this._type = val;
-		return this;
-	}
-
-	return this._type;
-};
-
-Index.prototype.unique = function (val) {
-	if (val !== undefined) {
-		this._unique = val;
-		return this;
-	}
-
-	return this._unique;
-};
-
-Index.prototype.rebuild = function () {
+IndexHashMap.prototype.rebuild = function () {
 	// Do we have a collection?
 	if (this._collection) {
 		// Get sorted data
@@ -3425,7 +3375,7 @@ Index.prototype.rebuild = function () {
 	};
 };
 
-Index.prototype.insert = function (dataItem, options) {
+IndexHashMap.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -3445,7 +3395,7 @@ Index.prototype.insert = function (dataItem, options) {
 	}
 };
 
-Index.prototype.remove = function (dataItem, options) {
+IndexHashMap.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
 		itemHashArr,
@@ -3465,7 +3415,7 @@ Index.prototype.remove = function (dataItem, options) {
 	}
 };
 
-Index.prototype.violation = function (dataItem) {
+IndexHashMap.prototype.violation = function (dataItem) {
 	// Generate item hash
 	var uniqueHash = this._itemHash(dataItem, this._keys);
 
@@ -3473,12 +3423,12 @@ Index.prototype.violation = function (dataItem) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.hashViolation = function (uniqueHash) {
+IndexHashMap.prototype.hashViolation = function (uniqueHash) {
 	// Check if the item breaks the unique constraint
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-Index.prototype.pushToPathValue = function (hash, obj) {
+IndexHashMap.prototype.pushToPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash] = this._data[hash] || [];
 
 	// Make sure we have not already indexed this object at this path/value
@@ -3494,7 +3444,7 @@ Index.prototype.pushToPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pullFromPathValue = function (hash, obj) {
+IndexHashMap.prototype.pullFromPathValue = function (hash, obj) {
 	var pathValArr = this._data[hash],
 		indexOfObject;
 
@@ -3519,7 +3469,7 @@ Index.prototype.pullFromPathValue = function (hash, obj) {
 	}
 };
 
-Index.prototype.pull = function (obj) {
+IndexHashMap.prototype.pull = function (obj) {
 	// Get all places the object has been used and remove them
 	var id = obj[this._collection.primaryKey()],
 		crossRefArr = this._crossRef[id],
@@ -3541,7 +3491,7 @@ Index.prototype.pull = function (obj) {
 	delete this._crossRef[id];
 };
 
-Index.prototype._pullFromArray = function (arr, obj) {
+IndexHashMap.prototype._pullFromArray = function (arr, obj) {
 	var arrCount = arr.length;
 
 	while (arrCount--) {
@@ -3551,7 +3501,7 @@ Index.prototype._pullFromArray = function (arr, obj) {
 	}
 };
 
-Index.prototype.pushToCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
@@ -3566,18 +3516,18 @@ Index.prototype.pushToCrossRef = function (obj, pathValArr) {
 	}
 };
 
-Index.prototype.pullFromCrossRef = function (obj, pathValArr) {
+IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
 	var id = obj[this._collection.primaryKey()],
 		crObj;
 
 	delete this._crossRef[id];
 };
 
-Index.prototype.lookup = function (query) {
+IndexHashMap.prototype.lookup = function (query) {
 	return this._data[this._itemHash(query, this._keys)] || [];
 };
 
-Index.prototype.match = function (query, options) {
+IndexHashMap.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path();
@@ -3613,7 +3563,7 @@ Index.prototype.match = function (query, options) {
 	//return pathSolver.countObjectPaths(this._keys, query);
 };
 
-Index.prototype._itemHash = function (item, keys) {
+IndexHashMap.prototype._itemHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -3629,7 +3579,7 @@ Index.prototype._itemHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemKeyHash = function (item, keys) {
+IndexHashMap.prototype._itemKeyHash = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -3645,7 +3595,7 @@ Index.prototype._itemKeyHash = function (item, keys) {
 	return hash;
 };
 
-Index.prototype._itemHashArr = function (item, keys) {
+IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
 		hash = '',
@@ -3674,9 +3624,9 @@ Index.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
-Shared.finishModule('Index');
-module.exports = Index;
-},{"./Path":16,"./Shared":17}],6:[function(_dereq_,module,exports){
+Shared.finishModule('IndexHashMap');
+module.exports = IndexHashMap;
+},{"./Path":17,"./Shared":18}],6:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3889,7 +3839,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":17}],7:[function(_dereq_,module,exports){
+},{"./Shared":18}],7:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -3962,7 +3912,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":14,"./Shared":17}],8:[function(_dereq_,module,exports){
+},{"./Operation":15,"./Shared":18}],8:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -4141,7 +4091,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":15}],11:[function(_dereq_,module,exports){
+},{"./Overload":16}],11:[function(_dereq_,module,exports){
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -4281,6 +4231,50 @@ var Events = {
 
 module.exports = Events;
 },{}],13:[function(_dereq_,module,exports){
+var Sorting = {
+	/**
+	 * Sorts the passed value a against the passed value b ascending.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortAsc: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return a.localeCompare(b);
+		} else {
+			if (a > b) {
+				return 1;
+			} else if (a < b) {
+				return -1;
+			}
+		}
+
+		return 0;
+	},
+
+	/**
+	 * Sorts the passed value a against the passed value b descending.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortDesc: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return b.localeCompare(a);
+		} else {
+			if (a > b) {
+				return -1;
+			} else if (a < b) {
+				return 1;
+			}
+		}
+
+		return 0;
+	}
+};
+
+module.exports = Sorting;
+},{}],14:[function(_dereq_,module,exports){
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -4418,7 +4412,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4563,7 +4557,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":16,"./Shared":17}],15:[function(_dereq_,module,exports){
+},{"./Path":17,"./Shared":18}],16:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -4698,7 +4692,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5109,7 +5103,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":17}],17:[function(_dereq_,module,exports){
+},{"./Shared":18}],18:[function(_dereq_,module,exports){
 var Shared = {
 	modules: {},
 	_synth: {},
@@ -5233,7 +5227,8 @@ var Shared = {
 		'Mixin.ChainReactor': _dereq_('./Mixin.ChainReactor'),
 		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
-		'Mixin.Triggers': _dereq_('./Mixin.Triggers')
+		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
+		'Mixin.Sorting': _dereq_('./Mixin.Sorting')
 	}
 };
 
@@ -5241,5 +5236,5 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":8,"./Mixin.ChainReactor":9,"./Mixin.Common":10,"./Mixin.Constants":11,"./Mixin.Events":12,"./Mixin.Triggers":13,"./Overload":15}]},{},[1])(1)
+},{"./Mixin.CRUD":8,"./Mixin.ChainReactor":9,"./Mixin.Common":10,"./Mixin.Constants":11,"./Mixin.Events":12,"./Mixin.Sorting":13,"./Mixin.Triggers":14,"./Overload":16}]},{},[1])(1)
 });
