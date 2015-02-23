@@ -354,34 +354,82 @@ test("Index - Collection.ensureIndex() :: Test index against a key in a sub-arra
 
 	var coll,
 		result,
-		insert1,
-		insert2,
+		allowedInsert,
+		deniedInsert,
 		find,
 		index;
 
 	coll = db.collection('temp').truncate();
-	coll.setData([
-		{"_id": "139", "eventId": "139", "nthRepeat": 0, "name": "Test", "notes": "wfewef", "startDateTime": "2014-09-01T23:00:00+00:00", "endDateTime": "2014-09-03T23:00:00+00:00", "reminderType": "", "reminderTime": 0, "isRepeatedEvent": false, "repeatContext": null, "repeatDate": null, "repeatForever": 0, "creator": {"organisationUserId": "63614", "dateTime": "2014-09-01T13:01:54+00:00"}, "updated": [], "_s": "Test:::01:::09:00", "attendees": [
-			{"contactId": "78254", "selectedUserId": "79255"},
-			{"contactId": "78255", "selectedUserId": "79255"}
-		]}
-	]);
+	coll.setData([{
+		"_id": "139",
+		"eventId": "139",
+		"nthRepeat": 0,
+		"name": "Test",
+		"notes": "wfewef",
+		"startDateTime": "2014-09-01T23:00:00+00:00",
+		"endDateTime": "2014-09-03T23:00:00+00:00",
+		"reminderType": "",
+		"reminderTime": 0,
+		"isRepeatedEvent": false,
+		"repeatContext": null,
+		"repeatDate": null,
+		"repeatForever": 0,
+		"creator": {
+			"organisationUserId": "63614",
+			"dateTime": "2014-09-01T13:01:54+00:00"
+		},
+		"updated": [],
+		"_s": "Test:::01:::09:00",
+		"attendees": {
+			"moo":{
+				"foo": [{
+					"name": "1"
+				}]
+			}
+		}
+	}]);
 
 	result = coll.ensureIndex({
 		attendees: {
-			selectedUserId: 1
+			moo: {
+				foo: 1
+			}
 		}
 	}, {
-		unique: true,
-		name: 'uniqueName'
+		unique: true, // Only allow unique values
+		scope: 'document', // Index against documents individually rather than the whole collection
+		name: 'uniqueAttendeeMooFoo'
 	});
 
-	insert1 = coll.insert({
-		name: 'Bob'
+	allowedInsert = coll.updateById("139", {
+		"attendees": {
+			"moo": {
+				"$push": {
+					"foo": {
+						"name": "2"
+					}
+				}
+			}
+		}
 	});
 
-	ok(find.length === 1, "Check data length");
-	ok(index.size() === 1, "Check index size");
+	deniedInsert = coll.update({_id: "139"}, {
+		"attendees": {
+			"moo": {
+				"$push": {
+					"foo": {
+						"name": "2"
+					}
+				}
+			}
+		}
+	});
+
+	find = coll.find();
+
+	ok(find.length === 1, "Check expected number of items exists");
+	ok(allowedInsert.length === 1, "Check expected update worked (index should allow it)");
+	ok(deniedInsert.length === 0, "Check expected update failed (index should make it fail)");
 
 	base.dbDown();
 });
