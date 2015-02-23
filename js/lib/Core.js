@@ -29,7 +29,6 @@ Core.prototype.init = function (name) {
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
-	this._version = '1.3.2';
 };
 
 Core.prototype.moduleLoaded = Overload({
@@ -106,8 +105,31 @@ Core.prototype.moduleLoaded = Overload({
 	}
 });
 
+/**
+ * Checks version against the string passed and if it matches (or partially matches)
+ * then the callback is called.
+ * @param {String} val The version to check against.
+ * @param {Function} callback The callback to call if match is true.
+ * @returns {Boolean}
+ */
+Core.prototype.version = function (val, callback) {
+	if (val !== undefined) {
+		if (Shared.version.indexOf(val) === 0) {
+			if (callback) { callback(); }
+			return true;
+		}
+
+		return false;
+	}
+
+	return Shared.version;
+};
+
 // Expose moduleLoaded method to non-instantiated object ForerunnerDB
 Core.moduleLoaded = Core.prototype.moduleLoaded;
+
+// Expose version method to non-instantiated object ForerunnerDB
+Core.version = Core.prototype.version;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
