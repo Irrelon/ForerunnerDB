@@ -9,6 +9,7 @@ var Shared,
 	KeyValueStore,
 	Path,
 	IndexHashMap,
+	IndexBinaryTree,
 	Crc;
 
 Shared = require('./Shared');
@@ -69,6 +70,7 @@ Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
 Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
+IndexBinaryTree = require('./IndexBinaryTree');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 
@@ -2680,10 +2682,27 @@ Collection.prototype.ensureIndex = function (keys, options) {
 	this._indexByName = this._indexByName || {};
 	this._indexById = this._indexById || {};
 
-	var index = new IndexHashMap(keys, options, this),
+	var index,
 		time = {
 			start: new Date().getTime()
 		};
+
+	if (options) {
+		switch (options.type) {
+			case 'hashed':
+				index = new IndexHashMap(keys, options, this);
+				break;
+
+			case 'btree':
+				index = new IndexBinaryTree(keys, options, this);
+				break;
+
+			default:
+				// Default
+				index = new IndexHashMap(keys, options, this);
+				break;
+		}
+	}
 
 	// Check the index does not already exist
 	if (this._indexByName[index.name()]) {
