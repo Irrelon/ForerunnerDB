@@ -249,6 +249,11 @@ Collection.prototype.setData = function (data, options, callback) {
 		this.rebuildPrimaryKeyIndex(options);
 		op.time('Rebuild Primary Key Index');
 
+		// Rebuild all other indexes
+		op.time('Rebuild All Other Indexes');
+		this._rebuildIndexes();
+		op.time('Rebuild All Other Indexes');
+
 		op.time('Resolve chains');
 		this.chainSend('setData', data, {oldData: oldData});
 		op.time('Resolve chains');
@@ -1457,6 +1462,22 @@ Collection.prototype._removeFromIndexes = function (doc) {
 	for (arrIndex in arr) {
 		if (arr.hasOwnProperty(arrIndex)) {
 			arr[arrIndex].remove(doc);
+		}
+	}
+};
+
+/**
+ * Rebuild collection indexes.
+ * @private
+ */
+Collection.prototype._rebuildIndexes = function () {
+	var arr = this._indexByName,
+		arrIndex;
+
+	// Remove from other indexes
+	for (arrIndex in arr) {
+		if (arr.hasOwnProperty(arrIndex)) {
+			arr[arrIndex].rebuild();
 		}
 	}
 };

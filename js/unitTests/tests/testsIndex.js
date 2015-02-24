@@ -20,6 +20,52 @@ test("Index - Collection.ensureIndex() :: Assign an index to a collection", func
 	base.dbDown();
 });
 
+ForerunnerDB.moduleLoaded('Persist', function () {
+	asyncTest("Index - Collection.ensureIndex() :: Ensure an index is maintained after persist.load()", function () {
+		expect(3);
+
+		base.dbUp();
+		base.dataUp();
+
+		var coll = db.collection('test27'),
+			result;
+
+		coll.insert({name: 'Jim'});
+
+		coll.save(function () {
+			// Data saved, now clear the collection
+			db.collection('test27').drop();
+
+			// Check that there are no docs
+			result = db.collection('test27').find();
+
+			ok(result.length === 0, 'Check for empty collection');
+
+			// Now create an index on the collection
+			var indexResult = db.collection('test27').ensureIndex({
+				name: 1
+			}, {
+				unique: true,
+				name: 'testIndex'
+			});
+
+			// Now load the persisted data
+			db.collection('test27').load(function () {
+				// Now check that we have our doc
+				result = db.collection('test27').find();
+				ok(result.length === 1, 'Check for doc in collection');
+
+				// Now query for the doc with explain to see if an index is used
+				result = db.collection('test27').explain({name: 'Jim'});
+				ok(result.index.used, 'Check for index use in query');
+
+				start();
+				base.dbDown();
+			});
+		});
+	});
+});
+
 test("Index - Collection.index() :: Test lookup of index from collection by name", function () {
 	base.dbUp();
 	base.dataUp();
