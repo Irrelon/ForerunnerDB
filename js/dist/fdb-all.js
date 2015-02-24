@@ -8032,7 +8032,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":27}],27:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.2',
+	version: '1.3.3',
 	modules: {},
 
 	_synth: {},
