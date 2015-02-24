@@ -9,7 +9,81 @@
 	<script src="../dist/fdb-autobind.js"></script>
 	<script src="../unitTests/lib/qunit.js"></script>
 	<script src="../unitTests/lib/highcharts-all.js"></script>
+	<script src="../../js/lib/BinaryTree.js"></script>
 </head>
 <body>
+<script>
+	// Example BinBinarySearchTree
+	var bst = new BinarySearchTree({name: 'Jett', age: 10});
+	bst.insert({name: 'Jim', age: 12});
+	bst.insert({name: 'Bob', age: 14});
+	bst.insert({name: 'Hal', age: 16});
+	bst.insert({name: 'Hal', age: 17});
+	bst.insert({name: 'Hal', age: 19});
+	bst.insert({name: 'Hal', age: 19});
+
+	/*console.log("Inorder Traversal");
+	bst.inOrderTraversal();
+
+	console.log("Preorder Traversal");
+	bst.preOrderTraversal();
+
+	console.log("Postorder Traversal");
+	bst.postOrderTraversal();
+
+	console.log("Search for valid");
+	bst.depthFirstSearch({name: 'Hal'});
+
+	console.log("Search for invalid");
+	bst.depthFirstSearch({name: 'Spock'});
+
+	bst.breadthFirstTraversal();*/
+
+	var genSearch = function (query) {
+		var keys = [],
+			func,
+			funcStart = 'function generatedSearch (val) {',
+			funcEnd = '};',
+			funcCode = '',
+			keyValType,
+			i;
+
+		for (i in query) {
+			keyValType = typeof query[i];
+			if (keyValType === 'object') {
+				// Traverse
+			}
+
+			if (keyValType === 'string') {
+				funcCode += 'if ("' + query[i] + '" < val.' + i + ') { return -1 ; } ';
+				funcCode += 'else if ("' + query[i] + '" > val.' + i + ') { return 1 ;} ';
+				funcCode += 'else { return 0 ;}';
+			}
+		}
+
+		eval('func = ' + funcStart + funcCode + funcEnd);
+
+		return func;
+	};
+
+	var gend = genSearch({name: 'Moo'});
+	console.log(gend);
+
+	/*bst.search(function (val) {
+		if (a.name > b.name) {
+			return 1;
+		} else if (a.name < b.name) {
+			return -1;
+		} else {
+			if (a.age < b.age) {
+				return -1;
+			} else if (a.age > b.age) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	});*/
+</script>
 </body>
 </html>
