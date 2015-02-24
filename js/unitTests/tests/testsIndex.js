@@ -349,87 +349,89 @@ test("Index - Collection.find() :: Test index based on range search ($gt, $lt et
 	base.dbDown();
 });
 
-test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
-	base.dbUp();
+ForerunnerDB.version('1.4', function () {
+	test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
+		base.dbUp();
 
-	var coll,
-		result,
-		allowedInsert,
-		deniedInsert,
-		find,
-		index;
+		var coll,
+			result,
+			allowedInsert,
+			deniedInsert,
+			find,
+			index;
 
-	coll = db.collection('temp').truncate();
-	coll.setData([{
-		"_id": "139",
-		"eventId": "139",
-		"nthRepeat": 0,
-		"name": "Test",
-		"notes": "wfewef",
-		"startDateTime": "2014-09-01T23:00:00+00:00",
-		"endDateTime": "2014-09-03T23:00:00+00:00",
-		"reminderType": "",
-		"reminderTime": 0,
-		"isRepeatedEvent": false,
-		"repeatContext": null,
-		"repeatDate": null,
-		"repeatForever": 0,
-		"creator": {
-			"organisationUserId": "63614",
-			"dateTime": "2014-09-01T13:01:54+00:00"
-		},
-		"updated": [],
-		"_s": "Test:::01:::09:00",
-		"attendees": {
-			"moo":{
-				"foo": [{
-					"name": "1"
-				}]
+		coll = db.collection('temp').truncate();
+		coll.setData([{
+			"_id": "139",
+			"eventId": "139",
+			"nthRepeat": 0,
+			"name": "Test",
+			"notes": "wfewef",
+			"startDateTime": "2014-09-01T23:00:00+00:00",
+			"endDateTime": "2014-09-03T23:00:00+00:00",
+			"reminderType": "",
+			"reminderTime": 0,
+			"isRepeatedEvent": false,
+			"repeatContext": null,
+			"repeatDate": null,
+			"repeatForever": 0,
+			"creator": {
+				"organisationUserId": "63614",
+				"dateTime": "2014-09-01T13:01:54+00:00"
+			},
+			"updated": [],
+			"_s": "Test:::01:::09:00",
+			"attendees": {
+				"moo": {
+					"foo": [{
+						"name": "1"
+					}]
+				}
 			}
-		}
-	}]);
+		}]);
 
-	result = coll.ensureIndex({
-		attendees: {
-			moo: {
-				foo: 1
+		result = coll.ensureIndex({
+			attendees: {
+				moo: {
+					foo: 1
+				}
 			}
-		}
-	}, {
-		unique: true, // Only allow unique values
-		scope: 'document', // Index against documents individually rather than the whole collection
-		name: 'uniqueAttendeeMooFoo'
-	});
+		}, {
+			unique: true, // Only allow unique values
+			scope: 'document', // Index against documents individually rather than the whole collection
+			name: 'uniqueAttendeeMooFoo'
+		});
 
-	allowedInsert = coll.updateById("139", {
-		"attendees": {
-			"moo": {
-				"$push": {
-					"foo": {
-						"name": "2"
+		allowedInsert = coll.updateById("139", {
+			"attendees": {
+				"moo": {
+					"$push": {
+						"foo": {
+							"name": "2"
+						}
 					}
 				}
 			}
-		}
-	});
+		});
 
-	deniedInsert = coll.update({_id: "139"}, {
-		"attendees": {
-			"moo": {
-				"$push": {
-					"foo": {
-						"name": "2"
+		deniedInsert = coll.update({_id: "139"}, {
+			"attendees": {
+				"moo": {
+					"$push": {
+						"foo": {
+							"name": "2"
+						}
 					}
 				}
 			}
-		}
+		});
+
+		find = coll.find();
+
+		ok(find.length === 1, "Check expected number of items exists");
+		ok(allowedInsert.length === 1, "Check expected update worked (index should allow it)");
+		ok(deniedInsert.length === 0, "Check expected update failed (index should make it fail)");
+
+		base.dbDown();
 	});
-
-	find = coll.find();
-
-	ok(find.length === 1, "Check expected number of items exists");
-	ok(allowedInsert.length === 1, "Check expected update worked (index should allow it)");
-	ok(deniedInsert.length === 0, "Check expected update failed (index should make it fail)");
-
-	base.dbDown();
 });
