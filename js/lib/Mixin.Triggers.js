@@ -89,7 +89,7 @@ var Triggers = {
 							break;
 					}
 
-					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
+					//console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
 
 				// Run the trigger's method and store the response
