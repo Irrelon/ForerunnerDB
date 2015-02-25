@@ -28,9 +28,7 @@ Node.prototype.insert = function(newNode) {
 };
 
 Node.prototype.search = function (query, resultArr) {
-	var result = this.tree._operationCompare(query, this.key, function (a, b) {
-		return a === b;
-	});
+	var result = this.tree._operationCompare(query, this.key);
 
 	if(result === 0) {
 		// We have a matching result, add it to results
@@ -104,22 +102,28 @@ Node.prototype.postOrderTraversal = function() {
 };
 
 var BinarySearchTree = function(orderBy) {
-	var i;
+	var i, keyData;
 
 	// TODO when added to the main system, use shared ref to module
 	this.pathSolver = new ForerunnerDB.shared.modules.Path();
 
 	this._orderKeys = this.pathSolver.parseArr(orderBy);
 	this._orderKeyData = [];
+	this._orderKeyDataByKey = {};
 
 	for (i = 0; i < this._orderKeys.length; i++) {
-		this._orderKeyData.push({
+		keyData = {
 			key: this._orderKeys[i],
 			dir: this.pathSolver.get(orderBy, this._orderKeys[i]),
 			pathSolver: new ForerunnerDB.shared.modules.Path(this._orderKeys[i])
-		});
+		};
+
+		this._orderKeyData.push(keyData);
+		this._orderKeyDataByKey[this._orderKeys[i]] = keyData;
 	}
 };
+
+ForerunnerDB.shared.mixin(BinarySearchTree.prototype, 'Mixin.Matching');
 
 BinarySearchTree.prototype._sort = function (a, b) {
 	var aVal,
@@ -191,42 +195,63 @@ BinarySearchTree.prototype.search = function (query) {
 	var resultArr = [],
 		searchKey = this.objKey(query);
 
+	// Check for no matching key values and return early if -1
+	if (searchKey === -1) {
+		return resultArr;
+	}
+
 	this.root.search(searchKey, resultArr);
 
 	return resultArr;
 };
 
-BinarySearchTree.prototype._operationCompare = function (a, b, op) {
+BinarySearchTree.prototype._operationCompare = function (a, b) {
 	var aVal,
 		bVal,
-		arr = this._orderKeyData,
-		count = arr.length,
 		index,
+		arr = this._orderKeyDataByKey,
 		sortData,
-		castType;
+		matchVal;
 
-	for (index = 0; index < count; index++) {
-		sortData = arr[index];
+	for (index in a) {
+		if (a.hasOwnProperty(index)) {
+			sortData = arr[index];
 
-		aVal = a[sortData.key];
-		bVal = b[sortData.key];
+			aVal = a[sortData.key];
+			bVal = b[sortData.key];
 
-		castType = typeof aVal;
+			// Run operation on values
+			if (!this._match(bVal, aVal)) {
+				// Get the value of the field without any operation
+				// keys getting in the way
+				if (typeof aVal === 'object') {
+					if (aVal.$gt || aVal.$gt) {
+						matchVal = aVal.$gt;
+					}
 
-		if (castType === 'number') {
-			aVal = Number(aVal);
-			bVal = Number(bVal);
-		}
+					if (aVal.$gte) {
+						matchVal = aVal.$gte;
+					}
 
-		// Run operation on values
-		if (!op(aVal, bVal)) {
-			// Return the sorted items
-			if (sortData.dir === 1) {
-				return this.sortAsc(aVal, bVal);
-			}
+					if (aVal.$lt) {
+						matchVal = aVal.$lt;
+					}
 
-			if (sortData.dir === -1) {
-				return this.sortDesc(aVal, bVal);
+					if (aVal.$lte) {
+						matchVal = aVal.$lte;
+					}
+				} else {
+					matchVal = aVal;
+				}
+
+				// Return the sorted items
+				if (sortData.dir === 1) {
+					return this.sortAsc(matchVal, bVal);
+				}
+
+				if (sortData.dir === -1) {
+					return this.sortDesc(matchVal, bVal);
+				}
 			}
 		}
 	}
@@ -240,11 +265,24 @@ BinarySearchTree.prototype.objKey = function (obj) {
 		arr = this._orderKeyData,
 		count = arr.length,
 		index,
-		keyData;
+		keyData,
+		keyVal,
+		gotVal = false;
 
 	for (index = 0; index < count; index++) {
 		keyData = arr[index];
-		key[keyData.key] = keyData.pathSolver.get(obj);
+		keyVal = keyData.pathSolver.get(obj);
+
+		if (keyVal !== undefined) {
+			key[keyData.key] = keyVal;
+			gotVal = true;
+		} else {
+			break;
+		}
+	}
+
+	if (!gotVal) {
+		return -1;
 	}
 
 	return key;

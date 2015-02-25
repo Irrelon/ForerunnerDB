@@ -18,7 +18,7 @@
 			first: 1
 		},
 		age: -1
-	});
+	}), search;
 
 	bst.insert({names: {first: 'Jett'}, age: 10});
 	bst.insert({names: {first: 'Jim'}, age: 12});
@@ -31,23 +31,31 @@
 	console.log("Inorder Traversal");
 	bst.inOrderTraversal();
 
-	var search = bst.search({names: {first:'Hal'}});
+	search = bst.search({names: {first:'Hal'}});
 	console.log(search);
-	/*bst.search({name: 'Hal', age: 17});
-	bst.search({
-		name: {
-			$gte: 'Ha'
+	search = bst.search({names: {first:'Hal'}, age: 17});
+	console.log(search);
+	search = bst.search({
+		names: {
+			first: {
+				$gte: 'Ha'
+			}
 		},
 		age: 17
 	});
-	bst.search({
-		name: {
-			$gte: 'Ha'
+	console.log(search);
+	debugger;
+	search = bst.search({
+		names: {
+			first: {
+				$gte: 'Ha'
+			}
 		},
 		age: {
 			$lt: 19
 		}
-	});*/
+	});
+	console.log(search);
 
 	 /*console.log("Preorder Traversal");
 	bst.preOrderTraversal();
