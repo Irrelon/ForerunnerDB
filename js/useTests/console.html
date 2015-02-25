@@ -13,19 +13,43 @@
 </head>
 <body>
 <script>
-	// Example BinBinarySearchTree
-	var bst = new BinarySearchTree({name: 'Jett', age: 10});
-	bst.insert({name: 'Jim', age: 12});
-	bst.insert({name: 'Bob', age: 14});
-	bst.insert({name: 'Hal', age: 16});
-	bst.insert({name: 'Hal', age: 17});
-	bst.insert({name: 'Hal', age: 19});
-	bst.insert({name: 'Hal', age: 19});
+	var bst = new BinarySearchTree({
+		names: {
+			first: 1
+		},
+		age: -1
+	});
 
-	/*console.log("Inorder Traversal");
+	bst.insert({names: {first: 'Jett'}, age: 10});
+	bst.insert({names: {first: 'Jim'}, age: 12});
+	bst.insert({names: {first: 'Bob'}, age: 14});
+	bst.insert({names: {first: 'Hal'}, age: 16});
+	bst.insert({names: {first: 'Hal'}, age: 17});
+	bst.insert({names: {first: 'Hal'}, age: 19});
+	bst.insert({names: {first: 'Hal'}, age: 19});
+
+	console.log("Inorder Traversal");
 	bst.inOrderTraversal();
 
-	console.log("Preorder Traversal");
+	var search = bst.search({names: {first:'Hal'}});
+	console.log(search);
+	/*bst.search({name: 'Hal', age: 17});
+	bst.search({
+		name: {
+			$gte: 'Ha'
+		},
+		age: 17
+	});
+	bst.search({
+		name: {
+			$gte: 'Ha'
+		},
+		age: {
+			$lt: 19
+		}
+	});*/
+
+	 /*console.log("Preorder Traversal");
 	bst.preOrderTraversal();
 
 	console.log("Postorder Traversal");
@@ -39,7 +63,7 @@
 
 	bst.breadthFirstTraversal();*/
 
-	var genSearch = function (query) {
+	/*var genSearch = function (query) {
 		var keys = [],
 			func,
 			funcStart = 'function generatedSearch (val) {',
@@ -67,7 +91,7 @@
 	};
 
 	var gend = genSearch({name: 'Moo'});
-	console.log(gend);
+	console.log(gend);*/
 
 	/*bst.search(function (val) {
 		if (a.name > b.name) {

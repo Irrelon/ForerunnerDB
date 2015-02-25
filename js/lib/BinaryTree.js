@@ -1,32 +1,14 @@
-var compareFunc = function (a, b) {
-	if (a !== undefined && b !== undefined) {
-		if (a.name < b.name) {
-			return -1;
-		} else if (a.name > b.name) {
-			return 1;
-		} else {
-			if (a.age > b.age) {
-				return -1;
-			} else if (a.age < b.age) {
-				return 1;
-			} else {
-				return 0;
-			}
-		}
-	}
-
-	return 0;
-};
-
-var Node = function(value) {
-	this.value = value;
+var Node = function(tree, key, value) {
+	this.tree = tree;
+	this.key = key;
+	this.data = [value];
 	this.left = null;
 	this.right = null;
 	return this;
 };
 
 Node.prototype.insert = function(newNode) {
-	var result = compareFunc(newNode.value, this.value);
+	var result = this.tree._sort(newNode.key, this.key);
 
 	if(result === -1) {
 		if(this.left === null) {
@@ -45,28 +27,37 @@ Node.prototype.insert = function(newNode) {
 	}
 };
 
-Node.prototype.search = function (searchFunc, resultArr) {
-	var result = searchFunc(this.value);
+Node.prototype.search = function (query, resultArr) {
+	var result = this.tree._operationCompare(query, this.key, function (a, b) {
+		return a === b;
+	});
 
 	if(result === 0) {
 		// We have a matching result, add it to results
-		resultArr.push(this.value);
+		if (this.left !== null) {
+			this.left.search(query, resultArr);
+		}
+
+		// It is very important that we push here below the left-side traversal
+		// otherwise the order of the returned items will be incorrect
+		resultArr.push(this.key);
 
 		// Now scan both tree branches for more matches
-		this.left.search(searchFunc, resultArr);
-		this.right.search(searchFunc, resultArr);
+		if (this.right !== null) {
+			this.right.search(query, resultArr);
+		}
 	} else if(result === -1 && this.left !== null) {
 		// This node does not match and we have been told to look left
-		this.left.search(searchFunc, resultArr);
+		this.left.search(query, resultArr);
 	} else if(result === 1 && this.right !== null) {
 		// This node does not match and we have been told to look right
-		this.right.search(searchFunc, resultArr);
+		this.right.search(query, resultArr);
 	}
 };
 
 Node.prototype.depthFirstSearch = function(search) {
-	var result = compareFunc(search, this.value);
-	console.log(search, ":", this.value);
+	var result = this.tree._sort(search, this.key);
+	console.log(search, ":", this.key);
 
 	if(result === 0) {
 		console.log("search item found");
@@ -86,14 +77,14 @@ Node.prototype.inorderTraversal = function() {
 	if(this.left !== null) {
 		this.left.inorderTraversal();
 	}
-	console.log(this.value);
+	console.log(this.key);
 	if(this.right !== null) {
 		this.right.inorderTraversal();
 	}
 };
 
 Node.prototype.preOrderTraversal = function() {
-	console.log(this.value);
+	console.log(this.key);
 	if(this.left !== null) {
 		this.left.preOrderTraversal();
 	}
@@ -109,35 +100,177 @@ Node.prototype.postOrderTraversal = function() {
 	if(this.right !== null) {
 		this.right.postOrderTraversal();
 	}
-	console.log(this.value);
+	console.log(this.key);
 };
 
-var BinarySearchTree = function(insertNode) {
-	if(insertNode instanceof Node) {
-		this.root = insertNode;
-	} else {
-		this.root = new Node(insertNode);
+var BinarySearchTree = function(orderBy) {
+	var i;
+
+	// TODO when added to the main system, use shared ref to module
+	this.pathSolver = new ForerunnerDB.shared.modules.Path();
+
+	this._orderKeys = this.pathSolver.parseArr(orderBy);
+	this._orderKeyData = [];
+
+	for (i = 0; i < this._orderKeys.length; i++) {
+		this._orderKeyData.push({
+			key: this._orderKeys[i],
+			dir: this.pathSolver.get(orderBy, this._orderKeys[i]),
+			pathSolver: new ForerunnerDB.shared.modules.Path(this._orderKeys[i])
+		});
 	}
-	return this;
 };
 
-BinarySearchTree.prototype.search = function (searchFunc) {
-	var resultArr = [];
-	this.root.search(searchFunc, resultArr);
+BinarySearchTree.prototype._sort = function (a, b) {
+	var aVal,
+		bVal,
+		arr = this._orderKeyData,
+		count = arr.length,
+		index,
+		sortData,
+		castType;
+
+	for (index = 0; index < count; index++) {
+		sortData = arr[index];
+
+		aVal = a[sortData.key];
+		bVal = b[sortData.key];
+
+		castType = typeof aVal;
+
+		if (castType === 'number') {
+			aVal = Number(aVal);
+			bVal = Number(bVal);
+		}
+
+		// Check for non-equal items
+		if (aVal !== bVal) {
+			// Return the sorted items
+			if (sortData.dir === 1) {
+				return this.sortAsc(aVal, bVal);
+			}
+
+			if (sortData.dir === -1) {
+				return this.sortDesc(aVal, bVal);
+			}
+		}
+	}
+
+	return 0;
+};
+
+BinarySearchTree.prototype.sortAsc = function (a, b) {
+	if (typeof(a) === 'string' && typeof(b) === 'string') {
+		return a.localeCompare(b);
+	} else {
+		if (a > b) {
+			return 1;
+		} else if (a < b) {
+			return -1;
+		}
+	}
+
+	return 0;
+};
+
+BinarySearchTree.prototype.sortDesc = function (a, b) {
+	if (typeof(a) === 'string' && typeof(b) === 'string') {
+		return b.localeCompare(a);
+	} else {
+		if (a > b) {
+			return -1;
+		} else if (a < b) {
+			return 1;
+		}
+	}
+
+	return 0;
+};
+
+BinarySearchTree.prototype.search = function (query) {
+	var resultArr = [],
+		searchKey = this.objKey(query);
+
+	this.root.search(searchKey, resultArr);
 
 	return resultArr;
 };
 
-BinarySearchTree.prototype.insert = function(insert) {
-	if (insert instanceof Node) {
-		this.root.insert(insert);
-	} else {
-		this.root.insert(new Node(insert));
+BinarySearchTree.prototype._operationCompare = function (a, b, op) {
+	var aVal,
+		bVal,
+		arr = this._orderKeyData,
+		count = arr.length,
+		index,
+		sortData,
+		castType;
+
+	for (index = 0; index < count; index++) {
+		sortData = arr[index];
+
+		aVal = a[sortData.key];
+		bVal = b[sortData.key];
+
+		castType = typeof aVal;
+
+		if (castType === 'number') {
+			aVal = Number(aVal);
+			bVal = Number(bVal);
+		}
+
+		// Run operation on values
+		if (!op(aVal, bVal)) {
+			// Return the sorted items
+			if (sortData.dir === 1) {
+				return this.sortAsc(aVal, bVal);
+			}
+
+			if (sortData.dir === -1) {
+				return this.sortDesc(aVal, bVal);
+			}
+		}
 	}
+
+	return 0;
+};
+
+// Generate a key from the passed object
+BinarySearchTree.prototype.objKey = function (obj) {
+	var key = {},
+		arr = this._orderKeyData,
+		count = arr.length,
+		index,
+		keyData;
+
+	for (index = 0; index < count; index++) {
+		keyData = arr[index];
+		key[keyData.key] = keyData.pathSolver.get(obj);
+	}
+
+	return key;
+};
+
+BinarySearchTree.prototype.insert = function(insert) {
+	if (!this.root) {
+		if(insert instanceof Node) {
+			this.root = insert;
+		} else {
+			this.root = new Node(this, this.objKey(insert), insert);
+		}
+	} else {
+		if (insert instanceof Node) {
+			this.root.insert(insert);
+		} else {
+			this.root.insert(new Node(this, this.objKey(insert), insert));
+		}
+	}
+
+	return this;
 };
 
 BinarySearchTree.prototype.depthFirstSearch = function(searchValue) {
 	this.root.depthFirstSearch(searchValue);
+	return this;
 };
 
 BinarySearchTree.prototype.breadthFirstTraversal = function() {
@@ -155,7 +288,7 @@ BinarySearchTree.prototype.breadthFirstTraversal = function() {
 	// start off enqueing root
 	while(queue.length > 0) {
 		var tempNode = queue.shift();
-		console.log(tempNode.value); // Visit current node
+		console.log(tempNode.key); // Visit current node
 		if(tempNode.left !== null) {
 			queue.push(tempNode.left);
 		}
@@ -163,14 +296,18 @@ BinarySearchTree.prototype.breadthFirstTraversal = function() {
 			queue.push(tempNode.right);
 		}
 	}
+	return this;
 };
 
 BinarySearchTree.prototype.inOrderTraversal = function(){
 	this.root.inorderTraversal();
+	return this;
 };
 BinarySearchTree.prototype.preOrderTraversal = function(){
 	this.root.preOrderTraversal();
+	return this;
 };
 BinarySearchTree.prototype.postOrderTraversal = function(){
 	this.root.postOrderTraversal();
+	return this;
 };
