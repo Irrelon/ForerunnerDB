@@ -3,7 +3,7 @@ var Core = _dereq_('../lib/Core'),
 	View = _dereq_('../lib/View');
 
 module.exports = Core;
-},{"../lib/Core":5,"../lib/View":23}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":5,"../lib/View":24}],2:[function(_dereq_,module,exports){
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -263,7 +263,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":20,"./Shared":22}],3:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":23}],3:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -331,6 +331,7 @@ Shared.mixin(Collection.prototype, 'Mixin.CRUD');
 Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
+Shared.mixin(Collection.prototype, 'Mixin.Matching');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -2546,318 +2547,6 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
 };
 
 /**
- * Internal method that checks a document against a test object.
- * @param {*} source The source object or value to test against.
- * @param {*} test The test object or value to test with.
- * @param {String=} opToApply The special operation to apply to the test such
- * as 'and' or an 'or' operator.
- * @returns {Boolean} True if the test was positive, false on negative.
- * @private
- */
-Collection.prototype._match = function (source, test, opToApply) {
-	// TODO: This method is quite long, break into smaller pieces
-	var operation,
-		applyOp,
-		recurseVal,
-		tmpIndex,
-		sourceType = typeof source,
-		testType = typeof test,
-		matchedAll = true,
-		opResult,
-		i;
-
-	// Check if the comparison data are both strings or numbers
-	if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
-		// The source and test data are flat types that do not require recursive searches,
-		// so just compare them and return the result
-		if (source !== test) {
-			matchedAll = false;
-		}
-	} else {
-		for (i in test) {
-			if (test.hasOwnProperty(i)) {
-				// Reset operation flag
-				operation = false;
-
-				// Check if the property starts with a dollar (function)
-				if (i.substr(0, 1) === '$') {
-					// Ask the _matchOp method to handle the operation
-					opResult = this._matchOp(i, source, test[i]);
-
-					// Check the result of the matchOp operation
-					// If the result is -1 then no operation took place, otherwise the result
-					// will be a boolean denoting a match (true) or no match (false)
-					if (opResult > -1) {
-						if (opResult) {
-							if (opToApply === 'or') {
-								return true;
-							}
-						} else {
-							// Set the matchedAll flag to the result of the operation
-							// because the operation did not return true
-							matchedAll = opResult;
-						}
-
-						// Record that an operation was handled
-						operation = true;
-					}
-				}
-
-				// Check for regex
-				if (!operation && test[i] instanceof RegExp) {
-					operation = true;
-
-					if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
-						if (opToApply === 'or') {
-							return true;
-						}
-					} else {
-						matchedAll = false;
-					}
-				}
-
-				if (!operation) {
-					// Check if our query is an object
-					if (typeof(test[i]) === 'object') {
-						// Because test[i] is an object, source must also be an object
-
-						// Check if our source data we are checking the test query against
-						// is an object or an array
-						if (source[i] !== undefined) {
-							if (source[i] instanceof Array && !(test[i] instanceof Array)) {
-								// The source data is an array, so check each item until a
-								// match is found
-								recurseVal = false;
-								for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-									recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
-
-									if (recurseVal) {
-										// One of the array items matched the query so we can
-										// include this item in the results, so break now
-										break;
-									}
-								}
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else if (!(source[i] instanceof Array) && test[i] instanceof Array) {
-								// The test key data is an array and the source key data is not so check
-								// each item in the test key data to see if the source item matches one
-								// of them. This is effectively an $in search.
-								recurseVal = false;
-
-								for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
-									recurseVal = this._match(source[i], test[i][tmpIndex], applyOp);
-
-									if (recurseVal) {
-										// One of the array items matched the query so we can
-										// include this item in the results, so break now
-										break;
-									}
-								}
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else if (typeof(source) === 'object') {
-								// Recurse down the object tree
-								recurseVal = this._match(source[i], test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else {
-								recurseVal = this._match(undefined, test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							}
-						} else {
-							// First check if the test match is an $exists
-							if (test[i] && test[i]['$exists'] !== undefined) {
-								// Push the item through another match recurse
-								recurseVal = this._match(undefined, test[i], applyOp);
-
-								if (recurseVal) {
-									if (opToApply === 'or') {
-										return true;
-									}
-								} else {
-									matchedAll = false;
-								}
-							} else {
-								matchedAll = false;
-							}
-						}
-					} else {
-						// Check if the prop matches our test value
-						if (source && source[i] === test[i]) {
-							if (opToApply === 'or') {
-								return true;
-							}
-						} else if (source && source[i] && source[i] instanceof Array && test[i] && typeof(test[i]) !== "object") {
-							// We are looking for a value inside an array
-
-							// The source data is an array, so check each item until a
-							// match is found
-							recurseVal = false;
-							for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-								recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
-
-								if (recurseVal) {
-									// One of the array items matched the query so we can
-									// include this item in the results, so break now
-									break;
-								}
-							}
-
-							if (recurseVal) {
-								if (opToApply === 'or') {
-									return true;
-								}
-							} else {
-								matchedAll = false;
-							}
-						} else {
-							matchedAll = false;
-						}
-					}
-				}
-
-				if (opToApply === 'and' && !matchedAll) {
-					return false;
-				}
-			}
-		}
-	}
-
-	return matchedAll;
-};
-
-/**
- * Internal method, performs a matching process against a query operator such as $gt or $nin.
- * @param {String} key The property name in the test that matches the operator to perform
- * matching against.
- * @param {*} source The source data to match the query against.
- * @param {*} test The query to match the source against.
- * @returns {*}
- * @private
- */
-Collection.prototype._matchOp = function (key, source, test) {
-	// Check for commands
-	switch (key) {
-		case '$gt':
-			// Greater than
-			return source > test;
-			break;
-
-		case '$gte':
-			// Greater than or equal
-			return source >= test;
-			break;
-
-		case '$lt':
-			// Less than
-			return source < test;
-			break;
-
-		case '$lte':
-			// Less than or equal
-			return source <= test;
-			break;
-
-		case '$exists':
-			// Property exists
-			return (source === undefined) !== test;
-			break;
-
-		case '$ne': // Not equals
-			return source != test;
-			break;
-
-		case '$or':
-			// Match true on ANY check to pass
-			for (var orIndex = 0; orIndex < test.length; orIndex++) {
-				if (this._match(source, test[orIndex], 'and')) {
-					return true;
-				}
-			}
-
-			return false;
-			break;
-
-		case '$and':
-			// Match true on ALL checks to pass
-			for (var andIndex = 0; andIndex < test.length; andIndex++) {
-				if (!this._match(source, test[andIndex], 'and')) {
-					return false;
-				}
-			}
-
-			return true;
-			break;
-
-		case '$in': // In
-			// Check that the in test is an array
-			if (test instanceof Array) {
-				var inArr = test,
-					inArrCount = inArr.length,
-					inArrIndex;
-
-				for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-					if (inArr[inArrIndex] === source) {
-						return true;
-					}
-				}
-
-				return false;
-			} else {
-				throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
-			}
-			break;
-
-		case '$nin': // Not in
-			// Check that the not-in test is an array
-			if (test instanceof Array) {
-				var notInArr = test,
-					notInArrCount = notInArr.length,
-					notInArrIndex;
-
-				for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
-					if (notInArr[notInArrIndex] === source) {
-						return false;
-					}
-				}
-
-				return true;
-			} else {
-				throw('ForerunnerDB.Collection "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
-			}
-			break;
-	}
-
-	return -1;
-};
-
-/**
  * Returns the number of documents currently in the collection.
  * @returns {Number}
  */
@@ -3202,7 +2891,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Path":20,"./Shared":22}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Path":21,"./Shared":23}],4:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -3492,7 +3181,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":22}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":23}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3863,7 +3552,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":10,"./Overload":19,"./Shared":22}],6:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":10,"./Overload":20,"./Shared":23}],6:[function(_dereq_,module,exports){
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -4183,7 +3872,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":20,"./Shared":22,"./vendor/btree":24}],8:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":23,"./vendor/btree":25}],8:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4534,7 +4223,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":20,"./Shared":22}],9:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":23}],9:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4747,7 +4436,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":22}],10:[function(_dereq_,module,exports){
+},{"./Shared":23}],10:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4820,7 +4509,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":18,"./Shared":22}],11:[function(_dereq_,module,exports){
+},{"./Operation":19,"./Shared":23}],11:[function(_dereq_,module,exports){
 var CRUD = {
 	preSetData: function () {
 		
@@ -4999,7 +4688,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":19}],14:[function(_dereq_,module,exports){
+},{"./Overload":20}],14:[function(_dereq_,module,exports){
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -5139,6 +4828,322 @@ var Events = {
 
 module.exports = Events;
 },{}],16:[function(_dereq_,module,exports){
+var Matching = {
+	/**
+	 * Internal method that checks a document against a test object.
+	 * @param {*} source The source object or value to test against.
+	 * @param {*} test The test object or value to test with.
+	 * @param {String=} opToApply The special operation to apply to the test such
+	 * as 'and' or an 'or' operator.
+	 * @returns {Boolean} True if the test was positive, false on negative.
+	 * @private
+	 */
+	_match: function (source, test, opToApply) {
+		// TODO: This method is quite long, break into smaller pieces
+		var operation,
+			applyOp,
+			recurseVal,
+			tmpIndex,
+			sourceType = typeof source,
+			testType = typeof test,
+			matchedAll = true,
+			opResult,
+			i;
+
+		// Check if the comparison data are both strings or numbers
+		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
+			// The source and test data are flat types that do not require recursive searches,
+			// so just compare them and return the result
+			if (source !== test) {
+				matchedAll = false;
+			}
+		} else {
+			for (i in test) {
+				if (test.hasOwnProperty(i)) {
+					// Reset operation flag
+					operation = false;
+
+					// Check if the property starts with a dollar (function)
+					if (i.substr(0, 1) === '$') {
+						// Ask the _matchOp method to handle the operation
+						opResult = this._matchOp(i, source, test[i]);
+
+						// Check the result of the matchOp operation
+						// If the result is -1 then no operation took place, otherwise the result
+						// will be a boolean denoting a match (true) or no match (false)
+						if (opResult > -1) {
+							if (opResult) {
+								if (opToApply === 'or') {
+									return true;
+								}
+							} else {
+								// Set the matchedAll flag to the result of the operation
+								// because the operation did not return true
+								matchedAll = opResult;
+							}
+
+							// Record that an operation was handled
+							operation = true;
+						}
+					}
+
+					// Check for regex
+					if (!operation && test[i] instanceof RegExp) {
+						operation = true;
+
+						if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
+							if (opToApply === 'or') {
+								return true;
+							}
+						} else {
+							matchedAll = false;
+						}
+					}
+
+					if (!operation) {
+						// Check if our query is an object
+						if (typeof(test[i]) === 'object') {
+							// Because test[i] is an object, source must also be an object
+
+							// Check if our source data we are checking the test query against
+							// is an object or an array
+							if (source[i] !== undefined) {
+								if (source[i] instanceof Array && !(test[i] instanceof Array)) {
+									// The source data is an array, so check each item until a
+									// match is found
+									recurseVal = false;
+									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else if (!(source[i] instanceof Array) && test[i] instanceof Array) {
+									// The test key data is an array and the source key data is not so check
+									// each item in the test key data to see if the source item matches one
+									// of them. This is effectively an $in search.
+									recurseVal = false;
+
+									for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
+										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp);
+
+										if (recurseVal) {
+											// One of the array items matched the query so we can
+											// include this item in the results, so break now
+											break;
+										}
+									}
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else if (typeof(source) === 'object') {
+									// Recurse down the object tree
+									recurseVal = this._match(source[i], test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else {
+									recurseVal = this._match(undefined, test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								}
+							} else {
+								// First check if the test match is an $exists
+								if (test[i] && test[i]['$exists'] !== undefined) {
+									// Push the item through another match recurse
+									recurseVal = this._match(undefined, test[i], applyOp);
+
+									if (recurseVal) {
+										if (opToApply === 'or') {
+											return true;
+										}
+									} else {
+										matchedAll = false;
+									}
+								} else {
+									matchedAll = false;
+								}
+							}
+						} else {
+							// Check if the prop matches our test value
+							if (source && source[i] === test[i]) {
+								if (opToApply === 'or') {
+									return true;
+								}
+							} else if (source && source[i] && source[i] instanceof Array && test[i] && typeof(test[i]) !== "object") {
+								// We are looking for a value inside an array
+
+								// The source data is an array, so check each item until a
+								// match is found
+								recurseVal = false;
+								for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
+									recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+
+									if (recurseVal) {
+										// One of the array items matched the query so we can
+										// include this item in the results, so break now
+										break;
+									}
+								}
+
+								if (recurseVal) {
+									if (opToApply === 'or') {
+										return true;
+									}
+								} else {
+									matchedAll = false;
+								}
+							} else {
+								matchedAll = false;
+							}
+						}
+					}
+
+					if (opToApply === 'and' && !matchedAll) {
+						return false;
+					}
+				}
+			}
+		}
+
+		return matchedAll;
+	},
+
+	/**
+	 * Internal method, performs a matching process against a query operator such as $gt or $nin.
+	 * @param {String} key The property name in the test that matches the operator to perform
+	 * matching against.
+	 * @param {*} source The source data to match the query against.
+	 * @param {*} test The query to match the source against.
+	 * @returns {*}
+	 * @private
+	 */
+	_matchOp: function (key, source, test) {
+		// Check for commands
+		switch (key) {
+			case '$gt':
+				// Greater than
+				return source > test;
+				break;
+
+			case '$gte':
+				// Greater than or equal
+				return source >= test;
+				break;
+
+			case '$lt':
+				// Less than
+				return source < test;
+				break;
+
+			case '$lte':
+				// Less than or equal
+				return source <= test;
+				break;
+
+			case '$exists':
+				// Property exists
+				return (source === undefined) !== test;
+				break;
+
+			case '$ne': // Not equals
+				return source != test;
+				break;
+
+			case '$or':
+				// Match true on ANY check to pass
+				for (var orIndex = 0; orIndex < test.length; orIndex++) {
+					if (this._match(source, test[orIndex], 'and')) {
+						return true;
+					}
+				}
+
+				return false;
+				break;
+
+			case '$and':
+				// Match true on ALL checks to pass
+				for (var andIndex = 0; andIndex < test.length; andIndex++) {
+					if (!this._match(source, test[andIndex], 'and')) {
+						return false;
+					}
+				}
+
+				return true;
+				break;
+
+			case '$in': // In
+						// Check that the in test is an array
+				if (test instanceof Array) {
+					var inArr = test,
+						inArrCount = inArr.length,
+						inArrIndex;
+
+					for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
+						if (inArr[inArrIndex] === source) {
+							return true;
+						}
+					}
+
+					return false;
+				} else {
+					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
+				}
+				break;
+
+			case '$nin': // Not in
+				// Check that the not-in test is an array
+				if (test instanceof Array) {
+					var notInArr = test,
+						notInArrCount = notInArr.length,
+						notInArrIndex;
+
+					for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
+						if (notInArr[notInArrIndex] === source) {
+							return false;
+						}
+					}
+
+					return true;
+				} else {
+					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
+				}
+				break;
+		}
+
+		return -1;
+	}
+};
+
+module.exports = Matching;
+},{}],17:[function(_dereq_,module,exports){
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.
@@ -5182,7 +5187,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -5274,7 +5279,7 @@ var Triggers = {
 							break;
 					}
 
-					console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
+					//console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 				}
 
 				// Run the trigger's method and store the response
@@ -5320,7 +5325,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5465,7 +5470,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":20,"./Shared":22}],19:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":23}],20:[function(_dereq_,module,exports){
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -5600,7 +5605,7 @@ generateSignaturePermutations = function (str) {
 };
 
 module.exports = Overload;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 /**
@@ -6011,7 +6016,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":22}],21:[function(_dereq_,module,exports){
+},{"./Shared":23}],22:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -6071,7 +6076,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":22}],22:[function(_dereq_,module,exports){
+},{"./Shared":23}],23:[function(_dereq_,module,exports){
 var Shared = {
 	version: '1.3.4',
 	modules: {},
@@ -6198,7 +6203,8 @@ var Shared = {
 		'Mixin.CRUD': _dereq_('./Mixin.CRUD'),
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
 		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
-		'Mixin.Sorting': _dereq_('./Mixin.Sorting')
+		'Mixin.Sorting': _dereq_('./Mixin.Sorting'),
+		'Mixin.Matching': _dereq_('./Mixin.Matching')
 	}
 };
 
@@ -6206,7 +6212,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Sorting":16,"./Mixin.Triggers":17,"./Overload":19}],23:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Matching":16,"./Mixin.Sorting":17,"./Mixin.Triggers":18,"./Overload":20}],24:[function(_dereq_,module,exports){
 // Import external names locally
 var Shared,
 	Core,
@@ -7118,7 +7124,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":21,"./Shared":22}],24:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":22,"./Shared":23}],25:[function(_dereq_,module,exports){
 /*
  Copyright 2013 Daniel Wirtz <dcode@dcode.io>
 
