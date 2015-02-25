@@ -2316,7 +2316,7 @@ Collection.prototype._match = function (source, test, opToApply) {
 				// Check if the property starts with a dollar (function)
 				if (i.substr(0, 1) === '$') {
 					// Ask the _matchOp method to handle the operation
-					opResult = this._matchOp(i, source, test);
+					opResult = this._matchOp(i, source, test[i]);
 
 					// Check the result of the matchOp operation
 					// If the result is -1 then no operation took place, otherwise the result
@@ -2500,37 +2500,37 @@ Collection.prototype._matchOp = function (key, source, test) {
 	switch (key) {
 		case '$gt':
 			// Greater than
-			return source > test[key];
+			return source > test;
 			break;
 
 		case '$gte':
 			// Greater than or equal
-			return source >= test[key];
+			return source >= test;
 			break;
 
 		case '$lt':
 			// Less than
-			return source < test[key];
+			return source < test;
 			break;
 
 		case '$lte':
 			// Less than or equal
-			return source <= test[key];
+			return source <= test;
 			break;
 
 		case '$exists':
 			// Property exists
-			return (source === undefined) !== test[key];
+			return (source === undefined) !== test;
 			break;
 
 		case '$ne': // Not equals
-			return source != test[key];
+			return source != test;
 			break;
 
 		case '$or':
 			// Match true on ANY check to pass
-			for (var orIndex = 0; orIndex < test[key].length; orIndex++) {
-				if (this._match(source, test[key][orIndex], 'and')) {
+			for (var orIndex = 0; orIndex < test.length; orIndex++) {
+				if (this._match(source, test[orIndex], 'and')) {
 					return true;
 				}
 			}
@@ -2540,8 +2540,8 @@ Collection.prototype._matchOp = function (key, source, test) {
 
 		case '$and':
 			// Match true on ALL checks to pass
-			for (var andIndex = 0; andIndex < test[key].length; andIndex++) {
-				if (!this._match(source, test[key][andIndex], 'and')) {
+			for (var andIndex = 0; andIndex < test.length; andIndex++) {
+				if (!this._match(source, test[andIndex], 'and')) {
 					return false;
 				}
 			}
@@ -2551,8 +2551,8 @@ Collection.prototype._matchOp = function (key, source, test) {
 
 		case '$in': // In
 			// Check that the in test is an array
-			if (test[key] instanceof Array) {
-				var inArr = test[key],
+			if (test instanceof Array) {
+				var inArr = test,
 					inArrCount = inArr.length,
 					inArrIndex;
 
@@ -2570,8 +2570,8 @@ Collection.prototype._matchOp = function (key, source, test) {
 
 		case '$nin': // Not in
 			// Check that the not-in test is an array
-			if (test[key] instanceof Array) {
-				var notInArr = test[key],
+			if (test instanceof Array) {
+				var notInArr = test,
 					notInArrCount = notInArr.length,
 					notInArrIndex;
 
@@ -2723,6 +2723,9 @@ Collection.prototype.ensureIndex = function (keys, options) {
 				index = new IndexHashMap(keys, options, this);
 				break;
 		}
+	} else {
+		// Default
+		index = new IndexHashMap(keys, options, this);
 	}
 
 	// Check the index does not already exist
