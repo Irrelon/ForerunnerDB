@@ -22,7 +22,6 @@ Highchart.prototype.init = function (collection, options) {
 
 	if (!this._selector[0]) {
 		throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart target element does not exist via selector: ' + this._options.selector);
-		return;
 	}
 
 	this._listeners = {};
@@ -338,6 +337,7 @@ Collection.prototype.pieChart = new Overload({
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} keyField The field to use as the data key.
 	 * @param {String} valField The field to use as the data value.
+	 * @param {String} seriesName The name of the series to display on the chart.
 	 * @param {Object} options The options object.
 	 */
 	'*, string, string, string, ...': function (selector, keyField, valField, seriesName, options) {
