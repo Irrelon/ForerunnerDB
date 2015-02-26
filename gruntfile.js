@@ -3,7 +3,10 @@ module.exports = function(grunt) {
 		"jshint": {
 			"ForerunnerDB": {
 				"files": {
-					"src": ["js/lib/**/*.js"]
+					"src": [
+						"js/lib/**/*.js",
+						'!js/lib/vendor/*.js'
+					]
 				}
 			}
 		}
