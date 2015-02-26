@@ -52,7 +52,6 @@ if (typeof jQuery !== 'undefined') {
 /**
  * The grid constructor.
  * @param {String} selector jQuery selector.
- * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
  */
