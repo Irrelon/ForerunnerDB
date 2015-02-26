@@ -146,7 +146,7 @@ var Matching = {
 								}
 							} else {
 								// First check if the test match is an $exists
-								if (test[i] && test[i]['$exists'] !== undefined) {
+								if (test[i] && test[i].$exists !== undefined) {
 									// Push the item through another match recurse
 									recurseVal = this._match(undefined, test[i], applyOp);
 
@@ -221,31 +221,25 @@ var Matching = {
 			case '$gt':
 				// Greater than
 				return source > test;
-				break;
 
 			case '$gte':
 				// Greater than or equal
 				return source >= test;
-				break;
 
 			case '$lt':
 				// Less than
 				return source < test;
-				break;
 
 			case '$lte':
 				// Less than or equal
 				return source <= test;
-				break;
 
 			case '$exists':
 				// Property exists
 				return (source === undefined) !== test;
-				break;
 
 			case '$ne': // Not equals
 				return source != test;
-				break;
 
 			case '$or':
 				// Match true on ANY check to pass
@@ -256,7 +250,6 @@ var Matching = {
 				}
 
 				return false;
-				break;
 
 			case '$and':
 				// Match true on ALL checks to pass
@@ -267,7 +260,6 @@ var Matching = {
 				}
 
 				return true;
-				break;
 
 			case '$in': // In
 						// Check that the in test is an array
@@ -286,7 +278,6 @@ var Matching = {
 				} else {
 					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
 				}
-				break;
 
 			case '$nin': // Not in
 				// Check that the not-in test is an array
@@ -305,7 +296,6 @@ var Matching = {
 				} else {
 					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
 				}
-				break;
 		}
 
 		return -1;
