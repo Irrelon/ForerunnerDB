@@ -284,7 +284,7 @@ Document.prototype._updateUnset = function (doc, prop) {
 /**
  * Deletes a property on a document.
  * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
+ * @param {String} val The property to delete.
  * @return {Boolean}
  * @private
  */
