@@ -343,12 +343,8 @@ Core.prototype.drop = function (callback) {
 		var arr = this.collections(),
 			arrCount = arr.length,
 			arrIndex,
-			finishCount = 0;
-
-		this._state = 'dropped';
-
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			this.collection(arr[arrIndex].name).drop(function () {
+			finishCount = 0,
+			afterDrop = function () {
 				finishCount++;
 
 				if (finishCount === arrCount) {
@@ -356,7 +352,12 @@ Core.prototype.drop = function (callback) {
 						callback();
 					}
 				}
-			});
+			};
+
+		this._state = 'dropped';
+
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			this.collection(arr[arrIndex].name).drop(afterDrop);
 
 			delete this._collection[arr[arrIndex].name];
 		}
