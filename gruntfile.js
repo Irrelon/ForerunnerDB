@@ -9,9 +9,17 @@ module.exports = function(grunt) {
 					]
 				}
 			}
+		},
+		qunit: {
+			"ForerunnerDB": {
+				"src": [
+					"js/unitTests/index.html"
+				]
+			}
 		}
 	});
 
+	grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.registerTask('default', ['jshint']);
+	grunt.registerTask('default', ['jshint', 'qunit']);
 };

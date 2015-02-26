@@ -27,7 +27,8 @@
 		"socket.io": "^1.1.0",
 		"grunt": "0.4.5",
 		"grunt-cli": "0.1.13",
-		"grunt-contrib-jshint": "0.11.0"
+		"grunt-contrib-jshint": "0.11.0",
+		"grunt-contrib-qunit": "0.5.2"
 	},
 	"main": "./js/builds/core",
 	"browserify": "./js/builds/core"
