@@ -1924,7 +1924,7 @@ Collection.prototype.transform = function (obj) {
 		enabled: this._transformEnabled,
 		dataIn: this._transformIn,
 		dataOut: this._transformOut
-	}
+	};
 };
 
 /**
@@ -2219,7 +2219,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 					// Check if the join uses an $as operator
 					if ('$as' in options.join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName]['$as']);
+						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName].$as);
 					} else {
 						joinCollectionReferences.push(joinCollectionName);
 					}
