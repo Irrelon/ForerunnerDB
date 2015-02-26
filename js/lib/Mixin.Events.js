@@ -87,11 +87,14 @@ var Events = {
 		this._listeners = this._listeners || {};
 
 		if (event in this._listeners) {
+			var arrIndex,
+				arrCount;
+
 			// Handle global emit
 			if (this._listeners[event]['*']) {
-				var arr = this._listeners[event]['*'],
-					arrCount = arr.length,
-					arrIndex;
+				var arr = this._listeners[event]['*'];
+
+				arrCount = arr.length;
 
 				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
