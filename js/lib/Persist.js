@@ -70,7 +70,6 @@ Persist.prototype.driver = function (val) {
 
 			default:
 				throw('ForerunnerDB.Persist: The persistence driver you have specified is not found. Please use either IndexedDB, WebSQL or LocalStorage!');
-				break;
 		}
 
 		return this;
@@ -316,22 +315,25 @@ Core.prototype.load = function (callback) {
 	var obj = this._collection,
 		keys = obj.keys(),
 		keyCount = keys.length,
+		loadCallback,
 		index;
+
+	loadCallback = function (err) {
+		if (!err) {
+			keyCount--;
+
+			if (keyCount === 0) {
+				callback(false);
+			}
+		} else {
+			callback(err);
+		}
+	};
 
 	for (index in obj) {
 		if (obj.hasOwnProperty(index)) {
 			// Call the collection load method
-			obj[index].load(function (err) {
-				if (!err) {
-					keyCount--;
-
-					if (keyCount === 0) {
-						callback(false);
-					}
-				} else {
-					callback(err);
-				}
-			});
+			obj[index].load(loadCallback);
 		}
 	}
 };
@@ -341,22 +343,25 @@ Core.prototype.save = function (callback) {
 	var obj = this._collection,
 		keys = obj.keys(),
 		keyCount = keys.length,
+		saveCallback,
 		index;
+
+	saveCallback = function (err) {
+		if (!err) {
+			keyCount--;
+
+			if (keyCount === 0) {
+				callback(false);
+			}
+		} else {
+			callback(err);
+		}
+	};
 
 	for (index in obj) {
 		if (obj.hasOwnProperty(index)) {
 			// Call the collection save method
-			obj[index].save(function (err) {
-				if (!err) {
-					keyCount--;
-
-					if (keyCount === 0) {
-						callback(false);
-					}
-				} else {
-					callback(err);
-				}
-			});
+			obj[index].save(saveCallback);
 		}
 	}
 };
