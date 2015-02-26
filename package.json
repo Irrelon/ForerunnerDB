@@ -23,13 +23,16 @@
 		"derequire": "^1.2.0",
 		"faye": "^1.0.3",
 		"forever": "^0.11.1",
-		"request": "^2.44.0",
-		"socket.io": "^1.1.0",
 		"grunt": "0.4.5",
 		"grunt-cli": "0.1.13",
 		"grunt-contrib-jshint": "0.11.0",
-		"grunt-contrib-qunit": "0.5.2"
+		"grunt-contrib-qunit": "0.5.2",
+		"request": "^2.44.0",
+		"socket.io": "^1.1.0"
 	},
 	"main": "./js/builds/core",
-	"browserify": "./js/builds/core"
+	"browserify": "./js/builds/core",
+	"bugs": {
+		"url": "http://github.com/irrelon/ForerunnerDB/issues"
+	}
 }
