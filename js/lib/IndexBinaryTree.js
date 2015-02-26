@@ -9,7 +9,7 @@ lookup
 
 var Shared = require('./Shared'),
 	Path = require('./Path'),
-	btree = require('./vendor/btree');
+	btree = function () {};
 
 /**
  * The index class used to instantiate hash map indexes that the database can
