@@ -100,7 +100,7 @@ var Shared = {
 				this.$super = tmp;
 
 				return ret;
-			}
+			};
 		} else {
 			obj[name] = this._synth[name];
 		}
