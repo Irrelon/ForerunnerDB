@@ -444,6 +444,7 @@ AutoBind.extendView = function (Module) {
 	 * will use when rendering to the screen, or you can pass an object with a template key
 	 * containing a string that represents the HTML template such as:
 	 *     { template: '<div>{{:name}}</div>' }
+	 * @param {Object=} options An options object.
 	 * @returns {*}
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
@@ -481,6 +482,7 @@ AutoBind.extendOverview = function (Module) {
 	 * output to the DOM.
 	 * @param outputTargetSelector
 	 * @param templateSelector
+	 * @param {Object=} options An options object.
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		this._data.link.apply(this._data, arguments);
@@ -511,6 +513,7 @@ AutoBind.extendDocument = function (Module) {
 	 * output to the DOM.
 	 * @param outputTargetSelector
 	 * @param templateSelector
+	 * @param {Object=} options An options object.
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
@@ -638,15 +641,16 @@ if (typeof jQuery !== 'undefined') {
 	if (typeof jQuery.views !== 'undefined') {
 		// Define modules that we wish to work on
 		var modules = ['Collection', 'View', 'Overview', 'Document'],
-			moduleIndex;
-
-		// Extend modules that are finished loading
-		for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-			Shared.moduleFinished(modules[moduleIndex], function (name, module) {
+			moduleIndex,
+			moduleFinished = function (name, module) {
 				if (AutoBind['extend' + name]) {
 					AutoBind['extend' + name](module);
 				}
-			});
+			};
+
+		// Extend modules that are finished loading
+		for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+			Shared.moduleFinished(modules[moduleIndex], moduleFinished);
 		}
 
 		Shared.finishModule('AutoBind');
