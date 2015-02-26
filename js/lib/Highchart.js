@@ -93,7 +93,6 @@ Highchart.prototype.init = function (collection, options) {
 
 		default:
 			throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
-			break;
 	}
 
 	// Hook the collection events to auto-update the chart
