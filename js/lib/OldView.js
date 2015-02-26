@@ -14,7 +14,7 @@ Shared = require('./Shared');
  * @param viewName
  * @constructor
  */
-var OldView = function () {
+var OldView = function (viewName) {
 	this.init.apply(this, arguments);
 };
 
