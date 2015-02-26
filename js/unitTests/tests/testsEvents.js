@@ -5,7 +5,7 @@ asyncTest("Events - Collection.on() :: Insert with Success", function() {
 	expect(1);
 
 	var eventFunc = function (successArr, failed) {
-		ok(successArr.length === 1, "Insert single document");
+		strictEqual(successArr.length, 1, "Insert single document");
 		start();
 	};
 
@@ -33,7 +33,7 @@ asyncTest("Events - Collection.on() :: Insert with Failed", function() {
 	});
 
 	user.on('insert', function (successArr, failed) {
-		ok(failed.length === 1, "Insert single document with index violation");
+		strictEqual(failed.length, 1, "Insert single document with index violation");
 		start();
 	});
 
@@ -58,7 +58,7 @@ asyncTest("Events - Collection.on() :: Update with Success", function() {
 
 	user.on('update', function (updated, failed) {
 		//console.log('Updated');
-		ok(updated.length === 1, "Update single document");
+		strictEqual(updated.length, 1, "Update single document");
 		start();
 	});
 
@@ -85,7 +85,7 @@ asyncTest("Events - Collection.on() :: Update Key Array Data with Success", func
 
 	user.on('update', function (updated, failed) {
 		//console.log('Updated', updated);
-		ok(updated.length === 1, "Update single document");
+		strictEqual(updated.length, 1, "Update single document");
 		start();
 	});
 
@@ -112,7 +112,7 @@ asyncTest("Events - Collection.on() :: Remove with Success", function() {
 	});
 
 	user.on('remove', function (removed, failed) {
-		ok(removed.length === 1, "Remove single document");
+		strictEqual(removed.length, 1, "Remove single document");
 		start();
 	});
 
@@ -134,7 +134,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 			.addCollection(user);
 
 		group.on('insert', function (successArr, failed) {
-			ok(successArr.length === 1, "Insert single document");
+			strictEqual(successArr.length, 1, "Insert single document");
 			start();
 		});
 
@@ -161,7 +161,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 			.addCollection(user);
 
 		group.on('update', function (successArr, failArr) {
-			ok(successArr.length === 1, "Update single document");
+			strictEqual(successArr.length, 1, "Update single document");
 			start();
 		});
 
@@ -194,11 +194,11 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 			.addCollection(user);
 
 		group.on('update', '2342', function (successArr, failArr) {
-			ok(successArr.length === 1 && successArr[0]._id === '2342', "Update single document");
+			strictEqual(successArr.length === 1 && successArr[0]._id, '2342', "Update single document");
 		});
 
 		group.on('update', '2343', function (successArr, failArr) {
-			ok(successArr.length === 1 && successArr[0]._id === '2343', "Update single document");
+			strictEqual(successArr.length === 1 && successArr[0]._id, '2343', "Update single document");
 			start();
 		});
 
@@ -232,7 +232,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 			.addCollection(user);
 
 		group.on('remove', function (successArr, failArr) {
-			ok(successArr.length === 1, "Remove single document");
+			strictEqual(successArr.length, 1, "Remove single document");
 			start();
 		});
 
@@ -256,7 +256,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 			.addCollection(userView);
 
 		group.on('insert', function (successArr, failed) {
-			ok(successArr.length === 1, "Insert single document");
+			strictEqual(successArr.length, 1, "Insert single document");
 			start();
 		});
 
@@ -285,7 +285,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 			.addCollection(userView);
 
 		group.on('update', function (successArr, failArr) {
-			ok(successArr.length === 1, "Update single document");
+			strictEqual(successArr.length, 1, "Update single document");
 			start();
 		});
 
@@ -315,7 +315,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 			.addCollection(userView);
 
 		var testFunc = function (successArr, failArr) {
-			ok(successArr.length === 1, "Remove single document");
+			strictEqual(successArr.length, 1, "Remove single document");
 			start();
 		};
 
@@ -342,7 +342,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		db.view('userView').on('insert', function (successArr, failed) {
 			//console.log('insert');
-			ok(successArr.length === 1, "Insert single document");
+			strictEqual(successArr.length, 1, "Insert single document");
 			start();
 		});
 

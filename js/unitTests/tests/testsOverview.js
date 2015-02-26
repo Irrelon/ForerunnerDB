@@ -42,8 +42,8 @@ ForerunnerDB.moduleLoaded('Overview', function () {
 		var elems = $('#testTarget div');
 		var elem = $(elems[0]);
 
-		ok(elems.length === 1, 'Correct number of elements rendered');
-		ok(elem.attr('data-count') === '2', 'DOM data-bound elements are showing correct data');
+		strictEqual(elems.length, 1, 'Correct number of elements rendered');
+		strictEqual(elem.attr('data-count'), '2', 'DOM data-bound elements are showing correct data');
 
 		base.domDown();
 		base.dbDown();
@@ -59,11 +59,11 @@ ForerunnerDB.moduleLoaded('Overview', function () {
 
 		ov.from(coll);
 
-		ok(ov.from()[0] === coll, 'Check that the collection reference exists');
+		strictEqual(ov.from()[0], coll, 'Check that the collection reference exists');
 
 		ov.drop();
 
-		ok(ov.from() === undefined, 'Check that the collection reference has been released');
+		strictEqual(ov.from(), undefined, 'Check that the collection reference has been released');
 
 		base.dbDown();
 	});

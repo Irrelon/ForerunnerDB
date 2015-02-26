@@ -20,8 +20,8 @@ test("Transform - Collection.transform() :: Assign a transform-in method to a co
 
 	var result = coll.find();
 
-	ok(result.length === 1, "Insert");
-	ok(result[0].moo === 1 && result[0].goo === 2, "Insert transformed");
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].moo === 1 && result[0].goo, 2, "Insert transformed");
 
 	base.dbDown();
 });
@@ -50,9 +50,9 @@ test("Transform - Collection.transform() :: Assign a transform-out method to a c
 	var collData = coll._data,
 		result = coll.find();
 
-	ok(result.length === 1, "Insert");
-	ok(collData[0].doo === 1, "Insert not transformed");
-	ok(result[0].moo === 1 && result[0].goo === 2 && result[0].doo === undefined, "Find transformed");
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(collData[0].doo, 1, "Insert not transformed");
+	strictEqual(result[0].moo === 1 && result[0].goo === 2 && result[0].doo, undefined, "Find transformed");
 
 	base.dbDown();
 });
@@ -70,8 +70,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var result = coll.find();
 
-		ok(result.length === 1, "Collection insert");
-		ok(result[0].foo === 1, "Collection insert not transformed");
+		strictEqual(result.length, 1, "Collection insert");
+		strictEqual(result[0].foo, 1, "Collection insert not transformed");
 
 		var view = db.view('transformView').from(coll);
 
@@ -87,7 +87,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		});
 
 		result = view.find();
-		ok(result[0].moo === 1 && result[0].goo === 2, "View insert 1 transformed");
+		strictEqual(result[0].moo === 1 && result[0].goo, 2, "View insert 1 transformed");
 
 		// Now insert another record
 		coll.insert({
@@ -96,7 +96,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		});
 
 		result = view.find();
-		ok(result[1] && result[1].moo === 4 && result[1].goo === 5, "View insert 2 transformed");
+		strictEqual(result[1] && result[1].moo === 4 && result[1].goo, 5, "View insert 2 transformed");
 
 		// Now test collection updates
 		coll.update({
@@ -106,7 +106,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		});
 
 		result = view.find();
-		ok(result[1] && result[1].moo === 2 && result[1].goo === 3, "View update 2 transformed");
+		strictEqual(result[1] && result[1].moo === 2 && result[1].goo, 3, "View update 2 transformed");
 
 		// Now remove a record
 		coll.remove({
@@ -114,7 +114,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		});
 
 		result = view.find();
-		ok(result[0] && result[0].moo === 2 && result[0].goo === 3, "Collection remove 'test1' replicate to transformed view");
+		strictEqual(result[0] && result[0].moo === 2 && result[0].goo, 3, "Collection remove 'test1' replicate to transformed view");
 
 		base.dbDown();
 	});

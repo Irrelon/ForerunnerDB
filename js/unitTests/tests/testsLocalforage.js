@@ -18,7 +18,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
         // Make sure the item does not currently exist
         result = coll.find();
-        ok(result.length === 0, 'Check that there are currently no items in the collection');
+        strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 
         result = coll.load(function(err){
 
@@ -26,8 +26,8 @@ ForerunnerDB.moduleLoaded('Persist', function () {
             assert.ok(!err, 'Loads without an error');
 
             result = coll.find();
-            ok(result.length === 1, 'Check that items were loaded correctly');
-            ok(result[0].name === 'Test', 'Check that the data loaded holds correct information');
+            strictEqual(result.length, 1, 'Check that items were loaded correctly');
+            strictEqual(result[0].name, 'Test', 'Check that the data loaded holds correct information');
 
             base.dbDown();
         });

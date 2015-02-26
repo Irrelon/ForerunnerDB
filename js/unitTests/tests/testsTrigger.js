@@ -71,8 +71,8 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 
 	var result = coll.find();
 
-	ok(result.length === 1, "Insert");
-	ok(result[0].slots[0].anyAvailable === false, "Insert trigger fired");
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].slots[0].anyAvailable, false, "Insert trigger fired");
 
 	coll.update({
 		_id: 1,
@@ -92,7 +92,7 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 
 	result = coll.find();
 
-	ok(result[0].slots[0].anyAvailable === true, "Update trigger fired");
+	strictEqual(result[0].slots[0].anyAvailable, true, "Update trigger fired");
 
 	base.dbDown();
 });

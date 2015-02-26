@@ -10,7 +10,12 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		});
 
 		coll.save(function (err) {
-			ok(!err, 'Check that there are currently no items in the collection');
+			if (err) {
+				console.log(err);
+				ok(false, err);
+			} else {
+				ok(!err, 'Check that there are currently no items in the collection');
+			}
 			//coll.drop();
 
 			base.dbDown();
@@ -22,12 +27,12 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			result = coll.find();
 
 			ok(db.persist.driver(), 'Check that there is a persistent storage driver: ' + db.persist.driver());
-			ok(result.length === 0, 'Check that there are currently no items in the collection');
+			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 
 			coll.load(function (err) {
 				result = coll.find();
-				ok(result.length === 1, 'Check that items were loaded correctly');
-				ok(result[0] && result[0].name === 'Test', 'Check that the data loaded holds correct information');
+				strictEqual(result.length, 1, 'Check that items were loaded correctly');
+				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
 
 				base.dbDown();
 

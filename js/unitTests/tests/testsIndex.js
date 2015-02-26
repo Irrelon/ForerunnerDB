@@ -12,10 +12,10 @@ test("Index - Collection.ensureIndex() :: Assign an index to a collection", func
 		name: 'testIndex'
 	});
 
-	ok(indexResult.err === undefined, "Initialise index: " + indexResult.err);
+	strictEqual(indexResult.err, undefined, "Initialise index: " + indexResult.err);
 	ok(indexResult.state !== undefined, "Check index state object: " + indexResult.state);
-	ok(indexResult.state.ok === true, "Check index state ok: " + indexResult.state.ok);
-	ok(indexResult.state.name === 'testIndex', "Check index state name: " + indexResult.state.name);
+	strictEqual(indexResult.state.ok, true, "Check index state ok: " + indexResult.state.ok);
+	strictEqual(indexResult.state.name, 'testIndex', "Check index state name: " + indexResult.state.name);
 
 	base.dbDown();
 });
@@ -39,7 +39,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			// Check that there are no docs
 			result = db.collection('test27').find();
 
-			ok(result.length === 0, 'Check for empty collection');
+			strictEqual(result.length, 0, 'Check for empty collection');
 
 			// Now create an index on the collection
 			var indexResult = db.collection('test27').ensureIndex({
@@ -53,7 +53,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			db.collection('test27').load(function () {
 				// Now check that we have our doc
 				result = db.collection('test27').find();
-				ok(result.length === 1, 'Check for doc in collection');
+				strictEqual(result.length, 1, 'Check for doc in collection');
 
 				// Now query for the doc with explain to see if an index is used
 				result = db.collection('test27').explain({name: 'Jim'});
@@ -132,8 +132,8 @@ test("Index - Index.lookup() :: Test optimal query index detection", function ()
 		orgId: "3"
 	});
 
-	ok(a && a.index.used && a.index.potential.length === 2, "Query analyser returned correct number of indexes to use");
-	ok(a.index.used._name === 'testArrValAndOrgId', "Check index name: " + a.index.used._name);
+	strictEqual(a && a.index.used && a.index.potential.length, 2, "Query analyser returned correct number of indexes to use");
+	strictEqual(a.index.used._name, 'testArrValAndOrgId', "Check index name: " + a.index.used._name);
 
 	base.dbDown();
 });
@@ -163,9 +163,9 @@ test("Index - Index.lookup() :: Test lookup from index", function () {
 
 	//console.log(lookup);
 
-	ok(lookup.length === 2, "Lookup returned correct number of results");
-	ok(lookup[0]._id === '4' && lookup[0].arr[1].val === 5, "Lookup returned correct result 1");
-	ok(lookup[1]._id === '5' && lookup[1].arr[1].val === 5, "Lookup returned correct result 2");
+	strictEqual(lookup.length, 2, "Lookup returned correct number of results");
+	strictEqual(lookup[0]._id === '4' && lookup[0].arr[1].val, 5, "Lookup returned correct result 1");
+	strictEqual(lookup[1]._id === '5' && lookup[1].arr[1].val, 5, "Lookup returned correct result 2");
 
 	base.dbDown();
 });
@@ -191,9 +191,9 @@ test("Index - Collection.find() :: Test query that should use an index", functio
 		name: 'Dean'
 	});
 
-	ok(result && result.length === 2, "Check correct number of results returned");
-	ok(result[0]._id === "4", "Check returned data 1 id");
-	ok(result[1]._id === "5", "Check returned data 2 id");
+	strictEqual(result && result.length, 2, "Check correct number of results returned");
+	strictEqual(result[0]._id, "4", "Check returned data 1 id");
+	strictEqual(result[1]._id, "5", "Check returned data 2 id");
 
 	base.dbDown();
 });
@@ -234,9 +234,9 @@ test("Index - Collection.find() :: Test index doesn't interfere with other queri
 		age: 14
 	});
 
-	ok(result && result.length === 2, "Check correct number of results returned : " + result.length);
-	ok(result[0]._id === "2", "Check returned data 1 id");
-	ok(result[1]._id === "5", "Check returned data 2 id");
+	strictEqual(result && result.length, 2, "Check correct number of results returned : " + result.length);
+	strictEqual(result[0]._id, "2", "Check returned data 1 id");
+	strictEqual(result[1]._id, "5", "Check returned data 2 id");
 
 	base.dbDown();
 });
@@ -281,8 +281,8 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 	// Run with index + table scan
 	c = collection.find({name: 'Sally', age: 12}, {$decouple: false, $skipIndex: false});
 
-	ok(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name() === 'index_name', "Check that index was used");
-	ok(b.__fdbOp.data('index.used') === false, "Check that index was not used");
+	strictEqual(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name(), 'index_name', "Check that index was used");
+	strictEqual(b.__fdbOp.data('index.used'), false, "Check that index was not used");
 
 	ok(a.__fdbOp.time().totalMs <= b.__fdbOp.time().totalMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbOp.time().totalMs + " vs Non-Indexed: " + b.length + " rows in " + b.__fdbOp.time().totalMs + ")");
 
@@ -307,8 +307,8 @@ test("Index - Collection.find() :: Test index created before inserting data", fu
 		name: 'Bob'
 	});
 
-	ok(insert1.inserted.length === 1, "Check returned data 1 length");
-	ok(insert2.inserted.length === 0, "Check returned data 2 length");
+	strictEqual(insert1.inserted.length, 1, "Check returned data 1 length");
+	strictEqual(insert2.inserted.length, 0, "Check returned data 2 length");
 
 	base.dbDown();
 });
@@ -342,8 +342,8 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 	find = coll.find();
 	index = coll.index('uniqueName');
 
-	ok(find.length === 2, "Check data length");
-	ok(index.size() === 2, "Check index size");
+	strictEqual(find.length, 2, "Check data length");
+	strictEqual(index.size(), 2, "Check index size");
 
 	// Now remove item and check that it cannot be found in the index
 	coll.remove({
@@ -353,8 +353,8 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 	find = coll.find();
 	index = coll.index('uniqueName');
 
-	ok(find.length === 1, "Check data length");
-	ok(index.size() === 1, "Check index size");
+	strictEqual(find.length, 1, "Check data length");
+	strictEqual(index.size(), 1, "Check index size");
 
 	base.dbDown();
 });
@@ -389,7 +389,7 @@ test("Index - Collection.find() :: Test index based on range search ($gt, $lt et
 		}
 	});
 
-	ok(explain.index.used === true, 'Query explanation shows index in use');
+	strictEqual(explain.index.used, true, 'Query explanation shows index in use');
 	console.log(explain);
 
 	base.dbDown();
@@ -474,9 +474,9 @@ ForerunnerDB.version('1.4', function () {
 
 		find = coll.find();
 
-		ok(find.length === 1, "Check expected number of items exists");
-		ok(allowedInsert.length === 1, "Check expected update worked (index should allow it)");
-		ok(deniedInsert.length === 0, "Check expected update failed (index should make it fail)");
+		strictEqual(find.length, 1, "Check expected number of items exists");
+		strictEqual(allowedInsert.length, 1, "Check expected update worked (index should allow it)");
+		strictEqual(deniedInsert.length, 0, "Check expected update failed (index should make it fail)");
 
 		base.dbDown();
 	});

@@ -95,7 +95,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
 
 		var elems = $('#testTarget').find('.item');
-		ok(elems.length === count, "Document count " + count + ": " + elems.length);
+		strictEqual(elems.length, count, "Document count " + count + ": " + elems.length);
 
 		base.domDown();
 		base.dbDown();
@@ -161,7 +161,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
 
 		var elems = $('#testTarget').find('.item');
-		ok(elems.length === count, "Document count " + count + ": " + elems.length);
+		strictEqual(elems.length, count, "Document count " + count + ": " + elems.length);
 
 		base.domDown();
 		base.dbDown();

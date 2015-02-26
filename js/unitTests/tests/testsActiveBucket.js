@@ -21,7 +21,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			});
 		}
 
-		ok(ab.count() === total, 'Correct number of items (' + total + '): ' + ab.count());
+		strictEqual(ab.count(), total, 'Correct number of items (' + total + '): ' + ab.count());
 	});
 
 	test('ActiveBucket - Update Document', function () {
@@ -82,24 +82,24 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		// Check items
 		var elems = $('#testTarget').find('.item');
 
-		ok(elems.length === 15, "Insert documents");
+		strictEqual(elems.length, 15, "Insert documents");
 
 		// Check sort order
-		ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
-		ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
-		ok($(elems[2]).text() === 'Alice : 22', "Alphabetical 3");
-		ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
-		ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
-		ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
-		ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
-		ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
-		ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
-		ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
-		ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
-		ok($(elems[11]).text() === 'Rob : 15', "Alphabetical 12");
-		ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
-		ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
-		ok($(elems[14]).text() === 'Sam : 27', "Alphabetical 15");
+		strictEqual($(elems[0]).text(), 'Alice : 22', "Alphabetical 1");
+		strictEqual($(elems[1]).text(), 'Alice : 22', "Alphabetical 2");
+		strictEqual($(elems[2]).text(), 'Alice : 22', "Alphabetical 3");
+		strictEqual($(elems[3]).text(), 'Bob : 33', "Alphabetical 4");
+		strictEqual($(elems[4]).text(), 'Bob : 33', "Alphabetical 5");
+		strictEqual($(elems[5]).text(), 'Bob : 33', "Alphabetical 6");
+		strictEqual($(elems[6]).text(), 'Jim : 18', "Alphabetical 7");
+		strictEqual($(elems[7]).text(), 'Jim : 18', "Alphabetical 8");
+		strictEqual($(elems[8]).text(), 'Jim : 18', "Alphabetical 9");
+		strictEqual($(elems[9]).text(), 'Rob : 15', "Alphabetical 10");
+		strictEqual($(elems[10]).text(), 'Rob : 15', "Alphabetical 11");
+		strictEqual($(elems[11]).text(), 'Rob : 15', "Alphabetical 12");
+		strictEqual($(elems[12]).text(), 'Sam : 27', "Alphabetical 13");
+		strictEqual($(elems[13]).text(), 'Sam : 27', "Alphabetical 14");
+		strictEqual($(elems[14]).text(), 'Sam : 27', "Alphabetical 15");
 
 		// Remove an item from the collection
 		var items = coll.find(),
@@ -110,23 +110,23 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		// Check items
 		var elems = $('#testTarget').find('.item');
 
-		ok(elems.length === 14, "Insert documents");
+		strictEqual(elems.length, 14, "Insert documents");
 
 		// Check sort order
-		ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
-		ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
-		ok($(elems[2]).text() === 'Alice : 22', "Alphabetical 3");
-		ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
-		ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
-		ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
-		ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
-		ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
-		ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
-		ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
-		ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
-		ok($(elems[11]).text() === 'Sam : 27', "Alphabetical 12");
-		ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
-		ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
+		strictEqual($(elems[0]).text(), 'Alice : 22', "Alphabetical 1");
+		strictEqual($(elems[1]).text(), 'Alice : 22', "Alphabetical 2");
+		strictEqual($(elems[2]).text(), 'Alice : 22', "Alphabetical 3");
+		strictEqual($(elems[3]).text(), 'Bob : 33', "Alphabetical 4");
+		strictEqual($(elems[4]).text(), 'Bob : 33', "Alphabetical 5");
+		strictEqual($(elems[5]).text(), 'Bob : 33', "Alphabetical 6");
+		strictEqual($(elems[6]).text(), 'Jim : 18', "Alphabetical 7");
+		strictEqual($(elems[7]).text(), 'Jim : 18', "Alphabetical 8");
+		strictEqual($(elems[8]).text(), 'Jim : 18', "Alphabetical 9");
+		strictEqual($(elems[9]).text(), 'Rob : 15', "Alphabetical 10");
+		strictEqual($(elems[10]).text(), 'Rob : 15', "Alphabetical 11");
+		strictEqual($(elems[11]).text(), 'Sam : 27', "Alphabetical 12");
+		strictEqual($(elems[12]).text(), 'Sam : 27', "Alphabetical 13");
+		strictEqual($(elems[13]).text(), 'Sam : 27', "Alphabetical 14");
 
 		items = view.find();
 		item = items[1];
@@ -137,20 +137,20 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		var elems = $('#testTarget').find('.item');
 
 		// Check sort order
-		ok($(elems[0]).text() === 'Alice : 22', "Alphabetical 1");
-		ok($(elems[1]).text() === 'Alice : 22', "Alphabetical 2");
-		ok($(elems[2]).text() === 'Alice : 21', "Alphabetical 3");
-		ok($(elems[3]).text() === 'Bob : 33', "Alphabetical 4");
-		ok($(elems[4]).text() === 'Bob : 33', "Alphabetical 5");
-		ok($(elems[5]).text() === 'Bob : 33', "Alphabetical 6");
-		ok($(elems[6]).text() === 'Jim : 18', "Alphabetical 7");
-		ok($(elems[7]).text() === 'Jim : 18', "Alphabetical 8");
-		ok($(elems[8]).text() === 'Jim : 18', "Alphabetical 9");
-		ok($(elems[9]).text() === 'Rob : 15', "Alphabetical 10");
-		ok($(elems[10]).text() === 'Rob : 15', "Alphabetical 11");
-		ok($(elems[11]).text() === 'Sam : 27', "Alphabetical 12");
-		ok($(elems[12]).text() === 'Sam : 27', "Alphabetical 13");
-		ok($(elems[13]).text() === 'Sam : 27', "Alphabetical 14");
+		strictEqual($(elems[0]).text(), 'Alice : 22', "Alphabetical 1");
+		strictEqual($(elems[1]).text(), 'Alice : 22', "Alphabetical 2");
+		strictEqual($(elems[2]).text(), 'Alice : 21', "Alphabetical 3");
+		strictEqual($(elems[3]).text(), 'Bob : 33', "Alphabetical 4");
+		strictEqual($(elems[4]).text(), 'Bob : 33', "Alphabetical 5");
+		strictEqual($(elems[5]).text(), 'Bob : 33', "Alphabetical 6");
+		strictEqual($(elems[6]).text(), 'Jim : 18', "Alphabetical 7");
+		strictEqual($(elems[7]).text(), 'Jim : 18', "Alphabetical 8");
+		strictEqual($(elems[8]).text(), 'Jim : 18', "Alphabetical 9");
+		strictEqual($(elems[9]).text(), 'Rob : 15', "Alphabetical 10");
+		strictEqual($(elems[10]).text(), 'Rob : 15', "Alphabetical 11");
+		strictEqual($(elems[11]).text(), 'Sam : 27', "Alphabetical 12");
+		strictEqual($(elems[12]).text(), 'Sam : 27', "Alphabetical 13");
+		strictEqual($(elems[13]).text(), 'Sam : 27', "Alphabetical 14");
 
 		base.domDown();
 		base.dbDown();
@@ -182,7 +182,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			}
 		}
 
-		ok(ab.count() === 40, 'Correct number of items: ' + ab.count());
+		strictEqual(ab.count(), 40, 'Correct number of items: ' + ab.count());
 
 		for (i = 0; i < objs.length; i++) {
 			obj = objs[i];
@@ -196,7 +196,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			}
 		}
 
-		ok(testArr[31].name === 'Rob' && testArr[31].age === 15, 'Items at correct index');
+		strictEqual(testArr[31].name === 'Rob' && testArr[31].age, 15, 'Items at correct index');
 	});
 
 	test('ActiveBucket - Add documents, check correct indexes with string-based sorting', function () {
@@ -225,7 +225,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			}
 		}
 
-		ok(ab.count() === 40, 'Correct number of items: ' + ab.count());
+		strictEqual(ab.count(), 40, 'Correct number of items: ' + ab.count());
 
 		for (i = 0; i < objs.length; i++) {
 			obj = objs[i];
@@ -239,7 +239,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			}
 		}
 
-		ok(testArr[0].name === 'Sam' && testArr[0]._id === '15', 'Items at correct index');
+		strictEqual(testArr[0].name === 'Sam' && testArr[0]._id, '15', 'Items at correct index');
 	});
 
 	test('ActiveBucket - Time Performance', function () {

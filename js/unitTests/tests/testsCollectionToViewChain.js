@@ -13,8 +13,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var result = view.find();
 
-		ok(result.length === 1, "Correct number of results in view find");
-		ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		strictEqual(result.length, 1, "Correct number of results in view find");
+		strictEqual(result.length && result[0].name, 'Fred', "Correct entry data");
 
 		base.dbDown();
 	});
@@ -33,8 +33,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var result = view.find();
 
-		ok(result.length === 1, "Correct number of results in view find: " + result.length);
-		ok(result.length && result[0].name === 'Fred', "Correct entry data");
+		strictEqual(result.length, 1, "Correct number of results in view find: " + result.length);
+		strictEqual(result.length && result[0].name, 'Fred', "Correct entry data");
 
 		base.dbDown();
 	});
@@ -59,8 +59,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var result = view.find();
 
-		ok(result.length === 2, "Correct number of results in view find: " + result.length);
-		ok(result.length && result[0].name === 'Jim', "Correct entry data");
+		strictEqual(result.length, 2, "Correct number of results in view find: " + result.length);
+		strictEqual(result.length && result[0].name, 'Jim', "Correct entry data");
 
 		base.dbDown();
 	});
@@ -85,8 +85,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var result = view.find();
 
-		ok(result.length === 1, "Correct number of results in view find: " + result.length);
-		ok(result.length && result[0].name === 'Joe', "Correct entry data");
+		strictEqual(result.length, 1, "Correct number of results in view find: " + result.length);
+		strictEqual(result.length && result[0].name, 'Joe', "Correct entry data");
 
 		base.dbDown();
 	});
