@@ -139,7 +139,7 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 			}
 		}
 	}
-};
+}
 
 /**
  * Inserts a document into the active bucket.
