@@ -1,3 +1,5 @@
+var Overload = require('./Overload');
+
 var Events = {
 	on: new Overload({
 		/**
