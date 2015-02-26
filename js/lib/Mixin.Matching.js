@@ -278,6 +278,7 @@ var Matching = {
 				} else {
 					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
 				}
+				break;
 
 			case '$nin': // Not in
 				// Check that the not-in test is an array
