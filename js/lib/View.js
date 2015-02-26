@@ -700,13 +700,7 @@ View.prototype.transform = function (obj) {
 				this._transformOut = obj.dataOut;
 			}
 		} else {
-			if (obj === false) {
-				// Turn off transforms
-				this._transformEnabled = false;
-			} else {
-				// Turn on transforms
-				this._transformEnabled = true;
-			}
+			this._transformEnabled = obj !== false;
 		}
 
 		// Update the transformed data object
