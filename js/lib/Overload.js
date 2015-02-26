@@ -44,6 +44,10 @@ Overload = function (def) {
 		}
 
 		return function () {
+			var arr = [],
+				lookup,
+				type;
+
 			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
 				// We were passed an array of functions
@@ -55,10 +59,6 @@ Overload = function (def) {
 				}
 			} else {
 				// Generate lookup key from arguments
-				var arr = [],
-					lookup,
-					type;
-
 				// Copy arguments to an array
 				for (index = 0; index < arguments.length; index++) {
 					type = typeof arguments[index];
