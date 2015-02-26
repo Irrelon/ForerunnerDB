@@ -213,7 +213,6 @@ IndexBinaryTree.prototype.match = function (query, options) {
 				totalKeyCount: queryArr.length,
 				score: 0
 			};
-			break;
 		}
 	}
 
