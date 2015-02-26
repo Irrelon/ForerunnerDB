@@ -1,30 +1,34 @@
 {
-  "author": "Rob Evans - Irrelon Software Limited",
-  "name": "forerunnerdb",
-  "description": "A NoSQL document store database for browsers and Node.js.",
-  "version": "1.3.4",
-  "dependencies": {
-    "localforage": "1.2.2"
-  },
-  "engines": {
-    "node": "*"
-  },
-  "scripts": {
-    "start": "forever start server/server.js",
-    "stop": "forever stop server/server.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/coolbloke1324/ForerunnerDB.git"
-  },
-  "devDependencies": {
-    "async": "^0.9.0",
-    "derequire": "^1.2.0",
-    "faye": "^1.0.3",
-    "forever": "^0.11.1",
-    "request": "^2.44.0",
-    "socket.io": "^1.1.0"
-  },
-  "main": "./js/builds/core",
-  "browserify": "./js/builds/core"
+	"author": "Rob Evans - Irrelon Software Limited",
+	"name": "forerunnerdb",
+	"description": "A NoSQL document store database for browsers and Node.js.",
+	"version": "1.3.4",
+	"dependencies": {
+		"localforage": "1.2.2"
+	},
+	"engines": {
+		"node": "*"
+	},
+	"scripts": {
+		"start": "forever start server/server.js",
+		"stop": "forever stop server/server.js",
+		"test": "grunt --verbose"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/coolbloke1324/ForerunnerDB.git"
+	},
+	"devDependencies": {
+		"async": "^0.9.0",
+		"derequire": "^1.2.0",
+		"faye": "^1.0.3",
+		"forever": "^0.11.1",
+		"request": "^2.44.0",
+		"socket.io": "^1.1.0",
+		"grunt": "0.4.5",
+		"grunt-cli": "0.1.13",
+		"grunt-contrib-jshint": "0.11.0"
+	},
+	"main": "./js/builds/core",
+	"browserify": "./js/builds/core"
 }
