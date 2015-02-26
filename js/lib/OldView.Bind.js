@@ -192,18 +192,21 @@ OldView.prototype.bindRender = function (bindSelector, domHandler) {
 		dataItem,
 		itemHtml,
 		finalHtml = $('<ul></ul>'),
+		bindCallback,
 		i;
 
 	if (bind) {
 		allData = this._data.find();
 
+		bindCallback = function (itemHtml) {
+			finalHtml.append(itemHtml);
+		};
+
 		// Loop all items and add them to the screen
 		for (i = 0; i < allData.length; i++) {
 			dataItem = allData[i];
 
-			itemHtml = bind.template(dataItem, function (itemHtml) {
-				finalHtml.append(itemHtml);
-			});
+			itemHtml = bind.template(dataItem, bindCallback);
 		}
 
 		if (!domHandler) {
@@ -304,7 +307,30 @@ OldView.prototype._bindInsert = function (selector, options, successArr, failArr
 	var container = $(selector),
 		itemElem,
 		itemHtml,
+		makeCallback,
 		i;
+
+	makeCallback = function (itemElem, insertedItem, failArr, all) {
+		return function (itemHtml) {
+			// Check if there is custom DOM insert method
+			if (options.insert) {
+				options.insert(itemHtml, insertedItem, failArr, all);
+			} else {
+				// Handle the insert automatically
+				// Add the item to the container
+				if (options.prependInsert) {
+					container.prepend(itemHtml);
+
+				} else {
+					container.append(itemHtml);
+				}
+			}
+
+			if (options.afterInsert) {
+				options.afterInsert(itemHtml, insertedItem, failArr, all);
+			}
+		};
+	};
 
 	// Loop the inserted items
 	for (i = 0; i < successArr.length; i++) {
@@ -312,25 +338,7 @@ OldView.prototype._bindInsert = function (selector, options, successArr, failArr
 		itemElem = container.find('#' + successArr[i][this._primaryKey]);
 
 		if (!itemElem.length) {
-			itemHtml = options.template(successArr[i], function (itemElem, insertedItem, failArr, all) { return function (itemHtml) {
-				// Check if there is custom DOM insert method
-				if (options.insert) {
-					options.insert(itemHtml, insertedItem, failArr, all);
-				} else {
-					// Handle the insert automatically
-					// Add the item to the container
-					if (options.prependInsert) {
-						container.prepend(itemHtml);
-
-					} else {
-						container.append(itemHtml);
-					}
-				}
-
-				if (options.afterInsert) {
-					options.afterInsert(itemHtml, insertedItem, failArr, all);
-				}
-			}}(itemElem, successArr[i], failArr, all));
+			itemHtml = options.template(successArr[i], makeCallback(itemElem, successArr[i], failArr, all));
 		}
 	}
 };
@@ -338,14 +346,11 @@ OldView.prototype._bindInsert = function (selector, options, successArr, failArr
 OldView.prototype._bindUpdate = function (selector, options, successArr, failArr, all) {
 	var container = $(selector),
 		itemElem,
+		makeCallback,
 		i;
 
-	// Loop the updated items
-	for (i = 0; i < successArr.length; i++) {
-		// Check for existing item in the container
-		itemElem = container.find('#' + successArr[i][this._primaryKey]);
-
-		options.template(successArr[i], function (itemElem, itemData) { return function (itemHtml) {
+	makeCallback = function (itemElem, itemData) {
+		return function (itemHtml) {
 			// Check if there is custom DOM insert method
 			if (options.update) {
 				options.update(itemHtml, itemData, all, itemElem.length ? 'update' : 'append');
@@ -367,14 +372,37 @@ OldView.prototype._bindUpdate = function (selector, options, successArr, failArr
 			if (options.afterUpdate) {
 				options.afterUpdate(itemHtml, itemData, all);
 			}
-		}}(itemElem, successArr[i]));
+		};
+	};
+
+	// Loop the updated items
+	for (i = 0; i < successArr.length; i++) {
+		// Check for existing item in the container
+		itemElem = container.find('#' + successArr[i][this._primaryKey]);
+
+		options.template(successArr[i], makeCallback(itemElem, successArr[i]));
 	}
 };
 
 OldView.prototype._bindRemove = function (selector, options, successArr, failArr, all) {
 	var container = $(selector),
 		itemElem,
+		makeCallback,
 		i;
+
+	makeCallback = function (itemElem, data, all) {
+		return function () {
+			if (options.remove) {
+				options.remove(itemElem, data, all);
+			} else {
+				itemElem.remove();
+
+				if (options.afterRemove) {
+					options.afterRemove(itemElem, data, all);
+				}
+			}
+		};
+	};
 
 	// Loop the removed items
 	for (i = 0; i < successArr.length; i++) {
@@ -383,17 +411,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 
 		if (itemElem.length) {
 			if (options.beforeRemove) {
-				options.beforeRemove(itemElem, successArr[i], all, function (itemElem, data, all) { return function () {
-					if (options.remove) {
-						options.remove(itemElem, data, all);
-					} else {
-						itemElem.remove();
-
-						if (options.afterRemove) {
-							options.afterRemove(itemElem, data, all);
-						}
-					}
-				}}(itemElem, successArr[i], all));
+				options.beforeRemove(itemElem, successArr[i], all, makeCallback(itemElem, successArr[i], all));
 			} else {
 				if (options.remove) {
 					options.remove(itemElem, successArr[i], all);
