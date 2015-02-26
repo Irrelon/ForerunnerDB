@@ -14,48 +14,81 @@
 <body>
 <script>
 	var bst = new BinarySearchTree({
-		names: {
-			first: 1
-		},
-		age: -1
-	}), search;
+			names: {
+				first: 1
+			},
+			age: -1
+		}),
+			search,
+			alpha,
+			count = 100,
+			nameCount = 10,
+			nameIndex,
+			name,
+			obj,
+			start;
 
-	bst.insert({names: {first: 'Jett'}, age: 10});
-	bst.insert({names: {first: 'Jim'}, age: 12});
-	bst.insert({names: {first: 'Bob'}, age: 14});
-	bst.insert({names: {first: 'Hal'}, age: 16});
-	bst.insert({names: {first: 'Hal'}, age: 17});
-	bst.insert({names: {first: 'Hal'}, age: 19});
-	bst.insert({names: {first: 'Hal'}, age: 19});
+	alpha = 'abcdefghijklmnopqrstuvwxyz0123456789';
 
-	console.log("Inorder Traversal");
+	// Generate names and ages
+	while (count--) {
+		name = '';
+		for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
+			name += alpha[Math.floor(Math.random() * alpha.length)];
+		}
+
+		obj = {
+			names: {first: name},
+			age: Math.ceil(Math.random() * 100)
+		};
+
+		bst.insert(obj);
+	}
+
+	bst.insert({names: {first: 'jim'}, age: 12});
+	bst.insert({names: {first: 'bob'}, age: 14});
+	bst.insert({names: {first: 'hal'}, age: 16});
+	bst.insert({names: {first: 'hal'}, age: 17});
+	bst.insert({names: {first: 'hal'}, age: 19});
+	bst.insert({names: {first: 'hal'}, age: 19});
+
+	//console.log("Inorder Traversal");
 	bst.inOrderTraversal();
 
-	search = bst.search({names: {first:'Hal'}});
-	console.log(search);
-	search = bst.search({names: {first:'Hal'}, age: 17});
-	console.log(search);
+	start = new Date().getTime();
+	search = bst.search({names: {first:'hal'}});
+	console.log(new Date().getTime() - start, search);
+
+	start = new Date().getTime();
+	search = bst.search({names: {first:'hal'}, age: 17});
+	console.log(new Date().getTime() - start, search);
+
+	start = new Date().getTime();
 	search = bst.search({
 		names: {
 			first: {
-				$gte: 'Ha'
+				$gte: 'ha'
 			}
-		},
-		age: 17
+		}
 	});
-	console.log(search);
-	debugger;
+	console.log(new Date().getTime() - start, search);
+
+	start = new Date().getTime();
 	search = bst.search({
 		names: {
 			first: {
-				$gte: 'Ha'
+				$gt: 'hal'
 			}
 		},
 		age: {
 			$lt: 19
 		}
 	});
-	console.log(search);
+	console.log(new Date().getTime() - start, search);
+
+	for (var i = 0; i < search.nodes.length; i += 2) {
+		console.log(search.path[i], 'at node', search.path[i+1].key, search.path[i+1]);
+	}
 
 	 /*console.log("Preorder Traversal");
 	bst.preOrderTraversal();

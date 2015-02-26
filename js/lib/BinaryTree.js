@@ -27,29 +27,39 @@ Node.prototype.insert = function(newNode) {
 	}
 };
 
-Node.prototype.search = function (query, resultArr) {
+Node.prototype.search = function (query, resultObj) {
 	var result = this.tree._operationCompare(query, this.key);
 
-	if(result === 0) {
-		// We have a matching result, add it to results
-		if (this.left !== null) {
-			this.left.search(query, resultArr);
-		}
+	// Increment node visit count
+	resultObj.nodes.push(this);
 
-		// It is very important that we push here below the left-side traversal
-		// otherwise the order of the returned items will be incorrect
-		resultArr.push(this.key);
-
+	if(result.metric === 0) {
 		// Now scan both tree branches for more matches
-		if (this.right !== null) {
-			this.right.search(query, resultArr);
+		if (this.left !== null) {
+			resultObj.path.push('left', this);
+			this.left.search(query, resultObj);
 		}
-	} else if(result === -1 && this.left !== null) {
+
+		// We have a matching result, add it to results
+		if (result.match) {
+			// It is very important that we push here below the left-side traversal
+			// otherwise the order of the returned items will be incorrect
+			resultObj.path.push('result', this);
+			resultObj.arr.push(this.key);
+		}
+
+		if (this.right !== null) {
+			resultObj.path.push('right', this);
+			this.right.search(query, resultObj);
+		}
+	} else if(result.metric === -1 && this.left !== null) {
 		// This node does not match and we have been told to look left
-		this.left.search(query, resultArr);
-	} else if(result === 1 && this.right !== null) {
+		resultObj.path.push('left', this);
+		this.left.search(query, resultObj);
+	} else if(result.metric === 1 && this.right !== null) {
 		// This node does not match and we have been told to look right
-		this.right.search(query, resultArr);
+		resultObj.path.push('right', this);
+		this.right.search(query, resultObj);
 	}
 };
 
@@ -192,21 +202,29 @@ BinarySearchTree.prototype.sortDesc = function (a, b) {
 };
 
 BinarySearchTree.prototype.search = function (query) {
-	var resultArr = [],
+	var resultObj = {
+			arr: [],
+			nodes: [],
+			path: []
+		},
 		searchKey = this.objKey(query);
 
 	// Check for no matching key values and return early if -1
 	if (searchKey === -1) {
-		return resultArr;
+		return resultObj;
 	}
 
-	this.root.search(searchKey, resultArr);
+	this.root.search(searchKey, resultObj);
 
-	return resultArr;
+	return resultObj;
 };
 
 BinarySearchTree.prototype._operationCompare = function (a, b) {
-	var aVal,
+	var result = {
+			match: false,
+			metric: 0
+		},
+		aVal,
 		bVal,
 		index,
 		arr = this._orderKeyDataByKey,
@@ -222,23 +240,33 @@ BinarySearchTree.prototype._operationCompare = function (a, b) {
 
 			// Run operation on values
 			if (!this._match(bVal, aVal)) {
+				result.match = false;
+
 				// Get the value of the field without any operation
 				// keys getting in the way
 				if (typeof aVal === 'object') {
 					if (aVal.$gt || aVal.$gt) {
 						matchVal = aVal.$gt;
+						/*result.metric = -sortData.dir;
+						return result;*/
 					}
 
 					if (aVal.$gte) {
 						matchVal = aVal.$gte;
+						/*result.metric = sortData.dir;
+						return result;*/
 					}
 
 					if (aVal.$lt) {
 						matchVal = aVal.$lt;
+						/*result.metric = -sortData.dir;
+						return result;*/
 					}
 
 					if (aVal.$lte) {
 						matchVal = aVal.$lte;
+						/*result.metric = -sortData.dir;
+						return result;*/
 					}
 				} else {
 					matchVal = aVal;
@@ -246,17 +274,21 @@ BinarySearchTree.prototype._operationCompare = function (a, b) {
 
 				// Return the sorted items
 				if (sortData.dir === 1) {
-					return this.sortAsc(matchVal, bVal);
+					result.metric = this.sortAsc(matchVal, bVal);
+					return result;
 				}
 
 				if (sortData.dir === -1) {
-					return this.sortDesc(matchVal, bVal);
+					result.metric = this.sortDesc(matchVal, bVal);
+					return result;
 				}
+			} else {
+				result.match = true;
 			}
 		}
 	}
 
-	return 0;
+	return result;
 };
 
 // Generate a key from the passed object
