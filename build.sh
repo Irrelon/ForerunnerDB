@@ -34,3 +34,11 @@ java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS 
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-core+persist.js > ./js/dist/fdb-core+persist.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-all.js > ./js/dist/fdb-all.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-legacy.js > ./js/dist/fdb-legacy.min.js
+
+node postfix.js
+
+rm ./js/unitTests/lib/fdb-all.js
+cp ./js/dist/fdb-all.js ./js/unitTests/lib/fdb-all.js
+
+rm ./js/unitTests/lib/fdb-autobind.js
+cp ./js/dist/fdb-autobind.js ./js/unitTests/lib/fdb-autobind.js

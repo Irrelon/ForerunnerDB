@@ -10,3 +10,11 @@ browserify ./js/builds/autobind.js -s ForerunnerDB_AutoBind | derequire > ./js/d
 
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-all.js > ./js/dist/fdb-all.min.js
 java -jar ./vendor/google/compiler.jar --compilation_level SIMPLE_OPTIMIZATIONS --warning_level=QUIET --js ./js/dist/fdb-autobind.js > ./js/dist/fdb-autobind.min.js
+
+node postfix.js
+
+rm ./js/unitTests/lib/fdb-all.js
+cp ./js/dist/fdb-all.js ./js/unitTests/lib/fdb-all.js
+
+rm ./js/unitTests/lib/fdb-autobind.js
+cp ./js/dist/fdb-autobind.js ./js/unitTests/lib/fdb-autobind.js
