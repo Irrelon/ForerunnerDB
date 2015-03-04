@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.3.5 (3rd March 2015)
+## Version 1.3.6 (4th March 2015)
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
@@ -41,21 +41,21 @@ Please see licensing page for latest information: http://www.forerunnerdb.com/li
 ## Browser Compatibility
 ForerunnerDB works in all modern browsers (IE9+) - for IE8 support see note below.
 
-Android Browser 2.1
-Blackberry 7
-Chrome 23
-Chrome for Android 32
-Firefox 18
-Firefox for Android 25
-Firefox OS 1.0
-IE 9 (IE 8+ without data persistence - see note below)
-IE Mobile 10
-Opera 15
-Opera Mobile 11
-Phonegap/Apache Cordova 1.2.0
-Safari 3.1 (includes Mobile Safari)
+* Android Browser 2.1
+* Blackberry 7
+* Chrome 23
+* Chrome for Android 32
+* Firefox 18
+* Firefox for Android 25
+* Firefox OS 1.0
+* IE 9 (IE 8+ without data persistence - see note below)
+* IE Mobile 10
+* Opera 15
+* Opera Mobile 11
+* Phonegap/Apache Cordova 1.2.0
+* Safari 3.1 (includes Mobile Safari)
 
-> * IE8 support is currently broken by dependancy on LocalForage when using persistent storage which does not compile with legacy browser support when using browserify. When it gets fixed we will update this section to show full support for IE8. Until then IE8 support is limited to ForerunnerDB without the Perist module (meaning no localstorage, websql or indexeddb support).
+> * IE8 support is currently broken by dependency on LocalForage when using persistent storage which does not compile with legacy browser support when using browserify. When it gets fixed we will update this section to show full support for IE8. Until then IE8 support is limited to ForerunnerDB without the Perist module (meaning no localstorage, websql or indexeddb support).
 
 ## Use ForerunnerDB in Browser
 Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
