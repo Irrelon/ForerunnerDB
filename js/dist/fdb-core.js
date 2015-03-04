@@ -1,8 +1,9 @@
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var Core = _dereq_('../lib/Core');
+var Core = _dereq_('../lib/Core'),
+	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
 module.exports = Core;
-},{"../lib/Core":3}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":3,"../lib/Shim.IE8":21}],2:[function(_dereq_,module,exports){
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -4301,9 +4302,18 @@ var Matching = {
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
 			// so just compare them and return the result
-			if (source !== test) {
-				matchedAll = false;
+			if (sourceType === 'number') {
+				// Number comparison
+				if (source !== test) {
+					matchedAll = false;
+				}
+			} else {
+				// String comparison
+				if (source.localeCompare(test)) {
+					matchedAll = false;
+				}
 			}
+
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
@@ -5456,7 +5466,7 @@ Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":20}],20:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.4',
+	version: '1.3.5',
 	modules: {},
 
 	_synth: {},
@@ -5590,5 +5600,125 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":9,"./Mixin.ChainReactor":10,"./Mixin.Common":11,"./Mixin.Constants":12,"./Mixin.Events":13,"./Mixin.Matching":14,"./Mixin.Sorting":15,"./Mixin.Triggers":16,"./Overload":18}]},{},[1])(1)
+},{"./Mixin.CRUD":9,"./Mixin.ChainReactor":10,"./Mixin.Common":11,"./Mixin.Constants":12,"./Mixin.Events":13,"./Mixin.Matching":14,"./Mixin.Sorting":15,"./Mixin.Triggers":16,"./Overload":18}],21:[function(_dereq_,module,exports){
+if (!Array.prototype.filter) {
+	Array.prototype.filter = function(fun/*, thisArg*/) {
+		'use strict';
+
+		if (this === void 0 || this === null) {
+			throw new TypeError();
+		}
+
+		var t = Object(this);
+		var len = t.length >>> 0;
+		if (typeof fun !== 'function') {
+			throw new TypeError();
+		}
+
+		var res = [];
+		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+		for (var i = 0; i < len; i++) {
+			if (i in t) {
+				var val = t[i];
+
+				// NOTE: Technically this should Object.defineProperty at
+				//       the next index, as push can be affected by
+				//       properties on Object.prototype and Array.prototype.
+				//       But that method's new, and collisions should be
+				//       rare, so use the more-compatible alternative.
+				if (fun.call(thisArg, val, i, t)) {
+					res.push(val);
+				}
+			}
+		}
+
+		return res;
+	};
+}
+
+if (typeof Object.create !== 'function') {
+	Object.create = (function() {
+		var Temp = function() {};
+		return function (prototype) {
+			if (arguments.length > 1) {
+				throw Error('Second argument not supported');
+			}
+			if (typeof prototype !== 'object') {
+				throw TypeError('Argument must be an object');
+			}
+			Temp.prototype = prototype;
+			var result = new Temp();
+			Temp.prototype = null;
+			return result;
+		};
+	})();
+}
+
+// Production steps of ECMA-262, Edition 5, 15.4.4.14
+// Reference: http://es5.github.io/#x15.4.4.14
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(searchElement, fromIndex) {
+		var k;
+
+		// 1. Let O be the result of calling ToObject passing
+		//    the this value as the argument.
+		if (this == null) {
+			throw new TypeError('"this" is null or not defined');
+		}
+
+		var O = Object(this);
+
+		// 2. Let lenValue be the result of calling the Get
+		//    internal method of O with the argument "length".
+		// 3. Let len be ToUint32(lenValue).
+		var len = O.length >>> 0;
+
+		// 4. If len is 0, return -1.
+		if (len === 0) {
+			return -1;
+		}
+
+		// 5. If argument fromIndex was passed let n be
+		//    ToInteger(fromIndex); else let n be 0.
+		var n = +fromIndex || 0;
+
+		if (Math.abs(n) === Infinity) {
+			n = 0;
+		}
+
+		// 6. If n >= len, return -1.
+		if (n >= len) {
+			return -1;
+		}
+
+		// 7. If n >= 0, then Let k be n.
+		// 8. Else, n<0, Let k be len - abs(n).
+		//    If k is less than 0, then let k be 0.
+		k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+		// 9. Repeat, while k < len
+		while (k < len) {
+			// a. Let Pk be ToString(k).
+			//   This is implicit for LHS operands of the in operator
+			// b. Let kPresent be the result of calling the
+			//    HasProperty internal method of O with argument Pk.
+			//   This step can be combined with c
+			// c. If kPresent is true, then
+			//    i.  Let elementK be the result of calling the Get
+			//        internal method of O with the argument ToString(k).
+			//   ii.  Let same be the result of applying the
+			//        Strict Equality Comparison Algorithm to
+			//        searchElement and elementK.
+			//  iii.  If same is true, return k.
+			if (k in O && O[k] === searchElement) {
+				return k;
+			}
+			k++;
+		}
+		return -1;
+	};
+}
+
+module.exports = {};
+},{}]},{},[1])(1)
 });

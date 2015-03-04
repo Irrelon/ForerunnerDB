@@ -4592,9 +4592,18 @@ var Matching = {
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
 			// so just compare them and return the result
-			if (source !== test) {
-				matchedAll = false;
+			if (sourceType === 'number') {
+				// Number comparison
+				if (source !== test) {
+					matchedAll = false;
+				}
+			} else {
+				// String comparison
+				if (source.localeCompare(test)) {
+					matchedAll = false;
+				}
 			}
+
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
@@ -6118,7 +6127,7 @@ Shared.finishModule('Persist');
 module.exports = Persist;
 },{"./Collection":2,"./CollectionGroup":3,"./Shared":22,"localforage":29}],22:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.4',
+	version: '1.3.5',
 	modules: {},
 
 	_synth: {},
