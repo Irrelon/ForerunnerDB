@@ -1,4 +1,4 @@
-var Core = require('../lib/Core'),
+var Core = require('./core'),
 	CollectionGroup = require('../lib/CollectionGroup'),
 	View = require('../lib/View'),
 	Highchart = require('../lib/Highchart'),
