@@ -52,7 +52,7 @@ if (typeof Object.create !== 'function') {
 }
 
 // Production steps of ECMA-262, Edition 5, 15.4.4.14
-// Reference: http://es5.github.io/#x15.4.4.14
+// Reference: http://es5.github.io/#x15.4.4.14e
 if (!Array.prototype.indexOf) {
 	Array.prototype.indexOf = function(searchElement, fromIndex) {
 		var k;
