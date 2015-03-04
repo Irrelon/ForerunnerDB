@@ -39,23 +39,21 @@ This will also work for browser-based development, however if you prefer a more 
 Please see licensing page for latest information: http://www.forerunnerdb.com/licensing.html
 
 ## Browser Compatibility
-ForerunnerDB works in all modern browsers (IE9+) - for IE8 support see note below.
+ForerunnerDB works in all modern browsers (IE8+)
 
-* Android Browser 2.1
+* Android Browser 4
 * Blackberry 7
 * Chrome 23
 * Chrome for Android 32
 * Firefox 18
 * Firefox for Android 25
 * Firefox OS 1.0
-* IE 9 (IE 8+ without data persistence - see note below)
+* IE 8
 * IE Mobile 10
 * Opera 15
 * Opera Mobile 11
 * Phonegap/Apache Cordova 1.2.0
-* Safari 3.1 (includes Mobile Safari)
-
-> * IE8 support is currently broken by dependency on LocalForage when using persistent storage which does not compile with legacy browser support when using browserify. When it gets fixed we will update this section to show full support for IE8. Until then IE8 support is limited to ForerunnerDB without the Perist module (meaning no localstorage, websql or indexeddb support).
+* Safari 4 (includes Mobile Safari)
 
 ## Use ForerunnerDB in Browser
 Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
