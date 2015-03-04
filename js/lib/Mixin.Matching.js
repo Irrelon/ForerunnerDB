@@ -24,9 +24,18 @@ var Matching = {
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
 			// so just compare them and return the result
-			if (source !== test) {
-				matchedAll = false;
+			if (sourceType === 'number') {
+				// Number comparison
+				if (source !== test) {
+					matchedAll = false;
+				}
+			} else {
+				// String comparison
+				if (source.localeCompare(test)) {
+					matchedAll = false;
+				}
 			}
+
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
