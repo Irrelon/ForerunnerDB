@@ -28,7 +28,8 @@
 		"websql"
 	],
 	"dependencies": {
-		"localforage": "1.2.2"
+		"localforage": "1.2.2",
+		"rest": "^1.3.0"
 	},
 	"engines": {
 		"node": "*"
