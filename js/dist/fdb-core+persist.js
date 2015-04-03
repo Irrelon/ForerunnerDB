@@ -224,7 +224,7 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		}
 	}
 
-	this.$super.apply(this, arguments);
+	return this.$super.apply(this, arguments);
 });
 
 /**
@@ -6144,7 +6144,7 @@ Shared.finishModule('Persist');
 module.exports = Persist;
 },{"./Collection":2,"./CollectionGroup":3,"./Shared":22,"localforage":29}],22:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.7',
+	version: '1.3.8',
 	modules: {},
 
 	_synth: {},

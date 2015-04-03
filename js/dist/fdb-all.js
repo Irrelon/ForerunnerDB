@@ -496,7 +496,7 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		}
 	}
 
-	this.$super.apply(this, arguments);
+	return this.$super.apply(this, arguments);
 });
 
 /**
@@ -8170,7 +8170,7 @@ Shared.finishModule('Rest');
 module.exports = Rest;
 },{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"rest":42,"rest/interceptor/mime":47}],30:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.7',
+	version: '1.3.8',
 	modules: {},
 
 	_synth: {},

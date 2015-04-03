@@ -218,7 +218,7 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		}
 	}
 
-	this.$super.apply(this, arguments);
+	return this.$super.apply(this, arguments);
 });
 
 /**

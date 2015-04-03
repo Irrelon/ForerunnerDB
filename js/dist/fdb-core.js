@@ -224,7 +224,7 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		}
 	}
 
-	this.$super.apply(this, arguments);
+	return this.$super.apply(this, arguments);
 });
 
 /**
@@ -5483,7 +5483,7 @@ Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":20}],20:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.7',
+	version: '1.3.8',
 	modules: {},
 
 	_synth: {},
