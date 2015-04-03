@@ -210,7 +210,16 @@ Collection.prototype._onRemove = function (items) {
  * @param {Core=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db');
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		if (this.primaryKey() === '_id') {
+			// Set primary key to the db's key by default
+			this.primaryKey(db.primaryKey());
+		}
+	}
+
+	this.$super.apply(this, arguments);
+});
 
 /**
  * Sets the collection's data to the array of documents passed.
