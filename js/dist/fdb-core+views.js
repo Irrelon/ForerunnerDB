@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ForerunnerDB = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	View = _dereq_('../lib/View');
 
@@ -476,7 +476,16 @@ Collection.prototype._onRemove = function (items) {
  * @param {Core=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db');
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		if (this.primaryKey() === '_id') {
+			// Set primary key to the db's key by default
+			this.primaryKey(db.primaryKey());
+		}
+	}
+
+	this.$super.apply(this, arguments);
+});
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -3204,6 +3213,7 @@ var Core = function (name) {
 };
 
 Core.prototype.init = function (name) {
+	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
@@ -3323,6 +3333,13 @@ Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the default primary key for new collections.
+ * @param {String=} val The name of the primary key to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'primaryKey');
 
 /**
  * Gets / sets the current state.
@@ -6076,7 +6093,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":23}],23:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.5',
+	version: '1.3.7',
 	modules: {},
 
 	_synth: {},

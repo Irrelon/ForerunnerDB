@@ -488,7 +488,16 @@ Collection.prototype._onRemove = function (items) {
  * @param {Core=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db');
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		if (this.primaryKey() === '_id') {
+			// Set primary key to the db's key by default
+			this.primaryKey(db.primaryKey());
+		}
+	}
+
+	this.$super.apply(this, arguments);
+});
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -3216,6 +3225,7 @@ var Core = function (name) {
 };
 
 Core.prototype.init = function (name) {
+	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
@@ -3335,6 +3345,13 @@ Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the default primary key for new collections.
+ * @param {String=} val The name of the primary key to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'primaryKey');
 
 /**
  * Gets / sets the current state.
@@ -8153,7 +8170,7 @@ Shared.finishModule('Rest');
 module.exports = Rest;
 },{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"rest":42,"rest/interceptor/mime":47}],30:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.5',
+	version: '1.3.7',
 	modules: {},
 
 	_synth: {},
