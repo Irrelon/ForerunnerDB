@@ -1,0 +1,41 @@
+{
+  "name": "forerunner",
+  "version": "1.3.7-dev",
+  "homepage": "http://www.forerunnerdb.com",
+  "authors": [
+    "Rob Evans - Irrelon Software Limited"
+  ],
+  "description": "A NoSQL document store database for browsers and Node.js.",
+  "main": "js/dist/fdb-all.js",
+  "keywords": [
+    "database",
+    "nosql",
+    "mongodb",
+    "javascript",
+    "document",
+    "store",
+    "browser",
+    "node",
+    "data",
+    "binding",
+    "index",
+    "client-side",
+    "server-side",
+    "lokijs",
+    "loki",
+    "db",
+    "memory",
+    "in-memory",
+    "indexeddb",
+    "localstorage",
+    "websql"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
