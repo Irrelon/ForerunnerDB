@@ -8,4 +8,7 @@ var Core = require('./core'),
 	Grid = require('../lib/Grid'),
 	Rest = require('../lib/Rest');
 
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
 module.exports = Core;

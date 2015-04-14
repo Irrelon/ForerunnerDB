@@ -1,63 +1,71 @@
 {
-	"author": "Rob Evans - Irrelon Software Limited",
-	"name": "forerunnerdb",
-	"description": "A NoSQL document store database for browsers and Node.js.",
-	"version": "1.3.8",
-	"keywords": [
-		"database",
-		"nosql",
-		"mongodb",
-		"javascript",
-		"document",
-		"store",
-		"browser",
-		"node",
-		"data",
-		"binding",
-		"index",
-		"client-side",
-		"server-side",
-		"lokijs",
-		"loki",
-		"db",
-		"memory",
-		"in-memory",
-		"indexeddb",
-		"localstorage",
-		"storage",
-		"websql"
-	],
-	"dependencies": {
-		"localforage": "1.2.2",
-		"rest": "^1.3.0"
-	},
-	"engines": {
-		"node": "*"
-	},
-	"scripts": {
-		"start": "forever start server/server.js",
-		"stop": "forever stop server/server.js",
-		"test": "grunt --verbose"
-	},
-	"repository": {
-		"type": "git",
-		"url": "git://github.com/coolbloke1324/ForerunnerDB.git"
-	},
-	"devDependencies": {
-		"async": "^0.9.0",
-		"derequire": "^1.2.0",
-		"faye": "^1.0.3",
-		"forever": "^0.11.1",
-		"grunt": "0.4.5",
-		"grunt-cli": "0.1.13",
-		"grunt-contrib-jshint": "0.11.0",
-		"grunt-contrib-qunit": "0.5.2",
-		"request": "^2.44.0",
-		"socket.io": "^1.1.0"
-	},
-	"main": "./js/builds/core",
-	"browserify": "./js/builds/all",
-	"bugs": {
-		"url": "http://github.com/irrelon/ForerunnerDB/issues"
-	}
+  "author": "Rob Evans - Irrelon Software Limited",
+  "name": "forerunnerdb",
+  "description": "A NoSQL document store database for browsers and Node.js.",
+  "version": "1.3.8",
+  "keywords": [
+    "database",
+    "nosql",
+    "mongodb",
+    "javascript",
+    "document",
+    "store",
+    "browser",
+    "node",
+    "data",
+    "binding",
+    "index",
+    "client-side",
+    "server-side",
+    "lokijs",
+    "loki",
+    "db",
+    "memory",
+    "in-memory",
+    "indexeddb",
+    "localstorage",
+    "storage",
+    "websql"
+  ],
+  "dependencies": {
+    "localforage": "1.2.2",
+    "rest": "^1.3.0"
+  },
+  "engines": {
+    "node": "*"
+  },
+  "scripts": {
+    "start": "forever start server/server.js",
+    "stop": "forever stop server/server.js",
+    "test": "grunt --verbose"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/coolbloke1324/ForerunnerDB.git"
+  },
+  "devDependencies": {
+    "aliasify": "^1.7.2",
+    "async": "^0.9.0",
+    "browserify-derequire": "^0.9.4",
+    "derequire": "^1.2.0",
+    "faye": "^1.0.3",
+    "forever": "^0.11.1",
+    "grunt": "0.4.5",
+    "grunt-browserify": "^3.7.0",
+    "grunt-cli": "0.1.13",
+    "grunt-contrib-jshint": "0.11.0",
+    "grunt-contrib-qunit": "0.5.2",
+    "grunt-contrib-uglify": "^0.9.1",
+    "grunt-umd": "^2.3.3",
+    "install": "^0.1.8",
+    "npm": "^2.7.6",
+    "request": "^2.44.0",
+    "socket.io": "^1.1.0",
+    "stringify": "^3.1.0"
+  },
+  "main": "./js/builds/core",
+  "browserify": "./js/builds/all",
+  "bugs": {
+    "url": "http://github.com/irrelon/ForerunnerDB/issues"
+  }
 }

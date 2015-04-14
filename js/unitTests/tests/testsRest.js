@@ -1,8 +1,6 @@
 asyncTest("Rest - Get items for collection", function() {
 	base.dbUp();
 
-	expect(1);
-
 	var coll,
 		results;
 
@@ -12,6 +10,7 @@ asyncTest("Rest - Get items for collection", function() {
 		password: 'fakepassword123'
 	}, function (err, result) {
 		if (!err) {
+			expect(1);
 			console.log('Result in REST: ', result);
 
 			// Get collection
@@ -49,6 +48,7 @@ asyncTest("Rest - Get items for collection", function() {
 			});
 		} else {
 			console.error('Error in REST call:', err);
+			start();
 		}
 	});
 });

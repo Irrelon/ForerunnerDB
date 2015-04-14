@@ -3,9 +3,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex === -1) {
+			// The trigger does not exist, create it
 			self._trigger = self._trigger || {};
 			self._trigger[type] = self._trigger[type] || {};
 			self._trigger[type][phase] = self._trigger[type][phase] || [];
@@ -25,9 +27,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex > -1) {
+			// The trigger does not exist, create it
 			self._trigger[type][phase].splice(triggerIndex, 1);
 		}
 
@@ -113,7 +117,7 @@ var Triggers = {
 		}
 	},
 
-	_triggerIndex: function (id, type, phase) {
+	_triggerIndexOf: function (id, type, phase) {
 		var self = this,
 			triggerArr,
 			triggerCount,

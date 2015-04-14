@@ -1356,25 +1356,50 @@ Collection.prototype._insertHandle = function (data, index, callback) {
  */
 Collection.prototype._insert = function (doc, index) {
 	if (doc) {
-		var indexViolation;
+		var self = this,
+			indexViolation,
+			triggerOperation,
+			insertMethod;
 
 		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
 
-		if (!indexViolation) {
+		insertMethod = function (doc) {
 			// Add the item to the collection's indexes
-			this._insertIntoIndexes(doc);
+			self._insertIntoIndexes(doc);
 
 			// Check index overflow
-			if (index > this._data.length) {
-				index = this._data.length;
+			if (index > self._data.length) {
+				index = self._data.length;
 			}
 
 			// Insert the document
-			this._dataInsertAtIndex(index, doc);
-			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
+			self._dataInsertAtIndex(index, doc);
+		};
+
+		if (!indexViolation) {
+			if (self.willTrigger(self.TYPE_INSERT, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'insert'
+				};
+
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
+
+				insertMethod(doc);
+
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, doc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
+			} else {
+				// No triggers to execute
+				insertMethod(doc);
+			}
 
 			return true;
 		} else {

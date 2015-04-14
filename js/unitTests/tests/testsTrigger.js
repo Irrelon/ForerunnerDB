@@ -48,7 +48,7 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 
 	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_AFTER, triggerMethod);
 	coll.addTrigger('availability', db.TYPE_UPDATE, db.PHASE_AFTER, triggerMethod);
-
+debugger;
 	coll.insert({
 		_id: 1,
 		slots: [{
