@@ -499,8 +499,38 @@ The result of the call above is:
 		"purchasedBy":[]
 	}]
 
+## Triggers
+ForerunnerDB currently supports triggers for inserts, updates and deletes at both the
+*before* and *after* operation phases. Triggers that fire on the *before* phase can
+also optionally modify the operation data and actually cancel the operation entirely
+allowing you to provide database-level data validation etc.
+
+Setting up triggers is very easy. Here is an example of a *before insert* trigger that
+will cancel the insert operation before the data is inserted into the database:
+
+	var db = new ForerunnerDB(),
+    	collection = db.collection('test');
+    
+    collection.addTrigger('myTrigger', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldData, newData) {
+    	// By returning false inside a "before" trigger we cancel the operation
+    	return false;
+    });
+    
+    collection.insert({test: true});
+
+The trigger method passed to addTrigger() as parameter 4 should handle these
+arguments:
+
+|Argument|Data Type|Description|
+|--------------|---------|-----------------------------------------------------|
+|operation|object|Details about the operation being executed. In update operations this also includes *query* and *update* objects which you can modify directly to alter the final update applied.|
+
 ## Indices & Performance
-ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method. ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined. Let's setup some data to index:
+ForerunnerDB currently supports basic indexing for performance enhancements when
+querying a collection. You can create an index on a collection using the
+ensureIndex() method. ForerunnerDB will utilise the index that most closely matches
+the query you are executing. In the case where a query matches multiple indexes
+the most relevant index is automatically determined. Let's setup some data to index:
 
 	var db = new ForerunnerDB(),
 		names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
