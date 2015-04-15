@@ -1,4 +1,5 @@
-asyncTest("Paging - View.page :: Limit view page", function() {
+QUnit.module('Paging');
+QUnit.asyncTest("View.page :: Limit view page", function() {
 	base.dbUp();
 	base.dataUp();
 	base.viewUp();

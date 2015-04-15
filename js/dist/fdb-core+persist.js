@@ -1,4 +1,4 @@
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var n;"undefined"!=typeof window?n=window:"undefined"!=typeof global?n=global:"undefined"!=typeof self&&(n=self),n.ForerunnerDB=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ForerunnerDB = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
   Persist = _dereq_('../lib/Persist');
 
@@ -216,7 +216,16 @@ Collection.prototype._onRemove = function (items) {
  * @param {Core=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db');
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		if (this.primaryKey() === '_id') {
+			// Set primary key to the db's key by default
+			this.primaryKey(db.primaryKey());
+		}
+	}
+
+	return this.$super.apply(this, arguments);
+});
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -2944,6 +2953,7 @@ var Core = function (name) {
 };
 
 Core.prototype.init = function (name) {
+	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
@@ -3063,6 +3073,13 @@ Metrics = _dereq_('./Metrics.js');
 Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the default primary key for new collections.
+ * @param {String=} val The name of the primary key to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'primaryKey');
 
 /**
  * Gets / sets the current state.
@@ -6127,7 +6144,7 @@ Shared.finishModule('Persist');
 module.exports = Persist;
 },{"./Collection":2,"./CollectionGroup":3,"./Shared":22,"localforage":29}],22:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.5',
+	version: '1.3.8',
 	modules: {},
 
 	_synth: {},
@@ -8489,46 +8506,40 @@ module.exports = asap;
 // shim for using process in browser
 
 var process = module.exports = {};
+var queue = [];
+var draining = false;
 
-process.nextTick = (function () {
-    var canSetImmediate = typeof window !== 'undefined'
-    && window.setImmediate;
-    var canPost = typeof window !== 'undefined'
-    && window.postMessage && window.addEventListener
-    ;
-
-    if (canSetImmediate) {
-        return function (f) { return window.setImmediate(f) };
+function drainQueue() {
+    if (draining) {
+        return;
     }
-
-    if (canPost) {
-        var queue = [];
-        window.addEventListener('message', function (ev) {
-            var source = ev.source;
-            if ((source === window || source === null) && ev.data === 'process-tick') {
-                ev.stopPropagation();
-                if (queue.length > 0) {
-                    var fn = queue.shift();
-                    fn();
-                }
-            }
-        }, true);
-
-        return function nextTick(fn) {
-            queue.push(fn);
-            window.postMessage('process-tick', '*');
-        };
+    draining = true;
+    var currentQueue;
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        var i = -1;
+        while (++i < len) {
+            currentQueue[i]();
+        }
+        len = queue.length;
     }
-
-    return function nextTick(fn) {
-        setTimeout(fn, 0);
-    };
-})();
+    draining = false;
+}
+process.nextTick = function (fun) {
+    queue.push(fun);
+    if (!draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
 
 process.title = 'browser';
 process.browser = true;
 process.env = {};
 process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
 
 function noop() {}
 
@@ -8542,13 +8553,14 @@ process.emit = noop;
 
 process.binding = function (name) {
     throw new Error('process.binding is not supported');
-}
+};
 
 // TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
+process.umask = function() { return 0; };
 
 },{}]},{},[1])(1)
 });

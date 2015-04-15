@@ -1,5 +1,6 @@
+QUnit.module('HighChart');
 ForerunnerDB.moduleLoaded('Highchart', function () {
-	test('Highchart - Create chart', function () {
+	QUnit.test('Create chart', function () {
 		base.dbUp();
 		base.domUp();
 

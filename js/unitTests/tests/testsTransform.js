@@ -1,4 +1,5 @@
-test("Transform - Collection.transform() :: Assign a transform-in method to a collection", function() {
+QUnit.module('Transform');
+QUnit.test("Collection.transform() :: Assign a transform-in method to a collection", function() {
 	base.dbUp();
 	var coll = db.collection('transformColl').truncate();
 
@@ -9,7 +10,7 @@ test("Transform - Collection.transform() :: Assign a transform-in method to a co
 				_id: data._id,
 				moo: data.foo,
 				goo: data.foo + 1
-			}
+			};
 		}
 	});
 
@@ -26,7 +27,7 @@ test("Transform - Collection.transform() :: Assign a transform-in method to a co
 	base.dbDown();
 });
 
-test("Transform - Collection.transform() :: Assign a transform-out method to a collection", function() {
+QUnit.test("Collection.transform() :: Assign a transform-out method to a collection", function() {
 	base.dbUp();
 	var coll = db.collection('transformColl').truncate();
 
@@ -58,7 +59,7 @@ test("Transform - Collection.transform() :: Assign a transform-out method to a c
 });
 
 ForerunnerDB.moduleLoaded('View', function () {
-	test("Transform - View.transform() :: Assign a transform-in method to a view from a standard collection", function () {
+	QUnit.test("View.transform() :: Assign a transform-in method to a view from a standard collection", function () {
 		base.dbUp();
 		var coll = db.collection('transformColl').truncate();
 		coll.transform(false);

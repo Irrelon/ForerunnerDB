@@ -5,6 +5,10 @@ var Core = require('./core'),
 	Persist = require('../lib/Persist'),
 	Document = require('../lib/Document'),
 	Overview = require('../lib/Overview'),
-	Grid = require('../lib/Grid');
+	Grid = require('../lib/Grid'),
+	Rest = require('../lib/Rest');
 
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
 module.exports = Core;

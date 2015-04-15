@@ -1,4 +1,5 @@
-test("Core - Init DB", function() {
+QUnit.module('Core');
+QUnit.test("Init DB", function() {
 	base.dbUp();
 
 	ok(db instanceof ForerunnerDB, "Complete");
@@ -6,7 +7,7 @@ test("Core - Init DB", function() {
 	base.dbDown();
 });
 
-test("Core - Drop DB", function() {
+QUnit.test("Drop DB", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');
@@ -22,7 +23,7 @@ test("Core - Drop DB", function() {
 	base.dbDown();
 });
 
-test("Core - DB.collection() :: Create Collection", function() {
+QUnit.test("DB.collection() :: Create Collection", function() {
 	base.dbUp();
 
 	user = db.collection('user');
@@ -32,7 +33,7 @@ test("Core - DB.collection() :: Create Collection", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.setData() :: Single Document Object", function() {
+QUnit.test("Collection.setData() :: Single Document Object", function() {
 	base.dbUp();
 
 	user.setData(singleUserObject);
@@ -42,7 +43,7 @@ test("Core - Collection.setData() :: Single Document Object", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: Update a document", function() {
+QUnit.test("Collection.update() :: Update a document", function() {
 	base.dbUp();
 
 	user.setData(singleUserObject);
@@ -61,7 +62,7 @@ test("Core - Collection.update() :: Update a document", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.remove() :: Remove Single Document via Find", function() {
+QUnit.test("Collection.remove() :: Remove Single Document via Find", function() {
 	base.dbUp();
 
 	user.setData(singleUserObject);
@@ -74,7 +75,7 @@ test("Core - Collection.remove() :: Remove Single Document via Find", function()
 	base.dbDown();
 });
 
-test("Core - Collection.setData() :: Multiple Documents via Array", function() {
+QUnit.test("Collection.setData() :: Multiple Documents via Array", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -86,7 +87,7 @@ test("Core - Collection.setData() :: Multiple Documents via Array", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.remove() :: Remove Multiple Documents via Find Boolean", function() {
+QUnit.test("Collection.remove() :: Remove Multiple Documents via Find Boolean", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -97,7 +98,7 @@ test("Core - Collection.remove() :: Remove Multiple Documents via Find Boolean",
 	base.dbDown();
 });
 
-test("Core - Collection.insert() :: Check Primary Key Violation is Working", function() {
+QUnit.test("Collection.insert() :: Check Primary Key Violation is Working", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -112,7 +113,7 @@ test("Core - Collection.insert() :: Check Primary Key Violation is Working", fun
 	base.dbDown();
 });
 
-test("Core - Collection.setData() :: Multiple Records Re-Insert Data", function() {
+QUnit.test("Collection.setData() :: Multiple Records Re-Insert Data", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -125,7 +126,7 @@ test("Core - Collection.setData() :: Multiple Records Re-Insert Data", function(
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $exists clause true on field that does exist", function() {
+QUnit.test("Collection.find() :: $exists clause true on field that does exist", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -138,7 +139,7 @@ test("Core - Collection.find() :: $exists clause true on field that does exist",
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $exists clause true on field that does not exist", function() {
+QUnit.test("Collection.find() :: $exists clause true on field that does not exist", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -151,7 +152,7 @@ test("Core - Collection.find() :: $exists clause true on field that does not exi
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $exists clause true on field that does exist", function() {
+QUnit.test("Collection.find() :: $exists clause true on field that does exist", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -166,7 +167,7 @@ test("Core - Collection.find() :: $exists clause true on field that does exist",
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $exists clause false", function() {
+QUnit.test("Collection.find() :: $exists clause false", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -181,7 +182,7 @@ test("Core - Collection.find() :: $exists clause false", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $gt clause", function() {
+QUnit.test("Collection.find() :: $gt clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -194,7 +195,7 @@ test("Core - Collection.find() :: $gt clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $gte clause", function() {
+QUnit.test("Collection.find() :: $gte clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -207,7 +208,7 @@ test("Core - Collection.find() :: $gte clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $lt clause", function() {
+QUnit.test("Collection.find() :: $lt clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -220,7 +221,7 @@ test("Core - Collection.find() :: $lt clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $lte clause", function() {
+QUnit.test("Collection.find() :: $lte clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -233,7 +234,7 @@ test("Core - Collection.find() :: $lte clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $gt $lt clause combined", function() {
+QUnit.test("Collection.find() :: $gt $lt clause combined", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -247,7 +248,7 @@ test("Core - Collection.find() :: $gt $lt clause combined", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $gte $lte clause combined", function() {
+QUnit.test("Collection.find() :: $gte $lte clause combined", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -261,7 +262,7 @@ test("Core - Collection.find() :: $gte $lte clause combined", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $ne clause basic string", function() {
+QUnit.test("Collection.find() :: $ne clause basic string", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -274,7 +275,7 @@ test("Core - Collection.find() :: $ne clause basic string", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Primary key string lookup", function() {
+QUnit.test("Collection.find() :: Primary key string lookup", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -287,7 +288,7 @@ test("Core - Collection.find() :: Primary key string lookup", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Regex lookup", function() {
+QUnit.test("Collection.find() :: Regex lookup", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -300,7 +301,7 @@ test("Core - Collection.find() :: Regex lookup", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Primary key regex lookup", function() {
+QUnit.test("Collection.find() :: Primary key regex lookup", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -313,7 +314,7 @@ test("Core - Collection.find() :: Primary key regex lookup", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $ne clause primary key object", function() {
+QUnit.test("Collection.find() :: $ne clause primary key object", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -328,7 +329,7 @@ test("Core - Collection.find() :: $ne clause primary key object", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $nin clause primary key object", function() {
+QUnit.test("Collection.find() :: $nin clause primary key object", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -343,7 +344,7 @@ test("Core - Collection.find() :: $nin clause primary key object", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $in clause primary key object", function() {
+QUnit.test("Collection.find() :: $in clause primary key object", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -358,7 +359,7 @@ test("Core - Collection.find() :: $in clause primary key object", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $or clause", function() {
+QUnit.test("Collection.find() :: $or clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -375,7 +376,7 @@ test("Core - Collection.find() :: $or clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $and clause", function() {
+QUnit.test("Collection.find() :: $and clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -392,7 +393,7 @@ test("Core - Collection.find() :: $and clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Nested $or clause", function() {
+QUnit.test("Collection.find() :: Nested $or clause", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -411,7 +412,7 @@ test("Core - Collection.find() :: Nested $or clause", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $in clause against root key data", function() {
+QUnit.test("Collection.find() :: $in clause against root key data", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -429,7 +430,7 @@ test("Core - Collection.find() :: $in clause against root key data", function() 
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $in clause against multi-level key data", function() {
+QUnit.test("Collection.find() :: $in clause against multi-level key data", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -449,7 +450,7 @@ test("Core - Collection.find() :: $in clause against multi-level key data", func
 	base.dbDown();
 });
 
-test("Core - Collection.peek() :: Search collection for string", function() {
+QUnit.test("Collection.peek() :: Search collection for string", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -462,7 +463,7 @@ test("Core - Collection.peek() :: Search collection for string", function() {
 	base.dbDown();
 });
 
-test("Core - DB.peek() :: Search all database collections for string", function() {
+QUnit.test("DB.peek() :: Search all database collections for string", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -476,7 +477,7 @@ test("Core - DB.peek() :: Search all database collections for string", function(
 	base.dbDown();
 });
 
-test("Core - DB.peekCat() :: Search all database collections for string", function() {
+QUnit.test("DB.peekCat() :: Search all database collections for string", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -488,7 +489,7 @@ test("Core - DB.peekCat() :: Search all database collections for string", functi
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $nin clause against root key data", function() {
+QUnit.test("Collection.find() :: $nin clause against root key data", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -506,7 +507,7 @@ test("Core - Collection.find() :: $nin clause against root key data", function()
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: $nin clause against multi-level key data", function() {
+QUnit.test("Collection.find() :: $nin clause against multi-level key data", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -526,7 +527,7 @@ test("Core - Collection.find() :: $nin clause against multi-level key data", fun
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: arrayKey.$ Positional array selector", function() {
+QUnit.test("Collection.update() :: arrayKey.$ Positional array selector", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -597,7 +598,7 @@ test("Core - Collection.update() :: arrayKey.$ Positional array selector", funct
 	base.dbDown();
 });
 
-/*test("Core - Collection.update() :: arrayKey.$ Positional array selector", function() {
+/*test("Collection.update() :: arrayKey.$ Positional array selector", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -628,7 +629,7 @@ test("Core - Collection.update() :: arrayKey.$ Positional array selector", funct
 	base.dbDown();
 });*/
 
-test("Core - Collection.update() :: $addToSet operator for unique push operation", function() {
+QUnit.test("Collection.update() :: $addToSet operator for unique push operation", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -680,7 +681,7 @@ test("Core - Collection.update() :: $addToSet operator for unique push operation
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $addToSet operator for unique push operation against a specific key path", function() {
+QUnit.test("Collection.update() :: $addToSet operator for unique push operation against a specific key path", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -765,7 +766,7 @@ test("Core - Collection.update() :: $addToSet operator for unique push operation
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $addToSet operator for unique push operation against a specific key path using new $key", function() {
+QUnit.test("Collection.update() :: $addToSet operator for unique push operation against a specific key path using new $key", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -847,7 +848,7 @@ test("Core - Collection.update() :: $addToSet operator for unique push operation
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Value in array of strings", function() {
+QUnit.test("Collection.find() :: Value in array of strings", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -861,12 +862,12 @@ test("Core - Collection.find() :: Value in array of strings", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Single join", function() {
+QUnit.test("Collection.find() :: Options :: Single join", function() {
 	base.dbUp();
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"organisation": {
 				"_id": "orgId",
 				"$as": "org",
@@ -883,12 +884,12 @@ test("Core - Collection.find() :: Options :: Single join", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Single join, array of ids", function() {
+QUnit.test("Collection.find() :: Options :: Single join, array of ids", function() {
 	base.dbUp();
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"organisation": {
 				"_id": "orgId",
 				"$as": "org",
@@ -916,12 +917,12 @@ test("Core - Collection.find() :: Options :: Single join, array of ids", functio
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Multi join", function() {
+QUnit.test("Collection.find() :: Options :: Multi join", function() {
 	base.dbUp();
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"user": {
 				"_id": "friends",
 				"$as": "friendData",
@@ -938,7 +939,7 @@ test("Core - Collection.find() :: Options :: Multi join", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $inc operator", function() {
+QUnit.test("Collection.update() :: $inc operator", function() {
 	base.dbUp();
 	
 	var coll = db.collection('test');
@@ -967,7 +968,7 @@ test("Core - Collection.update() :: $inc operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $inc operator advanced", function() {
+QUnit.test("Collection.update() :: $inc operator advanced", function() {
 	base.dbUp();
 	
 	var coll = db.collection('test');
@@ -1020,7 +1021,7 @@ test("Core - Collection.update() :: $inc operator advanced", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.updateById() :: $push array operator", function() {
+QUnit.test("Collection.updateById() :: $push array operator", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1044,7 +1045,7 @@ test("Core - Collection.updateById() :: $push array operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $push array operator with $each modifier", function() {
+QUnit.test("Collection.update() :: $push array operator with $each modifier", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1071,7 +1072,7 @@ test("Core - Collection.update() :: $push array operator with $each modifier", f
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $push array operator with $each and $position modifier", function() {
+QUnit.test("Collection.update() :: $push array operator with $each and $position modifier", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1099,7 +1100,7 @@ test("Core - Collection.update() :: $push array operator with $each and $positio
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $push array operator to undefined field (should assign new array to field)", function() {
+QUnit.test("Collection.update() :: $push array operator to undefined field (should assign new array to field)", function() {
 	base.dbUp();
 	
 	var coll = db.collection('test');
@@ -1126,7 +1127,7 @@ test("Core - Collection.update() :: $push array operator to undefined field (sho
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $splicePush array operator", function() {
+QUnit.test("Collection.update() :: $splicePush array operator", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1150,7 +1151,7 @@ test("Core - Collection.update() :: $splicePush array operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $move array operator", function() {
+QUnit.test("Collection.update() :: $move array operator", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1174,7 +1175,7 @@ test("Core - Collection.update() :: $move array operator", function() {
 	base.dbDown();
 });
 
-/*test("Core - Collection.update() :: $splicePush into empty array with incorrect index", function() {
+/*test("Collection.update() :: $splicePush into empty array with incorrect index", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1203,7 +1204,7 @@ test("Core - Collection.update() :: $move array operator", function() {
 	base.dbDown();
 });*/
 
-test("Core - Collection.updateById() :: $pull array operator", function() {
+QUnit.test("Collection.updateById() :: $pull array operator", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1226,7 +1227,7 @@ test("Core - Collection.updateById() :: $pull array operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.updateById() :: $pullAll array operator", function() {
+QUnit.test("Collection.updateById() :: $pullAll array operator", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');
@@ -1252,7 +1253,7 @@ test("Core - Collection.updateById() :: $pullAll array operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $mul operator", function() {
+QUnit.test("Collection.update() :: $mul operator", function() {
 	base.dbUp();
 	
 	var coll = db.collection('test');
@@ -1281,7 +1282,7 @@ test("Core - Collection.update() :: $mul operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $rename operator", function() {
+QUnit.test("Collection.update() :: $rename operator", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');
@@ -1311,7 +1312,7 @@ test("Core - Collection.update() :: $rename operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $unset operator", function() {
+QUnit.test("Collection.update() :: $unset operator", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');
@@ -1340,7 +1341,7 @@ test("Core - Collection.update() :: $unset operator", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.update() :: $unset operator inside sub-array", function() {
+QUnit.test("Collection.update() :: $unset operator inside sub-array", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');
@@ -1384,7 +1385,7 @@ test("Core - Collection.update() :: $unset operator inside sub-array", function(
 	base.dbDown();
 });
 
-test("Core - Collection.upsert() :: Insert on upsert call", function() {
+QUnit.test("Collection.upsert() :: Insert on upsert call", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1403,7 +1404,7 @@ test("Core - Collection.upsert() :: Insert on upsert call", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.upsert() :: Update on upsert call", function() {
+QUnit.test("Collection.upsert() :: Update on upsert call", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1426,7 +1427,7 @@ test("Core - Collection.upsert() :: Update on upsert call", function() {
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Single Sort Argument, Ascending", function() {
+QUnit.test("Collection.find() :: Options :: Single Sort Argument, Ascending", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1444,7 +1445,7 @@ test("Core - Collection.find() :: Options :: Single Sort Argument, Ascending", f
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Single Sort Argument, Descending", function() {
+QUnit.test("Collection.find() :: Options :: Single Sort Argument, Descending", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1461,7 +1462,7 @@ test("Core - Collection.find() :: Options :: Single Sort Argument, Descending", 
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Ascending, Ascending", function() {
+QUnit.test("Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Ascending, Ascending", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1498,7 +1499,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments),
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Ascending", function() {
+QUnit.test("Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Ascending", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1536,7 +1537,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments),
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Descending", function() {
+QUnit.test("Collection.find() :: Options :: Multi Sort Arguments (3 arguments), Ascending, Ascending, Descending", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1574,7 +1575,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (3 arguments),
 	base.dbDown();
 });
 
-test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Descending, Descending with Numbers and Booleans", function() {
+QUnit.test("Collection.find() :: Options :: Multi Sort Arguments (2 arguments), Descending, Descending with Numbers and Booleans", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -1595,7 +1596,7 @@ test("Core - Collection.find() :: Options :: Multi Sort Arguments (2 arguments),
 	base.dbDown();
 });
 
-test("Core - Collection.setData() :: Drop a collection and then set data against it", function() {
+QUnit.test("Collection.setData() :: Drop a collection and then set data against it", function() {
 	base.dbUp();
 
 	var coll = db.collection('test');

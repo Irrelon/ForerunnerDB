@@ -1,5 +1,6 @@
+QUnit.module('Overview');
 ForerunnerDB.moduleLoaded('Overview', function () {
-	test('Overview - Overview.reduce() :: Correct data reduced for overview', function () {
+	QUnit.test('Overview.reduce() :: Correct data reduced for overview', function () {
 		base.dbUp();
 		base.domUp();
 
@@ -49,7 +50,7 @@ ForerunnerDB.moduleLoaded('Overview', function () {
 		base.dbDown();
 	});
 
-	test('Overview - Overview.drop() :: Create overview assign a collection then drop the overview', function () {
+	QUnit.test('Overview.drop() :: Create overview assign a collection then drop the overview', function () {
 		base.dbUp();
 
 		var coll = db.collection('test');

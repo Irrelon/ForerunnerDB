@@ -210,7 +210,16 @@ Collection.prototype._onRemove = function (items) {
  * @param {Core=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db');
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		if (this.primaryKey() === '_id') {
+			// Set primary key to the db's key by default
+			this.primaryKey(db.primaryKey());
+		}
+	}
+
+	return this.$super.apply(this, arguments);
+});
 
 /**
  * Sets the collection's data to the array of documents passed.
@@ -487,26 +496,25 @@ Collection.prototype.update = function (query, update, options) {
 					op: op
 				};
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, newDoc) === false) {
+				// Update newDoc with the update criteria so we know what the data will look
+				// like AFTER the update is processed
+				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) === false) {
 					// The trigger just wants to cancel the operation
 					return false;
 				}
 
-				if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE)) {
-					// Process the update against the newDoc so that the after-update trigger will see
-					// the new document as it would exist after update has been processed
-					result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
-
-					// Execute triggers if update changed any data
-					if (result && self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
-						// The trigger just wants to cancel the operation
-						return false;
-					}
-				}
-
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
-				result = self.updateObject(originalDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+				result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
+
+				// NOTE: If for some reason we would only like to fire this event if changes are actually going
+				// to occur on the object from the proposed update then we can add "result &&" to the if
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
@@ -1347,25 +1355,56 @@ Collection.prototype._insertHandle = function (data, index, callback) {
  */
 Collection.prototype._insert = function (doc, index) {
 	if (doc) {
-		var indexViolation;
+		var self = this,
+			indexViolation,
+			triggerOperation,
+			insertMethod,
+			newDoc;
 
 		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
 
-		if (!indexViolation) {
+		insertMethod = function (doc) {
 			// Add the item to the collection's indexes
-			this._insertIntoIndexes(doc);
+			self._insertIntoIndexes(doc);
 
 			// Check index overflow
-			if (index > this._data.length) {
-				index = this._data.length;
+			if (index > self._data.length) {
+				index = self._data.length;
 			}
 
 			// Insert the document
-			this._dataInsertAtIndex(index, doc);
-			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
+			self._dataInsertAtIndex(index, doc);
+		};
+
+		if (!indexViolation) {
+			if (self.willTrigger(self.TYPE_INSERT, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'insert'
+				};
+
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
+
+				insertMethod(doc);
+				if (self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+					// Clone the doc so that the programmer cannot update the internal document
+					// on the "after" phase trigger
+					newDoc = self.decouple(doc);
+
+					if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, newDoc) === false) {
+						// The trigger just wants to cancel the operation
+						return false;
+					}
+				}
+			} else {
+				// No triggers to execute
+				insertMethod(doc);
+			}
 
 			return true;
 		} else {
@@ -1752,10 +1791,10 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Now process any joins on the final data
-		if (options.join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.join[joinCollectionIndex]) {
-					if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+		if (options.$join) {
+			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
+				for (joinCollectionName in options.$join[joinCollectionIndex]) {
+					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 						// Set the key to store the join result in to the collection name by default
 						resultCollectionName = joinCollectionName;
 
@@ -1763,7 +1802,7 @@ Collection.prototype.find = function (query, options) {
 						joinCollectionInstance = this._db.collection(joinCollectionName);
 
 						// Get the match data for the join
-						joinMatch = options.join[joinCollectionIndex][joinCollectionName];
+						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2201,19 +2240,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	}
 
 	// Check for join data
-	if (options.join) {
+	if (options.$join) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
+		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.join[joinCollectionIndex]) {
-				if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+			for (joinCollectionName in options.$join[joinCollectionIndex]) {
+				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 					joinCollections.push(joinCollectionName);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName].$as);
+					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
+						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
 					} else {
 						joinCollectionReferences.push(joinCollectionName);
 					}

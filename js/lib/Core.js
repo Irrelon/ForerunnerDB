@@ -26,6 +26,7 @@ var Core = function (name) {
 };
 
 Core.prototype.init = function (name) {
+	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
 	this._debug = {};
@@ -145,6 +146,13 @@ Metrics = require('./Metrics.js');
 Crc = require('./Crc.js');
 
 Core.prototype._isServer = false;
+
+/**
+ * Gets / sets the default primary key for new collections.
+ * @param {String=} val The name of the primary key to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'primaryKey');
 
 /**
  * Gets / sets the current state.

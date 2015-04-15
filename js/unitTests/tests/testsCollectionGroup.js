@@ -1,5 +1,6 @@
+QUnit.module('CollectionGroup');
 ForerunnerDB.moduleLoaded('CollectionGroup', function () {
-	test("Core - CollectionGroup.find() :: Single collection", function() {
+	QUnit.test("CollectionGroup.find() :: Single collection", function() {
 		base.dbUp();
 		base.dataUp();
 
@@ -20,7 +21,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Core - CollectionGroup.find() :: Single collection, descending sort", function() {
+	QUnit.test("CollectionGroup.find() :: Single collection, descending sort", function() {
 		base.dbUp();
 		base.dataUp();
 

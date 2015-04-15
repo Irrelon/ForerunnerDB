@@ -1,4 +1,5 @@
-test("Index - Collection.ensureIndex() :: Assign an index to a collection", function() {
+QUnit.module('Index');
+QUnit.test("Collection.ensureIndex() :: Assign an index to a collection", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -21,7 +22,7 @@ test("Index - Collection.ensureIndex() :: Assign an index to a collection", func
 });
 
 ForerunnerDB.moduleLoaded('Persist', function () {
-	asyncTest("Index - Collection.ensureIndex() :: Ensure an index is maintained after persist.load()", function () {
+	QUnit.asyncTest("Collection.ensureIndex() :: Ensure an index is maintained after persist.load()", function () {
 		expect(3);
 
 		base.dbUp();
@@ -34,7 +35,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 		coll.save(function () {
 			// Data saved, now clear the collection
-			db.collection('test27').drop();
+			db.collection('test27').drop(false);
 
 			// Check that there are no docs
 			result = db.collection('test27').find();
@@ -66,7 +67,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 	});
 });
 
-test("Index - Collection.index() :: Test lookup of index from collection by name", function () {
+QUnit.test("Collection.index() :: Test lookup of index from collection by name", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -88,7 +89,7 @@ test("Index - Collection.index() :: Test lookup of index from collection by name
 	base.dbDown();
 });
 
-test("Index - Index.lookup() :: Test optimal query index detection", function () {
+QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -138,7 +139,7 @@ test("Index - Index.lookup() :: Test optimal query index detection", function ()
 	base.dbDown();
 });
 
-test("Index - Index.lookup() :: Test lookup from index", function () {
+QUnit.test("Index.lookup() :: Test lookup from index", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -170,7 +171,7 @@ test("Index - Index.lookup() :: Test lookup from index", function () {
 	base.dbDown();
 });
 
-test("Index - Collection.find() :: Test query that should use an index", function () {
+QUnit.test("Collection.find() :: Test query that should use an index", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -198,7 +199,7 @@ test("Index - Collection.find() :: Test query that should use an index", functio
 	base.dbDown();
 });
 
-test("Index - Collection.find() :: Test index doesn't interfere with other queries", function () {
+QUnit.test("Collection.find() :: Test index doesn't interfere with other queries", function () {
 	base.dbUp();
 
 	var coll = db.collection('testIndexColl').truncate();
@@ -241,7 +242,7 @@ test("Index - Collection.find() :: Test index doesn't interfere with other queri
 	base.dbDown();
 });
 
-test("Index - Collection.find() :: Random data inserted into collection and indexed with existing index", function () {
+QUnit.test("Collection.find() :: Random data inserted into collection and indexed with existing index", function () {
 	base.dbUp();
 
 	var collection = db.collection('temp').truncate(),
@@ -289,7 +290,7 @@ test("Index - Collection.find() :: Random data inserted into collection and inde
 	base.dbDown();
 });
 
-test("Index - Collection.find() :: Test index created before inserting data", function () {
+QUnit.test("Collection.find() :: Test index created before inserting data", function () {
 	base.dbUp();
 
 	var coll = db.collection('temp').truncate();
@@ -313,7 +314,7 @@ test("Index - Collection.find() :: Test index created before inserting data", fu
 	base.dbDown();
 });
 
-test("Index - Index.remove() :: Test index is being kept up to date with CRUD", function () {
+QUnit.test("Index.remove() :: Test index is being kept up to date with CRUD", function () {
 	base.dbUp();
 
 	var coll,
@@ -360,7 +361,7 @@ test("Index - Index.remove() :: Test index is being kept up to date with CRUD", 
 });
 
 ForerunnerDB.version('1.4', function () {
-	test("Index - Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
+	QUnit.test("Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
 		base.dbUp();
 
 		var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
@@ -398,7 +399,7 @@ ForerunnerDB.version('1.4', function () {
 });
 
 ForerunnerDB.version('1.4', function () {
-	test("Index - Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
+	QUnit.test("Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 		base.dbUp();
 
 		var coll,

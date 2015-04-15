@@ -1,4 +1,5 @@
-asyncTest("Events - Collection.on() :: Insert with Success", function() {
+QUnit.module('Events');
+QUnit.asyncTest("Collection.on() :: Insert with Success", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -21,7 +22,7 @@ asyncTest("Events - Collection.on() :: Insert with Success", function() {
 	base.dbDown();
 });
 
-asyncTest("Events - Collection.on() :: Insert with Failed", function() {
+QUnit.asyncTest("Collection.on() :: Insert with Failed", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -45,7 +46,7 @@ asyncTest("Events - Collection.on() :: Insert with Failed", function() {
 	base.dbDown();
 });
 
-asyncTest("Events - Collection.on() :: Update with Success", function() {
+QUnit.asyncTest("Collection.on() :: Update with Success", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -72,7 +73,7 @@ asyncTest("Events - Collection.on() :: Update with Success", function() {
 	base.dbDown();
 });
 
-asyncTest("Events - Collection.on() :: Update Key Array Data with Success", function() {
+QUnit.asyncTest("Collection.on() :: Update Key Array Data with Success", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -100,7 +101,7 @@ asyncTest("Events - Collection.on() :: Update Key Array Data with Success", func
 	base.dbDown();
 });
 
-asyncTest("Events - Collection.on() :: Remove with Success", function() {
+QUnit.asyncTest("Collection.on() :: Remove with Success", function() {
 	base.dbUp();
 	base.dataUp();
 
@@ -124,7 +125,7 @@ asyncTest("Events - Collection.on() :: Remove with Success", function() {
 });
 
 ForerunnerDB.moduleLoaded('CollectionGroup', function () {
-	asyncTest("Events - CollectionGroup.on() :: Insert :: Event fired from collection", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Insert :: Event fired from collection", function () {
 		base.dbUp();
 		base.dataUp();
 
@@ -146,7 +147,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Events - CollectionGroup.on() :: Update :: Event fired from collection", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Update :: Event fired from collection", function () {
 		base.dbUp();
 		base.dataUp();
 
@@ -174,7 +175,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Events - CollectionGroup.on() :: Update With Specific ID Selector :: Event fired from collection", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Update With Specific ID Selector :: Event fired from collection", function () {
 		base.dbUp();
 		base.dataUp();
 
@@ -217,7 +218,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Events - CollectionGroup.on() :: Remove :: Event fired from collection", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Remove :: Event fired from collection", function () {
 		base.dbUp();
 		base.dataUp();
 
@@ -245,7 +246,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 });
 
 ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
-	asyncTest("Events - CollectionGroup.on() :: Insert :: Event fired from view", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Insert :: Event fired from view", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -269,7 +270,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Events - CollectionGroup.on() :: Update :: Event fired from view", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Update :: Event fired from view", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -299,7 +300,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Events - CollectionGroup.on() :: Remove :: Event fired from view", function () {
+	QUnit.asyncTest("CollectionGroup.on() :: Remove :: Event fired from view", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -333,7 +334,7 @@ ForerunnerDB.moduleLoaded('View, CollectionGroup', function () {
 });
 
 ForerunnerDB.moduleLoaded('View', function () {
-	asyncTest("Events - View.on() :: Insert", function () {
+	QUnit.asyncTest("View.on() :: Insert", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();

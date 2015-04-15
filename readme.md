@@ -1,21 +1,39 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
-## Version 1.3.6 (4th March 2015)
+ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
+a UK registered company.
+## Version 1.3.10 (15th April 2015)
+#### Warning - API Change Notification Since Version 1.3.10
+The join system has been updated to use "$join" as the key defining a join instead of
+"join". This was done to keep joins in line with the rest of the API that now uses
+the $ symbol when denoting an operation rather than a property. See the Joins section
+of the documentation for examples of correct usage.
+
+Migrating old code should be as simple as searching for instances of "join" and
+replacing with "$join" within ForerunnerDB queries in your application.
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
+ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
+MongoDB and runs on browsers and Node.js.
 
 ## What is ForerunnerDB's Primary Use Case?
-ForerunnerDB was created primarily to allow web application developers to easily store, query and manipulate JSON data
-in the browser via a simple query language. It provides the ability to store data passed by an API to the front-end and
-query it throughout your application making handling JSON data client-side significantly easier.
+ForerunnerDB was created primarily to allow web application developers to easily
+store, query and manipulate JSON data in the browser via a simple query language.
+It provides the ability to store data passed by an API to the front-end and query
+it throughout your application making handling JSON data client-side significantly
+easier.
 
-Furthermore, if you use the optional data-binding module, changes to your JSON data stored in ForerunnerDB are
-automatically propagated to the DOM. Some web application frameworks provide similar functionality which is why
-data-binding is an optional module.
+Furthermore, if you use the optional data-binding module, changes to your JSON
+data stored in ForerunnerDB are automatically propagated to the DOM. The data
+binding system in ForerunnerDB is state-of-the-art, high performance and supports
+features like partial updates.
 
-Many web applications take data from an API and then represent that on screen to the user. ForerunnerDB allows you to 
-sort that data and filter it so that you don't have to make API calls whenever you want data in a different order or
+Some web application frameworks provide similar functionality which is why
+data-binding is an optional module that you can choose to include on a per-app
+basis as you choose.
+
+Many web applications take data from an API and then represent that on screen
+to the user. ForerunnerDB allows you to sort that data and filter it so that you
+don't have to make API calls whenever you want data in a different order or
 filtered by specific fields and values.
 
 ## Demo
@@ -395,7 +413,7 @@ documents where the price is greater than or equal to 100:
 	});
 
 ### Joins
-Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
+Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "$join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
 
 	var db = new ForerunnerDB(),
 		itemCollection = db.collection('item'),
@@ -436,7 +454,7 @@ Sometimes you want to join two or more collections when running a query and retu
 Now, when we find data from the "item" collection we can grab all the users that ordered that item as well and store them in a key called "purchasedBy":
 
 	itemCollection.find({}, {
-		'join': [{
+		'$join': [{
 			'purchase': {
 				'itemId': '_id',
 				'$as': 'purchasedBy',
@@ -446,7 +464,10 @@ Now, when we find data from the "item" collection we can grab all the users that
 		}]
 	});
 
-The "join" key holds an array of joins to perform, each join object has a key which denotes the collection name to pull data from, then matching criteria which in this case is to match purchase.itemId with the item._id. The three other keys are special operations (start with $) and indicate:
+The "$join" key holds an array of joins to perform, each join object has a key which
+denotes the collection name to pull data from, then matching criteria which in this
+case is to match purchase.itemId with the item._id. The three other keys are special
+operations (start with $) and indicate:
 
 * $as tells the join what object key to store the join results in when returning the document
 * $require is a boolean that denotes if the join must be successful for the item to be returned in the final find result
@@ -489,8 +510,43 @@ The result of the call above is:
 		"purchasedBy":[]
 	}]
 
+## Triggers
+ForerunnerDB currently supports triggers for inserts and updates at both the
+*before* and *after* operation phases. Triggers that fire on the *before* phase can
+also optionally modify the operation data and actually cancel the operation entirely
+allowing you to provide database-level data validation etc.
+
+Setting up triggers is very easy.
+
+### Example: Cancel Operation Before Insert Trigger 
+Here is an example of a *before insert* trigger that will cancel the insert
+operation before the data is inserted into the database:
+
+	var db = new ForerunnerDB(),
+    	collection = db.collection('test');
+    
+    collection.addTrigger('myTrigger', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldData, newData) {
+    	// By returning false inside a "before" trigger we cancel the operation
+    	return false;
+    });
+    
+    collection.insert({test: true});
+
+The trigger method passed to addTrigger() as parameter 4 should handle these
+arguments:
+
+|Argument|Data Type|Description|
+|--------------|---------|-----------------------------------------------------|
+|operation|object|Details about the operation being executed. In *before update* operations this also includes *query* and *update* objects which you can modify directly to alter the final update applied.|
+|oldData|object|The data before the operation is executed. In insert triggers this is always a blank object. In update triggers this will represent what the document that *will* be updated currently looks like. You cannot modify this object.|
+|newData|object|The data after the operation is executed. In insert triggers this is the new document being inserted. In update triggers this is what the document being updated *will* look like after the operation is run against it. You can update this object ONLY in *before* phase triggers.|
+
 ## Indices & Performance
-ForerunnerDB currently supports basic indexing for performance enhancements when querying a collection. You can create an index on a collection using the ensureIndex() method. ForerunnerDB will utilise the index that most closely matches the query you are executing. In the case where a query matches multiple indexes the most relevant index is automatically determined. Let's setup some data to index:
+ForerunnerDB currently supports basic indexing for performance enhancements when
+querying a collection. You can create an index on a collection using the
+ensureIndex() method. ForerunnerDB will utilise the index that most closely matches
+the query you are executing. In the case where a query matches multiple indexes
+the most relevant index is automatically determined. Let's setup some data to index:
 
 	var db = new ForerunnerDB(),
 		names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
@@ -674,7 +730,7 @@ Now we are able to query 100,000 records instantly, requiring zero milliseconds 
 Examining the output from an explain() call will provide you with the most insight into how the query
 was executed and if a table scan was involved or not, helping you to plan your indices accordingly.
 
-Keep in mind that indices require memory to maintain hash tables and there is always a trade-off between
+Keep in mind that indices require memory to maintain and there is always a trade-off between
 speed and memory usage.
 
 ## Data Persistence (Save and Load Between Pages)
