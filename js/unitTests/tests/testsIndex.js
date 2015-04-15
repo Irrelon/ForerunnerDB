@@ -35,7 +35,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 		coll.save(function () {
 			// Data saved, now clear the collection
-			db.collection('test27').drop();
+			db.collection('test27').drop(false);
 
 			// Check that there are no docs
 			result = db.collection('test27').find();

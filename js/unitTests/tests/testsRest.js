@@ -48,6 +48,7 @@ QUnit.asyncTest("Get items for collection", function() {
 				base.dbDown();
 			});
 		} else {
+			expect(0);
 			console.error('Error in REST call:', err);
 			start();
 		}
