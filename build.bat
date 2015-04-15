@@ -1,1 +1,0 @@
-browserify -s ForerunnerDB .\js\builds\all.js > .\js\dist\fdb-all.js

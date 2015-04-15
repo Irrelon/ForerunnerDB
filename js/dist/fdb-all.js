@@ -9910,7 +9910,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -9939,7 +9939,7 @@ module.exports = asap;
                         if (result !== void(0)) {
                             resolve(result);
                         } else {
-                            cursor.continue();
+                            cursor['continue']();
                         }
                     } else {
                         resolve();
@@ -9949,7 +9949,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -9998,7 +9998,7 @@ module.exports = asap;
                 transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10023,10 +10023,10 @@ module.exports = asap;
 
                 // We use a Grunt task to make this safe for IE and some
                 // versions of Android (including those used by Cordova).
-                // Normally IE won't like `.delete()` and will insist on
+                // Normally IE won't like `['delete']()` and will insist on
                 // using `['delete']()`, but we have a build step that
                 // fixes this for us now.
-                var req = store.delete(key);
+                var req = store['delete'](key);
                 transaction.oncomplete = function() {
                     resolve();
                 };
@@ -10044,7 +10044,7 @@ module.exports = asap;
                         reject(error);
                     }
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10068,7 +10068,7 @@ module.exports = asap;
                 transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10092,7 +10092,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10145,7 +10145,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10173,13 +10173,13 @@ module.exports = asap;
                     }
 
                     keys.push(cursor.key);
-                    cursor.continue();
+                    cursor['continue']();
                 };
 
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10655,7 +10655,7 @@ module.exports = asap;
             } catch (e) {
                 return self.setDriver(self.LOCALSTORAGE).then(function() {
                     return self._initStorage(options);
-                }).then(resolve).catch(reject);
+                }).then(resolve)['catch'](reject);
             }
 
             // Create our key/value table if it doesn't exist.
@@ -10709,7 +10709,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10754,7 +10754,7 @@ module.exports = asap;
                             reject(error);
                         });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10812,7 +10812,7 @@ module.exports = asap;
                         });
                     }
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10842,7 +10842,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10865,7 +10865,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10892,7 +10892,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10923,7 +10923,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10951,7 +10951,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11292,7 +11292,7 @@ module.exports = asap;
                 }
 
                 self._ready.then(resolve, reject);
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         ready.then(callback, callback);
@@ -13734,9 +13734,9 @@ define(function() {
 
 		/**
 		 * Add Error-type and predicate matching to catch.  Examples:
-		 * promise.catch(TypeError, handleTypeError)
-		 *   .catch(predicate, handleMatchedErrors)
-		 *   .catch(handleRemainingErrors)
+		 * promise['catch'](TypeError, handleTypeError)
+		 *   ['catch'](predicate, handleMatchedErrors)
+		 *   ['catch'](handleRemainingErrors)
 		 * @param onRejected
 		 * @returns {*}
 		 */
