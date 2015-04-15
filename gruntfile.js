@@ -75,6 +75,10 @@ module.exports = function(grunt) {
 
 		// Write changes
 		fs.writeFileSync('./js/dist/fdb-all.js', code);
+
+		// Copy the build file to the tests folder
+		fs.unlinkSync('./js/unitTests/lib/fdb-all.js');
+		fs.copySync('./js/dist/fdb-all.js', './js/unitTests/lib/fdb-all.js');
 	});
 
 	grunt.registerTask("0: Check & Build Distribution File", ["jshint", "browserify"]);
