@@ -867,7 +867,7 @@ QUnit.test("Collection.find() :: Options :: Single join", function() {
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"organisation": {
 				"_id": "orgId",
 				"$as": "org",
@@ -889,7 +889,7 @@ QUnit.test("Collection.find() :: Options :: Single join, array of ids", function
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"organisation": {
 				"_id": "orgId",
 				"$as": "org",
@@ -922,7 +922,7 @@ QUnit.test("Collection.find() :: Options :: Multi join", function() {
 	base.dataUp();
 
 	var result = user.find({}, {
-		"join": [{
+		"$join": [{
 			"user": {
 				"_id": "friends",
 				"$as": "friendData",
