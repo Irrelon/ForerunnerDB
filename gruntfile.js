@@ -25,7 +25,7 @@ module.exports = function(grunt) {
 		},
 
 		"browserify": {
-			"core": {
+			"all": {
 				src: ["./js/builds/all.js"],
 				dest: "./js/dist/fdb-all.js",
 				options: {
@@ -36,11 +36,76 @@ module.exports = function(grunt) {
 						[ "browserify-derequire" ]
 					]
 				}
-			}
+			},
+
+			"autobind": {
+				src: ["./js/builds/autobind.js"],
+				dest: "./js/dist/fdb-autobind.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
+
+			"core": {
+				src: ["./js/builds/core.js"],
+				dest: "./js/dist/fdb-core.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
+
+			"core+persist": {
+				src: ["./js/builds/core+persist.js"],
+				dest: "./js/dist/fdb-core+persist.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
+
+			"core+views": {
+				src: ["./js/builds/core+views.js"],
+				dest: "./js/dist/fdb-core+views.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
+
+			"legacy": {
+				src: ["./js/builds/legacy.js"],
+				dest: "./js/dist/fdb-legacy.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
 		},
 
 		"uglify": {
-			"core": {
+			"all": {
 				"files": {
 					"./js/dist/fdb-all.min.js": ["./js/dist/fdb-all.js"]
 				}
@@ -51,7 +116,42 @@ module.exports = function(grunt) {
 			all: {
 				options: {
 					src: './js/dist/fdb-all.js',
-					globalAlias: 'ForerunnerDB' // optional, changes the name of the global variable
+					globalAlias: 'ForerunnerDB'
+				}
+			},
+
+			autobind: {
+				options: {
+					src: './js/dist/fdb-autobind.js',
+					globalAlias: 'ForerunnerDB_AutoBind'
+				}
+			},
+
+			core: {
+				options: {
+					src: './js/dist/fdb-core.js',
+					globalAlias: 'ForerunnerDB'
+				}
+			},
+
+			"core+views": {
+				options: {
+					src: './js/dist/fdb-core+views.js',
+					globalAlias: 'ForerunnerDB'
+				}
+			},
+
+			"core+persist": {
+				options: {
+					src: './js/dist/fdb-core+persist.js',
+					globalAlias: 'ForerunnerDB'
+				}
+			},
+
+			"legacy": {
+				options: {
+					src: './js/dist/fdb-legacy.js',
+					globalAlias: 'ForerunnerDB'
 				}
 			}
 		}
@@ -66,28 +166,38 @@ module.exports = function(grunt) {
 	grunt.registerTask('postfix', 'Fix code for IE.', function () {
 		var fs = require('fs-extra');
 
-		var code = fs.readFileSync('./js/dist/fdb-all.js', 'utf8');
+		var fixFile = function (file) {
+			var code = fs.readFileSync('./js/dist/' + file, 'utf8');
 
-		// Replace code that IE8 will die on
-		code = code.replace(/\.catch\(/g, "['catch'](");
-		code = code.replace(/\.continue\(/g, "['continue'](");
-		code = code.replace(/\.delete\(/g, "['delete'](");
+			// Replace code that IE8 will die on
+			code = code.replace(/\.catch\(/g, "['catch'](");
+			code = code.replace(/\.continue\(/g, "['continue'](");
+			code = code.replace(/\.delete\(/g, "['delete'](");
 
-		// Write changes
-		fs.writeFileSync('./js/dist/fdb-all.js', code);
+			// Write changes
+			fs.writeFileSync('./js/dist/' + file, code);
 
-		// Copy the build file to the tests folder
-		if (fs.existsSync('./js/unitTests/lib/fdb-all.js')) {
-			fs.unlinkSync('./js/unitTests/lib/fdb-all.js');
+			// Copy the build file to the tests folder
+			if (fs.existsSync('./js/unitTests/lib/' + file)) {
+				fs.unlinkSync('./js/unitTests/lib/' + file);
+			}
+
+			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
 		}
-		fs.copySync('./js/dist/fdb-all.js', './js/unitTests/lib/fdb-all.js');
+
+		fixFile('fdb-all.js');
+		fixFile('fdb-core.js');
+		fixFile('fdb-core+persist.js');
+		fixFile('fdb-core+views.js');
+		fixFile('fdb-legacy.js');
 	});
 
-	grunt.registerTask("0: Check & Build Distribution File", ["jshint", "browserify"]);
-	grunt.registerTask("1: Check Code Cleanliness", ["jshint"]);
-	grunt.registerTask("2: Build Distribution File", ["browserify", "postfix"]);
-	grunt.registerTask("3: Minify Distribution Source", ["uglify"]);
-	grunt.registerTask("4: Run Unit Tests", ["qunit"]);
-	grunt.registerTask("5: Full Build Cycle", ["jshint", "browserify", "uglify", "qunit"]);
+	grunt.registerTask("0.0: Check & Build Distribution File", ["jshint", "browserify"]);
+	grunt.registerTask("1.0: Check Code Cleanliness", ["jshint"]);
+	grunt.registerTask("2.0: Build Distribution File", ["browserify", "postfix"]);
+	grunt.registerTask("3.0: Minify Distribution Source", ["uglify"]);
+	grunt.registerTask("4.0: Run Unit Tests", ["qunit"]);
+	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "qunit"]);
+	grunt.registerTask("do postfix", ["postfix"]);
 	grunt.registerTask("default", ["qunit"]);
 };

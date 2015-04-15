@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ForerunnerDB = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	View = _dereq_('../lib/View');
 
@@ -762,26 +762,25 @@ Collection.prototype.update = function (query, update, options) {
 					op: op
 				};
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, newDoc) === false) {
+				// Update newDoc with the update criteria so we know what the data will look
+				// like AFTER the update is processed
+				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) === false) {
 					// The trigger just wants to cancel the operation
 					return false;
 				}
 
-				if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE)) {
-					// Process the update against the newDoc so that the after-update trigger will see
-					// the new document as it would exist after update has been processed
-					result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
-
-					// Execute triggers if update changed any data
-					if (result && self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
-						// The trigger just wants to cancel the operation
-						return false;
-					}
-				}
-
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
-				result = self.updateObject(originalDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+				result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
+
+				// NOTE: If for some reason we would only like to fire this event if changes are actually going
+				// to occur on the object from the proposed update then we can add "result &&" to the if
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
@@ -1622,25 +1621,56 @@ Collection.prototype._insertHandle = function (data, index, callback) {
  */
 Collection.prototype._insert = function (doc, index) {
 	if (doc) {
-		var indexViolation;
+		var self = this,
+			indexViolation,
+			triggerOperation,
+			insertMethod,
+			newDoc;
 
 		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
 
-		if (!indexViolation) {
+		insertMethod = function (doc) {
 			// Add the item to the collection's indexes
-			this._insertIntoIndexes(doc);
+			self._insertIntoIndexes(doc);
 
 			// Check index overflow
-			if (index > this._data.length) {
-				index = this._data.length;
+			if (index > self._data.length) {
+				index = self._data.length;
 			}
 
 			// Insert the document
-			this._dataInsertAtIndex(index, doc);
-			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
+			self._dataInsertAtIndex(index, doc);
+		};
+
+		if (!indexViolation) {
+			if (self.willTrigger(self.TYPE_INSERT, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'insert'
+				};
+
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
+
+				insertMethod(doc);
+				if (self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+					// Clone the doc so that the programmer cannot update the internal document
+					// on the "after" phase trigger
+					newDoc = self.decouple(doc);
+
+					if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, newDoc) === false) {
+						// The trigger just wants to cancel the operation
+						return false;
+					}
+				}
+			} else {
+				// No triggers to execute
+				insertMethod(doc);
+			}
 
 			return true;
 		} else {
@@ -2027,10 +2057,10 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Now process any joins on the final data
-		if (options.join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.join[joinCollectionIndex]) {
-					if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+		if (options.$join) {
+			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
+				for (joinCollectionName in options.$join[joinCollectionIndex]) {
+					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 						// Set the key to store the join result in to the collection name by default
 						resultCollectionName = joinCollectionName;
 
@@ -2038,7 +2068,7 @@ Collection.prototype.find = function (query, options) {
 						joinCollectionInstance = this._db.collection(joinCollectionName);
 
 						// Get the match data for the join
-						joinMatch = options.join[joinCollectionIndex][joinCollectionName];
+						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2476,19 +2506,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	}
 
 	// Check for join data
-	if (options.join) {
+	if (options.$join) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
+		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.join[joinCollectionIndex]) {
-				if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+			for (joinCollectionName in options.$join[joinCollectionIndex]) {
+				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 					joinCollections.push(joinCollectionName);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName].$as);
+					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
+						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
 					} else {
 						joinCollectionReferences.push(joinCollectionName);
 					}
@@ -5208,9 +5238,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex === -1) {
+			// The trigger does not exist, create it
 			self._trigger = self._trigger || {};
 			self._trigger[type] = self._trigger[type] || {};
 			self._trigger[type][phase] = self._trigger[type][phase] || [];
@@ -5230,9 +5262,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex > -1) {
+			// The trigger does not exist, create it
 			self._trigger[type][phase].splice(triggerIndex, 1);
 		}
 
@@ -5318,7 +5352,7 @@ var Triggers = {
 		}
 	},
 
-	_triggerIndex: function (id, type, phase) {
+	_triggerIndexOf: function (id, type, phase) {
 		var self = this,
 			triggerArr,
 			triggerCount,
@@ -5493,7 +5527,7 @@ module.exports = Operation;
  * @returns {Function}
  * @constructor
  */
-Overload = function (def) {
+var Overload = function (def) {
 	if (def) {
 		var index,
 			count,
@@ -5598,7 +5632,7 @@ Overload = function (def) {
  * @param {String} str Signature string with a wildcard in it.
  * @returns {Array} An array of signature strings that are generated.
  */
-generateSignaturePermutations = function (str) {
+var generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
 		types = ['string', 'object', 'number', 'function', 'undefined'],
@@ -6093,7 +6127,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":23}],23:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.8',
+	version: '1.3.10',
 	modules: {},
 
 	_synth: {},
@@ -7133,5 +7167,4 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":22,"./Shared":23}]},{},[1])(1)
-});
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":22,"./Shared":23}]},{},[1]);

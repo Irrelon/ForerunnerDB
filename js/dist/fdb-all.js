@@ -6906,7 +6906,7 @@ module.exports = Operation;
  * @returns {Function}
  * @constructor
  */
-Overload = function (def) {
+var Overload = function (def) {
 	if (def) {
 		var index,
 			count,
@@ -7011,7 +7011,7 @@ Overload = function (def) {
  * @param {String} str Signature string with a wildcard in it.
  * @returns {Array} An array of signature strings that are generated.
  */
-generateSignaturePermutations = function (str) {
+var generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
 		types = ['string', 'object', 'number', 'function', 'undefined'],

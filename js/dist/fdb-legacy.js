@@ -1,4 +1,4 @@
-(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.ForerunnerDB = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	CollectionGroup = _dereq_('../lib/CollectionGroup'),
 	View = _dereq_('../lib/View'),
@@ -769,26 +769,25 @@ Collection.prototype.update = function (query, update, options) {
 					op: op
 				};
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, newDoc) === false) {
+				// Update newDoc with the update criteria so we know what the data will look
+				// like AFTER the update is processed
+				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) === false) {
 					// The trigger just wants to cancel the operation
 					return false;
 				}
 
-				if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE)) {
-					// Process the update against the newDoc so that the after-update trigger will see
-					// the new document as it would exist after update has been processed
-					result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
-
-					// Execute triggers if update changed any data
-					if (result && self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
-						// The trigger just wants to cancel the operation
-						return false;
-					}
-				}
-
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
-				result = self.updateObject(originalDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
+				result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
+
+				// NOTE: If for some reason we would only like to fire this event if changes are actually going
+				// to occur on the object from the proposed update then we can add "result &&" to the if
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
@@ -1629,25 +1628,56 @@ Collection.prototype._insertHandle = function (data, index, callback) {
  */
 Collection.prototype._insert = function (doc, index) {
 	if (doc) {
-		var indexViolation;
+		var self = this,
+			indexViolation,
+			triggerOperation,
+			insertMethod,
+			newDoc;
 
 		this.ensurePrimaryKey(doc);
 
 		// Check indexes are not going to be broken by the document
 		indexViolation = this.insertIndexViolation(doc);
 
-		if (!indexViolation) {
+		insertMethod = function (doc) {
 			// Add the item to the collection's indexes
-			this._insertIntoIndexes(doc);
+			self._insertIntoIndexes(doc);
 
 			// Check index overflow
-			if (index > this._data.length) {
-				index = this._data.length;
+			if (index > self._data.length) {
+				index = self._data.length;
 			}
 
 			// Insert the document
-			this._dataInsertAtIndex(index, doc);
-			this.processTrigger(this.TYPE_INSERT, this.PHASE_AFTER, {}, doc);
+			self._dataInsertAtIndex(index, doc);
+		};
+
+		if (!indexViolation) {
+			if (self.willTrigger(self.TYPE_INSERT, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+				triggerOperation = {
+					type: 'insert'
+				};
+
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) === false) {
+					// The trigger just wants to cancel the operation
+					return false;
+				}
+
+				insertMethod(doc);
+				if (self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+					// Clone the doc so that the programmer cannot update the internal document
+					// on the "after" phase trigger
+					newDoc = self.decouple(doc);
+
+					if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, newDoc) === false) {
+						// The trigger just wants to cancel the operation
+						return false;
+					}
+				}
+			} else {
+				// No triggers to execute
+				insertMethod(doc);
+			}
 
 			return true;
 		} else {
@@ -2034,10 +2064,10 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Now process any joins on the final data
-		if (options.join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.join[joinCollectionIndex]) {
-					if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+		if (options.$join) {
+			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
+				for (joinCollectionName in options.$join[joinCollectionIndex]) {
+					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 						// Set the key to store the join result in to the collection name by default
 						resultCollectionName = joinCollectionName;
 
@@ -2045,7 +2075,7 @@ Collection.prototype.find = function (query, options) {
 						joinCollectionInstance = this._db.collection(joinCollectionName);
 
 						// Get the match data for the join
-						joinMatch = options.join[joinCollectionIndex][joinCollectionName];
+						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2483,19 +2513,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	}
 
 	// Check for join data
-	if (options.join) {
+	if (options.$join) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
+		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.join[joinCollectionIndex]) {
-				if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+			for (joinCollectionName in options.$join[joinCollectionIndex]) {
+				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 					joinCollections.push(joinCollectionName);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName].$as);
+					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
+						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
 					} else {
 						joinCollectionReferences.push(joinCollectionName);
 					}
@@ -6193,9 +6223,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex === -1) {
+			// The trigger does not exist, create it
 			self._trigger = self._trigger || {};
 			self._trigger[type] = self._trigger[type] || {};
 			self._trigger[type][phase] = self._trigger[type][phase] || [];
@@ -6215,9 +6247,11 @@ var Triggers = {
 		var self = this,
 			triggerIndex;
 
-		triggerIndex = self._triggerIndex(id, type, phase);
+		// Check if the trigger already exists
+		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex > -1) {
+			// The trigger does not exist, create it
 			self._trigger[type][phase].splice(triggerIndex, 1);
 		}
 
@@ -6303,7 +6337,7 @@ var Triggers = {
 		}
 	},
 
-	_triggerIndex: function (id, type, phase) {
+	_triggerIndexOf: function (id, type, phase) {
 		var self = this,
 			triggerArr,
 			triggerCount,
@@ -7609,7 +7643,7 @@ module.exports = Operation;
  * @returns {Function}
  * @constructor
  */
-Overload = function (def) {
+var Overload = function (def) {
 	if (def) {
 		var index,
 			count,
@@ -7714,7 +7748,7 @@ Overload = function (def) {
  * @param {String} str Signature string with a wildcard in it.
  * @returns {Array} An array of signature strings that are generated.
  */
-generateSignaturePermutations = function (str) {
+var generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
 		types = ['string', 'object', 'number', 'function', 'undefined'],
@@ -8739,7 +8773,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":29,"localforage":37}],28:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":29,"localforage":38}],28:[function(_dereq_,module,exports){
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -8801,7 +8835,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":29}],29:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.8',
+	version: '1.3.10',
 	modules: {},
 
 	_synth: {},
@@ -9842,6 +9876,66 @@ Core.prototype.views = function () {
 Shared.finishModule('View');
 module.exports = View;
 },{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":28,"./Shared":29}],31:[function(_dereq_,module,exports){
+// shim for using process in browser
+
+var process = module.exports = {};
+var queue = [];
+var draining = false;
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    draining = true;
+    var currentQueue;
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        var i = -1;
+        while (++i < len) {
+            currentQueue[i]();
+        }
+        len = queue.length;
+    }
+    draining = false;
+}
+process.nextTick = function (fun) {
+    queue.push(fun);
+    if (!draining) {
+        setTimeout(drainQueue, 0);
+    }
+};
+
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+// TODO(shtylman)
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],32:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -9948,7 +10042,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":33}],32:[function(_dereq_,module,exports){
+},{"asap":34}],33:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -10130,7 +10224,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":31,"asap":33}],33:[function(_dereq_,module,exports){
+},{"./core.js":32,"asap":34}],34:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -10247,7 +10341,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":39}],34:[function(_dereq_,module,exports){
+},{"_process":31}],35:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -10329,7 +10423,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10358,7 +10452,7 @@ module.exports = asap;
                         if (result !== void(0)) {
                             resolve(result);
                         } else {
-                            cursor.continue();
+                            cursor['continue']();
                         }
                     } else {
                         resolve();
@@ -10368,7 +10462,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10417,7 +10511,7 @@ module.exports = asap;
                 transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10442,10 +10536,10 @@ module.exports = asap;
 
                 // We use a Grunt task to make this safe for IE and some
                 // versions of Android (including those used by Cordova).
-                // Normally IE won't like `.delete()` and will insist on
+                // Normally IE won't like `['delete']()` and will insist on
                 // using `['delete']()`, but we have a build step that
                 // fixes this for us now.
-                var req = store.delete(key);
+                var req = store['delete'](key);
                 transaction.oncomplete = function() {
                     resolve();
                 };
@@ -10463,7 +10557,7 @@ module.exports = asap;
                         reject(error);
                     }
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10487,7 +10581,7 @@ module.exports = asap;
                 transaction.onabort = transaction.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeDeferedCallback(promise, callback);
@@ -10511,7 +10605,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10564,7 +10658,7 @@ module.exports = asap;
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10592,13 +10686,13 @@ module.exports = asap;
                     }
 
                     keys.push(cursor.key);
-                    cursor.continue();
+                    cursor['continue']();
                 };
 
                 req.onerror = function() {
                     reject(req.error);
                 };
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -10662,7 +10756,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":32}],35:[function(_dereq_,module,exports){
+},{"promise":33}],36:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -10993,7 +11087,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":38,"promise":32}],36:[function(_dereq_,module,exports){
+},{"./../utils/serializer":39,"promise":33}],37:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -11074,7 +11168,7 @@ module.exports = asap;
             } catch (e) {
                 return self.setDriver(self.LOCALSTORAGE).then(function() {
                     return self._initStorage(options);
-                }).then(resolve).catch(reject);
+                }).then(resolve)['catch'](reject);
             }
 
             // Create our key/value table if it doesn't exist.
@@ -11128,7 +11222,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11173,7 +11267,7 @@ module.exports = asap;
                             reject(error);
                         });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11231,7 +11325,7 @@ module.exports = asap;
                         });
                     }
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11261,7 +11355,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11284,7 +11378,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11311,7 +11405,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11342,7 +11436,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11370,7 +11464,7 @@ module.exports = asap;
                         reject(error);
                     });
                 });
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         executeCallback(promise, callback);
@@ -11411,7 +11505,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":38,"promise":32}],37:[function(_dereq_,module,exports){
+},{"./../utils/serializer":39,"promise":33}],38:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -11711,7 +11805,7 @@ module.exports = asap;
                 }
 
                 self._ready.then(resolve, reject);
-            }).catch(reject);
+            })['catch'](reject);
         });
 
         ready.then(callback, callback);
@@ -11833,7 +11927,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":34,"./drivers/localstorage":35,"./drivers/websql":36,"promise":32}],38:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":35,"./drivers/localstorage":36,"./drivers/websql":37,"promise":33}],39:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12065,65 +12159,4 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],39:[function(_dereq_,module,exports){
-// shim for using process in browser
-
-var process = module.exports = {};
-var queue = [];
-var draining = false;
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    draining = true;
-    var currentQueue;
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        var i = -1;
-        while (++i < len) {
-            currentQueue[i]();
-        }
-        len = queue.length;
-    }
-    draining = false;
-}
-process.nextTick = function (fun) {
-    queue.push(fun);
-    if (!draining) {
-        setTimeout(drainQueue, 0);
-    }
-};
-
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-// TODO(shtylman)
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
-
-},{}]},{},[1])(1)
-});
+},{}]},{},[1]);
