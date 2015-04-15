@@ -1,5 +1,6 @@
+QUnit.module('AutoBind');
 ForerunnerDB.moduleLoaded('View, AutoBind', function () {
-	test("Bind - Collection.update() :: $unset operator inside sub-array propagates to bound data", function() {
+	QUnit.test("Collection.update() :: $unset operator inside sub-array propagates to bound data", function() {
 		base.dbUp();
 		base.domUp();
 
@@ -65,7 +66,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: setData from Collection", function () {
+	QUnit.test("View.on() :: setData from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -93,7 +94,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Insert from Collection", function () {
+	QUnit.test("View.on() :: Insert from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -117,7 +118,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Update from Collection", function () {
+	QUnit.test("View.on() :: Update from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -149,7 +150,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Upsert from Collection", function () {
+	QUnit.test("View.on() :: Upsert from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -180,7 +181,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Remove from Collection", function () {
+	QUnit.test("View.on() :: Remove from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -210,7 +211,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	asyncTest("Bind - View() :: View order is correct after insert", function() {
+	QUnit.asyncTest("View() :: View order is correct after insert", function() {
 		base.dbUp();
 		base.viewUp();
 		base.dataUp();
@@ -265,7 +266,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		}, 100);
 	});
 
-	test("Bind - View() :: View order is correct after update", function() {
+	QUnit.test("View() :: View order is correct after update", function() {
 		base.dbUp();
 		base.viewUp();
 		base.dataUp();
@@ -313,7 +314,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 	});
 
 	// Bind with queries
-	test("Bind - View.on() with query :: setData from Collection", function () {
+	QUnit.test("View.on() with query :: setData from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -343,7 +344,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Insert from Collection", function () {
+	QUnit.test("View.on() with query :: Insert from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -369,7 +370,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Insert from Collection With Item That Does Not Match View Query", function () {
+	QUnit.test("View.on() with query :: Insert from Collection With Item That Does Not Match View Query", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -395,7 +396,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Update from Collection to outside view query constraints", function () {
+	QUnit.test("View.on() with query :: Update from Collection to outside view query constraints", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -429,7 +430,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Update from Collection to inside view query constraints", function () {
+	QUnit.test("View.on() with query :: Update from Collection to inside view query constraints", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -463,7 +464,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Upsert from Collection", function () {
+	QUnit.test("View.on() with query :: Upsert from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -496,7 +497,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() with query :: Remove from Collection", function () {
+	QUnit.test("View.on() with query :: Remove from Collection", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -528,7 +529,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View() with query :: View order is correct after insert", function() {
+	QUnit.test("View() with query :: View order is correct after insert", function() {
 		base.dbUp();
 		base.viewUp();
 		base.dataUp();
@@ -577,7 +578,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View() with query :: View order is correct after update", function() {
+	QUnit.test("View() with query :: View order is correct after update", function() {
 		base.dbUp();
 		base.viewUp();
 		base.dataUp();
@@ -628,7 +629,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View() with query :: View order is correct after update with query constraint", function() {
+	QUnit.test("View() with query :: View order is correct after update with query constraint", function() {
 		base.dbUp();
 		base.viewUp();
 		base.dataUp();
@@ -724,7 +725,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View() with query :: View order large number of items", function() {
+	QUnit.test("View() with query :: View order large number of items", function() {
 		base.dbUp();
 		base.domUp();
 
@@ -786,7 +787,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View() with query :: View order large number of items before linking", function() {
+	QUnit.test("View() with query :: View order large number of items before linking", function() {
 		base.dbUp();
 		base.domUp();
 
@@ -854,7 +855,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 });
 
 ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
-	test("Bind - View.on() :: Insert from CollectionGroup via Collection Interface", function () {
+	QUnit.test("View.on() :: Insert from CollectionGroup via Collection Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -899,7 +900,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Update from CollectionGroup via Collection Interface", function () {
+	QUnit.test("View.on() :: Update from CollectionGroup via Collection Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -949,7 +950,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Remove from CollectionGroup via Collection Interface", function () {
+	QUnit.test("View.on() :: Remove from CollectionGroup via Collection Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -997,7 +998,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Insert from CollectionGroup via CollectionGroup Interface", function () {
+	QUnit.test("View.on() :: Insert from CollectionGroup via CollectionGroup Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -1042,7 +1043,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Update from CollectionGroup via CollectionGroup Interface", function () {
+	QUnit.test("View.on() :: Update from CollectionGroup via CollectionGroup Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -1092,7 +1093,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Remove from CollectionGroup via CollectionGroup Interface", function () {
+	QUnit.test("View.on() :: Remove from CollectionGroup via CollectionGroup Interface", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -1140,7 +1141,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Update with binding library logic check", function () {
+	QUnit.test("View.on() :: Update with binding library logic check", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -1207,7 +1208,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - Collection.on() :: Bind then modify then unbind then modify check unbind is working", function () {
+	QUnit.test("Collection.on() :: Bind then modify then unbind then modify check unbind is working", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();
@@ -1253,7 +1254,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Bind - View.on() :: Bind then modify then unbind then modify check unbind is working", function () {
+	QUnit.test("View.on() :: Bind then modify then unbind then modify check unbind is working", function () {
 		base.dbUp();
 		base.dataUp();
 		base.viewUp();

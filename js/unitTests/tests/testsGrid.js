@@ -1,5 +1,6 @@
+QUnit.module('Grid');
 ForerunnerDB.moduleLoaded('Grid', function () {
-	test('Grid - Grid() :: Instantiate a grid', function () {
+	QUnit.test('Grid() :: Instantiate a grid', function () {
 		base.dbUp();
 
 		var grid = db.grid('.moo');
@@ -9,7 +10,7 @@ ForerunnerDB.moduleLoaded('Grid', function () {
 		base.dbDown();
 	});
 
-	test('Grid - Grid() :: Bind a grid', function () {
+	QUnit.test('Grid() :: Bind a grid', function () {
 		base.dbUp();
 		base.domUp();
 

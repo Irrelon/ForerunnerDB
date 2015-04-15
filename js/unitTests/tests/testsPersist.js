@@ -1,5 +1,6 @@
+QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
-	asyncTest('Persistence - Collection.save() :: Save data to storage and load it back', function () {
+	QUnit.asyncTest('Collection.save() :: Save data to storage and load it back', function () {
 		expect(5);
 
 		base.dbUp();

@@ -1,4 +1,5 @@
-test('Overload :: Type-based overloading', function () {
+QUnit.module('Overload');
+QUnit.test('Type-based overloading', function () {
 	base.dbUp();
 
 	var func = new db.shared.overload({

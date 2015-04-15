@@ -1,10 +1,11 @@
+QUnit.module('ActiveBucket');
 ForerunnerDB.moduleLoaded('ActiveBucket', function () {
-	test('ActiveBucket - Create instance', function () {
+	QUnit.test('Create instance', function () {
 		var ab = new ForerunnerDB.shared.modules.ActiveBucket({});
 		ok(ab instanceof ForerunnerDB.shared.modules.ActiveBucket, 'Instance created');
 	});
 
-	test('ActiveBucket - Add document', function () {
+	QUnit.test('Add document', function () {
 		var ab = new ForerunnerDB.shared.modules.ActiveBucket({
 				name: 1,
 				age: -1
@@ -24,7 +25,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		strictEqual(ab.count(), total, 'Correct number of items (' + total + '): ' + ab.count());
 	});
 
-	test('ActiveBucket - Update Document', function () {
+	QUnit.test('Update Document', function () {
 		base.dbUp();
 		base.domUp();
 
@@ -156,7 +157,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		base.dbDown();
 	});
 
-	test('ActiveBucket - Add documents, check correct indexes with string and number based sorting', function () {
+	QUnit.test('Add documents, check correct indexes with string and number based sorting', function () {
 		var ab = new ForerunnerDB.shared.modules.ActiveBucket({
 				name: 1,
 				age: -1
@@ -199,7 +200,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		strictEqual(testArr[31].name === 'Rob' && testArr[31].age, 15, 'Items at correct index');
 	});
 
-	test('ActiveBucket - Add documents, check correct indexes with string-based sorting', function () {
+	QUnit.test('Add documents, check correct indexes with string-based sorting', function () {
 		var ab = new ForerunnerDB.shared.modules.ActiveBucket({
 				name: -1,
 				_id: 1
@@ -242,7 +243,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		strictEqual(testArr[0].name === 'Sam' && testArr[0]._id, '15', 'Items at correct index');
 	});
 
-	test('ActiveBucket - Time Performance', function () {
+	QUnit.test('Time Performance', function () {
 		var arr = [],
 			alpha = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p'],
 			names = ['Rob', 'Jim', 'Alice', 'Sam', 'Bob'],

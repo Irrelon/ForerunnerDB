@@ -1,5 +1,6 @@
+QUnit.module('Document');
 ForerunnerDB.moduleLoaded('Document', function () {
-	test('Document - Document() :: Instantiate a document', function () {
+	QUnit.test('Document() :: Instantiate a document', function () {
 		base.dbUp();
 
 		var doc = db.document('moo');
@@ -9,7 +10,7 @@ ForerunnerDB.moduleLoaded('Document', function () {
 		base.dbDown();
 	});
 
-	test('Document - Document.setData() :: Set document data', function () {
+	QUnit.test('Document.setData() :: Set document data', function () {
 		base.dbUp();
 
 		var doc = db.document('moo')
@@ -24,7 +25,7 @@ ForerunnerDB.moduleLoaded('Document', function () {
 		base.dbDown();
 	});
 
-	test('Document - Document.setData() :: Set document data against existing data', function () {
+	QUnit.test('Document.setData() :: Set document data against existing data', function () {
 		base.dbUp();
 		base.domUp();
 
@@ -56,7 +57,7 @@ ForerunnerDB.moduleLoaded('Document', function () {
 		base.dbDown();
 	});
 
-	test('Document - Document.setData() :: Data-binding to DOM element', function () {
+	QUnit.test('Document.setData() :: Data-binding to DOM element', function () {
 		base.dbUp();
 		base.domUp();
 

@@ -1,4 +1,5 @@
-asyncTest("Rest - Get items for collection", function() {
+QUnit.module('Rest');
+QUnit.asyncTest("Get items for collection", function() {
 	base.dbUp();
 
 	var coll,

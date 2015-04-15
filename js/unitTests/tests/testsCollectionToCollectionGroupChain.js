@@ -1,5 +1,6 @@
+QUnit.module('Collection -> CollectionGroup');
 ForerunnerDB.moduleLoaded('CollectionGroup', function () {
-	test("Collection -> CollectionGroup - Chains CRUD - setData", function () {
+	QUnit.test("Chains CRUD - setData", function () {
 		base.dbUp();
 
 		var coll = db.collection('test'),
@@ -19,7 +20,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Collection -> CollectionGroup - Chains CRUD - insert", function () {
+	QUnit.test("Chains CRUD - insert", function () {
 		base.dbUp();
 
 		var coll = db.collection('test'),
@@ -39,7 +40,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Collection -> CollectionGroup - Chains CRUD - updated", function () {
+	QUnit.test("Chains CRUD - updated", function () {
 		base.dbUp();
 
 		var coll = db.collection('test'),
@@ -65,7 +66,7 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 		base.dbDown();
 	});
 
-	test("Collection -> CollectionGroup - Chains CRUD - remove", function () {
+	QUnit.test("Chains CRUD - remove", function () {
 		base.dbUp();
 
 		var coll = db.collection('test'),

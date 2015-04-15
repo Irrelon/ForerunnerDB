@@ -1,4 +1,83 @@
-test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and update", function() {
+QUnit.module('Triggers');
+QUnit.test("Collection.addTrigger() :: Trigger before insert", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, true, "Insert trigger fired");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.addTrigger() :: Trigger before insert cancel insert", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		// Update the object to indicate the trigger fired
+		newData.triggered = true;
+
+		// Return false to cancel insert operation from the trigger
+		return false;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+
+	var obj = {
+		_id: 1,
+		triggered: false
+	};
+
+	coll.insert(obj);
+
+	var result = coll.find();
+
+	strictEqual(obj.triggered, true, "Trigger fired");
+	strictEqual(result.length, 0, "Didn't Insert");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.addTrigger() :: Trigger after insert", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_AFTER, triggerMethod);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, true, "Insert trigger fired");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.addTrigger() :: Trigger alters data after insert and update", function() {
 	base.dbUp();
 	var coll = db.collection('transformColl').truncate(),
 		triggerMethod;
@@ -48,7 +127,7 @@ test("Triggers - Collection.addTrigger() :: Trigger alters data after insert and
 
 	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_AFTER, triggerMethod);
 	coll.addTrigger('availability', db.TYPE_UPDATE, db.PHASE_AFTER, triggerMethod);
-debugger;
+
 	coll.insert({
 		_id: 1,
 		slots: [{

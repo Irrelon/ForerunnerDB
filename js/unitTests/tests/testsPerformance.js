@@ -1,4 +1,5 @@
-test('Performance - Collection.sort()', function () {
+QUnit.module('Performance');
+QUnit.test('Collection.sort()', function () {
 	base.dbUp();
 	
 	var coll = db.collection('test'),
