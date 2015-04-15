@@ -1,7 +1,15 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
-## Version 1.3.9 (15th April 2015)
+## Version 1.3.10 (15th April 2015)
+#### Warning - API Change Notification Since Version 1.3.10
+The join system has been updated to use "$join" as the key defining a join instead of
+"join". This was done to keep joins in line with the rest of the API that now uses
+the $ symbol when denoting an operation rather than a property. See the Joins section
+of the documentation for examples of correct usage.
+
+Migrating old code should be as simple as searching for instances of "join" and
+replacing with "$join" within ForerunnerDB queries in your application.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
