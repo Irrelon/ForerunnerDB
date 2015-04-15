@@ -524,6 +524,8 @@ arguments:
 |Argument|Data Type|Description|
 |--------------|---------|-----------------------------------------------------|
 |operation|object|Details about the operation being executed. In update operations this also includes *query* and *update* objects which you can modify directly to alter the final update applied.|
+|oldData|object|The data before the operation is executed. In insert triggers this is always a blank object. In update triggers this will represent what the document that *will* be updated currently looks like. You cannot modify this object.|
+|newData|object|The data after the operation is executed. In insert triggers this is the new document being inserted. In update triggers this is what the document being updated *will* look like after the operation is run against it. You can update this object ONLY in *before* phase triggers.|
 
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when
