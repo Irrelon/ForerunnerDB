@@ -500,7 +500,7 @@ The result of the call above is:
 	}]
 
 ## Triggers
-ForerunnerDB currently supports triggers for inserts, updates and deletes at both the
+ForerunnerDB currently supports triggers for inserts and updates at both the
 *before* and *after* operation phases. Triggers that fire on the *before* phase can
 also optionally modify the operation data and actually cancel the operation entirely
 allowing you to provide database-level data validation etc.
