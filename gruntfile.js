@@ -64,7 +64,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-umd');
 
 	grunt.registerTask('postfix', 'Fix code for IE.', function () {
-		var fs = require('fs');
+		var fs = require('fs-extra');
 
 		var code = fs.readFileSync('./js/dist/fdb-all.js', 'utf8');
 
@@ -77,7 +77,9 @@ module.exports = function(grunt) {
 		fs.writeFileSync('./js/dist/fdb-all.js', code);
 
 		// Copy the build file to the tests folder
-		fs.unlinkSync('./js/unitTests/lib/fdb-all.js');
+		if (fs.existsSync('./js/unitTests/lib/fdb-all.js')) {
+			fs.unlinkSync('./js/unitTests/lib/fdb-all.js');
+		}
 		fs.copySync('./js/dist/fdb-all.js', './js/unitTests/lib/fdb-all.js');
 	});
 
