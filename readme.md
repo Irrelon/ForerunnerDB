@@ -1,21 +1,31 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/), a UK registered company.
+ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
+a UK registered company.
 ## Version 1.3.9 (15th April 2015)
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as MongoDB and runs on browsers and Node.js.
+ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
+MongoDB and runs on browsers and Node.js.
 
 ## What is ForerunnerDB's Primary Use Case?
-ForerunnerDB was created primarily to allow web application developers to easily store, query and manipulate JSON data
-in the browser via a simple query language. It provides the ability to store data passed by an API to the front-end and
-query it throughout your application making handling JSON data client-side significantly easier.
+ForerunnerDB was created primarily to allow web application developers to easily
+store, query and manipulate JSON data in the browser via a simple query language.
+It provides the ability to store data passed by an API to the front-end and query
+it throughout your application making handling JSON data client-side significantly
+easier.
 
-Furthermore, if you use the optional data-binding module, changes to your JSON data stored in ForerunnerDB are
-automatically propagated to the DOM. Some web application frameworks provide similar functionality which is why
-data-binding is an optional module.
+Furthermore, if you use the optional data-binding module, changes to your JSON
+data stored in ForerunnerDB are automatically propagated to the DOM. The data
+binding system in ForerunnerDB is state-of-the-art, high performance and supports
+features like partial updates.
 
-Many web applications take data from an API and then represent that on screen to the user. ForerunnerDB allows you to 
-sort that data and filter it so that you don't have to make API calls whenever you want data in a different order or
+Some web application frameworks provide similar functionality which is why
+data-binding is an optional module that you can choose to include on a per-app
+basis as you choose.
+
+Many web applications take data from an API and then represent that on screen
+to the user. ForerunnerDB allows you to sort that data and filter it so that you
+don't have to make API calls whenever you want data in a different order or
 filtered by specific fields and values.
 
 ## Demo
