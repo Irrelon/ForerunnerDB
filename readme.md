@@ -719,7 +719,7 @@ Now we are able to query 100,000 records instantly, requiring zero milliseconds 
 Examining the output from an explain() call will provide you with the most insight into how the query
 was executed and if a table scan was involved or not, helping you to plan your indices accordingly.
 
-Keep in mind that indices require memory to maintain hash tables and there is always a trade-off between
+Keep in mind that indices require memory to maintain and there is always a trade-off between
 speed and memory usage.
 
 ## Data Persistence (Save and Load Between Pages)
