@@ -63,9 +63,23 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks('grunt-umd');
 
+	grunt.registerTask('postfix', 'Fix code for IE.', function () {
+		var fs = require('fs');
+
+		var code = fs.readFileSync('./js/dist/fdb-all.js', 'utf8');
+
+		// Replace code that IE8 will die on
+		code = code.replace(/\.catch\(/g, "['catch'](");
+		code = code.replace(/\.continue\(/g, "['continue'](");
+		code = code.replace(/\.delete\(/g, "['delete'](");
+
+		// Write changes
+		fs.writeFileSync('./js/dist/fdb-all.js', code);
+	});
+
 	grunt.registerTask("0: Check & Build Distribution File", ["jshint", "browserify"]);
 	grunt.registerTask("1: Check Code Cleanliness", ["jshint"]);
-	grunt.registerTask("2: Build Distribution File", ["browserify"]);
+	grunt.registerTask("2: Build Distribution File", ["browserify", "postfix"]);
 	grunt.registerTask("3: Minify Distribution Source", ["uglify"]);
 	grunt.registerTask("4: Run Unit Tests", ["qunit"]);
 	grunt.registerTask("5: Full Build Cycle", ["jshint", "browserify", "uglify", "qunit"]);
