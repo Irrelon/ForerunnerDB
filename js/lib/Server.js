@@ -128,10 +128,10 @@ Server.prototype.isAllowed = function (action, user, data, options, callback) {
 	}
 
 	// Check for join collection permissions
-	if (data.options && data.options.join) {
-		for (var i = 0; i < data.options.join.length; i++) {
-			for (var collName in data.options.join[i]) {
-				if (data.options.join[i].hasOwnProperty(collName)) {
+	if (data.options && data.options.$join) {
+		for (var i = 0; i < data.options.$join.length; i++) {
+			for (var collName in data.options.$join[i]) {
+				if (data.options.$join[i].hasOwnProperty(collName)) {
 					if (collName.substr(0, 1) === "_") {
 						// Check if the user is a root
 						if (!this.hasPermission(user, collName, 'root')) {
