@@ -405,7 +405,7 @@ documents where the price is greater than or equal to 100:
 	});
 
 ### Joins
-Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
+Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "$join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
 
 	var db = new ForerunnerDB(),
 		itemCollection = db.collection('item'),
@@ -446,7 +446,7 @@ Sometimes you want to join two or more collections when running a query and retu
 Now, when we find data from the "item" collection we can grab all the users that ordered that item as well and store them in a key called "purchasedBy":
 
 	itemCollection.find({}, {
-		'join': [{
+		'$join': [{
 			'purchase': {
 				'itemId': '_id',
 				'$as': 'purchasedBy',
@@ -456,7 +456,10 @@ Now, when we find data from the "item" collection we can grab all the users that
 		}]
 	});
 
-The "join" key holds an array of joins to perform, each join object has a key which denotes the collection name to pull data from, then matching criteria which in this case is to match purchase.itemId with the item._id. The three other keys are special operations (start with $) and indicate:
+The "$join" key holds an array of joins to perform, each join object has a key which
+denotes the collection name to pull data from, then matching criteria which in this
+case is to match purchase.itemId with the item._id. The three other keys are special
+operations (start with $) and indicate:
 
 * $as tells the join what object key to store the join results in when returning the document
 * $require is a boolean that denotes if the join must be successful for the item to be returned in the final find result

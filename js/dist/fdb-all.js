@@ -2072,10 +2072,10 @@ Collection.prototype.find = function (query, options) {
 		}
 
 		// Now process any joins on the final data
-		if (options.join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.join[joinCollectionIndex]) {
-					if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+		if (options.$join) {
+			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
+				for (joinCollectionName in options.$join[joinCollectionIndex]) {
+					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 						// Set the key to store the join result in to the collection name by default
 						resultCollectionName = joinCollectionName;
 
@@ -2083,7 +2083,7 @@ Collection.prototype.find = function (query, options) {
 						joinCollectionInstance = this._db.collection(joinCollectionName);
 
 						// Get the match data for the join
-						joinMatch = options.join[joinCollectionIndex][joinCollectionName];
+						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2521,19 +2521,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	}
 
 	// Check for join data
-	if (options.join) {
+	if (options.$join) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.join.length; joinCollectionIndex++) {
+		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.join[joinCollectionIndex]) {
-				if (options.join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+			for (joinCollectionName in options.$join[joinCollectionIndex]) {
+				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
 					joinCollections.push(joinCollectionName);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.join[joinCollectionIndex][joinCollectionName].$as);
+					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
+						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
 					} else {
 						joinCollectionReferences.push(joinCollectionName);
 					}
@@ -8207,7 +8207,7 @@ Shared.finishModule('Rest');
 module.exports = Rest;
 },{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"rest":43,"rest/interceptor/mime":48}],30:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.8',
+	version: '1.3.9',
 	modules: {},
 
 	_synth: {},
