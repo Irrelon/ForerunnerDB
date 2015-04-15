@@ -505,8 +505,11 @@ ForerunnerDB currently supports triggers for inserts and updates at both the
 also optionally modify the operation data and actually cancel the operation entirely
 allowing you to provide database-level data validation etc.
 
-Setting up triggers is very easy. Here is an example of a *before insert* trigger that
-will cancel the insert operation before the data is inserted into the database:
+Setting up triggers is very easy.
+
+### Example: Cancel Operation Before Insert Trigger 
+Here is an example of a *before insert* trigger that will cancel the insert
+operation before the data is inserted into the database:
 
 	var db = new ForerunnerDB(),
     	collection = db.collection('test');
