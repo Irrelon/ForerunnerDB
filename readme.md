@@ -2,6 +2,7 @@
 
 #### Build Test Status
 |Master|Dev|
+|------|---|
 |[![Build Status](https://secure.travis-ci.org/Irrelon/ForerunnerDB.png?branch=master)](http://travis-ci.org/Irrelon/ForerunnerDB)|[![Build Status](https://secure.travis-ci.org/Irrelon/ForerunnerDB.png?branch=dev)](http://travis-ci.org/Irrelon/ForerunnerDB)|
 
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
