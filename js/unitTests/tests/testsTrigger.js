@@ -371,7 +371,6 @@ QUnit.test("Trigger after remove", function() {
 
 	strictEqual(result.length, 1, "Insert");
 
-	debugger;
 	coll.remove({
 		_id: 1
 	});
