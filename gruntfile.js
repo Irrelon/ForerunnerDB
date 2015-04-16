@@ -255,5 +255,5 @@ module.exports = function(grunt) {
 	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
 	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit"]);
 	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("default", ["6: Full Build Cycle"]);
+	grunt.registerTask("default", ["qunit"]);
 };
