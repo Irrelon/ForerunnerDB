@@ -249,13 +249,11 @@ module.exports = function(grunt) {
 		copyFile('fdb-legacy.min.js');
 	});
 
-	grunt.registerTask("0.0: Check & Build Distribution File", ["jshint", "browserify"]);
-	grunt.registerTask("1.0: Check Code Cleanliness", ["jshint"]);
-	grunt.registerTask("2.0: Build Distribution File", ["browserify", "postfix"]);
-	grunt.registerTask("3.0: Minify Distribution Source", ["uglify"]);
-	grunt.registerTask("4.0: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("do postfix", ["postfix"]);
-	grunt.registerTask("do copy", ["copy"]);
-	grunt.registerTask("default", ["qunit"]);
+	grunt.registerTask("1: Check & Build Source File", ["2: Check Code Cleanliness", "3: Build Source File"]);
+	grunt.registerTask("2: Check Code Cleanliness", ["jshint"]);
+	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
+	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
+	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit"]);
+	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("default", ["6: Full Build Cycle"]);
 };
