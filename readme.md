@@ -531,7 +531,7 @@ allowing you to provide database-level data validation etc.
 
 Setting up triggers is very easy.
 
-### Example: Cancel Operation Before Insert Trigger 
+### Example 1: Cancel Operation Before Insert Trigger 
 Here is an example of a *before insert* trigger that will cancel the insert
 operation before the data is inserted into the database:
 
@@ -553,6 +553,38 @@ arguments:
 |operation|object|Details about the operation being executed. In *before update* operations this also includes *query* and *update* objects which you can modify directly to alter the final update applied.|
 |oldData|object|The data before the operation is executed. In insert triggers this is always a blank object. In update triggers this will represent what the document that *will* be updated currently looks like. You cannot modify this object.|
 |newData|object|The data after the operation is executed. In insert triggers this is the new document being inserted. In update triggers this is what the document being updated *will* look like after the operation is run against it. You can update this object ONLY in *before* phase triggers.|
+
+### Example 2: Modify a Document Before Update
+In this example we insert a document into the collection and then update it afterwards.
+When the update operation is run the *before update* trigger is fired and the
+document is modified before the update is applied. This allows you to make changes to
+an operation before the operation is carried out.
+
+	var db = new ForerunnerDB(),
+    	collection = db.collection('test');
+    
+    collection.addTrigger('myTrigger', db.TYPE_UPDATE, db.PHASE_BEFORE, function (operation, oldData, newData) {
+    	newData.updated = String(new Date());
+    });
+    
+    // Insert a document with the property "test" being true
+    collection.insert({test: true});
+    
+    // Now update that document to set "test" to false - this
+    // will fire the trigger code registered above and cause the
+    // final document to have a new property "updated" which
+    // contains the date/time that the update occurred on that
+    // document
+    collection.update({test: true}, {test: false});
+    
+    // Now inspect the document and it will show the "updated"
+    // property that the trigger added!
+    console.log(collection.find());
+
+> Please keep in mind that you can only modify a document's data during a *before*
+phase trigger. Modifications to the document during an *after* phase trigger will
+simply be ignored and will not be applied to the document. This applies for all
+trigger types.
 
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when
