@@ -272,3 +272,114 @@ QUnit.test("Trigger alters data before insert and update", function() {
 
 	base.dbDown();
 });
+
+QUnit.test("Trigger before remove", function() {
+	base.dbUp();
+
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod,
+		triggered,
+		result;
+
+	triggerMethod = function (operation, oldData, newData) {
+		triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_REMOVE, db.PHASE_BEFORE, triggerMethod);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+
+	coll.remove({
+		_id: 1
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 0, "Remove");
+	strictEqual(triggered, true, "Remove trigger fired");
+
+	base.dbDown();
+});
+
+QUnit.test("Trigger before remove cancel operation", function() {
+	base.dbUp();
+
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod,
+		triggered,
+		result;
+
+	triggerMethod = function (operation, oldData, newData) {
+		triggered = true;
+
+		// Return false to cancel operation from the trigger
+		return false;
+	};
+
+	coll.addTrigger('availability', db.TYPE_REMOVE, db.PHASE_BEFORE, triggerMethod);
+
+	var obj = {
+		_id: 1,
+		triggered: false
+	};
+
+	coll.insert(obj);
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+
+	coll.remove({
+		_id: 1
+	});
+
+	result = coll.find();
+
+	strictEqual(triggered, true, "Trigger fired");
+	strictEqual(result.length, 1, "Didn't remove");
+
+	base.dbDown();
+});
+
+QUnit.test("Trigger after remove", function() {
+	base.dbUp();
+
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod,
+		triggered,
+		result;
+
+	triggerMethod = function (operation, oldData, newData) {
+		triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_REMOVE, db.PHASE_AFTER, triggerMethod);
+
+	coll.insert({
+		_id: 1,
+		someData: true
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+
+	debugger;
+	coll.remove({
+		_id: 1
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 0, "Remove");
+	strictEqual(triggered, true, "Remove trigger fired");
+
+	base.dbDown();
+});

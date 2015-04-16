@@ -583,8 +583,8 @@ an operation before the operation is carried out.
 
 > Please keep in mind that you can only modify a document's data during a *before*
 phase trigger. Modifications to the document during an *after* phase trigger will
-simply be ignored and will not be applied to the document. This applies for all
-trigger types.
+simply be ignored and will not be applied to the document. This applies to insert
+and update trigger types. Remove triggers cannot modify the document at any time.
 
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when

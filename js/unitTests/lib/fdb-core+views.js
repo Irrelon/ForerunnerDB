@@ -766,20 +766,17 @@ Collection.prototype.update = function (query, update, options) {
 				// like AFTER the update is processed
 				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) === false) {
-					// The trigger just wants to cancel the operation
-					return false;
-				}
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) !== false) {
+					// No triggers complained so let's execute the replacement of the existing
+					// object with the new one
+					result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
 
-				// No triggers complained so let's execute the replacement of the existing
-				// object with the new one
-				result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
-
-				// NOTE: If for some reason we would only like to fire this event if changes are actually going
-				// to occur on the object from the proposed update then we can add "result &&" to the if
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc) === false) {
-					// The trigger just wants to cancel the operation
-					return false;
+					// NOTE: If for some reason we would only like to fire this event if changes are actually going
+					// to occur on the object from the proposed update then we can add "result &&" to the if
+					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc);
+				} else {
+					// Trigger cancelled operation so tell result that it was not updated
+					result = false;
 				}
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
@@ -1393,7 +1390,11 @@ Collection.prototype.remove = function (query, options, callback) {
 		index,
 		dataItem,
 		arrIndex,
-		returnArr;
+		returnArr,
+		removeMethod,
+		triggerOperation,
+		doc,
+		newDoc;
 
 	if (query instanceof Array) {
 		returnArr = [];
@@ -1409,19 +1410,38 @@ Collection.prototype.remove = function (query, options, callback) {
 		return returnArr;
 	} else {
 		dataSet = this.find(query, {$decouple: false});
-		if (dataSet.length) {
-			// Remove the data from the collection
-			for (var i = 0; i < dataSet.length; i++) {
-				dataItem = dataSet[i];
 
+		if (dataSet.length) {
+			removeMethod = function (dataItem) {
 				// Remove the item from the collection's indexes
-				this._removeFromIndexes(dataItem);
+				self._removeFromIndexes(dataItem);
 
 				// Remove data from internal stores
-				index = this._data.indexOf(dataItem);
-				this._dataRemoveAtIndex(index);
+				index = self._data.indexOf(dataItem);
+				self._dataRemoveAtIndex(index);
+			};
 
-				self.processTrigger(self.TYPE_REMOVE, self.PHASE_AFTER, dataItem, {});
+			// Remove the data from the collection
+			for (var i = 0; i < dataSet.length; i++) {
+				doc = dataSet[i];
+
+				if (self.willTrigger(self.TYPE_REMOVE, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_REMOVE, self.PHASE_AFTER)) {
+					triggerOperation = {
+						type: 'remove'
+					};
+
+					newDoc = self.decouple(doc);
+
+					if (self.processTrigger(triggerOperation, self.TYPE_REMOVE, self.PHASE_BEFORE, newDoc, newDoc) !== false) {
+						// The trigger didn't ask to cancel so execute the removal method
+						removeMethod(doc);
+
+						self.processTrigger(triggerOperation, self.TYPE_REMOVE, self.PHASE_AFTER, newDoc, newDoc);
+					}
+				} else {
+					// No triggers to execute
+					removeMethod(doc);
+				}
 			}
 
 			//op.time('Resolve chains');
@@ -1651,21 +1671,19 @@ Collection.prototype._insert = function (doc, index) {
 					type: 'insert'
 				};
 
-				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) === false) {
+				if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_BEFORE, {}, doc) !== false) {
+					insertMethod(doc);
+
+					if (self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
+						// Clone the doc so that the programmer cannot update the internal document
+						// on the "after" phase trigger
+						newDoc = self.decouple(doc);
+
+						self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, newDoc);
+					}
+				} else {
 					// The trigger just wants to cancel the operation
 					return false;
-				}
-
-				insertMethod(doc);
-				if (self.willTrigger(self.TYPE_INSERT, self.PHASE_AFTER)) {
-					// Clone the doc so that the programmer cannot update the internal document
-					// on the "after" phase trigger
-					newDoc = self.decouple(doc);
-
-					if (self.processTrigger(triggerOperation, self.TYPE_INSERT, self.PHASE_AFTER, {}, newDoc) === false) {
-						// The trigger just wants to cancel the operation
-						return false;
-					}
 				}
 			} else {
 				// No triggers to execute
