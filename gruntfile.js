@@ -17,9 +17,15 @@ module.exports = function(grunt) {
 		},
 
 		qunit: {
-			"ForerunnerDB": {
+			"source": {
 				"src": [
-					"js/unitTests/index.html"
+					"js/unitTests/source.html"
+				]
+			},
+
+			"minified": {
+				"src": [
+					"js/unitTests/minified.html"
 				]
 			}
 		},
@@ -101,13 +107,43 @@ module.exports = function(grunt) {
 						[ "browserify-derequire" ]
 					]
 				}
-			},
+			}
 		},
 
 		"uglify": {
 			"all": {
 				"files": {
 					"./js/dist/fdb-all.min.js": ["./js/dist/fdb-all.js"]
+				}
+			},
+
+			"autobind": {
+				"files": {
+					"./js/dist/fdb-autobind.min.js": ["./js/dist/fdb-autobind.js"]
+				}
+			},
+
+			"core": {
+				"files": {
+					"./js/dist/fdb-core.min.js": ["./js/dist/fdb-core.js"]
+				}
+			},
+
+			"core+views": {
+				"files": {
+					"./js/dist/fdb-core+views.min.js": ["./js/dist/fdb-core+views.js"]
+				}
+			},
+
+			"core+persist": {
+				"files": {
+					"./js/dist/fdb-core+persist.min.js": ["./js/dist/fdb-core+persist.js"]
+				}
+			},
+
+			"legacy": {
+				"files": {
+					"./js/dist/fdb-legacy.min.js": ["./js/dist/fdb-legacy.js"]
 				}
 			}
 		},
@@ -183,7 +219,7 @@ module.exports = function(grunt) {
 			}
 
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
-		}
+		};
 
 		fixFile('fdb-all.js');
 		fixFile('fdb-core.js');
@@ -192,12 +228,31 @@ module.exports = function(grunt) {
 		fixFile('fdb-legacy.js');
 	});
 
+	grunt.registerTask('copy', 'Copy final minified files to test lib.', function () {
+		var fs = require('fs-extra');
+
+		var copyFile = function (file) {
+			// Copy the build file to the tests folder
+			if (fs.existsSync('./js/unitTests/lib/' + file)) {
+				fs.unlinkSync('./js/unitTests/lib/' + file);
+			}
+
+			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
+		};
+
+		copyFile('fdb-all.min.js');
+		copyFile('fdb-core.min.js');
+		copyFile('fdb-core+persist.min.js');
+		copyFile('fdb-core+views.min.js');
+		copyFile('fdb-legacy.min.js');
+	});
+
 	grunt.registerTask("0.0: Check & Build Distribution File", ["jshint", "browserify"]);
 	grunt.registerTask("1.0: Check Code Cleanliness", ["jshint"]);
 	grunt.registerTask("2.0: Build Distribution File", ["browserify", "postfix"]);
 	grunt.registerTask("3.0: Minify Distribution Source", ["uglify"]);
-	grunt.registerTask("4.0: Run Unit Tests", ["qunit"]);
-	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "qunit"]);
+	grunt.registerTask("4.0: Run Unit Tests", ["copy", "qunit"]);
+	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "qunit", "copy"]);
 	grunt.registerTask("do postfix", ["postfix"]);
 	grunt.registerTask("default", ["qunit"]);
 };

@@ -5517,7 +5517,7 @@ Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":20}],20:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.10',
+	version: '1.3.11',
 	modules: {},
 
 	_synth: {},

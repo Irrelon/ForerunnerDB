@@ -8207,7 +8207,7 @@ Shared.finishModule('Rest');
 module.exports = Rest;
 },{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"rest":43,"rest/interceptor/mime":48}],30:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.10',
+	version: '1.3.11',
 	modules: {},
 
 	_synth: {},

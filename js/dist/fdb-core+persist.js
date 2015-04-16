@@ -6178,7 +6178,7 @@ Shared.finishModule('Persist');
 module.exports = Persist;
 },{"./Collection":2,"./CollectionGroup":3,"./Shared":22,"localforage":30}],22:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.10',
+	version: '1.3.11',
 	modules: {},
 
 	_synth: {},
