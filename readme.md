@@ -1,6 +1,6 @@
 # ForerunnerDB - A NoSQL JSON Document DB
 
-[[https://secure.travis-ci.org/Irrelon/ForerunnerDB.png?branch=master|width=90px]]
+<img src="https://secure.travis-ci.org/Irrelon/ForerunnerDB.png?branch=master" width="90" />
 
 #### Build Test Status
 |Master|Dev|
