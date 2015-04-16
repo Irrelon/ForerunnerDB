@@ -1,4 +1,4 @@
-# ForerunnerDB - A NoSQL JSON Document DB
+# ForerunnerDB - A NoSQL JSON Document DB [![Build Status](https://secure.travis-ci.org/Irrelon/ForerunnerDB.png?branch=master)](http://travis-ci.org/Irrelon/ForerunnerDB)
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 ## Version 1.3.10 (15th April 2015)
