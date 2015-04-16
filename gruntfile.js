@@ -223,6 +223,7 @@ module.exports = function(grunt) {
 
 		fixFile('fdb-all.js');
 		fixFile('fdb-core.js');
+		fixFile('fdb-autobind.js');
 		fixFile('fdb-core+persist.js');
 		fixFile('fdb-core+views.js');
 		fixFile('fdb-legacy.js');
@@ -241,6 +242,7 @@ module.exports = function(grunt) {
 		};
 
 		copyFile('fdb-all.min.js');
+		copyFile('fdb-autobind.min.js');
 		copyFile('fdb-core.min.js');
 		copyFile('fdb-core+persist.min.js');
 		copyFile('fdb-core+views.min.js');
@@ -252,7 +254,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("2.0: Build Distribution File", ["browserify", "postfix"]);
 	grunt.registerTask("3.0: Minify Distribution Source", ["uglify"]);
 	grunt.registerTask("4.0: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "qunit", "copy"]);
+	grunt.registerTask("5.0: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("do postfix", ["postfix"]);
+	grunt.registerTask("do copy", ["copy"]);
 	grunt.registerTask("default", ["qunit"]);
 };
