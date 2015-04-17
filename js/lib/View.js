@@ -398,6 +398,26 @@ View.prototype.emit = function () {
 };
 
 /**
+ * Find the distinct values for a specified field across a single collection and
+ * returns the results in an array.
+ * @param {String} key The field path to return distinct values for e.g. "person.name".
+ * @param {Object=} query The query to use to filter the documents used to return values from.
+ * @param {Object=} options The query options to use when running the query.
+ * @returns {Array}
+ */
+View.prototype.distinct = function (key, query, options) {
+	return this._privateData.distinct.apply(this._privateData, arguments);
+};
+
+/**
+ * Gets the primary key for this view from the assigned collection.
+ * @returns {String}
+ */
+View.prototype.primaryKey = function () {
+	return this._privateData.primaryKey();
+};
+
+/**
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
@@ -462,14 +482,6 @@ View.prototype.db = function (db) {
 	}
 
 	return this._db;
-};
-
-/**
- * Gets the primary key for this view from the assigned collection.
- * @returns {String}
- */
-View.prototype.primaryKey = function () {
-	return this._privateData.primaryKey();
 };
 
 /**
