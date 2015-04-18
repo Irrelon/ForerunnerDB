@@ -344,6 +344,8 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
 			this._grid = this._grid || [];
 			this._grid.push(grid);
 
+			this._db._grid[selector] = grid;
+
 			return grid;
 		} else {
 			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
@@ -364,6 +366,8 @@ Collection.prototype.unGrid = View.prototype.unGrid = function (selector, templa
 	if (this._db && this._db._grid ) {
 		if (this._db._grid[selector]) {
 			var grid = this._db._grid[selector];
+			delete this._db._grid[selector];
+
 			return grid.drop();
 		} else {
 			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
