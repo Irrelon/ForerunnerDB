@@ -249,11 +249,50 @@ module.exports = function(grunt) {
 		copyFile('fdb-legacy.min.js');
 	});
 
+	grunt.registerTask('version', 'Increments the current version by a revision', function () {
+		var fs = require('fs-extra'),
+			packageJson,
+			versionString,
+			oldVersion,
+			versionArr,
+			revision,
+			fileData;
+
+		fileData = fs.readFileSync('./package.json', {encoding: 'utf8'});
+		packageJson = JSON.parse(fileData);
+
+		versionString = packageJson.version;
+		oldVersion = versionString;
+		versionArr = versionString.split('.');
+		revision = parseInt(versionArr[2], 10);
+
+		// Increment revision number
+		revision++;
+
+		// Create new string
+		versionArr[2] = String(revision);
+		versionString = versionArr.join('.');
+
+		// Save JSON
+		fileData = fileData.replace(oldVersion, versionString);
+		fs.writeFileSync('./package.json', fileData);
+
+		// Search project files for old version and replace
+		fileData = fs.readFileSync('./js/lib/Shared.js', {encoding: 'utf8'});
+		fileData = fileData.replace(oldVersion, versionString);
+		fs.writeFileSync('./js/lib/Shared.js', fileData);
+
+		fileData = fs.readFileSync('./readme.md', {encoding: 'utf8'});
+		fileData = fileData.replace(oldVersion, versionString);
+		fs.writeFileSync('./readme.md', fileData);
+	});
+
 	grunt.registerTask("1: Check & Build Source File", ["2: Check Code Cleanliness", "3: Build Source File"]);
 	grunt.registerTask("2: Check Code Cleanliness", ["jshint"]);
 	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
 	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
 	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("6: Full Build Cycle", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+
 	grunt.registerTask("default", ["qunit"]);
 };
