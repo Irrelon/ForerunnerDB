@@ -669,7 +669,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					// Loop the array and find matches to our search
 					for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0])) {
+						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], '', {})) {
 							tmpArray.push(tmpIndex);
 						}
 					}
@@ -768,7 +768,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i])) {
+									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
 										tmpArray.push(tmpIndex);
 									}
 								}
@@ -907,7 +907,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Array) {
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i])) {
+									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
 										var moveToIndex = update.$index;
 
 										if (moveToIndex !== undefined) {
@@ -1729,8 +1729,9 @@ Collection.prototype.find = function (query, options) {
 		resultRemove = [],
 		index,
 		i,
+		matcherTmpOptions = {},
 		matcher = function (doc) {
-			return self._match(doc, query, 'and');
+			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
 
 	op.start();

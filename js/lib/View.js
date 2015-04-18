@@ -152,13 +152,13 @@ View.prototype.from = function (collection) {
 						filteredData = [];
 
 						for (i = 0; i < data.length; i++) {
-							if (self._privateData._match(data[i], self._querySettings.query, 'and')) {
+							if (self._privateData._match(data[i], self._querySettings.query, 'and', {})) {
 								filteredData.push(data[i]);
 								doSend = true;
 							}
 						}
 					} else {
-						if (self._privateData._match(data, self._querySettings.query, 'and')) {
+						if (self._privateData._match(data, self._querySettings.query, 'and', {})) {
 							filteredData = data;
 							doSend = true;
 						}

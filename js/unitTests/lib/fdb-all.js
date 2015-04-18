@@ -950,7 +950,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					// Loop the array and find matches to our search
 					for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0])) {
+						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], '', {})) {
 							tmpArray.push(tmpIndex);
 						}
 					}
@@ -1049,7 +1049,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i])) {
+									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
 										tmpArray.push(tmpIndex);
 									}
 								}
@@ -1188,7 +1188,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Array) {
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i])) {
+									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
 										var moveToIndex = update.$index;
 
 										if (moveToIndex !== undefined) {
@@ -2010,8 +2010,9 @@ Collection.prototype.find = function (query, options) {
 		resultRemove = [],
 		index,
 		i,
+		matcherTmpOptions = {},
 		matcher = function (doc) {
-			return self._match(doc, query, 'and');
+			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
 
 	op.start();
@@ -4287,19 +4288,75 @@ Grid.prototype.refresh = function () {
 			// Clear the container
 			elem.html('');
 
-			if (this._from.orderBy) {
+			if (self._from.orderBy) {
 				// Remove listeners
 				elem.off('click', '[data-grid-sort]', clickListener);
 			}
 
+			if (self._from.query) {
+				// Remove listeners
+				elem.off('click', '[data-grid-filter]', clickListener);
+			}
+
 			// Auto-bind the data to the grid template
-			this._from.link(this._selector, this.template(), {
+			self._from.link(self._selector, self.template(), {
 				wrap: 'gridRow'
 			});
 
-			if (this._from.orderBy) {
+			// Check if the data source (collection or view) has an
+			// orderBy method (usually only views) and if so activate
+			// the sorting system
+			if (self._from.orderBy) {
 				// Listen for sort requests
 				elem.on('click', '[data-grid-sort]', clickListener);
+			}
+
+			if (self._from.query) {
+				// Listen for filter requests
+				elem.find('[data-grid-filter]').each(function (index, filterElem) {
+					filterElem = $(filterElem);
+
+					var filterField = filterElem.attr('data-grid-filter'),
+						title = filterElem.html(),
+						data,
+						dropDown,
+						template,
+						filterId = self._db.objectId(),
+						filterView = self._db.view('tmpGridFilter_' + filterId),
+						i;
+
+					filterView
+						.query({
+							$distinct: {
+								firstName: 1
+							}
+						})
+						.from(self._from);
+
+					template = [
+						'<div class="dropdown">',
+						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
+						title + ' <span class="caret"></span>',
+						'</button>',
+						'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">',
+						'</ul>',
+						'</div>'
+					];
+
+					dropDown = $(template.join(''));
+					filterElem.html(dropDown);
+
+					// Data-link the underlying data to the grid filter drop-down
+					filterView.link(dropDown.find('ul'), {
+						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#">{{:' + filterField + '}}</a></li>{{/for}}'
+					}, {
+						wrap: 'options'
+					});
+				});
+
+				elem.on('click', '.gridTableFilterDrop', function () {
+
+				});
 			}
 		} else {
 			throw('Grid requires the AutoBind module in order to operate!');
@@ -4329,6 +4386,26 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
 			return grid;
 		} else {
 			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
+		}
+	}
+};
+
+/**
+ * Removes a grid safely from the DOM. Must be called when grid is
+ * no longer required / is being removed from DOM otherwise references
+ * will stick around and cause memory leaks.
+ * @param {String} selector jQuery selector of grid output target.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Collection.prototype.unGrid = View.prototype.unGrid = function (selector, template, options) {
+	if (this._db && this._db._grid ) {
+		if (this._db._grid[selector]) {
+			var grid = this._db._grid[selector];
+			return grid.drop();
+		} else {
+			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
 		}
 	}
 };
@@ -4379,6 +4456,24 @@ Core.prototype.init = function () {
  * @returns {*}
  */
 Core.prototype.grid = function (selector, template, options) {
+	if (!this._grid[selector]) {
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log('Core.Grid: Creating grid ' + selector);
+		}
+	}
+
+	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
+	return this._grid[selector];
+};
+
+/**
+ * Gets a grid by it's name.
+ * @param {String} selector The jQuery selector of the grid to retrieve.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Core.prototype.unGrid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Core.Grid: Creating grid ' + selector);
@@ -6277,10 +6372,12 @@ var Matching = {
 	 * @param {*} test The test object or value to test with.
 	 * @param {String=} opToApply The special operation to apply to the test such
 	 * as 'and' or an 'or' operator.
+	 * @param {Object=} options An object containing options to apply to the
+	 * operation such as limiting the fields returned etc.
 	 * @returns {Boolean} True if the test was positive, false on negative.
 	 * @private
 	 */
-	_match: function (source, test, opToApply) {
+	_match: function (source, test, opToApply, options) {
 		// TODO: This method is quite long, break into smaller pieces
 		var operation,
 			applyOp,
@@ -6291,6 +6388,8 @@ var Matching = {
 			matchedAll = true,
 			opResult,
 			i;
+
+		options = options || {};
 
 		// Check if the comparison data are both strings or numbers
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
@@ -6317,7 +6416,7 @@ var Matching = {
 					// Check if the property starts with a dollar (function)
 					if (i.substr(0, 1) === '$') {
 						// Ask the _matchOp method to handle the operation
-						opResult = this._matchOp(i, source, test[i]);
+						opResult = this._matchOp(i, source, test[i], options);
 
 						// Check the result of the matchOp operation
 						// If the result is -1 then no operation took place, otherwise the result
@@ -6364,7 +6463,7 @@ var Matching = {
 									// match is found
 									recurseVal = false;
 									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp, options);
 
 										if (recurseVal) {
 											// One of the array items matched the query so we can
@@ -6387,7 +6486,7 @@ var Matching = {
 									recurseVal = false;
 
 									for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
-										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp);
+										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp, options);
 
 										if (recurseVal) {
 											// One of the array items matched the query so we can
@@ -6405,7 +6504,7 @@ var Matching = {
 									}
 								} else if (typeof(source) === 'object') {
 									// Recurse down the object tree
-									recurseVal = this._match(source[i], test[i], applyOp);
+									recurseVal = this._match(source[i], test[i], applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6415,7 +6514,7 @@ var Matching = {
 										matchedAll = false;
 									}
 								} else {
-									recurseVal = this._match(undefined, test[i], applyOp);
+									recurseVal = this._match(undefined, test[i], applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6429,7 +6528,7 @@ var Matching = {
 								// First check if the test match is an $exists
 								if (test[i] && test[i].$exists !== undefined) {
 									// Push the item through another match recurse
-									recurseVal = this._match(undefined, test[i], applyOp);
+									recurseVal = this._match(undefined, test[i], applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6455,7 +6554,7 @@ var Matching = {
 								// match is found
 								recurseVal = false;
 								for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-									recurseVal = this._match(source[i][tmpIndex], test[i], applyOp);
+									recurseVal = this._match(source[i][tmpIndex], test[i], applyOp, options);
 
 									if (recurseVal) {
 										// One of the array items matched the query so we can
@@ -6493,10 +6592,11 @@ var Matching = {
 	 * matching against.
 	 * @param {*} source The source data to match the query against.
 	 * @param {*} test The query to match the source against.
+	 * @param {Object=} options An options object.
 	 * @returns {*}
 	 * @private
 	 */
-	_matchOp: function (key, source, test) {
+	_matchOp: function (key, source, test, options) {
 		// Check for commands
 		switch (key) {
 			case '$gt':
@@ -6525,7 +6625,7 @@ var Matching = {
 			case '$or':
 				// Match true on ANY check to pass
 				for (var orIndex = 0; orIndex < test.length; orIndex++) {
-					if (this._match(source, test[orIndex], 'and')) {
+					if (this._match(source, test[orIndex], 'and', options)) {
 						return true;
 					}
 				}
@@ -6535,7 +6635,7 @@ var Matching = {
 			case '$and':
 				// Match true on ALL checks to pass
 				for (var andIndex = 0; andIndex < test.length; andIndex++) {
-					if (!this._match(source, test[andIndex], 'and')) {
+					if (!this._match(source, test[andIndex], 'and', options)) {
 						return false;
 					}
 				}
@@ -6543,7 +6643,7 @@ var Matching = {
 				return true;
 
 			case '$in': // In
-						// Check that the in test is an array
+				// Check that the in test is an array
 				if (test instanceof Array) {
 					var inArr = test,
 						inArrCount = inArr.length,
@@ -6578,6 +6678,29 @@ var Matching = {
 				} else {
 					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
 				}
+				break;
+
+			case '$distinct':
+				// Ensure options holds an distinct lookup
+				options.distinctLookup = options.distinctLookup || {};
+
+				for (var distinctProp in test) {
+					if (test.hasOwnProperty(distinctProp)) {
+						options.distinctLookup[distinctProp] = options.distinctLookup[distinctProp] || {};
+						// Check if the options distinct lookup has this field's value
+						if (options.distinctLookup[distinctProp][source[distinctProp]]) {
+							// Value is already in use
+							return false;
+						} else {
+							// Set the value in the lookup
+							options.distinctLookup[distinctProp][source[distinctProp]] = true;
+
+							// Allow the item in the results
+							return true;
+						}
+					}
+				}
+				break;
 		}
 
 		return -1;
@@ -8634,13 +8757,13 @@ View.prototype.from = function (collection) {
 						filteredData = [];
 
 						for (i = 0; i < data.length; i++) {
-							if (self._privateData._match(data[i], self._querySettings.query, 'and')) {
+							if (self._privateData._match(data[i], self._querySettings.query, 'and', {})) {
 								filteredData.push(data[i]);
 								doSend = true;
 							}
 						}
 					} else {
-						if (self._privateData._match(data, self._querySettings.query, 'and')) {
+						if (self._privateData._match(data, self._querySettings.query, 'and', {})) {
 							filteredData = data;
 							doSend = true;
 						}
@@ -8880,6 +9003,26 @@ View.prototype.emit = function () {
 };
 
 /**
+ * Find the distinct values for a specified field across a single collection and
+ * returns the results in an array.
+ * @param {String} key The field path to return distinct values for e.g. "person.name".
+ * @param {Object=} query The query to use to filter the documents used to return values from.
+ * @param {Object=} options The query options to use when running the query.
+ * @returns {Array}
+ */
+View.prototype.distinct = function (key, query, options) {
+	return this._privateData.distinct.apply(this._privateData, arguments);
+};
+
+/**
+ * Gets the primary key for this view from the assigned collection.
+ * @returns {String}
+ */
+View.prototype.primaryKey = function () {
+	return this._privateData.primaryKey();
+};
+
+/**
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
@@ -8944,14 +9087,6 @@ View.prototype.db = function (db) {
 	}
 
 	return this._db;
-};
-
-/**
- * Gets the primary key for this view from the assigned collection.
- * @returns {String}
- */
-View.prototype.primaryKey = function () {
-	return this._privateData.primaryKey();
 };
 
 /**

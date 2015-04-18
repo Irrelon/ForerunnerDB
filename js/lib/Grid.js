@@ -249,19 +249,75 @@ Grid.prototype.refresh = function () {
 			// Clear the container
 			elem.html('');
 
-			if (this._from.orderBy) {
+			if (self._from.orderBy) {
 				// Remove listeners
 				elem.off('click', '[data-grid-sort]', clickListener);
 			}
 
+			if (self._from.query) {
+				// Remove listeners
+				elem.off('click', '[data-grid-filter]', clickListener);
+			}
+
 			// Auto-bind the data to the grid template
-			this._from.link(this._selector, this.template(), {
+			self._from.link(self._selector, self.template(), {
 				wrap: 'gridRow'
 			});
 
-			if (this._from.orderBy) {
+			// Check if the data source (collection or view) has an
+			// orderBy method (usually only views) and if so activate
+			// the sorting system
+			if (self._from.orderBy) {
 				// Listen for sort requests
 				elem.on('click', '[data-grid-sort]', clickListener);
+			}
+
+			if (self._from.query) {
+				// Listen for filter requests
+				elem.find('[data-grid-filter]').each(function (index, filterElem) {
+					filterElem = $(filterElem);
+
+					var filterField = filterElem.attr('data-grid-filter'),
+						title = filterElem.html(),
+						data,
+						dropDown,
+						template,
+						filterId = self._db.objectId(),
+						filterView = self._db.view('tmpGridFilter_' + filterId),
+						i;
+
+					filterView
+						.query({
+							$distinct: {
+								firstName: 1
+							}
+						})
+						.from(self._from);
+
+					template = [
+						'<div class="dropdown">',
+						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
+						title + ' <span class="caret"></span>',
+						'</button>',
+						'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">',
+						'</ul>',
+						'</div>'
+					];
+
+					dropDown = $(template.join(''));
+					filterElem.html(dropDown);
+
+					// Data-link the underlying data to the grid filter drop-down
+					filterView.link(dropDown.find('ul'), {
+						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#">{{:' + filterField + '}}</a></li>{{/for}}'
+					}, {
+						wrap: 'options'
+					});
+				});
+
+				elem.on('click', '.gridTableFilterDrop', function () {
+
+				});
 			}
 		} else {
 			throw('Grid requires the AutoBind module in order to operate!');
@@ -291,6 +347,26 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
 			return grid;
 		} else {
 			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
+		}
+	}
+};
+
+/**
+ * Removes a grid safely from the DOM. Must be called when grid is
+ * no longer required / is being removed from DOM otherwise references
+ * will stick around and cause memory leaks.
+ * @param {String} selector jQuery selector of grid output target.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Collection.prototype.unGrid = View.prototype.unGrid = function (selector, template, options) {
+	if (this._db && this._db._grid ) {
+		if (this._db._grid[selector]) {
+			var grid = this._db._grid[selector];
+			return grid.drop();
+		} else {
+			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
 		}
 	}
 };
@@ -341,6 +417,24 @@ Core.prototype.init = function () {
  * @returns {*}
  */
 Core.prototype.grid = function (selector, template, options) {
+	if (!this._grid[selector]) {
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log('Core.Grid: Creating grid ' + selector);
+		}
+	}
+
+	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
+	return this._grid[selector];
+};
+
+/**
+ * Gets a grid by it's name.
+ * @param {String} selector The jQuery selector of the grid to retrieve.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Core.prototype.unGrid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Core.Grid: Creating grid ' + selector);

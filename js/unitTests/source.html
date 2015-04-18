@@ -4,6 +4,10 @@
 	<meta charset="utf-8">
 	<title>Unit Tests</title>
 	<link rel="stylesheet" href="css/qunit.css" />
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
 	<script src="./lib/polyfiller.js"></script>
 	<script src="./lib/jquery-1.11.0.min.js"></script>
 
@@ -11,6 +15,13 @@
 	<script src="./lib/fdb-autobind.js"></script>
 	<script src="./lib/qunit.js"></script>
 	<script src="./lib/highcharts-all.js"></script>
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<!-- Include the plugin's CSS and JS: -->
+	<script type="text/javascript" src="./lib/multiselect/js/bootstrap-multiselect.js"></script>
+	<link rel="stylesheet" href="./lib/multiselect/css/bootstrap-multiselect.css" type="text/css"/>
 </head>
 <body>
 	<div id="qunit"></div>
@@ -41,31 +52,37 @@
 	<!--<script src="tests/testsPaging.js"></script>-->
 
 	<script type="text/x-jsrender" id="gridTable">
-		<table class="gridTable">
-			<thead class="gridHead">
-				<tr>
-					<td data-grid-sort="firstName">First Name</td>
-					<td data-grid-sort="lastName">Last Name</td>
-					<td data-grid-sort="age">Age</td>
-				</tr>
-			</thead>
-			<tbody class="gridBody">
-				{^{for gridRow}}
-				<tr data-link="id{:_id}">
-					<td>{^{:firstName}}</td>
-					<td>{^{:lastName}}</td>
-					<td>{^{:age}}</td>
-				</tr>
-				{^{/for}}
-			</tbody>
-			<tfoot>
-				<tr>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			</tfoot>
-		</table>
+		<div class="container" role="main">
+			<div class="table-responsive">
+				<div class="gridContainer"></div>
+
+				<table class="table table-striped gridTable">
+					<thead class="gridHead">
+						<tr>
+							<td data-grid-filter="firstName">First Name</td>
+							<td data-grid-sort="lastName">Last Name</td>
+							<td data-grid-sort="age">Age</td>
+						</tr>
+					</thead>
+					<tbody class="gridBody">
+						{^{for gridRow}}
+						<tr data-link="id{:_id}">
+							<td>{^{:firstName}}</td>
+							<td>{^{:lastName}}</td>
+							<td>{^{:age}}</td>
+						</tr>
+						{^{/for}}
+					</tbody>
+					<tfoot>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
 	</script>
 </body>
 </html>
