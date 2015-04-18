@@ -6174,7 +6174,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":23}],23:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.11',
+	version: '1.3.12',
 	modules: {},
 
 	_synth: {},
