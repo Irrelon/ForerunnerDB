@@ -1058,6 +1058,43 @@ Example:
 > Dropping a chart will remove it from the DOM and stop all further collection updates from propagating
 to Highcharts.
 
+# Special Considerations
+## Queries
+Queries are made up of properties in an object. ForerunnerDB handles some properties
+differently from others. Specifically properties that start with a dollar symbol ($)
+or two slashes (//) will be treated as special cases.
+
+### The Dollar Symbol
+Properties that start with a dollar symbol are treated as *modifiers*. These are not
+handled in the same way as normal properties. Examples of modifier properties are:
+
+	$or
+	$and
+	$in
+
+These modifier properties allow you to indicate special operations to perform during
+your query.
+
+### The Double-Slash
+Properties that start with a double-slash are treated as comments and ignored during
+the query process. An example would be where you wish to store some data in the query
+object but you do not want it to affect the outcome of the query.
+
+	// Find documents that have a property "num" that equals 1:
+	db.collection('test').find({
+		'num': 1
+	});
+	
+	// Find documents that have a property "num" that equals 1
+	// -- this is exactly the same query as above because the //myData
+	// property is ignored completely
+	db.collection('test').find({
+		'num': 1,
+		'//myData': {
+			'someProp': 134223
+		}
+	});
+
 # Development
 
 ## Unit Tests
