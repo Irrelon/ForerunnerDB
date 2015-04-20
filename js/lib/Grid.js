@@ -278,6 +278,7 @@ Grid.prototype.refresh = function () {
 					filterElem = $(filterElem);
 
 					var filterField = filterElem.attr('data-grid-filter'),
+						filterObj = {},
 						title = filterElem.html(),
 						data,
 						dropDown,
@@ -286,11 +287,11 @@ Grid.prototype.refresh = function () {
 						filterView = self._db.view('tmpGridFilter_' + filterId),
 						i;
 
+					filterObj[filterField] = 1;
+
 					filterView
 						.query({
-							$distinct: {
-								firstName: 1
-							}
+							$distinct: filterObj
 						})
 						.from(self._from);
 

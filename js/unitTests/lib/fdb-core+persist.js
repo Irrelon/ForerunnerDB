@@ -4964,18 +4964,18 @@ var Matching = {
 
 			case '$distinct':
 				// Ensure options holds an distinct lookup
-				options.distinctLookup = options.distinctLookup || {};
+				options.$rootQuery['//distinctLookup'] = options.$rootQuery['//distinctLookup'] || {};
 
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.distinctLookup[distinctProp] = options.distinctLookup[distinctProp] || {};
+						options.$rootQuery['//distinctLookup'][distinctProp] = options.$rootQuery['//distinctLookup'][distinctProp] || {};
 						// Check if the options distinct lookup has this field's value
-						if (options.distinctLookup[distinctProp][source[distinctProp]]) {
+						if (options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.distinctLookup[distinctProp][source[distinctProp]] = true;
+							options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]] = true;
 
 							// Allow the item in the results
 							return true;

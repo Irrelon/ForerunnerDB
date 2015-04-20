@@ -1635,7 +1635,7 @@ QUnit.test("Collection.find() :: $distinct clause", function() {
 		}
 	});
 
-	strictEqual(result.length, 2, 'Check correct result number');
+	strictEqual(result.length, 2, 'Check correct $distinct query result number');
 	strictEqual(result[0].test, 1, 'Check correct result 1');
 	strictEqual(result[1].test, 2, 'Check correct result 2');
 

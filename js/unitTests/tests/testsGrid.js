@@ -24,7 +24,7 @@ ForerunnerDB.moduleLoaded('Grid', function () {
 			age: 15
 		}, {
 			firstName: 'Jim',
-			lastName: 'Franks',
+			lastName: 'Monsoon',
 			age: 34
 		}, {
 			firstName: 'Tilly',
@@ -34,6 +34,10 @@ ForerunnerDB.moduleLoaded('Grid', function () {
 			firstName: 'Arbit',
 			lastName: 'Frogsbottom',
 			age: 63
+		}, {
+			firstName: 'Fred',
+			lastName: 'Frogsbottom',
+			age: 62
 		}]);
 
 		ok(grid, 'Grid active');
