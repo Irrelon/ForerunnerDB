@@ -214,11 +214,15 @@ View.prototype.from = function (collection) {
 						// Return true to stop further propagation of the chain packet
 						return true;
 					} else {
+						// Returning false informs the chain reactor to continue propagation
+						// of the chain packet down the graph tree
 						return false;
 					}
 				}
 			}
 
+			// Returning false informs the chain reactor to continue propagation
+			// of the chain packet down the graph tree
 			return false;
 		});
 
