@@ -292,7 +292,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
 	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
 	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("6: Full Build Cycle", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
