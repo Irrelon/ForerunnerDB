@@ -4914,9 +4914,16 @@ var Matching = {
 			testType = typeof test,
 			matchedAll = true,
 			opResult,
+			substringCache,
 			i;
 
 		options = options || {};
+
+		// Check if options currently holds a root query object
+		if (!options.$rootQuery) {
+			// Root query not assigned, hold the root query
+			options.$rootQuery = test;
+		}
 
 		// Check if the comparison data are both strings or numbers
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
@@ -4940,8 +4947,16 @@ var Matching = {
 					// Reset operation flag
 					operation = false;
 
+					substringCache = i.substr(0, 2);
+
+					// Check if the property is a comment (ignorable)
+					if (substringCache === '//') {
+						// Skip this property
+						continue;
+					}
+
 					// Check if the property starts with a dollar (function)
-					if (i.substr(0, 1) === '$') {
+					if (substringCache.indexOf('$') === 0) {
 						// Ask the _matchOp method to handle the operation
 						opResult = this._matchOp(i, source, test[i], options);
 
@@ -6174,7 +6189,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":23}],23:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.13',
+	version: '1.3.14',
 	modules: {},
 
 	_synth: {},
@@ -6525,11 +6540,15 @@ View.prototype.from = function (collection) {
 						// Return true to stop further propagation of the chain packet
 						return true;
 					} else {
+						// Returning false informs the chain reactor to continue propagation
+						// of the chain packet down the graph tree
 						return false;
 					}
 				}
 			}
 
+			// Returning false informs the chain reactor to continue propagation
+			// of the chain packet down the graph tree
 			return false;
 		});
 
