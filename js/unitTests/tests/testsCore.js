@@ -1617,3 +1617,27 @@ QUnit.test("Collection.setData() :: Drop a collection and then set data against 
 
 	base.dbDown();
 });
+
+QUnit.test("Collection.find() :: $distinct clause", function() {
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result;
+
+	coll.setData([{'test': 1}, {'test': 1}, {'test': 2}]);
+
+	strictEqual(coll.find().length, 3, 'Check data inserted correctly');
+
+	// Run distinct query
+	result = coll.find({
+		$distinct: {
+			test: 1
+		}
+	});
+
+	strictEqual(result.length, 2, 'Check correct result number');
+	strictEqual(result[0].test, 1, 'Check correct result 1');
+	strictEqual(result[1].test, 2, 'Check correct result 2');
+
+	base.dbDown();
+});
