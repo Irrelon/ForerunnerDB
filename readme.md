@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-#### Build Test Status
+#### TravisCI Build Test Status
 <table>
 <tr>
 <th>Master</th>
