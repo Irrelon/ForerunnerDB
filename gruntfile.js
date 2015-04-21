@@ -4,6 +4,13 @@ var util = require('util'),
 	derequire = require('derequire');
 
 module.exports = function(grunt) {
+	grunt.loadNpmTasks('grunt-contrib-qunit');
+	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-uglify');
+	grunt.loadNpmTasks("grunt-browserify");
+	grunt.loadNpmTasks('grunt-qunit-blanket-lcov');
+	grunt.loadNpmTasks('grunt-umd');
+
 	grunt.initConfig({
 		"jshint": {
 			"ForerunnerDB": {
@@ -27,6 +34,16 @@ module.exports = function(grunt) {
 				"src": [
 					"js/unitTests/minified.html"
 				]
+			}
+		},
+
+		"qunit_blanket_lcov": {
+			"lib": {
+				"src": "js/unitTests/lib/fdb-all.js",
+				"options": {
+					"dest": "coverage/fdb-all.lcov",
+					force: true
+				}
 			}
 		},
 
@@ -193,12 +210,6 @@ module.exports = function(grunt) {
 		}
 	});
 
-	grunt.loadNpmTasks('grunt-contrib-qunit');
-	grunt.loadNpmTasks('grunt-contrib-jshint');
-	grunt.loadNpmTasks('grunt-contrib-uglify');
-	grunt.loadNpmTasks("grunt-browserify");
-	grunt.loadNpmTasks('grunt-umd');
-
 	grunt.registerTask('postfix', 'Fix code for IE.', function () {
 		var fs = require('fs-extra');
 
@@ -291,7 +302,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("2: Check Code Cleanliness", ["jshint"]);
 	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
 	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
-	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit"]);
+	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
 	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 
