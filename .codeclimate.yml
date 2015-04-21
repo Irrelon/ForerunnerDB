@@ -1,0 +1,7 @@
+exclude_paths:
+- js/dist/**/*.js
+- js/builds/**/*.js
+- js/unitTests/**/*.js
+- js/useTests/**/*.js
+- js/lib/vendor/**/*.js
+- node_modules/**/*.js
