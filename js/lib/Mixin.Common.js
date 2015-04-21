@@ -81,7 +81,7 @@ Common = {
 	 * @param {Boolean} val The value to set debug flag to.
 	 * @return {Boolean} True if enabled, false otherwise.
 	 */
-	debug: Overload([
+	debug: new Overload([
 		function () {
 			return this._debug && this._debug.all;
 		},

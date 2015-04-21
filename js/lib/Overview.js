@@ -5,7 +5,7 @@ var Shared,
 	Core,
 	CoreInit,
 	Collection,
-	Document;
+	DbDocument;
 
 Shared = require('./Shared');
 
@@ -17,7 +17,7 @@ Overview.prototype.init = function (name) {
 	var self = this;
 
 	this._name = name;
-	this._data = new Document('__FDB__dc_data_' + this._name);
+	this._data = new DbDocument('__FDB__dc_data_' + this._name);
 	this._collData = new Collection();
 	this._collections = [];
 
@@ -34,7 +34,7 @@ Shared.mixin(Overview.prototype, 'Mixin.Triggers');
 Shared.mixin(Overview.prototype, 'Mixin.Events');
 
 Collection = require('./Collection');
-Document = require('./Document');
+DbDocument = require('./Document');
 Core = Shared.modules.Core;
 CoreInit = Shared.modules.Core.prototype.init;
 

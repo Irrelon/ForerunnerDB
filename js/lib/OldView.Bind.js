@@ -113,7 +113,7 @@ OldView.prototype.isBound = function (selector) {
  * elements should be in based on the order they are in, in the array.
  */
 OldView.prototype.bindSortDom = function (selector, itemArr) {
-	var container = $(selector),
+	var container = window.jQuery(selector),
 		arrIndex,
 		arrItem,
 		domItem;
@@ -189,11 +189,11 @@ OldView.prototype.bindRefresh = function (obj) {
 OldView.prototype.bindRender = function (bindSelector, domHandler) {
 	// Check the bind exists
 	var bind = this._binds[bindSelector],
-		domTarget = $(bindSelector),
+		domTarget = window.jQuery(bindSelector),
 		allData,
 		dataItem,
 		itemHtml,
-		finalHtml = $('<ul></ul>'),
+		finalHtml = window.jQuery('<ul></ul>'),
 		bindCallback,
 		i;
 
@@ -306,7 +306,7 @@ OldView.prototype._bindChange = function (newDataArr) {
 };
 
 OldView.prototype._bindInsert = function (selector, options, successArr, failArr, all) {
-	var container = $(selector),
+	var container = window.jQuery(selector),
 		itemElem,
 		itemHtml,
 		makeCallback,
@@ -346,7 +346,7 @@ OldView.prototype._bindInsert = function (selector, options, successArr, failArr
 };
 
 OldView.prototype._bindUpdate = function (selector, options, successArr, failArr, all) {
-	var container = $(selector),
+	var container = window.jQuery(selector),
 		itemElem,
 		makeCallback,
 		i;
@@ -387,7 +387,7 @@ OldView.prototype._bindUpdate = function (selector, options, successArr, failArr
 };
 
 OldView.prototype._bindRemove = function (selector, options, successArr, failArr, all) {
-	var container = $(selector),
+	var container = window.jQuery(selector),
 		itemElem,
 		makeCallback,
 		i;

@@ -20,7 +20,7 @@ Persist = function () {
 Persist.prototype.init = function (db) {
 	// Check environment
 	if (db.isClient()) {
-		if (Storage !== undefined) {
+		if (window.Storage !== undefined) {
 			this.mode('localforage');
 			localforage.config({
 				driver: [

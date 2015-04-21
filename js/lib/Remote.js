@@ -138,7 +138,7 @@ var Remote = function (db) {
 Remote.prototype.connect = function (url, callback) {
 	var self = this;
 
-	self._socket = io.connect(url);
+	self._socket = window.io.connect(url);
 	self._socket.on('connect', function () {
 		self.connected(true);
 	});

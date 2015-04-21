@@ -34,7 +34,7 @@ Core.prototype.init = function (name) {
 	this._debug = {};
 };
 
-Core.prototype.moduleLoaded = Overload({
+Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
 	 * @param {String} moduleName The name of the module to check for.

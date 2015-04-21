@@ -283,6 +283,11 @@ Collection.prototype.setData = function (data, options, callback) {
  * @private
  */
 Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	options = options || {
+		$ensureKeys: undefined,
+		$violationCheck: undefined
+	};
+
 	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
 		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
@@ -618,8 +623,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var oldDoc = this.decouple(doc),
-		updated = false,
+	//var oldDoc = this.decouple(doc),
+	var	updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -1852,13 +1857,13 @@ Collection.prototype.find = function (query, options) {
 												joinRequire = joinMatch[joinMatchIndex];
 												break;
 
-											default:
+											/*default:
 												// Check for a double-dollar which is a back-reference to the root collection item
 												if (joinMatchIndex.substr(0, 3) === '$$.') {
 													// Back reference
 													// TODO: Support complex joins
 												}
-												break;
+												break;*/
 										}
 									} else {
 										// TODO: Could optimise this by caching path objects

@@ -20,7 +20,7 @@ var Highchart = function (collection, options) {
 
 Highchart.prototype.init = function (collection, options) {
 	this._options = options;
-	this._selector = jQuery(this._options.selector);
+	this._selector = window.jQuery(this._options.selector);
 
 	if (!this._selector[0]) {
 		throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart target element does not exist via selector: ' + this._options.selector);
@@ -57,16 +57,16 @@ Highchart.prototype.init = function (collection, options) {
 					enabled: true,
 					format: '<b>{point.name}</b>: {y} ({point.percentage:.0f}%)',
 					style: {
-						color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+						color: (window.Highcharts.theme && window.Highcharts.theme.contrastTextColor) || 'black'
 					}
 				}
 			};
 
 			chartData = this.pieDataFromCollectionData(data, this._options.keyField, this._options.valField);
 
-			jQuery.extend(seriesObj, this._options.seriesOptions);
+			window.jQuery.extend(seriesObj, this._options.seriesOptions);
 
-			jQuery.extend(seriesObj, {
+			window.jQuery.extend(seriesObj, {
 				name: this._options.seriesName,
 				data: chartData
 			});

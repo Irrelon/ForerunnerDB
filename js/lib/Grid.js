@@ -225,7 +225,7 @@ Grid.prototype.template = function (template) {
 };
 
 Grid.prototype._sortGridClick = function (e) {
-	var sortColText = $(e.currentTarget).attr('data-grid-sort') || '',
+	var sortColText = window.jQuery(e.currentTarget).attr('data-grid-sort') || '',
 		sortCols = sortColText.split(','),
 		sortObj = {},
 		i;
@@ -244,7 +244,7 @@ Grid.prototype.refresh = function () {
 	if (this._from) {
 		if (this._from.link) {
 			var self = this,
-				elem = $(this._selector),
+				elem = window.jQuery(this._selector),
 				clickListener = function () {
 					self._sortGridClick.apply(self, arguments);
 				};
@@ -278,7 +278,7 @@ Grid.prototype.refresh = function () {
 			if (self._from.query) {
 				// Listen for filter requests
 				elem.find('[data-grid-filter]').each(function (index, filterElem) {
-					filterElem = $(filterElem);
+					filterElem = window.jQuery(filterElem);
 
 					var filterField = filterElem.attr('data-grid-filter'),
 						filterObj = {},
@@ -307,7 +307,7 @@ Grid.prototype.refresh = function () {
 						'</div>'
 					];
 
-					dropDown = $(template.join(''));
+					dropDown = window.jQuery(template.join(''));
 					filterElem.html(dropDown);
 
 					// Data-link the underlying data to the grid filter drop-down
@@ -321,7 +321,7 @@ Grid.prototype.refresh = function () {
 						e.preventDefault();
 						var queryObj = {};
 
-						queryObj[filterField] = $(this).attr('data-val');
+						queryObj[filterField] = window.jQuery(this).attr('data-val');
 						//filterView.update(queryObj, {active: 1});
 
 						self._from.queryAdd(queryObj);

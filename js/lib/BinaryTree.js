@@ -117,7 +117,7 @@ var BinarySearchTree = function(orderBy) {
 	var i, keyData;
 
 	// TODO when added to the main system, use shared ref to module
-	this.pathSolver = new ForerunnerDB.shared.modules.Path();
+	this.pathSolver = new window.ForerunnerDB.shared.modules.Path();
 
 	this._orderKeys = this.pathSolver.parseArr(orderBy);
 	this._orderKeyData = [];
@@ -127,7 +127,7 @@ var BinarySearchTree = function(orderBy) {
 		keyData = {
 			key: this._orderKeys[i],
 			dir: this.pathSolver.get(orderBy, this._orderKeys[i]),
-			pathSolver: new ForerunnerDB.shared.modules.Path(this._orderKeys[i])
+			pathSolver: new window.ForerunnerDB.shared.modules.Path(this._orderKeys[i])
 		};
 
 		this._orderKeyData.push(keyData);
@@ -135,7 +135,7 @@ var BinarySearchTree = function(orderBy) {
 	}
 };
 
-ForerunnerDB.shared.mixin(BinarySearchTree.prototype, 'Mixin.Matching');
+window.ForerunnerDB.shared.mixin(BinarySearchTree.prototype, 'Mixin.Matching');
 
 BinarySearchTree.prototype._sort = function (a, b) {
 	var aVal,
