@@ -1664,3 +1664,23 @@ QUnit.test("Collection.find() :: // Comment properties", function() {
 
 	base.dbDown();
 });
+
+QUnit.test('Collection.find() :: $orderBy with blank object', function () {
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	try {
+		coll.find({}, {
+			$orderBy: {}
+		});
+
+		err = false;
+	} catch (e) {
+		err = true;
+	}
+
+	strictEqual(err, true, 'The call produced no error');
+
+	base.dbDown();
+});
