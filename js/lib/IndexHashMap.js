@@ -241,8 +241,7 @@ IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
 };
 
 IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
-	var id = obj[this._collection.primaryKey()],
-		crObj;
+	var id = obj[this._collection.primaryKey()];
 
 	delete this._crossRef[id];
 };
@@ -321,7 +320,7 @@ IndexHashMap.prototype._itemKeyHash = function (item, keys) {
 IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
-		hash = '',
+		//hash = '',
 		hashArr = [],
 		valArr,
 		i, k, j;

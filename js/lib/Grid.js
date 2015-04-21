@@ -133,7 +133,7 @@ Grid.prototype.remove = function () {
  * @returns {Grid}
  */
 Grid.prototype.from = function (collection) {
-	var self = this;
+	//var self = this;
 
 	if (collection !== undefined) {
 		// Check if we have an existing from
@@ -283,7 +283,6 @@ Grid.prototype.refresh = function () {
 					var filterField = filterElem.attr('data-grid-filter'),
 						filterObj = {},
 						title = filterElem.html(),
-						data,
 						dropDown,
 						template,
 						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);

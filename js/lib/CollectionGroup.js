@@ -15,10 +15,10 @@ var CollectionGroup = function () {
 CollectionGroup.prototype.init = function (name) {
 	var self = this;
 
-	this._name = name;
-	this._data = new Collection('__FDB__cg_data_' + this._name);
-	this._collections = [];
-	this._view = [];
+	self._name = name;
+	self._data = new Collection('__FDB__cg_data_' + self._name);
+	self._collections = [];
+	self._view = [];
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
@@ -74,7 +74,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
 		if (this._collections.indexOf(collection) === -1) {
-			var self = this;
+			//var self = this;
 
 			// Check for compatible primary keys
 			if (this._collections.length) {

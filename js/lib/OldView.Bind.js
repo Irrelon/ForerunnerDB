@@ -252,9 +252,9 @@ OldView.prototype.processQueue = function (type, callback) {
 };
 
 OldView.prototype._bindEvent = function (type, successArr, failArr) {
-	var queue = this._deferQueue[type],
+	/*var queue = this._deferQueue[type],
 		deferThreshold = this._deferThreshold[type],
-		deferTime = this._deferTime[type];
+		deferTime = this._deferTime[type];*/
 
 	var binds = this._binds,
 		unfilteredDataSet = this.find({}),

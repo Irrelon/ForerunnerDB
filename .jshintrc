@@ -2,5 +2,22 @@
 	"browserify": true,
 	"node": true,
 	"white": true,
-	"onevar": true
+	"onevar": true,
+	"nonew": true,
+	"jquery": true,
+	"curly": true,
+	"latedef": true,
+	"unused": "vars",
+	"noarg": true,
+	"white": true,
+	"forin": true,
+	"noempty": true,
+	"node": true,
+	"eqeqeq": true,
+	"strict": true,
+	"undef": true,
+	"bitwise": true,
+	"onevar": true,
+	"browser": true,
+	"camelcase": true
 }

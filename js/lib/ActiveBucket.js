@@ -5,8 +5,7 @@
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
  */
-var Shared = require('./Shared'),
-	Path = require('./Path');
+var Shared = require('./Shared');
 
 /**
  * The active bucket class.

@@ -262,7 +262,7 @@ IndexBinaryTree.prototype._itemKeyHash = function (item, keys) {
 IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
-		hash = '',
+		//hash = '',
 		hashArr = [],
 		valArr,
 		i, k, j;

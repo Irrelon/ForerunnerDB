@@ -258,15 +258,15 @@ View.prototype.ensureIndex = function () {
 };
 
 View.prototype._chainHandler = function (chainPacket) {
-	var self = this,
+	var //self = this,
 		arr,
 		count,
 		index,
 		insertIndex,
-		tempData,
-		dataIsArray,
+		//tempData,
+		//dataIsArray,
 		updates,
-		finalUpdates,
+		//finalUpdates,
 		primaryKey,
 		tQuery,
 		item,

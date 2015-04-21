@@ -345,7 +345,7 @@ BinarySearchTree.prototype.depthFirstSearch = function(searchValue) {
 	return this;
 };
 
-BinarySearchTree.prototype.breadthFirstTraversal = function() {
+/*BinarySearchTree.prototype.breadthFirstTraversal = function() {
 	console.log("Breadth First Traversal");
 
 	// For our intensive purposes,
@@ -357,7 +357,7 @@ BinarySearchTree.prototype.breadthFirstTraversal = function() {
 		queue.push(current);
 	}
 
-	// start off enqueing root
+	// start off enqueuing root
 	while(queue.length > 0) {
 		var tempNode = queue.shift();
 		console.log(tempNode.key); // Visit current node
@@ -369,7 +369,7 @@ BinarySearchTree.prototype.breadthFirstTraversal = function() {
 		}
 	}
 	return this;
-};
+};*/
 
 BinarySearchTree.prototype.inOrderTraversal = function(){
 	this.root.inorderTraversal();

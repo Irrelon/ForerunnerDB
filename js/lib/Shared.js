@@ -1,7 +1,7 @@
 "use strict";
 
 var Shared = {
-	version: '1.3.17',
+	version: '1.3.18',
 	modules: {},
 
 	_synth: {},

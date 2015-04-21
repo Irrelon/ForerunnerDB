@@ -636,10 +636,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		tmpArray,
 		tmpIndex,
 		tmpCount,
+		tempIndex,
 		pathInstance,
 		sourceIsArray,
 		updateIsArray,
-		i, k;
+		i;
 
 	// Loop each key in the update object
 	for (i in update) {
@@ -883,7 +884,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + k + ')');
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -896,7 +897,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 							// Check that the target key is an array
 							if (doc[i] instanceof Array) {
-								var tempIndex = update.$index;
+								tempIndex = update.$index;
 
 								if (tempIndex !== undefined) {
 									delete update.$index;
@@ -1135,7 +1136,6 @@ Collection.prototype.remove = function (query, options, callback) {
 	var self = this,
 		dataSet,
 		index,
-		dataItem,
 		arrIndex,
 		returnArr,
 		removeMethod,
@@ -1154,6 +1154,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
+		if (callback) { callback(false, returnArr); }
 		return returnArr;
 	} else {
 		dataSet = this.find(query, {$decouple: false});
@@ -1205,6 +1206,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
+		if (callback) { callback(false, dataSet); }
 		return dataSet;
 	}
 };
@@ -1312,10 +1314,10 @@ Collection.prototype.insert = function (data, index, callback) {
  * objects to insert into the collection.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
-	var self = this,
+	var //self = this,
 		queue = this._deferQueue.insert,
 		deferThreshold = this._deferThreshold.insert,
-		deferTime = this._deferTime.insert,
+		//deferTime = this._deferTime.insert,
 		inserted = [],
 		failed = [],
 		insertResult,
@@ -1720,7 +1722,7 @@ Collection.prototype.find = function (query, options) {
 	var op = this._metrics.create('find'),
 		self = this,
 		analysis,
-		finalQuery,
+		//finalQuery,
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
@@ -2707,10 +2709,10 @@ var CollectionGroup = function () {
 CollectionGroup.prototype.init = function (name) {
 	var self = this;
 
-	this._name = name;
-	this._data = new Collection('__FDB__cg_data_' + this._name);
-	this._collections = [];
-	this._view = [];
+	self._name = name;
+	self._data = new Collection('__FDB__cg_data_' + self._name);
+	self._collections = [];
+	self._view = [];
 };
 
 Shared.addModule('CollectionGroup', CollectionGroup);
@@ -2766,7 +2768,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
 		if (this._collections.indexOf(collection) === -1) {
-			var self = this;
+			//var self = this;
 
 			// Check for compatible primary keys
 			if (this._collections.length) {
@@ -3658,7 +3660,7 @@ IndexBinaryTree.prototype._itemKeyHash = function (item, keys) {
 IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
-		hash = '',
+		//hash = '',
 		hashArr = [],
 		valArr,
 		i, k, j;
@@ -3930,8 +3932,7 @@ IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
 };
 
 IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
-	var id = obj[this._collection.primaryKey()],
-		crObj;
+	var id = obj[this._collection.primaryKey()];
 
 	delete this._crossRef[id];
 };
@@ -4010,7 +4011,7 @@ IndexHashMap.prototype._itemKeyHash = function (item, keys) {
 IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	var path = new Path(),
 		pathData,
-		hash = '',
+		//hash = '',
 		hashArr = [],
 		valArr,
 		i, k, j;
@@ -4934,7 +4935,7 @@ var Matching = {
 				return (source === undefined) !== test;
 
 			case '$ne': // Not equals
-				return source != test;
+				return source != test; // jshint ignore:line
 
 			case '$or':
 				// Match true on ANY check to pass
@@ -5393,7 +5394,7 @@ var Overload = function (def) {
 					} else {
 						// A * was found, generate the different signatures that this
 						// definition could represent
-						signatures = generateSignaturePermutations(defNewKey);
+						signatures = this.generateSignaturePermutations(defNewKey);
 
 						for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
 							if (!tmpDef[signatures[sigIndex]]) {
@@ -5474,7 +5475,7 @@ var Overload = function (def) {
  * @param {String} str Signature string with a wildcard in it.
  * @returns {Array} An array of signature strings that are generated.
  */
-var generateSignaturePermutations = function (str) {
+Overload.prototype.generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
 		types = ['string', 'object', 'number', 'function', 'undefined'],
@@ -5486,7 +5487,7 @@ var generateSignaturePermutations = function (str) {
 		// would be significantly slower
 		for (index = 0; index < types.length; index++) {
 			newSignature = str.replace('*', types[index]);
-			signatures = signatures.concat(generateSignaturePermutations(newSignature));
+			signatures = signatures.concat(this.generateSignaturePermutations(newSignature));
 		}
 	} else {
 		signatures.push(str);
@@ -6286,7 +6287,7 @@ module.exports = Persist;
 "use strict";
 
 var Shared = {
-	version: '1.3.17',
+	version: '1.3.18',
 	modules: {},
 
 	_synth: {},

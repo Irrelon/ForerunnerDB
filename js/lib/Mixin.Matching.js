@@ -270,7 +270,7 @@ var Matching = {
 				return (source === undefined) !== test;
 
 			case '$ne': // Not equals
-				return source != test;
+				return source != test; // jshint ignore:line
 
 			case '$or':
 				// Match true on ANY check to pass

@@ -31,7 +31,7 @@ var Overload = function (def) {
 					} else {
 						// A * was found, generate the different signatures that this
 						// definition could represent
-						signatures = generateSignaturePermutations(defNewKey);
+						signatures = this.generateSignaturePermutations(defNewKey);
 
 						for (sigIndex = 0; sigIndex < signatures.length; sigIndex++) {
 							if (!tmpDef[signatures[sigIndex]]) {
@@ -112,7 +112,7 @@ var Overload = function (def) {
  * @param {String} str Signature string with a wildcard in it.
  * @returns {Array} An array of signature strings that are generated.
  */
-var generateSignaturePermutations = function (str) {
+Overload.prototype.generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
 		types = ['string', 'object', 'number', 'function', 'undefined'],
@@ -124,7 +124,7 @@ var generateSignaturePermutations = function (str) {
 		// would be significantly slower
 		for (index = 0; index < types.length; index++) {
 			newSignature = str.replace('*', types[index]);
-			signatures = signatures.concat(generateSignaturePermutations(newSignature));
+			signatures = signatures.concat(this.generateSignaturePermutations(newSignature));
 		}
 	} else {
 		signatures.push(str);

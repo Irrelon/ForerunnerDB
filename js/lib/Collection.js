@@ -630,10 +630,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		tmpArray,
 		tmpIndex,
 		tmpCount,
+		tempIndex,
 		pathInstance,
 		sourceIsArray,
 		updateIsArray,
-		i, k;
+		i;
 
 	// Loop each key in the update object
 	for (i in update) {
@@ -877,7 +878,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + k + ')');
+								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -890,7 +891,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 							// Check that the target key is an array
 							if (doc[i] instanceof Array) {
-								var tempIndex = update.$index;
+								tempIndex = update.$index;
 
 								if (tempIndex !== undefined) {
 									delete update.$index;
@@ -1129,7 +1130,6 @@ Collection.prototype.remove = function (query, options, callback) {
 	var self = this,
 		dataSet,
 		index,
-		dataItem,
 		arrIndex,
 		returnArr,
 		removeMethod,
@@ -1148,6 +1148,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
+		if (callback) { callback(false, returnArr); }
 		return returnArr;
 	} else {
 		dataSet = this.find(query, {$decouple: false});
@@ -1199,6 +1200,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
+		if (callback) { callback(false, dataSet); }
 		return dataSet;
 	}
 };
@@ -1306,10 +1308,10 @@ Collection.prototype.insert = function (data, index, callback) {
  * objects to insert into the collection.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
-	var self = this,
+	var //self = this,
 		queue = this._deferQueue.insert,
 		deferThreshold = this._deferThreshold.insert,
-		deferTime = this._deferTime.insert,
+		//deferTime = this._deferTime.insert,
 		inserted = [],
 		failed = [],
 		insertResult,
@@ -1714,7 +1716,7 @@ Collection.prototype.find = function (query, options) {
 	var op = this._metrics.create('find'),
 		self = this,
 		analysis,
-		finalQuery,
+		//finalQuery,
 		scanLength,
 		requiresTableScan = true,
 		resultArr,

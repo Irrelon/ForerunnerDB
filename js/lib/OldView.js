@@ -148,7 +148,7 @@ OldView.prototype.from = function (collection) {
 };
 
 OldView.prototype.addFrom = function (collection) {
-	var self = this;
+	//var self = this;
 
 	this._from = collection;
 

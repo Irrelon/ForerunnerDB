@@ -1,3 +1,4 @@
+/* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
 
@@ -6,7 +7,7 @@ if (!Array.prototype.filter) {
 		}
 
 		var t = Object(this);
-		var len = t.length >>> 0;
+		var len = t.length >>> 0; // jshint ignore:line
 		if (typeof fun !== 'function') {
 			throw new TypeError();
 		}
@@ -67,7 +68,7 @@ if (!Array.prototype.indexOf) {
 		// 2. Let lenValue be the result of calling the Get
 		//    internal method of O with the argument "length".
 		// 3. Let len be ToUint32(lenValue).
-		var len = O.length >>> 0;
+		var len = O.length >>> 0; // jshint ignore:line
 
 		// 4. If len is 0, return -1.
 		if (len === 0) {
