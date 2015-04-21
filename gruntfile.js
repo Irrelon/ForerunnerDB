@@ -20,6 +20,9 @@ module.exports = function(grunt) {
 						'!js/lib/vendor/*.js'
 					]
 				}
+			},
+			options: {
+				jshintrc: '.jshintrc'
 			}
 		},
 
