@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.

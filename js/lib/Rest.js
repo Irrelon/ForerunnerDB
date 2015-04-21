@@ -1,6 +1,15 @@
+"use strict";
+
 var Shared = require('./Shared'),
 	RestClient = require('rest'),
-	mime = require('rest/interceptor/mime');
+	mime = require('rest/interceptor/mime'),
+	Core,
+	Collection,
+	CollectionDrop,
+	CollectionGroup,
+	CollectionInit,
+	CoreInit,
+	Overload;
 
 var Rest = function () {
 	this.init.apply(this, arguments);

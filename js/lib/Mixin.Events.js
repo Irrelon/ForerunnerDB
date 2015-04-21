@@ -1,3 +1,5 @@
+"use strict";
+
 var Overload = require('./Overload');
 
 var Events = {

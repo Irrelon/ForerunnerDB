@@ -1,3 +1,5 @@
+"use strict";
+
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.

@@ -1,3 +1,5 @@
+"use strict";
+
 var idCounter = 0,
 	Overload = require('./Overload'),
 	Common;

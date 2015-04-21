@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -12,8 +14,7 @@ var Shared = require('./Shared'),
  * @constructor
  */
 var ActiveBucket = function (orderBy) {
-	var sortKey,
-		bucketData;
+	var sortKey;
 
 	this._primaryKey = '_id';
 	this._keyArr = [];

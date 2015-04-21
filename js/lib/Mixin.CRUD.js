@@ -1,3 +1,5 @@
+"use strict";
+
 var CRUD = {
 	preSetData: function () {
 		

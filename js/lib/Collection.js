@@ -1,3 +1,5 @@
+"use strict";
+
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update

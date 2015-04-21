@@ -1,4 +1,6 @@
-var Node = function(tree, key, value) {
+"use strict";
+
+var TreeNode = function(tree, key, value) {
 	this.tree = tree;
 	this.key = key;
 	this.data = [value];
@@ -7,7 +9,7 @@ var Node = function(tree, key, value) {
 	return this;
 };
 
-Node.prototype.insert = function(newNode) {
+TreeNode.prototype.insert = function(newNode) {
 	var result = this.tree._sort(newNode.key, this.key);
 
 	if(result === -1) {
@@ -27,7 +29,7 @@ Node.prototype.insert = function(newNode) {
 	}
 };
 
-Node.prototype.search = function (query, resultObj) {
+TreeNode.prototype.search = function (query, resultObj) {
 	var result = this.tree._operationCompare(query, this.key);
 
 	// Increment node visit count
@@ -63,7 +65,7 @@ Node.prototype.search = function (query, resultObj) {
 	}
 };
 
-Node.prototype.depthFirstSearch = function(search) {
+TreeNode.prototype.depthFirstSearch = function(search) {
 	var result = this.tree._sort(search, this.key);
 	console.log(search, ":", this.key);
 
@@ -81,7 +83,7 @@ Node.prototype.depthFirstSearch = function(search) {
 };
 
 
-Node.prototype.inorderTraversal = function() {
+TreeNode.prototype.inorderTraversal = function() {
 	if(this.left !== null) {
 		this.left.inorderTraversal();
 	}
@@ -91,7 +93,7 @@ Node.prototype.inorderTraversal = function() {
 	}
 };
 
-Node.prototype.preOrderTraversal = function() {
+TreeNode.prototype.preOrderTraversal = function() {
 	console.log(this.key);
 	if(this.left !== null) {
 		this.left.preOrderTraversal();
@@ -101,7 +103,7 @@ Node.prototype.preOrderTraversal = function() {
 	}
 };
 
-Node.prototype.postOrderTraversal = function() {
+TreeNode.prototype.postOrderTraversal = function() {
 	if(this.left !== null) {
 		this.left.postOrderTraversal();
 	}
@@ -322,16 +324,16 @@ BinarySearchTree.prototype.objKey = function (obj) {
 
 BinarySearchTree.prototype.insert = function(insert) {
 	if (!this.root) {
-		if(insert instanceof Node) {
+		if(insert instanceof TreeNode) {
 			this.root = insert;
 		} else {
-			this.root = new Node(this, this.objKey(insert), insert);
+			this.root = new TreeNode(this, this.objKey(insert), insert);
 		}
 	} else {
-		if (insert instanceof Node) {
+		if (insert instanceof TreeNode) {
 			this.root.insert(insert);
 		} else {
-			this.root.insert(new Node(this, this.objKey(insert), insert));
+			this.root.insert(new TreeNode(this, this.objKey(insert), insert));
 		}
 	}
 

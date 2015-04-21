@@ -1,3 +1,5 @@
+"use strict";
+
 // Extend the Collection class to handle remote calls
 var Shared = require('./Shared'),
 	Collection = require('./Collection'),

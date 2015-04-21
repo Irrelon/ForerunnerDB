@@ -8,6 +8,8 @@
  Please visit the license page to see latest license information:
  http://www.forerunnerdb.com/licensing.html
  */
+"use strict";
+
 var Shared,
 	Collection,
 	Metrics,

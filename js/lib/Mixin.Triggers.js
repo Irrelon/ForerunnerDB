@@ -1,3 +1,5 @@
+"use strict";
+
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,

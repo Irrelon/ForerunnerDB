@@ -1,3 +1,5 @@
+"use strict";
+
 // Grab the view class
 var Shared,
 	Core,

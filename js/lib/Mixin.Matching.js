@@ -1,3 +1,5 @@
+"use strict";
+
 var Matching = {
 	/**
 	 * Internal method that checks a document against a test object.

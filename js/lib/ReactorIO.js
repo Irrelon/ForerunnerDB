@@ -1,3 +1,5 @@
+"use strict";
+
 var Shared = require('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {

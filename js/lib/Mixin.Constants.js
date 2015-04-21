@@ -1,3 +1,5 @@
+"use strict";
+
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,

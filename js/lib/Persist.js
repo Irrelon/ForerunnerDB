@@ -1,3 +1,5 @@
+"use strict";
+
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = require('./Shared'),

@@ -1,3 +1,5 @@
+"use strict";
+
 var Shared = require('./Shared'),
 	Core,
 	DBInit;

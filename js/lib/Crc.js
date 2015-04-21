@@ -1,3 +1,5 @@
+"use strict";
+
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;

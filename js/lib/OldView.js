@@ -1,3 +1,5 @@
+"use strict";
+
 // Import external names locally
 var Shared,
 	Core,

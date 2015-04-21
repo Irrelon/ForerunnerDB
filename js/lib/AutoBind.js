@@ -1,9 +1,11 @@
+"use strict";
+
 /**
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements
  * from jsViews (jsRender) templates.
  */
-var Shared = ForerunnerDB.shared,
+var Shared = window.ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
@@ -114,8 +116,6 @@ AutoBind.extendCollection = function (Module) {
 		} else {
 			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
-
-		return this;
 	};
 
 	/**
@@ -389,7 +389,7 @@ AutoBind.extendCollection = function (Module) {
 				}
 
 				if (index > -1) {
-					jQuery.observable(arr).remove(index);
+					jQuery.observable(doc).remove(index);
 					updated = true;
 				}
 			}
@@ -649,10 +649,10 @@ if (typeof jQuery !== 'undefined') {
 
 		Shared.finishModule('AutoBind');
 	} else {
-		throw('ForerunnerDB.AutoBind "' + this.name() + '": Plugin cannot continue because jsViews is not loaded. Check your error log for url errors; it should have automatically loaded with this plugin.');
+		throw('ForerunnerDB.AutoBind : Plugin cannot continue because jsViews is not loaded. Check your error log for url errors; it should have automatically loaded with this plugin.');
 	}
 } else {
-	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+	throw('ForerunnerDB.AutoBind : Cannot data-bind without jQuery. Please add jQuery to your page!');
 }
 
 Shared.finishModule('AutoBind');

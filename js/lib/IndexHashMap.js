@@ -1,3 +1,5 @@
+"use strict";
+
 var Shared = require('./Shared'),
 	Path = require('./Path');
 

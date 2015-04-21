@@ -1,3 +1,5 @@
+"use strict";
+
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
