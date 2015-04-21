@@ -66,6 +66,7 @@ Grid.prototype.init = function (selector, template, options) {
 	this._template = template;
 	this._options = options;
 	this._debug = {};
+	this._id = this.objectId();
 
 	this._collectionDroppedWrap = function () {
 		self._collectionDropped.apply(self, arguments);
@@ -283,9 +284,7 @@ Grid.prototype.refresh = function () {
 						data,
 						dropDown,
 						template,
-						filterId = self._db.objectId(),
-						filterView = self._db.view('tmpGridFilter_' + filterId),
-						i;
+						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
 
 					filterObj[filterField] = 1;
 
@@ -293,10 +292,11 @@ Grid.prototype.refresh = function () {
 						.query({
 							$distinct: filterObj
 						})
+						.orderBy(filterObj)
 						.from(self._from);
 
 					template = [
-						'<div class="dropdown">',
+						'<div class="dropdown" id="' + self._id + '_' + filterField + '">',
 						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
 						title + ' <span class="caret"></span>',
 						'</button>',
@@ -310,14 +310,20 @@ Grid.prototype.refresh = function () {
 
 					// Data-link the underlying data to the grid filter drop-down
 					filterView.link(dropDown.find('ul'), {
-						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#">{{:' + filterField + '}}</a></li>{{/for}}'
+						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-val="{{:' + filterField + '}}">{^{if active}}<span class="glyphicons glyphicons-tick"></span> {{/if}}{{:' + filterField + '}}</a></li>{{/for}}'
 					}, {
 						wrap: 'options'
 					});
-				});
 
-				elem.on('click', '.gridTableFilterDrop', function () {
+					elem.on('click', '#' + self._id + '_' + filterField + ' ul.dropdown-menu li>a', function (e) {
+						e.preventDefault();
+						var queryObj = {};
 
+						queryObj[filterField] = $(this).attr('data-val');
+						//filterView.update(queryObj, {active: 1});
+
+						self._from.queryAdd(queryObj);
+					});
 				});
 			}
 		} else {
