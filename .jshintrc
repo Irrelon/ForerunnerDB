@@ -1,7 +1,6 @@
 {
 	"browserify": true,
 	"node": true,
-	"strict": false,
 	"white": true,
 	"onevar": true
 }
