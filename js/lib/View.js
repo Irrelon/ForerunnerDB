@@ -694,6 +694,11 @@ View.prototype.count = function () {
 	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
 };
 
+// Call underlying
+View.prototype.subset = function () {
+	return this.publicData().subset.apply(this._privateData, arguments);
+};
+
 /**
  * Takes the passed data and uses it to set transform methods and globally
  * enable or disable the transform system for the view.
