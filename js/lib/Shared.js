@@ -1,5 +1,5 @@
 var Shared = {
-	version: '1.3.14',
+	version: '1.3.15',
 	modules: {},
 
 	_synth: {},

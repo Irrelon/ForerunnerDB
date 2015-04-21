@@ -8897,7 +8897,7 @@ Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":29}],29:[function(_dereq_,module,exports){
 var Shared = {
-	version: '1.3.14',
+	version: '1.3.15',
 	modules: {},
 
 	_synth: {},
@@ -9154,7 +9154,7 @@ View.prototype.from = function (collection) {
 		if (this._from) {
 			// Remove the listener to the drop event
 			this._from.off('drop', this._collectionDroppedWrap);
-			this._from._removeView(this);
+			delete this._from;
 		}
 
 		if (typeof(collection) === 'string') {
@@ -9560,6 +9560,8 @@ View.prototype.queryData = function (query, options, refresh) {
  * once the operation is complete. Defaults to true.
  */
 View.prototype.queryAdd = function (obj, overwrite, refresh) {
+	this._querySettings.query = this._querySettings.query || {};
+
 	var query = this._querySettings.query,
 		i;
 
@@ -9567,7 +9569,7 @@ View.prototype.queryAdd = function (obj, overwrite, refresh) {
 		// Loop object properties and add to existing query
 		for (i in obj) {
 			if (obj.hasOwnProperty(i)) {
-				if (query[i] === undefined || (query[i] !== undefined && overwrite)) {
+				if (query[i] === undefined || (query[i] !== undefined && overwrite !== false)) {
 					query[i] = obj[i];
 				}
 			}
@@ -9703,6 +9705,8 @@ View.prototype.refresh = function () {
 			//var transformedData = this._privateData.find();
 			// TODO: Shouldn't this data get passed into a transformIn first?
 			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
+			// TODO: Is this even required anymore? After commenting it all seems to work
+			// TODO: Might be worth setting up a test to check trasforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}
 	}
@@ -9722,6 +9726,11 @@ View.prototype.refresh = function () {
  */
 View.prototype.count = function () {
 	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
+};
+
+// Call underlying
+View.prototype.subset = function () {
+	return this.publicData().subset.apply(this._privateData, arguments);
 };
 
 /**
@@ -9784,6 +9793,9 @@ View.prototype.privateData = function () {
  * same as the private data the view holds. If transforms are
  * applied then the public data will contain the transformed version
  * of the private data.
+ *
+ * The public data collection is also used by data binding to only
+ * changes to the publicData will show in a data-bound element.
  */
 View.prototype.publicData = function () {
 	if (this._transformEnabled) {
