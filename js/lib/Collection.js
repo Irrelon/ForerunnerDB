@@ -2549,51 +2549,50 @@ Collection.prototype.diff = function (collection) {
 		arrCount;
 
 	// Check if the primary key index of each collection can be utilised
-	if (pm === collection.primaryKey()) {
-		// Use the collection primary key index to do the diff (super-fast)
-		arr = collection._data;
-
-		// Check if we have an array or another collection
-		while (arr && !(arr instanceof Array)) {
-			// We don't have an array, assign collection and get data
-			collection = arr;
-			arr = collection._data;
-		}
-
-		arrCount = arr.length;
-
-		// Loop the collection's data array and check for matching items
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			arrItem = arr[arrIndex];
-
-			// Check for a matching item in this collection
-			if (this._primaryIndex.get(arrItem[pm])) {
-				// Matching item exists, check if the data is the same
-				if (this._primaryCrc.get(arrItem[pm]) === collection._primaryCrc.get(arrItem[pm])) {
-					// Matching objects, no update required
-				} else {
-					// The documents exist in both collections but data differs, update required
-					diff.update.push(arrItem);
-				}
-			} else {
-				// The document is missing from this collection, insert requried
-				diff.insert.push(arrItem);
-			}
-		}
-
-		// Now loop this collection's data and check for matching items
-		arr = this._data;
-		arrCount = arr.length;
-
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			arrItem = arr[arrIndex];
-			if (!collection._primaryIndex.get(arrItem[pm])) {
-				// The document does not exist in the other collection, remove required
-				diff.remove.push(arrItem);
-			}
-		}
-	} else {
+	if (pm !== collection.primaryKey()) {
 		throw('ForerunnerDB.Collection "' + this.name() + '": Collection diffing requires that both collections have the same primary key!');
+	}
+
+	// Use the collection primary key index to do the diff (super-fast)
+	arr = collection._data;
+
+	// Check if we have an array or another collection
+	while (arr && !(arr instanceof Array)) {
+		// We don't have an array, assign collection and get data
+		collection = arr;
+		arr = collection._data;
+	}
+
+	arrCount = arr.length;
+
+	// Loop the collection's data array and check for matching items
+	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+		arrItem = arr[arrIndex];
+
+		// Check for a matching item in this collection
+		if (this._primaryIndex.get(arrItem[pm])) {
+			// Matching item exists, check if the data is the same
+			if (this._primaryCrc.get(arrItem[pm]) !== collection._primaryCrc.get(arrItem[pm])) {
+				// The documents exist in both collections but data differs, update required
+				diff.update.push(arrItem);
+			}
+		} else {
+			// The document is missing from this collection, insert required
+			diff.insert.push(arrItem);
+		}
+	}
+
+	// Now loop this collection's data and check for matching items
+	arr = this._data;
+	arrCount = arr.length;
+
+	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+		arrItem = arr[arrIndex];
+
+		if (!collection._primaryIndex.get(arrItem[pm])) {
+			// The document does not exist in the other collection, remove required
+			diff.remove.push(arrItem);
+		}
 	}
 
 	return diff;
