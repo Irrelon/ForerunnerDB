@@ -657,8 +657,7 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	if (this._from) {
-		var sortedData,
-			pubData = this.publicData();
+		var pubData = this.publicData();
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
@@ -666,7 +665,7 @@ View.prototype.refresh = function () {
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
-		if (pubData._linked) {
+		/*if (pubData._linked) {
 			// Update data and observers
 			//var transformedData = this._privateData.find();
 			// TODO: Shouldn't this data get passed into a transformIn first?
@@ -674,7 +673,7 @@ View.prototype.refresh = function () {
 			// TODO: Is this even required anymore? After commenting it all seems to work
 			// TODO: Might be worth setting up a test to check trasforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
-		}
+		}*/
 	}
 
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
