@@ -4,6 +4,8 @@ var Core = _dereq_('../lib/Core'),
 
 module.exports = Core;
 },{"../lib/Core":3,"../lib/Shim.IE8":21}],2:[function(_dereq_,module,exports){
+"use strict";
+
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -287,6 +289,11 @@ Collection.prototype.setData = function (data, options, callback) {
  * @private
  */
 Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	options = options || {
+		$ensureKeys: undefined,
+		$violationCheck: undefined
+	};
+
 	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
 		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
@@ -622,8 +629,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var oldDoc = this.decouple(doc),
-		updated = false,
+	//var oldDoc = this.decouple(doc),
+	var	updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -1856,13 +1863,13 @@ Collection.prototype.find = function (query, options) {
 												joinRequire = joinMatch[joinMatchIndex];
 												break;
 
-											default:
+											/*default:
 												// Check for a double-dollar which is a back-reference to the root collection item
 												if (joinMatchIndex.substr(0, 3) === '$$.') {
 													// Back reference
 													// TODO: Support complex joins
 												}
-												break;
+												break;*/
 										}
 									} else {
 										// TODO: Could optimise this by caching path objects
@@ -2693,6 +2700,8 @@ module.exports = Collection;
  Please visit the license page to see latest license information:
  http://www.forerunnerdb.com/licensing.html
  */
+"use strict";
+
 var Shared,
 	Collection,
 	Metrics,
@@ -2717,7 +2726,7 @@ Core.prototype.init = function (name) {
 	this._debug = {};
 };
 
-Core.prototype.moduleLoaded = Overload({
+Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
 	 * @param {String} moduleName The name of the module to check for.
@@ -3063,6 +3072,8 @@ Core.prototype.drop = function (callback) {
 
 module.exports = Core;
 },{"./Collection.js":2,"./Crc.js":4,"./Metrics.js":8,"./Overload":18,"./Shared":20}],4:[function(_dereq_,module,exports){
+"use strict";
+
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3091,6 +3102,8 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
 },{}],5:[function(_dereq_,module,exports){
+"use strict";
+
 /*
 name
 id
@@ -3382,6 +3395,8 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
 },{"./Path":19,"./Shared":20}],6:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -3732,6 +3747,8 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
 },{"./Path":19,"./Shared":20}],7:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared');
 
 /**
@@ -3945,6 +3962,8 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
 },{"./Shared":20}],8:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4018,6 +4037,8 @@ Metrics.prototype.list = function () {
 Shared.finishModule('Metrics');
 module.exports = Metrics;
 },{"./Operation":17,"./Shared":20}],9:[function(_dereq_,module,exports){
+"use strict";
+
 var CRUD = {
 	preSetData: function () {
 		
@@ -4030,6 +4051,8 @@ var CRUD = {
 
 module.exports = CRUD;
 },{}],10:[function(_dereq_,module,exports){
+"use strict";
+
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -4077,6 +4100,8 @@ var ChainReactor = {
 
 module.exports = ChainReactor;
 },{}],11:[function(_dereq_,module,exports){
+"use strict";
+
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Common;
@@ -4158,7 +4183,7 @@ Common = {
 	 * @param {Boolean} val The value to set debug flag to.
 	 * @return {Boolean} True if enabled, false otherwise.
 	 */
-	debug: Overload([
+	debug: new Overload([
 		function () {
 			return this._debug && this._debug.all;
 		},
@@ -4197,6 +4222,8 @@ Common = {
 
 module.exports = Common;
 },{"./Overload":18}],12:[function(_dereq_,module,exports){
+"use strict";
+
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -4208,6 +4235,8 @@ var Constants = {
 
 module.exports = Constants;
 },{}],13:[function(_dereq_,module,exports){
+"use strict";
+
 var Overload = _dereq_('./Overload');
 
 var Events = {
@@ -4341,6 +4370,8 @@ var Events = {
 
 module.exports = Events;
 },{"./Overload":18}],14:[function(_dereq_,module,exports){
+"use strict";
+
 var Matching = {
 	/**
 	 * Internal method that checks a document against a test object.
@@ -4700,6 +4731,8 @@ var Matching = {
 
 module.exports = Matching;
 },{}],15:[function(_dereq_,module,exports){
+"use strict";
+
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.
@@ -4744,6 +4777,8 @@ var Sorting = {
 
 module.exports = Sorting;
 },{}],16:[function(_dereq_,module,exports){
+"use strict";
+
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -4886,6 +4921,8 @@ var Triggers = {
 
 module.exports = Triggers;
 },{}],17:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5031,6 +5068,8 @@ Operation.prototype.stop = function () {
 Shared.finishModule('Operation');
 module.exports = Operation;
 },{"./Path":19,"./Shared":20}],18:[function(_dereq_,module,exports){
+"use strict";
+
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -5166,6 +5205,8 @@ var generateSignaturePermutations = function (str) {
 
 module.exports = Overload;
 },{}],19:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared');
 
 /**
@@ -5577,8 +5618,10 @@ Path.prototype.clean = function (str) {
 Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":20}],20:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = {
-	version: '1.3.16',
+	version: '1.3.17',
 	modules: {},
 
 	_synth: {},
@@ -5715,7 +5758,6 @@ module.exports = Shared;
 },{"./Mixin.CRUD":9,"./Mixin.ChainReactor":10,"./Mixin.Common":11,"./Mixin.Constants":12,"./Mixin.Events":13,"./Mixin.Matching":14,"./Mixin.Sorting":15,"./Mixin.Triggers":16,"./Overload":18}],21:[function(_dereq_,module,exports){
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
-		'use strict';
 
 		if (this === void 0 || this === null) {
 			throw new TypeError();

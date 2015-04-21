@@ -4,6 +4,8 @@ var Core = _dereq_('../lib/Core'),
 
 module.exports = Core;
 },{"../lib/Core":5,"../lib/View":24}],2:[function(_dereq_,module,exports){
+"use strict";
+
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
@@ -18,8 +20,7 @@ var Shared = _dereq_('./Shared'),
  * @constructor
  */
 var ActiveBucket = function (orderBy) {
-	var sortKey,
-		bucketData;
+	var sortKey;
 
 	this._primaryKey = '_id';
 	this._keyArr = [];
@@ -264,6 +265,8 @@ ActiveBucket.prototype.count = function () {
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
 },{"./Path":21,"./Shared":23}],3:[function(_dereq_,module,exports){
+"use strict";
+
 /**
  * The main collection class. Collections store multiple documents and
  * can operate on them using the query language to insert, read, update
@@ -547,6 +550,11 @@ Collection.prototype.setData = function (data, options, callback) {
  * @private
  */
 Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
+	options = options || {
+		$ensureKeys: undefined,
+		$violationCheck: undefined
+	};
+
 	var ensureKeys = options && options.$ensureKeys !== undefined ? options.$ensureKeys : true,
 		violationCheck = options && options.$violationCheck !== undefined ? options.$violationCheck : true,
 		arr,
@@ -882,8 +890,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 	path = path || '';
 	if (path.substr(0, 1) === '.') { path = path.substr(1, path.length -1); }
 
-	var oldDoc = this.decouple(doc),
-		updated = false,
+	//var oldDoc = this.decouple(doc),
+	var	updated = false,
 		recurseUpdated = false,
 		operation,
 		tmpArray,
@@ -2116,13 +2124,13 @@ Collection.prototype.find = function (query, options) {
 												joinRequire = joinMatch[joinMatchIndex];
 												break;
 
-											default:
+											/*default:
 												// Check for a double-dollar which is a back-reference to the root collection item
 												if (joinMatchIndex.substr(0, 3) === '$$.') {
 													// Back reference
 													// TODO: Support complex joins
 												}
-												break;
+												break;*/
 										}
 									} else {
 										// TODO: Could optimise this by caching path objects
@@ -2943,6 +2951,8 @@ Core.prototype.collections = function (search) {
 Shared.finishModule('Collection');
 module.exports = Collection;
 },{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Path":21,"./Shared":23}],4:[function(_dereq_,module,exports){
+"use strict";
+
 // Import external names locally
 var Shared,
 	Core,
@@ -3243,6 +3253,8 @@ module.exports = CollectionGroup;
  Please visit the license page to see latest license information:
  http://www.forerunnerdb.com/licensing.html
  */
+"use strict";
+
 var Shared,
 	Collection,
 	Metrics,
@@ -3267,7 +3279,7 @@ Core.prototype.init = function (name) {
 	this._debug = {};
 };
 
-Core.prototype.moduleLoaded = Overload({
+Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
 	 * @param {String} moduleName The name of the module to check for.
@@ -3613,6 +3625,8 @@ Core.prototype.drop = function (callback) {
 
 module.exports = Core;
 },{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":10,"./Overload":20,"./Shared":23}],6:[function(_dereq_,module,exports){
+"use strict";
+
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3641,6 +3655,8 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
 },{}],7:[function(_dereq_,module,exports){
+"use strict";
+
 /*
 name
 id
@@ -3932,6 +3948,8 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
 },{"./Path":21,"./Shared":23}],8:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -4282,6 +4300,8 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
 },{"./Path":21,"./Shared":23}],9:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared');
 
 /**
@@ -4495,6 +4515,8 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
 },{"./Shared":23}],10:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Operation = _dereq_('./Operation');
 
@@ -4568,6 +4590,8 @@ Metrics.prototype.list = function () {
 Shared.finishModule('Metrics');
 module.exports = Metrics;
 },{"./Operation":19,"./Shared":23}],11:[function(_dereq_,module,exports){
+"use strict";
+
 var CRUD = {
 	preSetData: function () {
 		
@@ -4580,6 +4604,8 @@ var CRUD = {
 
 module.exports = CRUD;
 },{}],12:[function(_dereq_,module,exports){
+"use strict";
+
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -4627,6 +4653,8 @@ var ChainReactor = {
 
 module.exports = ChainReactor;
 },{}],13:[function(_dereq_,module,exports){
+"use strict";
+
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Common;
@@ -4708,7 +4736,7 @@ Common = {
 	 * @param {Boolean} val The value to set debug flag to.
 	 * @return {Boolean} True if enabled, false otherwise.
 	 */
-	debug: Overload([
+	debug: new Overload([
 		function () {
 			return this._debug && this._debug.all;
 		},
@@ -4747,6 +4775,8 @@ Common = {
 
 module.exports = Common;
 },{"./Overload":20}],14:[function(_dereq_,module,exports){
+"use strict";
+
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -4758,6 +4788,8 @@ var Constants = {
 
 module.exports = Constants;
 },{}],15:[function(_dereq_,module,exports){
+"use strict";
+
 var Overload = _dereq_('./Overload');
 
 var Events = {
@@ -4891,6 +4923,8 @@ var Events = {
 
 module.exports = Events;
 },{"./Overload":20}],16:[function(_dereq_,module,exports){
+"use strict";
+
 var Matching = {
 	/**
 	 * Internal method that checks a document against a test object.
@@ -5250,6 +5284,8 @@ var Matching = {
 
 module.exports = Matching;
 },{}],17:[function(_dereq_,module,exports){
+"use strict";
+
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.
@@ -5294,6 +5330,8 @@ var Sorting = {
 
 module.exports = Sorting;
 },{}],18:[function(_dereq_,module,exports){
+"use strict";
+
 var Triggers = {
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
@@ -5436,6 +5474,8 @@ var Triggers = {
 
 module.exports = Triggers;
 },{}],19:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -5581,6 +5621,8 @@ Operation.prototype.stop = function () {
 Shared.finishModule('Operation');
 module.exports = Operation;
 },{"./Path":21,"./Shared":23}],20:[function(_dereq_,module,exports){
+"use strict";
+
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
@@ -5716,6 +5758,8 @@ var generateSignaturePermutations = function (str) {
 
 module.exports = Overload;
 },{}],21:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared');
 
 /**
@@ -6127,6 +6171,8 @@ Path.prototype.clean = function (str) {
 Shared.finishModule('Path');
 module.exports = Path;
 },{"./Shared":23}],22:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared');
 
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -6187,8 +6233,10 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
 },{"./Shared":23}],23:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = {
-	version: '1.3.16',
+	version: '1.3.17',
 	modules: {},
 
 	_synth: {},
@@ -6323,6 +6371,8 @@ Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
 },{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Matching":16,"./Mixin.Sorting":17,"./Mixin.Triggers":18,"./Overload":20}],24:[function(_dereq_,module,exports){
+"use strict";
+
 // Import external names locally
 var Shared,
 	Core,
@@ -6982,8 +7032,7 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	if (this._from) {
-		var sortedData,
-			pubData = this.publicData();
+		var pubData = this.publicData();
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
@@ -6991,7 +7040,7 @@ View.prototype.refresh = function () {
 
 		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
 
-		if (pubData._linked) {
+		/*if (pubData._linked) {
 			// Update data and observers
 			//var transformedData = this._privateData.find();
 			// TODO: Shouldn't this data get passed into a transformIn first?
@@ -6999,7 +7048,7 @@ View.prototype.refresh = function () {
 			// TODO: Is this even required anymore? After commenting it all seems to work
 			// TODO: Might be worth setting up a test to check trasforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
-		}
+		}*/
 	}
 
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
