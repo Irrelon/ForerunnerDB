@@ -141,6 +141,10 @@ Remote.prototype.connect = function (url, callback) {
 	self._socket = window.io.connect(url);
 	self._socket.on('connect', function () {
 		self.connected(true);
+
+		if (callback) {
+			callback(false);
+		}
 	});
 };
 
