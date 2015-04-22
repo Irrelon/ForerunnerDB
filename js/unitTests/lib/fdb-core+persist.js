@@ -1,7 +1,10 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
-  Persist = _dereq_('../lib/Persist');
+	Persist = _dereq_('../lib/Persist');
 
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
 module.exports = Core;
 },{"../lib/Core":4,"../lib/Persist":21}],2:[function(_dereq_,module,exports){
 "use strict";
@@ -5073,6 +5076,18 @@ module.exports = Sorting;
 "use strict";
 
 var Triggers = {
+	/**
+	 * Add a trigger by id.
+	 * @param {String} id The id of the trigger. This must be unique to the type and
+	 * phase of the trigger. Only one trigger may be added with this id per type and
+	 * phase.
+	 * @param {Number} type The type of operation to apply the trigger to. See
+	 * Mixin.Constants for constants to use.
+	 * @param {Number} phase The phase of an operation to fire the trigger on. See
+	 * Mixin.Constants for constants to use.
+	 * @param {Function} method The method to call when the trigger is fired.
+	 * @returns {boolean} True if the trigger was added successfully, false if not.
+	 */
 	addTrigger: function (id, type, phase, method) {
 		var self = this,
 			triggerIndex;
@@ -5097,6 +5112,15 @@ var Triggers = {
 		return false;
 	},
 
+	/**
+	 *
+	 * @param {String} id The id of the trigger to remove.
+	 * @param {Number} type The type of operation to remove the trigger from. See
+	 * Mixin.Constants for constants to use.
+	 * @param {Number} phase The phase of the operation to remove the trigger from.
+	 * See Mixin.Constants for constants to use.
+	 * @returns {boolean} True if removed successfully, false if not.
+	 */
 	removeTrigger: function (id, type, phase) {
 		var self = this,
 			triggerIndex;
@@ -5112,10 +5136,31 @@ var Triggers = {
 		return false;
 	},
 
+	/**
+	 * Checks if a trigger will fire based on the type and phase provided.
+	 * @param {Number} type The type of operation. See Mixin.Constants for
+	 * constants to use.
+	 * @param {Number} phase The phase of the operation. See Mixin.Constants
+	 * for constants to use.
+	 * @returns {Boolean} True if the trigger will fire, false otherwise.
+	 */
 	willTrigger: function (type, phase) {
 		return this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length;
 	},
 
+	/**
+	 * Processes trigger actions based on the operation, type and phase.
+	 * @param {Object} operation Operation data to pass to the trigger.
+	 * @param {Number} type The type of operation. See Mixin.Constants for
+	 * constants to use.
+	 * @param {Number} phase The phase of the operation. See Mixin.Constants
+	 * for constants to use.
+	 * @param {Object} oldDoc The document snapshot before operations are
+	 * carried out against the data.
+	 * @param {Object} newDoc The document snapshot after operations are
+	 * carried out against the data.
+	 * @returns {boolean}
+	 */
 	processTrigger: function (operation, type, phase, oldDoc, newDoc) {
 		var self = this,
 			triggerArr,
@@ -5191,6 +5236,16 @@ var Triggers = {
 		}
 	},
 
+	/**
+	 * Returns the index of a trigger by id based on type and phase.
+	 * @param {String} id The id of the trigger to find the index of.
+	 * @param {Number} type The type of operation. See Mixin.Constants for
+	 * constants to use.
+	 * @param {Number} phase The phase of the operation. See Mixin.Constants
+	 * for constants to use.
+	 * @returns {number}
+	 * @private
+	 */
 	_triggerIndexOf: function (id, type, phase) {
 		var self = this,
 			triggerArr,
@@ -6287,7 +6342,7 @@ module.exports = Persist;
 "use strict";
 
 var Shared = {
-	version: '1.3.18',
+	version: '1.3.20',
 	modules: {},
 
 	_synth: {},

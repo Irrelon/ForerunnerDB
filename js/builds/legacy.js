@@ -8,4 +8,7 @@ var Core = require('../lib/Core'),
 	OldView = require('../lib/OldView'),
 	OldViewBind = require('../lib/OldView.Bind');
 
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
 module.exports = Core;
