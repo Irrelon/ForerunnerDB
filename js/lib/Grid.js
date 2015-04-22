@@ -235,6 +235,7 @@ Grid.prototype._sortGridClick = function (e) {
 	}
 
 	this._from.orderBy(sortObj);
+	this.emit('sort', sortObj);
 };
 
 /**
