@@ -328,6 +328,8 @@ Grid.prototype.refresh = function () {
 					});
 				});
 			}
+
+			self.emit('refresh');
 		} else {
 			throw('Grid requires the AutoBind module in order to operate!');
 		}
