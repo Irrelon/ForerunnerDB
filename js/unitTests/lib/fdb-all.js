@@ -4388,6 +4388,8 @@ Grid.prototype.refresh = function () {
 					});
 				});
 			}
+
+			self.emit('refresh');
 		} else {
 			throw('Grid requires the AutoBind module in order to operate!');
 		}
@@ -8497,7 +8499,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.21',
+	version: '1.3.22',
 	modules: {},
 
 	_synth: {},
