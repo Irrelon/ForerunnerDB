@@ -14,7 +14,7 @@ a UK registered company.
 </tr>
 </table>
 
-## Version 1.3.20
+## Version 1.3.21
 #### Warning - API Change Notification Since Version 1.3.10
 The join system has been updated to use "$join" as the key defining a join instead of
 "join". This was done to keep joins in line with the rest of the API that now uses

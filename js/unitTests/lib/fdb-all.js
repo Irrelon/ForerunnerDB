@@ -4295,6 +4295,7 @@ Grid.prototype._sortGridClick = function (e) {
 	}
 
 	this._from.orderBy(sortObj);
+	this.emit('sort', sortObj);
 };
 
 /**
@@ -8496,7 +8497,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.20',
+	version: '1.3.21',
 	modules: {},
 
 	_synth: {},

@@ -5677,7 +5677,7 @@ module.exports = Path;
 "use strict";
 
 var Shared = {
-	version: '1.3.20',
+	version: '1.3.21',
 	modules: {},
 
 	_synth: {},
