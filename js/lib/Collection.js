@@ -1737,7 +1737,10 @@ Collection.prototype.find = function (query, options) {
 		resultIndex,
 		resultRemove = [],
 		index,
-		i,
+		i, j, k,
+		elemMatchPathSolver,
+		elemMatchSubArr,
+		elemMatchSpliceArr,
 		matcherTmpOptions = {},
 		matcher = function (doc) {
 			return self._match(doc, query, 'and', matcherTmpOptions);
@@ -1805,9 +1808,9 @@ Collection.prototype.find = function (query, options) {
 			op.time('tableScan: ' + scanLength);
 		}
 
-		if (options.limit && resultArr && resultArr.length > options.limit) {
-			resultArr.length = options.limit;
-			op.data('limit', options.limit);
+		if (options.$limit && resultArr && resultArr.length > options.$limit) {
+			resultArr.length = options.$limit;
+			op.data('limit', options.$limit);
 		}
 
 		if (options.$decouple) {
@@ -1907,10 +1910,10 @@ Collection.prototype.find = function (query, options) {
 			op.time('removalQueue');
 		}
 
-		if (options.transform) {
+		if (options.$transform) {
 			op.time('transform');
 			for (i = 0; i < resultArr.length; i++) {
-				resultArr.splice(i, 1, options.transform(resultArr[i]));
+				resultArr.splice(i, 1, options.$transform(resultArr[i]));
 			}
 			op.time('transform');
 			op.data('flag.transform', true);
@@ -1923,22 +1926,86 @@ Collection.prototype.find = function (query, options) {
 			op.time('transformOut');
 		}
 
-
 		op.data('results', resultArr.length);
-
-		op.stop();
-
-		resultArr.__fdbOp = op;
-
-		return resultArr;
 	} else {
-		op.stop();
-
 		resultArr = [];
-		resultArr.__fdbOp = op;
-
-		return resultArr;
 	}
+
+	// Now run any projections on the data required
+	if (options.$elemMatch) {
+		op.time('project: elemMatch');
+
+		for (i in options.$elemMatch) {
+			if (options.$elemMatch.hasOwnProperty(i)) {
+				elemMatchPathSolver = new Path(i);
+
+				// Loop the results array
+				for (j = 0; j < resultArr.length; j++) {
+					elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
+
+					// Check we have a sub-array to loop
+					if (elemMatchSubArr && elemMatchSubArr.length) {
+
+						// Loop the sub-array and check for projection query matches
+						for (k = 0; k < elemMatchSubArr.length; k++) {
+
+							// Check if the current item in the sub-array matches the projection query
+							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], '', {})) {
+								// The item matches the projection query so set the sub-array
+								// to an array that ONLY contains the matching item and then
+								// exit the loop since we only want to match the first item
+								elemMatchPathSolver.set(resultArr[j], i, [elemMatchSubArr[k]]);
+								break;
+							}
+						}
+					}
+				}
+			}
+		}
+
+		op.time('project: elemMatch');
+	}
+
+	if (options.$elemsMatch) {
+		op.time('project: elemsMatch');
+
+		for (i in options.$elemsMatch) {
+			if (options.$elemsMatch.hasOwnProperty(i)) {
+				elemMatchPathSolver = new Path(i);
+
+				// Loop the results array
+				for (j = 0; j < resultArr.length; j++) {
+					elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
+
+					// Check we have a sub-array to loop
+					if (elemMatchSubArr && elemMatchSubArr.length) {
+						elemMatchSpliceArr = [];
+
+						// Loop the sub-array and check for projection query matches
+						for (k = 0; k < elemMatchSubArr.length; k++) {
+
+							// Check if the current item in the sub-array matches the projection query
+							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], '', {})) {
+								// The item matches the projection query so add it to the final array
+								elemMatchSpliceArr.push(elemMatchSubArr[k]);
+							}
+						}
+
+						// Now set the final sub-array to the matched items
+						elemMatchPathSolver.set(resultArr[j], i, elemMatchSpliceArr);
+					}
+				}
+			}
+		}
+
+		op.time('project: elemsMatch');
+	}
+
+	// Now limit results by passed fields
+
+	op.stop();
+	resultArr.__fdbOp = op;
+	return resultArr;
 };
 
 /**
