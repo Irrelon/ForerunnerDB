@@ -1,5 +1,5 @@
 "use strict";
-
+// TODO: Document the methods in this mixin
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -9,6 +9,7 @@ var ChainReactor = {
 			this._chain.push(obj);
 		}
 	},
+
 	unChain: function (obj) {
 		if (this._chain) {
 			var index = this._chain.indexOf(obj);
@@ -18,6 +19,7 @@ var ChainReactor = {
 			}
 		}
 	},
+
 	chainSend: function (type, data, options) {
 		if (this._chain) {
 			var arr = this._chain,
@@ -29,6 +31,7 @@ var ChainReactor = {
 			}
 		}
 	},
+
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
 			sender: sender,
