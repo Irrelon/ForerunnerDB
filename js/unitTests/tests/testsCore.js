@@ -1684,3 +1684,172 @@ QUnit.test('Collection.find() :: $orderBy with blank object', function () {
 
 	base.dbDown();
 });
+
+QUnit.test('Collection.find() :: $elemMatch projection', function () {
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result;
+
+	coll.setData([{
+		names: [{
+			text: 'Jim',
+			index: 1
+		}, {
+			text: 'Bill',
+			index: 2
+		}, {
+			text: 'Carry',
+			index: 2
+		}, {
+			text: 'Jill',
+			index: 3
+		}, {
+			text: 'Tim',
+			index: 3
+		}, {
+			text: 'John',
+			index: 1
+		}]
+	}, {
+		names: [{
+			text: 'Tim',
+			index: 1
+		}, {
+			text: 'Axel',
+			index: 2
+		}, {
+			text: 'Carry',
+			index: 2
+		}, {
+			text: 'Uber',
+			index: 3
+		}, {
+			text: 'Tim',
+			index: 3
+		}, {
+			text: 'Kiki',
+			index: 1
+		}]
+	}]);
+
+	result = coll.find({}, {
+		$elemMatch: {
+			names: {
+				text: 'Tim'
+			}
+		}
+	});
+
+	// $elemMatch matches ONLY the first item so results should always only
+	// contain the first result that matches
+	strictEqual(result[0].names.length, 1, 'Result 1 names were projected correctly');
+	strictEqual(result[1].names.length, 1, 'Result 2 names were projected correctly');
+
+	strictEqual(result[0].names[0].text, 'Tim', 'Result 1 name is correct');
+	strictEqual(result[1].names[0].text, 'Tim', 'Result 2 name is correct');
+
+	result = coll.find({}, {
+		$elemMatch: {
+			names: {
+				index: {
+					$gt: 1
+				}
+			}
+		}
+	});
+
+	strictEqual(result[0].names.length, 1, 'Result 1 names were projected correctly');
+	strictEqual(result[1].names.length, 1, 'Result 2 names were projected correctly');
+
+	strictEqual(result[0].names[0].text, 'Bill', 'Result 1 name is correct');
+	strictEqual(result[1].names[0].text, 'Axel', 'Result 2 name is correct');
+
+	base.dbDown();
+});
+
+QUnit.test('Collection.find() :: $elemsMatch projection', function () {
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result,
+		i, j;
+
+	coll.setData([{
+		names: [{
+			text: 'Jim',
+			index: 1
+		}, {
+			text: 'Bill',
+			index: 2
+		}, {
+			text: 'Carry',
+			index: 2
+		}, {
+			text: 'Jill',
+			index: 3
+		}, {
+			text: 'Tim',
+			index: 3
+		}, {
+			text: 'John',
+			index: 1
+		}]
+	}, {
+		names: [{
+			text: 'Tim',
+			index: 1
+		}, {
+			text: 'Axel',
+			index: 2
+		}, {
+			text: 'Carry',
+			index: 2
+		}, {
+			text: 'Uber',
+			index: 3
+		}, {
+			text: 'Tim',
+			index: 3
+		}, {
+			text: 'Kiki',
+			index: 1
+		}]
+	}]);
+
+	result = coll.find({}, {
+		$elemsMatch: {
+			names: {
+				text: 'Tim'
+			}
+		}
+	});
+
+	strictEqual(result[0].names.length, 1, 'Result 1 names were projected correctly');
+	strictEqual(result[1].names.length, 2, 'Result 2 names were projected correctly');
+
+	strictEqual(result[0].names[0].text, 'Tim', 'Result 1 name is correct');
+	strictEqual(result[1].names[0].text, 'Tim', 'Result 2 name is correct');
+	strictEqual(result[1].names[1].text, 'Tim', 'Result 3 name is correct');
+
+	result = coll.find({}, {
+		$elemsMatch: {
+			names: {
+				index: {
+					$gt: 1
+				}
+			}
+		}
+	});
+
+	strictEqual(result[0].names.length, 4, 'Result 1 names were projected correctly');
+	strictEqual(result[1].names.length, 4, 'Result 2 names were projected correctly');
+
+	for (i = 0; i < result.length; i++) {
+		for (j = 0; j < result[i].names.length; j++) {
+			ok(result[i].names[j].index > 1, 'Result ' + i + ' index ' + j + ' is correct');
+		}
+	}
+
+	base.dbDown();
+});
