@@ -331,7 +331,7 @@ var Matching = {
 				break;
 
 			case '$distinct':
-				// Ensure options holds an distinct lookup
+				// Ensure options holds a distinct lookup
 				options.$rootQuery['//distinctLookup'] = options.$rootQuery['//distinctLookup'] || {};
 
 				for (var distinctProp in test) {
