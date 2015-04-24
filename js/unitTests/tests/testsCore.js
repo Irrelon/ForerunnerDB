@@ -1853,3 +1853,84 @@ QUnit.test('Collection.find() :: $elemsMatch projection', function () {
 
 	base.dbDown();
 });
+
+QUnit.test('Collection.find() :: Return field selection', function () {
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result,
+		i, j;
+
+	coll.setData([{
+		text: 'Jim',
+		index: 1
+	}, {
+		text: 'Bill',
+		index: 2
+	}, {
+		text: 'Carry',
+		index: 2
+	}, {
+		text: 'Jill',
+		index: 3
+	}, {
+		text: 'Tim',
+		index: 3
+	}, {
+		text: 'John',
+		index: 1
+	}, {
+		text: 'Tim',
+		index: 1
+	}, {
+		text: 'Axel',
+		index: 2
+	}, {
+		text: 'Carry',
+		index: 2
+	}, {
+		text: 'Uber',
+		index: 3
+	}, {
+		text: 'Tim',
+		index: 3
+	}, {
+		text: 'Kiki',
+		index: 1
+	}]);
+
+	result = coll.find({}, {
+		text: 1
+	});
+
+	strictEqual(typeof result[0]._id, 'string', 'Primary key exists in return fields');
+	strictEqual(typeof result[0].text, 'string', 'Text key exists in return fields');
+	strictEqual(typeof result[0].index, 'undefined', 'Index key does not exist in return fields');
+
+	result = coll.find({}, {
+		index: 1
+	});
+
+	strictEqual(typeof result[0]._id, 'string', 'Primary key exists in return fields');
+	strictEqual(typeof result[0].text, 'undefined', 'Text key exists in return fields');
+	strictEqual(typeof result[0].index, 'number', 'Index key exists in return fields');
+
+	result = coll.find({}, {
+		index: 1,
+		_id: 0
+	});
+
+	strictEqual(typeof result[0]._id, 'undefined', 'Primary key exists in return fields');
+	strictEqual(typeof result[0].text, 'undefined', 'Text key exists in return fields');
+	strictEqual(typeof result[0].index, 'number', 'Index key exists in return fields');
+
+	result = coll.find({}, {
+		_id: 0
+	});
+
+	strictEqual(typeof result[0]._id, 'undefined', 'Primary key exists in return fields');
+	strictEqual(typeof result[0].text, 'string', 'Text key exists in return fields');
+	strictEqual(typeof result[0].index, 'number', 'Index key exists in return fields');
+
+	base.dbDown();
+});
