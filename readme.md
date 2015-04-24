@@ -170,8 +170,119 @@ Supported search operators:
 * $and Match all conditions inside the sub-query
 * $exists Check that a key exists in the document
 * arrayKey.$ Positional selector query
+* $elemMatch (projection) - Limit sub-array documents by query
+* $elemsMatch (projection) - Mutliple document version of $elemMatch
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
+
+### Projection
+
+#### $elemMatch
+The $elemMatch operator limits the contents of an <array> field from the query results to contain only the first element matching the $elemMatch condition.
+
+The $elemMatch operator is specified in the *options* object of the find call rather than
+ the query object.
+ 
+[MongoDB $elemMatch Documentation](http://docs.mongodb.org/manual/reference/operator/projection/elemMatch/)
+ 
+##### Usage
+
+	var coll = db.collection('test');
+	coll.setData({
+		names: [{
+			_id: 1,
+			text: 'Jim'
+		}, {
+			_id: 2,
+			text: 'Bob'
+		}, {
+			_id: 3,
+			text: 'Bob'
+		}, {
+			_id: 4,
+			text: 'Anne'
+		}, {
+			_id: 5,
+			text: 'Simon'
+		}, {
+			_id: 6,
+			text: 'Uber'
+		}]
+	});
+	
+	result = coll.find({}, {
+		$elemMatch: {
+			names: {
+				text: 'Bob'
+			}
+		}
+	});
+	
+Result is:
+
+	{
+		names: [{
+			_id: 2,
+			text: 'Bob'
+		}]
+	}
+
+Notice that only the FIRST item matching the $elemMatch clause is returned in the names array.
+If you require multiple matches use the ForerunnerDB-specific $elemsMatch operator instead.
+
+#### $elemsMatch
+The $elemsMatch operator limits the contents of an <array> field from the query results to contain only the elements matching the $elemMatch condition.
+
+The $elemsMatch operator is specified in the *options* object of the find call rather than
+ the query object.
+ 
+##### Usage
+
+	var coll = db.collection('test');
+	coll.setData({
+		names: [{
+			_id: 1,
+			text: 'Jim'
+		}, {
+			_id: 2,
+			text: 'Bob'
+		}, {
+			_id: 3,
+			text: 'Bob'
+		}, {
+			_id: 4,
+			text: 'Anne'
+		}, {
+			_id: 5,
+			text: 'Simon'
+		}, {
+			_id: 6,
+			text: 'Uber'
+		}]
+	});
+	
+	result = coll.find({}, {
+		$elemsMatch: {
+			names: {
+				text: 'Bob'
+			}
+		}
+	});
+	
+Result is:
+
+	{
+		names: [{
+			_id: 2,
+			text: 'Bob'
+		}, {
+			_id: 3,
+			text: 'Bob'
+		}]
+	}
+
+Notice that all items matching the $elemMatch clause are returned in the names array.
+If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
 
 ### Ordering / Sorting Results
 You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
@@ -186,6 +297,70 @@ You can specify an $orderBy option along with the find call to order/sort your r
 			price: 1 // Sort ascending or -1 for descending
 		}
 	});
+
+### Limiting Return Fields
+You can specify which fields are included in the return data for a query by adding them in
+the options object. This follows the same rules specified by MongoDB here: 
+
+[MongoDB Documentation](http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/)
+
+> Please note that the primary key field will always be returned unless explicitly excluded
+from the results via "_id: 0".
+
+#### Usage
+
+	var coll = db.collection('test');
+	coll.setData([{
+		_id: 1,
+		text: 'Jim',
+		val: 2131232
+	}, {
+		_id: 2,
+		text: 'Bob',
+		val: 2425234321
+	}, {
+		_id: 3,
+		text: 'Bob',
+		val: 54353454
+	}, {
+		_id: 4,
+		text: 'Anne',
+		val: 1231432
+	}, {
+		_id: 5,
+		text: 'Simon',
+		val: 87567455
+	}, {
+		_id: 6,
+		text: 'Uber',
+		val: 93472834
+	}]);
+	
+	result = coll.find({}, {
+		text: 1
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		text: 'Jim'
+	}, {
+		_id: 2,
+		text: 'Bob'
+	}, {
+		_id: 3,
+		text: 'Bob'
+	}, {
+		_id: 4,
+		text: 'Anne'
+	}, {
+		_id: 5,
+		text: 'Simon'
+	}, {
+		_id: 6,
+		text: 'Uber'
+	}]
 
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
@@ -1185,10 +1360,12 @@ ForerunnerDB's project road-map:
 * $position
 * $each
 * $pullAll
+* $elemMatch (projection)
 
 #### Operators that are unique to ForerunnerDB:
 * $move
 * $splicePush
+* $elemsMatch (projection)
 
 ### Future Updates
 * Data persistence on server-side
@@ -1213,16 +1390,18 @@ ForerunnerDB's project road-map:
 
 #### Scheduled Features - Version 1.3
 * Data-bound grid (table) output of collection / view data - COMPLETE
+* $elemMatch (projection) - COMPLETE
+* Return limited fields on query - COMPLETE
 
 #### Scheduled Features - Version 1.4
 * Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6) - COMPLETE
 * Data persistence added to documentation - COMPLETE
 * Remove iOS from this repo, add to its own - COMPLETE
 * Remove server from this repo, add to its own - COMPLETE
+* Trigger support - COMPLETE
 * Support localforage for storage instead of relying on localStorage (https://github.com/irrelon/ForerunnerDB/issues/5) - COMPLETE
 * Highcharts support from views instead of only collections
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
-* Trigger support
 
 #### Scheduled Features - Version 1.5
 * Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
