@@ -2224,8 +2224,9 @@ Collection.prototype.find = function (query, options) {
 
 	// Limit returned fields by the options data
 	if (fieldListOn.length || fieldListOff.length) {
-		op.data('scanFields.on', fieldListOn);
-		op.data('scanFields.off', fieldListOff);
+		op.data('flag.limitFields', true);
+		op.data('limitFields.on', fieldListOn);
+		op.data('limitFields.off', fieldListOff);
 
 		op.time('limitFields');
 
@@ -2265,6 +2266,7 @@ Collection.prototype.find = function (query, options) {
 
 	// Now run any projections on the data required
 	if (options.$elemMatch) {
+		op.data('flag.elemMatch', true);
 		op.time('projection-elemMatch');
 
 		for (i in options.$elemMatch) {
@@ -2299,6 +2301,7 @@ Collection.prototype.find = function (query, options) {
 	}
 
 	if (options.$elemsMatch) {
+		op.data('flag.elemsMatch', true);
 		op.time('projection-elemsMatch');
 
 		for (i in options.$elemsMatch) {
