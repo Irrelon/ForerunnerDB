@@ -1723,6 +1723,7 @@ Collection.prototype.find = function (query, options) {
 	options = this.options(options);
 
 	var op = this._metrics.create('find'),
+		pk = this.primaryKey(),
 		self = this,
 		analysis,
 		//finalQuery,
@@ -1747,10 +1748,13 @@ Collection.prototype.find = function (query, options) {
 		resultRemove = [],
 		index,
 		i, j, k,
+		fieldListOn = [],
+		fieldListOff = [],
 		elemMatchPathSolver,
 		elemMatchSubArr,
 		elemMatchSpliceArr,
 		matcherTmpOptions = {},
+		result,
 		matcher = function (doc) {
 			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
@@ -1940,9 +1944,68 @@ Collection.prototype.find = function (query, options) {
 		resultArr = [];
 	}
 
+	// Generate a list of fields to limit data by
+	// Each property starts off being enabled by default (= 1) then
+	// if any property is explicitly specified as 1 then all switch to
+	// zero except _id.
+	//
+	// Any that are explicitly set to zero are switched off.
+	op.time('scanFields');
+	for (i in options) {
+		if (options.hasOwnProperty(i) && i.indexOf('$') !== 0) {
+			if (options[i] === 1) {
+				fieldListOn.push(i);
+			} else if (options[i] === 0) {
+				fieldListOff.push(i);
+			}
+		}
+	}
+	op.time('scanFields');
+
+	// Limit returned fields by the options data
+	if (fieldListOn.length || fieldListOff.length) {
+		op.data('scanFields.on', fieldListOn);
+		op.data('scanFields.off', fieldListOff);
+
+		op.time('limitFields');
+
+		// We have explicit fields switched on or off
+		for (i = 0; i < resultArr.length; i++) {
+			result = resultArr[i];
+
+			for (j in result) {
+				if (result.hasOwnProperty(j)) {
+					if (fieldListOn.length) {
+						// We have explicit fields switched on so remove all fields
+						// that are not explicitly switched on
+
+						// Check if the field name is not the primary key
+						if (j !== pk) {
+							if (fieldListOn.indexOf(j) === -1) {
+								// This field is not in the on list, remove it
+								delete result[j];
+							}
+						}
+					}
+
+					if (fieldListOff.length) {
+						// We have explicit fields switched off so remove fields
+						// that are explicitly switched off
+						if (fieldListOff.indexOf(j) > -1) {
+							// This field is in the off list, remove it
+							delete result[j];
+						}
+					}
+				}
+			}
+		}
+
+		op.time('limitFields');
+	}
+
 	// Now run any projections on the data required
 	if (options.$elemMatch) {
-		op.time('project: elemMatch');
+		op.time('projection-elemMatch');
 
 		for (i in options.$elemMatch) {
 			if (options.$elemMatch.hasOwnProperty(i)) {
@@ -1972,11 +2035,11 @@ Collection.prototype.find = function (query, options) {
 			}
 		}
 
-		op.time('project: elemMatch');
+		op.time('projection-elemMatch');
 	}
 
 	if (options.$elemsMatch) {
-		op.time('project: elemsMatch');
+		op.time('projection-elemsMatch');
 
 		for (i in options.$elemsMatch) {
 			if (options.$elemsMatch.hasOwnProperty(i)) {
@@ -2007,10 +2070,8 @@ Collection.prototype.find = function (query, options) {
 			}
 		}
 
-		op.time('project: elemsMatch');
+		op.time('projection-elemsMatch');
 	}
-
-	// Now limit results by passed fields
 
 	op.stop();
 	resultArr.__fdbOp = op;
@@ -4415,7 +4476,7 @@ var CRUD = {
 module.exports = CRUD;
 },{}],11:[function(_dereq_,module,exports){
 "use strict";
-
+// TODO: Document the methods in this mixin
 var ChainReactor = {
 	chain: function (obj) {
 		this._chain = this._chain || [];
@@ -4425,6 +4486,7 @@ var ChainReactor = {
 			this._chain.push(obj);
 		}
 	},
+
 	unChain: function (obj) {
 		if (this._chain) {
 			var index = this._chain.indexOf(obj);
@@ -4434,6 +4496,7 @@ var ChainReactor = {
 			}
 		}
 	},
+
 	chainSend: function (type, data, options) {
 		if (this._chain) {
 			var arr = this._chain,
@@ -4445,6 +4508,7 @@ var ChainReactor = {
 			}
 		}
 	},
+
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
 			sender: sender,
@@ -6409,7 +6473,7 @@ module.exports = Persist;
 "use strict";
 
 var Shared = {
-	version: '1.3.23',
+	version: '1.3.24',
 	modules: {},
 
 	_synth: {},
