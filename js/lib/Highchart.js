@@ -299,7 +299,7 @@ Highchart.prototype.drop = function () {
 	}
 };
 
-// Extend collection with view init
+// Extend collection with highchart init
 Collection.prototype.init = function () {
 	this._highcharts = {};
 	CollectionInit.apply(this, arguments);
