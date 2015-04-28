@@ -281,7 +281,8 @@ var Shared,
 	Path,
 	IndexHashMap,
 	IndexBinaryTree,
-	Crc;
+	Crc,
+	Overload;
 
 Shared = _dereq_('./Shared');
 
@@ -345,6 +346,7 @@ IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
+Overload = _dereq_('./Overload');
 
 /**
  * Returns a checksum of a string.
@@ -3043,33 +3045,115 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-/**
- * Get a collection by name. If the collection does not already exist
- * then one is created for that name automatically.
- * @param {String} collectionName The name of the collection.
- * @param {String=} primaryKey Optional primary key to specify the primary key field on the collection
- * objects. Defaults to "_id".
- * @returns {Collection}
- */
-Core.prototype.collection = function (collectionName, primaryKey) {
-	if (collectionName) {
-		if (!this._collection[collectionName]) {
-			if (this.debug()) {
-				console.log('Creating collection ' + collectionName);
-			}
-		}
-
-		this._collection[collectionName] = this._collection[collectionName] || new Collection(collectionName).db(this);
-
-		if (primaryKey !== undefined) {
-			this._collection[collectionName].primaryKey(primaryKey);
-		}
-
-		return this._collection[collectionName];
-	} else {
-		throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+Collection.prototype.feedIn = function (collection) {
+	if (typeof collection === 'string') {
+		// The collection passed is a name, not a reference so get
+		// the reference from the name
+		collection = this._db.collection(collection);
 	}
+
+
 };
+
+Core.prototype.collection = new Overload({
+	/**
+	 * Get a collection by name. If the collection does not already exist
+	 * then one is created for that name automatically.
+	 * @param {Object} options An options object.
+	 * @returns {Collection}
+	 */
+	'object': function (options) {
+		return this.$main.call(this, options);
+	},
+
+	/**
+	 * Get a collection by name. If the collection does not already exist
+	 * then one is created for that name automatically.
+	 * @param {String} collectionName The name of the collection.
+	 * @returns {Collection}
+	 */
+	'string': function (collectionName) {
+		return this.$main.call(this, {
+			name: collectionName
+		});
+	},
+
+	/**
+	 * Get a collection by name. If the collection does not already exist
+	 * then one is created for that name automatically.
+	 * @param {String} collectionName The name of the collection.
+	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
+	 * objects. Defaults to "_id".
+	 * @returns {Collection}
+	 */
+	'string, string': function (collectionName, primaryKey) {
+		return this.$main.call(this, {
+			name: collectionName,
+			primaryKey: primaryKey
+		});
+	},
+
+	/**
+	 * Get a collection by name. If the collection does not already exist
+	 * then one is created for that name automatically.
+	 * @param {String} collectionName The name of the collection.
+	 * @param {Object} options An options object.
+	 * @returns {Collection}
+	 */
+	'string, object': function (collectionName, options) {
+		options.name = collectionName;
+
+		return this.$main.call(this, options);
+	},
+
+	/**
+	 * Get a collection by name. If the collection does not already exist
+	 * then one is created for that name automatically.
+	 * @param {String} collectionName The name of the collection.
+	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
+	 * objects. Defaults to "_id".
+	 * @param {Object} options An options object.
+	 * @returns {Collection}
+	 */
+	'string, string, object': function (collectionName, primaryKey, options) {
+		options.name = collectionName;
+		options.primaryKey = primaryKey;
+
+		return this.$main.call(this, options);
+	},
+
+	/**
+	 * The main handler method. This get's called by all the other variants and
+	 * handles the actual logic of the overloaded method.
+	 * @param {Object} options An options object.
+	 * @returns {*}
+	 */
+	'$main': function (options) {
+		var name = options.name;
+
+		if (name) {
+			if (!this._collection[name]) {
+				if (options && options.autoCreate === false) {
+					throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+				}
+
+				if (this.debug()) {
+					console.log('Creating collection ' + name);
+				}
+			}
+
+			this._collection[name] = this._collection[name] || new Collection(name).db(this);
+
+			if (options.primaryKey !== undefined) {
+				this._collection[name].primaryKey(options.primaryKey);
+			}
+
+			return this._collection[name];
+		} else {
+			throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+		}
+	}
+});
 
 /**
  * Determine if a collection with the passed name already exists.
@@ -3121,7 +3205,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Path":21,"./Shared":23}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":20,"./Path":21,"./Shared":23}],4:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5857,7 +5941,8 @@ module.exports = Operation;
  */
 var Overload = function (def) {
 	if (def) {
-		var index,
+		var self = this,
+			index,
 			count,
 			tmpDef,
 			defNewKey,
@@ -5904,7 +5989,7 @@ var Overload = function (def) {
 				count = def.length;
 				for (index = 0; index < count; index++) {
 					if (def[index].length === arguments.length) {
-						return def[index].apply(this, arguments);
+						return self.callExtend(this, '$main', def, def[index], arguments);
 					}
 				}
 			} else {
@@ -5926,7 +6011,7 @@ var Overload = function (def) {
 
 				// Check for an exact lookup match
 				if (def[lookup]) {
-					return def[lookup].apply(this, arguments);
+					return self.callExtend(this, '$main', def, def[lookup], arguments);
 				} else {
 					for (index = arr.length; index >= 0; index--) {
 						// Get the closest match
@@ -5934,7 +6019,7 @@ var Overload = function (def) {
 
 						if (def[lookup + ',...']) {
 							// Matched against arguments + "any other"
-							return def[lookup + ',...'].apply(this, arguments);
+							return self.callExtend(this, '$main', def, def[lookup + ',...'], arguments);
 						}
 					}
 				}
@@ -5979,6 +6064,23 @@ Overload.prototype.generateSignaturePermutations = function (str) {
 	}
 
 	return signatures;
+};
+
+Overload.prototype.callExtend = function (context, prop, propContext, func, args) {
+	var tmp,
+		ret;
+
+	if (context && propContext[prop]) {
+		tmp = context[prop];
+
+		context[prop] = propContext[prop];
+		ret = func.apply(context, args);
+		context[prop] = tmp;
+
+		return ret;
+	} else {
+		return func.apply(context, args);
+	}
 };
 
 module.exports = Overload;
@@ -6461,7 +6563,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.25',
+	version: '1.3.26',
 	modules: {},
 
 	_synth: {},
