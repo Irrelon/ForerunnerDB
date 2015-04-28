@@ -230,10 +230,14 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
  * @param callback Optional callback function.
  */
 Collection.prototype.setData = function (data, options, callback) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	if (data) {
 		var op = this._metrics.create('setData');
 		op.start();
-		
+
 		options = this.options(options);
 		this.preSetData(data, options, callback);
 
@@ -352,6 +356,10 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	this.emit('truncate', this._data);
 
 	// Clear all the data from the collection
@@ -390,6 +398,10 @@ Collection.prototype.truncate = function () {
  * contains the return data from the operation used.
  */
 Collection.prototype.upsert = function (obj, callback) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	if (obj) {
 		var queue = this._deferQueue.upsert,
 			deferThreshold = this._deferThreshold.upsert;
@@ -475,6 +487,10 @@ Collection.prototype.upsert = function (obj, callback) {
  * @returns {Array} The items that were updated.
  */
 Collection.prototype.update = function (query, update, options) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	// Decouple the update data
 	update = this.decouple(update);
 
@@ -1127,6 +1143,10 @@ Collection.prototype._updatePop = function (doc, val) {
  * @returns {Array} An array of the documents that were removed.
  */
 Collection.prototype.remove = function (query, options, callback) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	var self = this,
 		dataSet,
 		index,
@@ -1289,6 +1309,10 @@ Collection.prototype.processQueue = function (type, callback) {
  * objects to insert into the collection.
  */
 Collection.prototype.insert = function (data, index, callback) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	if (typeof(index) === 'function') {
 		callback = index;
 		index = this._data.length;
@@ -1604,6 +1628,10 @@ Collection.prototype._subsetOf = function (collection) {
  * @returns {Array}
  */
 Collection.prototype.distinct = function (key, query, options) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	var data = this.find(query, options),
 		pathSolver = new Path(key),
 		valueUsed = {},
@@ -1708,6 +1736,10 @@ Collection.prototype.options = function (obj) {
  * documents that matched the query.
  */
 Collection.prototype.find = function (query, options) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
 	
@@ -2581,6 +2613,10 @@ Collection.prototype.insertIndexViolation = function (doc) {
  * @returns {*}
  */
 Collection.prototype.ensureIndex = function (keys, options) {
+	if (this._state === 'dropped') {
+		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+	}
+
 	this._indexByName = this._indexByName || {};
 	this._indexById = this._indexById || {};
 
