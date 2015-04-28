@@ -9,7 +9,8 @@
  */
 var Overload = function (def) {
 	if (def) {
-		var index,
+		var self = this,
+			index,
 			count,
 			tmpDef,
 			defNewKey,
@@ -56,7 +57,7 @@ var Overload = function (def) {
 				count = def.length;
 				for (index = 0; index < count; index++) {
 					if (def[index].length === arguments.length) {
-						return def[index].apply(this, arguments);
+						return self.callExtend(this, '$main', def, def[index], arguments);
 					}
 				}
 			} else {
@@ -78,7 +79,7 @@ var Overload = function (def) {
 
 				// Check for an exact lookup match
 				if (def[lookup]) {
-					return def[lookup].apply(this, arguments);
+					return self.callExtend(this, '$main', def, def[lookup], arguments);
 				} else {
 					for (index = arr.length; index >= 0; index--) {
 						// Get the closest match
@@ -86,7 +87,7 @@ var Overload = function (def) {
 
 						if (def[lookup + ',...']) {
 							// Matched against arguments + "any other"
-							return def[lookup + ',...'].apply(this, arguments);
+							return self.callExtend(this, '$main', def, def[lookup + ',...'], arguments);
 						}
 					}
 				}
@@ -131,6 +132,23 @@ Overload.prototype.generateSignaturePermutations = function (str) {
 	}
 
 	return signatures;
+};
+
+Overload.prototype.callExtend = function (context, prop, propContext, func, args) {
+	var tmp,
+		ret;
+
+	if (context && propContext[prop]) {
+		tmp = context[prop];
+
+		context[prop] = propContext[prop];
+		ret = func.apply(context, args);
+		context[prop] = tmp;
+
+		return ret;
+	} else {
+		return func.apply(context, args);
+	}
 };
 
 module.exports = Overload;
