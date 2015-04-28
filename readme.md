@@ -109,6 +109,33 @@ In our examples we will use a collection called "item" which will store some fic
 
 	var itemCollection = db.collection('item');
 
+### Auto-Creation
+
+When you request a collection that does not yet exist it is automatically created. If
+it already exists you are given the reference to the existing collection. If you want
+ForerunnerDB to throw an error if a collection is requested that does not already exist
+you can pass an option to the *collection()* method instead:
+
+	var collection = db.collection('collectionName', {autoCreate: false});
+	
+### Specifying a Primary Key Up-Front
+
+On requesting a collection you can specify a primary key that the collection should be
+using. For instance to use a property called "name" as the primary key field:
+
+	var collection = db.collection('collectionName', {primaryKey: 'name'});
+
+### Other Patterns
+
+The *collection()* method accepts a number of argument patterns including passing the
+primary key as a string in the second argument e.g.
+
+	var collection = db.collection('collectionName', 'name');
+
+> While this will work for legacy reasons it is best to use the options object as shown
+above to specify autoCreate and primaryKey option values as using an options object is
+considered the "standard".
+
 ## Setting Initial Data
 When you get a collection instance for the first time it will contain no data. To set data on the collection pass an
 array of objects to the setData() method:
