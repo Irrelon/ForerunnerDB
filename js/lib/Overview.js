@@ -36,7 +36,7 @@ Shared.mixin(Overview.prototype, 'Mixin.Events');
 Collection = require('./Collection');
 DbDocument = require('./Document');
 Core = Shared.modules.Core;
-CoreInit = Shared.modules.Core.prototype.init;
+CoreInit = Core.prototype.init;
 
 /**
  * Gets / sets the current state.
