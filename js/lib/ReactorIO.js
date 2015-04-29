@@ -18,7 +18,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		// Register the output with the reactorIO
 		this.chain(reactorOut);
 	} else {
-		throw('ForerunnerDB.ReactorIO: ReactorIO requires an in, out and process argument to instantiate!');
+		throw('ForerunnerDB.ReactorIO: ReactorIO requires in, out and process arguments to instantiate!');
 	}
 };
 
