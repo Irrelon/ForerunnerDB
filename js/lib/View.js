@@ -249,7 +249,6 @@ View.prototype.from = function (collection) {
 View.prototype._collectionDropped = function (collection) {
 	if (collection) {
 		// Collection was dropped, remove from view
-		debugger;
 		delete this._from;
 	}
 };

@@ -7,13 +7,14 @@ var Core = _dereq_('./core'),
 	Document = _dereq_('../lib/Document'),
 	Overview = _dereq_('../lib/Overview'),
 	Grid = _dereq_('../lib/Grid'),
-	Rest = _dereq_('../lib/Rest');
+	Rest = _dereq_('../lib/Rest'),
+	Odm = _dereq_('../lib/Odm');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/CollectionGroup":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/Overview":25,"../lib/Persist":27,"../lib/Rest":29,"../lib/View":32,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/Odm":23,"../lib/Overview":26,"../lib/Persist":28,"../lib/Rest":30,"../lib/View":33,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -21,7 +22,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":31}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":6,"../lib/Shim.IE8":32}],3:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -281,7 +282,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":30}],4:[function(_dereq_,module,exports){
+},{"./Shared":31}],4:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -297,7 +298,8 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Crc,
-	Overload;
+	Overload,
+	ReactorIO;
 
 Shared = _dereq_('./Shared');
 
@@ -316,7 +318,6 @@ Collection.prototype.init = function (name) {
 	this._crcLookup = new KeyValueStore('crcLookup');
 	this._name = name;
 	this._data = [];
-	this._groups = [];
 	this._metrics = new Metrics();
 
 	this._deferQueue = {
@@ -362,6 +363,7 @@ IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 Overload = _dereq_('./Overload');
+ReactorIO = _dereq_('./ReactorIO');
 
 /**
  * Returns a checksum of a string.
@@ -397,6 +399,8 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
+	var key;
+
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
@@ -409,19 +413,12 @@ Collection.prototype.drop = function () {
 
 			delete this._db._collection[this._name];
 
-			if (this._groups && this._groups.length) {
-				var groupArr = [],
-					i;
-
-				// Copy the group array because if we call removeCollection on a group
-				// it will alter the groups array of this collection mid-loop!
-				for (i = 0; i < this._groups.length; i++) {
-					groupArr.push(this._groups[i]);
-				}
-
-				// Loop any groups we are part of and remove ourselves from them
-				for (i = 0; i < groupArr.length; i++) {
-					this._groups[i].removeCollection(this);
+			// Remove any reactor IO chain links
+			if (this._collate) {
+				for (key in this._collate) {
+					if (this._collate.hasOwnProperty(key)) {
+						this.collateRemove(key);
+					}
 				}
 			}
 
@@ -431,7 +428,6 @@ Collection.prototype.drop = function () {
 			delete this._crcLookup;
 			delete this._name;
 			delete this._data;
-			delete this._groups;
 			delete this._metrics;
 
 			return true;
@@ -3060,14 +3056,43 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.feedIn = function (collection) {
+Collection.prototype.collateAdd = function (collection, process) {
 	if (typeof collection === 'string') {
 		// The collection passed is a name, not a reference so get
 		// the reference from the name
-		collection = this._db.collection(collection);
+		collection = this._db.collection(collection, {
+			autoCreate: false,
+			throwError: false
+		});
 	}
 
+	if (collection) {
+		this._collate = this._collate || {};
+		this._collate[collection.name()] = new ReactorIO(collection, this, process);
 
+		return this;
+	} else {
+		throw('Cannot collate from a non-existent collection!');
+	}
+};
+
+Collection.prototype.collateRemove = function (collection) {
+	if (typeof collection === 'object') {
+		// We need to have the name of the collection to remove it
+		collection = collection.name();
+	}
+
+	if (collection) {
+		// Drop the reactor IO chain node
+		this._collate[collection].drop();
+
+		// Remove the collection data from the collate object
+		delete this._collate[collection];
+
+		return this;
+	} else {
+		throw('No collection name passed to collateRemove() or collection not found!');
+	}
 };
 
 Core.prototype.collection = new Overload({
@@ -3149,7 +3174,9 @@ Core.prototype.collection = new Overload({
 		if (name) {
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
-					throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					if (options && options.throwError !== false) {
+						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					}
 				}
 
 				if (this.debug()) {
@@ -3165,7 +3192,9 @@ Core.prototype.collection = new Overload({
 
 			return this._collection[name];
 		} else {
-			throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			if (!options || (options && options.throwError !== false)) {
+				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			}
 		}
 	}
 });
@@ -3220,7 +3249,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":24,"./Path":26,"./Shared":30}],5:[function(_dereq_,module,exports){
+},{"./Crc":7,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":25,"./Path":27,"./ReactorIO":29,"./Shared":31}],5:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3311,8 +3340,31 @@ CollectionGroup.prototype.addCollection = function (collection) {
 
 			// Add the collection
 			this._collections.push(collection);
+			collection._groups = collection._groups || [];
 			collection._groups.push(this);
 			collection.chain(this);
+
+			// Hook the collection's drop event to destroy group data
+			collection.on('drop', function () {
+				// Remove collection from any group associations
+				if (collection._groups && collection._groups.length) {
+					var groupArr = [],
+						i;
+
+					// Copy the group array because if we call removeCollection on a group
+					// it will alter the groups array of this collection mid-loop!
+					for (i = 0; i < collection._groups.length; i++) {
+						groupArr.push(collection._groups[i]);
+					}
+
+					// Loop any groups we are part of and remove ourselves from them
+					for (i = 0; i < groupArr.length; i++) {
+						collection._groups[i].removeCollection(collection);
+					}
+				}
+
+				delete collection._groups;
+			});
 
 			// Add collection's data
 			this._data.insert(collection.find());
@@ -3331,11 +3383,14 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			collection.unChain(this);
 			this._collections.splice(collectionIndex, 1);
 
+			collection._groups = collection._groups || [];
 			groupIndex = collection._groups.indexOf(this);
 
 			if (groupIndex !== -1) {
 				collection._groups.splice(groupIndex, 1);
 			}
+
+			collection.off('drop');
 		}
 
 		if (this._collections.length === 0) {
@@ -3512,7 +3567,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":30}],6:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":31}],6:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3894,7 +3949,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":24,"./Shared":30}],7:[function(_dereq_,module,exports){
+},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":25,"./Shared":31}],7:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -4308,7 +4363,7 @@ Shared = _dereq_('./Shared');
 	Shared.finishModule('Document');
 	module.exports = Document;
 }());
-},{"./Collection":4,"./Shared":30}],9:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":31}],9:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4459,6 +4514,7 @@ Grid.prototype.from = function (collection) {
 		}
 
 		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
 		this.refresh();
 	}
 
@@ -4803,7 +4859,7 @@ Core.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":28,"./Shared":30,"./View":32}],10:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":29,"./Shared":31,"./View":33}],10:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5403,7 +5459,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":24,"./Shared":30}],11:[function(_dereq_,module,exports){
+},{"./Overload":25,"./Shared":31}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5696,7 +5752,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":26,"./Shared":30}],12:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":31}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6047,7 +6103,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":26,"./Shared":30}],13:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":31}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6262,7 +6318,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":30}],14:[function(_dereq_,module,exports){
+},{"./Shared":31}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6337,7 +6393,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":23,"./Shared":30}],15:[function(_dereq_,module,exports){
+},{"./Operation":24,"./Shared":31}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6525,7 +6581,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":24}],18:[function(_dereq_,module,exports){
+},{"./Overload":25}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -6673,7 +6729,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":24}],20:[function(_dereq_,module,exports){
+},{"./Overload":25}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -7279,6 +7335,172 @@ module.exports = Triggers;
 },{}],23:[function(_dereq_,module,exports){
 "use strict";
 
+// Import external names locally
+var Shared,
+	Collection;
+
+Shared = _dereq_('./Shared');
+
+var Odm = function () {
+	this.init.apply(this, arguments);
+};
+
+Odm.prototype.init = function (from) {
+	var self = this;
+
+	self._collectionDroppedWrap = function () {
+		self._collectionDropped.apply(self, arguments);
+	};
+
+	self.from(from);
+};
+
+Shared.addModule('Odm', Odm);
+Shared.mixin(Odm.prototype, 'Mixin.Common');
+Shared.mixin(Odm.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Odm.prototype, 'Mixin.Constants');
+Shared.mixin(Odm.prototype, 'Mixin.Events');
+
+Collection = _dereq_('./Collection');
+
+Shared.synthesize(Odm.prototype, 'state');
+Shared.synthesize(Odm.prototype, 'parent');
+Shared.synthesize(Odm.prototype, 'query');
+Shared.synthesize(Odm.prototype, 'from', function (val) {
+	if (val !== undefined) {
+		val.chain(this);
+		val.on('drop', this._collectionDroppedWrap);
+	}
+
+	return this.$super(val);
+});
+
+Odm.prototype._collectionDropped = function (collection) {
+	this.drop();
+};
+
+Odm.prototype._chainHandler = function (chainPacket) {
+	switch (chainPacket.type) {
+		case 'setData':
+		case 'insert':
+		case 'update':
+		case 'remove':
+			//this._refresh();
+			break;
+
+		default:
+			break;
+	}
+};
+
+Odm.prototype.drop = function () {
+	if (this.state() !== 'dropped') {
+		this.state('dropped');
+
+		this.emit('drop', this);
+
+		if (this._from) {
+			delete this._from._odm;
+		}
+
+		delete this._name;
+	}
+
+	return true;
+};
+
+/**
+ * Queries the current object and returns a result that can
+ * also be queried in the same way.
+ * @param {String} prop The property to delve into.
+ * @param {Object=} query Optional query that limits the returned documents.
+ * @returns {Odm}
+ */
+Odm.prototype.$ = function (prop, query) {
+	var data,
+		tmpQuery,
+		tmpColl,
+		tmpOdm;
+
+	if (prop === this._from.primaryKey()) {
+		// Query is against a specific PK id
+		tmpQuery = {};
+		tmpQuery[prop] = query;
+
+		data = this._from.find(tmpQuery, {$decouple: false});
+		tmpColl = new Collection();
+
+		tmpColl.setData(data, {$decouple: false});
+		tmpColl._linked = this._from._linked;
+	} else {
+		// Query is against an array of sub-documents
+		tmpColl = new Collection();
+		data = this._from.find({}, {$decouple: false});
+
+		if (data[0] && data[0][prop]) {
+			// Set the temp collection data to the array property
+			tmpColl.setData(data[0][prop], {$decouple: false});
+
+			// Check if we need to filter this array further
+			if (query) {
+				data = tmpColl.find(query, {$decouple: false});
+				tmpColl.setData(data, {$decouple: false});
+			}
+		}
+
+		tmpColl._linked = this._from._linked;
+	}
+
+	tmpOdm = new Odm(tmpColl);
+
+	tmpOdm.parent(this);
+	tmpOdm.query(query);
+
+	return tmpOdm;
+};
+
+/**
+ * Gets / sets a property on the current ODM document.
+ * @param {String} prop The name of the property.
+ * @param {*} val Optional value to set.
+ * @returns {*}
+ */
+Odm.prototype.prop = function (prop, val) {
+	var tmpQuery;
+
+	if (prop !== undefined) {
+		if (val !== undefined) {
+			tmpQuery = {};
+			tmpQuery[prop] = val;
+
+			return this._from.update({}, tmpQuery);
+		}
+
+		if (this._from._data[0]) {
+			return this._from._data[0][prop];
+		}
+	}
+
+	return undefined;
+};
+
+/**
+ * Get the ODM instance for this collection.
+ * @returns {Odm}
+ */
+Collection.prototype.odm = function () {
+	if (!this._odm) {
+		this._odm = new Odm(this);
+	}
+
+	return this._odm;
+};
+
+Shared.finishModule('Odm');
+module.exports = Odm;
+},{"./Collection":4,"./Shared":31}],24:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path');
 
@@ -7423,7 +7645,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":26,"./Shared":30}],24:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":31}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7578,7 +7800,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7617,7 +7839,7 @@ Shared.mixin(Overview.prototype, 'Mixin.Events');
 Collection = _dereq_('./Collection');
 DbDocument = _dereq_('./Document');
 Core = Shared.modules.Core;
-CoreInit = Shared.modules.Core.prototype.init;
+CoreInit = Core.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -7801,7 +8023,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":4,"./Document":8,"./Shared":30}],26:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Document":8,"./Shared":31}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8214,7 +8436,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":30}],27:[function(_dereq_,module,exports){
+},{"./Shared":31}],28:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -8587,7 +8809,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"localforage":40}],28:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./Shared":31,"localforage":41}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8608,7 +8830,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		// Register the output with the reactorIO
 		this.chain(reactorOut);
 	} else {
-		throw('ForerunnerDB.ReactorIO: ReactorIO requires an in, out and process argument to instantiate!');
+		throw('ForerunnerDB.ReactorIO: ReactorIO requires in, out and process arguments to instantiate!');
 	}
 };
 
@@ -8649,7 +8871,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":30}],29:[function(_dereq_,module,exports){
+},{"./Shared":31}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8767,11 +8989,11 @@ Core.prototype.init = function () {
 
 Shared.finishModule('Rest');
 module.exports = Rest;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":30,"rest":43,"rest/interceptor/mime":48}],30:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./Shared":31,"rest":44,"rest/interceptor/mime":49}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
-	version: '1.3.26',
+	version: '1.3.27',
 	modules: {},
 
 	_synth: {},
@@ -8905,7 +9127,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Triggers":22,"./Overload":24}],31:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Triggers":22,"./Overload":25}],32:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -9025,7 +9247,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],32:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9055,7 +9277,6 @@ View.prototype.init = function (name, query, options) {
 	var self = this;
 
 	this._name = name;
-	this._groups = [];
 	this._listeners = {};
 	this._querySettings = {};
 	this._debug = {};
@@ -9158,6 +9379,7 @@ View.prototype.from = function (collection) {
 		}
 
 		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
 
 		// Create a new reactor IO graph node that intercepts chain packets from the
 		// view's "from" collection and determines how they should be interpreted by
@@ -9487,7 +9709,6 @@ View.prototype.drop = function () {
 			delete this._from;
 			delete this._privateData;
 			delete this._io;
-			delete this._groups;
 			delete this._listeners;
 			delete this._querySettings;
 			delete this._db;
@@ -9960,7 +10181,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":28,"./Shared":30}],33:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":29,"./Shared":31}],34:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -10020,7 +10241,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],34:[function(_dereq_,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -10127,7 +10348,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":36}],35:[function(_dereq_,module,exports){
+},{"asap":37}],36:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -10309,7 +10530,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":34,"asap":36}],36:[function(_dereq_,module,exports){
+},{"./core.js":35,"asap":37}],37:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -10426,7 +10647,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":33}],37:[function(_dereq_,module,exports){
+},{"_process":34}],38:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -10841,7 +11062,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":35}],38:[function(_dereq_,module,exports){
+},{"promise":36}],39:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -11172,7 +11393,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":41,"promise":35}],39:[function(_dereq_,module,exports){
+},{"./../utils/serializer":42,"promise":36}],40:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -11590,7 +11811,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":41,"promise":35}],40:[function(_dereq_,module,exports){
+},{"./../utils/serializer":42,"promise":36}],41:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12012,7 +12233,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":37,"./drivers/localstorage":38,"./drivers/websql":39,"promise":35}],41:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":38,"./drivers/localstorage":39,"./drivers/websql":40,"promise":36}],42:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12244,7 +12465,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],42:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -12475,7 +12696,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./util/mixin":78}],43:[function(_dereq_,module,exports){
+},{"./util/mixin":79}],44:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -12502,7 +12723,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client/default":45,"./client/xhr":46}],44:[function(_dereq_,module,exports){
+},{"./client/default":46,"./client/xhr":47}],45:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -12568,7 +12789,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -12694,7 +12915,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../client":44}],46:[function(_dereq_,module,exports){
+},{"../client":45}],47:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -12870,7 +13091,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":42,"../client":44,"../util/normalizeHeaderName":79,"../util/responsePromise":80,"when":75}],47:[function(_dereq_,module,exports){
+},{"../UrlBuilder":43,"../client":45,"../util/normalizeHeaderName":80,"../util/responsePromise":81,"when":76}],48:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13037,7 +13258,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client":44,"./client/default":45,"./util/mixin":78,"./util/responsePromise":80,"when":75}],48:[function(_dereq_,module,exports){
+},{"./client":45,"./client/default":46,"./util/mixin":79,"./util/responsePromise":81,"when":76}],49:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13149,7 +13370,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":47,"../mime":51,"../mime/registry":52,"when":75}],49:[function(_dereq_,module,exports){
+},{"../interceptor":48,"../mime":52,"../mime/registry":53,"when":76}],50:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13210,7 +13431,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":42,"../interceptor":47}],50:[function(_dereq_,module,exports){
+},{"../UrlBuilder":43,"../interceptor":48}],51:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13266,7 +13487,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":47,"../util/mixin":78,"../util/uriTemplate":82}],51:[function(_dereq_,module,exports){
+},{"../interceptor":48,"../util/mixin":79,"../util/uriTemplate":83}],52:[function(_dereq_,module,exports){
 /*
 * Copyright 2014 the original author or authors
 * @license MIT, see LICENSE.txt for details
@@ -13321,7 +13542,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],52:[function(_dereq_,module,exports){
+},{}],53:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13438,7 +13659,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../mime":51,"./type/application/hal":53,"./type/application/json":54,"./type/application/x-www-form-urlencoded":55,"./type/multipart/form-data":56,"./type/text/plain":57,"when":75}],53:[function(_dereq_,module,exports){
+},{"../mime":52,"./type/application/hal":54,"./type/application/json":55,"./type/application/x-www-form-urlencoded":56,"./type/multipart/form-data":57,"./type/text/plain":58,"when":76}],54:[function(_dereq_,module,exports){
 /*
  * Copyright 2013-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13579,7 +13800,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../../../interceptor/pathPrefix":49,"../../../interceptor/template":50,"../../../util/find":76,"../../../util/lazyPromise":77,"../../../util/responsePromise":80,"when":75}],54:[function(_dereq_,module,exports){
+},{"../../../interceptor/pathPrefix":50,"../../../interceptor/template":51,"../../../util/find":77,"../../../util/lazyPromise":78,"../../../util/responsePromise":81,"when":76}],55:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13628,7 +13849,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],55:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13720,7 +13941,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],57:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13795,7 +14016,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],57:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13826,7 +14047,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -13845,7 +14066,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":59,"./env":71,"./makePromise":73}],59:[function(_dereq_,module,exports){
+},{"./Scheduler":60,"./env":72,"./makePromise":74}],60:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -13927,7 +14148,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],60:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -13955,7 +14176,7 @@ define(function() {
 	return TimeoutError;
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-},{}],61:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14012,7 +14233,7 @@ define(function() {
 
 
 
-},{}],62:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14303,7 +14524,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../apply":61,"../state":74}],63:[function(_dereq_,module,exports){
+},{"../apply":62,"../state":75}],64:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14465,7 +14686,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],64:[function(_dereq_,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14494,7 +14715,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14516,7 +14737,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../state":74}],66:[function(_dereq_,module,exports){
+},{"../state":75}],67:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14583,7 +14804,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],67:[function(_dereq_,module,exports){
+},{}],68:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14609,7 +14830,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],68:[function(_dereq_,module,exports){
+},{}],69:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14689,7 +14910,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../TimeoutError":60,"../env":71}],69:[function(_dereq_,module,exports){
+},{"../TimeoutError":61,"../env":72}],70:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14777,7 +14998,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../env":71,"../format":72}],70:[function(_dereq_,module,exports){
+},{"../env":72,"../format":73}],71:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14817,7 +15038,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 
-},{}],71:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -14894,7 +15115,7 @@ define(function(_dereq_) {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":33}],72:[function(_dereq_,module,exports){
+},{"_process":34}],73:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14952,7 +15173,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],73:[function(_dereq_,module,exports){
+},{}],74:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -15883,7 +16104,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":33}],74:[function(_dereq_,module,exports){
+},{"_process":34}],75:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15920,7 +16141,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],75:[function(_dereq_,module,exports){
+},{}],76:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 
 /**
@@ -16151,7 +16372,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./lib/Promise":58,"./lib/TimeoutError":60,"./lib/apply":61,"./lib/decorators/array":62,"./lib/decorators/flow":63,"./lib/decorators/fold":64,"./lib/decorators/inspect":65,"./lib/decorators/iterate":66,"./lib/decorators/progress":67,"./lib/decorators/timed":68,"./lib/decorators/unhandledRejection":69,"./lib/decorators/with":70}],76:[function(_dereq_,module,exports){
+},{"./lib/Promise":59,"./lib/TimeoutError":61,"./lib/apply":62,"./lib/decorators/array":63,"./lib/decorators/flow":64,"./lib/decorators/fold":65,"./lib/decorators/inspect":66,"./lib/decorators/iterate":67,"./lib/decorators/progress":68,"./lib/decorators/timed":69,"./lib/decorators/unhandledRejection":70,"./lib/decorators/with":71}],77:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16194,7 +16415,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],78:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16251,7 +16472,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"when":75}],78:[function(_dereq_,module,exports){
+},{"when":76}],79:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16301,7 +16522,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],79:[function(_dereq_,module,exports){
+},{}],80:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16341,7 +16562,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],80:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 /*
  * Copyright 2014-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16483,7 +16704,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./normalizeHeaderName":79,"when":75}],81:[function(_dereq_,module,exports){
+},{"./normalizeHeaderName":80,"when":76}],82:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16664,7 +16885,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],82:[function(_dereq_,module,exports){
+},{}],83:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16837,4 +17058,4 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./uriEncoder":81}]},{},[1]);
+},{"./uriEncoder":82}]},{},[1]);

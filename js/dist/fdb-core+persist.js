@@ -22,7 +22,8 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Crc,
-	Overload;
+	Overload,
+	ReactorIO;
 
 Shared = _dereq_('./Shared');
 
@@ -41,7 +42,6 @@ Collection.prototype.init = function (name) {
 	this._crcLookup = new KeyValueStore('crcLookup');
 	this._name = name;
 	this._data = [];
-	this._groups = [];
 	this._metrics = new Metrics();
 
 	this._deferQueue = {
@@ -87,6 +87,7 @@ IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 Overload = _dereq_('./Overload');
+ReactorIO = _dereq_('./ReactorIO');
 
 /**
  * Returns a checksum of a string.
@@ -122,6 +123,8 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
+	var key;
+
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
@@ -134,19 +137,12 @@ Collection.prototype.drop = function () {
 
 			delete this._db._collection[this._name];
 
-			if (this._groups && this._groups.length) {
-				var groupArr = [],
-					i;
-
-				// Copy the group array because if we call removeCollection on a group
-				// it will alter the groups array of this collection mid-loop!
-				for (i = 0; i < this._groups.length; i++) {
-					groupArr.push(this._groups[i]);
-				}
-
-				// Loop any groups we are part of and remove ourselves from them
-				for (i = 0; i < groupArr.length; i++) {
-					this._groups[i].removeCollection(this);
+			// Remove any reactor IO chain links
+			if (this._collate) {
+				for (key in this._collate) {
+					if (this._collate.hasOwnProperty(key)) {
+						this.collateRemove(key);
+					}
 				}
 			}
 
@@ -156,7 +152,6 @@ Collection.prototype.drop = function () {
 			delete this._crcLookup;
 			delete this._name;
 			delete this._data;
-			delete this._groups;
 			delete this._metrics;
 
 			return true;
@@ -2785,14 +2780,43 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.feedIn = function (collection) {
+Collection.prototype.collateAdd = function (collection, process) {
 	if (typeof collection === 'string') {
 		// The collection passed is a name, not a reference so get
 		// the reference from the name
-		collection = this._db.collection(collection);
+		collection = this._db.collection(collection, {
+			autoCreate: false,
+			throwError: false
+		});
 	}
 
+	if (collection) {
+		this._collate = this._collate || {};
+		this._collate[collection.name()] = new ReactorIO(collection, this, process);
 
+		return this;
+	} else {
+		throw('Cannot collate from a non-existent collection!');
+	}
+};
+
+Collection.prototype.collateRemove = function (collection) {
+	if (typeof collection === 'object') {
+		// We need to have the name of the collection to remove it
+		collection = collection.name();
+	}
+
+	if (collection) {
+		// Drop the reactor IO chain node
+		this._collate[collection].drop();
+
+		// Remove the collection data from the collate object
+		delete this._collate[collection];
+
+		return this;
+	} else {
+		throw('No collection name passed to collateRemove() or collection not found!');
+	}
 };
 
 Core.prototype.collection = new Overload({
@@ -2874,7 +2898,9 @@ Core.prototype.collection = new Overload({
 		if (name) {
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
-					throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					if (options && options.throwError !== false) {
+						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					}
 				}
 
 				if (this.debug()) {
@@ -2890,7 +2916,9 @@ Core.prototype.collection = new Overload({
 
 			return this._collection[name];
 		} else {
-			throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			if (!options || (options && options.throwError !== false)) {
+				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			}
 		}
 	}
 });
@@ -2945,7 +2973,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":5,"./IndexBinaryTree":6,"./IndexHashMap":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":19,"./Path":20,"./Shared":22}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./IndexBinaryTree":6,"./IndexHashMap":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":19,"./Path":20,"./ReactorIO":22,"./Shared":23}],3:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3036,8 +3064,31 @@ CollectionGroup.prototype.addCollection = function (collection) {
 
 			// Add the collection
 			this._collections.push(collection);
+			collection._groups = collection._groups || [];
 			collection._groups.push(this);
 			collection.chain(this);
+
+			// Hook the collection's drop event to destroy group data
+			collection.on('drop', function () {
+				// Remove collection from any group associations
+				if (collection._groups && collection._groups.length) {
+					var groupArr = [],
+						i;
+
+					// Copy the group array because if we call removeCollection on a group
+					// it will alter the groups array of this collection mid-loop!
+					for (i = 0; i < collection._groups.length; i++) {
+						groupArr.push(collection._groups[i]);
+					}
+
+					// Loop any groups we are part of and remove ourselves from them
+					for (i = 0; i < groupArr.length; i++) {
+						collection._groups[i].removeCollection(collection);
+					}
+				}
+
+				delete collection._groups;
+			});
 
 			// Add collection's data
 			this._data.insert(collection.find());
@@ -3056,11 +3107,14 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			collection.unChain(this);
 			this._collections.splice(collectionIndex, 1);
 
+			collection._groups = collection._groups || [];
 			groupIndex = collection._groups.indexOf(this);
 
 			if (groupIndex !== -1) {
 				collection._groups.splice(groupIndex, 1);
 			}
+
+			collection.off('drop');
 		}
 
 		if (this._collections.length === 0) {
@@ -3237,7 +3291,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":22}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Shared":23}],4:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3619,7 +3673,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload":19,"./Shared":22}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload":19,"./Shared":23}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -3942,7 +3996,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":20,"./Shared":22}],7:[function(_dereq_,module,exports){
+},{"./Path":20,"./Shared":23}],7:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -4293,7 +4347,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":20,"./Shared":22}],8:[function(_dereq_,module,exports){
+},{"./Path":20,"./Shared":23}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -4508,7 +4562,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":22}],9:[function(_dereq_,module,exports){
+},{"./Shared":23}],9:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -4583,7 +4637,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":18,"./Shared":22}],10:[function(_dereq_,module,exports){
+},{"./Operation":18,"./Shared":23}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -5669,7 +5723,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":20,"./Shared":22}],19:[function(_dereq_,module,exports){
+},{"./Path":20,"./Shared":23}],19:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -6237,7 +6291,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":22}],21:[function(_dereq_,module,exports){
+},{"./Shared":23}],21:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -6610,11 +6664,73 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":22,"localforage":30}],22:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":23,"localforage":31}],22:[function(_dereq_,module,exports){
+"use strict";
+
+var Shared = _dereq_('./Shared');
+
+var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
+	if (reactorIn && reactorOut && reactorProcess) {
+		this._reactorIn = reactorIn;
+		this._reactorOut = reactorOut;
+		this._chainHandler = reactorProcess;
+
+		if (!reactorIn.chain || !reactorOut.chainReceive) {
+			throw('ForerunnerDB.ReactorIO: ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
+		}
+
+		// Register the reactorIO with the input
+		reactorIn.chain(this);
+
+		// Register the output with the reactorIO
+		this.chain(reactorOut);
+	} else {
+		throw('ForerunnerDB.ReactorIO: ReactorIO requires in, out and process arguments to instantiate!');
+	}
+};
+
+Shared.addModule('ReactorIO', ReactorIO);
+
+ReactorIO.prototype.drop = function () {
+	if (this._state !== 'dropped') {
+		this._state = 'dropped';
+
+		// Remove links
+		if (this._reactorIn) {
+			this._reactorIn.unChain(this);
+		}
+
+		if (this._reactorOut) {
+			this.unChain(this._reactorOut);
+		}
+
+		delete this._reactorIn;
+		delete this._reactorOut;
+		delete this._chainHandler;
+
+		this.emit('drop', this);
+	}
+
+	return true;
+};
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(ReactorIO.prototype, 'state');
+
+Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
+Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
+
+Shared.finishModule('ReactorIO');
+module.exports = ReactorIO;
+},{"./Shared":23}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
-	version: '1.3.26',
+	version: '1.3.27',
 	modules: {},
 
 	_synth: {},
@@ -6748,7 +6864,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":10,"./Mixin.ChainReactor":11,"./Mixin.Common":12,"./Mixin.Constants":13,"./Mixin.Events":14,"./Mixin.Matching":15,"./Mixin.Sorting":16,"./Mixin.Triggers":17,"./Overload":19}],23:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":10,"./Mixin.ChainReactor":11,"./Mixin.Common":12,"./Mixin.Constants":13,"./Mixin.Events":14,"./Mixin.Matching":15,"./Mixin.Sorting":16,"./Mixin.Triggers":17,"./Overload":19}],24:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -6808,7 +6924,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -6915,7 +7031,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":26}],25:[function(_dereq_,module,exports){
+},{"asap":27}],26:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -7097,7 +7213,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":24,"asap":26}],26:[function(_dereq_,module,exports){
+},{"./core.js":25,"asap":27}],27:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -7214,7 +7330,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":23}],27:[function(_dereq_,module,exports){
+},{"_process":24}],28:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -7629,7 +7745,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":25}],28:[function(_dereq_,module,exports){
+},{"promise":26}],29:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -7960,7 +8076,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":31,"promise":25}],29:[function(_dereq_,module,exports){
+},{"./../utils/serializer":32,"promise":26}],30:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -8378,7 +8494,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":31,"promise":25}],30:[function(_dereq_,module,exports){
+},{"./../utils/serializer":32,"promise":26}],31:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -8800,7 +8916,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":27,"./drivers/localstorage":28,"./drivers/websql":29,"promise":25}],31:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":28,"./drivers/localstorage":29,"./drivers/websql":30,"promise":26}],32:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 

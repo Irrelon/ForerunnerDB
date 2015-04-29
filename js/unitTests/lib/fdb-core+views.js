@@ -282,7 +282,8 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Crc,
-	Overload;
+	Overload,
+	ReactorIO;
 
 Shared = _dereq_('./Shared');
 
@@ -301,7 +302,6 @@ Collection.prototype.init = function (name) {
 	this._crcLookup = new KeyValueStore('crcLookup');
 	this._name = name;
 	this._data = [];
-	this._groups = [];
 	this._metrics = new Metrics();
 
 	this._deferQueue = {
@@ -347,6 +347,7 @@ IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Crc = _dereq_('./Crc');
 Core = Shared.modules.Core;
 Overload = _dereq_('./Overload');
+ReactorIO = _dereq_('./ReactorIO');
 
 /**
  * Returns a checksum of a string.
@@ -382,6 +383,8 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
+	var key;
+
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
@@ -394,19 +397,12 @@ Collection.prototype.drop = function () {
 
 			delete this._db._collection[this._name];
 
-			if (this._groups && this._groups.length) {
-				var groupArr = [],
-					i;
-
-				// Copy the group array because if we call removeCollection on a group
-				// it will alter the groups array of this collection mid-loop!
-				for (i = 0; i < this._groups.length; i++) {
-					groupArr.push(this._groups[i]);
-				}
-
-				// Loop any groups we are part of and remove ourselves from them
-				for (i = 0; i < groupArr.length; i++) {
-					this._groups[i].removeCollection(this);
+			// Remove any reactor IO chain links
+			if (this._collate) {
+				for (key in this._collate) {
+					if (this._collate.hasOwnProperty(key)) {
+						this.collateRemove(key);
+					}
 				}
 			}
 
@@ -416,7 +412,6 @@ Collection.prototype.drop = function () {
 			delete this._crcLookup;
 			delete this._name;
 			delete this._data;
-			delete this._groups;
 			delete this._metrics;
 
 			return true;
@@ -3045,14 +3040,43 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.feedIn = function (collection) {
+Collection.prototype.collateAdd = function (collection, process) {
 	if (typeof collection === 'string') {
 		// The collection passed is a name, not a reference so get
 		// the reference from the name
-		collection = this._db.collection(collection);
+		collection = this._db.collection(collection, {
+			autoCreate: false,
+			throwError: false
+		});
 	}
 
+	if (collection) {
+		this._collate = this._collate || {};
+		this._collate[collection.name()] = new ReactorIO(collection, this, process);
 
+		return this;
+	} else {
+		throw('Cannot collate from a non-existent collection!');
+	}
+};
+
+Collection.prototype.collateRemove = function (collection) {
+	if (typeof collection === 'object') {
+		// We need to have the name of the collection to remove it
+		collection = collection.name();
+	}
+
+	if (collection) {
+		// Drop the reactor IO chain node
+		this._collate[collection].drop();
+
+		// Remove the collection data from the collate object
+		delete this._collate[collection];
+
+		return this;
+	} else {
+		throw('No collection name passed to collateRemove() or collection not found!');
+	}
 };
 
 Core.prototype.collection = new Overload({
@@ -3134,7 +3158,9 @@ Core.prototype.collection = new Overload({
 		if (name) {
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
-					throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					if (options && options.throwError !== false) {
+						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					}
 				}
 
 				if (this.debug()) {
@@ -3150,7 +3176,9 @@ Core.prototype.collection = new Overload({
 
 			return this._collection[name];
 		} else {
-			throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			if (!options || (options && options.throwError !== false)) {
+				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			}
 		}
 	}
 });
@@ -3205,7 +3233,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":20,"./Path":21,"./Shared":23}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":20,"./Path":21,"./ReactorIO":22,"./Shared":23}],4:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3296,8 +3324,31 @@ CollectionGroup.prototype.addCollection = function (collection) {
 
 			// Add the collection
 			this._collections.push(collection);
+			collection._groups = collection._groups || [];
 			collection._groups.push(this);
 			collection.chain(this);
+
+			// Hook the collection's drop event to destroy group data
+			collection.on('drop', function () {
+				// Remove collection from any group associations
+				if (collection._groups && collection._groups.length) {
+					var groupArr = [],
+						i;
+
+					// Copy the group array because if we call removeCollection on a group
+					// it will alter the groups array of this collection mid-loop!
+					for (i = 0; i < collection._groups.length; i++) {
+						groupArr.push(collection._groups[i]);
+					}
+
+					// Loop any groups we are part of and remove ourselves from them
+					for (i = 0; i < groupArr.length; i++) {
+						collection._groups[i].removeCollection(collection);
+					}
+				}
+
+				delete collection._groups;
+			});
 
 			// Add collection's data
 			this._data.insert(collection.find());
@@ -3316,11 +3367,14 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			collection.unChain(this);
 			this._collections.splice(collectionIndex, 1);
 
+			collection._groups = collection._groups || [];
 			groupIndex = collection._groups.indexOf(this);
 
 			if (groupIndex !== -1) {
 				collection._groups.splice(groupIndex, 1);
 			}
+
+			collection.off('drop');
 		}
 
 		if (this._collections.length === 0) {
@@ -6518,7 +6572,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		// Register the output with the reactorIO
 		this.chain(reactorOut);
 	} else {
-		throw('ForerunnerDB.ReactorIO: ReactorIO requires an in, out and process argument to instantiate!');
+		throw('ForerunnerDB.ReactorIO: ReactorIO requires in, out and process arguments to instantiate!');
 	}
 };
 
@@ -6563,7 +6617,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.26',
+	version: '1.3.27',
 	modules: {},
 
 	_synth: {},
@@ -6727,7 +6781,6 @@ View.prototype.init = function (name, query, options) {
 	var self = this;
 
 	this._name = name;
-	this._groups = [];
 	this._listeners = {};
 	this._querySettings = {};
 	this._debug = {};
@@ -6830,6 +6883,7 @@ View.prototype.from = function (collection) {
 		}
 
 		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
 
 		// Create a new reactor IO graph node that intercepts chain packets from the
 		// view's "from" collection and determines how they should be interpreted by
@@ -7159,7 +7213,6 @@ View.prototype.drop = function () {
 			delete this._from;
 			delete this._privateData;
 			delete this._io;
-			delete this._groups;
 			delete this._listeners;
 			delete this._querySettings;
 			delete this._db;
