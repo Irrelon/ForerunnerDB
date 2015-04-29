@@ -148,6 +148,7 @@ Grid.prototype.from = function (collection) {
 		}
 
 		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
 		this.refresh();
 	}
 

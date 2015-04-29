@@ -129,6 +129,7 @@ View.prototype.from = function (collection) {
 		}
 
 		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
 
 		// Create a new reactor IO graph node that intercepts chain packets from the
 		// view's "from" collection and determines how they should be interpreted by
@@ -248,6 +249,7 @@ View.prototype.from = function (collection) {
 View.prototype._collectionDropped = function (collection) {
 	if (collection) {
 		// Collection was dropped, remove from view
+		debugger;
 		delete this._from;
 	}
 };
