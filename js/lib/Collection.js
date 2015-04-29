@@ -13,7 +13,8 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Crc,
-	Overload;
+	Overload,
+	ReactorIO;
 
 Shared = require('./Shared');
 
@@ -32,7 +33,6 @@ Collection.prototype.init = function (name) {
 	this._crcLookup = new KeyValueStore('crcLookup');
 	this._name = name;
 	this._data = [];
-	this._groups = [];
 	this._metrics = new Metrics();
 
 	this._deferQueue = {
@@ -78,6 +78,7 @@ IndexBinaryTree = require('./IndexBinaryTree');
 Crc = require('./Crc');
 Core = Shared.modules.Core;
 Overload = require('./Overload');
+ReactorIO = require('./ReactorIO');
 
 /**
  * Returns a checksum of a string.
@@ -113,6 +114,8 @@ Collection.prototype.data = function () {
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function () {
+	var key;
+
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
@@ -125,19 +128,12 @@ Collection.prototype.drop = function () {
 
 			delete this._db._collection[this._name];
 
-			if (this._groups && this._groups.length) {
-				var groupArr = [],
-					i;
-
-				// Copy the group array because if we call removeCollection on a group
-				// it will alter the groups array of this collection mid-loop!
-				for (i = 0; i < this._groups.length; i++) {
-					groupArr.push(this._groups[i]);
-				}
-
-				// Loop any groups we are part of and remove ourselves from them
-				for (i = 0; i < groupArr.length; i++) {
-					this._groups[i].removeCollection(this);
+			// Remove any reactor IO chain links
+			if (this._collate) {
+				for (key in this._collate) {
+					if (this._collate.hasOwnProperty(key)) {
+						this.collateRemove(key);
+					}
 				}
 			}
 
@@ -147,7 +143,6 @@ Collection.prototype.drop = function () {
 			delete this._crcLookup;
 			delete this._name;
 			delete this._data;
-			delete this._groups;
 			delete this._metrics;
 
 			return true;
@@ -2776,14 +2771,43 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.feedIn = function (collection) {
+Collection.prototype.collateAdd = function (collection, process) {
 	if (typeof collection === 'string') {
 		// The collection passed is a name, not a reference so get
 		// the reference from the name
-		collection = this._db.collection(collection);
+		collection = this._db.collection(collection, {
+			autoCreate: false,
+			throwError: false
+		});
 	}
 
+	if (collection) {
+		this._collate = this._collate || {};
+		this._collate[collection.name()] = new ReactorIO(collection, this, process);
 
+		return this;
+	} else {
+		throw('Cannot collate from a non-existent collection!');
+	}
+};
+
+Collection.prototype.collateRemove = function (collection) {
+	if (typeof collection === 'object') {
+		// We need to have the name of the collection to remove it
+		collection = collection.name();
+	}
+
+	if (collection) {
+		// Drop the reactor IO chain node
+		this._collate[collection].drop();
+
+		// Remove the collection data from the collate object
+		delete this._collate[collection];
+
+		return this;
+	} else {
+		throw('No collection name passed to collateRemove() or collection not found!');
+	}
 };
 
 Core.prototype.collection = new Overload({
@@ -2865,7 +2889,9 @@ Core.prototype.collection = new Overload({
 		if (name) {
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
-					throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					if (options && options.throwError !== false) {
+						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+					}
 				}
 
 				if (this.debug()) {
@@ -2881,7 +2907,9 @@ Core.prototype.collection = new Overload({
 
 			return this._collection[name];
 		} else {
-			throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			if (!options || (options && options.throwError !== false)) {
+				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+			}
 		}
 	}
 });
