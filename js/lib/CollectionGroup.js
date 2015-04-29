@@ -88,8 +88,31 @@ CollectionGroup.prototype.addCollection = function (collection) {
 
 			// Add the collection
 			this._collections.push(collection);
+			collection._groups = collection._groups || [];
 			collection._groups.push(this);
 			collection.chain(this);
+
+			// Hook the collection's drop event to destroy group data
+			collection.on('drop', function () {
+				// Remove collection from any group associations
+				if (collection._groups && collection._groups.length) {
+					var groupArr = [],
+						i;
+
+					// Copy the group array because if we call removeCollection on a group
+					// it will alter the groups array of this collection mid-loop!
+					for (i = 0; i < collection._groups.length; i++) {
+						groupArr.push(collection._groups[i]);
+					}
+
+					// Loop any groups we are part of and remove ourselves from them
+					for (i = 0; i < groupArr.length; i++) {
+						collection._groups[i].removeCollection(collection);
+					}
+				}
+
+				delete collection._groups;
+			});
 
 			// Add collection's data
 			this._data.insert(collection.find());
@@ -108,11 +131,14 @@ CollectionGroup.prototype.removeCollection = function (collection) {
 			collection.unChain(this);
 			this._collections.splice(collectionIndex, 1);
 
+			collection._groups = collection._groups || [];
 			groupIndex = collection._groups.indexOf(this);
 
 			if (groupIndex !== -1) {
 				collection._groups.splice(groupIndex, 1);
 			}
+
+			collection.off('drop');
 		}
 
 		if (this._collections.length === 0) {
