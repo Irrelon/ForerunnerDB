@@ -1934,3 +1934,72 @@ QUnit.test('Collection.find() :: Return field selection', function () {
 
 	base.dbDown();
 });
+
+QUnit.test('Collection.collateAdd() :: Add a few collections and test collation functionality', function () {
+	base.dbUp();
+	base.dataUp();
+
+	var parent = db.collection('parent');
+
+	parent.collateAdd(user, function (packet) {
+		"use strict";
+		strictEqual(packet.type, 'insert', 'Collation system received insert correctly');
+	});
+
+	user.insert(singleUserObject);
+
+	base.dbDown();
+});
+
+QUnit.test('Collection.odm() :: Walk a document management object', function () {
+	"use strict";
+	base.dbUp();
+
+	var coll = db.collection('test');
+
+	coll.setData({
+		_id: '3',
+		name: 'Kat',
+		age: 12,
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}, {
+			_id: 'zjs',
+			val: 5,
+			comments: [{
+				_id: "1",
+				msg: "hello"
+			}, {
+				_id: "2",
+				msg: "goodbye"
+			}]
+		}],
+		stringArr: [
+			"goo",
+			"joo"
+		],
+		log: {
+			val: 1
+		},
+		orgId: "2",
+		friends: ["2"]
+	});
+
+	var collOdm = coll.odm(),
+		result;
+
+	collOdm
+		.$("_id", "3")
+		.$("arr", {"_id": "zjs"})
+		.$("comments", {"_id": "1"})
+		//.$("comments")
+		.prop("msg", "My comment has been updated");
+
+	result = coll.find();
+
+	strictEqual(result[0].arr[1].comments[0].msg, "My comment has been updated", 'Comment updated successfully via ODM');
+
+	base.dbDown();
+});
