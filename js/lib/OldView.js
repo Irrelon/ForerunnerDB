@@ -24,7 +24,6 @@ OldView.prototype.init = function (viewName) {
 	var self = this;
 
 	this._name = viewName;
-	this._groups = [];
 	this._listeners = {};
 	this._query = {
 		query: {},

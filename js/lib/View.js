@@ -27,7 +27,6 @@ View.prototype.init = function (name, query, options) {
 	var self = this;
 
 	this._name = name;
-	this._groups = [];
 	this._listeners = {};
 	this._querySettings = {};
 	this._debug = {};
@@ -459,7 +458,6 @@ View.prototype.drop = function () {
 			delete this._from;
 			delete this._privateData;
 			delete this._io;
-			delete this._groups;
 			delete this._listeners;
 			delete this._querySettings;
 			delete this._db;
