@@ -4712,6 +4712,34 @@ var idCounter = 0,
 
 Common = {
 	/**
+	 * Gets / sets data in the item store. The store can be used to set and
+	 * retrieve data against a key. Useful for adding arbitrary key/value data
+	 * to a collection / view etc and retrieving it later.
+	 * @param {String|*} key The key under which to store the passed value or
+	 * retrieve the existing stored value.
+	 * @param {*=} val Optional value. If passed will overwrite the existing value
+	 * stored against the specified key if one currently exists.
+	 * @returns {*}
+	 */
+	store: function (key, val) {
+		if (key !== undefined) {
+			if (val !== undefined) {
+				// Store the data
+				this._store = this._store || {};
+				this._store[key] = val;
+
+				return this;
+			}
+
+			if (this._store) {
+				return this._store[key];
+			}
+		}
+
+		return undefined;
+	},
+
+	/**
 	 * Returns a non-referenced version of the passed object / array.
 	 * @param {Object} data The object or array to return as a non-referenced version.
 	 * @param {Number=} copies Optional number of copies to produce. If specified, the return
@@ -6730,7 +6758,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.27',
+	version: '1.3.28',
 	modules: {},
 
 	_synth: {},
