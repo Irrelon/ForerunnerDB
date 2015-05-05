@@ -597,6 +597,38 @@ The following example moves "Milk" in the "shoppingList" array to index 1 in the
 		}
 	});
 
+#### Array Positional (.$)
+Often you want to update a sub-document stored inside an array. You can use the array positional
+operator to tell ForerunnerDB that you wish to update a sub-document that matches your query
+clause.
+
+The following example updates the sub-document in the array *"arr"* with the _id *"foo"* so
+that the *"name"* property is set to *"John"*:
+
+	db.collection('test').setData({
+		_id: '2',
+		arr: [{
+			_id: 'foo',
+			name: 'Jim'
+		}]
+	});
+	
+	var result = db.collection('test').update({
+		_id: '2',
+		"arr": {
+			"_id": "foo"
+		}
+	}, {
+		"arr.$": {
+			name: 'John'
+		}
+	});
+
+Internally this operation checks the update for property's ending in ".$" and then looks
+at the query part of the call to see if a corresponding clause exists for it. In the example
+above the "arr.$" property in the update part has a corresponding "arr" in the query part
+which determines which sub-documents are to be updated based on if they match or not.
+
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
 
