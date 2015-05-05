@@ -1025,7 +1025,28 @@ driver() method:
 
 	var db = new ForerunnerDB();
 	db.persist.driver('LocalStorage');
-	
+
+## Storing Arbitrary Key/Value Data
+Sometimes it can be useful to store key/value data on a class instance such as the core db
+class or a collection or view instance. This can later be retrieved somewhere else in your
+code to provide a quick and easy data-store across your application that is outside of the
+main storage system of ForerunnerDB, does not persist, is not indexed or maintained and will
+be destroyed when the supporting instance is dropped.
+
+To use the store, simply call the store() method on a collection or view:
+ 
+	var db = new ForerunnerDB();
+	db.collection('myColl').store('myKey', 'myVal');
+
+You can then lookup the value at a later time:
+
+	var value = db.collection('myColl').store('myKey');
+	console.log(value); // Will output "myVal"
+
+You can also remove a key/value from the store via the unStore() method:
+
+	db.collection('myColl').unStore('myKey');
+
 ## Grid / Table Output
 ForerunnerDB 1.3 includes a grid / table module that allows you to output data from a collection or view to
 an HTML table that can be sorted and is data-bound so the table will react to changes in the underlying

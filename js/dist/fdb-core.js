@@ -4422,6 +4422,20 @@ Common = {
 	},
 
 	/**
+	 * Removes a previously stored key/value pair from the item store, set previously
+	 * by using the store() method.
+	 * @param {String|*} key The key of the key/value pair to remove;
+	 * @returns {Common} Returns this for chaining.
+	 */
+	unStore: function (key) {
+		if (key !== undefined) {
+			delete this._store[key];
+		}
+
+		return this;
+	},
+
+	/**
 	 * Returns a non-referenced version of the passed object / array.
 	 * @param {Object} data The object or array to return as a non-referenced version.
 	 * @param {Number=} copies Optional number of copies to produce. If specified, the return
