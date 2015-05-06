@@ -2387,6 +2387,16 @@ Collection.prototype.find = function (query, options) {
 };
 
 /**
+ * Returns one document that satisfies the specified query criteria. If multiple
+ * documents satisfy the query, this method returns the first document to match
+ * the query.
+ * @returns {*}
+ */
+Collection.prototype.findOne = function () {
+	return (this.find.apply(this, arguments))[0];
+};
+
+/**
  * Gets the index in the collection data array of the first item matched by
  * the passed query object.
  * @param {Object} query The query to run to find the item to return the index of.
@@ -9035,7 +9045,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.28',
+	version: '1.3.29',
 	modules: {},
 
 	_synth: {},
