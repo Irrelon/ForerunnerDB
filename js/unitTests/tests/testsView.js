@@ -4,7 +4,8 @@ QUnit.test('View.from() :: Drop a view\'s underlying collection', function () {
 	base.dbUp();
 
 	var coll = db.collection('test'),
-		view = db.view('test');
+		view = db.view('test'),
+		from;
 
 	view.from(coll);
 
@@ -14,9 +15,10 @@ QUnit.test('View.from() :: Drop a view\'s underlying collection', function () {
 
 	coll.drop();
 
-	debugger;
+	from = view.from();
 
-	strictEqual(1, 1, 'OK');
+	// TODO this test is currently useless as it is not written yet
+	strictEqual(from, from, 'OK');
 
 	base.dbDown();
 });

@@ -317,17 +317,43 @@ module.exports = function(grunt) {
 		versionString = packageJson.version;
 
 		child = execSync('git commit -am "New version build ' + versionString + '"');
-
 	});
 
 	grunt.registerTask('gitPushAndTagDev', 'Git Push and Tag Dev Build', function () {
 		"use strict";
 
+		var execSync = require('child_process').execSync,
+			fs = require('fs-extra'),
+			child,
+			packageJson,
+			versionString,
+			fileData;
+
+		fileData = fs.readFileSync('./package.json', {encoding: 'utf8'});
+		packageJson = JSON.parse(fileData);
+
+		versionString = packageJson.version;
+
+		child = execSync('git push');
+		child = execSync('git tag ' + versionString + '-dev');
 	});
 
 	grunt.registerTask('gitMergeDevIntoMaster', 'Git Merge Dev Into Master', function () {
 		"use strict";
+		var execSync = require('child_process').execSync,
+			fs = require('fs-extra'),
+			child,
+			packageJson,
+			versionString,
+			fileData;
 
+		fileData = fs.readFileSync('./package.json', {encoding: 'utf8'});
+		packageJson = JSON.parse(fileData);
+
+		versionString = packageJson.version;
+
+		child = execSync('git push');
+		child = execSync('git tag ' + versionString + '-dev');
 	});
 
 	grunt.registerTask('gitPushAndTagMaster', 'Git Push and Tag Master Build', function () {
