@@ -205,7 +205,7 @@ Searches also support regular expressions for advanced text-based queries. Simpl
 ### Projection
 
 #### $elemMatch
-The $elemMatch operator limits the contents of an <array> field from the query results to contain only the first element matching the $elemMatch condition.
+The $elemMatch operator limits the contents of an *array* field from the query results to contain only the first element matching the $elemMatch condition.
 
 The $elemMatch operator is specified in the *options* object of the find call rather than
  the query object.
@@ -258,7 +258,7 @@ Notice that only the FIRST item matching the $elemMatch clause is returned in th
 If you require multiple matches use the ForerunnerDB-specific $elemsMatch operator instead.
 
 #### $elemsMatch
-The $elemsMatch operator limits the contents of an <array> field from the query results to contain only the elements matching the $elemMatch condition.
+The $elemsMatch operator limits the contents of an *array* field from the query results to contain only the elements matching the $elemMatch condition.
 
 The $elemsMatch operator is specified in the *options* object of the find call rather than
  the query object.
