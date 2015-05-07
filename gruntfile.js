@@ -304,7 +304,7 @@ module.exports = function(grunt) {
 	grunt.registerTask('gitCommit', 'Git Commit Updates', function () {
 		"use strict";
 
-		var exec = require('child_process').exec,
+		var execSync = require('child_process').execSync,
 			fs = require('fs-extra'),
 			child,
 			packageJson,
@@ -316,14 +316,8 @@ module.exports = function(grunt) {
 
 		versionString = packageJson.version;
 
-		child = exec('git commit -am "New version build ' + versionString + '"', function (error, stdout, stderr) {
-			console.log('stdout: ' + stdout);
-			console.log('stderr: ' + stderr);
+		child = execSync('git commit -am "New version build ' + versionString + '"');
 
-			if (error !== null) {
-				console.log('exec error: ' + error);
-			}
-		});
 	});
 
 	grunt.registerTask('gitPushAndTagDev', 'Git Push and Tag Dev Build', function () {
@@ -353,6 +347,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
 	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("8: Git Commit New Version", ["gitCommit"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
