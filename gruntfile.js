@@ -336,10 +336,21 @@ module.exports = function(grunt) {
 
 		child = execSync('git push');
 		child = execSync('git tag ' + versionString + '-dev');
+		child = execSync('git push --tags');
 	});
 
 	grunt.registerTask('gitMergeDevIntoMaster', 'Git Merge Dev Into Master', function () {
 		"use strict";
+		var execSync = require('child_process').execSync,
+			child;
+
+		child = execSync('git checkout master');
+		child = execSync('git merge dev');
+	});
+
+	grunt.registerTask('gitPushAndTagMaster', 'Git Push and Tag Master Build', function () {
+		"use strict";
+
 		var execSync = require('child_process').execSync,
 			fs = require('fs-extra'),
 			child,
@@ -353,17 +364,16 @@ module.exports = function(grunt) {
 		versionString = packageJson.version;
 
 		child = execSync('git push');
-		child = execSync('git tag ' + versionString + '-dev');
-	});
-
-	grunt.registerTask('gitPushAndTagMaster', 'Git Push and Tag Master Build', function () {
-		"use strict";
-
+		child = execSync('git tag ' + versionString);
+		child = execSync('git push --tags');
 	});
 
 	grunt.registerTask('npmPublish', 'NPM Publish New Version', function () {
 		"use strict";
 
+		var execSync = require('child_process').execSync;
+
+		execSync('npm publish');
 	});
 
 	grunt.registerTask("1: Check & Build Source File", ["2: Check Code Cleanliness", "3: Build Source File"]);
@@ -373,7 +383,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
 	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("8: Git Commit New Version", ["gitCommit"]);
+	grunt.registerTask("8: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
+	grunt.registerTask("9: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
