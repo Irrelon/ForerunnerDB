@@ -385,6 +385,7 @@ module.exports = function(grunt) {
 	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("8: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
 	grunt.registerTask("9: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
+	grunt.registerTask("10: NPM Publish", ["npmPublish"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
