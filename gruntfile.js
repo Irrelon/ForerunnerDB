@@ -376,16 +376,22 @@ module.exports = function(grunt) {
 		execSync('npm publish');
 	});
 
-	grunt.registerTask("1: Check & Build Source File", ["2: Check Code Cleanliness", "3: Build Source File"]);
-	grunt.registerTask("2: Check Code Cleanliness", ["jshint"]);
-	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
-	grunt.registerTask("4: Minify Distribution Source", ["uglify"]);
-	grunt.registerTask("5: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
-	grunt.registerTask("6: Full Build Cycle", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("7: Full Build Cycle + Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("8: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
-	grunt.registerTask("9: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
-	grunt.registerTask("10: NPM Publish", ["npmPublish"]);
+	grunt.registerTask('checkoutMaster', 'Git Checkout Master Branch', function () {
+		"use strict";
+
+		var execSync = require('child_process').execSync;
+
+		execSync('git checkout master');
+	});
+
+	grunt.registerTask("1: Build Source File", ["browserify", "postfix"]);
+	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
+	grunt.registerTask("3: Build And Test", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit_blanket_lcov", "qunit"]);
+	grunt.registerTask("4: Build, Test and Increment Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("5: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
+	grunt.registerTask("6: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
+	grunt.registerTask("7: NPM Publish", ["npmPublish"]);
+	grunt.registerTask("8: Full Build, Test, Version, Push, Merge and Publish", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutMaster"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
