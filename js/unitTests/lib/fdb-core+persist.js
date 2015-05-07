@@ -5435,6 +5435,8 @@ module.exports = Sorting;
 },{}],17:[function(_dereq_,module,exports){
 "use strict";
 
+var Overload = _dereq_('./Overload');
+
 var Triggers = {
 	/**
 	 * Add a trigger by id.
@@ -5463,7 +5465,8 @@ var Triggers = {
 
 			self._trigger[type][phase].push({
 				id: id,
-				method: method
+				method: method,
+				enabled: true
 			});
 
 			return true;
@@ -5489,12 +5492,214 @@ var Triggers = {
 		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex > -1) {
-			// The trigger does not exist, create it
+			// The trigger exists, remove it
 			self._trigger[type][phase].splice(triggerIndex, 1);
 		}
 
 		return false;
 	},
+
+	enableTrigger: new Overload({
+		'string': function (id) {
+			// Alter all triggers of this type
+			var self = this,
+				types = self._trigger,
+				phases,
+				triggers,
+				result = false,
+				i, k, j;
+
+			if (types) {
+				for (j in types) {
+					if (types.hasOwnProperty(j)) {
+						phases = types[j];
+
+						if (phases) {
+							for (i in phases) {
+								if (phases.hasOwnProperty(i)) {
+									triggers = phases[i];
+
+									// Loop triggers and set enabled flag
+									for (k = 0; k < triggers.length; k++) {
+										if (triggers[k].id === id) {
+											triggers[k].enabled = true;
+											result = true;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'number': function (type) {
+			// Alter all triggers of this type
+			var self = this,
+				phases = self._trigger[type],
+				triggers,
+				result = false,
+				i, k;
+
+			if (phases) {
+				for (i in phases) {
+					if (phases.hasOwnProperty(i)) {
+						triggers = phases[i];
+
+						// Loop triggers and set to enabled
+						for (k = 0; k < triggers.length; k++) {
+							triggers[k].enabled = true;
+							result = true;
+						}
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'number, number': function (type, phase) {
+			// Alter all triggers of this type and phase
+			var self = this,
+				phases = self._trigger[type],
+				triggers,
+				result = false,
+				k;
+
+			if (phases) {
+				triggers = phases[phase];
+
+				if (triggers) {
+					// Loop triggers and set to enabled
+					for (k = 0; k < triggers.length; k++) {
+						triggers[k].enabled = true;
+						result = true;
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'string, number, number': function (id, type, phase) {
+			// Check if the trigger already exists
+			var self = this,
+				triggerIndex = self._triggerIndexOf(id, type, phase);
+
+			if (triggerIndex > -1) {
+				// Update the trigger
+				self._trigger[type][phase][triggerIndex].enabled = true;
+
+				return true;
+			}
+
+			return false;
+		}
+	}),
+
+	disableTrigger: new Overload({
+		'string': function (id) {
+			// Alter all triggers of this type
+			var self = this,
+				types = self._trigger,
+				phases,
+				triggers,
+				result = false,
+				i, k, j;
+
+			if (types) {
+				for (j in types) {
+					if (types.hasOwnProperty(j)) {
+						phases = types[j];
+
+						if (phases) {
+							for (i in phases) {
+								if (phases.hasOwnProperty(i)) {
+									triggers = phases[i];
+
+									// Loop triggers and set enabled flag
+									for (k = 0; k < triggers.length; k++) {
+										if (triggers[k].id === id) {
+											triggers[k].enabled = false;
+											result = true;
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'number': function (type) {
+			// Alter all triggers of this type
+			var self = this,
+				phases = self._trigger[type],
+				triggers,
+				result = false,
+				i, k;
+
+			if (phases) {
+				for (i in phases) {
+					if (phases.hasOwnProperty(i)) {
+						triggers = phases[i];
+
+						// Loop triggers and set to disabled
+						for (k = 0; k < triggers.length; k++) {
+							triggers[k].enabled = false;
+							result = true;
+						}
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'number, number': function (type, phase) {
+			// Alter all triggers of this type and phase
+			var self = this,
+				phases = self._trigger[type],
+				triggers,
+				result = false,
+				k;
+
+			if (phases) {
+				triggers = phases[phase];
+
+				if (triggers) {
+					// Loop triggers and set to disabled
+					for (k = 0; k < triggers.length; k++) {
+						triggers[k].enabled = false;
+						result = true;
+					}
+				}
+			}
+
+			return result;
+		},
+
+		'string, number, number': function (id, type, phase) {
+			// Check if the trigger already exists
+			var self = this,
+				triggerIndex = self._triggerIndexOf(id, type, phase);
+
+			if (triggerIndex > -1) {
+				// Update the trigger
+				self._trigger[type][phase][triggerIndex].enabled = false;
+
+				return true;
+			}
+
+			return false;
+		}
+	}),
 
 	/**
 	 * Checks if a trigger will fire based on the type and phase provided.
@@ -5505,7 +5710,19 @@ var Triggers = {
 	 * @returns {Boolean} True if the trigger will fire, false otherwise.
 	 */
 	willTrigger: function (type, phase) {
-		return this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length;
+		if (this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length) {
+			// Check if a trigger in this array is enabled
+			var arr = this._trigger[type][phase],
+				i;
+
+			for (i = 0; i < arr.length; i++) {
+				if (arr[i].enabled) {
+					return true;
+				}
+			}
+		}
+
+		return false;
 	},
 
 	/**
@@ -5536,58 +5753,61 @@ var Triggers = {
 			for (triggerIndex = 0; triggerIndex < triggerCount; triggerIndex++) {
 				triggerItem = triggerArr[triggerIndex];
 
-				if (this.debug()) {
-					var typeName,
-						phaseName;
+				// Check if the trigger is enabled
+				if (triggerItem.enabled) {
+					if (this.debug()) {
+						var typeName,
+							phaseName;
 
-					switch (type) {
-						case this.TYPE_INSERT:
-							typeName = 'insert';
-							break;
+						switch (type) {
+							case this.TYPE_INSERT:
+								typeName = 'insert';
+								break;
 
-						case this.TYPE_UPDATE:
-							typeName = 'update';
-							break;
+							case this.TYPE_UPDATE:
+								typeName = 'update';
+								break;
 
-						case this.TYPE_REMOVE:
-							typeName = 'remove';
-							break;
+							case this.TYPE_REMOVE:
+								typeName = 'remove';
+								break;
 
-						default:
-							typeName = '';
-							break;
+							default:
+								typeName = '';
+								break;
+						}
+
+						switch (phase) {
+							case this.PHASE_BEFORE:
+								phaseName = 'before';
+								break;
+
+							case this.PHASE_AFTER:
+								phaseName = 'after';
+								break;
+
+							default:
+								phaseName = '';
+								break;
+						}
+
+						//console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
 					}
 
-					switch (phase) {
-						case this.PHASE_BEFORE:
-							phaseName = 'before';
-							break;
+					// Run the trigger's method and store the response
+					response = triggerItem.method.call(self, operation, oldDoc, newDoc);
 
-						case this.PHASE_AFTER:
-							phaseName = 'after';
-							break;
-
-						default:
-							phaseName = '';
-							break;
+					// Check the response for a non-expected result (anything other than
+					// undefined, true or false is considered a throwable error)
+					if (response === false) {
+						// The trigger wants us to cancel operations
+						return false;
 					}
 
-					//console.log('Triggers: Processing trigger "' + id + '" for ' + typeName + ' in phase "' + phaseName + '"');
-				}
-
-				// Run the trigger's method and store the response
-				response = triggerItem.method.call(self, operation, oldDoc, newDoc);
-
-				// Check the response for a non-expected result (anything other than
-				// undefined, true or false is considered a throwable error)
-				if (response === false) {
-					// The trigger wants us to cancel operations
-					return false;
-				}
-
-				if (response !== undefined && response !== true && response !== false) {
-					// Trigger responded with error, throw the error
-					throw('ForerunnerDB.Mixin.Triggers: Trigger error: ' + response);
+					if (response !== undefined && response !== true && response !== false) {
+						// Trigger responded with error, throw the error
+						throw('ForerunnerDB.Mixin.Triggers: Trigger error: ' + response);
+					}
 				}
 			}
 
@@ -5628,7 +5848,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{}],18:[function(_dereq_,module,exports){
+},{"./Overload":19}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6782,7 +7002,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.29',
+	version: '1.3.30',
 	modules: {},
 
 	_synth: {},

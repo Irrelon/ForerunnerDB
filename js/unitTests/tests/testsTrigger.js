@@ -382,3 +382,103 @@ QUnit.test("Trigger after remove", function() {
 
 	base.dbDown();
 });
+
+QUnit.test("Disable trigger by id only", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+	coll.disableTrigger('availability');
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, false, "Insert trigger did not fire");
+
+	base.dbDown();
+});
+
+QUnit.test("Disable trigger by id, type and phase", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+	coll.disableTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, false, "Insert trigger did not fire");
+
+	base.dbDown();
+});
+
+QUnit.test("Disable trigger by type", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+	coll.disableTrigger(db.TYPE_INSERT);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, false, "Insert trigger did not fire");
+
+	base.dbDown();
+});
+
+QUnit.test("Disable trigger by type and phase", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+	coll.disableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].triggered, false, "Insert trigger did not fire");
+
+	base.dbDown();
+});

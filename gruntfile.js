@@ -301,6 +301,51 @@ module.exports = function(grunt) {
 		fs.writeFileSync('./readme.md', fileData);
 	});
 
+	grunt.registerTask('gitCommit', 'Git Commit Updates', function () {
+		"use strict";
+
+		var exec = require('child_process').exec,
+			fs = require('fs-extra'),
+			child,
+			packageJson,
+			versionString,
+			fileData;
+
+		fileData = fs.readFileSync('./package.json', {encoding: 'utf8'});
+		packageJson = JSON.parse(fileData);
+
+		versionString = packageJson.version;
+
+		child = exec('git commit -am "New version build ' + versionString + '"', function (error, stdout, stderr) {
+			console.log('stdout: ' + stdout);
+			console.log('stderr: ' + stderr);
+
+			if (error !== null) {
+				console.log('exec error: ' + error);
+			}
+		});
+	});
+
+	grunt.registerTask('gitPushAndTagDev', 'Git Push and Tag Dev Build', function () {
+		"use strict";
+
+	});
+
+	grunt.registerTask('gitMergeDevIntoMaster', 'Git Merge Dev Into Master', function () {
+		"use strict";
+
+	});
+
+	grunt.registerTask('gitPushAndTagMaster', 'Git Push and Tag Master Build', function () {
+		"use strict";
+
+	});
+
+	grunt.registerTask('npmPublish', 'NPM Publish New Version', function () {
+		"use strict";
+
+	});
+
 	grunt.registerTask("1: Check & Build Source File", ["2: Check Code Cleanliness", "3: Build Source File"]);
 	grunt.registerTask("2: Check Code Cleanliness", ["jshint"]);
 	grunt.registerTask("3: Build Source File", ["browserify", "postfix"]);
