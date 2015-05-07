@@ -1955,7 +1955,9 @@ QUnit.test('Collection.odm() :: Walk a document management object', function () 
 	"use strict";
 	base.dbUp();
 
-	var coll = db.collection('test');
+	var coll = db.collection('test'),
+		collOdm,
+		result;
 
 	coll.setData({
 		_id: '3',
@@ -1987,8 +1989,7 @@ QUnit.test('Collection.odm() :: Walk a document management object', function () 
 		friends: ["2"]
 	});
 
-	var collOdm = coll.odm(),
-		result;
+	collOdm = coll.odm();
 
 	collOdm
 		.$("_id", "3")
@@ -2000,6 +2001,39 @@ QUnit.test('Collection.odm() :: Walk a document management object', function () 
 	result = coll.find();
 
 	strictEqual(result[0].arr[1].comments[0].msg, "My comment has been updated", 'Comment updated successfully via ODM');
+
+	base.dbDown();
+});
+
+QUnit.test('Collection.update() :: Use $overwrite to set a property value', function () {
+	"use strict";
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result;
+
+	coll.setData({
+		_id: '3',
+		name: 'Kat',
+		age: 12,
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}]
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].arr[0].val, 1, 'Data exists as expected before update');
+
+	coll.update({}, {$overwrite: {
+		arr: {moo: 1}
+	}});
+
+	result = coll.find();
+
+	strictEqual(result[0].arr.moo, 1, 'Data exists as expected after update');
 
 	base.dbDown();
 });

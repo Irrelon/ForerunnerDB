@@ -23,6 +23,7 @@ AutoBind.extendCollection = function (Module) {
 		superUpdatePull = Module.prototype._updatePull,
 		superUpdateMultiply = Module.prototype._updateMultiply,
 		superUpdateRename = Module.prototype._updateRename,
+		superUpdateOverwrite = Module.prototype._updateOverwrite,
 		superUpdateUnset = Module.prototype._updateUnset,
 		superUpdatePop = Module.prototype._updatePop,
 		superDrop = Module.prototype.drop;
@@ -345,6 +346,24 @@ AutoBind.extendCollection = function (Module) {
 			window.jQuery.observable(doc).removeProperty(prop);
 		} else {
 			superUpdateRename.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Overwrites a property on a document to the passed value.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @param {*} val The new value to set the property to.
+	 * @private
+	 */
+	Module.prototype._updateOverwrite = function (doc, prop, val) {
+		if (this._linked) {
+			if (this.debug()) {
+				console.log('ForerunnerDB.AutoBind: Setting document property "' + prop + '" for collection "' + this.name() + '"');
+			}
+			window.jQuery.observable(doc).setProperty(prop, val);
+		} else {
+			superUpdateOverwrite.apply(this, arguments);
 		}
 	};
 

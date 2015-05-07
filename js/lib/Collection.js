@@ -957,6 +957,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							updated = true;
 							break;
 
+						case '$overwrite':
+							this._updateOverwrite(doc, i, update[i]);
+							updated = true;
+							break;
+
 						case '$unset':
 							this._updateUnset(doc, i);
 							updated = true;
@@ -1096,6 +1101,17 @@ Collection.prototype._updateMultiply = function (doc, prop, val) {
 Collection.prototype._updateRename = function (doc, prop, val) {
 	doc[val] = doc[prop];
 	delete doc[prop];
+};
+
+/**
+ * Sets a property on a document to the passed value.
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @param {*} val The new property value.
+ * @private
+ */
+Collection.prototype._updateOverwrite = function (doc, prop, val) {
+	doc[prop] = val;
 };
 
 /**
