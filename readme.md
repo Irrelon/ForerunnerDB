@@ -798,6 +798,8 @@ The result of the call above is:
 	}]
 
 ## Triggers
+> Version >= 1.3.12
+
 ForerunnerDB currently supports triggers for inserts and updates at both the
 *before* and *after* operation phases. Triggers that fire on the *before* phase can
 also optionally modify the operation data and actually cancel the operation entirely
@@ -859,6 +861,55 @@ an operation before the operation is carried out.
 phase trigger. Modifications to the document during an *after* phase trigger will
 simply be ignored and will not be applied to the document. This applies to insert
 and update trigger types. Remove triggers cannot modify the document at any time.
+
+### Enabling / Disabling Triggers
+> Version >= 1.3.31
+
+#### Enabling a Trigger
+You can enable a previously disabled trigger or multiple triggers using the enableTrigger()
+method on a collection.
+
+> If you specify a type or type and phase and do not specify an ID the method will
+affect all triggers that match the type / phase.
+
+##### Enable a Trigger via Trigger ID
+
+	db.collection('test').enableTrigger('myTriggerId');
+
+##### Enable a Trigger via Type
+
+	db.collection('test').enableTrigger(db.TYPE_INSERT);
+
+##### Enable a Trigger via Type and Phase
+
+	db.collection('test').enableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+
+##### Enable a Trigger via ID, Type and Phase
+
+	db.collection('test').enableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+
+#### Disabling a Trigger
+You can temporarily disable a trigger or multiple triggers using the disableTrigger()
+method on a collection.
+
+> If you specify a type or type and phase and do not specify an ID the method will
+affect all triggers that match the type / phase.
+
+##### Disable a Trigger via Trigger ID
+
+	db.collection('test').disableTrigger('myTriggerId');
+
+##### Disable a Trigger via Type
+
+	db.collection('test').disableTrigger(db.TYPE_INSERT);
+
+##### Disable a Trigger via Type and Phase
+
+	db.collection('test').disableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+
+##### Disable a Trigger via ID, Type and Phase
+
+	db.collection('test').disableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
 
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when
