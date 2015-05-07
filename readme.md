@@ -401,6 +401,9 @@ This is one of the areas where ForerunnerDB and MongoDB are different. By defaul
 		moo: true
 	});
 
+If you want to replace a key's value you can use the $overwrite operator described
+in the *Update Operators* section below.
+
 ## Quick Updates
 You can target individual documents for update by their id (primary key) via a quick helper method:
 
@@ -409,10 +412,46 @@ You can target individual documents for update by their id (primary key) via a q
 This will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
+#### $overwrite
+The $overwrite operator replaces a key's value with the one passed, overwriting it
+completely. This operates the same way that MongoDB's default update behaviour works.
+
+This operator is most useful when updating an array field to a new type such as an object.
+By default ForerunnerDB will detect an array and step into the array objects one at a time
+and apply the update to each object. When you use $overwrite you can replace the array
+instead of stepping into it.
+
+	db.collection('test').update({
+		<query>
+	}, {
+		$overwrite: {
+			<field>: <value>
+		}
+	});
+
+In the following example the "arr" field (initially an array) is replaced by an object:
+
+	db.collection('test').setData({
+		_id: "445324",
+		arr: [{
+			foo: 1
+		}]
+	});
+
+	db.collection('test').update({
+		_id: "445324"
+	}, {
+		$overwrite: {
+			arr: {
+				moo: 1
+			}
+		}
+	});
+
 #### $inc
 The $inc operator increments / decrements a field value by the given number.
 
-	db.collection.update({
+	db.collection('test').update({
 		<query>
 	}, {
 		$inc: {
@@ -420,9 +459,10 @@ The $inc operator increments / decrements a field value by the given number.
 		}
 	});
 
-In the following example, the "count" field is decremented by 1 in the document that matches the id "445324":
+In the following example, the "count" field is decremented by 1 in the document that
+matches the id "445324":
 
-	db.collection.update({
+	db.collection('test').update({
 		_id: "445324"
 	}, {
 		$inc: {
@@ -435,7 +475,7 @@ Using a positive number will increment, using a negative number will decrement.
 #### $push
 The $push operator appends a specified value to an array.
 
-	db.collection.update({
+	db.collection('test').update({
 		<query>
 	}, {
 		$push: {
@@ -456,7 +496,7 @@ The following example appends "Milk" to the "shoppingList" array in the document
 #### $splicePush
 The $splicePush operator adds an item into an array at a specified index.
 
-	db.collection.update({
+	db.collection('test').update({
 		<query>
 	}, {
 		$splicePush: {
@@ -554,7 +594,7 @@ You can also specify the key to check uniqueness against as an object path such 
 #### $pull
 The $pull operator removes a specified value or values that match an input query.
 
-	db.collection.update({
+	db.collection('test').update({
 		<query>
 	}, {
 		$pull: {
@@ -577,7 +617,7 @@ If an array element is an embedded document (JavaScript object), the $pull opera
 #### $move
 The $move operator moves an item that exists inside a document's array from one index to another.
 
-	db.collection.update({
+	db.collection('test').update({
 		<query>
 	}, {
 		$move: {
