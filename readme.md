@@ -15,11 +15,6 @@ a UK registered company.
 </table>
 
 ## Version 1.3.31
-#### Breaking Changes Notifications
-Please check the breaking changes section at the end of this document for details
-of any changes that break previous operation or behaviour of ForerunnerDB. Changes
-that break functionality are not taken lightly and we do not allow them to be
-merged in to the master branch without good cause!
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
@@ -1422,6 +1417,8 @@ These modifier properties allow you to indicate special operations to perform du
 your query.
 
 ### The Double-Slash
+> Version >= 1.3.14
+
 Properties that start with a double-slash are treated as comments and ignored during
 the query process. An example would be where you wish to store some data in the query
 object but you do not want it to affect the outcome of the query.
@@ -1583,6 +1580,10 @@ ForerunnerDB's project road-map:
 * Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
 
 # Breaking Changes
+Please check below for details of any changes that break previous operation or
+behaviour of ForerunnerDB. Changes that break functionality are not taken lightly
+and we do not allow them to be merged in to the master branch without good cause!
+
 ## Since Version 1.3.10
 The join system has been updated to use "$join" as the key defining a join instead of
 "join". This was done to keep joins in line with the rest of the API that now uses
