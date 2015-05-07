@@ -15,14 +15,11 @@ a UK registered company.
 </table>
 
 ## Version 1.3.31
-#### Warning - API Change Notification Since Version 1.3.10
-The join system has been updated to use "$join" as the key defining a join instead of
-"join". This was done to keep joins in line with the rest of the API that now uses
-the $ symbol when denoting an operation rather than a property. See the Joins section
-of the documentation for examples of correct usage.
-
-Migrating old code should be as simple as searching for instances of "join" and
-replacing with "$join" within ForerunnerDB queries in your application.
+#### Breaking Changes Notifications
+Please check the breaking changes section at the end of this document for details
+of any changes that break previous operation or behaviour of ForerunnerDB. Changes
+that break functionality are not taken lightly and we do not allow them to be
+merged in to the master branch without good cause!
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
@@ -1584,3 +1581,15 @@ ForerunnerDB's project road-map:
 #### Scheduled Features - Version 1.6
 * Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4)
 * Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
+
+# Breaking Changes
+## Since Version 1.3.10
+The join system has been updated to use "$join" as the key defining a join instead of
+"join". This was done to keep joins in line with the rest of the API that now uses
+the $ symbol when denoting an operation rather than a property. See the Joins section
+of the documentation for examples of correct usage.
+
+Migrating old code should be as simple as searching for instances of "join" and
+replacing with "$join" within ForerunnerDB queries in your application. Be careful not
+to search / replace your entire codebase for "join" to "$join" as this may break other
+code in your project. Ensure that changes are limited to ForerunnerDB query sections.
