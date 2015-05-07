@@ -202,6 +202,9 @@ Supported search operators:
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
+> See the *Special Considerations* section for details about how names of keys / properties
+in a query object can affect a query's operation.
+
 ### Projection
 
 #### $elemMatch
