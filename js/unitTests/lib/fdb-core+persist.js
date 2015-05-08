@@ -976,6 +976,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							updated = true;
 							break;
 
+						case '$clear':
+							this._updateClear(doc, i);
+							updated = true;
+							break;
+
 						case '$pop':
 							if (doc[i] instanceof Array) {
 								if (this._updatePop(doc[i], update[i])) {
@@ -1131,6 +1136,26 @@ Collection.prototype._updateOverwrite = function (doc, prop, val) {
  */
 Collection.prototype._updateUnset = function (doc, prop) {
 	delete doc[prop];
+};
+
+/**
+ * Removes all properties from an object without destroying
+ * the object instance, thereby maintaining data-bound linking.
+ * @param {Object} doc The parent object to modify.
+ * @param {String} prop The name of the child object to clear.
+ * @private
+ */
+Collection.prototype._updateClear = function (doc, prop) {
+	var obj = doc[prop],
+		i;
+
+	if (obj && typeof obj === 'object') {
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				this._updateUnset(obj, i);
+			}
+		}
+	}
 };
 
 /**
@@ -7018,7 +7043,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.31',
+	version: '1.3.32',
 	modules: {},
 
 	_synth: {},
