@@ -482,3 +482,52 @@ QUnit.test("Disable trigger by type and phase", function() {
 
 	base.dbDown();
 });
+
+QUnit.test("Disable and then re-enable trigger by id only", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod,
+		triggered = false,
+		result;
+
+	triggerMethod = function (operation, oldData, newData) {
+		triggered = true;
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+
+	coll.insert({
+		_id: 1
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(triggered, true, "Insert trigger did fire");
+
+	triggered = false;
+
+	coll.disableTrigger('availability');
+
+	coll.insert({
+		_id: 2
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 2, "Insert");
+	strictEqual(triggered, false, "Insert trigger did not fire");
+
+	coll.enableTrigger('availability');
+
+	coll.insert({
+		_id: 3
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 3, "Insert");
+	strictEqual(triggered, true, "Insert trigger did fire");
+
+	base.dbDown();
+});
