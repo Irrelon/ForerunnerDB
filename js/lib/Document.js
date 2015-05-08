@@ -2,8 +2,7 @@
 
 var Shared,
 	Collection,
-	Core,
-	CoreInit;
+	Core;
 
 Shared = require('./Shared');
 
@@ -26,7 +25,6 @@ Shared = require('./Shared');
 
 	Collection = require('./Collection');
 	Core = Shared.modules.Core;
-	CoreInit = Shared.modules.Core.prototype.init;
 
 	/**
 	 * Gets / sets the current state.
@@ -340,11 +338,6 @@ Shared = require('./Shared');
 		}
 
 		return false;
-	};
-
-// Extend DB to include documents
-	Core.prototype.init = function () {
-		CoreInit.apply(this, arguments);
 	};
 
 	Core.prototype.document = function (documentName) {
