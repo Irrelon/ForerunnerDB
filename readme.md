@@ -59,7 +59,7 @@ npm install forerunnerdb
 This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 ## License
-Please see licensing page for latest information: http://www.forerunnerdb.com/licensing.html
+Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
 
 ## Browser Compatibility
 ForerunnerDB works in all modern browsers (IE8+)
