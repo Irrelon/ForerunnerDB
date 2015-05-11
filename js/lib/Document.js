@@ -22,6 +22,7 @@ Shared = require('./Shared');
 	Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 	Shared.mixin(Document.prototype, 'Mixin.Constants');
 	Shared.mixin(Document.prototype, 'Mixin.Triggers');
+	//Shared.mixin(Document.prototype, 'Mixin.Updating');
 
 	Collection = require('./Collection');
 	Core = Shared.modules.Core;

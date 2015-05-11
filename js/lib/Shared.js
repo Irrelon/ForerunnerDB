@@ -127,7 +127,8 @@ var Shared = {
 		'Mixin.Constants': require('./Mixin.Constants'),
 		'Mixin.Triggers': require('./Mixin.Triggers'),
 		'Mixin.Sorting': require('./Mixin.Sorting'),
-		'Mixin.Matching': require('./Mixin.Matching')
+		'Mixin.Matching': require('./Mixin.Matching'),
+		'Mixin.Updating': require('./Mixin.Updating')
 	}
 };
 
