@@ -2694,7 +2694,7 @@ Collection.prototype.collateAdd = new Overload({
 					};
 
 					obj1.$pull[keyName] = {};
-					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][self.primaryKey()];
+					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
 
 					self.update({}, obj1);
 					break;
