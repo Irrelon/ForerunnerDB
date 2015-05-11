@@ -99,17 +99,15 @@ Persist.prototype.save = function (key, data, callback) {
 		case 'localforage':
 			encode(data, function (err, data) {
 				localforage.setItem(key, data).then(function (data) {
-					callback(false, data);
+					if (callback) { callback(false, data); }
 				}, function (err) {
-					callback(err);
+					if (callback) { callback(err); }
 				});
 			});
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler.');
-			}
+			if (callback) { callback('No data handler.'); }
 			break;
 	}
 };
@@ -140,7 +138,9 @@ Persist.prototype.load = function (key, callback) {
 				finished(false, data);
 			}
 		} else {
-			finished(false, val);
+			if (finished) {
+				finished(false, val);
+			}
 		}
 	};
 
@@ -149,14 +149,12 @@ Persist.prototype.load = function (key, callback) {
 			localforage.getItem(key).then(function (val) {
 				decode(val, callback);
 			}, function (err) {
-				callback(err);
+				if (callback) { callback(err); }
 			});
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler or unrecognised data type.');
-			}
+			if (callback) { callback('No data handler or unrecognised data type.');	}
 			break;
 	}
 };
@@ -165,11 +163,12 @@ Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localforage':
 			localforage.removeItem(key).then(function () {
-				callback(false);
+				if (callback) { callback(false); }
 			}, function (err) {
-				callback(err);
+				if (callback) { callback(err); }
 			});
 			break;
+
 		default:
 			if (callback) {
 				callback('No data handler or unrecognised data type.');
@@ -325,10 +324,10 @@ Core.prototype.load = function (callback) {
 			keyCount--;
 
 			if (keyCount === 0) {
-				callback(false);
+				if (callback) { callback(false); }
 			}
 		} else {
-			callback(err);
+			if (callback) { callback(err); }
 		}
 	};
 
@@ -353,10 +352,10 @@ Core.prototype.save = function (callback) {
 			keyCount--;
 
 			if (keyCount === 0) {
-				callback(false);
+				if (callback) { callback(false); }
 			}
 		} else {
-			callback(err);
+			if (callback) { callback(err); }
 		}
 	};
 

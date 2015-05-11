@@ -358,9 +358,7 @@ Core.prototype.drop = function (callback) {
 				finishCount++;
 
 				if (finishCount === arrCount) {
-					if (callback) {
-						callback();
-					}
+					if (callback) { callback();	}
 				}
 			};
 

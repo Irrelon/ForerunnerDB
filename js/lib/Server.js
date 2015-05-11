@@ -52,41 +52,41 @@ Server.prototype.start = function () {
 			user = results[0];
 			authSuccess = Boolean(results[0]);
 
-			callback({err: false, result: authSuccess});
+			if (callback) { callback({err: false, result: authSuccess}); }
 		});
 
 		socket.on('setData', function (data, callback) {
 			if (self.isAllowed('setData', user, data, {}, callback)) {
 				self._db.collection(data.collection).setData(data.query, data.options);
-				callback({err: false, result: true});
+				if (callback) { callback({err: false, result: true}); }
 			}
 		});
 
 		socket.on('insert', function (data, callback) {
 			if (self.isAllowed('insert', user, data, {}, callback)) {
 				var results = self._db.collection(data.collection).insert(data.query, data.options);
-				callback({err: false, result: results});
+				if (callback) { callback({err: false, result: results}); }
 			}
 		});
 
 		socket.on('find', function (data, callback) {
 			if (self.isAllowed('find', user, data, {}, callback)) {
 				var results = self._db.collection(data.collection).find(data.query, data.options);
-				callback({err: false, result: results});
+				if (callback) { callback({err: false, result: results}); }
 			}
 		});
 
 		socket.on('update', function (data, callback) {
 			if (self.isAllowed('update', user, data, {}, callback)) {
 				var results = self._db.collection(data.collection).update(data.query, data.update, data.options);
-				callback({err: false, result: results});
+				if (callback) { callback({err: false, result: results}); }
 			}
 		});
 
 		socket.on('remove', function (data, callback) {
 			if (self.isAllowed('remove', user, data, {}, callback)) {
 				var results = self._db.collection(data.collection).remove(data.query, data.options);
-				callback({err: false, result: results});
+				if (callback) { callback({err: false, result: results}); }
 			}
 		});
 	});
@@ -118,14 +118,14 @@ Server.prototype.isAllowed = function (action, user, data, options, callback) {
 	// Check for direct private collection interaction
 	if (data.collection.substr(0, 1) === "_") {
 		if (!this.hasPermission(user, null, 'root')) {
-			callback({err: 'Cannot remotely interact with private collection: ' + data.collection, result: null});
+			if (callback) { callback({err: 'Cannot remotely interact with private collection: ' + data.collection, result: null}); }
 			return false;
 		}
 	}
 
 	// Check if the user has permissions for the action against the collection
 	if (!this.hasPermission(user, data.collection, action)) {
-		callback({err: 'No permission to "' + action + '" on collection "' + data.collection + '"', result: null});
+		if (callback) { callback({err: 'No permission to "' + action + '" on collection "' + data.collection + '"', result: null}); }
 		return false;
 	}
 
@@ -137,13 +137,13 @@ Server.prototype.isAllowed = function (action, user, data, options, callback) {
 					if (collName.substr(0, 1) === "_") {
 						// Check if the user is a root
 						if (!this.hasPermission(user, collName, 'root')) {
-							callback({err: 'Cannot remotely interact with private collection "' + collName + '" via join', result: null});
+							if (callback) { callback({err: 'Cannot remotely interact with private collection "' + collName + '" via join', result: null}); }
 							return false;
 						}
 					} else {
 						// Check they have permission
 						if (!this.hasPermission(user, collName, action)) {
-							callback({err: 'Cannot "' + action + '" on collection "' + collName + '" via join', result: null});
+							if (callback) { callback({err: 'Cannot "' + action + '" on collection "' + collName + '" via join', result: null}); }
 							return false;
 						}
 					}

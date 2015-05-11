@@ -20,7 +20,7 @@ Collection.prototype.find = function (query, options, callback) {
 				query: query,
 				options: options
 			}, function (data) {
-				callback(data.err, data.result);
+				if (callback) { callback(data.err, data.result); }
 			});
 		} else {
 			// Set a timer to try and re-execute this call
@@ -44,7 +44,7 @@ Collection.prototype.insert = function (query, options, callback) {
 				query: query,
 				options: options
 			}, function (data) {
-				callback(data.err, data.result);
+				if (callback) { callback(data.err, data.result); }
 			});
 		} else {
 			// Set a timer to try and re-execute this call
@@ -69,7 +69,7 @@ Collection.prototype.update = function (query, update, options, callback) {
 				update: update,
 				options: options
 			}, function (data) {
-				callback(data.err, data.result);
+				if (callback) { callback(data.err, data.result); }
 			});
 		} else {
 			// Set a timer to try and re-execute this call
@@ -93,7 +93,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				query: query,
 				options: options
 			}, function (data) {
-				callback(data.err, data.result);
+				if (callback) { callback(data.err, data.result); }
 			});
 		} else {
 			// Set a timer to try and re-execute this call
@@ -117,7 +117,7 @@ Collection.prototype.setData = function (query, options, callback) {
 				query: query,
 				options: options
 			}, function (data) {
-				callback(data.err, data.result);
+				if (callback) { callback(data.err, data.result); }
 			});
 		} else {
 			// Set a timer to try and re-execute this call
@@ -142,9 +142,7 @@ Remote.prototype.connect = function (url, callback) {
 	self._socket.on('connect', function () {
 		self.connected(true);
 
-		if (callback) {
-			callback(false);
-		}
+		if (callback) { callback(false); }
 	});
 };
 

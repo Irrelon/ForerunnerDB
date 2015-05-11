@@ -38,7 +38,7 @@ var Shared = {
 	 */
 	moduleFinished: function (name, callback) {
 		if (this.modules[name] && this.modules[name]._fdbFinished) {
-			callback(name, this.modules[name]);
+			if (callback) { callback(name, this.modules[name]); }
 		} else {
 			this.on('moduleFinished', callback);
 		}

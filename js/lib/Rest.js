@@ -44,14 +44,14 @@ Rest.prototype.get = function (path, data, callback) {
 
 	path = path !== undefined ? path : "";
 
-	console.log('Getting: ', this.endPoint() + path + '?' + this._params(data));
+	//console.log('Getting: ', this.endPoint() + path + '?' + this._params(data));
 	this._client({
 		method: 'get',
 		path: this.endPoint() + path,
 		params: data
 	}).then(function (response) {
 		if (response.entity && response.entity.error) {
-			callback(response.entity.error, response.entity, response);
+			if (callback) { callback(response.entity.error, response.entity, response); }
 		} else {
 			// Check if we have a collection
 			coll = self.collection();
@@ -61,10 +61,10 @@ Rest.prototype.get = function (path, data, callback) {
 				coll.upsert(response.entity);
 			}
 
-			callback(false, response.entity, response);
+			if (callback) { callback(false, response.entity, response); }
 		}
 	}, function(response) {
-		callback(true, response.entity, response);
+		if (callback) { callback(true, response.entity, response); }
 	});
 };
 
@@ -78,12 +78,12 @@ Rest.prototype.post = function (path, data, callback) {
 		}
 	}).then(function (response) {
 		if (response.entity && response.entity.error) {
-			callback(response.entity.error, response.entity, response);
+			if (callback) { callback(response.entity.error, response.entity, response); }
 		} else {
-			callback(false, response.entity, response);
+			if (callback) { callback(false, response.entity, response); }
 		}
 	}, function(response) {
-		callback(true, response);
+		if (callback) { callback(true, response); }
 	});
 };
 

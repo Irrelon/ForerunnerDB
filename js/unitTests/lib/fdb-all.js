@@ -3862,9 +3862,7 @@ Core.prototype.drop = function (callback) {
 				finishCount++;
 
 				if (finishCount === arrCount) {
-					if (callback) {
-						callback();
-					}
+					if (callback) { callback();	}
 				}
 			};
 
@@ -8897,17 +8895,15 @@ Persist.prototype.save = function (key, data, callback) {
 		case 'localforage':
 			encode(data, function (err, data) {
 				localforage.setItem(key, data).then(function (data) {
-					callback(false, data);
+					if (callback) { callback(false, data); }
 				}, function (err) {
-					callback(err);
+					if (callback) { callback(err); }
 				});
 			});
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler.');
-			}
+			if (callback) { callback('No data handler.'); }
 			break;
 	}
 };
@@ -8938,7 +8934,9 @@ Persist.prototype.load = function (key, callback) {
 				finished(false, data);
 			}
 		} else {
-			finished(false, val);
+			if (finished) {
+				finished(false, val);
+			}
 		}
 	};
 
@@ -8947,14 +8945,12 @@ Persist.prototype.load = function (key, callback) {
 			localforage.getItem(key).then(function (val) {
 				decode(val, callback);
 			}, function (err) {
-				callback(err);
+				if (callback) { callback(err); }
 			});
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler or unrecognised data type.');
-			}
+			if (callback) { callback('No data handler or unrecognised data type.');	}
 			break;
 	}
 };
@@ -8963,11 +8959,12 @@ Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localforage':
 			localforage.removeItem(key).then(function () {
-				callback(false);
+				if (callback) { callback(false); }
 			}, function (err) {
-				callback(err);
+				if (callback) { callback(err); }
 			});
 			break;
+
 		default:
 			if (callback) {
 				callback('No data handler or unrecognised data type.');
@@ -9123,10 +9120,10 @@ Core.prototype.load = function (callback) {
 			keyCount--;
 
 			if (keyCount === 0) {
-				callback(false);
+				if (callback) { callback(false); }
 			}
 		} else {
-			callback(err);
+			if (callback) { callback(err); }
 		}
 	};
 
@@ -9151,10 +9148,10 @@ Core.prototype.save = function (callback) {
 			keyCount--;
 
 			if (keyCount === 0) {
-				callback(false);
+				if (callback) { callback(false); }
 			}
 		} else {
-			callback(err);
+			if (callback) { callback(err); }
 		}
 	};
 
@@ -9277,14 +9274,14 @@ Rest.prototype.get = function (path, data, callback) {
 
 	path = path !== undefined ? path : "";
 
-	console.log('Getting: ', this.endPoint() + path + '?' + this._params(data));
+	//console.log('Getting: ', this.endPoint() + path + '?' + this._params(data));
 	this._client({
 		method: 'get',
 		path: this.endPoint() + path,
 		params: data
 	}).then(function (response) {
 		if (response.entity && response.entity.error) {
-			callback(response.entity.error, response.entity, response);
+			if (callback) { callback(response.entity.error, response.entity, response); }
 		} else {
 			// Check if we have a collection
 			coll = self.collection();
@@ -9294,10 +9291,10 @@ Rest.prototype.get = function (path, data, callback) {
 				coll.upsert(response.entity);
 			}
 
-			callback(false, response.entity, response);
+			if (callback) { callback(false, response.entity, response); }
 		}
 	}, function(response) {
-		callback(true, response.entity, response);
+		if (callback) { callback(true, response.entity, response); }
 	});
 };
 
@@ -9311,12 +9308,12 @@ Rest.prototype.post = function (path, data, callback) {
 		}
 	}).then(function (response) {
 		if (response.entity && response.entity.error) {
-			callback(response.entity.error, response.entity, response);
+			if (callback) { callback(response.entity.error, response.entity, response); }
 		} else {
-			callback(false, response.entity, response);
+			if (callback) { callback(false, response.entity, response); }
 		}
 	}, function(response) {
-		callback(true, response);
+		if (callback) { callback(true, response); }
 	});
 };
 
@@ -9389,7 +9386,7 @@ var Shared = {
 	 */
 	moduleFinished: function (name, callback) {
 		if (this.modules[name] && this.modules[name]._fdbFinished) {
-			callback(name, this.modules[name]);
+			if (callback) { callback(name, this.modules[name]); }
 		} else {
 			this.on('moduleFinished', callback);
 		}
