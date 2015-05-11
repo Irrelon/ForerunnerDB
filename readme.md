@@ -144,6 +144,9 @@ array of objects to the setData() method:
 
 Setting data on a collection will empty any existing data from the collection.
 
+You do not *have* to use setData(). You can simply begin inserting data using the
+insert() method as soon as you have a collection reference.
+
 ## Inserting Documents
 You can either insert a single document object:
 
