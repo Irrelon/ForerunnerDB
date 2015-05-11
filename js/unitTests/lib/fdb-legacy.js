@@ -2935,25 +2935,71 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.collateAdd = function (collection, process) {
-	if (typeof collection === 'string') {
-		// The collection passed is a name, not a reference so get
-		// the reference from the name
-		collection = this._db.collection(collection, {
-			autoCreate: false,
-			throwError: false
+Collection.prototype.collateAdd = new Overload({
+	'object, string': function (collection, keyName) {
+		var self = this;
+
+		self.collateAdd(collection, function (packet) {
+			var obj1,
+				obj2;
+
+			switch (packet.type) {
+				case 'insert':
+					obj1 = {
+						$push: {}
+					};
+
+					obj1.$push[keyName] = self.decouple(packet.data);
+
+					self.update({}, obj1);
+					break;
+
+				case 'update':
+					obj1 = {};
+					obj2 = {};
+
+					obj1[keyName] = packet.data.query;
+					obj2[keyName + '.$'] = packet.data.update;
+
+					self.update(obj1, obj2);
+					break;
+
+				case 'remove':
+					obj1 = {
+						$pull: {}
+					};
+
+					obj1.$pull[keyName] = {};
+					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
+
+					self.update({}, obj1);
+					break;
+
+				default:
+			}
 		});
-	}
+	},
 
-	if (collection) {
-		this._collate = this._collate || {};
-		this._collate[collection.name()] = new ReactorIO(collection, this, process);
+	'object, function': function (collection, process) {
+		if (typeof collection === 'string') {
+			// The collection passed is a name, not a reference so get
+			// the reference from the name
+			collection = this._db.collection(collection, {
+				autoCreate: false,
+				throwError: false
+			});
+		}
 
-		return this;
-	} else {
-		throw('Cannot collate from a non-existent collection!');
+		if (collection) {
+			this._collate = this._collate || {};
+			this._collate[collection.name()] = new ReactorIO(collection, this, process);
+
+			return this;
+		} else {
+			throw('Cannot collate from a non-existent collection!');
+		}
 	}
-};
+});
 
 Collection.prototype.collateRemove = function (collection) {
 	if (typeof collection === 'object') {
