@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/CollectionGroup":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/Odm":23,"../lib/Overview":26,"../lib/Persist":28,"../lib/Rest":30,"../lib/View":33,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/Odm":24,"../lib/Overview":27,"../lib/Persist":29,"../lib/Rest":31,"../lib/View":34,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -22,7 +22,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":32}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":6,"../lib/Shim.IE8":33}],3:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -282,7 +282,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":31}],4:[function(_dereq_,module,exports){
+},{"./Shared":32}],4:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -354,6 +354,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Shared.mixin(Collection.prototype, 'Mixin.Matching');
+Shared.mixin(Collection.prototype, 'Mixin.Updating');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -1291,170 +1292,6 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
  */
 Collection.prototype._isPositionalKey = function (key) {
 	return key.substr(key.length - 2, 2) === '.$';
-};
-
-/**
- * Updates a property on an object depending on if the collection is
- * currently running data-binding or not.
- * @param {Object} doc The object whose property is to be updated.
- * @param {String} prop The property to update.
- * @param {*} val The new value of the property.
- * @private
- */
-Collection.prototype._updateProperty = function (doc, prop, val) {
-	doc[prop] = val;
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Increments a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to increment by.
- * @private
- */
-Collection.prototype._updateIncrement = function (doc, prop, val) {
-	doc[prop] += val;
-};
-
-/**
- * Changes the index of an item in the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} indexFrom The index to move the item from.
- * @param {Number} indexTo The index to move the item to.
- * @private
- */
-Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
-	arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Inserts an item into the passed array at the specified index.
- * @param {Array} arr The array to insert into.
- * @param {Number} index The index to insert at.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updateSplicePush = function (arr, index, doc) {
-	if (arr.length > index) {
-		arr.splice(index, 0, doc);
-	} else {
-		arr.push(doc);
-	}
-};
-
-/**
- * Inserts an item at the end of an array.
- * @param {Array} arr The array to insert the item into.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updatePush = function (arr, doc) {
-	arr.push(doc);
-};
-
-/**
- * Removes an item from the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} index The index of the item in the array to remove.
- * @private
- */
-Collection.prototype._updatePull = function (arr, index) {
-	arr.splice(index, 1);
-};
-
-/**
- * Multiplies a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to multiply by.
- * @private
- */
-Collection.prototype._updateMultiply = function (doc, prop, val) {
-	doc[prop] *= val;
-};
-
-/**
- * Renames a property on a document to the passed property.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to rename.
- * @param {Number} val The new property name.
- * @private
- */
-Collection.prototype._updateRename = function (doc, prop, val) {
-	doc[val] = doc[prop];
-	delete doc[prop];
-};
-
-/**
- * Sets a property on a document to the passed value.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @param {*} val The new property value.
- * @private
- */
-Collection.prototype._updateOverwrite = function (doc, prop, val) {
-	doc[prop] = val;
-};
-
-/**
- * Deletes a property on a document.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @private
- */
-Collection.prototype._updateUnset = function (doc, prop) {
-	delete doc[prop];
-};
-
-/**
- * Removes all properties from an object without destroying
- * the object instance, thereby maintaining data-bound linking.
- * @param {Object} doc The parent object to modify.
- * @param {String} prop The name of the child object to clear.
- * @private
- */
-Collection.prototype._updateClear = function (doc, prop) {
-	var obj = doc[prop],
-		i;
-
-	if (obj && typeof obj === 'object') {
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				this._updateUnset(obj, i);
-			}
-		}
-	}
-};
-
-/**
- * Pops an item from the array stack.
- * @param {Object} doc The document to modify.
- * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
- * @return {Boolean}
- * @private
- */
-Collection.prototype._updatePop = function (doc, val) {
-	var updated = false;
-
-	if (doc.length > 0) {
-		if (val === 1) {
-			doc.pop();
-			updated = true;
-		} else if (val === -1) {
-			doc.shift();
-			updated = true;
-		}
-	}
-
-	return updated;
 };
 
 /**
@@ -3300,7 +3137,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":25,"./Path":27,"./ReactorIO":29,"./Shared":31}],5:[function(_dereq_,module,exports){
+},{"./Crc":7,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":28,"./ReactorIO":30,"./Shared":32}],5:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3618,7 +3455,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":31}],6:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":32}],6:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4000,7 +3837,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":25,"./Shared":31}],7:[function(_dereq_,module,exports){
+},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":26,"./Shared":32}],7:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -4035,8 +3872,7 @@ module.exports = function(str) {
 
 var Shared,
 	Collection,
-	Core,
-	CoreInit;
+	Core;
 
 Shared = _dereq_('./Shared');
 
@@ -4056,10 +3892,10 @@ Shared = _dereq_('./Shared');
 	Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 	Shared.mixin(Document.prototype, 'Mixin.Constants');
 	Shared.mixin(Document.prototype, 'Mixin.Triggers');
+	//Shared.mixin(Document.prototype, 'Mixin.Updating');
 
 	Collection = _dereq_('./Collection');
 	Core = Shared.modules.Core;
-	CoreInit = Shared.modules.Core.prototype.init;
 
 	/**
 	 * Gets / sets the current state.
@@ -4375,11 +4211,6 @@ Shared = _dereq_('./Shared');
 		return false;
 	};
 
-// Extend DB to include documents
-	Core.prototype.init = function () {
-		CoreInit.apply(this, arguments);
-	};
-
 	Core.prototype.document = function (documentName) {
 		if (documentName) {
 			this._document = this._document || {};
@@ -4414,7 +4245,7 @@ Shared = _dereq_('./Shared');
 	Shared.finishModule('Document');
 	module.exports = Document;
 }());
-},{"./Collection":4,"./Shared":31}],9:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":32}],9:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4910,7 +4741,7 @@ Core.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":29,"./Shared":31,"./View":33}],10:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":30,"./Shared":32,"./View":34}],10:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5510,7 +5341,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":25,"./Shared":31}],11:[function(_dereq_,module,exports){
+},{"./Overload":26,"./Shared":32}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5803,7 +5634,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":27,"./Shared":31}],12:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":32}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6154,7 +5985,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":27,"./Shared":31}],13:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":32}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6369,7 +6200,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":31}],14:[function(_dereq_,module,exports){
+},{"./Shared":32}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6444,7 +6275,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":24,"./Shared":31}],15:[function(_dereq_,module,exports){
+},{"./Operation":25,"./Shared":32}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6674,7 +6505,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":25}],18:[function(_dereq_,module,exports){
+},{"./Overload":26}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -6822,7 +6653,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":25}],20:[function(_dereq_,module,exports){
+},{"./Overload":26}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -7645,7 +7476,176 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":25}],23:[function(_dereq_,module,exports){
+},{"./Overload":26}],23:[function(_dereq_,module,exports){
+"use strict";
+
+var Updating = {
+	/**
+	 * Updates a property on an object.
+	 * @param {Object} doc The object whose property is to be updated.
+	 * @param {String} prop The property to update.
+	 * @param {*} val The new value of the property.
+	 * @private
+	 */
+	_updateProperty: function (doc, prop, val) {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Setting non-data-bound document property "' + prop + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Increments a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to increment by.
+	 * @private
+	 */
+	_updateIncrement: function (doc, prop, val) {
+		doc[prop] += val;
+	},
+
+	/**
+	 * Changes the index of an item in the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} indexFrom The index to move the item from.
+	 * @param {Number} indexTo The index to move the item to.
+	 * @private
+	 */
+	_updateSpliceMove: function (arr, indexFrom, indexTo) {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Inserts an item into the passed array at the specified index.
+	 * @param {Array} arr The array to insert into.
+	 * @param {Number} index The index to insert at.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updateSplicePush: function (arr, index, doc) {
+		if (arr.length > index) {
+			arr.splice(index, 0, doc);
+		} else {
+			arr.push(doc);
+		}
+	},
+
+	/**
+	 * Inserts an item at the end of an array.
+	 * @param {Array} arr The array to insert the item into.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updatePush: function (arr, doc) {
+		arr.push(doc);
+	},
+
+	/**
+	 * Removes an item from the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} index The index of the item in the array to remove.
+	 * @private
+	 */
+	_updatePull: function (arr, index) {
+		arr.splice(index, 1);
+	},
+
+	/**
+	 * Multiplies a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to multiply by.
+	 * @private
+	 */
+	_updateMultiply: function (doc, prop, val) {
+		doc[prop] *= val;
+	},
+
+	/**
+	 * Renames a property on a document to the passed property.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to rename.
+	 * @param {Number} val The new property name.
+	 * @private
+	 */
+	_updateRename: function (doc, prop, val) {
+		doc[val] = doc[prop];
+		delete doc[prop];
+	},
+
+	/**
+	 * Sets a property on a document to the passed value.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @param {*} val The new property value.
+	 * @private
+	 */
+	_updateOverwrite: function (doc, prop, val) {
+		doc[prop] = val;
+	},
+
+	/**
+	 * Deletes a property on a document.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @private
+	 */
+	_updateUnset: function (doc, prop) {
+		delete doc[prop];
+	},
+
+	/**
+	 * Removes all properties from an object without destroying
+	 * the object instance, thereby maintaining data-bound linking.
+	 * @param {Object} doc The parent object to modify.
+	 * @param {String} prop The name of the child object to clear.
+	 * @private
+	 */
+	_updateClear: function (doc, prop) {
+		var obj = doc[prop],
+			i;
+
+		if (obj && typeof obj === 'object') {
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					this._updateUnset(obj, i);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	_updatePop: function (doc, val) {
+		var updated = false;
+
+		if (doc.length > 0) {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+
+		return updated;
+	}
+};
+
+module.exports = Updating;
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7811,7 +7811,7 @@ Collection.prototype.odm = function () {
 
 Shared.finishModule('Odm');
 module.exports = Odm;
-},{"./Collection":4,"./Shared":31}],24:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":32}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7958,7 +7958,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":27,"./Shared":31}],25:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":32}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8113,7 +8113,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8336,7 +8336,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":4,"./Document":8,"./Shared":31}],27:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Document":8,"./Shared":32}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8749,7 +8749,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":31}],28:[function(_dereq_,module,exports){
+},{"./Shared":32}],29:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -9122,7 +9122,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":31,"localforage":41}],29:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./Shared":32,"localforage":42}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9184,7 +9184,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":31}],30:[function(_dereq_,module,exports){
+},{"./Shared":32}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9302,7 +9302,7 @@ Core.prototype.init = function () {
 
 Shared.finishModule('Rest');
 module.exports = Rest;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":31,"rest":44,"rest/interceptor/mime":49}],31:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./Shared":32,"rest":45,"rest/interceptor/mime":50}],32:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
@@ -9432,7 +9432,8 @@ var Shared = {
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
 		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
 		'Mixin.Sorting': _dereq_('./Mixin.Sorting'),
-		'Mixin.Matching': _dereq_('./Mixin.Matching')
+		'Mixin.Matching': _dereq_('./Mixin.Matching'),
+		'Mixin.Updating': _dereq_('./Mixin.Updating')
 	}
 };
 
@@ -9440,7 +9441,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Triggers":22,"./Overload":25}],32:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Triggers":22,"./Mixin.Updating":23,"./Overload":26}],33:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -9560,7 +9561,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],33:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10494,7 +10495,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":29,"./Shared":31}],34:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":30,"./Shared":32}],35:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -10554,7 +10555,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],35:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -10661,7 +10662,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":37}],36:[function(_dereq_,module,exports){
+},{"asap":38}],37:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -10843,7 +10844,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":35,"asap":37}],37:[function(_dereq_,module,exports){
+},{"./core.js":36,"asap":38}],38:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -10960,7 +10961,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":34}],38:[function(_dereq_,module,exports){
+},{"_process":35}],39:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -11375,7 +11376,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":36}],39:[function(_dereq_,module,exports){
+},{"promise":37}],40:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -11706,7 +11707,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":42,"promise":36}],40:[function(_dereq_,module,exports){
+},{"./../utils/serializer":43,"promise":37}],41:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -12124,7 +12125,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":42,"promise":36}],41:[function(_dereq_,module,exports){
+},{"./../utils/serializer":43,"promise":37}],42:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12546,7 +12547,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":38,"./drivers/localstorage":39,"./drivers/websql":40,"promise":36}],42:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":39,"./drivers/localstorage":40,"./drivers/websql":41,"promise":37}],43:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12778,7 +12779,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],43:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13009,7 +13010,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./util/mixin":79}],44:[function(_dereq_,module,exports){
+},{"./util/mixin":80}],45:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13036,7 +13037,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client/default":46,"./client/xhr":47}],45:[function(_dereq_,module,exports){
+},{"./client/default":47,"./client/xhr":48}],46:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13102,7 +13103,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],46:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13228,7 +13229,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../client":45}],47:[function(_dereq_,module,exports){
+},{"../client":46}],48:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13404,7 +13405,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":43,"../client":45,"../util/normalizeHeaderName":80,"../util/responsePromise":81,"when":76}],48:[function(_dereq_,module,exports){
+},{"../UrlBuilder":44,"../client":46,"../util/normalizeHeaderName":81,"../util/responsePromise":82,"when":77}],49:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13571,7 +13572,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client":45,"./client/default":46,"./util/mixin":79,"./util/responsePromise":81,"when":76}],49:[function(_dereq_,module,exports){
+},{"./client":46,"./client/default":47,"./util/mixin":80,"./util/responsePromise":82,"when":77}],50:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13683,7 +13684,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":48,"../mime":52,"../mime/registry":53,"when":76}],50:[function(_dereq_,module,exports){
+},{"../interceptor":49,"../mime":53,"../mime/registry":54,"when":77}],51:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13744,7 +13745,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":43,"../interceptor":48}],51:[function(_dereq_,module,exports){
+},{"../UrlBuilder":44,"../interceptor":49}],52:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13800,7 +13801,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":48,"../util/mixin":79,"../util/uriTemplate":83}],52:[function(_dereq_,module,exports){
+},{"../interceptor":49,"../util/mixin":80,"../util/uriTemplate":84}],53:[function(_dereq_,module,exports){
 /*
 * Copyright 2014 the original author or authors
 * @license MIT, see LICENSE.txt for details
@@ -13855,7 +13856,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],53:[function(_dereq_,module,exports){
+},{}],54:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -13972,7 +13973,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../mime":52,"./type/application/hal":54,"./type/application/json":55,"./type/application/x-www-form-urlencoded":56,"./type/multipart/form-data":57,"./type/text/plain":58,"when":76}],54:[function(_dereq_,module,exports){
+},{"../mime":53,"./type/application/hal":55,"./type/application/json":56,"./type/application/x-www-form-urlencoded":57,"./type/multipart/form-data":58,"./type/text/plain":59,"when":77}],55:[function(_dereq_,module,exports){
 /*
  * Copyright 2013-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14113,7 +14114,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../../../interceptor/pathPrefix":50,"../../../interceptor/template":51,"../../../util/find":77,"../../../util/lazyPromise":78,"../../../util/responsePromise":81,"when":76}],55:[function(_dereq_,module,exports){
+},{"../../../interceptor/pathPrefix":51,"../../../interceptor/template":52,"../../../util/find":78,"../../../util/lazyPromise":79,"../../../util/responsePromise":82,"when":77}],56:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14162,7 +14163,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],56:[function(_dereq_,module,exports){
+},{}],57:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14254,7 +14255,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],57:[function(_dereq_,module,exports){
+},{}],58:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14329,7 +14330,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14360,7 +14361,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],59:[function(_dereq_,module,exports){
+},{}],60:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14379,7 +14380,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":60,"./env":72,"./makePromise":74}],60:[function(_dereq_,module,exports){
+},{"./Scheduler":61,"./env":73,"./makePromise":75}],61:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14461,7 +14462,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14489,7 +14490,7 @@ define(function() {
 	return TimeoutError;
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-},{}],62:[function(_dereq_,module,exports){
+},{}],63:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14546,7 +14547,7 @@ define(function() {
 
 
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14837,7 +14838,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../apply":62,"../state":75}],64:[function(_dereq_,module,exports){
+},{"../apply":63,"../state":76}],65:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -14999,7 +15000,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15028,7 +15029,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],66:[function(_dereq_,module,exports){
+},{}],67:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15050,7 +15051,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../state":75}],67:[function(_dereq_,module,exports){
+},{"../state":76}],68:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15117,7 +15118,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],68:[function(_dereq_,module,exports){
+},{}],69:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15143,7 +15144,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],69:[function(_dereq_,module,exports){
+},{}],70:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15223,7 +15224,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../TimeoutError":61,"../env":72}],70:[function(_dereq_,module,exports){
+},{"../TimeoutError":62,"../env":73}],71:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15311,7 +15312,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../env":72,"../format":73}],71:[function(_dereq_,module,exports){
+},{"../env":73,"../format":74}],72:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15351,7 +15352,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 
-},{}],72:[function(_dereq_,module,exports){
+},{}],73:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -15428,7 +15429,7 @@ define(function(_dereq_) {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":34}],73:[function(_dereq_,module,exports){
+},{"_process":35}],74:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15486,7 +15487,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],74:[function(_dereq_,module,exports){
+},{}],75:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -16417,7 +16418,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":34}],75:[function(_dereq_,module,exports){
+},{"_process":35}],76:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16454,7 +16455,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],76:[function(_dereq_,module,exports){
+},{}],77:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 
 /**
@@ -16685,7 +16686,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./lib/Promise":59,"./lib/TimeoutError":61,"./lib/apply":62,"./lib/decorators/array":63,"./lib/decorators/flow":64,"./lib/decorators/fold":65,"./lib/decorators/inspect":66,"./lib/decorators/iterate":67,"./lib/decorators/progress":68,"./lib/decorators/timed":69,"./lib/decorators/unhandledRejection":70,"./lib/decorators/with":71}],77:[function(_dereq_,module,exports){
+},{"./lib/Promise":60,"./lib/TimeoutError":62,"./lib/apply":63,"./lib/decorators/array":64,"./lib/decorators/flow":65,"./lib/decorators/fold":66,"./lib/decorators/inspect":67,"./lib/decorators/iterate":68,"./lib/decorators/progress":69,"./lib/decorators/timed":70,"./lib/decorators/unhandledRejection":71,"./lib/decorators/with":72}],78:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16728,7 +16729,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],78:[function(_dereq_,module,exports){
+},{}],79:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16785,7 +16786,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"when":76}],79:[function(_dereq_,module,exports){
+},{"when":77}],80:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16835,7 +16836,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],80:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -16875,7 +16876,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],81:[function(_dereq_,module,exports){
+},{}],82:[function(_dereq_,module,exports){
 /*
  * Copyright 2014-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -17017,7 +17018,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./normalizeHeaderName":80,"when":76}],82:[function(_dereq_,module,exports){
+},{"./normalizeHeaderName":81,"when":77}],83:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -17198,7 +17199,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],83:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -17371,4 +17372,4 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./uriEncoder":82}]},{},[1]);
+},{"./uriEncoder":83}]},{},[1]);

@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":22,"../lib/OldView.Bind":21,"../lib/Overview":25,"../lib/Persist":27,"../lib/View":30}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":23,"../lib/OldView.Bind":22,"../lib/Overview":26,"../lib/Persist":28,"../lib/View":31}],2:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -273,7 +273,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":29}],3:[function(_dereq_,module,exports){
+},{"./Shared":30}],3:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -345,6 +345,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Shared.mixin(Collection.prototype, 'Mixin.Matching');
+Shared.mixin(Collection.prototype, 'Mixin.Updating');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -1282,170 +1283,6 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
  */
 Collection.prototype._isPositionalKey = function (key) {
 	return key.substr(key.length - 2, 2) === '.$';
-};
-
-/**
- * Updates a property on an object depending on if the collection is
- * currently running data-binding or not.
- * @param {Object} doc The object whose property is to be updated.
- * @param {String} prop The property to update.
- * @param {*} val The new value of the property.
- * @private
- */
-Collection.prototype._updateProperty = function (doc, prop, val) {
-	doc[prop] = val;
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Increments a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to increment by.
- * @private
- */
-Collection.prototype._updateIncrement = function (doc, prop, val) {
-	doc[prop] += val;
-};
-
-/**
- * Changes the index of an item in the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} indexFrom The index to move the item from.
- * @param {Number} indexTo The index to move the item to.
- * @private
- */
-Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
-	arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Inserts an item into the passed array at the specified index.
- * @param {Array} arr The array to insert into.
- * @param {Number} index The index to insert at.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updateSplicePush = function (arr, index, doc) {
-	if (arr.length > index) {
-		arr.splice(index, 0, doc);
-	} else {
-		arr.push(doc);
-	}
-};
-
-/**
- * Inserts an item at the end of an array.
- * @param {Array} arr The array to insert the item into.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updatePush = function (arr, doc) {
-	arr.push(doc);
-};
-
-/**
- * Removes an item from the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} index The index of the item in the array to remove.
- * @private
- */
-Collection.prototype._updatePull = function (arr, index) {
-	arr.splice(index, 1);
-};
-
-/**
- * Multiplies a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to multiply by.
- * @private
- */
-Collection.prototype._updateMultiply = function (doc, prop, val) {
-	doc[prop] *= val;
-};
-
-/**
- * Renames a property on a document to the passed property.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to rename.
- * @param {Number} val The new property name.
- * @private
- */
-Collection.prototype._updateRename = function (doc, prop, val) {
-	doc[val] = doc[prop];
-	delete doc[prop];
-};
-
-/**
- * Sets a property on a document to the passed value.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @param {*} val The new property value.
- * @private
- */
-Collection.prototype._updateOverwrite = function (doc, prop, val) {
-	doc[prop] = val;
-};
-
-/**
- * Deletes a property on a document.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @private
- */
-Collection.prototype._updateUnset = function (doc, prop) {
-	delete doc[prop];
-};
-
-/**
- * Removes all properties from an object without destroying
- * the object instance, thereby maintaining data-bound linking.
- * @param {Object} doc The parent object to modify.
- * @param {String} prop The name of the child object to clear.
- * @private
- */
-Collection.prototype._updateClear = function (doc, prop) {
-	var obj = doc[prop],
-		i;
-
-	if (obj && typeof obj === 'object') {
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				this._updateUnset(obj, i);
-			}
-		}
-	}
-};
-
-/**
- * Pops an item from the array stack.
- * @param {Object} doc The document to modify.
- * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
- * @return {Boolean}
- * @private
- */
-Collection.prototype._updatePop = function (doc, val) {
-	var updated = false;
-
-	if (doc.length > 0) {
-		if (val === 1) {
-			doc.pop();
-			updated = true;
-		} else if (val === -1) {
-			doc.shift();
-			updated = true;
-		}
-	}
-
-	return updated;
 };
 
 /**
@@ -3291,7 +3128,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":24,"./Path":26,"./ReactorIO":28,"./Shared":29}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":25,"./Path":27,"./ReactorIO":29,"./Shared":30}],4:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3609,7 +3446,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":29}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":30}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3991,7 +3828,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":12,"./Overload":24,"./Shared":29}],6:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":12,"./Overload":25,"./Shared":30}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -4026,8 +3863,7 @@ module.exports = function(str) {
 
 var Shared,
 	Collection,
-	Core,
-	CoreInit;
+	Core;
 
 Shared = _dereq_('./Shared');
 
@@ -4047,10 +3883,10 @@ Shared = _dereq_('./Shared');
 	Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
 	Shared.mixin(Document.prototype, 'Mixin.Constants');
 	Shared.mixin(Document.prototype, 'Mixin.Triggers');
+	//Shared.mixin(Document.prototype, 'Mixin.Updating');
 
 	Collection = _dereq_('./Collection');
 	Core = Shared.modules.Core;
-	CoreInit = Shared.modules.Core.prototype.init;
 
 	/**
 	 * Gets / sets the current state.
@@ -4366,11 +4202,6 @@ Shared = _dereq_('./Shared');
 		return false;
 	};
 
-// Extend DB to include documents
-	Core.prototype.init = function () {
-		CoreInit.apply(this, arguments);
-	};
-
 	Core.prototype.document = function (documentName) {
 		if (documentName) {
 			this._document = this._document || {};
@@ -4405,7 +4236,7 @@ Shared = _dereq_('./Shared');
 	Shared.finishModule('Document');
 	module.exports = Document;
 }());
-},{"./Collection":3,"./Shared":29}],8:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":30}],8:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5005,7 +4836,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":24,"./Shared":29}],9:[function(_dereq_,module,exports){
+},{"./Overload":25,"./Shared":30}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5298,7 +5129,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":26,"./Shared":29}],10:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":30}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5649,7 +5480,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":26,"./Shared":29}],11:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":30}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -5864,7 +5695,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":29}],12:[function(_dereq_,module,exports){
+},{"./Shared":30}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5939,7 +5770,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":23,"./Shared":29}],13:[function(_dereq_,module,exports){
+},{"./Operation":24,"./Shared":30}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6169,7 +6000,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":24}],16:[function(_dereq_,module,exports){
+},{"./Overload":25}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -6317,7 +6148,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":24}],18:[function(_dereq_,module,exports){
+},{"./Overload":25}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -7140,7 +6971,176 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":24}],21:[function(_dereq_,module,exports){
+},{"./Overload":25}],21:[function(_dereq_,module,exports){
+"use strict";
+
+var Updating = {
+	/**
+	 * Updates a property on an object.
+	 * @param {Object} doc The object whose property is to be updated.
+	 * @param {String} prop The property to update.
+	 * @param {*} val The new value of the property.
+	 * @private
+	 */
+	_updateProperty: function (doc, prop, val) {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Setting non-data-bound document property "' + prop + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Increments a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to increment by.
+	 * @private
+	 */
+	_updateIncrement: function (doc, prop, val) {
+		doc[prop] += val;
+	},
+
+	/**
+	 * Changes the index of an item in the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} indexFrom The index to move the item from.
+	 * @param {Number} indexTo The index to move the item to.
+	 * @private
+	 */
+	_updateSpliceMove: function (arr, indexFrom, indexTo) {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Inserts an item into the passed array at the specified index.
+	 * @param {Array} arr The array to insert into.
+	 * @param {Number} index The index to insert at.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updateSplicePush: function (arr, index, doc) {
+		if (arr.length > index) {
+			arr.splice(index, 0, doc);
+		} else {
+			arr.push(doc);
+		}
+	},
+
+	/**
+	 * Inserts an item at the end of an array.
+	 * @param {Array} arr The array to insert the item into.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updatePush: function (arr, doc) {
+		arr.push(doc);
+	},
+
+	/**
+	 * Removes an item from the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} index The index of the item in the array to remove.
+	 * @private
+	 */
+	_updatePull: function (arr, index) {
+		arr.splice(index, 1);
+	},
+
+	/**
+	 * Multiplies a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to multiply by.
+	 * @private
+	 */
+	_updateMultiply: function (doc, prop, val) {
+		doc[prop] *= val;
+	},
+
+	/**
+	 * Renames a property on a document to the passed property.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to rename.
+	 * @param {Number} val The new property name.
+	 * @private
+	 */
+	_updateRename: function (doc, prop, val) {
+		doc[val] = doc[prop];
+		delete doc[prop];
+	},
+
+	/**
+	 * Sets a property on a document to the passed value.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @param {*} val The new property value.
+	 * @private
+	 */
+	_updateOverwrite: function (doc, prop, val) {
+		doc[prop] = val;
+	},
+
+	/**
+	 * Deletes a property on a document.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @private
+	 */
+	_updateUnset: function (doc, prop) {
+		delete doc[prop];
+	},
+
+	/**
+	 * Removes all properties from an object without destroying
+	 * the object instance, thereby maintaining data-bound linking.
+	 * @param {Object} doc The parent object to modify.
+	 * @param {String} prop The name of the child object to clear.
+	 * @private
+	 */
+	_updateClear: function (doc, prop) {
+		var obj = doc[prop],
+			i;
+
+		if (obj && typeof obj === 'object') {
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					this._updateUnset(obj, i);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	_updatePop: function (doc, val) {
+		var updated = false;
+
+		if (doc.length > 0) {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+
+		return updated;
+	}
+};
+
+module.exports = Updating;
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 // Grab the view class
@@ -7571,7 +7571,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./Shared":29}],22:[function(_dereq_,module,exports){
+},{"./Shared":30}],23:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8274,7 +8274,7 @@ Core.prototype.oldViews = function () {
 
 Shared.finishModule('OldView');
 module.exports = OldView;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":29}],23:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":30}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8421,7 +8421,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":26,"./Shared":29}],24:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":30}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8576,7 +8576,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8799,7 +8799,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":29}],26:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":7,"./Shared":30}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9212,7 +9212,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":29}],27:[function(_dereq_,module,exports){
+},{"./Shared":30}],28:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -9585,7 +9585,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":29,"localforage":38}],28:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":30,"localforage":39}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9647,7 +9647,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":29}],29:[function(_dereq_,module,exports){
+},{"./Shared":30}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
@@ -9777,7 +9777,8 @@ var Shared = {
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
 		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
 		'Mixin.Sorting': _dereq_('./Mixin.Sorting'),
-		'Mixin.Matching': _dereq_('./Mixin.Matching')
+		'Mixin.Matching': _dereq_('./Mixin.Matching'),
+		'Mixin.Updating': _dereq_('./Mixin.Updating')
 	}
 };
 
@@ -9785,7 +9786,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Triggers":20,"./Overload":24}],30:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Triggers":20,"./Mixin.Updating":21,"./Overload":25}],31:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10719,7 +10720,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":28,"./Shared":29}],31:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":29,"./Shared":30}],32:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -10779,7 +10780,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],32:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -10886,7 +10887,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":34}],33:[function(_dereq_,module,exports){
+},{"asap":35}],34:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -11068,7 +11069,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":32,"asap":34}],34:[function(_dereq_,module,exports){
+},{"./core.js":33,"asap":35}],35:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -11185,7 +11186,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":31}],35:[function(_dereq_,module,exports){
+},{"_process":32}],36:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -11600,7 +11601,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":33}],36:[function(_dereq_,module,exports){
+},{"promise":34}],37:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -11931,7 +11932,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":39,"promise":33}],37:[function(_dereq_,module,exports){
+},{"./../utils/serializer":40,"promise":34}],38:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -12349,7 +12350,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":39,"promise":33}],38:[function(_dereq_,module,exports){
+},{"./../utils/serializer":40,"promise":34}],39:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12771,7 +12772,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":35,"./drivers/localstorage":36,"./drivers/websql":37,"promise":33}],39:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":36,"./drivers/localstorage":37,"./drivers/websql":38,"promise":34}],40:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 

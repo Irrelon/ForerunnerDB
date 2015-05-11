@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":4,"../lib/Persist":21}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/Persist":22}],2:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -78,6 +78,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Constants');
 Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Shared.mixin(Collection.prototype, 'Mixin.Matching');
+Shared.mixin(Collection.prototype, 'Mixin.Updating');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -1015,170 +1016,6 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
  */
 Collection.prototype._isPositionalKey = function (key) {
 	return key.substr(key.length - 2, 2) === '.$';
-};
-
-/**
- * Updates a property on an object depending on if the collection is
- * currently running data-binding or not.
- * @param {Object} doc The object whose property is to be updated.
- * @param {String} prop The property to update.
- * @param {*} val The new value of the property.
- * @private
- */
-Collection.prototype._updateProperty = function (doc, prop, val) {
-	doc[prop] = val;
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Increments a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to increment by.
- * @private
- */
-Collection.prototype._updateIncrement = function (doc, prop, val) {
-	doc[prop] += val;
-};
-
-/**
- * Changes the index of an item in the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} indexFrom The index to move the item from.
- * @param {Number} indexTo The index to move the item to.
- * @private
- */
-Collection.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
-	arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
-
-	if (this.debug()) {
-		console.log('ForerunnerDB.Collection: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-	}
-};
-
-/**
- * Inserts an item into the passed array at the specified index.
- * @param {Array} arr The array to insert into.
- * @param {Number} index The index to insert at.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updateSplicePush = function (arr, index, doc) {
-	if (arr.length > index) {
-		arr.splice(index, 0, doc);
-	} else {
-		arr.push(doc);
-	}
-};
-
-/**
- * Inserts an item at the end of an array.
- * @param {Array} arr The array to insert the item into.
- * @param {Object} doc The document to insert.
- * @private
- */
-Collection.prototype._updatePush = function (arr, doc) {
-	arr.push(doc);
-};
-
-/**
- * Removes an item from the passed array.
- * @param {Array} arr The array to modify.
- * @param {Number} index The index of the item in the array to remove.
- * @private
- */
-Collection.prototype._updatePull = function (arr, index) {
-	arr.splice(index, 1);
-};
-
-/**
- * Multiplies a value for a property on a document by the passed number.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to modify.
- * @param {Number} val The amount to multiply by.
- * @private
- */
-Collection.prototype._updateMultiply = function (doc, prop, val) {
-	doc[prop] *= val;
-};
-
-/**
- * Renames a property on a document to the passed property.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to rename.
- * @param {Number} val The new property name.
- * @private
- */
-Collection.prototype._updateRename = function (doc, prop, val) {
-	doc[val] = doc[prop];
-	delete doc[prop];
-};
-
-/**
- * Sets a property on a document to the passed value.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @param {*} val The new property value.
- * @private
- */
-Collection.prototype._updateOverwrite = function (doc, prop, val) {
-	doc[prop] = val;
-};
-
-/**
- * Deletes a property on a document.
- * @param {Object} doc The document to modify.
- * @param {String} prop The property to delete.
- * @private
- */
-Collection.prototype._updateUnset = function (doc, prop) {
-	delete doc[prop];
-};
-
-/**
- * Removes all properties from an object without destroying
- * the object instance, thereby maintaining data-bound linking.
- * @param {Object} doc The parent object to modify.
- * @param {String} prop The name of the child object to clear.
- * @private
- */
-Collection.prototype._updateClear = function (doc, prop) {
-	var obj = doc[prop],
-		i;
-
-	if (obj && typeof obj === 'object') {
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				this._updateUnset(obj, i);
-			}
-		}
-	}
-};
-
-/**
- * Pops an item from the array stack.
- * @param {Object} doc The document to modify.
- * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
- * @return {Boolean}
- * @private
- */
-Collection.prototype._updatePop = function (doc, val) {
-	var updated = false;
-
-	if (doc.length > 0) {
-		if (val === 1) {
-			doc.pop();
-			updated = true;
-		} else if (val === -1) {
-			doc.shift();
-			updated = true;
-		}
-	}
-
-	return updated;
 };
 
 /**
@@ -3024,7 +2861,7 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":5,"./IndexBinaryTree":6,"./IndexHashMap":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":19,"./Path":20,"./ReactorIO":22,"./Shared":23}],3:[function(_dereq_,module,exports){
+},{"./Crc":5,"./IndexBinaryTree":6,"./IndexHashMap":7,"./KeyValueStore":8,"./Metrics":9,"./Overload":20,"./Path":21,"./ReactorIO":23,"./Shared":24}],3:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3342,7 +3179,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":2,"./Shared":23}],4:[function(_dereq_,module,exports){
+},{"./Collection":2,"./Shared":24}],4:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3724,7 +3561,7 @@ Core.prototype.drop = function (callback) {
 };
 
 module.exports = Core;
-},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload":19,"./Shared":23}],5:[function(_dereq_,module,exports){
+},{"./Collection.js":2,"./Crc.js":5,"./Metrics.js":9,"./Overload":20,"./Shared":24}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -4047,7 +3884,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":20,"./Shared":23}],7:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],7:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -4398,7 +4235,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":20,"./Shared":23}],8:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -4613,7 +4450,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":23}],9:[function(_dereq_,module,exports){
+},{"./Shared":24}],9:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -4688,7 +4525,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":18,"./Shared":23}],10:[function(_dereq_,module,exports){
+},{"./Operation":19,"./Shared":24}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -4918,7 +4755,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":19}],13:[function(_dereq_,module,exports){
+},{"./Overload":20}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -5066,7 +4903,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":19}],15:[function(_dereq_,module,exports){
+},{"./Overload":20}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -5889,7 +5726,176 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":19}],18:[function(_dereq_,module,exports){
+},{"./Overload":20}],18:[function(_dereq_,module,exports){
+"use strict";
+
+var Updating = {
+	/**
+	 * Updates a property on an object.
+	 * @param {Object} doc The object whose property is to be updated.
+	 * @param {String} prop The property to update.
+	 * @param {*} val The new value of the property.
+	 * @private
+	 */
+	_updateProperty: function (doc, prop, val) {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Setting non-data-bound document property "' + prop + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Increments a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to increment by.
+	 * @private
+	 */
+	_updateIncrement: function (doc, prop, val) {
+		doc[prop] += val;
+	},
+
+	/**
+	 * Changes the index of an item in the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} indexFrom The index to move the item from.
+	 * @param {Number} indexTo The index to move the item to.
+	 * @private
+	 */
+	_updateSpliceMove: function (arr, indexFrom, indexTo) {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Inserts an item into the passed array at the specified index.
+	 * @param {Array} arr The array to insert into.
+	 * @param {Number} index The index to insert at.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updateSplicePush: function (arr, index, doc) {
+		if (arr.length > index) {
+			arr.splice(index, 0, doc);
+		} else {
+			arr.push(doc);
+		}
+	},
+
+	/**
+	 * Inserts an item at the end of an array.
+	 * @param {Array} arr The array to insert the item into.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updatePush: function (arr, doc) {
+		arr.push(doc);
+	},
+
+	/**
+	 * Removes an item from the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} index The index of the item in the array to remove.
+	 * @private
+	 */
+	_updatePull: function (arr, index) {
+		arr.splice(index, 1);
+	},
+
+	/**
+	 * Multiplies a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to multiply by.
+	 * @private
+	 */
+	_updateMultiply: function (doc, prop, val) {
+		doc[prop] *= val;
+	},
+
+	/**
+	 * Renames a property on a document to the passed property.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to rename.
+	 * @param {Number} val The new property name.
+	 * @private
+	 */
+	_updateRename: function (doc, prop, val) {
+		doc[val] = doc[prop];
+		delete doc[prop];
+	},
+
+	/**
+	 * Sets a property on a document to the passed value.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @param {*} val The new property value.
+	 * @private
+	 */
+	_updateOverwrite: function (doc, prop, val) {
+		doc[prop] = val;
+	},
+
+	/**
+	 * Deletes a property on a document.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @private
+	 */
+	_updateUnset: function (doc, prop) {
+		delete doc[prop];
+	},
+
+	/**
+	 * Removes all properties from an object without destroying
+	 * the object instance, thereby maintaining data-bound linking.
+	 * @param {Object} doc The parent object to modify.
+	 * @param {String} prop The name of the child object to clear.
+	 * @private
+	 */
+	_updateClear: function (doc, prop) {
+		var obj = doc[prop],
+			i;
+
+		if (obj && typeof obj === 'object') {
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					this._updateUnset(obj, i);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	_updatePop: function (doc, val) {
+		var updated = false;
+
+		if (doc.length > 0) {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+
+		return updated;
+	}
+};
+
+module.exports = Updating;
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6036,7 +6042,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":20,"./Shared":23}],19:[function(_dereq_,module,exports){
+},{"./Path":21,"./Shared":24}],20:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -6191,7 +6197,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6604,7 +6610,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":23}],21:[function(_dereq_,module,exports){
+},{"./Shared":24}],22:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -6977,7 +6983,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":2,"./CollectionGroup":3,"./Shared":23,"localforage":31}],22:[function(_dereq_,module,exports){
+},{"./Collection":2,"./CollectionGroup":3,"./Shared":24,"localforage":32}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7039,7 +7045,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":23}],23:[function(_dereq_,module,exports){
+},{"./Shared":24}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
@@ -7169,7 +7175,8 @@ var Shared = {
 		'Mixin.Constants': _dereq_('./Mixin.Constants'),
 		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
 		'Mixin.Sorting': _dereq_('./Mixin.Sorting'),
-		'Mixin.Matching': _dereq_('./Mixin.Matching')
+		'Mixin.Matching': _dereq_('./Mixin.Matching'),
+		'Mixin.Updating': _dereq_('./Mixin.Updating')
 	}
 };
 
@@ -7177,7 +7184,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":10,"./Mixin.ChainReactor":11,"./Mixin.Common":12,"./Mixin.Constants":13,"./Mixin.Events":14,"./Mixin.Matching":15,"./Mixin.Sorting":16,"./Mixin.Triggers":17,"./Overload":19}],24:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":10,"./Mixin.ChainReactor":11,"./Mixin.Common":12,"./Mixin.Constants":13,"./Mixin.Events":14,"./Mixin.Matching":15,"./Mixin.Sorting":16,"./Mixin.Triggers":17,"./Mixin.Updating":18,"./Overload":20}],25:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -7237,7 +7244,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -7344,7 +7351,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":27}],26:[function(_dereq_,module,exports){
+},{"asap":28}],27:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -7526,7 +7533,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":25,"asap":27}],27:[function(_dereq_,module,exports){
+},{"./core.js":26,"asap":28}],28:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -7643,7 +7650,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":24}],28:[function(_dereq_,module,exports){
+},{"_process":25}],29:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -8058,7 +8065,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":26}],29:[function(_dereq_,module,exports){
+},{"promise":27}],30:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -8389,7 +8396,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":32,"promise":26}],30:[function(_dereq_,module,exports){
+},{"./../utils/serializer":33,"promise":27}],31:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -8807,7 +8814,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":32,"promise":26}],31:[function(_dereq_,module,exports){
+},{"./../utils/serializer":33,"promise":27}],32:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -9229,7 +9236,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":28,"./drivers/localstorage":29,"./drivers/websql":30,"promise":26}],32:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":29,"./drivers/localstorage":30,"./drivers/websql":31,"promise":27}],33:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
