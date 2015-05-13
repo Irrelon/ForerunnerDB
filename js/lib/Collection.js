@@ -662,8 +662,25 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 				switch (i) {
 					case '$key':
 					case '$index':
+					case '$data':
 						// Ignore some operators
 						operation = true;
+						break;
+
+					case '$each':
+						operation = true;
+
+						// Loop over the array of updates and run each one
+						tmpCount = update.$each.length;
+						for (tmpIndex = 0; tmpIndex < tmpCount; tmpIndex++) {
+							recurseUpdated = this.updateObject(doc, update.$each[tmpIndex], query, options, path);
+
+							if (recurseUpdated) {
+								updated = true;
+							}
+						}
+
+						updated = updated || recurseUpdated;
 						break;
 
 					default:
@@ -747,6 +764,50 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 						case '$inc':
 							this._updateIncrement(doc, i, update[i]);
 							updated = true;
+							break;
+
+						case '$cast':
+							// Casts a property to the type specified if it is not already
+							// that type. If the cast is an array or an object and the property
+							// is not already that type a new array or object is created and
+							// set to the property, overwriting the previous value
+							switch (update[i]) {
+								case 'array':
+									if (!(doc[i] instanceof Array)) {
+										// Cast to an array
+										this._updateProperty(doc, i, update.$data || []);
+										updated = true;
+									}
+									break;
+
+								case 'object':
+									if (!(doc[i] instanceof Object) || (doc[i] instanceof Array)) {
+										// Cast to an object
+										this._updateProperty(doc, i, update.$data || {});
+										updated = true;
+									}
+									break;
+
+								case 'number':
+									if (typeof doc[i] !== 'number') {
+										// Cast to a number
+										this._updateProperty(doc, i, Number(doc[i]));
+										updated = true;
+									}
+									break;
+
+								case 'string':
+									if (typeof doc[i] !== 'string') {
+										// Cast to a string
+										this._updateProperty(doc, i, String(doc[i]));
+										updated = true;
+									}
+									break;
+
+								default:
+									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot update cast to unknown type: ' + update[i]);
+							}
+
 							break;
 
 						case '$push':

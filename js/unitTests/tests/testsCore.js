@@ -1127,6 +1127,48 @@ QUnit.test("Collection.update() :: $push array operator to undefined field (shou
 	base.dbDown();
 });
 
+QUnit.test("Collection.update() :: $each, $cast and $push array operator to undefined multiple nested fields (should assign new array to field)", function() {
+	base.dbUp();
+
+	var coll = db.collection('test');
+	coll.setData([{
+		_id: 'fooItem',
+		name: 'foo'
+	}]);
+
+	coll.update({
+		_id: "fooItem"
+	}, {
+		"$each": [{
+			"$cast": {
+				"arr": "array",
+				$data: [{}]
+			}
+		}, {
+			"arr": {
+				"$cast": {
+					"secondArr": "array"
+				}
+			}
+		}, {
+			"arr": {
+				$push: {
+					"secondArr": {
+						_id: 'ahh',
+						val: 8
+					}
+				}
+			}
+		}]
+	});
+
+	var after = coll.findById("fooItem");
+
+	ok(after.arr && after.arr[0] && after.arr[0].secondArr && after.arr[0].secondArr.length === 1, 'Nested push created multiple arrays correctly');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.update() :: $splicePush array operator", function() {
 	base.dbUp();
 	base.dataUp();
