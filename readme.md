@@ -14,7 +14,7 @@ a UK registered company.
 </tr>
 </table>
 
-## Version 1.3.34
+## Version 1.3.35
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as

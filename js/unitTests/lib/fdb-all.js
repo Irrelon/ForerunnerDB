@@ -9410,7 +9410,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.34',
+	version: '1.3.35',
 	modules: {},
 
 	_synth: {},
