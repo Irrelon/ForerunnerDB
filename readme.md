@@ -4,6 +4,8 @@ a UK registered company.
 
 ## Version 1.3.35
 
+[![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
+
 #### TravisCI Build Test Status
 <table>
 <tr>
