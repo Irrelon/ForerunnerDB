@@ -445,6 +445,121 @@ In the following example the "arr" field (initially an array) is replaced by an 
 			}
 		}
 	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[{
+		"_id": "445324",
+		"arr": {
+			"moo": 1
+		}
+	}]
+
+#### $each
+> Version >= 1.3.34
+
+$each allows you to iterate through multiple update operations on the same query result.
+Use $each when you wish to execute update operations in sequence or on the same query.
+Using $each is slightly more performant than running each update operation one after the
+other calling update().
+
+Consider the following sequence of update calls that define a couple of nested arrays and
+then push a value to the inner-nested array:
+
+	db.collection('test').setData({
+		_id: "445324",
+		count: 5
+	});
+	
+	db.collection('test').update({
+		_id: "445324"
+	}, {
+		$cast: {
+			arr: "array",
+			$data: [{}]
+		}
+	});
+	
+	db.collection('test').update({
+		_id: "445324"
+	}, {
+		arr: {
+			$cast: {
+				secondArr: "array"
+			}
+		}
+	});
+	
+	db.collection('test').update({
+		_id: "445324"
+	}, {
+		arr: {
+			$push: {
+				secondArr: "moo"
+			}
+		}
+	});
+
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[
+    	{
+    		"_id": "445324",
+    		"count": 5,
+    		"arr": [{"secondArr": ["moo"]}]
+    	}
+    ]
+
+These calls a wasteful because each update() call must query the collection for matching
+documents before running the update against them. With $each you can pass a sequence of
+update operations and they will be executed in order:
+
+	db.collection('test').setData({
+		_id: "445324",
+		count: 5
+	});
+	
+	db.collection('test').update({
+		_id: "445324"
+	}, {
+		$each: [{
+			$cast: {
+				arr: "array",
+				$data: [{}]
+			}
+		}, {
+			arr: {
+				$cast: {
+					secondArr: "array"
+				}
+			}
+		}, {
+			arr: {
+				$push: {
+					secondArr: "moo"
+				}
+			}
+		}]
+	});
+
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[
+    	{
+    		"_id": "445324",
+    		"count": 5,
+    		"arr": [{"secondArr": ["moo"]}]
+    	}
+    ]
+
+As you can see the single sequenced call produces the same output as the multiple update()
+calls but will run slightly faster and use fewer resources.
 
 #### $inc
 The $inc operator increments / decrements a field value by the given number.
@@ -460,6 +575,11 @@ The $inc operator increments / decrements a field value by the given number.
 In the following example, the "count" field is decremented by 1 in the document that
 matches the id "445324":
 
+	db.collection('test').setData({
+		_id: "445324",
+		count: 5
+	});
+	
 	db.collection('test').update({
 		_id: "445324"
 	}, {
@@ -467,6 +587,15 @@ matches the id "445324":
 			count: -1
 		}
 	});
+	
+	JSON.stringify(db.collection('test').find());
+    
+Result:
+
+	[{
+		"_id": "445324",
+		"count": 4
+	}]
 
 Using a positive number will increment, using a negative number will decrement.
 
@@ -483,13 +612,29 @@ The $push operator appends a specified value to an array.
 
 The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
 
-	db.users.update({
+	db.collection('test').setData({
+		_id: "23231",
+		shoppingList: []
+	});
+	
+	db.collection('test').update({
 		_id: "23231"
 	}, {
 		$push: {
 			shoppingList: "Milk"
 		}
 	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[{
+		"_id": "23231",
+		"shoppingList": [
+			"Milk"
+		]
+    }]
 
 #### $splicePush
 The $splicePush operator adds an item into an array at a specified index.
@@ -505,15 +650,39 @@ The $splicePush operator adds an item into an array at a specified index.
 
 The following example inserts "Milk" to the "shoppingList" array at index 1 in the document with the id "23231":
 
-	db.users.update({
+	db.collection('test').setData({
+		_id: "23231",
+		shoppingList: [
+			"Sugar",
+			"Tea",
+			"Coffee"
+		]
+	});
+	
+	db.collection('test').update({
 		_id: "23231"
 	}, {
 		$splicePush: {
-			shoppingList: "Milk"
+			shoppingList: "Milk",
 			$index: 1
 		}
 	});
 
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[
+    	{
+    		"_id": "23231",
+    		"shoppingList": [
+    			"Sugar",
+    			"Milk",
+    			"Tea",
+    			"Coffee"
+    		]
+    	}
+    ]
 
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array.
@@ -523,13 +692,13 @@ ForerunnerDB supports the $addToSet operator as detailed in the MongoDB document
 In the following example $addToSet is used to check uniqueness against the whole document being added:
 
 	// Create a collection document
-	collection.setData({
+	db.collection('test').setData({
 		_id: "1",
 		arr: []
 	});
 
 	// Update the document by adding an object to the "arr" array
-	collection.update({
+	db.collection('test').update({
 		_id: "1"
 	}, {
 		$addToSet: {
@@ -542,7 +711,7 @@ In the following example $addToSet is used to check uniqueness against the whole
 
 	// Try and do it again... this will fail because a
 	// matching item already exists in the array
-	collection.update({
+	db.collection('test').update({
         _id: "1"
     }, {
         $addToSet: {
@@ -556,13 +725,13 @@ In the following example $addToSet is used to check uniqueness against the whole
 Now in the example below we specify which key to test uniqueness against:
 
 	// Create a collection document
-	collection.setData({
+	db.collection('test').setData({
 		_id: "1",
 		arr: []
 	});
 
 	// Update the document by adding an object to the "arr" array
-	collection.update({
+	db.collection('test').update({
 		_id: "1"
 	}, {
 		$addToSet: {
@@ -575,7 +744,7 @@ Now in the example below we specify which key to test uniqueness against:
 
 	// Try and do it again... this will work because the
 	// key "test" is different for the existing and new objects
-	collection.update({
+	db.collection('test').update({
         _id: "1"
     }, {
         $addToSet: {
@@ -624,7 +793,8 @@ The $move operator moves an item that exists inside a document's array from one 
 		}
 	});
 
-The following example moves "Milk" in the "shoppingList" array to index 1 in the document with the id "23231":
+The following example moves "Milk" in the "shoppingList" array to index 1 in the
+document with the id "23231":
 
 	db.users.update({
 		_id: "23231"
@@ -634,6 +804,93 @@ The following example moves "Milk" in the "shoppingList" array to index 1 in the
 			$index: 1
 		}
 	});
+
+#### $cast
+> Version >= 1.3.34
+
+The $cast operator allows you to change a property's type within a document. If used to 
+cast a property to an array or object the property is set to a new blank array or
+object respectively.
+
+This example changes the type of the "val" property from a string to a number:
+
+	db.collection('test').setData({
+		val: "1.2"
+	});
+	
+	db.collection('test').update({}, {
+		$cast: {
+			val: "number"
+		}
+	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[{
+		"_id": "1d6fbf16e080de0",
+		"val": 1.2
+	}]
+
+You can also use cast to ensure that an array or object exists on a property without
+overwriting that property if one already exists:
+
+	db.collection('test').setData({
+		_id: "moo",
+		arr: [{
+			test: true
+		}]
+	});
+	
+	db.collection('test').update({
+		_id: "moo"
+	}, {
+		$cast: {
+			arr: "array"
+		}
+	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[{
+		"_id": "moo",
+		"arr": [{
+			"test": true
+		}]
+	}]
+
+Should you wish to initialise an array or object with specific data if the property is
+not currently of that type rather than initialising as a blank array / object, you can 
+specify the data to use by including a $data property in your $cast operator object:
+
+	db.collection('test').setData({
+		_id: "moo"
+	});
+	
+	db.collection('test').update({
+		_id: "moo"
+	}, {
+		$cast: {
+			orders: "array",
+			$data: [{
+				initial: true
+			}]
+		}
+	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+	
+	[{
+		"_id": "moo",
+		"orders":[{
+			"initial": true
+		}]
+	}]
 
 #### Array Positional (.$)
 Often you want to update a sub-document stored inside an array. You can use the array positional
