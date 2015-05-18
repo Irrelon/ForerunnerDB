@@ -6,7 +6,7 @@
  * and delete.
  */
 var Shared,
-	Core,
+	Db,
 	Metrics,
 	KeyValueStore,
 	Path,
@@ -77,7 +77,7 @@ Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
 IndexBinaryTree = require('./IndexBinaryTree');
 Crc = require('./Crc');
-Core = Shared.modules.Core;
+Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
 
@@ -114,7 +114,7 @@ Collection.prototype.data = function () {
  * Drops a collection and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
-Collection.prototype.drop = function () {
+Collection.prototype.drop = function (callback) {
 	var key;
 
 	if (this._state !== 'dropped') {
@@ -146,12 +146,17 @@ Collection.prototype.drop = function () {
 			delete this._data;
 			delete this._metrics;
 
+			if (callback) { callback(false, true); }
+
 			return true;
 		}
 	} else {
+		if (callback) { callback(false, true); }
+
 		return true;
 	}
 
+	if (callback) { callback(false, true); }
 	return false;
 };
 
@@ -207,7 +212,7 @@ Collection.prototype._onRemove = function (items) {
 
 /**
  * Gets / sets the db instance this class instance belongs to.
- * @param {Core=} db The db instance.
+ * @param {Db=} db The db instance.
  * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'db', function (db) {
@@ -2805,7 +2810,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Core.prototype.collection = new Overload({
+Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
@@ -2885,7 +2890,7 @@ Core.prototype.collection = new Overload({
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
 					if (options && options.throwError !== false) {
-						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+						throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
 					}
 				}
 
@@ -2903,7 +2908,7 @@ Core.prototype.collection = new Overload({
 			return this._collection[name];
 		} else {
 			if (!options || (options && options.throwError !== false)) {
-				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+				throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection with undefined name!');
 			}
 		}
 	}
@@ -2914,7 +2919,7 @@ Core.prototype.collection = new Overload({
  * @param {String} viewName The name of the collection to check for.
  * @returns {boolean}
  */
-Core.prototype.collectionExists = function (viewName) {
+Db.prototype.collectionExists = function (viewName) {
 	return Boolean(this._collection[viewName]);
 };
 
@@ -2925,7 +2930,7 @@ Core.prototype.collectionExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each collection
  * the database is currently managing.
  */
-Core.prototype.collections = function (search) {
+Db.prototype.collections = function (search) {
 	var arr = [],
 		i;
 

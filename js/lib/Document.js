@@ -2,7 +2,7 @@
 
 var Shared,
 	Collection,
-	Core;
+	Db;
 
 Shared = require('./Shared');
 
@@ -25,7 +25,7 @@ Shared = require('./Shared');
 	//Shared.mixin(Document.prototype, 'Mixin.Updating');
 
 	Collection = require('./Collection');
-	Core = Shared.modules.Core;
+	Db = Shared.modules.Db;
 
 	/**
 	 * Gets / sets the current state.
@@ -36,7 +36,7 @@ Shared = require('./Shared');
 
 	/**
 	 * Gets / sets the db instance this class instance belongs to.
-	 * @param {Core=} db The db instance.
+	 * @param {Db=} db The db instance.
 	 * @returns {*}
 	 */
 	Shared.synthesize(Document.prototype, 'db');
@@ -341,7 +341,7 @@ Shared = require('./Shared');
 		return false;
 	};
 
-	Core.prototype.document = function (documentName) {
+	Db.prototype.document = function (documentName) {
 		if (documentName) {
 			this._document = this._document || {};
 			this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
@@ -357,7 +357,7 @@ Shared = require('./Shared');
 	 * @returns {Array} An array of objects containing details of each document
 	 * the database is currently managing.
 	 */
-	Core.prototype.documents = function () {
+	Db.prototype.documents = function () {
 		var arr = [],
 			i;
 

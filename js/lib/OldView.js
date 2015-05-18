@@ -2,12 +2,12 @@
 
 // Import external names locally
 var Shared,
-	Core,
+	Db,
 	CollectionGroup,
 	Collection,
 	CollectionInit,
 	CollectionGroupInit,
-	CoreInit;
+	DbInit;
 
 Shared = require('./Shared');
 
@@ -59,8 +59,8 @@ CollectionGroup = require('./CollectionGroup');
 Collection = require('./Collection');
 CollectionInit = Collection.prototype.init;
 CollectionGroupInit = CollectionGroup.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 Shared.mixin(OldView.prototype, 'Mixin.Events');
 
@@ -647,9 +647,9 @@ CollectionGroup.prototype._removeOldView = function (view) {
 };
 
 // Extend DB with views init
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._oldViews = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 /**
@@ -657,7 +657,7 @@ Core.prototype.init = function () {
  * @param {String} viewName The name of the view to retrieve.
  * @returns {*}
  */
-Core.prototype.oldView = function (viewName) {
+Db.prototype.oldView = function (viewName) {
 	if (!this._oldViews[viewName]) {
 		if (this.debug()) {
 			console.log('ForerunnerDB.OldView: Creating view ' + viewName);
@@ -673,7 +673,7 @@ Core.prototype.oldView = function (viewName) {
  * @param {String} viewName The name of the view to check for.
  * @returns {boolean}
  */
-Core.prototype.oldViewExists = function (viewName) {
+Db.prototype.oldViewExists = function (viewName) {
 	return Boolean(this._oldViews[viewName]);
 };
 
@@ -682,7 +682,7 @@ Core.prototype.oldViewExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each view
  * the database is currently managing.
  */
-Core.prototype.oldViews = function () {
+Db.prototype.oldViews = function () {
 	var arr = [],
 		i;
 

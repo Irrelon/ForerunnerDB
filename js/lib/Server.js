@@ -1,8 +1,8 @@
 "use strict";
 
 var Shared = require('./Shared'),
-	Core,
-	DBInit;
+	Db,
+	DbInit;
 
 var Server = function (db) {
 	this.init.apply(this, arguments);
@@ -22,8 +22,8 @@ Server.prototype.init = function (db) {
 };
 
 Shared.modules.Server = Server;
-Core = Shared.modules.Core;
-DBInit = Shared.modules.Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Shared.modules.Db.prototype.init;
 
 Server.prototype.addAuth = function (data) {
 	if (data.user && data.pass) {
@@ -155,11 +155,11 @@ Server.prototype.isAllowed = function (action, user, data, options, callback) {
 	return true;
 };
 
-// Extend the functionality of core
-Core.prototype.init = function () {
+// Extend the functionality of db
+Db.prototype.init = function () {
 	// Create the server instance
 	this.server = new Server(this);
-	DBInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 module.exports = Server;

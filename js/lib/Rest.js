@@ -3,12 +3,12 @@
 var Shared = require('./Shared'),
 	RestClient = require('rest'),
 	mime = require('rest/interceptor/mime'),
-	Core,
+	Db,
 	Collection,
 	CollectionDrop,
 	CollectionGroup,
 	CollectionInit,
-	CoreInit,
+	DbInit,
 	Overload;
 
 var Rest = function () {
@@ -94,12 +94,12 @@ Shared.synthesize(Rest.prototype, 'collection');
 Shared.addModule('Rest', Rest);
 Shared.mixin(Rest.prototype, 'Mixin.ChainReactor');
 
-Core = Shared.modules.Core;
+Db = Shared.modules.Db;
 Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-CoreInit = Core.prototype.init;
+DbInit = Db.prototype.init;
 Overload = Shared.overload;
 
 Collection.prototype.init = function () {
@@ -108,9 +108,9 @@ Collection.prototype.init = function () {
 	CollectionInit.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this.rest = new Rest();
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 Shared.finishModule('Rest');

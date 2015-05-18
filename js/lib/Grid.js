@@ -2,12 +2,12 @@
 
 // Import external names locally
 var Shared,
-	Core,
+	Db,
 	Collection,
 	CollectionGroup,
 	View,
 	CollectionInit,
-	CoreInit,
+	DbInit,
 	ReactorIO;
 
 //Shared = ForerunnerDB.shared;
@@ -87,8 +87,8 @@ CollectionGroup = require('./CollectionGroup');
 View = require('./View');
 ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -420,9 +420,9 @@ Collection.prototype._removeGrid = CollectionGroup.prototype._removeGrid = View.
 };
 
 // Extend DB with grids init
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._grid = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 /**
@@ -432,10 +432,10 @@ Core.prototype.init = function () {
  * @param {Object=} options The options object to apply to the grid.
  * @returns {*}
  */
-Core.prototype.grid = function (selector, template, options) {
+Db.prototype.grid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Core.Grid: Creating grid ' + selector);
+			console.log('Db.Grid: Creating grid ' + selector);
 		}
 	}
 
@@ -450,10 +450,10 @@ Core.prototype.grid = function (selector, template, options) {
  * @param {Object=} options The options object to apply to the grid.
  * @returns {*}
  */
-Core.prototype.unGrid = function (selector, template, options) {
+Db.prototype.unGrid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Core.Grid: Creating grid ' + selector);
+			console.log('Db.Grid: Creating grid ' + selector);
 		}
 	}
 
@@ -466,7 +466,7 @@ Core.prototype.unGrid = function (selector, template, options) {
  * @param {String} selector The jQuery selector to bind the grid to.
  * @returns {boolean}
  */
-Core.prototype.gridExists = function (selector) {
+Db.prototype.gridExists = function (selector) {
 	return Boolean(this._grid[selector]);
 };
 
@@ -475,7 +475,7 @@ Core.prototype.gridExists = function (selector) {
  * @returns {Array} An array of objects containing details of each grid
  * the database is currently managing.
  */
-Core.prototype.grids = function () {
+Db.prototype.grids = function () {
 	var arr = [],
 		i;
 

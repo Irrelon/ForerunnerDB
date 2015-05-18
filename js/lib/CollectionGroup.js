@@ -2,8 +2,8 @@
 
 // Import external names locally
 var Shared,
-	Core,
-	CoreInit,
+	Db,
+	DbInit,
 	Collection;
 
 Shared = require('./Shared');
@@ -28,8 +28,8 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 
 Collection = require('./Collection');
-Core = Shared.modules.Core;
-CoreInit = Shared.modules.Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Shared.modules.Db.prototype.init;
 
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
@@ -66,7 +66,7 @@ Shared.synthesize(CollectionGroup.prototype, 'state');
 
 /**
  * Gets / sets the db instance the collection group belongs to.
- * @param {Core=} db The db instance.
+ * @param {Db=} db The db instance.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'db');
@@ -279,12 +279,12 @@ CollectionGroup.prototype.drop = function () {
 };
 
 // Extend DB to include collection groups
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._collectionGroup = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
-Core.prototype.collectionGroup = function (collectionGroupName) {
+Db.prototype.collectionGroup = function (collectionGroupName) {
 	if (collectionGroupName) {
 		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
 		return this._collectionGroup[collectionGroupName];
@@ -299,7 +299,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
  * @returns {Array} An array of objects containing details of each collection group
  * the database is currently managing.
  */
-Core.prototype.collectionGroups = function () {
+Db.prototype.collectionGroups = function () {
 	var arr = [],
 		i;
 

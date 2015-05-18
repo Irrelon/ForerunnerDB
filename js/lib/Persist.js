@@ -4,12 +4,13 @@
 // Import external names locally
 var Shared = require('./Shared'),
 	localforage = require('localforage'),
-	Core,
+	Db,
 	Collection,
 	CollectionDrop,
 	CollectionGroup,
 	CollectionInit,
-	CoreInit,
+	DbInit,
+	DbDrop,
 	Persist,
 	Overload;
 
@@ -38,12 +39,13 @@ Persist.prototype.init = function (db) {
 Shared.addModule('Persist', Persist);
 Shared.mixin(Persist.prototype, 'Mixin.ChainReactor');
 
-Core = Shared.modules.Core;
+Db = Shared.modules.Db;
 Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-CoreInit = Core.prototype.init;
+DbInit = Db.prototype.init;
+DbDrop = Db.prototype.drop;
 Overload = Shared.overload;
 
 Persist.prototype.mode = function (type) {
@@ -220,7 +222,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this, arguments);
+			CollectionDrop.apply(this);
 		}
 	},
 
@@ -250,7 +252,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this, arguments);
+			CollectionDrop.apply(this, callback);
 		}
 	}
 });
@@ -306,12 +308,12 @@ Collection.prototype.load = function (callback) {
 };
 
 // Override the DB init to instantiate the plugin
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this.persist = new Persist(this);
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
-Core.prototype.load = function (callback) {
+Db.prototype.load = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
 		keys = obj.keys(),
@@ -339,7 +341,7 @@ Core.prototype.load = function (callback) {
 	}
 };
 
-Core.prototype.save = function (callback) {
+Db.prototype.save = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
 		keys = obj.keys(),
@@ -366,6 +368,24 @@ Core.prototype.save = function (callback) {
 		}
 	}
 };
+
+Db.prototype.drop = new Overload({
+	'': function () {
+		this.drop(true);
+	},
+
+	'boolean': function (removePersist) {
+		DbDrop.apply(this);
+	},
+
+	'function': function (callback) {
+
+	},
+
+	'boolean, function': function (removePersist, callback) {
+
+	}
+});
 
 Shared.finishModule('Persist');
 module.exports = Persist;

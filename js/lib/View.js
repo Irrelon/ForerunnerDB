@@ -2,11 +2,11 @@
 
 // Import external names locally
 var Shared,
-	Core,
+	Db,
 	Collection,
 	CollectionGroup,
 	CollectionInit,
-	CoreInit,
+	DbInit,
 	ReactorIO,
 	ActiveBucket;
 
@@ -52,8 +52,8 @@ CollectionGroup = require('./CollectionGroup');
 ActiveBucket = require('./ActiveBucket');
 ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -878,9 +878,9 @@ Collection.prototype._removeView = CollectionGroup.prototype._removeView = funct
 };
 
 // Extend DB with views init
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._view = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 /**
@@ -888,10 +888,10 @@ Core.prototype.init = function () {
  * @param {String} viewName The name of the view to retrieve.
  * @returns {*}
  */
-Core.prototype.view = function (viewName) {
+Db.prototype.view = function (viewName) {
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Core.View: Creating view ' + viewName);
+			console.log('Db.View: Creating view ' + viewName);
 		}
 	}
 
@@ -904,7 +904,7 @@ Core.prototype.view = function (viewName) {
  * @param {String} viewName The name of the view to check for.
  * @returns {boolean}
  */
-Core.prototype.viewExists = function (viewName) {
+Db.prototype.viewExists = function (viewName) {
 	return Boolean(this._view[viewName]);
 };
 
@@ -913,7 +913,7 @@ Core.prototype.viewExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each view
  * the database is currently managing.
  */
-Core.prototype.views = function () {
+Db.prototype.views = function () {
 	var arr = [],
 		i;
 
