@@ -369,23 +369,5 @@ Db.prototype.save = function (callback) {
 	}
 };
 
-Db.prototype.drop = new Overload({
-	'': function () {
-		this.drop(true);
-	},
-
-	'boolean': function (removePersist) {
-		DbDrop.apply(this);
-	},
-
-	'function': function (callback) {
-
-	},
-
-	'boolean, function': function (removePersist, callback) {
-
-	}
-});
-
 Shared.finishModule('Persist');
 module.exports = Persist;

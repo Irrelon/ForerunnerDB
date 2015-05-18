@@ -38,7 +38,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				}
 
 				result = coll.find();
-				debugger;
+
 				strictEqual(result.length, 1, 'Check that items were loaded correctly');
 				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
 

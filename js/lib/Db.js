@@ -351,39 +351,124 @@ Db.prototype.peekCat = function (search) {
 	return cat;
 };
 
-/**
- * Drops all collections in the database.
- * @param {Function=} callback Optional callback method.
- */
-Db.prototype.drop = function (callback) {
-	if (this._state !== 'dropped') {
-		var arr = this.collections(),
-			arrCount = arr.length,
-			arrIndex,
-			finishCount = 0,
-			afterDrop = function () {
-				finishCount++;
+Db.prototype.drop = new Overload({
+	/**
+	 * Drops the database.
+	 */
+	'': function () {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex;
 
-				if (finishCount === arrCount) {
-					if (callback) { callback();	}
-				}
-			};
+			this._state = 'dropped';
 
-		this._state = 'dropped';
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop();
+				delete this._collection[arr[arrIndex].name];
+			}
 
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			this.collection(arr[arrIndex].name).drop(afterDrop);
+			this.emit('drop', this);
 
-			delete this._collection[arr[arrIndex].name];
+			delete this._core._db[this._name];
 		}
 
-		this.emit('drop', this);
+		return true;
+	},
 
-		delete this._core._db[this._name];
+	/**
+	 * Drops the database.
+	 * @param {Function} callback Optional callback method.
+	 */
+	'function': function (callback) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex,
+				finishCount = 0,
+				afterDrop = function () {
+					finishCount++;
+
+					if (finishCount === arrCount) {
+						if (callback) { callback();	}
+					}
+				};
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(afterDrop);
+
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	},
+
+	/**
+	 * Drops the database.
+	 * @param {Boolean} removePersist Drop persistent storage for this database.
+	 */
+	'boolean': function (removePersist) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex;
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(removePersist);
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	},
+
+	/**
+	 * Drops the database.
+	 * @param {Boolean} removePersist Drop persistent storage for this database.
+	 * @param {Function} callback Optional callback method.
+	 */
+	'boolean, function': function (removePersist, callback) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex,
+				finishCount = 0,
+				afterDrop = function () {
+					finishCount++;
+
+					if (finishCount === arrCount) {
+						if (callback) { callback();	}
+					}
+				};
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(removePersist, afterDrop);
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
 	}
-
-	return true;
-};
+});
 
 /**
  * Gets a database instance by name.
