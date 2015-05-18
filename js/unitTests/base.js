@@ -1,7 +1,9 @@
-var Base = function () {};
+var Base = function () {
+	fdb = new ForerunnerDB();
+};
 
 Base.prototype.dbUp = function () {
-	db = new ForerunnerDB();
+	db = fdb.db('testDb');
 	user = db.collection('user');
 	organisation = db.collection('organisation');
 
@@ -15,9 +17,11 @@ Base.prototype.dataUp = function () {
 	organisation.setData(organisationsData);
 };
 
-Base.prototype.dbDown = function () {
-	organisation ? organisation.drop() : '';
-	user ? user.drop() : '';
+Base.prototype.dbDown = function (removePersistent) {
+	organisation ? organisation.drop(removePersistent) : '';
+	user ? user.drop(removePersistent) : '';
+	db.drop(removePersistent);
+
 	organisation = undefined;
 	user = undefined;
 	db = undefined;

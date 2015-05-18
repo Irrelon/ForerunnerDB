@@ -2,7 +2,7 @@ QUnit.module('Core');
 QUnit.test("Init DB", function() {
 	base.dbUp();
 
-	ok(db instanceof ForerunnerDB, "Complete");
+	ok(db instanceof ForerunnerDB.shared.modules.Db, "Complete");
 
 	base.dbDown();
 });
