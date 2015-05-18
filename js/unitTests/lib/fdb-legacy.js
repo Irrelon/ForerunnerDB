@@ -13,7 +13,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":7,"../lib/Highchart":8,"../lib/OldView":23,"../lib/OldView.Bind":22,"../lib/Overview":26,"../lib/Persist":28,"../lib/View":31}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":8,"../lib/Highchart":9,"../lib/OldView":24,"../lib/OldView.Bind":23,"../lib/Overview":27,"../lib/Persist":29,"../lib/View":32}],2:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -273,7 +273,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":30}],3:[function(_dereq_,module,exports){
+},{"./Shared":31}],3:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -282,7 +282,7 @@ module.exports = ActiveBucket;
  * and delete.
  */
 var Shared,
-	Core,
+	Db,
 	Metrics,
 	KeyValueStore,
 	Path,
@@ -353,7 +353,7 @@ Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Crc = _dereq_('./Crc');
-Core = Shared.modules.Core;
+Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
 
@@ -390,7 +390,7 @@ Collection.prototype.data = function () {
  * Drops a collection and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
-Collection.prototype.drop = function () {
+Collection.prototype.drop = function (callback) {
 	var key;
 
 	if (this._state !== 'dropped') {
@@ -422,12 +422,17 @@ Collection.prototype.drop = function () {
 			delete this._data;
 			delete this._metrics;
 
+			if (callback) { callback(false, true); }
+
 			return true;
 		}
 	} else {
+		if (callback) { callback(false, true); }
+
 		return true;
 	}
 
+	if (callback) { callback(false, true); }
 	return false;
 };
 
@@ -483,7 +488,7 @@ Collection.prototype._onRemove = function (items) {
 
 /**
  * Gets / sets the db instance this class instance belongs to.
- * @param {Core=} db The db instance.
+ * @param {Db=} db The db instance.
  * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'db', function (db) {
@@ -3081,7 +3086,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Core.prototype.collection = new Overload({
+Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
@@ -3161,7 +3166,7 @@ Core.prototype.collection = new Overload({
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
 					if (options && options.throwError !== false) {
-						throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+						throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
 					}
 				}
 
@@ -3179,7 +3184,7 @@ Core.prototype.collection = new Overload({
 			return this._collection[name];
 		} else {
 			if (!options || (options && options.throwError !== false)) {
-				throw('ForerunnerDB.Core "' + this.name() + '": Cannot get collection with undefined name!');
+				throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection with undefined name!');
 			}
 		}
 	}
@@ -3190,7 +3195,7 @@ Core.prototype.collection = new Overload({
  * @param {String} viewName The name of the collection to check for.
  * @returns {boolean}
  */
-Core.prototype.collectionExists = function (viewName) {
+Db.prototype.collectionExists = function (viewName) {
 	return Boolean(this._collection[viewName]);
 };
 
@@ -3201,7 +3206,7 @@ Core.prototype.collectionExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each collection
  * the database is currently managing.
  */
-Core.prototype.collections = function (search) {
+Db.prototype.collections = function (search) {
 	var arr = [],
 		i;
 
@@ -3235,13 +3240,13 @@ Core.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":25,"./Path":27,"./ReactorIO":29,"./Shared":30}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":26,"./Path":28,"./ReactorIO":30,"./Shared":31}],4:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
 var Shared,
-	Core,
-	CoreInit,
+	Db,
+	DbInit,
 	Collection;
 
 Shared = _dereq_('./Shared');
@@ -3266,8 +3271,8 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 
 Collection = _dereq_('./Collection');
-Core = Shared.modules.Core;
-CoreInit = Shared.modules.Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Shared.modules.Db.prototype.init;
 
 CollectionGroup.prototype.on = function () {
 	this._data.on.apply(this._data, arguments);
@@ -3304,7 +3309,7 @@ Shared.synthesize(CollectionGroup.prototype, 'state');
 
 /**
  * Gets / sets the db instance the collection group belongs to.
- * @param {Core=} db The db instance.
+ * @param {Db=} db The db instance.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'db');
@@ -3517,12 +3522,12 @@ CollectionGroup.prototype.drop = function () {
 };
 
 // Extend DB to include collection groups
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._collectionGroup = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
-Core.prototype.collectionGroup = function (collectionGroupName) {
+Db.prototype.collectionGroup = function (collectionGroupName) {
 	if (collectionGroupName) {
 		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
 		return this._collectionGroup[collectionGroupName];
@@ -3537,7 +3542,7 @@ Core.prototype.collectionGroup = function (collectionGroupName) {
  * @returns {Array} An array of objects containing details of each collection group
  * the database is currently managing.
  */
-Core.prototype.collectionGroups = function () {
+Db.prototype.collectionGroups = function () {
 	var arr = [],
 		i;
 
@@ -3553,7 +3558,7 @@ Core.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":30}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":31}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3567,9 +3572,8 @@ module.exports = CollectionGroup;
 "use strict";
 
 var Shared,
-	Collection,
+	Db,
 	Metrics,
-	Crc,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -3583,10 +3587,8 @@ var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function (name) {
-	this._primaryKey = '_id';
-	this._name = name;
-	this._collection = {};
+Core.prototype.init = function () {
+	this._db = {};
 	this._debug = {};
 };
 
@@ -3696,35 +3698,12 @@ Core.prototype.shared = Shared;
 
 Shared.addModule('Core', Core);
 Shared.mixin(Core.prototype, 'Mixin.Common');
-Shared.mixin(Core.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Core.prototype, 'Mixin.Constants');
 
-Collection = _dereq_('./Collection.js');
+Db = _dereq_('./Db.js');
 Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
 
 Core.prototype._isServer = false;
-
-/**
- * Gets / sets the default primary key for new collections.
- * @param {String=} val The name of the primary key to set.
- * @returns {*}
- */
-Shared.synthesize(Core.prototype, 'primaryKey');
-
-/**
- * Gets / sets the current state.
- * @param {String=} val The name of the state to set.
- * @returns {*}
- */
-Shared.synthesize(Core.prototype, 'state');
-
-/**
- * Gets / sets the name of the database.
- * @param {String=} val The name of the database to set.
- * @returns {*}
- */
-Shared.synthesize(Core.prototype, 'name');
 
 /**
  * Returns true if ForerunnerDB is running on a client browser.
@@ -3741,13 +3720,6 @@ Core.prototype.isClient = function () {
 Core.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Core.prototype.crc = Crc;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -3767,173 +3739,8 @@ Core.prototype.isServer = function () {
 	return this._isServer;
 };
 
-/**
- * Converts a normal javascript array of objects into a DB collection.
- * @param {Array} arr An array of objects.
- * @returns {Collection} A new collection instance with the data set to the
- * array passed.
- */
-Core.prototype.arrayToCollection = function (arr) {
-	return new Collection().setData(arr);
-};
-
-/**
- * Registers an event listener against an event name.
- * @param {String} event The name of the event to listen for.
- * @param {Function} listener The listener method to call when
- * the event is fired.
- * @returns {*}
- */
-Core.prototype.on = function(event, listener) {
-	this._listeners = this._listeners || {};
-	this._listeners[event] = this._listeners[event] || [];
-	this._listeners[event].push(listener);
-
-	return this;
-};
-
-/**
- * De-registers an event listener from an event name.
- * @param {String} event The name of the event to stop listening for.
- * @param {Function} listener The listener method passed to on() when
- * registering the event listener.
- * @returns {*}
- */
-Core.prototype.off = function(event, listener) {
-	if (event in this._listeners) {
-		var arr = this._listeners[event],
-			index = arr.indexOf(listener);
-
-		if (index > -1) {
-			arr.splice(index, 1);
-		}
-	}
-
-	return this;
-};
-
-/**
- * Emits an event by name with the given data.
- * @param {String} event The name of the event to emit.
- * @param {*=} data The data to emit with the event.
- * @returns {*}
- */
-Core.prototype.emit = function(event, data) {
-	this._listeners = this._listeners || {};
-
-	if (event in this._listeners) {
-		var arr = this._listeners[event],
-			arrCount = arr.length,
-			arrIndex;
-
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
-		}
-	}
-
-	return this;
-};
-
-/**
- * Find all documents across all collections in the database that match the passed
- * string or search object.
- * @param search String or search object.
- * @returns {Array}
- */
-Core.prototype.peek = function (search) {
-	var i,
-		coll,
-		arr = [],
-		typeOfSearch = typeof search;
-
-	// Loop collections
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
-			coll = this._collection[i];
-
-			if (typeOfSearch === 'string') {
-				arr = arr.concat(coll.peek(search));
-			} else {
-				arr = arr.concat(coll.find(search));
-			}
-		}
-	}
-
-	return arr;
-};
-
-/**
- * Find all documents across all collections in the database that match the passed
- * string or search object and return them in an object where each key is the name
- * of the collection that the document was matched in.
- * @param search String or search object.
- * @returns {object}
- */
-Core.prototype.peekCat = function (search) {
-	var i,
-		coll,
-		cat = {},
-		arr,
-		typeOfSearch = typeof search;
-
-	// Loop collections
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
-			coll = this._collection[i];
-
-			if (typeOfSearch === 'string') {
-				arr = coll.peek(search);
-
-				if (arr && arr.length) {
-					cat[coll.name()] = arr;
-				}
-			} else {
-				arr = coll.find(search);
-
-				if (arr && arr.length) {
-					cat[coll.name()] = arr;
-				}
-			}
-		}
-	}
-
-	return cat;
-};
-
-/**
- * Drops all collections in the database.
- * @param {Function=} callback Optional callback method.
- */
-Core.prototype.drop = function (callback) {
-	if (this._state !== 'dropped') {
-		var arr = this.collections(),
-			arrCount = arr.length,
-			arrIndex,
-			finishCount = 0,
-			afterDrop = function () {
-				finishCount++;
-
-				if (finishCount === arrCount) {
-					if (callback) { callback();	}
-				}
-			};
-
-		this._state = 'dropped';
-
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			this.collection(arr[arrIndex].name).drop(afterDrop);
-
-			delete this._collection[arr[arrIndex].name];
-		}
-
-		this.emit('drop', this);
-	}
-
-	return true;
-};
-
 module.exports = Core;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":12,"./Overload":25,"./Shared":30}],6:[function(_dereq_,module,exports){
+},{"./Db.js":7,"./Metrics.js":13,"./Overload":26,"./Shared":31}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -3964,11 +3771,500 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
 },{}],7:[function(_dereq_,module,exports){
+/*
+ License
+
+ Copyright (c) 2015 Irrelon Software Limited
+ http://www.irrelon.com
+ http://www.forerunnerdb.com
+
+ Please visit the license page to see latest license information:
+ http://www.forerunnerdb.com/licensing.html
+ */
+"use strict";
+
+var Shared,
+	Core,
+	Collection,
+	Metrics,
+	Crc,
+	Overload;
+
+Shared = _dereq_('./Shared');
+Overload = _dereq_('./Overload');
+
+/**
+ * The main ForerunnerDB db object.
+ * @constructor
+ */
+var Db = function (name) {
+	this.init.apply(this, arguments);
+};
+
+Db.prototype.init = function (name) {
+	this._primaryKey = '_id';
+	this._name = name;
+	this._collection = {};
+	this._debug = {};
+};
+
+Db.prototype.moduleLoaded = new Overload({
+	/**
+	 * Checks if a module has been loaded into the database.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @returns {Boolean} True if the module is loaded, false if not.
+	 */
+	'string': function (moduleName) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * callback method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} callback The callback method to call if module is loaded.
+	 */
+	'string, function': function (moduleName, callback) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					return false;
+				}
+			}
+
+			callback();
+		}
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * success method, otherwise calls the failure method.
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} success The callback method to call if module is loaded.
+	 * @param {Function} failure The callback method to call if module not loaded.
+	 */
+	'string, function, function': function (moduleName, success, failure) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index < modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					failure();
+					return false;
+				}
+			}
+
+			success();
+		}
+	}
+});
+
+/**
+ * Checks version against the string passed and if it matches (or partially matches)
+ * then the callback is called.
+ * @param {String} val The version to check against.
+ * @param {Function} callback The callback to call if match is true.
+ * @returns {Boolean}
+ */
+Db.prototype.version = function (val, callback) {
+	if (val !== undefined) {
+		if (Shared.version.indexOf(val) === 0) {
+			if (callback) { callback(); }
+			return true;
+		}
+
+		return false;
+	}
+
+	return Shared.version;
+};
+
+// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+Db.moduleLoaded = Db.prototype.moduleLoaded;
+
+// Expose version method to non-instantiated object ForerunnerDB
+Db.version = Db.prototype.version;
+
+// Provide public access to the Shared object
+Db.shared = Shared;
+Db.prototype.shared = Shared;
+
+Shared.addModule('Db', Db);
+Shared.mixin(Db.prototype, 'Mixin.Common');
+Shared.mixin(Db.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Db.prototype, 'Mixin.Constants');
+
+Core = Shared.modules.Core;
+Collection = _dereq_('./Collection.js');
+Metrics = _dereq_('./Metrics.js');
+Crc = _dereq_('./Crc.js');
+
+Db.prototype._isServer = false;
+
+/**
+ * Gets / sets the core object this database belongs to.
+ */
+Shared.synthesize(Db.prototype, 'core');
+
+/**
+ * Gets / sets the default primary key for new collections.
+ * @param {String=} val The name of the primary key to set.
+ * @returns {*}
+ */
+Shared.synthesize(Db.prototype, 'primaryKey');
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Db.prototype, 'state');
+
+/**
+ * Gets / sets the name of the database.
+ * @param {String=} val The name of the database to set.
+ * @returns {*}
+ */
+Shared.synthesize(Db.prototype, 'name');
+
+/**
+ * Returns true if ForerunnerDB is running on a client browser.
+ * @returns {boolean}
+ */
+Db.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Returns true if ForerunnerDB is running on a server.
+ * @returns {boolean}
+ */
+Db.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} string The string to checksum.
+ * @return {String} The checksum generated.
+ */
+Db.prototype.crc = Crc;
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a browser.
+ */
+Db.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a server.
+ */
+Db.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Converts a normal javascript array of objects into a DB collection.
+ * @param {Array} arr An array of objects.
+ * @returns {Collection} A new collection instance with the data set to the
+ * array passed.
+ */
+Db.prototype.arrayToCollection = function (arr) {
+	return new Collection().setData(arr);
+};
+
+/**
+ * Registers an event listener against an event name.
+ * @param {String} event The name of the event to listen for.
+ * @param {Function} listener The listener method to call when
+ * the event is fired.
+ * @returns {*}
+ */
+Db.prototype.on = function(event, listener) {
+	this._listeners = this._listeners || {};
+	this._listeners[event] = this._listeners[event] || [];
+	this._listeners[event].push(listener);
+
+	return this;
+};
+
+/**
+ * De-registers an event listener from an event name.
+ * @param {String} event The name of the event to stop listening for.
+ * @param {Function} listener The listener method passed to on() when
+ * registering the event listener.
+ * @returns {*}
+ */
+Db.prototype.off = function(event, listener) {
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			index = arr.indexOf(listener);
+
+		if (index > -1) {
+			arr.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Emits an event by name with the given data.
+ * @param {String} event The name of the event to emit.
+ * @param {*=} data The data to emit with the event.
+ * @returns {*}
+ */
+Db.prototype.emit = function(event, data) {
+	this._listeners = this._listeners || {};
+
+	if (event in this._listeners) {
+		var arr = this._listeners[event],
+			arrCount = arr.length,
+			arrIndex;
+
+		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+			arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object.
+ * @param search String or search object.
+ * @returns {Array}
+ */
+Db.prototype.peek = function (search) {
+	var i,
+		coll,
+		arr = [],
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = arr.concat(coll.peek(search));
+			} else {
+				arr = arr.concat(coll.find(search));
+			}
+		}
+	}
+
+	return arr;
+};
+
+/**
+ * Find all documents across all collections in the database that match the passed
+ * string or search object and return them in an object where each key is the name
+ * of the collection that the document was matched in.
+ * @param search String or search object.
+ * @returns {object}
+ */
+Db.prototype.peekCat = function (search) {
+	var i,
+		coll,
+		cat = {},
+		arr,
+		typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = coll.peek(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			} else {
+				arr = coll.find(search);
+
+				if (arr && arr.length) {
+					cat[coll.name()] = arr;
+				}
+			}
+		}
+	}
+
+	return cat;
+};
+
+Db.prototype.drop = new Overload({
+	/**
+	 * Drops the database.
+	 */
+	'': function () {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex;
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop();
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	},
+
+	/**
+	 * Drops the database.
+	 * @param {Function} callback Optional callback method.
+	 */
+	'function': function (callback) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex,
+				finishCount = 0,
+				afterDrop = function () {
+					finishCount++;
+
+					if (finishCount === arrCount) {
+						if (callback) { callback();	}
+					}
+				};
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(afterDrop);
+
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	},
+
+	/**
+	 * Drops the database.
+	 * @param {Boolean} removePersist Drop persistent storage for this database.
+	 */
+	'boolean': function (removePersist) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex;
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(removePersist);
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	},
+
+	/**
+	 * Drops the database.
+	 * @param {Boolean} removePersist Drop persistent storage for this database.
+	 * @param {Function} callback Optional callback method.
+	 */
+	'boolean, function': function (removePersist, callback) {
+		if (this._state !== 'dropped') {
+			var arr = this.collections(),
+				arrCount = arr.length,
+				arrIndex,
+				finishCount = 0,
+				afterDrop = function () {
+					finishCount++;
+
+					if (finishCount === arrCount) {
+						if (callback) { callback();	}
+					}
+				};
+
+			this._state = 'dropped';
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				this.collection(arr[arrIndex].name).drop(removePersist, afterDrop);
+				delete this._collection[arr[arrIndex].name];
+			}
+
+			this.emit('drop', this);
+
+			delete this._core._db[this._name];
+		}
+
+		return true;
+	}
+});
+
+/**
+ * Gets a database instance by name.
+ * @param {String=} name Optional name of the database. If none is provided
+ * a random name is assigned.
+ * @returns {Db}
+ */
+Core.prototype.db = function (name) {
+	if (!name) {
+		name = this.objectId();
+	}
+
+	this._db[name] = this._db[name] || new Db(name).core(this);
+	return this._db[name];
+};
+
+module.exports = Db;
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":13,"./Overload":26,"./Shared":31}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Collection,
-	Core;
+	Db;
 
 Shared = _dereq_('./Shared');
 
@@ -3991,7 +4287,7 @@ Shared = _dereq_('./Shared');
 	//Shared.mixin(Document.prototype, 'Mixin.Updating');
 
 	Collection = _dereq_('./Collection');
-	Core = Shared.modules.Core;
+	Db = Shared.modules.Db;
 
 	/**
 	 * Gets / sets the current state.
@@ -4002,7 +4298,7 @@ Shared = _dereq_('./Shared');
 
 	/**
 	 * Gets / sets the db instance this class instance belongs to.
-	 * @param {Core=} db The db instance.
+	 * @param {Db=} db The db instance.
 	 * @returns {*}
 	 */
 	Shared.synthesize(Document.prototype, 'db');
@@ -4307,7 +4603,7 @@ Shared = _dereq_('./Shared');
 		return false;
 	};
 
-	Core.prototype.document = function (documentName) {
+	Db.prototype.document = function (documentName) {
 		if (documentName) {
 			this._document = this._document || {};
 			this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
@@ -4323,7 +4619,7 @@ Shared = _dereq_('./Shared');
 	 * @returns {Array} An array of objects containing details of each document
 	 * the database is currently managing.
 	 */
-	Core.prototype.documents = function () {
+	Db.prototype.documents = function () {
 		var arr = [],
 			i;
 
@@ -4341,7 +4637,7 @@ Shared = _dereq_('./Shared');
 	Shared.finishModule('Document');
 	module.exports = Document;
 }());
-},{"./Collection":3,"./Shared":30}],8:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":31}],9:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4941,7 +5237,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":25,"./Shared":30}],9:[function(_dereq_,module,exports){
+},{"./Overload":26,"./Shared":31}],10:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5234,7 +5530,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":27,"./Shared":30}],10:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5585,7 +5881,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":27,"./Shared":30}],11:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -5800,7 +6096,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":30}],12:[function(_dereq_,module,exports){
+},{"./Shared":31}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5875,7 +6171,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":24,"./Shared":30}],13:[function(_dereq_,module,exports){
+},{"./Operation":25,"./Shared":31}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -5889,7 +6185,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Document the methods in this mixin
 var ChainReactor = {
@@ -5941,7 +6237,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -6105,7 +6401,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":25}],16:[function(_dereq_,module,exports){
+},{"./Overload":26}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -6118,7 +6414,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -6253,7 +6549,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":25}],18:[function(_dereq_,module,exports){
+},{"./Overload":26}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -6614,7 +6910,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Sorting = {
@@ -6660,7 +6956,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -7076,7 +7372,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":25}],21:[function(_dereq_,module,exports){
+},{"./Overload":26}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Updating = {
@@ -7245,7 +7541,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 // Grab the view class
@@ -7676,17 +7972,17 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./Shared":30}],23:[function(_dereq_,module,exports){
+},{"./Shared":31}],24:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
 var Shared,
-	Core,
+	Db,
 	CollectionGroup,
 	Collection,
 	CollectionInit,
 	CollectionGroupInit,
-	CoreInit;
+	DbInit;
 
 Shared = _dereq_('./Shared');
 
@@ -7738,8 +8034,8 @@ CollectionGroup = _dereq_('./CollectionGroup');
 Collection = _dereq_('./Collection');
 CollectionInit = Collection.prototype.init;
 CollectionGroupInit = CollectionGroup.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 Shared.mixin(OldView.prototype, 'Mixin.Events');
 
@@ -8326,9 +8622,9 @@ CollectionGroup.prototype._removeOldView = function (view) {
 };
 
 // Extend DB with views init
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._oldViews = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 /**
@@ -8336,7 +8632,7 @@ Core.prototype.init = function () {
  * @param {String} viewName The name of the view to retrieve.
  * @returns {*}
  */
-Core.prototype.oldView = function (viewName) {
+Db.prototype.oldView = function (viewName) {
 	if (!this._oldViews[viewName]) {
 		if (this.debug()) {
 			console.log('ForerunnerDB.OldView: Creating view ' + viewName);
@@ -8352,7 +8648,7 @@ Core.prototype.oldView = function (viewName) {
  * @param {String} viewName The name of the view to check for.
  * @returns {boolean}
  */
-Core.prototype.oldViewExists = function (viewName) {
+Db.prototype.oldViewExists = function (viewName) {
 	return Boolean(this._oldViews[viewName]);
 };
 
@@ -8361,7 +8657,7 @@ Core.prototype.oldViewExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each view
  * the database is currently managing.
  */
-Core.prototype.oldViews = function () {
+Db.prototype.oldViews = function () {
 	var arr = [],
 		i;
 
@@ -8379,7 +8675,7 @@ Core.prototype.oldViews = function () {
 
 Shared.finishModule('OldView');
 module.exports = OldView;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":30}],24:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":31}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8526,7 +8822,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":27,"./Shared":30}],25:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8598,6 +8894,11 @@ var Overload = function (def) {
 					// Handle detecting arrays
 					if (type === 'object' && arguments[index] instanceof Array) {
 						type = 'array';
+					}
+
+					// Handle been presented with a single undefined argument
+					if (arguments.length === 1 && type === 'undefined') {
+						break;
 					}
 
 					// Add the type to the argument types array
@@ -8681,13 +8982,13 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
 var Shared,
-	Core,
-	CoreInit,
+	Db,
+	DbInit,
 	Collection,
 	DbDocument;
 
@@ -8719,8 +9020,8 @@ Shared.mixin(Overview.prototype, 'Mixin.Events');
 
 Collection = _dereq_('./Collection');
 DbDocument = _dereq_('./Document');
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -8887,12 +9188,12 @@ Overview.prototype.drop = function () {
 };
 
 // Extend DB to include collection groups
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._overview = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
-Core.prototype.overview = function (overviewName) {
+Db.prototype.overview = function (overviewName) {
 	if (overviewName) {
 		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
 		return this._overview[overviewName];
@@ -8904,7 +9205,7 @@ Core.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":7,"./Shared":30}],27:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":8,"./Shared":31}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9317,19 +9618,20 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":30}],28:[function(_dereq_,module,exports){
+},{"./Shared":31}],29:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
 	localforage = _dereq_('localforage'),
-	Core,
+	Db,
 	Collection,
 	CollectionDrop,
 	CollectionGroup,
 	CollectionInit,
-	CoreInit,
+	DbInit,
+	DbDrop,
 	Persist,
 	Overload;
 
@@ -9358,12 +9660,13 @@ Persist.prototype.init = function (db) {
 Shared.addModule('Persist', Persist);
 Shared.mixin(Persist.prototype, 'Mixin.ChainReactor');
 
-Core = Shared.modules.Core;
+Db = Shared.modules.Db;
 Collection = _dereq_('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = _dereq_('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
-CoreInit = Core.prototype.init;
+DbInit = Db.prototype.init;
+DbDrop = Db.prototype.drop;
 Overload = Shared.overload;
 
 Persist.prototype.mode = function (type) {
@@ -9540,7 +9843,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this, arguments);
+			CollectionDrop.apply(this);
 		}
 	},
 
@@ -9570,7 +9873,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this, arguments);
+			CollectionDrop.apply(this, callback);
 		}
 	}
 });
@@ -9626,12 +9929,12 @@ Collection.prototype.load = function (callback) {
 };
 
 // Override the DB init to instantiate the plugin
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this.persist = new Persist(this);
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
-Core.prototype.load = function (callback) {
+Db.prototype.load = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
 		keys = obj.keys(),
@@ -9659,7 +9962,7 @@ Core.prototype.load = function (callback) {
 	}
 };
 
-Core.prototype.save = function (callback) {
+Db.prototype.save = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
 		keys = obj.keys(),
@@ -9689,7 +9992,7 @@ Core.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":30,"localforage":39}],29:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":31,"localforage":40}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9751,7 +10054,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":30}],30:[function(_dereq_,module,exports){
+},{"./Shared":31}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
@@ -9890,16 +10193,16 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Triggers":20,"./Mixin.Updating":21,"./Overload":25}],31:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":26}],32:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
 var Shared,
-	Core,
+	Db,
 	Collection,
 	CollectionGroup,
 	CollectionInit,
-	CoreInit,
+	DbInit,
 	ReactorIO,
 	ActiveBucket;
 
@@ -9945,8 +10248,8 @@ CollectionGroup = _dereq_('./CollectionGroup');
 ActiveBucket = _dereq_('./ActiveBucket');
 ReactorIO = _dereq_('./ReactorIO');
 CollectionInit = Collection.prototype.init;
-Core = Shared.modules.Core;
-CoreInit = Core.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -10771,9 +11074,9 @@ Collection.prototype._removeView = CollectionGroup.prototype._removeView = funct
 };
 
 // Extend DB with views init
-Core.prototype.init = function () {
+Db.prototype.init = function () {
 	this._view = {};
-	CoreInit.apply(this, arguments);
+	DbInit.apply(this, arguments);
 };
 
 /**
@@ -10781,10 +11084,10 @@ Core.prototype.init = function () {
  * @param {String} viewName The name of the view to retrieve.
  * @returns {*}
  */
-Core.prototype.view = function (viewName) {
+Db.prototype.view = function (viewName) {
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Core.View: Creating view ' + viewName);
+			console.log('Db.View: Creating view ' + viewName);
 		}
 	}
 
@@ -10797,7 +11100,7 @@ Core.prototype.view = function (viewName) {
  * @param {String} viewName The name of the view to check for.
  * @returns {boolean}
  */
-Core.prototype.viewExists = function (viewName) {
+Db.prototype.viewExists = function (viewName) {
 	return Boolean(this._view[viewName]);
 };
 
@@ -10806,7 +11109,7 @@ Core.prototype.viewExists = function (viewName) {
  * @returns {Array} An array of objects containing details of each view
  * the database is currently managing.
  */
-Core.prototype.views = function () {
+Db.prototype.views = function () {
 	var arr = [],
 		i;
 
@@ -10824,7 +11127,7 @@ Core.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":29,"./Shared":30}],32:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":30,"./Shared":31}],33:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -10884,7 +11187,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],33:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -10991,7 +11294,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":35}],34:[function(_dereq_,module,exports){
+},{"asap":36}],35:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -11173,7 +11476,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":33,"asap":35}],35:[function(_dereq_,module,exports){
+},{"./core.js":34,"asap":36}],36:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -11290,7 +11593,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":32}],36:[function(_dereq_,module,exports){
+},{"_process":33}],37:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -11705,7 +12008,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":34}],37:[function(_dereq_,module,exports){
+},{"promise":35}],38:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -12036,7 +12339,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":40,"promise":34}],38:[function(_dereq_,module,exports){
+},{"./../utils/serializer":41,"promise":35}],39:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -12454,7 +12757,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":40,"promise":34}],39:[function(_dereq_,module,exports){
+},{"./../utils/serializer":41,"promise":35}],40:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -12876,7 +13179,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":36,"./drivers/localstorage":37,"./drivers/websql":38,"promise":34}],40:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":37,"./drivers/localstorage":38,"./drivers/websql":39,"promise":35}],41:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
