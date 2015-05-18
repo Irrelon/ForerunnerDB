@@ -89,10 +89,13 @@ Include the fdb-all.min.js file in your HTML (change path to the location you pu
 After installing via npm (see above) you can require ForerunnerDB in your code:
 
 	var ForerunnerDB = require('forerunnerdb');
+	var fdb = new ForerunnerDB();
 
 ## Create a Database
 
-	var db = new ForerunnerDB();
+	var db = fdb.db('myDatabaseName');
+
+> If you do not specify a database name a randomly generated one is provided instead.
 
 ## Collections (Tables)
 To create or get a reference to a collection object call (where collectionName is the name of your collection):
@@ -1845,6 +1848,25 @@ ForerunnerDB's project road-map:
 Please check below for details of any changes that break previous operation or
 behaviour of ForerunnerDB. Changes that break functionality are not taken lightly
 and we do not allow them to be merged in to the master branch without good cause!
+
+## Since Version 1.3.36
+In order to support multiple named databases Forerunner's instantiation has changed
+slightly. In previous versions you only had access to a single database that you
+instantiated via:
+
+	var db = new ForerunnerDB();
+
+Now you have access to multiple databases via from the main forerunner instance but this
+requires that you change your instantiation code to:
+
+	var fdb = new ForerunnerDB();
+	var db = fdb.db('myDatabaseName');
+
+Multiple database support is a key requirement that unfortunately requires we change
+the instantiation pattern as detailed above. Although this is a fundamental change to
+the way ForerunnerDB is instantiated we believe the impact to your projects will be
+minimal as it should only require you to update at most 2 lines of your project's code
+in order to "get it working" again.
 
 ## Since Version 1.3.10
 The join system has been updated to use "$join" as the key defining a join instead of
