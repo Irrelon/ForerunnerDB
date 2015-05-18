@@ -13,7 +13,6 @@
 var Shared,
 	Db,
 	Metrics,
-	Crc,
 	Overload;
 
 Shared = require('./Shared');
