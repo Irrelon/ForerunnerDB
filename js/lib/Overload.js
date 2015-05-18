@@ -71,6 +71,11 @@ var Overload = function (def) {
 						type = 'array';
 					}
 
+					// Handle been presented with a single undefined argument
+					if (arguments.length === 1 && type === 'undefined') {
+						break;
+					}
+
 					// Add the type to the argument types array
 					arr.push(type);
 				}
