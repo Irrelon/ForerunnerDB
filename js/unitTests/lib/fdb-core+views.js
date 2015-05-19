@@ -4251,6 +4251,45 @@ Core.prototype.db = function (name) {
 	return this._db[name];
 };
 
+/**
+ * Returns an array of databases that ForerunnerDB currently has.
+ * @param {String|RegExp=} search The optional search string or regular expression to use
+ * to match collection names against.
+ * @returns {Array} An array of objects containing details of each database
+ * that ForerunnerDB is currently managing.
+ */
+Core.prototype.databases = function (search) {
+	var arr = [],
+		i;
+
+	if (search) {
+		if (!(search instanceof RegExp)) {
+			// Turn the search into a regular expression
+			search = new RegExp(search);
+		}
+	}
+
+	for (i in this._db) {
+		if (this._db.hasOwnProperty(i)) {
+			if (search) {
+				if (search.exec(i)) {
+					arr.push({
+						name: i,
+						collectionCount: this._db[i].collections().length
+					});
+				}
+			} else {
+				arr.push({
+					name: i,
+					collectionCount: this._db[i].collections().length
+				});
+			}
+		}
+	}
+
+	return arr;
+};
+
 module.exports = Db;
 },{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":22,"./Shared":25}],8:[function(_dereq_,module,exports){
 "use strict";
