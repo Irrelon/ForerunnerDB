@@ -1,0 +1,43 @@
+<html>
+<head>
+	<link rel="stylesheet" href="./css/bootstrap.min.css">
+	<link rel="stylesheet" href="./css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="./css/bootstrap-treeview.css">
+	<link href="./css/default.css" rel="stylesheet" type="text/css"/>
+
+	<script src="./js/jquery-2.1.4.min.js"></script>
+	<script src="./js/bootstrap.min.js"></script>
+	<script src="./js/bootstrap-treeview.js"></script>
+
+	<script src="./panel.js"></script>
+</head>
+<body>
+<div role="tabpanel">
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs" role="tablist">
+		<li role="presentation" class="active"><a href="#local" aria-controls="local" role="tab" data-toggle="tab">Local</a></li>
+		<li role="presentation"><a href="#remote" aria-controls="remote" role="tab" data-toggle="tab">Remote</a></li>
+	</ul>
+
+	<!-- Tab panes -->
+	<div class="tab-content">
+		<div role="tabpanel" class="tab-pane active" id="local">
+			<div class="container-fluid margin-top-10">
+				<div class="row">
+					<div class="col-sm-4">
+						<div id="tree"></div>
+					</div>
+					<div class="col-sm-8">
+						Collection detail
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<div role="tabpanel" class="tab-pane" id="remote">
+
+		</div>
+	</div>
+</div>
+</body>
+</html>
