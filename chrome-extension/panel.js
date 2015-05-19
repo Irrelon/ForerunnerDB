@@ -7,7 +7,7 @@ $(document).ready(function () {
 	};
 
 	// Get the forerunnerdb instance
-	getCall('fdb', function (result, isException) {
+	getCall("typeof window.fdb !== 'undefined'", function (result, isException) {
 		if (result) {
 			getCall('fdb.databases()', function (result, isException) {
 				console.log('databases', result);
