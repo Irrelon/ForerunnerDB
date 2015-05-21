@@ -1653,10 +1653,10 @@ Example:
 		}
 	});
 
-> Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
- key is passed to Highcharts directly so any options that are described in the Highcharts documentation
- should be added inside the chartOptions object. You'll notice that we set the chart title in the call
- above using this object.
+> Note that the options object passed as the 5th parameter in the call above has a
+chartOptions key. This key is passed to Highcharts directly so any options that are
+described in the Highcharts documentation should be added inside the chartOptions
+object. You'll notice that we set the chart title in the call above using this object.
 
 #### Other Chart Types
 
@@ -1679,8 +1679,8 @@ Example:
 
 	coll.dropChart('#demo-chart);
 	
-> Dropping a chart will remove it from the DOM and stop all further collection updates from propagating
-to Highcharts.
+> Dropping a chart will remove it from the DOM and stop all further collection updates
+from propagating to Highcharts.
 
 # Special Considerations
 ## Queries
@@ -1689,14 +1689,14 @@ differently from others. Specifically properties that start with a dollar symbol
 or two slashes (//) will be treated as special cases.
 
 ### The Dollar Symbol
-Properties that start with a dollar symbol are treated as *modifiers*. These are not
-handled in the same way as normal properties. Examples of modifier properties are:
+Properties that start with a dollar symbol are treated as *operators*. These are not
+handled in the same way as normal properties. Examples of operator properties are:
 
 	$or
 	$and
 	$in
 
-These modifier properties allow you to indicate special operations to perform during
+These operator properties allow you to indicate special operations to perform during
 your query.
 
 ### The Double-Slash
@@ -1727,9 +1727,12 @@ object but you do not want it to affect the outcome of the query.
 Unit tests are available in the ./unitTests folder, load index.html to run the tests.
 
 ## Building / Compiling
-> This step is not required unless you are modifying ForerunnerDB code and wish to build your own version.
+> This step is not required unless you are modifying ForerunnerDB code and wish to
+build your own version.
 
-ForerunnerDB uses Browserify to compile to single-file distribution builds whilst maintaining source in distinct module files. To build, ensure you have Node.js and browserify installed. To install browserify if you already have Node.js:
+ForerunnerDB uses Browserify to compile to single-file distribution builds whilst
+maintaining source in distinct module files. To build, ensure you have Node.js and
+browserify installed. To install browserify if you already have Node.js:
 
 ```
 npm install -g browserify
@@ -1741,8 +1744,13 @@ Now you can then execute browserify to build ForerunnerDB:
 browserify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
+Grunt is used to execute regular tasks like build and test. Install grunt to access the
+grunt tasks.
+
 ## Continuous Compiling
-Browserify will compile to a single-file each time you run it. If you would prefer to automatically compile each change (for faster development) you can run watchify instead. Install watchify:
+Browserify will compile to a single-file each time you run it. If you would prefer to
+automatically compile each change (for faster development) you can run watchify instead.
+Install watchify:
 
 ```
 npm install -g watchify
@@ -1754,7 +1762,8 @@ You can then run watchify using the same command line arguments as browserify:
 watchify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
-The fully minified version of ForerunnerDB is run through Google's Closure Compiler with simple optimisations switched on.
+The fully minified version of ForerunnerDB is run through uglifyjs as part of the grunt
+build process.
 
 ## Contributing to This Project
 Contributions through pull requests are welcome. Please ensure that if your pull request includes code changes that you have run the unit tests and they have all passed. If your code changes include new features not currently under test coverage from existing unit tests please create new unit tests to cover your changes and ensure they work as expected.
@@ -1768,9 +1777,14 @@ So to summarise:
 * Make sure you document your code with JSDoc comments
 
 # iOS Version
-You may notice in the repo that there is an iOS folder containing a version of Forerunner for iOS. This project is still at an alpha level and should be considered non-production code, however you are welcome to play around with it and get a feel for what will be available soon.
+You may notice in the repo that there is an iOS folder containing a version of Forerunner
+for iOS. This project is still at an alpha level and should be considered non-production
+code, however you are welcome to play around with it and get a feel for what will be
+available soon.
 
-The iOS version is part of the roadmap and will include data-binding for list structures like UITableView, as well as individual controls like UILabel. Data-persistence is already working as well as inserting and basic data queries, update and remove.
+The iOS version is part of the roadmap and will include data-binding for list structures
+like UITableView, as well as individual controls like UILabel. Data-persistence is already
+working as well as inserting and basic data queries, update and remove.
 
 # Future Updates
 ForerunnerDB's project road-map:
