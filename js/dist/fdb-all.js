@@ -3752,6 +3752,15 @@ Core.prototype.isServer = function () {
 	return this._isServer;
 };
 
+/**
+ * Added to provide an error message for users who have not seen
+ * the new instantiation breaking change warning and try to get
+ * a collection directly from the core instance.
+ */
+Core.prototype.collection = function () {
+	throw("ForerunnerDB's instantiation has changed since version 1.3.36 to support multiple database instances. Please see the readme.md file for the minor change you have to make to get your project back up and running, or see the issue related to this change at https://github.com/Irrelon/ForerunnerDB/issues/44");
+};
+
 module.exports = Core;
 },{"./Db.js":8,"./Metrics.js":15,"./Overload":27,"./Shared":33}],7:[function(_dereq_,module,exports){
 "use strict";
@@ -9760,7 +9769,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.37',
+	version: '1.3.38',
 	modules: {},
 
 	_synth: {},
