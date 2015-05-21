@@ -1900,6 +1900,8 @@ the way ForerunnerDB is instantiated we believe the impact to your projects will
 minimal as it should only require you to update at most 2 lines of your project's code
 in order to "get it working" again.
 
+To discuss this change please see the related issue: [https://github.com/Irrelon/ForerunnerDB/issues/44](https://github.com/Irrelon/ForerunnerDB/issues/44)
+
 ## Since Version 1.3.10
 The join system has been updated to use "$join" as the key defining a join instead of
 "join". This was done to keep joins in line with the rest of the API that now uses
