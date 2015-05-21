@@ -19,8 +19,8 @@ a UK registered company.
 </table>
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL JavaScript database. It supports the same query language as
-MongoDB and runs on browsers and Node.js.
+ForerunnerDB is a NoSQL JavaScript database with a query language based on MongoDB
+and runs on browsers and Node.js.
 
 ## What is ForerunnerDB's Primary Use Case?
 ForerunnerDB was created primarily to allow web application developers to easily
@@ -174,9 +174,14 @@ or pass an array of documents:
 	}]);
 
 ## Searching the Collection
-Much like MongoDB, searching for data in a collection is done using the find() method, which supports many of the same
-operators starting with a $ that MongoDB supports. For instance, finding documents in the collection where the price
-is greater than 90 but less than 150, would look like this:
+> **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
+ as possible, small differences are present in the query matching logic. The main
+ difference is described here: [Find behaves differently from MongoDB](https://github.com/Irrelon/ForerunnerDB/issues/43)
+
+Much like MongoDB, searching for data in a collection is done using the find() method,
+which supports many of the same operators starting with a $ that MongoDB supports. For
+instance, finding documents in the collection where the price is greater than 90 but
+less than 150, would look like this:
 
 	itemCollection.find({
 		price: {
@@ -692,9 +697,12 @@ Result:
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array.
 
-ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation. Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check uniqueness against by using the $key property.
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation.
+Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check
+uniqueness against by using the $key property.
 
-In the following example $addToSet is used to check uniqueness against the whole document being added:
+In the following example $addToSet is used to check uniqueness against the whole document
+being added:
 
 	// Create a collection document
 	db.collection('test').setData({
