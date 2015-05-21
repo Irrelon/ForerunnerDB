@@ -3235,6 +3235,10 @@ Db.prototype.collections = function (search) {
 		}
 	}
 
+	arr.sort(function (a, b) {
+		return a.name.localeCompare(b.name);
+	});
+
 	return arr;
 };
 
@@ -4293,6 +4297,10 @@ Core.prototype.databases = function (search) {
 			}
 		}
 	}
+
+	arr.sort(function (a, b) {
+		return a.name.localeCompare(b.name);
+	});
 
 	return arr;
 };
