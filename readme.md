@@ -970,7 +970,8 @@ documents where the price is greater than or equal to 100:
 ### Joins
 Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "$join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
 
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
 		itemCollection = db.collection('item'),
 		purchaseCollection = db.collection('purchase');
 
@@ -1079,7 +1080,8 @@ Setting up triggers is very easy.
 Here is an example of a *before insert* trigger that will cancel the insert
 operation before the data is inserted into the database:
 
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
     	collection = db.collection('test');
     
     collection.addTrigger('myTrigger', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldData, newData) {
@@ -1104,7 +1106,8 @@ When the update operation is run the *before update* trigger is fired and the
 document is modified before the update is applied. This allows you to make changes to
 an operation before the operation is carried out.
 
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
     	collection = db.collection('test');
     
     collection.addTrigger('myTrigger', db.TYPE_UPDATE, db.PHASE_BEFORE, function (operation, oldData, newData) {
@@ -1186,7 +1189,8 @@ ensureIndex() method. ForerunnerDB will utilise the index that most closely matc
 the query you are executing. In the case where a query matches multiple indexes
 the most relevant index is automatically determined. Let's setup some data to index:
 
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
 		names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
 		collection = db.collection('test'),
 		tempName,
@@ -1404,17 +1408,20 @@ driver() method:
 
 #### IndexedDB
 
-	var db = new ForerunnerDB();
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
 	db.persist.driver('IndexedDB');
 
 #### WebSQL
 
-	var db = new ForerunnerDB();
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
 	db.persist.driver('WebSQL');
 
 #### LocalStorage
 
-	var db = new ForerunnerDB();
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
 	db.persist.driver('LocalStorage');
 
 ## Storing Arbitrary Key/Value Data
@@ -1426,7 +1433,8 @@ be destroyed when the supporting instance is dropped.
 
 To use the store, simply call the store() method on a collection or view:
  
-	var db = new ForerunnerDB();
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
 	db.collection('myColl').store('myKey', 'myVal');
 
 You can then lookup the value at a later time:
@@ -1490,7 +1498,8 @@ You can create a grid on screen via the .grid() method, passing it your target j
 string:
 
 	// Create our instances
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
 		coll = db.collection('testGrid'),
 		grid;
 	
@@ -1533,7 +1542,8 @@ the collection:
 	</script>
 
 ### JS
-	var db = new ForerunnerDB(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
 		collection = db.collection('test');
 
 	collection.link('#myList', '#myLinkFragment');
