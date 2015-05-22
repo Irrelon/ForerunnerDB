@@ -88,13 +88,13 @@ AutoBind.extendCollection = function (Module) {
 						window.jQuery.views.templates(templateId, templateHtml);
 					}
 
-					if (options && options.wrap) {
+					if (options && options.$wrap) {
 						// Create the data binding wrapped in an object
 						var wrapper = {};
-						wrapper[options.wrap] = this._data;
+						wrapper[options.$wrap] = this._data;
 
 						if (this.debug()) {
-							console.log('ForerunnerDB.AutoBind: Binding with data wrapper "' + options.wrap + '" for collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+							console.log('ForerunnerDB.AutoBind: Binding with data wrapper "' + options.$wrap + '" for collection "' + this.name() + '" to output target: ' + outputTargetSelector);
 						}
 
 						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
@@ -571,10 +571,10 @@ AutoBind.extendDocument = function (Module) {
 						window.jQuery.views.templates(templateId, templateHtml);
 					}
 
-					if (options && options.wrap) {
+					if (options && options.$wrap) {
 						// Create the data binding wrapped in an object
 						var wrapper = {};
-						wrapper[options.wrap] = this._data;
+						wrapper[options.$wrap] = this._data;
 
 						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
 					} else {
