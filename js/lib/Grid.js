@@ -266,7 +266,7 @@ Grid.prototype.refresh = function () {
 
 			// Auto-bind the data to the grid template
 			self._from.link(self._selector, self.template(), {
-				wrap: 'gridRow'
+				$wrap: 'gridRow'
 			});
 
 			// Check if the data source (collection or view) has an
@@ -315,7 +315,7 @@ Grid.prototype.refresh = function () {
 					filterView.link(dropDown.find('ul'), {
 						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-val="{{:' + filterField + '}}">{^{if active}}<span class="glyphicons glyphicons-tick"></span> {{/if}}{{:' + filterField + '}}</a></li>{{/for}}'
 					}, {
-						wrap: 'options'
+						$wrap: 'options'
 					});
 
 					elem.on('click', '#' + self._id + '_' + filterField + ' ul.dropdown-menu li>a', function (e) {
