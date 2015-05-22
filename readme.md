@@ -1514,21 +1514,29 @@ string:
 	coll.grid('#myGridContainer', '#gridTable');
 
 ### Auto-Sorting Tools
-The table can automatically handle sort requests when a column header is tapped/clicked on. To enable
-this functionality simply add the *data-grid-sort="{column name}"* attribute to elements you wish to
-use as sort elements. A good example is to use the table column header for sorting and you can see
-the correct usage above in the HTML of the table template.
+The table can automatically handle sort requests when a column header is tapped/clicked on.
+To enable this functionality simply add the *data-grid-sort="{column name}"* attribute
+to elements you wish to use as sort elements. A good example is to use the table column
+header for sorting and you can see the correct usage above in the HTML of the table
+template.
 
 ### Prerequisites
 * The AutoBind module must be loaded
 
 ## Data Binding
->Data binding is an optional module that is included via the fdb-autobind.min.js file. If you wish to use data-binding 
-please ensure you include that file in your page after the main fdb-all.min.js file.
+>Data binding is an optional module that is included via the fdb-autobind.min.js file.
+If you wish to use data-binding please ensure you include that file in your page after
+the main fdb-all.min.js file.
 
-The database includes a useful data-binding system that allows your HTML to be automatically updated when data in the
-collection changes. Here is a simple example of a data-bind that will keep the list of items up-to-date if you modify
-the collection:
+The database includes a useful data-binding system that allows your HTML to be
+automatically updated when data in the collection changes.
+
+> Binding a template to a collection will render the template once for each document in the
+collection. If you need an array of the entire collection passed to a single template see
+the section below on *wrapping data*.
+
+Here is a simple example of a data-bind that will keep the list of items up-to-date
+if you modify the collection:
 
 ### Prerequisites
 * Data-binding requires jQuery to be loaded
@@ -1548,10 +1556,13 @@ the collection:
 
 	collection.link('#myList', '#myLinkFragment');
 
-Now if you execute any insert, update or remove on the collection, the HTML will automatically update to reflect the
+Now if you execute any insert, update or remove on the collection, the HTML will
+automatically update to reflect the
 changes in the data.
 
-Note that the selector string that a bind uses can match multiple elements, allowing you to bind against multiple sections of the page with the same data. For instance, instead of binding against an ID (e.g. #myList) you could bind against a class:
+Note that the selector string that a bind uses can match multiple elements, allowing
+you to bind against multiple sections of the page with the same data. For instance,
+instead of binding against an ID (e.g. #myList) you could bind against a class:
 
 ### HTML
 	<ul class="myList">
@@ -1567,7 +1578,52 @@ Note that the selector string that a bind uses can match multiple elements, allo
 ### JS
 	collection.link('#myList', '#myLinkFragment');
 
-The result of this is that both UL elements will get data binding updates when the underlying data changes.
+The result of this is that both UL elements will get data binding updates when the
+underlying data changes.
+
+## Bespoke / Runtime Templates
+You can provide a bespoke template to the link method in the second argument by passing
+an object with a *template* property:
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
+		
+	db.collection('test').setData([{
+		name: 'Jim'
+	}, {
+		name: 'Bob'
+	}]);
+	
+	db.collection('test').link('#myTargetElement', {
+		template: '<div>{^{:name}}</div>'
+	});
+
+This allows you to specify a template programmatically rather than defining your template
+as a static piece of HTML on your page.
+
+## Wrapping Data
+Sometimes it is useful to provide data from a collection or view in an array form to the
+template. You can wrap all the data inside a property via the $wrap option passed to the
+link method like so:
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test');
+		
+	db.collection('test').setData([{
+		name: 'Jim'
+	}, {
+		name: 'Bob'
+	}]);
+	
+	db.collection('test').link('#myTargetElement', {
+		template: '<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>'
+	}, {
+		$wrap: 'items'
+	});
+
+Setting the $wrap option to 'items' passes the entire collection's data array into the
+template inside the *items* property which can then be accessed and iterated through like
+a normal array of data.
 
 ## Highcharts: Charts & Visualisations
 ForerunnerDB can utilise the popular Highcharts JavaScript library to generate charts from collection data
