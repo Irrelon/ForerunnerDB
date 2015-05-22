@@ -3,7 +3,6 @@
 // Import external names locally
 var Shared,
 	Db,
-	DbInit,
 	Collection,
 	DbDocument;
 
@@ -36,7 +35,6 @@ Shared.mixin(Overview.prototype, 'Mixin.Events');
 Collection = require('./Collection');
 DbDocument = require('./Document');
 Db = Shared.modules.Db;
-DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -202,19 +200,14 @@ Overview.prototype.drop = function () {
 	return true;
 };
 
-// Extend DB to include collection groups
-Db.prototype.init = function () {
-	this._overview = {};
-	DbInit.apply(this, arguments);
-};
-
 Db.prototype.overview = function (overviewName) {
 	if (overviewName) {
+		this._overview = this._overview || {};
 		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
 		return this._overview[overviewName];
 	} else {
 		// Return an object of collection data
-		return this._overview;
+		return this._overview || {};
 	}
 };
 
