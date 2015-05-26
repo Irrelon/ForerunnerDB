@@ -98,6 +98,8 @@ After installing via npm (see above) you can require ForerunnerDB in your code:
 > If you do not specify a database name a randomly generated one is provided instead.
 
 ## Collections (Tables)
+> Data Binding: Enabled
+
 To create or get a reference to a collection object call (where collectionName is the name of your collection):
 
 	var collection = db.collection('collectionName');
@@ -1447,6 +1449,8 @@ You can also remove a key/value from the store via the unStore() method:
 	db.collection('myColl').unStore('myKey');
 
 ## Grid / Table Output
+> Data Binding: Enabled
+
 ForerunnerDB 1.3 includes a grid / table module that allows you to output data from a collection or view to
 an HTML table that can be sorted and is data-bound so the table will react to changes in the underlying
 data inside the collection / view.
@@ -1524,6 +1528,7 @@ header for sorting and you can see the correct usage above in the HTML of the ta
 template.
 
 ## Views
+> Data Binding: Enabled
 A view is a queried subset of a collection that is automatically updated whenever the
 underlying collection is altered. Views are accessed in the same way as a collection and
 contain all the main CRUD functionality that a collection does. Inserting or updating on
@@ -1581,7 +1586,68 @@ Result:
 		"_id": "2d3bb2f43da7aa0"
 	}]
 
-Views also support data binding as detailed in the Data Binding section of this document.
+## Overviews
+> Data Binding: Enabled
+
+The Overview class provides the facility to run custom logic against the data from
+multiple data sources (collections and views for example) and return a single object /
+value. This is especially useful for scenarios where a summary of data is required such
+as a shopping basket order summary that is updated in realtime as items are added to
+the underlying cart collection, a count of some values etc.
+
+Consider a page with a shopping cart system and a cart summary which shows the number
+of items in the cart and the total cart value. Let's start by defining our cart
+collection:
+
+	var cart = db.collection('cart');
+
+Now we add some data to the cart:
+
+	cart.insert([{
+		name: 'Cat Food',
+		price: 12.99,
+		quantity: 2
+	}, {
+		name: 'Dog Food',
+		price: 18.99,
+		quantity: 3
+	}]);
+
+Now we want to display a cart summary with number of items and the total cart price, so
+we create an overview:
+
+	var cartSummary = db.overview('cartSummary');
+
+We need to tell the overview where to read data from:
+
+	cartSummary.from(cart);
+
+Now we give the overview some custom logic that will do our calculations against the data
+ in the cart collection and return an object with our item count and price total:
+
+	cartSummary.reduce(function () {
+		var obj = {},
+			items = this.find(), // .find() on an overview runs find() against underlying collection
+			total = 0,
+			i;
+
+		for (i = 0; i < items.length; i++) {
+			total += items[i].price * items[i].quantity;
+		}
+
+		obj.count = items.length;
+		obj.total = total;
+
+		return obj;
+	});
+
+You can execute the overview's reduce() method and get the result via the exec() method:
+
+	cartSummary.exec();
+
+Result:
+
+	{count: 2, total: 31.979999999999997}
 
 ## Data Binding
 >Data binding is an optional module that is included via the fdb-autobind.min.js file.
@@ -1686,6 +1752,8 @@ template inside the *items* property which can then be accessed and iterated thr
 a normal array of data.
 
 ## Highcharts: Charts & Visualisations
+> Data Binding: Enabled
+
 ForerunnerDB can utilise the popular Highcharts JavaScript library to generate charts from collection data
 and automatically keep the charts in sync with changes to the collection.
 
