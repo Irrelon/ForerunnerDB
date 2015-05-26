@@ -1451,6 +1451,9 @@ ForerunnerDB 1.3 includes a grid / table module that allows you to output data f
 an HTML table that can be sorted and is data-bound so the table will react to changes in the underlying
 data inside the collection / view.
 
+### Prerequisites
+* The AutoBind module must be loaded
+
 ### Grid Template
 
 Grids work via a jsRender template that describes how your grid should be rendered to the browser. An
@@ -1520,8 +1523,65 @@ to elements you wish to use as sort elements. A good example is to use the table
 header for sorting and you can see the correct usage above in the HTML of the table
 template.
 
-### Prerequisites
-* The AutoBind module must be loaded
+## Views
+A view is a queried / subset of a collection that is automatically updated whenever the
+underlying collection is altered. Views are accessed in the same way as a collection and
+contain all the main CRUD functionality that a collection does. Inserting or updating on
+a view will alter the underlying collection.
+
+#### Instantiating a View
+Views are instantiated the same way collections are:
+
+	var myView = db.view('myView');
+
+#### Specify an Underlying Data Source
+You must tell a view where to get it's data from using the *from()* method. Views can
+ use collections and other views as data sources:
+ 
+	var myCollection = db.collection('myCollection');
+	
+	myCollection.setData([{
+		name: 'Bob',
+		age: 20
+	}, {
+		name: 'Jim',
+		age: 25
+	}, {
+		name: 'Bill',
+		age: 30
+	}]);
+	
+	myView.from(myCollection);
+
+#### Setting a View's Query
+Since views represent live queried data / subsets of the underlying data source they
+usually take a query:
+
+	myView.query({
+		age: {
+			$gt: 24
+		}
+	});
+
+Using the collection data as defined in myCollection above, a call to the view's *find()*
+ method will result in returning only records in myCollection whose age property is greater
+ than 24:
+
+	myView.find();
+	
+Result:
+
+	[{
+		"name": "Jim",
+		"age": 25,
+		"_id": "2aee6ba38542220"
+	}, {
+		"name": "Bill",
+		"age": 30,
+		"_id": "2d3bb2f43da7aa0"
+	}]
+
+Views also support data binding as detailed in the Data Binding section of this document.
 
 ## Data Binding
 >Data binding is an optional module that is included via the fdb-autobind.min.js file.
