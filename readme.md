@@ -1524,7 +1524,7 @@ header for sorting and you can see the correct usage above in the HTML of the ta
 template.
 
 ## Views
-A view is a queried / subset of a collection that is automatically updated whenever the
+A view is a queried subset of a collection that is automatically updated whenever the
 underlying collection is altered. Views are accessed in the same way as a collection and
 contain all the main CRUD functionality that a collection does. Inserting or updating on
 a view will alter the underlying collection.
