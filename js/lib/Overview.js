@@ -90,6 +90,17 @@ Overview.prototype.find = function () {
 	return this._collData.find.apply(this._collData, arguments);
 };
 
+/**
+ * Executes and returns the response from the current reduce method
+ * assigned to the overview.
+ * @returns {*}
+ */
+Overview.prototype.exec = function () {
+	var reduceFunc = this.reduce();
+
+	return reduceFunc ? reduceFunc() : undefined;
+};
+
 Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
 };
