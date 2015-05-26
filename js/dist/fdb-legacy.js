@@ -9044,7 +9044,6 @@ module.exports = Overload;
 // Import external names locally
 var Shared,
 	Db,
-	DbInit,
 	Collection,
 	DbDocument;
 
@@ -9077,7 +9076,6 @@ Shared.mixin(Overview.prototype, 'Mixin.Events');
 Collection = _dereq_('./Collection');
 DbDocument = _dereq_('./Document');
 Db = Shared.modules.Db;
-DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
@@ -9131,6 +9129,17 @@ Overview.prototype.from = function (collection) {
 
 Overview.prototype.find = function () {
 	return this._collData.find.apply(this._collData, arguments);
+};
+
+/**
+ * Executes and returns the response from the current reduce method
+ * assigned to the overview.
+ * @returns {*}
+ */
+Overview.prototype.exec = function () {
+	var reduceFunc = this.reduce();
+
+	return reduceFunc ? reduceFunc() : undefined;
 };
 
 Overview.prototype.count = function () {
@@ -9243,19 +9252,14 @@ Overview.prototype.drop = function () {
 	return true;
 };
 
-// Extend DB to include collection groups
-Db.prototype.init = function () {
-	this._overview = {};
-	DbInit.apply(this, arguments);
-};
-
 Db.prototype.overview = function (overviewName) {
 	if (overviewName) {
+		this._overview = this._overview || {};
 		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
 		return this._overview[overviewName];
 	} else {
 		// Return an object of collection data
-		return this._overview;
+		return this._overview || {};
 	}
 };
 
@@ -10114,7 +10118,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.39',
+	version: '1.3.40',
 	modules: {},
 
 	_synth: {},
