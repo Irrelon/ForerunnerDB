@@ -1451,10 +1451,10 @@ ForerunnerDB 1.3 includes a grid / table module that allows you to output data f
 an HTML table that can be sorted and is data-bound so the table will react to changes in the underlying
 data inside the collection / view.
 
-### Prerequisites
+#### Prerequisites
 * The AutoBind module must be loaded
 
-### Grid Template
+#### Grid Template
 
 Grids work via a jsRender template that describes how your grid should be rendered to the browser. An
 example template called "gridTable" looks like this:
@@ -1492,7 +1492,7 @@ array. This array is the data inside your collection / view that the grid has be
 and is automatically passed to your template by the grid module. Use this array to loop over and
 output the row data for each row in your collection.
   
-### Creating a Grid
+#### Creating a Grid
 First you need to identify a target element that will contain the rendered grid:
 
 	<div id="myGridContainer"></div>
@@ -1516,7 +1516,7 @@ string:
 	// Create a grid from the collection using the template we defined earlier
 	coll.grid('#myGridContainer', '#gridTable');
 
-### Auto-Sorting Tools
+#### Auto-Sorting Tools
 The table can automatically handle sort requests when a column header is tapped/clicked on.
 To enable this functionality simply add the *data-grid-sort="{column name}"* attribute
 to elements you wish to use as sort elements. A good example is to use the table column
