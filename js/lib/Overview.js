@@ -98,7 +98,7 @@ Overview.prototype.find = function () {
 Overview.prototype.exec = function () {
 	var reduceFunc = this.reduce();
 
-	return reduceFunc ? reduceFunc() : undefined;
+	return reduceFunc ? reduceFunc.apply(this) : undefined;
 };
 
 Overview.prototype.count = function () {
@@ -166,7 +166,7 @@ Overview.prototype._refresh = function () {
 
 		// Now execute the reduce method
 		if (this._reduce) {
-			var reducedData = this._reduce();
+			var reducedData = this._reduce.apply(this);
 
 			// Update the document with the newly returned data
 			this._data.setData(reducedData);
