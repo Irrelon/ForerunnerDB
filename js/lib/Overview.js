@@ -79,7 +79,7 @@ Overview.prototype.from = function (collection) {
 			collection = this._db.collection(collection);
 		}
 
-		this._addCollection(collection);
+		this._setFrom(collection);
 		return this;
 	}
 
@@ -103,6 +103,17 @@ Overview.prototype.exec = function () {
 
 Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
+};
+
+Overview.prototype._setFrom = function (collection) {
+	// Remove all collection references
+	while (this._collections.length) {
+		this._removeCollection(this._collections[0]);
+	}
+
+	this._addCollection(collection);
+
+	return this;
 };
 
 Overview.prototype._addCollection = function (collection) {
