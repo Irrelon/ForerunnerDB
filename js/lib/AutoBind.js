@@ -127,39 +127,56 @@ AutoBind.extendCollection = function (Module) {
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		if (window.jQuery) {
+			var templateId,
+				i;
+
 			// Check for binding
 			this._links = this._links || {};
 
-			var templateId;
-
-			if (templateSelector && typeof templateSelector === 'object') {
-				// Our second argument is an object, let's inspect
-				if (templateSelector.template && typeof templateSelector.template === 'string') {
-					// The template has been given to us as a string
-					templateId = this.objectId(templateSelector.template);
+			if (outputTargetSelector && templateSelector) {
+				if (templateSelector && typeof templateSelector === 'object') {
+					// Our second argument is an object, let's inspect
+					if (templateSelector.template && typeof templateSelector.template === 'string') {
+						// The template has been given to us as a string
+						templateId = this.objectId(templateSelector.template);
+					}
+				} else {
+					templateId = templateSelector;
 				}
+
+				if (this._links[templateId]) {
+					// Remove the data binding
+					window.jQuery.templates[templateId].unlink(outputTargetSelector);
+
+					// Remove link from flags
+					delete this._links[templateId];
+
+					// Set the linked flag
+					this._linked--;
+
+					if (this.debug()) {
+						console.log('ForerunnerDB.AutoBind: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+					}
+
+					return this;
+				}
+
+				console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 			} else {
-				templateId = templateSelector;
-			}
+				// No parameters passed, unlink all from this module
+				for (i in this._links) {
+					if (this._links.hasOwnProperty(i)) {
+						window.jQuery.templates[i].unlink(this._links[i]);
 
-			if (this._links[templateId]) {
-				// Remove the data binding
-				window.jQuery.templates[templateId].unlink(outputTargetSelector);
-
-				// Remove link from flags
-				delete this._links[templateId];
-
-				// Set the linked flag
-				this._linked--;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+						if (this.debug()) {
+							console.log('ForerunnerDB.AutoBind: Removed binding collection "' + this.name() + '" to output target: ' + this._links[i]);
+						}
+					}
 				}
 
-				return this;
+				this._links = {};
+				this._linked = 0;
 			}
-
-			console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		} else {
 			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
@@ -609,36 +626,53 @@ AutoBind.extendDocument = function (Module) {
 			// Check for binding
 			this._links = this._links || {};
 
-			var templateId;
+			var templateId,
+				i;
 
-			if (templateSelector && typeof templateSelector === 'object') {
-				// Our second argument is an object, let's inspect
-				if (templateSelector.template && typeof templateSelector.template === 'string') {
-					// The template has been given to us as a string
-					templateId = this.objectId(templateSelector.template);
+			if (outputTargetSelector && templateSelector) {
+				if (templateSelector && typeof templateSelector === 'object') {
+					// Our second argument is an object, let's inspect
+					if (templateSelector.template && typeof templateSelector.template === 'string') {
+						// The template has been given to us as a string
+						templateId = this.objectId(templateSelector.template);
+					}
+				} else {
+					templateId = templateSelector;
 				}
+
+				if (this._links[templateId]) {
+					// Remove the data binding
+					window.jQuery.templates[templateId].unlink(outputTargetSelector);
+
+					// Remove link from flags
+					delete this._links[templateId];
+
+					// Set the linked flag
+					this._linked--;
+
+					if (this.debug()) {
+						console.log('ForerunnerDB.AutoBind "' + this.name() + '": Removed binding document to target: ' + outputTargetSelector);
+					}
+
+					return this;
+				}
+
+				console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 			} else {
-				templateId = templateSelector;
-			}
+				// No parameters passed, unlink all from this module
+				for (i in this._links) {
+					if (this._links.hasOwnProperty(i)) {
+						window.jQuery.templates[i].unlink(this._links[i]);
 
-			if (this._links[templateId]) {
-				// Remove the data binding
-				window.jQuery.templates[templateId].unlink(outputTargetSelector);
-
-				// Remove link from flags
-				delete this._links[templateId];
-
-				// Set the linked flag
-				this._linked--;
-
-				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Removed binding document to target: ' + outputTargetSelector);
+						if (this.debug()) {
+							console.log('ForerunnerDB.AutoBind: Removed binding document "' + this.name() + '" to output target: ' + this._links[i]);
+						}
+					}
 				}
 
-				return this;
+				this._links = {};
+				this._linked = 0;
 			}
-
-			console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 		} else {
 			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
