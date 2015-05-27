@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.45
+## Version 1.3.44
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -1750,6 +1750,37 @@ link method like so:
 Setting the $wrap option to 'items' passes the entire collection's data array into the
 template inside the *items* property which can then be accessed and iterated through like
 a normal array of data.
+
+You can also wrap inside a ForeunnerDB Document instance which will allow you to control
+other properties on the wrapper and have them update in realtime if you are using the
+data-binding module.
+
+To wrap inside a document instance, pass the document in the $wrapIn option:
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		doc;
+		
+	db.collection('test').setData([{
+		name: 'Jim'
+	}, {
+		name: 'Bob'
+	}]);
+	
+	doc = db.document('myWrapperDoc');
+	
+	doc.setData({
+		loading: true
+	});
+	
+	db.collection('test').link('#myTargetElement', {
+		template: '{^{if !loading}}<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>{{/if}}'
+	}, {
+		$wrap: 'items',
+		$wrapIn: doc
+	});
+	
+	doc.update({}, {loading: false});
 
 ## Highcharts: Charts & Visualisations
 > Data Binding: Enabled
