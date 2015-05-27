@@ -87,21 +87,21 @@ AutoBind.extendCollection = function (Module) {
 							tmpObj,
 							doc;
 
-						if (typeof options.$wrap === 'string') {
+						if (!options.$wrapIn) {
 							// Create the data binding wrapped in an object
 							wrapper = {};
 							wrapper[options.$wrap] = this._data;
-						} else if (options.$wrap instanceof window.ForerunnerDB.shared.modules.Document) {
+						} else if (options.$wrapIn instanceof window.ForerunnerDB.shared.modules.Document) {
 							// Document-based wrapper
 							// Grab the document instance
-							doc = options.$wrap;
+							doc = options.$wrapIn;
 
 							// Get the current data by reference
 							tmpObj = doc._data;
 
 							// Set the wrapper property to the referenced data
 							// of this collection / view
-							tmpObj[options.$wrapProp] = this._data;
+							tmpObj[options.$wrap] = this._data;
 
 							// Set the data back into the document by reference
 							doc.setData(tmpObj, {$decouple: false});
@@ -614,21 +614,21 @@ AutoBind.extendDocument = function (Module) {
 							tmpObj,
 							doc;
 
-						if (typeof options.$wrap === 'string') {
+						if (!options.$wrapIn) {
 							// Create the data binding wrapped in an object
 							wrapper = {};
 							wrapper[options.$wrap] = this._data;
-						} else if (options.$wrap instanceof Document) {
+						} else if (options.$wrapIn instanceof Document) {
 							// Document-based wrapper
 							// Grab the document instance
-							doc = options.$wrap;
+							doc = options.$wrapIn;
 
 							// Get the current data by reference
 							tmpObj = doc._data;
 
 							// Set the wrapper property to the referenced data
 							// of this collection / view
-							tmpObj[options.$wrapProp] = this._data;
+							tmpObj[options.$wrap] = this._data;
 
 							// Set the data back into the document by reference
 							doc.setData(tmpObj, {$decouple: false});
