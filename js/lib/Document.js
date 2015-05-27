@@ -48,12 +48,18 @@ Shared = require('./Shared');
 	 */
 	Shared.synthesize(Document.prototype, 'name');
 
-	Document.prototype.setData = function (data) {
+	Document.prototype.setData = function (data, options) {
 		var i,
 			$unset;
 
 		if (data) {
-			data = this.decouple(data);
+			options = options || {
+				$decouple: true
+			};
+
+			if (options && options.$decouple === true) {
+				data = this.decouple(data);
+			}
 
 			if (this._linked) {
 				$unset = {};
