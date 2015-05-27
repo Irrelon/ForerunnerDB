@@ -9791,7 +9791,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.43',
+	version: '1.3.44',
 	modules: {},
 
 	_synth: {},

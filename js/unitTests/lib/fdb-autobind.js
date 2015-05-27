@@ -107,7 +107,7 @@ AutoBind.extendCollection = function (Module) {
 
 							// Set the wrapper property to the referenced data
 							// of this collection / view
-							tmpObj[options.$wrap] = this._data;
+							tmpObj[options.$wrapProp] = this._data;
 
 							// Set the data back into the document by reference
 							doc.setData(tmpObj, {$decouple: false});
@@ -116,7 +116,7 @@ AutoBind.extendCollection = function (Module) {
 							doc._linked = 1;
 
 							// Provide the document data as wrapper data
-							wrapper = options.$wrap._data;
+							wrapper = doc._data;
 						}
 
 						if (this.debug()) {
@@ -634,7 +634,7 @@ AutoBind.extendDocument = function (Module) {
 
 							// Set the wrapper property to the referenced data
 							// of this collection / view
-							tmpObj[options.$wrap] = this._data;
+							tmpObj[options.$wrapProp] = this._data;
 
 							// Set the data back into the document by reference
 							doc.setData(tmpObj, {$decouple: false});
