@@ -461,7 +461,7 @@ AutoBind.extendView = function (Module) {
 	};
 
 	Module.prototype.isLinked = function () {
-		return this.data().isLinked();
+		return this.publicData().isLinked();
 	};
 
 	/**
