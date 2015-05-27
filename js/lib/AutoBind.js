@@ -6,6 +6,7 @@
  * from jsViews (jsRender) templates.
  */
 var Shared = window.ForerunnerDB.shared,
+	Document = window.ForerunnerDB.shared.modules.Document,
 	AutoBind = {},
 	jsviews;
 
@@ -83,9 +84,35 @@ AutoBind.extendCollection = function (Module) {
 					}
 
 					if (options && options.$wrap) {
-						// Create the data binding wrapped in an object
-						var wrapper = {};
-						wrapper[options.$wrap] = this._data;
+						var wrapper,
+							tmpObj,
+							doc;
+
+						if (typeof options.$wrap === 'string') {
+							// Create the data binding wrapped in an object
+							wrapper = {};
+							wrapper[options.$wrap] = this._data;
+						} else if (options.$wrap instanceof Document) {
+							// Document-based wrapper
+							// Grab the document instance
+							doc = options.$wrap;
+
+							// Get the current data by reference
+							tmpObj = doc._data;
+
+							// Set the wrapper property to the referenced data
+							// of this collection / view
+							tmpObj[options.$wrap] = this._data;
+
+							// Set the data back into the document by reference
+							doc.setData(tmpObj, {$decouple: false});
+
+							// Set it to data-bound mode
+							doc._linked = 1;
+
+							// Provide the document data as wrapper data
+							wrapper = options.$wrap._data;
+						}
 
 						if (this.debug()) {
 							console.log('ForerunnerDB.AutoBind: Binding with data wrapper "' + options.$wrap + '" for collection "' + this.name() + '" to output target: ' + outputTargetSelector);
@@ -584,8 +611,35 @@ AutoBind.extendDocument = function (Module) {
 
 					if (options && options.$wrap) {
 						// Create the data binding wrapped in an object
-						var wrapper = {};
-						wrapper[options.$wrap] = this._data;
+						var wrapper,
+							tmpObj,
+							doc;
+
+						if (typeof options.$wrap === 'string') {
+							// Create the data binding wrapped in an object
+							wrapper = {};
+							wrapper[options.$wrap] = this._data;
+						} else if (options.$wrap instanceof Document) {
+							// Document-based wrapper
+							// Grab the document instance
+							doc = options.$wrap;
+
+							// Get the current data by reference
+							tmpObj = doc._data;
+
+							// Set the wrapper property to the referenced data
+							// of this collection / view
+							tmpObj[options.$wrap] = this._data;
+
+							// Set the data back into the document by reference
+							doc.setData(tmpObj, {$decouple: false});
+
+							// Set it to data-bound mode
+							doc._linked = 1;
+
+							// Provide the document data as wrapper data
+							wrapper = options.$wrap._data;
+						}
 
 						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
 					} else {
