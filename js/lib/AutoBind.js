@@ -6,7 +6,6 @@
  * from jsViews (jsRender) templates.
  */
 var Shared = window.ForerunnerDB.shared,
-	Document = window.ForerunnerDB.shared.modules.Document,
 	AutoBind = {},
 	jsviews;
 
@@ -92,7 +91,7 @@ AutoBind.extendCollection = function (Module) {
 							// Create the data binding wrapped in an object
 							wrapper = {};
 							wrapper[options.$wrap] = this._data;
-						} else if (options.$wrap instanceof Document) {
+						} else if (options.$wrap instanceof window.ForerunnerDB.shared.modules.Document) {
 							// Document-based wrapper
 							// Grab the document instance
 							doc = options.$wrap;

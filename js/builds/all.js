@@ -12,4 +12,5 @@ var Core = require('./core'),
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
+
 module.exports = Core;

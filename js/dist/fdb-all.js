@@ -13,6 +13,7 @@ var Core = _dereq_('./core'),
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
+
 module.exports = Core;
 },{"../lib/CollectionGroup":5,"../lib/Document":9,"../lib/Grid":10,"../lib/Highchart":11,"../lib/Odm":25,"../lib/Overview":28,"../lib/Persist":30,"../lib/Rest":32,"../lib/View":35,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
@@ -4375,12 +4376,18 @@ Shared = _dereq_('./Shared');
 	 */
 	Shared.synthesize(Document.prototype, 'name');
 
-	Document.prototype.setData = function (data) {
+	Document.prototype.setData = function (data, options) {
 		var i,
 			$unset;
 
 		if (data) {
-			data = this.decouple(data);
+			options = options || {
+				$decouple: true
+			};
+
+			if (options && options.$decouple === true) {
+				data = this.decouple(data);
+			}
 
 			if (this._linked) {
 				$unset = {};
@@ -9784,7 +9791,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.42',
+	version: '1.3.43',
 	modules: {},
 
 	_synth: {},
@@ -10629,6 +10636,7 @@ View.prototype.query = function (query, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		}
+
 		return this;
 	}
 

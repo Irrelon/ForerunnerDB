@@ -4366,12 +4366,18 @@ Shared = _dereq_('./Shared');
 	 */
 	Shared.synthesize(Document.prototype, 'name');
 
-	Document.prototype.setData = function (data) {
+	Document.prototype.setData = function (data, options) {
 		var i,
 			$unset;
 
 		if (data) {
-			data = this.decouple(data);
+			options = options || {
+				$decouple: true
+			};
+
+			if (options && options.$decouple === true) {
+				data = this.decouple(data);
+			}
 
 			if (this._linked) {
 				$unset = {};
@@ -10129,7 +10135,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.42',
+	version: '1.3.43',
 	modules: {},
 
 	_synth: {},
@@ -10854,6 +10860,7 @@ View.prototype.query = function (query, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		}
+
 		return this;
 	}
 
