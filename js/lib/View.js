@@ -587,6 +587,7 @@ View.prototype.query = function (query, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		}
+
 		return this;
 	}
 
