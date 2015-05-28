@@ -614,6 +614,72 @@ View.prototype.orderBy = function (val) {
 };
 
 /**
+ * Gets / sets the page clause in the query options for the view.
+ * @param {Number=} val The page number to change to (zero index).
+ * @returns {*}
+ */
+View.prototype.page = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+
+		// Only execute a query options update if page has changed
+		if (val !== queryOptions.$page) {
+			queryOptions.$page = val;
+			this.queryOptions(queryOptions);
+		}
+
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$page;
+};
+
+/**
+ * Jump to the first page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageFirst = function () {
+	return this.page(0);
+};
+
+/**
+ * Jump to the last page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageLast = function () {
+	var pages = this.cursor().pages,
+		lastPage = pages !== undefined ? pages : 0;
+
+	return this.page(lastPage - 1);
+};
+
+/**
+ * Move forward or backwards in the data set pages by passing a positive
+ * or negative integer of the number of pages to move.
+ * @param {Number} val The number of pages to move.
+ * @returns {*}
+ */
+View.prototype.pageScan = function (val) {
+	if (val !== undefined) {
+		var pages = this.cursor().pages,
+			queryOptions = this.queryOptions() || {},
+			currentPage = queryOptions.$page !== undefined ? queryOptions.$page : 0;
+
+		currentPage += val;
+
+		if (currentPage < 0) {
+			currentPage = 0;
+		}
+
+		if (currentPage >= pages) {
+			currentPage = pages - 1;
+		}
+
+		return this.page(currentPage);
+	}
+};
+
+/**
  * Gets / sets the query options used when applying sorting etc to the
  * view data set.
  * @param {Object=} options An options object.
