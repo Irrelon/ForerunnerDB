@@ -6,7 +6,8 @@ var Core = require('../lib/Core'),
 	Document = require('../lib/Document'),
 	Overview = require('../lib/Overview'),
 	OldView = require('../lib/OldView'),
-	OldViewBind = require('../lib/OldView.Bind');
+	OldViewBind = require('../lib/OldView.Bind'),
+	Grid = require('../lib/Grid');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;

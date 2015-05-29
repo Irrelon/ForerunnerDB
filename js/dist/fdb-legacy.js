@@ -7,13 +7,14 @@ var Core = _dereq_('../lib/Core'),
 	Document = _dereq_('../lib/Document'),
 	Overview = _dereq_('../lib/Overview'),
 	OldView = _dereq_('../lib/OldView'),
-	OldViewBind = _dereq_('../lib/OldView.Bind');
+	OldViewBind = _dereq_('../lib/OldView.Bind'),
+	Grid = _dereq_('../lib/Grid');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":8,"../lib/Highchart":9,"../lib/OldView":24,"../lib/OldView.Bind":23,"../lib/Overview":27,"../lib/Persist":29,"../lib/View":32}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/OldView":25,"../lib/OldView.Bind":24,"../lib/Overview":28,"../lib/Persist":30,"../lib/View":33}],2:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -273,7 +274,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":31}],3:[function(_dereq_,module,exports){
+},{"./Shared":32}],3:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -1476,7 +1477,7 @@ Collection.prototype.deferEmit = function () {
 		this._changeTimeout = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
-		}, 100);
+		}, 1);
 	} else {
 		this.emit.apply(this, arguments);
 	}
@@ -1995,6 +1996,7 @@ Collection.prototype.find = function (query, options) {
 		elemMatchSpliceArr,
 		matcherTmpOptions = {},
 		result,
+		cursor = {},
 		matcher = function (doc) {
 			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
@@ -2061,7 +2063,32 @@ Collection.prototype.find = function (query, options) {
 			op.time('tableScan: ' + scanLength);
 		}
 
+		if (options.$page !== undefined && options.$limit !== undefined) {
+			// Record paging data
+			cursor.page = options.$page;
+			cursor.pages = Math.ceil(resultArr.length / options.$limit);
+			cursor.records = resultArr.length;
+
+			// Check if we actually need to apply the paging logic
+			if (options.$page && options.$limit > 0) {
+				op.data('cursor', cursor);
+
+				// Skip to the page specified based on limit
+				resultArr.splice(0, options.$page * options.$limit);
+			}
+		}
+
+		if (options.$skip) {
+			cursor.skip = options.$skip;
+
+			// Skip past the number of records specified
+			resultArr.splice(0, options.$skip);
+			op.data('skip', options.$skip);
+		}
+
 		if (options.$limit && resultArr && resultArr.length > options.$limit) {
+			cursor.limit = options.$limit;
+
 			resultArr.length = options.$limit;
 			op.data('limit', options.$limit);
 		}
@@ -2318,6 +2345,7 @@ Collection.prototype.find = function (query, options) {
 
 	op.stop();
 	resultArr.__fdbOp = op;
+	resultArr.$cursor = cursor;
 	return resultArr;
 };
 
@@ -3244,7 +3272,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":26,"./Path":28,"./ReactorIO":30,"./Shared":31}],4:[function(_dereq_,module,exports){
+},{"./Crc":6,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":27,"./Path":29,"./ReactorIO":31,"./Shared":32}],4:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3562,7 +3590,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":31}],5:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":32}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3753,7 +3781,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":7,"./Metrics.js":13,"./Overload":26,"./Shared":31}],6:[function(_dereq_,module,exports){
+},{"./Db.js":7,"./Metrics.js":14,"./Overload":27,"./Shared":32}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable = (function () {
@@ -4315,7 +4343,7 @@ Core.prototype.databases = function (search) {
 };
 
 module.exports = Db;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":13,"./Overload":26,"./Shared":31}],8:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":14,"./Overload":27,"./Shared":32}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -4699,7 +4727,503 @@ Shared = _dereq_('./Shared');
 	Shared.finishModule('Document');
 	module.exports = Document;
 }());
-},{"./Collection":3,"./Shared":31}],9:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Shared":32}],9:[function(_dereq_,module,exports){
+"use strict";
+
+// Import external names locally
+var Shared,
+	Db,
+	Collection,
+	CollectionGroup,
+	View,
+	CollectionInit,
+	DbInit,
+	ReactorIO;
+
+//Shared = ForerunnerDB.shared;
+Shared = _dereq_('./Shared');
+
+/*
+// As this is a separate module, use the external loader flow
+if (typeof jQuery !== 'undefined') {
+	// Define modules that we wish to work on (or wait for to load)
+	var modules = ['Collection', 'View'],
+		loaded = [],
+		moduleIndex;
+
+	// Extend modules that are finished loading
+	for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
+		Shared.moduleFinished(modules[moduleIndex], function (name, module) {
+			switch (name) {
+				case 'Collection':
+					Collection = module;
+					loaded.push(name);
+					break;
+
+				case 'View':
+					View = module;
+					loaded.push(name);
+					break;
+
+				default:
+					break;
+			}
+
+			if (loaded.length === modules.length) {
+				gridInit();
+			}
+		});
+	}
+
+	Shared.finishModule('AutoBind');
+} else {
+	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+}
+*/
+
+/**
+ * The grid constructor.
+ * @param {String} selector jQuery selector.
+ * @param {Object=} options The options object to apply to the grid.
+ * @constructor
+ */
+var Grid = function (selector, options) {
+	this.init.apply(this, arguments);
+};
+
+Grid.prototype.init = function (selector, template, options) {
+	var self = this;
+
+	this._selector = selector;
+	this._template = template;
+	this._options = options;
+	this._debug = {};
+	this._id = this.objectId();
+
+	this._collectionDroppedWrap = function () {
+		self._collectionDropped.apply(self, arguments);
+	};
+};
+
+Shared.addModule('Grid', Grid);
+Shared.mixin(Grid.prototype, 'Mixin.Common');
+Shared.mixin(Grid.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Grid.prototype, 'Mixin.Constants');
+Shared.mixin(Grid.prototype, 'Mixin.Triggers');
+Shared.mixin(Grid.prototype, 'Mixin.Events');
+
+Collection = _dereq_('./Collection');
+CollectionGroup = _dereq_('./CollectionGroup');
+View = _dereq_('./View');
+ReactorIO = _dereq_('./ReactorIO');
+CollectionInit = Collection.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(Grid.prototype, 'state');
+
+Shared.synthesize(Grid.prototype, 'name');
+
+/**
+ * Executes an insert against the grid's underlying data-source.
+ */
+Grid.prototype.insert = function () {
+	this._from.insert.apply(this._from, arguments);
+};
+
+/**
+ * Executes an update against the grid's underlying data-source.
+ */
+Grid.prototype.update = function () {
+	this._from.update.apply(this._from, arguments);
+};
+
+/**
+ * Executes an updateById against the grid's underlying data-source.
+ */
+Grid.prototype.updateById = function () {
+	this._from.updateById.apply(this._from, arguments);
+};
+
+/**
+ * Executes a remove against the grid's underlying data-source.
+ */
+Grid.prototype.remove = function () {
+	this._from.remove.apply(this._from, arguments);
+};
+
+/**
+ * Sets the collection from which the grid will assemble its data.
+ * @param {Collection} collection The collection to use to assemble grid data.
+ * @returns {Grid}
+ */
+Grid.prototype.from = function (collection) {
+	//var self = this;
+
+	if (collection !== undefined) {
+		// Check if we have an existing from
+		if (this._from) {
+			// Remove the listener to the drop event
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeGrid(this);
+		}
+
+		if (typeof(collection) === 'string') {
+			collection = this._db.collection(collection);
+		}
+
+		this._from = collection;
+		this._from.on('drop', this._collectionDroppedWrap);
+		this.refresh();
+	}
+
+	return this;
+};
+
+/**
+ * Gets / sets the DB the grid is bound against.
+ * @param db
+ * @returns {*}
+ */
+Grid.prototype.db = function (db) {
+	if (db !== undefined) {
+		this._db = db;
+		return this;
+	}
+
+	return this._db;
+};
+
+Grid.prototype._collectionDropped = function (collection) {
+	if (collection) {
+		// Collection was dropped, remove from grid
+		delete this._from;
+	}
+};
+
+/**
+ * Drops a grid and all it's stored data from the database.
+ * @returns {boolean} True on success, false on failure.
+ */
+Grid.prototype.drop = function () {
+	if (this._state !== 'dropped') {
+		if (this._from) {
+			// Remove data-binding
+			this._from.unlink(this._selector, this.template());
+
+			// Kill listeners and references
+			this._from.off('drop', this._collectionDroppedWrap);
+			this._from._removeGrid(this);
+
+			if (this.debug() || (this._db && this._db.debug())) {
+				console.log('ForerunnerDB.Grid: Dropping grid ' + this._selector);
+			}
+
+			this._state = 'dropped';
+
+			if (this._db && this._selector) {
+				delete this._db._grid[this._selector];
+			}
+
+			this.emit('drop', this);
+
+			delete this._selector;
+			delete this._template;
+			delete this._from;
+			delete this._db;
+
+			return true;
+		}
+	} else {
+		return true;
+	}
+
+	return false;
+};
+
+Grid.prototype.template = function (template) {
+	if (template !== undefined) {
+		this._template = template;
+		return this;
+	}
+
+	return this._template;
+};
+
+Grid.prototype._sortGridClick = function (e) {
+	var sortColText = window.jQuery(e.currentTarget).attr('data-grid-sort') || '',
+		sortCols = sortColText.split(','),
+		sortObj = {},
+		i;
+
+	for (i = 0; i < sortCols.length; i++) {
+		sortObj[sortCols] = 1;
+	}
+
+	this._from.orderBy(sortObj);
+	this.emit('sort', sortObj);
+};
+
+/**
+ * Refreshes the grid data such as ordering etc.
+ */
+Grid.prototype.refresh = function () {
+	if (this._from) {
+		if (this._from.link) {
+			var self = this,
+				elem = window.jQuery(this._selector),
+				clickListener = function () {
+					self._sortGridClick.apply(self, arguments);
+				};
+
+			// Clear the container
+			elem.html('');
+
+			if (self._from.orderBy) {
+				// Remove listeners
+				elem.off('click', '[data-grid-sort]', clickListener);
+			}
+
+			if (self._from.query) {
+				// Remove listeners
+				elem.off('click', '[data-grid-filter]', clickListener);
+			}
+
+			// Auto-bind the data to the grid template
+			self._from.link(self._selector, self.template(), {
+				$wrap: 'gridRow'
+			});
+
+			// Check if the data source (collection or view) has an
+			// orderBy method (usually only views) and if so activate
+			// the sorting system
+			if (self._from.orderBy) {
+				// Listen for sort requests
+				elem.on('click', '[data-grid-sort]', clickListener);
+			}
+
+			if (self._from.query) {
+				// Listen for filter requests
+				elem.find('[data-grid-filter]').each(function (index, filterElem) {
+					filterElem = window.jQuery(filterElem);
+
+					var filterField = filterElem.attr('data-grid-filter'),
+						filterObj = {},
+						title = filterElem.html(),
+						dropDown,
+						template,
+						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
+
+					filterObj[filterField] = 1;
+
+					filterView
+						.query({
+							$distinct: filterObj
+						})
+						.orderBy(filterObj)
+						.from(self._from);
+
+					template = [
+						'<div class="dropdown" id="' + self._id + '_' + filterField + '">',
+						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
+						title + ' <span class="caret"></span>',
+						'</button>',
+						'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">',
+						'</ul>',
+						'</div>'
+					];
+
+					dropDown = window.jQuery(template.join(''));
+					filterElem.html(dropDown);
+
+					// Data-link the underlying data to the grid filter drop-down
+					filterView.link(dropDown.find('ul'), {
+						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-val="{{:' + filterField + '}}">{^{if active}}<span class="glyphicons glyphicons-tick"></span> {{/if}}{{:' + filterField + '}}</a></li>{{/for}}'
+					}, {
+						$wrap: 'options'
+					});
+
+					elem.on('click', '#' + self._id + '_' + filterField + ' ul.dropdown-menu li>a', function (e) {
+						e.preventDefault();
+						var queryObj = {};
+
+						queryObj[filterField] = window.jQuery(this).attr('data-val');
+						//filterView.update(queryObj, {active: 1});
+
+						self._from.queryAdd(queryObj);
+					});
+				});
+			}
+
+			self.emit('refresh');
+		} else {
+			throw('Grid requires the AutoBind module in order to operate!');
+		}
+	}
+
+	return this;
+};
+
+/**
+ * Creates a grid and assigns the collection as its data source.
+ * @param {String} selector jQuery selector of grid output target.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Collection.prototype.grid = View.prototype.grid = function (selector, template, options) {
+	if (this._db && this._db._grid ) {
+		if (!this._db._grid[selector]) {
+			var grid = new Grid(selector, template, options)
+				.db(this._db)
+				.from(this);
+
+			this._grid = this._grid || [];
+			this._grid.push(grid);
+
+			this._db._grid[selector] = grid;
+
+			return grid;
+		} else {
+			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
+		}
+	}
+};
+
+/**
+ * Removes a grid safely from the DOM. Must be called when grid is
+ * no longer required / is being removed from DOM otherwise references
+ * will stick around and cause memory leaks.
+ * @param {String} selector jQuery selector of grid output target.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Collection.prototype.unGrid = View.prototype.unGrid = function (selector, template, options) {
+	if (this._db && this._db._grid ) {
+		if (this._db._grid[selector]) {
+			var grid = this._db._grid[selector];
+			delete this._db._grid[selector];
+
+			return grid.drop();
+		} else {
+			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+		}
+	}
+};
+
+/**
+ * Adds a grid to the internal grid lookup.
+ * @param {Grid} grid The grid to add.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._addGrid = CollectionGroup.prototype._addGrid = View.prototype._addGrid = function (grid) {
+	if (grid !== undefined) {
+		this._grid = this._grid || [];
+		this._grid.push(grid);
+	}
+
+	return this;
+};
+
+/**
+ * Removes a grid from the internal grid lookup.
+ * @param {Grid} grid The grid to remove.
+ * @returns {Collection}
+ * @private
+ */
+Collection.prototype._removeGrid = CollectionGroup.prototype._removeGrid = View.prototype._removeGrid = function (grid) {
+	if (grid !== undefined && this._grid) {
+		var index = this._grid.indexOf(grid);
+		if (index > -1) {
+			this._grid.splice(index, 1);
+		}
+	}
+
+	return this;
+};
+
+// Extend DB with grids init
+Db.prototype.init = function () {
+	this._grid = {};
+	DbInit.apply(this, arguments);
+};
+
+/**
+ * Gets a grid by it's name.
+ * @param {String} selector The jQuery selector of the grid to retrieve.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Db.prototype.grid = function (selector, template, options) {
+	if (!this._grid[selector]) {
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log('Db.Grid: Creating grid ' + selector);
+		}
+	}
+
+	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
+	return this._grid[selector];
+};
+
+/**
+ * Gets a grid by it's name.
+ * @param {String} selector The jQuery selector of the grid to retrieve.
+ * @param {String} template The table template to use when rendering the grid.
+ * @param {Object=} options The options object to apply to the grid.
+ * @returns {*}
+ */
+Db.prototype.unGrid = function (selector, template, options) {
+	if (!this._grid[selector]) {
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log('Db.Grid: Creating grid ' + selector);
+		}
+	}
+
+	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
+	return this._grid[selector];
+};
+
+/**
+ * Determine if a grid with the passed name already exists.
+ * @param {String} selector The jQuery selector to bind the grid to.
+ * @returns {boolean}
+ */
+Db.prototype.gridExists = function (selector) {
+	return Boolean(this._grid[selector]);
+};
+
+/**
+ * Returns an array of grids the DB currently has.
+ * @returns {Array} An array of objects containing details of each grid
+ * the database is currently managing.
+ */
+Db.prototype.grids = function () {
+	var arr = [],
+		i;
+
+	for (i in this._grid) {
+		if (this._grid.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._grid[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
+Shared.finishModule('Grid');
+module.exports = Grid;
+},{"./Collection":3,"./CollectionGroup":4,"./ReactorIO":31,"./Shared":32,"./View":33}],10:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5299,7 +5823,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":26,"./Shared":31}],10:[function(_dereq_,module,exports){
+},{"./Overload":27,"./Shared":32}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5592,7 +6116,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":28,"./Shared":31}],11:[function(_dereq_,module,exports){
+},{"./Path":29,"./Shared":32}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5943,7 +6467,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":28,"./Shared":31}],12:[function(_dereq_,module,exports){
+},{"./Path":29,"./Shared":32}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6158,7 +6682,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":31}],13:[function(_dereq_,module,exports){
+},{"./Shared":32}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6233,7 +6757,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":25,"./Shared":31}],14:[function(_dereq_,module,exports){
+},{"./Operation":26,"./Shared":32}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6247,7 +6771,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Document the methods in this mixin
 var ChainReactor = {
@@ -6299,7 +6823,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -6463,7 +6987,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":26}],17:[function(_dereq_,module,exports){
+},{"./Overload":27}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -6476,7 +7000,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -6611,7 +7135,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":26}],19:[function(_dereq_,module,exports){
+},{"./Overload":27}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -6972,7 +7496,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Sorting = {
@@ -7018,7 +7542,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -7434,7 +7958,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":26}],22:[function(_dereq_,module,exports){
+},{"./Overload":27}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Updating = {
@@ -7603,7 +8127,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 // Grab the view class
@@ -8034,7 +8558,7 @@ OldView.prototype._bindRemove = function (selector, options, successArr, failArr
 		}
 	}
 };
-},{"./Shared":31}],24:[function(_dereq_,module,exports){
+},{"./Shared":32}],25:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8737,7 +9261,7 @@ Db.prototype.oldViews = function () {
 
 Shared.finishModule('OldView');
 module.exports = OldView;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":31}],25:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":32}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8884,7 +9408,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":28,"./Shared":31}],26:[function(_dereq_,module,exports){
+},{"./Path":29,"./Shared":32}],27:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9044,7 +9568,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9282,7 +9806,7 @@ Db.prototype.overview = function (overviewName) {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":3,"./Document":8,"./Shared":31}],28:[function(_dereq_,module,exports){
+},{"./Collection":3,"./Document":8,"./Shared":32}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9695,7 +10219,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":31}],29:[function(_dereq_,module,exports){
+},{"./Shared":32}],30:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -10069,7 +10593,7 @@ Db.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":3,"./CollectionGroup":4,"./Shared":31,"localforage":40}],30:[function(_dereq_,module,exports){
+},{"./Collection":3,"./CollectionGroup":4,"./Shared":32,"localforage":41}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10131,11 +10655,11 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":31}],31:[function(_dereq_,module,exports){
+},{"./Shared":32}],32:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = {
-	version: '1.3.45',
+	version: '1.3.46',
 	modules: {},
 
 	_synth: {},
@@ -10270,7 +10794,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":26}],32:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Triggers":22,"./Mixin.Updating":23,"./Overload":27}],33:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10336,6 +10860,8 @@ DbInit = Db.prototype.init;
 Shared.synthesize(View.prototype, 'state');
 
 Shared.synthesize(View.prototype, 'name');
+
+Shared.synthesize(View.prototype, 'cursor');
 
 /**
  * Executes an insert against the view's underlying data-source.
@@ -10885,6 +11411,72 @@ View.prototype.orderBy = function (val) {
 };
 
 /**
+ * Gets / sets the page clause in the query options for the view.
+ * @param {Number=} val The page number to change to (zero index).
+ * @returns {*}
+ */
+View.prototype.page = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+
+		// Only execute a query options update if page has changed
+		if (val !== queryOptions.$page) {
+			queryOptions.$page = val;
+			this.queryOptions(queryOptions);
+		}
+
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$page;
+};
+
+/**
+ * Jump to the first page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageFirst = function () {
+	return this.page(0);
+};
+
+/**
+ * Jump to the last page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageLast = function () {
+	var pages = this.cursor().pages,
+		lastPage = pages !== undefined ? pages : 0;
+
+	return this.page(lastPage - 1);
+};
+
+/**
+ * Move forward or backwards in the data set pages by passing a positive
+ * or negative integer of the number of pages to move.
+ * @param {Number} val The number of pages to move.
+ * @returns {*}
+ */
+View.prototype.pageScan = function (val) {
+	if (val !== undefined) {
+		var pages = this.cursor().pages,
+			queryOptions = this.queryOptions() || {},
+			currentPage = queryOptions.$page !== undefined ? queryOptions.$page : 0;
+
+		currentPage += val;
+
+		if (currentPage < 0) {
+			currentPage = 0;
+		}
+
+		if (currentPage >= pages) {
+			currentPage = pages - 1;
+		}
+
+		return this.page(currentPage);
+	}
+};
+
+/**
  * Gets / sets the query options used when applying sorting etc to the
  * view data set.
  * @param {Object=} options An options object.
@@ -10932,13 +11524,20 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	if (this._from) {
-		var pubData = this.publicData();
+		var pubData = this.publicData(),
+			refreshResults;
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
 		pubData.remove();
 
-		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		refreshResults = this._from.find(this._querySettings.query, this._querySettings.options);
+		this.cursor(refreshResults.$cursor);
+
+		this._privateData.insert(refreshResults);
+
+		this._privateData._data.$cursor = refreshResults.$cursor;
+		pubData._data.$cursor = refreshResults.$cursor;
 
 		/*if (pubData._linked) {
 			// Update data and observers
@@ -10946,7 +11545,7 @@ View.prototype.refresh = function () {
 			// TODO: Shouldn't this data get passed into a transformIn first?
 			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
 			// TODO: Is this even required anymore? After commenting it all seems to work
-			// TODO: Might be worth setting up a test to check trasforms and linking then remove this if working?
+			// TODO: Might be worth setting up a test to check transforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}*/
 	}
@@ -11205,7 +11804,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":30,"./Shared":31}],33:[function(_dereq_,module,exports){
+},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":31,"./Shared":32}],34:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -11265,7 +11864,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],34:[function(_dereq_,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -11372,7 +11971,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":36}],35:[function(_dereq_,module,exports){
+},{"asap":37}],36:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -11554,7 +12153,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":34,"asap":36}],36:[function(_dereq_,module,exports){
+},{"./core.js":35,"asap":37}],37:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -11671,7 +12270,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":33}],37:[function(_dereq_,module,exports){
+},{"_process":34}],38:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -12086,7 +12685,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":35}],38:[function(_dereq_,module,exports){
+},{"promise":36}],39:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -12417,7 +13016,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":41,"promise":35}],39:[function(_dereq_,module,exports){
+},{"./../utils/serializer":42,"promise":36}],40:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -12835,7 +13434,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":41,"promise":35}],40:[function(_dereq_,module,exports){
+},{"./../utils/serializer":42,"promise":36}],41:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -13257,7 +13856,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":37,"./drivers/localstorage":38,"./drivers/websql":39,"promise":35}],41:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":38,"./drivers/localstorage":39,"./drivers/websql":40,"promise":36}],42:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 

@@ -1209,7 +1209,7 @@ Collection.prototype.deferEmit = function () {
 		this._changeTimeout = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
-		}, 100);
+		}, 1);
 	} else {
 		this.emit.apply(this, arguments);
 	}
@@ -1728,6 +1728,7 @@ Collection.prototype.find = function (query, options) {
 		elemMatchSpliceArr,
 		matcherTmpOptions = {},
 		result,
+		cursor = {},
 		matcher = function (doc) {
 			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
@@ -1794,7 +1795,32 @@ Collection.prototype.find = function (query, options) {
 			op.time('tableScan: ' + scanLength);
 		}
 
+		if (options.$page !== undefined && options.$limit !== undefined) {
+			// Record paging data
+			cursor.page = options.$page;
+			cursor.pages = Math.ceil(resultArr.length / options.$limit);
+			cursor.records = resultArr.length;
+
+			// Check if we actually need to apply the paging logic
+			if (options.$page && options.$limit > 0) {
+				op.data('cursor', cursor);
+
+				// Skip to the page specified based on limit
+				resultArr.splice(0, options.$page * options.$limit);
+			}
+		}
+
+		if (options.$skip) {
+			cursor.skip = options.$skip;
+
+			// Skip past the number of records specified
+			resultArr.splice(0, options.$skip);
+			op.data('skip', options.$skip);
+		}
+
 		if (options.$limit && resultArr && resultArr.length > options.$limit) {
+			cursor.limit = options.$limit;
+
 			resultArr.length = options.$limit;
 			op.data('limit', options.$limit);
 		}
@@ -2051,6 +2077,7 @@ Collection.prototype.find = function (query, options) {
 
 	op.stop();
 	resultArr.__fdbOp = op;
+	resultArr.$cursor = cursor;
 	return resultArr;
 };
 
@@ -7512,7 +7539,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.45',
+	version: '1.3.46',
 	modules: {},
 
 	_synth: {},

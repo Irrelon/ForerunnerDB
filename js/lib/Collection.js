@@ -1200,7 +1200,7 @@ Collection.prototype.deferEmit = function () {
 		this._changeTimeout = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
-		}, 100);
+		}, 1);
 	} else {
 		this.emit.apply(this, arguments);
 	}

@@ -1469,7 +1469,7 @@ Collection.prototype.deferEmit = function () {
 		this._changeTimeout = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
-		}, 100);
+		}, 1);
 	} else {
 		this.emit.apply(this, arguments);
 	}
@@ -1988,6 +1988,7 @@ Collection.prototype.find = function (query, options) {
 		elemMatchSpliceArr,
 		matcherTmpOptions = {},
 		result,
+		cursor = {},
 		matcher = function (doc) {
 			return self._match(doc, query, 'and', matcherTmpOptions);
 		};
@@ -2054,7 +2055,32 @@ Collection.prototype.find = function (query, options) {
 			op.time('tableScan: ' + scanLength);
 		}
 
+		if (options.$page !== undefined && options.$limit !== undefined) {
+			// Record paging data
+			cursor.page = options.$page;
+			cursor.pages = Math.ceil(resultArr.length / options.$limit);
+			cursor.records = resultArr.length;
+
+			// Check if we actually need to apply the paging logic
+			if (options.$page && options.$limit > 0) {
+				op.data('cursor', cursor);
+
+				// Skip to the page specified based on limit
+				resultArr.splice(0, options.$page * options.$limit);
+			}
+		}
+
+		if (options.$skip) {
+			cursor.skip = options.$skip;
+
+			// Skip past the number of records specified
+			resultArr.splice(0, options.$skip);
+			op.data('skip', options.$skip);
+		}
+
 		if (options.$limit && resultArr && resultArr.length > options.$limit) {
+			cursor.limit = options.$limit;
+
 			resultArr.length = options.$limit;
 			op.data('limit', options.$limit);
 		}
@@ -2311,6 +2337,7 @@ Collection.prototype.find = function (query, options) {
 
 	op.stop();
 	resultArr.__fdbOp = op;
+	resultArr.$cursor = cursor;
 	return resultArr;
 };
 
@@ -7398,7 +7425,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.45',
+	version: '1.3.46',
 	modules: {},
 
 	_synth: {},
@@ -7599,6 +7626,8 @@ DbInit = Db.prototype.init;
 Shared.synthesize(View.prototype, 'state');
 
 Shared.synthesize(View.prototype, 'name');
+
+Shared.synthesize(View.prototype, 'cursor');
 
 /**
  * Executes an insert against the view's underlying data-source.
@@ -8148,6 +8177,72 @@ View.prototype.orderBy = function (val) {
 };
 
 /**
+ * Gets / sets the page clause in the query options for the view.
+ * @param {Number=} val The page number to change to (zero index).
+ * @returns {*}
+ */
+View.prototype.page = function (val) {
+	if (val !== undefined) {
+		var queryOptions = this.queryOptions() || {};
+
+		// Only execute a query options update if page has changed
+		if (val !== queryOptions.$page) {
+			queryOptions.$page = val;
+			this.queryOptions(queryOptions);
+		}
+
+		return this;
+	}
+
+	return (this.queryOptions() || {}).$page;
+};
+
+/**
+ * Jump to the first page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageFirst = function () {
+	return this.page(0);
+};
+
+/**
+ * Jump to the last page in the data set.
+ * @returns {*}
+ */
+View.prototype.pageLast = function () {
+	var pages = this.cursor().pages,
+		lastPage = pages !== undefined ? pages : 0;
+
+	return this.page(lastPage - 1);
+};
+
+/**
+ * Move forward or backwards in the data set pages by passing a positive
+ * or negative integer of the number of pages to move.
+ * @param {Number} val The number of pages to move.
+ * @returns {*}
+ */
+View.prototype.pageScan = function (val) {
+	if (val !== undefined) {
+		var pages = this.cursor().pages,
+			queryOptions = this.queryOptions() || {},
+			currentPage = queryOptions.$page !== undefined ? queryOptions.$page : 0;
+
+		currentPage += val;
+
+		if (currentPage < 0) {
+			currentPage = 0;
+		}
+
+		if (currentPage >= pages) {
+			currentPage = pages - 1;
+		}
+
+		return this.page(currentPage);
+	}
+};
+
+/**
  * Gets / sets the query options used when applying sorting etc to the
  * view data set.
  * @param {Object=} options An options object.
@@ -8195,13 +8290,20 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	if (this._from) {
-		var pubData = this.publicData();
+		var pubData = this.publicData(),
+			refreshResults;
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
 		pubData.remove();
 
-		this._privateData.insert(this._from.find(this._querySettings.query, this._querySettings.options));
+		refreshResults = this._from.find(this._querySettings.query, this._querySettings.options);
+		this.cursor(refreshResults.$cursor);
+
+		this._privateData.insert(refreshResults);
+
+		this._privateData._data.$cursor = refreshResults.$cursor;
+		pubData._data.$cursor = refreshResults.$cursor;
 
 		/*if (pubData._linked) {
 			// Update data and observers
@@ -8209,7 +8311,7 @@ View.prototype.refresh = function () {
 			// TODO: Shouldn't this data get passed into a transformIn first?
 			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
 			// TODO: Is this even required anymore? After commenting it all seems to work
-			// TODO: Might be worth setting up a test to check trasforms and linking then remove this if working?
+			// TODO: Might be worth setting up a test to check transforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}*/
 	}
