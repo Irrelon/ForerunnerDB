@@ -375,14 +375,35 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
  * @returns {*}
  */
 Collection.prototype.unGrid = View.prototype.unGrid = function (selector, template, options) {
-	if (this._db && this._db._grid ) {
-		if (this._db._grid[selector]) {
-			var grid = this._db._grid[selector];
-			delete this._db._grid[selector];
+	var i,
+		grid;
 
-			return grid.drop();
+	if (this._db && this._db._grid ) {
+		if (selector && template) {
+			if (this._db._grid[selector]) {
+				grid = this._db._grid[selector];
+				delete this._db._grid[selector];
+
+				return grid.drop();
+			} else {
+				throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+			}
 		} else {
-			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+			// No parameters passed, remove all grids from this module
+			for (i in this._db._grid) {
+				if (this._db._grid.hasOwnProperty(i)) {
+					grid = this._db._grid[i];
+					delete this._db._grid[i];
+
+					grid.drop();
+
+					if (this.debug()) {
+						console.log('ForerunnerDB.Collection/View "' + this.name() + '": Removed grid binding "' + i + '"');
+					}
+				}
+			}
+
+			this._db._grid = {};
 		}
 	}
 };
@@ -423,42 +444,6 @@ Collection.prototype._removeGrid = CollectionGroup.prototype._removeGrid = View.
 Db.prototype.init = function () {
 	this._grid = {};
 	DbInit.apply(this, arguments);
-};
-
-/**
- * Gets a grid by it's name.
- * @param {String} selector The jQuery selector of the grid to retrieve.
- * @param {String} template The table template to use when rendering the grid.
- * @param {Object=} options The options object to apply to the grid.
- * @returns {*}
- */
-Db.prototype.grid = function (selector, template, options) {
-	if (!this._grid[selector]) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Db.Grid: Creating grid ' + selector);
-		}
-	}
-
-	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
-	return this._grid[selector];
-};
-
-/**
- * Gets a grid by it's name.
- * @param {String} selector The jQuery selector of the grid to retrieve.
- * @param {String} template The table template to use when rendering the grid.
- * @param {Object=} options The options object to apply to the grid.
- * @returns {*}
- */
-Db.prototype.unGrid = function (selector, template, options) {
-	if (!this._grid[selector]) {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Db.Grid: Creating grid ' + selector);
-		}
-	}
-
-	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
-	return this._grid[selector];
 };
 
 /**
