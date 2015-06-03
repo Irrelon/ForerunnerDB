@@ -827,7 +827,7 @@ View.prototype.transform = function (obj) {
  * @returns {Array}
  */
 View.prototype.filter = function (query, func, options) {
-	return ((this.publicData())(query, options)).filter(func);
+	return (this.publicData()).filter(query, func, options);
 };
 
 /**
