@@ -818,6 +818,19 @@ View.prototype.transform = function (obj) {
 };
 
 /**
+ * Executes a method against each document that matches query and returns an
+ * array of documents that may have been modified by the method.
+ * @param {Object} query The query object.
+ * @param {Function} func The method that each document is passed to. If this method
+ * returns false for a particular document it is excluded from the results.
+ * @param {Object=} options Optional options object.
+ * @returns {Array}
+ */
+View.prototype.filter = function (query, func, options) {
+	return ((this.publicData())(query, options)).filter(func);
+};
+
+/**
  * Returns the non-transformed data the view holds as a collection
  * reference.
  * @return {Collection} The non-transformed collection reference.
