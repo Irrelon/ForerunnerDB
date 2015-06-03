@@ -2079,3 +2079,38 @@ QUnit.test('Collection.update() :: Use $overwrite to set a property value', func
 
 	base.dbDown();
 });
+
+QUnit.test('Collection.filterUpdate() :: Use filter update to calculate and update values in documents', function () {
+	"use strict";
+	base.dbUp();
+
+	var coll = db.collection('test'),
+		result;
+
+	coll.setData([{
+		amount: 1
+	}, {
+		amount: 2
+	}, {
+		amount: 3
+	}]);
+
+	result = coll.find();
+
+	strictEqual(result[0].amount, 1, 'Data exists as expected before update');
+	strictEqual(result[1].amount, 2, 'Data exists as expected before update');
+	strictEqual(result[2].amount, 3, 'Data exists as expected before update');
+
+	coll.filterUpdate({}, function (data) {
+		data.amount *= 2;
+		return data;
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].amount, 2, 'Data exists as expected after update');
+	strictEqual(result[1].amount, 4, 'Data exists as expected after update');
+	strictEqual(result[2].amount, 6, 'Data exists as expected after update');
+
+	base.dbDown();
+});
