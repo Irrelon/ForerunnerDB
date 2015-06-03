@@ -490,6 +490,39 @@ Collection.prototype.filter = function (query, func, options) {
 };
 
 /**
+ * Executes a method against each document that matches query and then executes
+ * an update based on the return data of the method.
+ * @param {Object} query The query object.
+ * @param {Function} func The method that each document is passed to. If this method
+ * returns false for a particular document it is excluded from the update.
+ * @param {Object=} options Optional options object passed to the initial find call.
+ * @returns {Array}
+ */
+Collection.prototype.filterUpdate = function (query, func, options) {
+	var items = this.find(query, options),
+		results = [],
+		singleItem,
+		singleQuery,
+		singleUpdate,
+		pk = this.primaryKey(),
+		i;
+
+	for (i = 0; i < items.length; i++) {
+		singleItem = items[i];
+		singleUpdate = func(singleItem);
+
+		if (singleUpdate) {
+			singleQuery = {};
+			singleQuery[pk] = singleItem[pk];
+
+			results.push(this.update(singleQuery, singleUpdate));
+		}
+	}
+
+	return results;
+};
+
+/**
  * Modifies an existing document or documents in a collection. This will update
  * all matches for 'query' with the data held in 'update'. It will not overwrite
  * the matched documents with the update document.
