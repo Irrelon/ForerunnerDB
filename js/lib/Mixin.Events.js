@@ -53,7 +53,7 @@ var Events = {
 					delete this._listeners[event][listener];
 				}
 			} else {
-				if (event in this._listeners) {
+				if (this._listeners && event in this._listeners) {
 					arr = this._listeners[event]['*'];
 					index = arr.indexOf(listener);
 
