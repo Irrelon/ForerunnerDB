@@ -754,6 +754,19 @@ Collection.prototype.upsert = function (obj, callback) {
 };
 
 /**
+ * Executes a method against each document that matches query and returns an
+ * array of documents that may have been modified by the method.
+ * @param {Object} query The query object.
+ * @param {Function} func The method that each document is passed to. If this method
+ * returns false for a particular document it is excluded from the results.
+ * @param {Object=} options Optional options object.
+ * @returns {Array}
+ */
+Collection.prototype.filter = function (query, func, options) {
+	return (this.find(query, options)).filter(func);
+};
+
+/**
  * Modifies an existing document or documents in a collection. This will update
  * all matches for 'query' with the data held in 'update'. It will not overwrite
  * the matched documents with the update document.
@@ -5105,14 +5118,35 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
  * @returns {*}
  */
 Collection.prototype.unGrid = View.prototype.unGrid = function (selector, template, options) {
-	if (this._db && this._db._grid ) {
-		if (this._db._grid[selector]) {
-			var grid = this._db._grid[selector];
-			delete this._db._grid[selector];
+	var i,
+		grid;
 
-			return grid.drop();
+	if (this._db && this._db._grid ) {
+		if (selector && template) {
+			if (this._db._grid[selector]) {
+				grid = this._db._grid[selector];
+				delete this._db._grid[selector];
+
+				return grid.drop();
+			} else {
+				throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+			}
 		} else {
-			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+			// No parameters passed, remove all grids from this module
+			for (i in this._db._grid) {
+				if (this._db._grid.hasOwnProperty(i)) {
+					grid = this._db._grid[i];
+					delete this._db._grid[i];
+
+					grid.drop();
+
+					if (this.debug()) {
+						console.log('ForerunnerDB.Collection/View "' + this.name() + '": Removed grid binding "' + i + '"');
+					}
+				}
+			}
+
+			this._db._grid = {};
 		}
 	}
 };
@@ -5156,6 +5190,15 @@ Db.prototype.init = function () {
 };
 
 /**
+ * Determine if a grid with the passed name already exists.
+ * @param {String} selector The jQuery selector to bind the grid to.
+ * @returns {boolean}
+ */
+Db.prototype.gridExists = function (selector) {
+	return Boolean(this._grid[selector]);
+};
+
+/**
  * Gets a grid by it's name.
  * @param {String} selector The jQuery selector of the grid to retrieve.
  * @param {String} template The table template to use when rendering the grid.
@@ -5189,15 +5232,6 @@ Db.prototype.unGrid = function (selector, template, options) {
 
 	this._grid[selector] = this._grid[selector] || new Grid(selector, template, options).db(this);
 	return this._grid[selector];
-};
-
-/**
- * Determine if a grid with the passed name already exists.
- * @param {String} selector The jQuery selector to bind the grid to.
- * @returns {boolean}
- */
-Db.prototype.gridExists = function (selector) {
-	return Boolean(this._grid[selector]);
 };
 
 /**
@@ -10659,7 +10693,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.46',
+	version: '1.3.47',
 	modules: {},
 
 	_synth: {},
@@ -11612,6 +11646,19 @@ View.prototype.transform = function (obj) {
 		dataIn: this._transformIn,
 		dataOut: this._transformOut
 	};
+};
+
+/**
+ * Executes a method against each document that matches query and returns an
+ * array of documents that may have been modified by the method.
+ * @param {Object} query The query object.
+ * @param {Function} func The method that each document is passed to. If this method
+ * returns false for a particular document it is excluded from the results.
+ * @param {Object=} options Optional options object.
+ * @returns {Array}
+ */
+View.prototype.filter = function (query, func, options) {
+	return ((this.publicData())(query, options)).filter(func);
 };
 
 /**

@@ -486,6 +486,19 @@ Collection.prototype.upsert = function (obj, callback) {
 };
 
 /**
+ * Executes a method against each document that matches query and returns an
+ * array of documents that may have been modified by the method.
+ * @param {Object} query The query object.
+ * @param {Function} func The method that each document is passed to. If this method
+ * returns false for a particular document it is excluded from the results.
+ * @param {Object=} options Optional options object.
+ * @returns {Array}
+ */
+Collection.prototype.filter = function (query, func, options) {
+	return (this.find(query, options)).filter(func);
+};
+
+/**
  * Modifies an existing document or documents in a collection. This will update
  * all matches for 'query' with the data held in 'update'. It will not overwrite
  * the matched documents with the update document.
@@ -6847,7 +6860,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.46',
+	version: '1.3.47',
 	modules: {},
 
 	_synth: {},

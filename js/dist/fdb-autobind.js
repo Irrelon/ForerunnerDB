@@ -193,7 +193,9 @@ AutoBind.extendCollection = function (Module) {
 					return this;
 				}
 
-				console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+				if (this.debug()) {
+					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+				}
 			} else {
 				// No parameters passed, unlink all from this module
 				for (i in this._links) {
@@ -716,7 +718,9 @@ AutoBind.extendDocument = function (Module) {
 					return this;
 				}
 
-				console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+				if (this.debug()) {
+					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+				}
 			} else {
 				// No parameters passed, unlink all from this module
 				for (i in this._links) {
