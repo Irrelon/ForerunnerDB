@@ -5355,11 +5355,21 @@ var ChainReactor = {
 	chainSend: function (type, data, options) {
 		if (this._chain) {
 			var arr = this._chain,
+				arrItem,
 				count = arr.length,
 				index;
 
 			for (index = 0; index < count; index++) {
-				arr[index].chainReceive(this, type, data, options);
+				arrItem = arr[index];
+
+				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
+					arrItem.chainReceive(this, type, data, options);
+				} else {
+					console.log('Reactor Data:', type, data, options);
+					console.log('Reactor Node:', arrItem);
+					throw('Chain reactor attempting to send data to target reactor node that is in a dropped state!');
+				}
+
 			}
 		}
 	},
@@ -7471,7 +7481,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.50',
+	version: '1.3.51',
 	modules: {},
 
 	_synth: {},
