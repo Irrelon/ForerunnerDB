@@ -4490,6 +4490,25 @@ Shared = _dereq_('./Shared');
 	};
 
 	/**
+	 * Gets the document's data returned as a single object.
+	 * @param {Object} query The query object - currently unused, just
+	 * provide a blank object e.g. {}
+	 * @param {Object=} options An options object.
+	 * @returns {Object} The document's data object.
+	 */
+	Document.prototype.find = function (query, options) {
+		var result;
+
+		if (options && options.$decouple === false) {
+			result = this._data;
+		} else {
+			result = this.decouple(this._data);
+		}
+
+		return result;
+	};
+
+	/**
 	 * Modifies the document. This will update the document with the data held in 'update'.
 	 *
 	 * @param {Object} query The query that must be matched for a document to be
@@ -9885,7 +9904,7 @@ module.exports = Rest;
 "use strict";
 
 var Shared = {
-	version: '1.3.49',
+	version: '1.3.50',
 	modules: {},
 
 	_synth: {},

@@ -7585,7 +7585,7 @@ module.exports = ReactorIO;
 "use strict";
 
 var Shared = {
-	version: '1.3.49',
+	version: '1.3.50',
 	modules: {},
 
 	_synth: {},
