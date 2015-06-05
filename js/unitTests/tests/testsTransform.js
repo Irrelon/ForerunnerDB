@@ -83,7 +83,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 					_id: data._id,
 					moo: data.foo,
 					goo: data.foo + 1
-				}
+				};
 			}
 		});
 
