@@ -233,5 +233,26 @@ Db.prototype.overview = function (overviewName) {
 	}
 };
 
+/**
+ * Returns an array of overviews the DB currently has.
+ * @returns {Array} An array of objects containing details of each overview
+ * the database is currently managing.
+ */
+Db.prototype.overviews = function () {
+	var arr = [],
+		i;
+
+	for (i in this._overview) {
+		if (this._overview.hasOwnProperty(i)) {
+			arr.push({
+				name: i,
+				count: this._overview[i].count()
+			});
+		}
+	}
+
+	return arr;
+};
+
 Shared.finishModule('Overview');
 module.exports = Overview;
