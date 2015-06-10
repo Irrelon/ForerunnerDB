@@ -243,7 +243,7 @@ module.exports = function(grunt) {
 		fixFile('fdb-legacy.js');
 	});
 
-	grunt.registerTask('copy', 'Copy final minified files to test lib.', function () {
+	grunt.registerTask('copy', 'Copy final minified files to other folders.', function () {
 		var fs = require('fs-extra');
 
 		var copyFile = function (file) {
@@ -252,7 +252,12 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./js/unitTests/lib/' + file);
 			}
 
+			if (fs.existsSync('./chrome-extension/js/' + file)) {
+				fs.unlinkSync('./chrome-extension/js/' + file);
+			}
+
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
+			fs.copySync('./js/dist/' + file, './chrome-extension/js/' + file);
 		};
 
 		copyFile('fdb-all.min.js');

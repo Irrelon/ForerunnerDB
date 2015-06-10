@@ -4082,10 +4082,12 @@ Core.prototype.db = function (name) {
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each database
- * that ForerunnerDB is currently managing.
+ * that ForerunnerDB is currently managing and it's child entities.
  */
 Core.prototype.databases = function (search) {
 	var arr = [],
+		tmpObj,
+		addDb,
 		i;
 
 	if (search) {
@@ -4097,18 +4099,69 @@ Core.prototype.databases = function (search) {
 
 	for (i in this._db) {
 		if (this._db.hasOwnProperty(i)) {
+			addDb = true;
+
 			if (search) {
-				if (search.exec(i)) {
-					arr.push({
-						name: i,
-						collectionCount: this._db[i].collections().length
+				if (!search.exec(i)) {
+					addDb = false;
+				}
+			}
+
+			if (addDb) {
+				tmpObj = {
+					name: i,
+					children: []
+				};
+
+				if (this.shared.moduleExists('Collection')) {
+					tmpObj.children.push({
+						module: 'collection',
+						moduleName: 'Collections',
+						count: this._db[i].collections().length
 					});
 				}
-			} else {
-				arr.push({
-					name: i,
-					collectionCount: this._db[i].collections().length
-				});
+
+				if (this.shared.moduleExists('CollectionGroup')) {
+					tmpObj.children.push({
+						module: 'collectionGroup',
+						moduleName: 'Collection Groups',
+						count: this._db[i].collectionGroups().length
+					});
+				}
+
+				if (this.shared.moduleExists('Document')) {
+					tmpObj.children.push({
+						module: 'document',
+						moduleName: 'Documents',
+						count: this._db[i].documents().length
+					});
+				}
+
+				if (this.shared.moduleExists('Grid')) {
+					tmpObj.children.push({
+						module: 'grid',
+						moduleName: 'Grids',
+						count: this._db[i].grids().length
+					});
+				}
+
+				if (this.shared.moduleExists('Overview')) {
+					tmpObj.children.push({
+						module: 'overview',
+						moduleName: 'Overviews',
+						count: this._db[i].overviews().length
+					});
+				}
+
+				if (this.shared.moduleExists('View')) {
+					tmpObj.children.push({
+						module: 'view',
+						moduleName: 'Views',
+						count: this._db[i].views().length
+					});
+				}
+
+				arr.push(tmpObj);
 			}
 		}
 	}

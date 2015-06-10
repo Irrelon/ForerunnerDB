@@ -1,18 +1,21 @@
 <html>
 <head>
-	<link rel="stylesheet" href="./css/bootstrap.min.css">
-	<link rel="stylesheet" href="./css/bootstrap-theme.min.css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap.min.css">
+	<link rel="stylesheet" href="./bootstrap/css/bootstrap-theme.min.css">
 	<link rel="stylesheet" href="./css/bootstrap-treeview.css">
 	<link href="./css/default.css" rel="stylesheet" type="text/css"/>
 
 	<script src="./js/jquery-2.1.4.min.js"></script>
-	<script src="./js/bootstrap.min.js"></script>
+	<script src="./bootstrap/js/bootstrap.min.js"></script>
 	<script src="./js/bootstrap-treeview.js"></script>
 
-	<script src="./panel.js"></script>
+	<script src="./js/fdb-all.js"></script>
+	<script src="./js/fdb-autobind.js"></script>
+
+	<script src="./js/jsrender-helpers.js"></script>
 </head>
 <body>
-<div role="tabpanel">
+<div role="tabpanel" class="fill absolute">
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs" role="tablist">
 		<li role="presentation" class="active"><a href="#local" aria-controls="local" role="tab" data-toggle="tab">Local</a></li>
@@ -20,16 +23,18 @@
 	</ul>
 
 	<!-- Tab panes -->
-	<div class="tab-content scrolling">
-		<div role="tabpanel" class="tab-pane active" id="local">
-			<div class="container-fluid margin-top-10 scrolling">
+	<div class="tab-content fill absolute top-50">
+		<div role="tabpanel" class="tab-pane active fill absolute" id="local">
+			<div class="container-fluid">
 				<div class="row">
-					<div class="col-sm-4">
+					<div class="col-sm-4 scrolling">
 						<div class="btn btn-primary" id="refreshDatabaseTree"><span class="glyphicon glyphicon-refresh"></span> Refresh</div>
 						<div id="tree"></div>
 					</div>
-					<div class="col-sm-8">
-						Collection detail
+					<div id="dataContent" class="col-sm-8 scrolling" style="left: inherit;">
+						<div id="dataView">
+							Use the left tree to select an item to display it's details here.
+						</div>
 					</div>
 				</div>
 			</div>
@@ -40,5 +45,45 @@
 		</div>
 	</div>
 </div>
+<script type="text/x-jsrender" id="dataViewTable">
+	<div class="searchResults">
+		<div class="">
+			<div class="btn btn-info pageFirst"><span class="glyphicon glyphicon-fast-backward"></span></div>
+			<div class="btn btn-warning pagePrev"><span class="glyphicon glyphicon-step-backward"></span></div>
+			<div class="btn btn-warning pageNext"><span class="glyphicon glyphicon-step-forward"></span></div>
+			<div class="btn btn-info pageLast"><span class="glyphicon glyphicon-fast-forward"></span></div>
+		</div>
+		<div class="">
+			<div class="itemCount">Found {^{:records}} Items (Page {^{:page}} of {^{:pages}})</div>
+		</div>
+		<div class="clearfix"></div>
+	</div>
+
+	<table class="table fixed">
+		<thead>
+			<tr>
+				<th>Key</th>
+				<th>Value</th>
+				<th>Type</th>
+			</tr>
+		</thead>
+		<tbody>
+		{^{for items}}
+			{^{for ~getFields(#data, 0) tmpl="#dataViewTableObj" /}}
+		{{/for}}
+		</tbody>
+	</table>
+</script>
+<script type="text/x-jsrender" id="dataViewTableObj">
+	<tr data-link="class{:indent === 0 ? 'objectStart' : ''}">
+		<td>{^{for ~forVal(0, indent)}}<span class="indent"></span>{{/for}}{^{if expandable}}<span class="caret"></span>&nbsp;{{/if}}{^{:key}}</td>
+		<td class="ellipsis">{^{:value}}</td>
+		<td>{^{:type}}</td>
+	</tr>
+	{^{if expanded && children}}
+		{^{for ~getFields(children, indent + 1) tmpl="#dataViewTableObj" /}}
+	{{/if}}
+</script>
+<script src="./panel.js"></script>
 </body>
 </html>
