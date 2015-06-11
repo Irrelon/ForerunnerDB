@@ -431,7 +431,7 @@ FdbDocument.prototype.drop = function () {
 Db.prototype.document = function (documentName) {
 	if (documentName) {
 		this._document = this._document || {};
-		this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
+		this._document[documentName] = this._document[documentName] || new FdbDocument(documentName).db(this);
 		return this._document[documentName];
 	} else {
 		// Return an object of document data
