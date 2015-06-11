@@ -19,8 +19,11 @@ a UK registered company.
 </table>
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL JavaScript database with a query language based on MongoDB
-and runs on browsers and Node.js.
+ForerunnerDB is a NoSQL JavaScript database with a query language loosly based on
+MongoDB (with some differences) and runs on browsers and Node.js.
+
+##### ForerunnerDB & MongoDB
+Please see the [#](differences from MongoDB) section for more information.
 
 ## What is ForerunnerDB's Primary Use Case?
 ForerunnerDB was created primarily to allow web application developers to easily
@@ -1937,6 +1940,25 @@ object but you do not want it to affect the outcome of the query.
 			'someProp': 134223
 		}
 	});
+
+# Differences Between ForerunnerDB and MongoDB
+Developers familiar with the MongoDB query language will find ForerunnerDB quite similar
+however there are some fundamental differences that you should be aware of when writing
+queries for ForerunnerDB.
+
+> An update is being worked on that will allow a MongoDB emulation mode flag to be set
+to force ForerunnerDB to behave exactly like MongoDB when running find and update
+operations. For backward compatibility we cannot enable this by default or simply
+change default operation of CRUD calls.
+
+## find
+ForerunnerDB uses objects instead of dot notation to match fields. See issue #43 for more
+information. The reason we do this is for performance.
+
+## update
+ForerunnerDB runs an update rather than a replace against documents that match the query
+clause. You can think about ForerunnerDB's update operations as having been automatically
+wrapped in the MonogDB $set operator.
 
 # Development
 
