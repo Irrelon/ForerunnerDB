@@ -33,6 +33,8 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		options.$rootData = options.$rootData || {};
+
 		// Check if the comparison data are both strings or numbers
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
@@ -48,7 +50,6 @@ var Matching = {
 					matchedAll = false;
 				}
 			}
-
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
@@ -332,18 +333,18 @@ var Matching = {
 
 			case '$distinct':
 				// Ensure options holds a distinct lookup
-				options.$rootQuery['//distinctLookup'] = options.$rootQuery['//distinctLookup'] || {};
+				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
 
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootQuery['//distinctLookup'][distinctProp] = options.$rootQuery['//distinctLookup'][distinctProp] || {};
+						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
 
 							// Allow the item in the results
 							return true;
