@@ -8,6 +8,13 @@ var Shared,
 
 Shared = require('./Shared');
 
+/**
+ * Creates a new collection group. Collection groups allow single operations to be
+ * propagated to multiple collections at once. CRUD operations against a collection
+ * group are in fed to the group's collections. Useful when separating out slightly
+ * different data into multiple collections but querying as one collection.
+ * @constructor
+ */
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
 };

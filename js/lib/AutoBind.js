@@ -4,12 +4,21 @@
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements
  * from jsViews (jsRender) templates.
+ * @class AutoBind
  */
+
 var Shared = window.ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
 Shared.addModule('AutoBind', AutoBind);
+
+/**
+ * Extends the Collection class with new binding capabilities.
+ * @extends Collection
+ * @param {Collection} Module The Collection class module.
+ * @private
+ */
 AutoBind.extendCollection = function (Module) {
 	var superInit = Module.prototype.init,
 		superDataReplace = Module.prototype._dataReplace,
@@ -480,6 +489,12 @@ AutoBind.extendCollection = function (Module) {
 	};
 };
 
+/**
+ * Extends the View class with new binding capabilities.
+ * @extends View
+ * @param {View} Module The View class module.
+ * @private
+ */
 AutoBind.extendView = function (Module) {
 	var superInit = Module.prototype.init;
 
@@ -528,6 +543,12 @@ AutoBind.extendView = function (Module) {
 	};
 };
 
+/**
+ * Extends the Overview class with new binding capabilities.
+ * @extends Overview
+ * @param {Overview} Module The Overview class module.
+ * @private
+ */
 AutoBind.extendOverview = function (Module) {
 	Module.prototype.isLinked = function () {
 		return this.data().isLinked();
@@ -559,6 +580,12 @@ AutoBind.extendOverview = function (Module) {
 	};
 };
 
+/**
+ * Extends the Document class with new binding capabilities.
+ * @extends Document
+ * @param {Document} Module The Document class module.
+ * @private
+ */
 AutoBind.extendDocument = function (Module) {
 	Module.prototype.isLinked = function () {
 		return Boolean(this._linked);

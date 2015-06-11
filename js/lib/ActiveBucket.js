@@ -1,14 +1,11 @@
 "use strict";
 
+var Shared = require('./Shared');
+
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- */
-var Shared = require('./Shared');
-
-/**
- * The active bucket class.
  * @param {object} orderBy An order object.
  * @constructor
  */

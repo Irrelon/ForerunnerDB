@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Shared.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Shared.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+/**
+ * A shared object that can be used to store arbitrary data between class
+ * instances, and access helper methods.
+ * @mixin
+ */
+var Shared = {
+	version: '1.3.51',
+	modules: {},
+
+	_synth: {},
+
+	/**
+	 * Adds a module to ForerunnerDB.
+	 * @memberof Shared
+	 * @param {String} name The name of the module.
+	 * @param {Function} module The module class.
+	 */
+	addModule: function (name, module) {
+		this.modules[name] = module;
+		this.emit('moduleLoad', [name, module]);
+	},
+
+	/**
+	 * Called by the module once all processing has been completed. Used to determine
+	 * if the module is ready for use by other modules.
+	 * @memberof Shared
+	 * @param {String} name The name of the module.
+	 */
+	finishModule: function (name) {
+		if (this.modules[name]) {
+			this.modules[name]._fdbFinished = true;
+			this.emit('moduleFinished', [name, this.modules[name]]);
+		} else {
+			throw('ForerunnerDB.Shared: finishModule called on a module that has not been registered with addModule(): ' + name);
+		}
+	},
+
+	/**
+	 * Will call your callback method when the specified module has loaded. If the module
+	 * is already loaded the callback is called immediately.
+	 * @memberof Shared
+	 * @param {String} name The name of the module.
+	 * @param {Function} callback The callback method to call when the module is loaded.
+	 */
+	moduleFinished: function (name, callback) {
+		if (this.modules[name] &amp;&amp; this.modules[name]._fdbFinished) {
+			if (callback) { callback(name, this.modules[name]); }
+		} else {
+			this.on('moduleFinished', callback);
+		}
+	},
+
+	/**
+	 * Determines if a module has been added to ForerunnerDB or not.
+	 * @memberof Shared
+	 * @param {String} name The name of the module.
+	 * @returns {Boolean} True if the module exists or false if not.
+	 */
+	moduleExists: function (name) {
+		return Boolean(this.modules[name]);
+	},
+
+	/**
+	 * Adds the properties and methods defined in the mixin to the passed object.
+	 * @memberof Shared
+	 * @param {Object} obj The target object to add mixin key/values to.
+	 * @param {String} mixinName The name of the mixin to add to the object.
+	 */
+	mixin: function (obj, mixinName) {
+		var system = this.mixins[mixinName];
+
+		if (system) {
+			for (var i in system) {
+				if (system.hasOwnProperty(i)) {
+					obj[i] = system[i];
+				}
+			}
+		} else {
+			throw('ForerunnerDB.Shared: Cannot find mixin named: ' + mixinName);
+		}
+	},
+
+	/**
+	 * Generates a generic getter/setter method for the passed method name.
+	 * @memberof Shared
+	 * @param {Object} obj The object to add the getter/setter to.
+	 * @param {String} name The name of the getter/setter to generate.
+	 * @param {Function=} extend A method to call before executing the getter/setter.
+	 * The existing getter/setter can be accessed from the extend method via the
+	 * $super e.g. this.$super();
+	 */
+	synthesize: function (obj, name, extend) {
+		this._synth[name] = this._synth[name] || function (val) {
+			if (val !== undefined) {
+				this['_' + name] = val;
+				return this;
+			}
+
+			return this['_' + name];
+		};
+
+		if (extend) {
+			var self = this;
+
+			obj[name] = function () {
+				var tmp = this.$super,
+					ret;
+
+				this.$super = self._synth[name];
+				ret = extend.apply(this, arguments);
+				this.$super = tmp;
+
+				return ret;
+			};
+		} else {
+			obj[name] = this._synth[name];
+		}
+	},
+
+	/**
+	 * Allows a method to be overloaded.
+	 * @memberof Shared
+	 * @param arr
+	 * @returns {Function}
+	 * @constructor
+	 */
+	overload: require('./Overload'),
+
+	/**
+	 * Define the mixins that other modules can use as required.
+	 * @memberof Shared
+	 */
+	mixins: {
+		'Mixin.Common': require('./Mixin.Common'),
+		'Mixin.Events': require('./Mixin.Events'),
+		'Mixin.ChainReactor': require('./Mixin.ChainReactor'),
+		'Mixin.CRUD': require('./Mixin.CRUD'),
+		'Mixin.Constants': require('./Mixin.Constants'),
+		'Mixin.Triggers': require('./Mixin.Triggers'),
+		'Mixin.Sorting': require('./Mixin.Sorting'),
+		'Mixin.Matching': require('./Mixin.Matching'),
+		'Mixin.Updating': require('./Mixin.Updating')
+	}
+};
+
+// Add event handling to shared
+Shared.mixin(Shared, 'Mixin.Events');
+
+module.exports = Shared;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

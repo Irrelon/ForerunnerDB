@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Mixin.Updating.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Mixin.Updating.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+var Updating = {
+	/**
+	 * Updates a property on an object.
+	 * @param {Object} doc The object whose property is to be updated.
+	 * @param {String} prop The property to update.
+	 * @param {*} val The new value of the property.
+	 * @private
+	 */
+	_updateProperty: function (doc, prop, val) {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Setting non-data-bound document property "' + prop + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Increments a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to increment by.
+	 * @private
+	 */
+	_updateIncrement: function (doc, prop, val) {
+		doc[prop] += val;
+	},
+
+	/**
+	 * Changes the index of an item in the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} indexFrom The index to move the item from.
+	 * @param {Number} indexTo The index to move the item to.
+	 * @private
+	 */
+	_updateSpliceMove: function (arr, indexFrom, indexTo) {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Mixin.Updating: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for "' + this.name() + '"');
+		}
+	},
+
+	/**
+	 * Inserts an item into the passed array at the specified index.
+	 * @param {Array} arr The array to insert into.
+	 * @param {Number} index The index to insert at.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updateSplicePush: function (arr, index, doc) {
+		if (arr.length > index) {
+			arr.splice(index, 0, doc);
+		} else {
+			arr.push(doc);
+		}
+	},
+
+	/**
+	 * Inserts an item at the end of an array.
+	 * @param {Array} arr The array to insert the item into.
+	 * @param {Object} doc The document to insert.
+	 * @private
+	 */
+	_updatePush: function (arr, doc) {
+		arr.push(doc);
+	},
+
+	/**
+	 * Removes an item from the passed array.
+	 * @param {Array} arr The array to modify.
+	 * @param {Number} index The index of the item in the array to remove.
+	 * @private
+	 */
+	_updatePull: function (arr, index) {
+		arr.splice(index, 1);
+	},
+
+	/**
+	 * Multiplies a value for a property on a document by the passed number.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to modify.
+	 * @param {Number} val The amount to multiply by.
+	 * @private
+	 */
+	_updateMultiply: function (doc, prop, val) {
+		doc[prop] *= val;
+	},
+
+	/**
+	 * Renames a property on a document to the passed property.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to rename.
+	 * @param {Number} val The new property name.
+	 * @private
+	 */
+	_updateRename: function (doc, prop, val) {
+		doc[val] = doc[prop];
+		delete doc[prop];
+	},
+
+	/**
+	 * Sets a property on a document to the passed value.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @param {*} val The new property value.
+	 * @private
+	 */
+	_updateOverwrite: function (doc, prop, val) {
+		doc[prop] = val;
+	},
+
+	/**
+	 * Deletes a property on a document.
+	 * @param {Object} doc The document to modify.
+	 * @param {String} prop The property to delete.
+	 * @private
+	 */
+	_updateUnset: function (doc, prop) {
+		delete doc[prop];
+	},
+
+	/**
+	 * Removes all properties from an object without destroying
+	 * the object instance, thereby maintaining data-bound linking.
+	 * @param {Object} doc The parent object to modify.
+	 * @param {String} prop The name of the child object to clear.
+	 * @private
+	 */
+	_updateClear: function (doc, prop) {
+		var obj = doc[prop],
+			i;
+
+		if (obj &amp;&amp; typeof obj === 'object') {
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					this._updateUnset(obj, i);
+				}
+			}
+		}
+	},
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	_updatePop: function (doc, val) {
+		var updated = false;
+
+		if (doc.length > 0) {
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
+			}
+		}
+
+		return updated;
+	}
+};
+
+module.exports = Updating;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

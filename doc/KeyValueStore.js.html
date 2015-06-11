@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: KeyValueStore.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: KeyValueStore.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+var Shared = require('./Shared');
+
+/**
+ * The key value store class used when storing basic in-memory KV data,
+ * and can be queried for quick retrieval. Mostly used for collection
+ * primary key indexes and lookups.
+ * @param {String=} name Optional KV store name.
+ * @constructor
+ */
+var KeyValueStore = function (name) {
+	this.init.apply(this, arguments);
+};
+
+KeyValueStore.prototype.init = function (name) {
+	this._name = name;
+	this._data = {};
+	this._primaryKey = '_id';
+};
+
+Shared.addModule('KeyValueStore', KeyValueStore);
+Shared.mixin(KeyValueStore.prototype, 'Mixin.ChainReactor');
+
+/**
+ * Get / set the name of the key/value store.
+ * @param {String} val The name to set.
+ * @returns {*}
+ */
+Shared.synthesize(KeyValueStore.prototype, 'name');
+
+/**
+ * Get / set the primary key.
+ * @param {String} key The key to set.
+ * @returns {*}
+ */
+KeyValueStore.prototype.primaryKey = function (key) {
+	if (key !== undefined) {
+		this._primaryKey = key;
+		return this;
+	}
+
+	return this._primaryKey;
+};
+
+/**
+ * Removes all data from the store.
+ * @returns {*}
+ */
+KeyValueStore.prototype.truncate = function () {
+	this._data = {};
+	return this;
+};
+
+/**
+ * Sets data against a key in the store.
+ * @param {String} key The key to set data for.
+ * @param {*} value The value to assign to the key.
+ * @returns {*}
+ */
+KeyValueStore.prototype.set = function (key, value) {
+	this._data[key] = value ? value : true;
+	return this;
+};
+
+/**
+ * Gets data stored for the passed key.
+ * @param {String} key The key to get data for.
+ * @returns {*}
+ */
+KeyValueStore.prototype.get = function (key) {
+	return this._data[key];
+};
+
+/**
+ * Get / set the primary key.
+ * @param {*} obj A lookup query, can be a string key, an array of string keys,
+ * an object with further query clauses or a regular expression that should be
+ * run against all keys.
+ * @returns {*}
+ */
+KeyValueStore.prototype.lookup = function (obj) {
+	var pKeyVal = obj[this._primaryKey],
+		arrIndex,
+		arrCount,
+		lookupItem,
+		result;
+
+	if (pKeyVal instanceof Array) {
+		// An array of primary keys, find all matches
+		arrCount = pKeyVal.length;
+		result = [];
+
+		for (arrIndex = 0; arrIndex &lt; arrCount; arrIndex++) {
+			lookupItem = this._data[pKeyVal[arrIndex]];
+
+			if (lookupItem) {
+				result.push(lookupItem);
+			}
+		}
+
+		return result;
+	} else if (pKeyVal instanceof RegExp) {
+		// Create new data
+		result = [];
+
+		for (arrIndex in this._data) {
+			if (this._data.hasOwnProperty(arrIndex)) {
+				if (pKeyVal.test(arrIndex)) {
+					result.push(this._data[arrIndex]);
+				}
+			}
+		}
+
+		return result;
+	} else if (typeof pKeyVal === 'object') {
+		// The primary key clause is an object, now we have to do some
+		// more extensive searching
+		if (pKeyVal.$ne) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (arrIndex !== pKeyVal.$ne) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$in &amp;&amp; (pKeyVal.$in instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (pKeyVal.$in.indexOf(arrIndex) > -1) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$nin &amp;&amp; (pKeyVal.$nin instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (pKeyVal.$nin.indexOf(arrIndex) === -1) {
+						result.push(this._data[arrIndex]);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		if (pKeyVal.$or &amp;&amp; (pKeyVal.$or instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex = 0; arrIndex &lt; pKeyVal.$or.length; arrIndex++) {
+				result = result.concat(this.lookup(pKeyVal.$or[arrIndex]));
+			}
+
+			return result;
+		}
+	} else {
+		// Key is a basic lookup from string
+		lookupItem = this._data[pKeyVal];
+
+		if (lookupItem !== undefined) {
+			return [lookupItem];
+		} else {
+			return [];
+		}
+	}
+};
+
+/**
+ * Removes data for the given key from the store.
+ * @param {String} key The key to un-set.
+ * @returns {*}
+ */
+KeyValueStore.prototype.unSet = function (key) {
+	delete this._data[key];
+	return this;
+};
+
+/**
+ * Sets data for the give key in the store only where the given key
+ * does not already have a value in the store.
+ * @param {String} key The key to set data for.
+ * @param {*} value The value to assign to the key.
+ * @returns {Boolean} True if data was set or false if data already
+ * exists for the key.
+ */
+KeyValueStore.prototype.uniqueSet = function (key, value) {
+	if (this._data[key] === undefined) {
+		this._data[key] = value;
+		return true;
+	}
+
+	return false;
+};
+
+Shared.finishModule('KeyValueStore');
+module.exports = KeyValueStore;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

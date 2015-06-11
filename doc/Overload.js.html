@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Overload.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Overload.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+/**
+ * Allows a method to accept overloaded calls with different parameters controlling
+ * which passed overload function is called.
+ * @param {Object} def
+ * @returns {Function}
+ * @constructor
+ */
+var Overload = function (def) {
+	if (def) {
+		var self = this,
+			index,
+			count,
+			tmpDef,
+			defNewKey,
+			sigIndex,
+			signatures;
+
+		if (!(def instanceof Array)) {
+			tmpDef = {};
+
+			// Def is an object, make sure all prop names are devoid of spaces
+			for (index in def) {
+				if (def.hasOwnProperty(index)) {
+					defNewKey = index.replace(/ /g, '');
+
+					// Check if the definition array has a * string in it
+					if (defNewKey.indexOf('*') === -1) {
+						// No * found
+						tmpDef[defNewKey] = def[index];
+					} else {
+						// A * was found, generate the different signatures that this
+						// definition could represent
+						signatures = this.generateSignaturePermutations(defNewKey);
+
+						for (sigIndex = 0; sigIndex &lt; signatures.length; sigIndex++) {
+							if (!tmpDef[signatures[sigIndex]]) {
+								tmpDef[signatures[sigIndex]] = def[index];
+							}
+						}
+					}
+				}
+			}
+
+			def = tmpDef;
+		}
+
+		return function () {
+			var arr = [],
+				lookup,
+				type;
+
+			// Check if we are being passed a key/function object or an array of functions
+			if (def instanceof Array) {
+				// We were passed an array of functions
+				count = def.length;
+				for (index = 0; index &lt; count; index++) {
+					if (def[index].length === arguments.length) {
+						return self.callExtend(this, '$main', def, def[index], arguments);
+					}
+				}
+			} else {
+				// Generate lookup key from arguments
+				// Copy arguments to an array
+				for (index = 0; index &lt; arguments.length; index++) {
+					type = typeof arguments[index];
+
+					// Handle detecting arrays
+					if (type === 'object' &amp;&amp; arguments[index] instanceof Array) {
+						type = 'array';
+					}
+
+					// Handle been presented with a single undefined argument
+					if (arguments.length === 1 &amp;&amp; type === 'undefined') {
+						break;
+					}
+
+					// Add the type to the argument types array
+					arr.push(type);
+				}
+
+				lookup = arr.join(',');
+
+				// Check for an exact lookup match
+				if (def[lookup]) {
+					return self.callExtend(this, '$main', def, def[lookup], arguments);
+				} else {
+					for (index = arr.length; index >= 0; index--) {
+						// Get the closest match
+						lookup = arr.slice(0, index).join(',');
+
+						if (def[lookup + ',...']) {
+							// Matched against arguments + "any other"
+							return self.callExtend(this, '$main', def, def[lookup + ',...'], arguments);
+						}
+					}
+				}
+			}
+
+			throw('ForerunnerDB.Overload "' + this.name() + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
+		};
+	}
+
+	return function () {};
+};
+
+/**
+ * Generates an array of all the different definition signatures that can be
+ * created from the passed string with a catch-all wildcard *. E.g. it will
+ * convert the signature: string,*,string to all potentials:
+ * string,string,string
+ * string,number,string
+ * string,object,string,
+ * string,function,string,
+ * string,undefined,string
+ *
+ * @param {String} str Signature string with a wildcard in it.
+ * @returns {Array} An array of signature strings that are generated.
+ */
+Overload.prototype.generateSignaturePermutations = function (str) {
+	var signatures = [],
+		newSignature,
+		types = ['string', 'object', 'number', 'function', 'undefined'],
+		index;
+
+	if (str.indexOf('*') > -1) {
+		// There is at least one "any" type, break out into multiple keys
+		// We could do this at query time with regular expressions but
+		// would be significantly slower
+		for (index = 0; index &lt; types.length; index++) {
+			newSignature = str.replace('*', types[index]);
+			signatures = signatures.concat(this.generateSignaturePermutations(newSignature));
+		}
+	} else {
+		signatures.push(str);
+	}
+
+	return signatures;
+};
+
+Overload.prototype.callExtend = function (context, prop, propContext, func, args) {
+	var tmp,
+		ret;
+
+	if (context &amp;&amp; propContext[prop]) {
+		tmp = context[prop];
+
+		context[prop] = propContext[prop];
+		ret = func.apply(context, args);
+		context[prop] = tmp;
+
+		return ret;
+	} else {
+		return func.apply(context, args);
+	}
+};
+
+module.exports = Overload;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

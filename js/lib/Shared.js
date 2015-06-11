@@ -1,5 +1,10 @@
 "use strict";
 
+/**
+ * A shared object that can be used to store arbitrary data between class
+ * instances, and access helper methods.
+ * @mixin
+ */
 var Shared = {
 	version: '1.3.51',
 	modules: {},
@@ -8,6 +13,7 @@ var Shared = {
 
 	/**
 	 * Adds a module to ForerunnerDB.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} module The module class.
 	 */
@@ -19,6 +25,7 @@ var Shared = {
 	/**
 	 * Called by the module once all processing has been completed. Used to determine
 	 * if the module is ready for use by other modules.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 */
 	finishModule: function (name) {
@@ -33,6 +40,7 @@ var Shared = {
 	/**
 	 * Will call your callback method when the specified module has loaded. If the module
 	 * is already loaded the callback is called immediately.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} callback The callback method to call when the module is loaded.
 	 */
@@ -46,6 +54,7 @@ var Shared = {
 
 	/**
 	 * Determines if a module has been added to ForerunnerDB or not.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @returns {Boolean} True if the module exists or false if not.
 	 */
@@ -55,6 +64,7 @@ var Shared = {
 
 	/**
 	 * Adds the properties and methods defined in the mixin to the passed object.
+	 * @memberof Shared
 	 * @param {Object} obj The target object to add mixin key/values to.
 	 * @param {String} mixinName The name of the mixin to add to the object.
 	 */
@@ -74,6 +84,7 @@ var Shared = {
 
 	/**
 	 * Generates a generic getter/setter method for the passed method name.
+	 * @memberof Shared
 	 * @param {Object} obj The object to add the getter/setter to.
 	 * @param {String} name The name of the getter/setter to generate.
 	 * @param {Function=} extend A method to call before executing the getter/setter.
@@ -110,6 +121,7 @@ var Shared = {
 
 	/**
 	 * Allows a method to be overloaded.
+	 * @memberof Shared
 	 * @param arr
 	 * @returns {Function}
 	 * @constructor
@@ -118,6 +130,7 @@ var Shared = {
 
 	/**
 	 * Define the mixins that other modules can use as required.
+	 * @memberof Shared
 	 */
 	mixins: {
 		'Mixin.Common': require('./Mixin.Common'),

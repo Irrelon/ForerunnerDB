@@ -1,5 +1,8 @@
 "use strict";
 
+/**
+ * @mixin
+ */
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;

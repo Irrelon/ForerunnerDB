@@ -10,6 +10,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks("grunt-browserify");
 	grunt.loadNpmTasks('grunt-qunit-blanket-lcov');
 	grunt.loadNpmTasks('grunt-umd');
+	grunt.loadNpmTasks('grunt-jsdoc');
 
 	grunt.initConfig({
 		"jshint": {
@@ -23,6 +24,15 @@ module.exports = function(grunt) {
 			},
 			options: {
 				jshintrc: '.jshintrc'
+			}
+		},
+
+		jsdoc : {
+			all : {
+				src: ['./js/lib/*.js'],
+				options: {
+					destination: './doc'
+				}
 			}
 		},
 
@@ -400,7 +410,8 @@ module.exports = function(grunt) {
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
 	grunt.registerTask("3: Build And Test", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit_blanket_lcov", "qunit"]);
-	grunt.registerTask("4: Build, Test and Increment Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("4: Generate JSDoc", ["jsdoc"]);
+	//grunt.registerTask("4: Build, Test and Increment Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("5: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
 	grunt.registerTask("6: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
 	grunt.registerTask("7: NPM Publish", ["npmPublish"]);

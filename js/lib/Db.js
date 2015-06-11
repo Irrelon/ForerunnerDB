@@ -1,13 +1,3 @@
-/*
- License
-
- Copyright (c) 2015 Irrelon Software Limited
- http://www.irrelon.com
- http://www.forerunnerdb.com
-
- Please visit the license page to see latest license information:
- http://www.forerunnerdb.com/licensing.html
- */
 "use strict";
 
 var Shared,
@@ -21,7 +11,7 @@ Shared = require('./Shared');
 Overload = require('./Overload');
 
 /**
- * The main ForerunnerDB db object.
+ * Creates a new ForerunnerDB database instance.
  * @constructor
  */
 var Db = function (name) {
@@ -38,6 +28,8 @@ Db.prototype.init = function (name) {
 Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -63,6 +55,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -86,6 +80,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.
@@ -354,6 +350,8 @@ Db.prototype.peekCat = function (search) {
 Db.prototype.drop = new Overload({
 	/**
 	 * Drops the database.
+	 * @func drop
+	 * @memberof Db
 	 */
 	'': function () {
 		if (this._state !== 'dropped') {
@@ -377,7 +375,9 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
@@ -411,7 +411,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional persistent storage drop. Persistent
+	 * storage is dropped by default if no preference is provided.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
@@ -436,7 +439,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database and optionally controls dropping persistent storage
+	 * and callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 * @param {Function} callback Optional callback method.
 	 */
@@ -472,6 +478,7 @@ Db.prototype.drop = new Overload({
 
 /**
  * Gets a database instance by name.
+ * @memberof Core
  * @param {String=} name Optional name of the database. If none is provided
  * a random name is assigned.
  * @returns {Db}
@@ -487,6 +494,7 @@ Core.prototype.db = function (name) {
 
 /**
  * Returns an array of databases that ForerunnerDB currently has.
+ * @memberof Core
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each database

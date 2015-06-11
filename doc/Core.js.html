@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Core.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Core.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>/*
+ License
+
+ Copyright (c) 2015 Irrelon Software Limited
+ http://www.irrelon.com
+ http://www.forerunnerdb.com
+
+ Please visit the license page to see latest license information:
+ http://www.forerunnerdb.com/licensing.html
+ */
+"use strict";
+
+var Shared,
+	Db,
+	Metrics,
+	Overload;
+
+Shared = require('./Shared');
+Overload = require('./Overload');
+
+/**
+ * Creates a new ForerunnerDB instance. Core instances handle the lifecycle of
+ * multiple database instances.
+ * @constructor
+ */
+var Core = function (name) {
+	this.init.apply(this, arguments);
+};
+
+Core.prototype.init = function () {
+	this._db = {};
+	this._debug = {};
+};
+
+Core.prototype.moduleLoaded = new Overload({
+	/**
+	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Core
+	 * @param {String} moduleName The name of the module to check for.
+	 * @returns {Boolean} True if the module is loaded, false if not.
+	 */
+	'string': function (moduleName) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index &lt; modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} callback The callback method to call if module is loaded.
+	 */
+	'string, function': function (moduleName, callback) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index &lt; modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					return false;
+				}
+			}
+
+			callback();
+		}
+	},
+
+	/**
+	 * Checks if a module is loaded and if so calls the passed
+	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Core
+	 * @param {String} moduleName The name of the module to check for.
+	 * @param {Function} success The callback method to call if module is loaded.
+	 * @param {Function} failure The callback method to call if module not loaded.
+	 */
+	'string, function, function': function (moduleName, success, failure) {
+		if (moduleName !== undefined) {
+			moduleName = moduleName.replace(/ /g, '');
+
+			var modules = moduleName.split(','),
+				index;
+
+			for (index = 0; index &lt; modules.length; index++) {
+				if (!Shared.modules[modules[index]]) {
+					failure();
+					return false;
+				}
+			}
+
+			success();
+		}
+	}
+});
+
+/**
+ * Checks version against the string passed and if it matches (or partially matches)
+ * then the callback is called.
+ * @param {String} val The version to check against.
+ * @param {Function} callback The callback to call if match is true.
+ * @returns {Boolean}
+ */
+Core.prototype.version = function (val, callback) {
+	if (val !== undefined) {
+		if (Shared.version.indexOf(val) === 0) {
+			if (callback) { callback(); }
+			return true;
+		}
+
+		return false;
+	}
+
+	return Shared.version;
+};
+
+// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+Core.moduleLoaded = Core.prototype.moduleLoaded;
+
+// Expose version method to non-instantiated object ForerunnerDB
+Core.version = Core.prototype.version;
+
+// Provide public access to the Shared object
+Core.shared = Shared;
+Core.prototype.shared = Shared;
+
+Shared.addModule('Core', Core);
+Shared.mixin(Core.prototype, 'Mixin.Common');
+Shared.mixin(Core.prototype, 'Mixin.Constants');
+
+Db = require('./Db.js');
+Metrics = require('./Metrics.js');
+
+Core.prototype._isServer = false;
+
+/**
+ * Returns true if ForerunnerDB is running on a client browser.
+ * @returns {boolean}
+ */
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Returns true if ForerunnerDB is running on a server.
+ * @returns {boolean}
+ */
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a browser.
+ */
+Core.prototype.isClient = function () {
+	return !this._isServer;
+};
+
+/**
+ * Checks if the database is running on a client (browser) or
+ * a server (node.js).
+ * @returns {Boolean} Returns true if running on a server.
+ */
+Core.prototype.isServer = function () {
+	return this._isServer;
+};
+
+/**
+ * Added to provide an error message for users who have not seen
+ * the new instantiation breaking change warning and try to get
+ * a collection directly from the core instance.
+ */
+Core.prototype.collection = function () {
+	throw("ForerunnerDB's instantiation has changed since version 1.3.36 to support multiple database instances. Please see the readme.md file for the minor change you have to make to get your project back up and running, or see the issue related to this change at https://github.com/Irrelon/ForerunnerDB/issues/44");
+};
+
+module.exports = Core;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

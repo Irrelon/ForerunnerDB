@@ -1,6 +1,13 @@
 "use strict";
-// TODO: Document the methods in this mixin
+/**
+ * The chain reactor mixin, provides a class with chain reaction capabilities.
+ * @mixin
+ */
 var ChainReactor = {
+	/**
+	 *
+	 * @param obj
+	 */
 	chain: function (obj) {
 		this._chain = this._chain || [];
 		var index = this._chain.indexOf(obj);

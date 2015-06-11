@@ -124,6 +124,8 @@ using. For instance to use a property called "name" as the primary key field:
 
 	var collection = db.collection('collectionName', {primaryKey: 'name'});
 
+You can also read or specify a primary key after instantiation via the primaryKey() method.
+
 ### Other Patterns
 
 The *collection()* method accepts a number of argument patterns including passing the

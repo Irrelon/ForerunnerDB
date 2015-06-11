@@ -1,10 +1,5 @@
 "use strict";
 
-/**
- * The main collection class. Collections store multiple documents and
- * can operate on them using the query language to insert, read, update
- * and delete.
- */
 var Shared,
 	Db,
 	Metrics,
@@ -19,7 +14,8 @@ var Shared,
 Shared = require('./Shared');
 
 /**
- * Collection object used to store data.
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
  * @constructor
  */
 var Collection = function (name) {
@@ -1290,7 +1286,7 @@ Collection.prototype.processQueue = function (type, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -1313,7 +1309,7 @@ Collection.prototype.insert = function (data, index, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -2799,6 +2795,14 @@ Collection.prototype.diff = function (collection) {
 };
 
 Collection.prototype.collateAdd = new Overload({
+	/**
+	 * Adds a data source to collate data from and specifies the
+	 * key name to collate data to.
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {String} keyName The name of the key to collate data to.
+	 */
 	'object, string': function (collection, keyName) {
 		var self = this;
 
@@ -2843,6 +2847,15 @@ Collection.prototype.collateAdd = new Overload({
 		});
 	},
 
+	/**
+	 * Adds a data source to collate data from and specifies a process
+	 * method that will handle the collation functionality (for custom
+	 * collation).
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {Function} process The process method.
+	 */
 	'object, function': function (collection, process) {
 		if (typeof collection === 'string') {
 			// The collection passed is a name, not a reference so get
@@ -2887,6 +2900,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
 	 */
@@ -2897,6 +2912,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @returns {Collection}
 	 */
@@ -2909,6 +2926,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -2924,6 +2943,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
@@ -2937,6 +2958,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -2951,8 +2974,10 @@ Db.prototype.collection = new Overload({
 	},
 
 	/**
-	 * The main handler method. This get's called by all the other variants and
+	 * The main handler method. This gets called by all the other variants and
 	 * handles the actual logic of the overloaded method.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {*}
 	 */
@@ -2989,6 +3014,7 @@ Db.prototype.collection = new Overload({
 
 /**
  * Determine if a collection with the passed name already exists.
+ * @memberof Db
  * @param {String} viewName The name of the collection to check for.
  * @returns {boolean}
  */
@@ -2998,6 +3024,7 @@ Db.prototype.collectionExists = function (viewName) {
 
 /**
  * Returns an array of collections the DB currently has.
+ * @memberof Db
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each collection

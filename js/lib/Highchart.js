@@ -312,6 +312,8 @@ Collection.prototype.init = function () {
 Collection.prototype.pieChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func pieChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -332,6 +334,8 @@ Collection.prototype.pieChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func pieChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} keyField The field to use as the data key.
 	 * @param {String} valField The field to use as the data value.
@@ -358,6 +362,8 @@ Collection.prototype.pieChart = new Overload({
 Collection.prototype.lineChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func lineChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -378,6 +384,8 @@ Collection.prototype.lineChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func lineChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -404,6 +412,8 @@ Collection.prototype.lineChart = new Overload({
 Collection.prototype.areaChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func areaChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -424,6 +434,8 @@ Collection.prototype.areaChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func areaChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -450,6 +462,8 @@ Collection.prototype.areaChart = new Overload({
 Collection.prototype.columnChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func columnChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -470,6 +484,8 @@ Collection.prototype.columnChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func columnChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -496,6 +512,8 @@ Collection.prototype.columnChart = new Overload({
 Collection.prototype.barChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func barChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -516,6 +534,8 @@ Collection.prototype.barChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func barChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -542,6 +562,8 @@ Collection.prototype.barChart = new Overload({
 Collection.prototype.stackedBarChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func stackedBarChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -566,6 +588,8 @@ Collection.prototype.stackedBarChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func stackedBarChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -587,6 +611,7 @@ Collection.prototype.stackedBarChart = new Overload({
 
 /**
  * Removes a chart from the page by it's selector.
+ * @memberof Collection
  * @param {String} selector The chart selector.
  */
 Collection.prototype.dropChart = function (selector) {

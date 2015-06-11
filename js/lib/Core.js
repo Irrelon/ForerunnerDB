@@ -19,7 +19,8 @@ Shared = require('./Shared');
 Overload = require('./Overload');
 
 /**
- * The main ForerunnerDB core object.
+ * Creates a new ForerunnerDB instance. Core instances handle the lifecycle of
+ * multiple database instances.
  * @constructor
  */
 var Core = function (name) {
@@ -34,6 +35,8 @@ Core.prototype.init = function () {
 Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -59,6 +62,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -82,6 +87,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.

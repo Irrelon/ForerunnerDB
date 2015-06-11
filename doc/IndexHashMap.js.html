@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: IndexHashMap.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: IndexHashMap.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
+
+var Shared = require('./Shared'),
+	Path = require('./Path');
+
+/**
+ * The index class used to instantiate hash map indexes that the database can
+ * use to speed up queries on collections and views.
+ * @constructor
+ */
+var IndexHashMap = function () {
+	this.init.apply(this, arguments);
+};
+
+IndexHashMap.prototype.init = function (keys, options, collection) {
+	this._crossRef = {};
+	this._size = 0;
+	this._id = this._itemKeyHash(keys, keys);
+
+	this.data({});
+	this.unique(options &amp;&amp; options.unique ? options.unique : false);
+
+	if (keys !== undefined) {
+		this.keys(keys);
+	}
+
+	if (collection !== undefined) {
+		this.collection(collection);
+	}
+
+	this.name(options &amp;&amp; options.name ? options.name : this._id);
+};
+
+Shared.addModule('IndexHashMap', IndexHashMap);
+Shared.mixin(IndexHashMap.prototype, 'Mixin.ChainReactor');
+
+IndexHashMap.prototype.id = function () {
+	return this._id;
+};
+
+IndexHashMap.prototype.state = function () {
+	return this._state;
+};
+
+IndexHashMap.prototype.size = function () {
+	return this._size;
+};
+
+Shared.synthesize(IndexHashMap.prototype, 'data');
+Shared.synthesize(IndexHashMap.prototype, 'name');
+Shared.synthesize(IndexHashMap.prototype, 'collection');
+Shared.synthesize(IndexHashMap.prototype, 'type');
+Shared.synthesize(IndexHashMap.prototype, 'unique');
+
+IndexHashMap.prototype.keys = function (val) {
+	if (val !== undefined) {
+		this._keys = val;
+
+		// Count the keys
+		this._keyCount = (new Path()).parse(this._keys).length;
+		return this;
+	}
+
+	return this._keys;
+};
+
+IndexHashMap.prototype.rebuild = function () {
+	// Do we have a collection?
+	if (this._collection) {
+		// Get sorted data
+		var collection = this._collection.subset({}, {
+				$decouple: false,
+				$orderBy: this._keys
+			}),
+			collectionData = collection.find(),
+			dataIndex,
+			dataCount = collectionData.length;
+
+		// Clear the index data for the index
+		this._data = {};
+
+		if (this._unique) {
+			this._uniqueLookup = {};
+		}
+
+		// Loop the collection data
+		for (dataIndex = 0; dataIndex &lt; dataCount; dataIndex++) {
+			this.insert(collectionData[dataIndex]);
+		}
+	}
+
+	this._state = {
+		name: this._name,
+		keys: this._keys,
+		indexSize: this._size,
+		built: new Date(),
+		updated: new Date(),
+		ok: true
+	};
+};
+
+IndexHashMap.prototype.insert = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash,
+		itemHashArr,
+		hashIndex;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		this._uniqueLookup[uniqueHash] = dataItem;
+	}
+
+	// Generate item hash
+	itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+	// Get the path search results and store them
+	for (hashIndex = 0; hashIndex &lt; itemHashArr.length; hashIndex++) {
+		this.pushToPathValue(itemHashArr[hashIndex], dataItem);
+	}
+};
+
+IndexHashMap.prototype.remove = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash,
+		itemHashArr,
+		hashIndex;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		delete this._uniqueLookup[uniqueHash];
+	}
+
+	// Generate item hash
+	itemHashArr = this._itemHashArr(dataItem, this._keys);
+
+	// Get the path search results and store them
+	for (hashIndex = 0; hashIndex &lt; itemHashArr.length; hashIndex++) {
+		this.pullFromPathValue(itemHashArr[hashIndex], dataItem);
+	}
+};
+
+IndexHashMap.prototype.violation = function (dataItem) {
+	// Generate item hash
+	var uniqueHash = this._itemHash(dataItem, this._keys);
+
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+IndexHashMap.prototype.hashViolation = function (uniqueHash) {
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+IndexHashMap.prototype.pushToPathValue = function (hash, obj) {
+	var pathValArr = this._data[hash] = this._data[hash] || [];
+
+	// Make sure we have not already indexed this object at this path/value
+	if (pathValArr.indexOf(obj) === -1) {
+		// Index the object
+		pathValArr.push(obj);
+
+		// Record the reference to this object in our index size
+		this._size++;
+
+		// Cross-reference this association for later lookup
+		this.pushToCrossRef(obj, pathValArr);
+	}
+};
+
+IndexHashMap.prototype.pullFromPathValue = function (hash, obj) {
+	var pathValArr = this._data[hash],
+		indexOfObject;
+
+	// Make sure we have already indexed this object at this path/value
+	indexOfObject = pathValArr.indexOf(obj);
+
+	if (indexOfObject > -1) {
+		// Un-index the object
+		pathValArr.splice(indexOfObject, 1);
+
+		// Record the reference to this object in our index size
+		this._size--;
+
+		// Remove object cross-reference
+		this.pullFromCrossRef(obj, pathValArr);
+	}
+
+	// Check if we should remove the path value array
+	if (!pathValArr.length) {
+		// Remove the array
+		delete this._data[hash];
+	}
+};
+
+IndexHashMap.prototype.pull = function (obj) {
+	// Get all places the object has been used and remove them
+	var id = obj[this._collection.primaryKey()],
+		crossRefArr = this._crossRef[id],
+		arrIndex,
+		arrCount = crossRefArr.length,
+		arrItem;
+
+	for (arrIndex = 0; arrIndex &lt; arrCount; arrIndex++) {
+		arrItem = crossRefArr[arrIndex];
+
+		// Remove item from this index lookup array
+		this._pullFromArray(arrItem, obj);
+	}
+
+	// Record the reference to this object in our index size
+	this._size--;
+
+	// Now remove the cross-reference entry for this object
+	delete this._crossRef[id];
+};
+
+IndexHashMap.prototype._pullFromArray = function (arr, obj) {
+	var arrCount = arr.length;
+
+	while (arrCount--) {
+		if (arr[arrCount] === obj) {
+			arr.splice(arrCount, 1);
+		}
+	}
+};
+
+IndexHashMap.prototype.pushToCrossRef = function (obj, pathValArr) {
+	var id = obj[this._collection.primaryKey()],
+		crObj;
+
+	this._crossRef[id] = this._crossRef[id] || [];
+
+	// Check if the cross-reference to the pathVal array already exists
+	crObj = this._crossRef[id];
+
+	if (crObj.indexOf(pathValArr) === -1) {
+		// Add the cross-reference
+		crObj.push(pathValArr);
+	}
+};
+
+IndexHashMap.prototype.pullFromCrossRef = function (obj, pathValArr) {
+	var id = obj[this._collection.primaryKey()];
+
+	delete this._crossRef[id];
+};
+
+IndexHashMap.prototype.lookup = function (query) {
+	return this._data[this._itemHash(query, this._keys)] || [];
+};
+
+IndexHashMap.prototype.match = function (query, options) {
+	// Check if the passed query has data in the keys our index
+	// operates on and if so, is the query sort matching our order
+	var pathSolver = new Path();
+	var indexKeyArr = pathSolver.parseArr(this._keys),
+		queryArr = pathSolver.parseArr(query),
+		matchedKeys = [],
+		matchedKeyCount = 0,
+		i;
+
+	// Loop the query array and check the order of keys against the
+	// index key array to see if this index can be used
+	for (i = 0; i &lt; indexKeyArr.length; i++) {
+		if (queryArr[i] === indexKeyArr[i]) {
+			matchedKeyCount++;
+			matchedKeys.push(queryArr[i]);
+		} else {
+			// Query match failed - this is a hash map index so partial key match won't work
+			return {
+				matchedKeys: [],
+				totalKeyCount: queryArr.length,
+				score: 0
+			};
+		}
+	}
+
+	return {
+		matchedKeys: matchedKeys,
+		totalKeyCount: queryArr.length,
+		score: matchedKeyCount
+	};
+
+	//return pathSolver.countObjectPaths(this._keys, query);
+};
+
+IndexHashMap.prototype._itemHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k &lt; pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.value(item, pathData[k].path).join(':');
+	}
+
+	return hash;
+};
+
+IndexHashMap.prototype._itemKeyHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k &lt; pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.keyValue(item, pathData[k].path);
+	}
+
+	return hash;
+};
+
+IndexHashMap.prototype._itemHashArr = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		//hash = '',
+		hashArr = [],
+		valArr,
+		i, k, j;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k &lt; pathData.length; k++) {
+		valArr = path.value(item, pathData[k].path);
+
+		for (i = 0; i &lt; valArr.length; i++) {
+			if (k === 0) {
+				// Setup the initial hash array
+				hashArr.push(valArr[i]);
+			} else {
+				// Loop the hash array and concat the value to it
+				for (j = 0; j &lt; hashArr.length; j++) {
+					hashArr[j] = hashArr[j] + '_' + valArr[i];
+				}
+			}
+		}
+	}
+
+	return hashArr;
+};
+
+Shared.finishModule('IndexHashMap');
+module.exports = IndexHashMap;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 10:54:02 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
