@@ -1952,7 +1952,7 @@ operations. For backward compatibility we cannot enable this by default or simpl
 change default operation of CRUD calls.
 
 ## find
-ForerunnerDB uses objects instead of dot notation to match fields. See issue #43 for more
+ForerunnerDB uses objects instead of dot notation to match fields. See issue [#43](https://github.com/irrelon/ForerunnerDB/issues/43) for more
 information. The reason we do this is for performance.
 
 ## update
