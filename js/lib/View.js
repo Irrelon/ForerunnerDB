@@ -561,17 +561,19 @@ View.prototype.queryRemove = function (obj, refresh) {
 	var query = this._querySettings.query,
 		i;
 
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				delete query[i];
+	if (query) {
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					delete query[i];
+				}
 			}
 		}
-	}
 
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
 	}
 };
 
