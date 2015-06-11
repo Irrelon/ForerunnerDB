@@ -23,7 +23,7 @@ ForerunnerDB is a NoSQL JavaScript database with a query language loosly based o
 MongoDB (with some differences) and runs on browsers and Node.js.
 
 ##### ForerunnerDB & MongoDB
-Please see the [#differences-between-forerunnerdb-and-mongodb](differences from MongoDB) section for more information.
+Please see the [differences from MongoDB](#differences-between-forerunnerdb-and-mongodb) section for more information.
 
 ## What is ForerunnerDB's Primary Use Case?
 ForerunnerDB was created primarily to allow web application developers to easily
