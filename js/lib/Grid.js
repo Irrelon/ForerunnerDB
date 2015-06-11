@@ -13,46 +13,10 @@ var Shared,
 //Shared = ForerunnerDB.shared;
 Shared = require('./Shared');
 
-/*
-// As this is a separate module, use the external loader flow
-if (typeof jQuery !== 'undefined') {
-	// Define modules that we wish to work on (or wait for to load)
-	var modules = ['Collection', 'View'],
-		loaded = [],
-		moduleIndex;
-
-	// Extend modules that are finished loading
-	for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-		Shared.moduleFinished(modules[moduleIndex], function (name, module) {
-			switch (name) {
-				case 'Collection':
-					Collection = module;
-					loaded.push(name);
-					break;
-
-				case 'View':
-					View = module;
-					loaded.push(name);
-					break;
-
-				default:
-					break;
-			}
-
-			if (loaded.length === modules.length) {
-				gridInit();
-			}
-		});
-	}
-
-	Shared.finishModule('AutoBind');
-} else {
-	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
-}
-*/
-
 /**
- * The grid constructor.
+ * Creates a new grid instance.
+ * @name Grid
+ * @class Grid
  * @param {String} selector jQuery selector.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
@@ -92,15 +56,26 @@ DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
+ * @func state
+ * @memberof Grid
  * @param {String=} val The name of the state to set.
- * @returns {*}
+ * @returns {Grid}
  */
 Shared.synthesize(Grid.prototype, 'state');
 
+/**
+ * Gets / sets the current name.
+ * @func name
+ * @memberof Grid
+ * @param {String=} val The name to set.
+ * @returns {Grid}
+ */
 Shared.synthesize(Grid.prototype, 'name');
 
 /**
  * Executes an insert against the grid's underlying data-source.
+ * @func insert
+ * @memberof Grid
  */
 Grid.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
@@ -108,6 +83,8 @@ Grid.prototype.insert = function () {
 
 /**
  * Executes an update against the grid's underlying data-source.
+ * @func update
+ * @memberof Grid
  */
 Grid.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
@@ -115,6 +92,8 @@ Grid.prototype.update = function () {
 
 /**
  * Executes an updateById against the grid's underlying data-source.
+ * @func updateById
+ * @memberof Grid
  */
 Grid.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
@@ -122,6 +101,8 @@ Grid.prototype.updateById = function () {
 
 /**
  * Executes a remove against the grid's underlying data-source.
+ * @func remove
+ * @memberof Grid
  */
 Grid.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
@@ -129,6 +110,8 @@ Grid.prototype.remove = function () {
 
 /**
  * Sets the collection from which the grid will assemble its data.
+ * @func from
+ * @memberof Grid
  * @param {Collection} collection The collection to use to assemble grid data.
  * @returns {Grid}
  */
@@ -157,7 +140,9 @@ Grid.prototype.from = function (collection) {
 
 /**
  * Gets / sets the DB the grid is bound against.
- * @param db
+ * @func db
+ * @memberof Grid
+ * @param {Db} db
  * @returns {*}
  */
 Grid.prototype.db = function (db) {
@@ -178,6 +163,8 @@ Grid.prototype._collectionDropped = function (collection) {
 
 /**
  * Drops a grid and all it's stored data from the database.
+ * @func drop
+ * @memberof Grid
  * @returns {boolean} True on success, false on failure.
  */
 Grid.prototype.drop = function () {
@@ -216,6 +203,13 @@ Grid.prototype.drop = function () {
 	return false;
 };
 
+/**
+ * Gets / sets the grid's HTML template to use when rendering.
+ * @func template
+ * @memberof Grid
+ * @param {Selector} template The template's jQuery selector.
+ * @returns {*}
+ */
 Grid.prototype.template = function (template) {
 	if (template !== undefined) {
 		this._template = template;
@@ -241,6 +235,8 @@ Grid.prototype._sortGridClick = function (e) {
 
 /**
  * Refreshes the grid data such as ordering etc.
+ * @func refresh
+ * @memberof Grid
  */
 Grid.prototype.refresh = function () {
 	if (this._from) {
@@ -341,6 +337,8 @@ Grid.prototype.refresh = function () {
 
 /**
  * Creates a grid and assigns the collection as its data source.
+ * @func grid
+ * @memberof Collection
  * @param {String} selector jQuery selector of grid output target.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -369,6 +367,8 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
  * Removes a grid safely from the DOM. Must be called when grid is
  * no longer required / is being removed from DOM otherwise references
  * will stick around and cause memory leaks.
+ * @func unGrid
+ * @memberof Collection
  * @param {String} selector jQuery selector of grid output target.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -410,6 +410,8 @@ Collection.prototype.unGrid = View.prototype.unGrid = function (selector, templa
 
 /**
  * Adds a grid to the internal grid lookup.
+ * @func _addGrid
+ * @memberof Collection
  * @param {Grid} grid The grid to add.
  * @returns {Collection}
  * @private
@@ -425,6 +427,8 @@ Collection.prototype._addGrid = CollectionGroup.prototype._addGrid = View.protot
 
 /**
  * Removes a grid from the internal grid lookup.
+ * @func _removeGrid
+ * @memberof Collection
  * @param {Grid} grid The grid to remove.
  * @returns {Collection}
  * @private
@@ -448,6 +452,8 @@ Db.prototype.init = function () {
 
 /**
  * Determine if a grid with the passed name already exists.
+ * @func gridExists
+ * @memberof Db
  * @param {String} selector The jQuery selector to bind the grid to.
  * @returns {boolean}
  */
@@ -457,6 +463,8 @@ Db.prototype.gridExists = function (selector) {
 
 /**
  * Gets a grid by it's name.
+ * @func grid
+ * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -475,6 +483,8 @@ Db.prototype.grid = function (selector, template, options) {
 
 /**
  * Gets a grid by it's name.
+ * @func unGrid
+ * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -493,6 +503,8 @@ Db.prototype.unGrid = function (selector, template, options) {
 
 /**
  * Returns an array of grids the DB currently has.
+ * @func grids
+ * @memberof Db
  * @returns {Array} An array of objects containing details of each grid
  * the database is currently managing.
  */

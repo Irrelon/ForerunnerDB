@@ -247,7 +247,7 @@ FdbDocument.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 
 /**
  * Inserts an item into the passed array at the specified index.
- * @func
+ * @func _updateSplicePush
  * @memberof Document
  * @param {Array} arr The array to insert into.
  * @param {Number} index The index to insert at.
@@ -272,6 +272,8 @@ FdbDocument.prototype._updateSplicePush = function (arr, index, doc) {
 
 /**
  * Inserts an item at the end of an array.
+ * @func _updatePush
+ * @memberof Document
  * @param {Array} arr The array to insert the item into.
  * @param {Object} doc The document to insert.
  * @private
@@ -286,6 +288,8 @@ FdbDocument.prototype._updatePush = function (arr, doc) {
 
 /**
  * Removes an item from the passed array.
+ * @func _updatePull
+ * @memberof Document
  * @param {Array} arr The array to modify.
  * @param {Number} index The index of the item in the array to remove.
  * @private
@@ -300,6 +304,8 @@ FdbDocument.prototype._updatePull = function (arr, index) {
 
 /**
  * Multiplies a value for a property on a document by the passed number.
+ * @func _updateMultiply
+ * @memberof Document
  * @param {Object} doc The document to modify.
  * @param {String} prop The property to modify.
  * @param {Number} val The amount to multiply by.
@@ -315,6 +321,8 @@ FdbDocument.prototype._updateMultiply = function (doc, prop, val) {
 
 /**
  * Renames a property on a document to the passed property.
+ * @func _updateRename
+ * @memberof Document
  * @param {Object} doc The document to modify.
  * @param {String} prop The property to rename.
  * @param {Number} val The new property name.
@@ -333,6 +341,8 @@ FdbDocument.prototype._updateRename = function (doc, prop, val) {
 
 /**
  * Deletes a property on a document.
+ * @func _updateUnset
+ * @memberof Document
  * @param {Object} doc The document to modify.
  * @param {String} prop The property to delete.
  * @private
@@ -347,6 +357,8 @@ FdbDocument.prototype._updateUnset = function (doc, prop) {
 
 /**
  * Deletes a property on a document.
+ * @func _updatePop
+ * @memberof Document
  * @param {Object} doc The document to modify.
  * @param {*} val The property to delete.
  * @return {Boolean}
@@ -382,6 +394,12 @@ FdbDocument.prototype._updatePop = function (doc, val) {
 	return updated;
 };
 
+/**
+ * Drops the document.
+ * @func drop
+ * @memberof Document
+ * @returns {boolean} True if successful, false if not.
+ */
 FdbDocument.prototype.drop = function () {
 	if (this._state !== 'dropped') {
 		if (this._db && this._name) {
@@ -403,6 +421,13 @@ FdbDocument.prototype.drop = function () {
 	return false;
 };
 
+/**
+ * Creates a new document instance.
+ * @func document
+ * @memberof Db
+ * @param {String} documentName The name of the document to create.
+ * @returns {*}
+ */
 Db.prototype.document = function (documentName) {
 	if (documentName) {
 		this._document = this._document || {};
@@ -416,6 +441,8 @@ Db.prototype.document = function (documentName) {
 
 /**
  * Returns an array of documents the DB currently has.
+ * @func documents
+ * @memberof Db
  * @returns {Array} An array of objects containing details of each document
  * the database is currently managing.
  */
