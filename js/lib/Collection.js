@@ -2801,7 +2801,9 @@ Collection.prototype.collateAdd = new Overload({
 	 * @func collateAdd
 	 * @memberof Collection
 	 * @param {Collection} collection The collection to collate data from.
-	 * @param {String} keyName The name of the key to collate data to.
+	 * @param {String=} keyName Optional name of the key to collate data to.
+	 * If none is provided the record CRUD is operated on the root collection
+	 * data.
 	 */
 	'object, string': function (collection, keyName) {
 		var self = this;
@@ -2812,34 +2814,45 @@ Collection.prototype.collateAdd = new Overload({
 
 			switch (packet.type) {
 				case 'insert':
-					obj1 = {
-						$push: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$push: {}
+						};
 
-					obj1.$push[keyName] = self.decouple(packet.data);
-
-					self.update({}, obj1);
+						obj1.$push[keyName] = self.decouple(packet.data);
+						self.update({}, obj1);
+					} else {
+						self.insert(packet.data);
+					}
 					break;
 
 				case 'update':
-					obj1 = {};
-					obj2 = {};
+					if (keyName) {
+						obj1 = {};
+						obj2 = {};
 
-					obj1[keyName] = packet.data.query;
-					obj2[keyName + '.$'] = packet.data.update;
+						obj1[keyName] = packet.data.query;
+						obj2[keyName + '.$'] = packet.data.update;
 
-					self.update(obj1, obj2);
+						self.update(obj1, obj2);
+					} else {
+						self.update(packet.data.query, packet.data.update);
+					}
 					break;
 
 				case 'remove':
-					obj1 = {
-						$pull: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$pull: {}
+						};
 
-					obj1.$pull[keyName] = {};
-					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
+						obj1.$pull[keyName] = {};
+						obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
 
-					self.update({}, obj1);
+						self.update({}, obj1);
+					} else {
+						self.remove(packet.data);
+					}
 					break;
 
 				default:
