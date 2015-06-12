@@ -29,8 +29,13 @@ var ActiveBucket = function (orderBy) {
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
-Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 Shared.mixin(ActiveBucket.prototype, 'Mixin.Sorting');
+
+/**
+ * Gets / sets the primary key used by the active bucket.
+ * @returns {String} The current primary key.
+ */
+Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
 /**
  * Quicksorts a single document into the passed array and
