@@ -275,53 +275,179 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.query) {
 				// Listen for filter requests
+				var queryObj = {};
+
 				elem.find('[data-grid-filter]').each(function (index, filterElem) {
 					filterElem = window.jQuery(filterElem);
 
 					var filterField = filterElem.attr('data-grid-filter'),
+						filterVarType = filterElem.attr('data-grid-vartype'),
 						filterObj = {},
 						title = filterElem.html(),
-						dropDown,
+						dropDownButton,
+						dropDownMenu,
 						template,
+						filterQuery,
 						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
 
 					filterObj[filterField] = 1;
 
+					filterQuery = {
+						$distinct: filterObj
+					};
+
 					filterView
-						.query({
-							$distinct: filterObj
-						})
+						.query(filterQuery)
 						.orderBy(filterObj)
-						.from(self._from);
+						.from(self._from._from);
 
 					template = [
 						'<div class="dropdown" id="' + self._id + '_' + filterField + '">',
-						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
-						title + ' <span class="caret"></span>',
-						'</button>',
-						'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">',
-						'</ul>',
+							'<button class="btn btn-default dropdown-toggle" type="button" id="' + self._id + '_' + filterField + '_dropdownButton" data-toggle="dropdown" aria-expanded="true">',
+								title + ' <span class="caret"></span>',
+							'</button>',
 						'</div>'
 					];
 
-					dropDown = window.jQuery(template.join(''));
-					filterElem.html(dropDown);
+					dropDownButton = window.jQuery(template.join(''));
+					dropDownMenu = window.jQuery('<ul class="dropdown-menu" role="menu" id="' + self._id + '_' + filterField + '_dropdownMenu"></ul>');
+
+					dropDownButton.append(dropDownMenu);
+
+					filterElem.html(dropDownButton);
 
 					// Data-link the underlying data to the grid filter drop-down
-					filterView.link(dropDown.find('ul'), {
-						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-val="{{:' + filterField + '}}">{^{if active}}<span class="glyphicons glyphicons-tick"></span> {{/if}}{{:' + filterField + '}}</a></li>{{/for}}'
+					filterView.link(dropDownMenu, {
+						template: [
+							'<li role="presentation" class="input-group" style="width: 240px; padding-left: 10px; padding-right: 10px; padding-top: 5px;">',
+								'<input type="search" class="form-control gridFilterSearch" placeholder="Search...">',
+								'<span class="input-group-btn">',
+									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle"></span></button>',
+								'</span>',
+							'</li>',
+							'<li role="presentation" class="divider"></li>',
+							'<li role="presentation" data-val="$all">',
+								'<a role="menuitem" tabindex="-1">',
+									'<input type="checkbox" checked>&nbsp;All',
+								'</a>',
+							'</li>',
+							'<li role="presentation" class="divider"></li>',
+							'{^{for options}}',
+								'<li role="presentation" data-link="data-val{:' + filterField + '}">',
+									'<a role="menuitem" tabindex="-1">',
+										'<input type="checkbox">&nbsp;{^{:' + filterField + '}}',
+									'</a>',
+								'</li>',
+							'{{/for}}'
+						].join('')
 					}, {
 						$wrap: 'options'
 					});
 
-					elem.on('click', '#' + self._id + '_' + filterField + ' ul.dropdown-menu li>a', function (e) {
-						e.preventDefault();
-						var queryObj = {};
+					elem.on('keyup', '#' + self._id + '_' + filterField + '_dropdownMenu .gridFilterSearch', function (e) {
+						var elem = window.jQuery(this),
+							query = filterView.query(),
+							search = elem.val();
 
-						queryObj[filterField] = window.jQuery(this).attr('data-val');
-						//filterView.update(queryObj, {active: 1});
+						if (search) {
+							query[filterField] = new RegExp(search, 'gi');
+						} else {
+							delete query[filterField];
+						}
 
-						self._from.queryAdd(queryObj);
+						filterView.query(query);
+					});
+
+					elem.on('click', '#' + self._id + '_' + filterField + '_dropdownMenu .gridFilterClearSearch', function (e) {
+						// Clear search text box
+						window.jQuery(this).parents('li').find('.gridFilterSearch').val('');
+
+						// Clear view query
+						var query = filterView.query();
+						delete query[filterField];
+						filterView.query(query);
+					});
+
+					elem.on('click', '#' + self._id + '_' + filterField + '_dropdownMenu li', function (e) {
+						e.stopPropagation();
+
+						var fieldValue,
+							elem = $(this),
+							checkbox = elem.find('input[type="checkbox"]'),
+							checked,
+							addMode = true,
+							fieldInArr,
+							liElem,
+							i;
+
+						// If the checkbox is not the one clicked on
+						if (!window.jQuery(e.target).is('input')) {
+							// Set checkbox to opposite of current value
+							checkbox.prop('checked', !checkbox.prop('checked'));
+							checked = checkbox.is(':checked');
+						} else {
+							checkbox.prop('checked', checkbox.prop('checked'));
+							checked = checkbox.is(':checked');
+						}
+
+						liElem = window.jQuery(this);
+						fieldValue = liElem.attr('data-val');
+
+						// Check if the selection is the "all" option
+						if (fieldValue === '$all') {
+							// Remove the field from the query
+							delete queryObj[filterField];
+
+							// Clear all other checkboxes
+							liElem.parent().find('li[data-val!="$all"]').find('input[type="checkbox"]').prop('checked', false);
+						} else {
+							// Clear the "all" checkbox
+							liElem.parent().find('[data-val="$all"]').find('input[type="checkbox"]').prop('checked', false);
+
+							// Check if the type needs casting
+							switch (filterVarType) {
+								case 'integer':
+									fieldValue = parseInt(fieldValue, 10);
+									break;
+
+								case 'float':
+									fieldValue = parseFloat(fieldValue);
+									break;
+
+								default:
+							}
+
+							// Check if the item exists already
+							queryObj[filterField] = queryObj[filterField] || {
+								$in: []
+							};
+
+							fieldInArr = queryObj[filterField].$in;
+
+							for (i = 0; i < fieldInArr.length; i++) {
+								if (fieldInArr[i] === fieldValue) {
+									// Item already exists
+									if (checked === false) {
+										// Remove the item
+										fieldInArr.splice(i, 1);
+									}
+									addMode = false;
+									break;
+								}
+							}
+
+							if (addMode && checked) {
+								fieldInArr.push(fieldValue);
+							}
+
+							if (!fieldInArr.length) {
+								// Remove the field from the query
+								delete queryObj[filterField];
+							}
+						}
+
+						// Set the view query
+						self._from.queryData(queryObj);
 					});
 				});
 			}
@@ -333,6 +459,16 @@ Grid.prototype.refresh = function () {
 	}
 
 	return this;
+};
+
+/**
+ * Returns the number of documents currently in the grid.
+ * @func count
+ * @memberof Grid
+ * @returns {Number}
+ */
+Grid.prototype.count = function () {
+	return this._from.count();
 };
 
 /**
