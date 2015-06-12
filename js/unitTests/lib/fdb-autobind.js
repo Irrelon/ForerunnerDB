@@ -10,12 +10,21 @@ module.exports = AutoBind;
  * Provides data-binding functionality to ForerunnerDB. Allows collections
  * and views to link to selectors and automatically generate DOM elements
  * from jsViews (jsRender) templates.
+ * @class AutoBind
  */
+
 var Shared = window.ForerunnerDB.shared,
 	AutoBind = {},
 	jsviews;
 
 Shared.addModule('AutoBind', AutoBind);
+
+/**
+ * Extends the Collection class with new binding capabilities.
+ * @extends Collection
+ * @param {Collection} Module The Collection class module.
+ * @private
+ */
 AutoBind.extendCollection = function (Module) {
 	var superInit = Module.prototype.init,
 		superDataReplace = Module.prototype._dataReplace,
@@ -39,6 +48,12 @@ AutoBind.extendCollection = function (Module) {
 		superInit.apply(this, arguments);
 	};
 
+	/**
+	 * Checks if the instance is data-bound to any DOM elements.
+	 * @func isLinked
+	 * @memberof Collection
+	 * @returns {Boolean} True if linked, false if not.
+	 */
 	Module.prototype.isLinked = function () {
 		return Boolean(this._linked);
 	};
@@ -48,9 +63,12 @@ AutoBind.extendCollection = function (Module) {
 	 * in the passed output selector. When new elements are needed or changes
 	 * occur the passed templateSelector is used to get the template that is
 	 * output to the DOM.
+	 * @func link
+	 * @memberof Collection
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 * @param {Object=} options Optional extra options.
+	 * @see unlink
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
@@ -154,6 +172,8 @@ AutoBind.extendCollection = function (Module) {
 	/**
 	 * Removes a link to the DOM between the collection data and the elements
 	 * in the passed output selector that was created using the link() method.
+	 * @func unlink
+	 * @memberof Collection
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 */
@@ -486,6 +506,12 @@ AutoBind.extendCollection = function (Module) {
 	};
 };
 
+/**
+ * Extends the View class with new binding capabilities.
+ * @extends View
+ * @param {View} Module The View class module.
+ * @private
+ */
 AutoBind.extendView = function (Module) {
 	var superInit = Module.prototype.init;
 
@@ -494,12 +520,20 @@ AutoBind.extendView = function (Module) {
 		superInit.apply(this, arguments);
 	};
 
+	/**
+	 * Checks if the instance is data-bound to any DOM elements.
+	 * @func isLinked
+	 * @memberof View
+	 * @returns {Boolean} True if linked, false if not.
+	 */
 	Module.prototype.isLinked = function () {
 		return this.publicData().isLinked();
 	};
 
 	/**
 	 * Data-binds the view data to the elements matched by the passed selector.
+	 * @func link
+	 * @memberof View
 	 * @param {String} outputTargetSelector The jQuery element selector to select the element
 	 * into which the data-bound rendered items will be placed. All existing HTML will be
 	 * removed from this element.
@@ -508,8 +542,9 @@ AutoBind.extendView = function (Module) {
 	 * will use when rendering to the screen, or you can pass an object with a template key
 	 * containing a string that represents the HTML template such as:
 	 *     { template: '<div>{{:name}}</div>' }
-	 * @param {Object=} options An options object.
-	 * @returns {*}
+	 * @param {Object=} options An options object.wd
+	 * @returns {View}
+	 * @see unlink
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		var publicData = this.publicData();
@@ -522,6 +557,15 @@ AutoBind.extendView = function (Module) {
 		return this;
 	};
 
+	/**
+	 * Removes a previously set-up data-binding via the link() method.
+	 * @func unlink
+	 * @memberof View
+	 * @param {Selector} outputTargetSelector The jQuery target selector.
+	 * @param {Selector} templateSelector The jQuery template selector.
+	 * @see link
+	 * @returns {View}
+	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		var publicData = this.publicData();
 		if (this.debug()) {
@@ -534,7 +578,19 @@ AutoBind.extendView = function (Module) {
 	};
 };
 
+/**
+ * Extends the Overview class with new binding capabilities.
+ * @extends Overview
+ * @param {Overview} Module The Overview class module.
+ * @private
+ */
 AutoBind.extendOverview = function (Module) {
+	/**
+	 * Checks if the instance is data-bound to any DOM elements.
+	 * @func isLinked
+	 * @memberof Overview
+	 * @returns {Boolean} True if linked, false if not.
+	 */
 	Module.prototype.isLinked = function () {
 		return this.data().isLinked();
 	};
@@ -544,9 +600,12 @@ AutoBind.extendOverview = function (Module) {
 	 * in the passed output selector. When new elements are needed or changes
 	 * occur the passed templateSelector is used to get the template that is
 	 * output to the DOM.
+	 * @func link
+	 * @memberof Overview
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 * @param {Object=} options An options object.
+	 * @see unlink
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		this._data.link.apply(this._data, arguments);
@@ -556,8 +615,11 @@ AutoBind.extendOverview = function (Module) {
 	/**
 	 * Removes a link to the DOM between the overview data and the elements
 	 * in the passed output selector that was created using the link() method.
+	 * @func unlink
+	 * @memberof Overview
 	 * @param outputTargetSelector
 	 * @param templateSelector
+	 * @see link
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		this._data.unlink.apply(this._data, arguments);
@@ -565,7 +627,19 @@ AutoBind.extendOverview = function (Module) {
 	};
 };
 
+/**
+ * Extends the Document class with new binding capabilities.
+ * @extends Document
+ * @param {Document} Module The Document class module.
+ * @private
+ */
 AutoBind.extendDocument = function (Module) {
+	/**
+	 * Checks if the instance is data-bound to any DOM elements.
+	 * @func isLinked
+	 * @memberof Document
+	 * @returns {Boolean} True if linked, false if not.
+	 */
 	Module.prototype.isLinked = function () {
 		return Boolean(this._linked);
 	};
@@ -575,9 +649,12 @@ AutoBind.extendDocument = function (Module) {
 	 * in the passed output selector. When new elements are needed or changes
 	 * occur the passed templateSelector is used to get the template that is
 	 * output to the DOM.
+	 * @func link
+	 * @memberof Document
 	 * @param outputTargetSelector
 	 * @param templateSelector
 	 * @param {Object=} options An options object.
+	 * @see unlink
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
@@ -679,8 +756,11 @@ AutoBind.extendDocument = function (Module) {
 	/**
 	 * Removes a link to the DOM between the document data and the elements
 	 * in the passed output selector that was created using the link() method.
+	 * @func unlink
+	 * @memberof Document
 	 * @param outputTargetSelector
 	 * @param templateSelector
+	 * @see link
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		if (window.jQuery) {

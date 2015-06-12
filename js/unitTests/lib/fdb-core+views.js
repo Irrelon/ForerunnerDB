@@ -9,15 +9,12 @@ module.exports = Core;
 },{"../lib/Core":5,"../lib/View":26}],2:[function(_dereq_,module,exports){
 "use strict";
 
+var Shared = _dereq_('./Shared');
+
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- */
-var Shared = _dereq_('./Shared');
-
-/**
- * The active bucket class.
  * @param {object} orderBy An order object.
  * @constructor
  */
@@ -269,11 +266,6 @@ module.exports = ActiveBucket;
 },{"./Shared":25}],3:[function(_dereq_,module,exports){
 "use strict";
 
-/**
- * The main collection class. Collections store multiple documents and
- * can operate on them using the query language to insert, read, update
- * and delete.
- */
 var Shared,
 	Db,
 	Metrics,
@@ -288,7 +280,8 @@ var Shared,
 Shared = _dereq_('./Shared');
 
 /**
- * Collection object used to store data.
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
  * @constructor
  */
 var Collection = function (name) {
@@ -1559,7 +1552,7 @@ Collection.prototype.processQueue = function (type, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -1582,7 +1575,7 @@ Collection.prototype.insert = function (data, index, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -3068,6 +3061,16 @@ Collection.prototype.diff = function (collection) {
 };
 
 Collection.prototype.collateAdd = new Overload({
+	/**
+	 * Adds a data source to collate data from and specifies the
+	 * key name to collate data to.
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {String=} keyName Optional name of the key to collate data to.
+	 * If none is provided the record CRUD is operated on the root collection
+	 * data.
+	 */
 	'object, string': function (collection, keyName) {
 		var self = this;
 
@@ -3077,34 +3080,45 @@ Collection.prototype.collateAdd = new Overload({
 
 			switch (packet.type) {
 				case 'insert':
-					obj1 = {
-						$push: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$push: {}
+						};
 
-					obj1.$push[keyName] = self.decouple(packet.data);
-
-					self.update({}, obj1);
+						obj1.$push[keyName] = self.decouple(packet.data);
+						self.update({}, obj1);
+					} else {
+						self.insert(packet.data);
+					}
 					break;
 
 				case 'update':
-					obj1 = {};
-					obj2 = {};
+					if (keyName) {
+						obj1 = {};
+						obj2 = {};
 
-					obj1[keyName] = packet.data.query;
-					obj2[keyName + '.$'] = packet.data.update;
+						obj1[keyName] = packet.data.query;
+						obj2[keyName + '.$'] = packet.data.update;
 
-					self.update(obj1, obj2);
+						self.update(obj1, obj2);
+					} else {
+						self.update(packet.data.query, packet.data.update);
+					}
 					break;
 
 				case 'remove':
-					obj1 = {
-						$pull: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$pull: {}
+						};
 
-					obj1.$pull[keyName] = {};
-					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
+						obj1.$pull[keyName] = {};
+						obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
 
-					self.update({}, obj1);
+						self.update({}, obj1);
+					} else {
+						self.remove(packet.data);
+					}
 					break;
 
 				default:
@@ -3112,6 +3126,15 @@ Collection.prototype.collateAdd = new Overload({
 		});
 	},
 
+	/**
+	 * Adds a data source to collate data from and specifies a process
+	 * method that will handle the collation functionality (for custom
+	 * collation).
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {Function} process The process method.
+	 */
 	'object, function': function (collection, process) {
 		if (typeof collection === 'string') {
 			// The collection passed is a name, not a reference so get
@@ -3156,6 +3179,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
 	 */
@@ -3166,6 +3191,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @returns {Collection}
 	 */
@@ -3178,6 +3205,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -3193,6 +3222,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
@@ -3206,6 +3237,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -3220,8 +3253,10 @@ Db.prototype.collection = new Overload({
 	},
 
 	/**
-	 * The main handler method. This get's called by all the other variants and
+	 * The main handler method. This gets called by all the other variants and
 	 * handles the actual logic of the overloaded method.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {*}
 	 */
@@ -3258,6 +3293,7 @@ Db.prototype.collection = new Overload({
 
 /**
  * Determine if a collection with the passed name already exists.
+ * @memberof Db
  * @param {String} viewName The name of the collection to check for.
  * @returns {boolean}
  */
@@ -3267,6 +3303,7 @@ Db.prototype.collectionExists = function (viewName) {
 
 /**
  * Returns an array of collections the DB currently has.
+ * @memberof Db
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each collection
@@ -3321,6 +3358,13 @@ var Shared,
 
 Shared = _dereq_('./Shared');
 
+/**
+ * Creates a new collection group. Collection groups allow single operations to be
+ * propagated to multiple collections at once. CRUD operations against a collection
+ * group are in fed to the group's collections. Useful when separating out slightly
+ * different data into multiple collections but querying as one collection.
+ * @constructor
+ */
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
 };
@@ -3650,7 +3694,8 @@ Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
 
 /**
- * The main ForerunnerDB core object.
+ * Creates a new ForerunnerDB instance. Core instances handle the lifecycle of
+ * multiple database instances.
  * @constructor
  */
 var Core = function (name) {
@@ -3665,6 +3710,8 @@ Core.prototype.init = function () {
 Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -3690,6 +3737,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -3713,6 +3762,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.
@@ -3822,6 +3873,9 @@ module.exports = Core;
 },{"./Db.js":7,"./Metrics.js":11,"./Overload":22,"./Shared":25}],6:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * @mixin
+ */
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3850,16 +3904,6 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
 },{}],7:[function(_dereq_,module,exports){
-/*
- License
-
- Copyright (c) 2015 Irrelon Software Limited
- http://www.irrelon.com
- http://www.forerunnerdb.com
-
- Please visit the license page to see latest license information:
- http://www.forerunnerdb.com/licensing.html
- */
 "use strict";
 
 var Shared,
@@ -3873,7 +3917,7 @@ Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
 
 /**
- * The main ForerunnerDB db object.
+ * Creates a new ForerunnerDB database instance.
  * @constructor
  */
 var Db = function (name) {
@@ -3890,6 +3934,8 @@ Db.prototype.init = function (name) {
 Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -3915,6 +3961,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -3938,6 +3986,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.
@@ -4206,6 +4256,8 @@ Db.prototype.peekCat = function (search) {
 Db.prototype.drop = new Overload({
 	/**
 	 * Drops the database.
+	 * @func drop
+	 * @memberof Db
 	 */
 	'': function () {
 		if (this._state !== 'dropped') {
@@ -4229,7 +4281,9 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
@@ -4263,7 +4317,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional persistent storage drop. Persistent
+	 * storage is dropped by default if no preference is provided.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
@@ -4288,7 +4345,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database and optionally controls dropping persistent storage
+	 * and callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 * @param {Function} callback Optional callback method.
 	 */
@@ -4324,6 +4384,7 @@ Db.prototype.drop = new Overload({
 
 /**
  * Gets a database instance by name.
+ * @memberof Core
  * @param {String=} name Optional name of the database. If none is provided
  * a random name is assigned.
  * @returns {Db}
@@ -4339,6 +4400,7 @@ Core.prototype.db = function (name) {
 
 /**
  * Returns an array of databases that ForerunnerDB currently has.
+ * @memberof Core
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each database
@@ -5384,8 +5446,15 @@ var CRUD = {
 module.exports = CRUD;
 },{}],13:[function(_dereq_,module,exports){
 "use strict";
-// TODO: Document the methods in this mixin
+/**
+ * The chain reactor mixin, provides a class with chain reaction capabilities.
+ * @mixin
+ */
 var ChainReactor = {
+	/**
+	 *
+	 * @param obj
+	 */
 	chain: function (obj) {
 		this._chain = this._chain || [];
 		var index = this._chain.indexOf(obj);
@@ -5792,6 +5861,8 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		options.$rootData = options.$rootData || {};
+
 		// Check if the comparison data are both strings or numbers
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
@@ -5807,7 +5878,6 @@ var Matching = {
 					matchedAll = false;
 				}
 			}
-
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
@@ -6091,18 +6161,18 @@ var Matching = {
 
 			case '$distinct':
 				// Ensure options holds a distinct lookup
-				options.$rootQuery['//distinctLookup'] = options.$rootQuery['//distinctLookup'] || {};
+				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
 
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootQuery['//distinctLookup'][distinctProp] = options.$rootQuery['//distinctLookup'][distinctProp] || {};
+						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
 
 							// Allow the item in the results
 							return true;
@@ -7533,6 +7603,11 @@ module.exports = ReactorIO;
 },{"./Shared":25}],25:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * A shared object that can be used to store arbitrary data between class
+ * instances, and access helper methods.
+ * @mixin
+ */
 var Shared = {
 	version: '1.3.51',
 	modules: {},
@@ -7541,6 +7616,7 @@ var Shared = {
 
 	/**
 	 * Adds a module to ForerunnerDB.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} module The module class.
 	 */
@@ -7552,6 +7628,7 @@ var Shared = {
 	/**
 	 * Called by the module once all processing has been completed. Used to determine
 	 * if the module is ready for use by other modules.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 */
 	finishModule: function (name) {
@@ -7566,6 +7643,7 @@ var Shared = {
 	/**
 	 * Will call your callback method when the specified module has loaded. If the module
 	 * is already loaded the callback is called immediately.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} callback The callback method to call when the module is loaded.
 	 */
@@ -7579,6 +7657,7 @@ var Shared = {
 
 	/**
 	 * Determines if a module has been added to ForerunnerDB or not.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @returns {Boolean} True if the module exists or false if not.
 	 */
@@ -7588,6 +7667,7 @@ var Shared = {
 
 	/**
 	 * Adds the properties and methods defined in the mixin to the passed object.
+	 * @memberof Shared
 	 * @param {Object} obj The target object to add mixin key/values to.
 	 * @param {String} mixinName The name of the mixin to add to the object.
 	 */
@@ -7607,6 +7687,7 @@ var Shared = {
 
 	/**
 	 * Generates a generic getter/setter method for the passed method name.
+	 * @memberof Shared
 	 * @param {Object} obj The object to add the getter/setter to.
 	 * @param {String} name The name of the getter/setter to generate.
 	 * @param {Function=} extend A method to call before executing the getter/setter.
@@ -7643,6 +7724,7 @@ var Shared = {
 
 	/**
 	 * Allows a method to be overloaded.
+	 * @memberof Shared
 	 * @param arr
 	 * @returns {Function}
 	 * @constructor
@@ -7651,6 +7733,7 @@ var Shared = {
 
 	/**
 	 * Define the mixins that other modules can use as required.
+	 * @memberof Shared
 	 */
 	mixins: {
 		'Mixin.Common': _dereq_('./Mixin.Common'),
@@ -7685,10 +7768,10 @@ var Shared,
 Shared = _dereq_('./Shared');
 
 /**
- * The view constructor.
- * @param name
- * @param query
- * @param options
+ * Creates a new view instance.
+ * @param {String} name The name of the view.
+ * @param {Object=} query The view's query.
+ * @param {Object=} options An options object.
  * @constructor
  */
 var View = function (name, query, options) {
@@ -7734,12 +7817,23 @@ DbInit = Db.prototype.init;
  */
 Shared.synthesize(View.prototype, 'state');
 
+/**
+ * Gets / sets the current name.
+ * @param {String=} val The new name to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'name');
 
+/**
+ * Gets / sets the current cursor.
+ * @param {String=} val The new cursor to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'cursor');
 
 /**
  * Executes an insert against the view's underlying data-source.
+ * @see Collection::insert()
  */
 View.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
@@ -7747,6 +7841,7 @@ View.prototype.insert = function () {
 
 /**
  * Executes an update against the view's underlying data-source.
+ * @see Collection::update()
  */
 View.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
@@ -7754,6 +7849,7 @@ View.prototype.update = function () {
 
 /**
  * Executes an updateById against the view's underlying data-source.
+ * @see Collection::updateById()
  */
 View.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
@@ -7761,14 +7857,16 @@ View.prototype.updateById = function () {
 
 /**
  * Executes a remove against the view's underlying data-source.
+ * @see Collection::remove()
  */
 View.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
 };
 
 /**
- * Queries the view data. See Collection.find() for more information.
- * @returns {*}
+ * Queries the view data.
+ * @see Collection::find()
+ * @returns {Array} The result of the find query.
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
@@ -7920,6 +8018,12 @@ View.prototype.from = function (collection) {
 	return this;
 };
 
+/**
+ * Handles when an underlying collection the view is using as a data
+ * source is dropped.
+ * @param {Collection} collection The collection that has been dropped.
+ * @private
+ */
 View.prototype._collectionDropped = function (collection) {
 	if (collection) {
 		// Collection was dropped, remove from view
@@ -7927,10 +8031,20 @@ View.prototype._collectionDropped = function (collection) {
 	}
 };
 
+/**
+ * Creates an index on the view.
+ * @see Collection::ensureIndex()
+ * @returns {*}
+ */
 View.prototype.ensureIndex = function () {
 	return this._privateData.ensureIndex.apply(this._privateData, arguments);
 };
 
+/**
+ * The chain reaction handler method for the view.
+ * @param {Object} chainPacket The chain reaction packet to handle.
+ * @private
+ */
 View.prototype._chainHandler = function (chainPacket) {
 	var //self = this,
 		arr,
@@ -8065,16 +8179,28 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
+/**
+ * Listens for an event.
+ * @see Mixin.Events::on()
+ */
 View.prototype.on = function () {
-	this._privateData.on.apply(this._privateData, arguments);
+	return this._privateData.on.apply(this._privateData, arguments);
 };
 
+/**
+ * Cancels an event listener.
+ * @see Mixin.Events::off()
+ */
 View.prototype.off = function () {
-	this._privateData.off.apply(this._privateData, arguments);
+	return this._privateData.off.apply(this._privateData, arguments);
 };
 
+/**
+ * Emits an event.
+ * @see Mixin.Events::emit()
+ */
 View.prototype.emit = function () {
-	this._privateData.emit.apply(this._privateData, arguments);
+	return this._privateData.emit.apply(this._privateData, arguments);
 };
 
 /**
@@ -8091,6 +8217,7 @@ View.prototype.distinct = function (key, query, options) {
 
 /**
  * Gets the primary key for this view from the assigned collection.
+ * @see Collection::primaryKey()
  * @returns {String}
  */
 View.prototype.primaryKey = function () {
@@ -8164,9 +8291,11 @@ View.prototype.db = function (db) {
 };
 
 /**
- * Gets / sets the query that the view uses to build it's data set.
- * @param {Object=} query
- * @param {Boolean=} options An options object.
+ * Gets / sets the query object and query options that the view uses
+ * to build it's data set. This call modifies both the query and
+ * query options at the same time.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} options The query options object.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
  * @returns {*}
@@ -8233,22 +8362,25 @@ View.prototype.queryRemove = function (obj, refresh) {
 	var query = this._querySettings.query,
 		i;
 
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				delete query[i];
+	if (query) {
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					delete query[i];
+				}
 			}
 		}
-	}
 
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
 	}
 };
 
 /**
- * Gets / sets the query being used to generate the view data.
+ * Gets / sets the query being used to generate the view data. It
+ * does not change or modify the view's query options.
  * @param {Object=} query The query to set.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.

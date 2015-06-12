@@ -17,15 +17,12 @@ module.exports = Core;
 },{"../lib/CollectionGroup":4,"../lib/Core":5,"../lib/Document":8,"../lib/Grid":9,"../lib/Highchart":10,"../lib/OldView":25,"../lib/OldView.Bind":24,"../lib/Overview":28,"../lib/Persist":30,"../lib/View":33}],2:[function(_dereq_,module,exports){
 "use strict";
 
+var Shared = _dereq_('./Shared');
+
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- */
-var Shared = _dereq_('./Shared');
-
-/**
- * The active bucket class.
  * @param {object} orderBy An order object.
  * @constructor
  */
@@ -277,11 +274,6 @@ module.exports = ActiveBucket;
 },{"./Shared":32}],3:[function(_dereq_,module,exports){
 "use strict";
 
-/**
- * The main collection class. Collections store multiple documents and
- * can operate on them using the query language to insert, read, update
- * and delete.
- */
 var Shared,
 	Db,
 	Metrics,
@@ -296,7 +288,8 @@ var Shared,
 Shared = _dereq_('./Shared');
 
 /**
- * Collection object used to store data.
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
  * @constructor
  */
 var Collection = function (name) {
@@ -1567,7 +1560,7 @@ Collection.prototype.processQueue = function (type, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -1590,7 +1583,7 @@ Collection.prototype.insert = function (data, index, callback) {
 
 /**
  * Inserts a document or array of documents into the collection.
- * @param {Object||Array} data Either a document object or array of document
+ * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
  * @param {Function=} callback Optional callback called once action is complete.
  * objects to insert into the collection.
@@ -3076,6 +3069,16 @@ Collection.prototype.diff = function (collection) {
 };
 
 Collection.prototype.collateAdd = new Overload({
+	/**
+	 * Adds a data source to collate data from and specifies the
+	 * key name to collate data to.
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {String=} keyName Optional name of the key to collate data to.
+	 * If none is provided the record CRUD is operated on the root collection
+	 * data.
+	 */
 	'object, string': function (collection, keyName) {
 		var self = this;
 
@@ -3085,34 +3088,45 @@ Collection.prototype.collateAdd = new Overload({
 
 			switch (packet.type) {
 				case 'insert':
-					obj1 = {
-						$push: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$push: {}
+						};
 
-					obj1.$push[keyName] = self.decouple(packet.data);
-
-					self.update({}, obj1);
+						obj1.$push[keyName] = self.decouple(packet.data);
+						self.update({}, obj1);
+					} else {
+						self.insert(packet.data);
+					}
 					break;
 
 				case 'update':
-					obj1 = {};
-					obj2 = {};
+					if (keyName) {
+						obj1 = {};
+						obj2 = {};
 
-					obj1[keyName] = packet.data.query;
-					obj2[keyName + '.$'] = packet.data.update;
+						obj1[keyName] = packet.data.query;
+						obj2[keyName + '.$'] = packet.data.update;
 
-					self.update(obj1, obj2);
+						self.update(obj1, obj2);
+					} else {
+						self.update(packet.data.query, packet.data.update);
+					}
 					break;
 
 				case 'remove':
-					obj1 = {
-						$pull: {}
-					};
+					if (keyName) {
+						obj1 = {
+							$pull: {}
+						};
 
-					obj1.$pull[keyName] = {};
-					obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
+						obj1.$pull[keyName] = {};
+						obj1.$pull[keyName][self.primaryKey()] = packet.data.dataSet[0][collection.primaryKey()];
 
-					self.update({}, obj1);
+						self.update({}, obj1);
+					} else {
+						self.remove(packet.data);
+					}
 					break;
 
 				default:
@@ -3120,6 +3134,15 @@ Collection.prototype.collateAdd = new Overload({
 		});
 	},
 
+	/**
+	 * Adds a data source to collate data from and specifies a process
+	 * method that will handle the collation functionality (for custom
+	 * collation).
+	 * @func collateAdd
+	 * @memberof Collection
+	 * @param {Collection} collection The collection to collate data from.
+	 * @param {Function} process The process method.
+	 */
 	'object, function': function (collection, process) {
 		if (typeof collection === 'string') {
 			// The collection passed is a name, not a reference so get
@@ -3164,6 +3187,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
 	 */
@@ -3174,6 +3199,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @returns {Collection}
 	 */
@@ -3186,6 +3213,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -3201,6 +3230,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
@@ -3214,6 +3245,8 @@ Db.prototype.collection = new Overload({
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @func collection
+	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
 	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
 	 * objects. Defaults to "_id".
@@ -3228,8 +3261,10 @@ Db.prototype.collection = new Overload({
 	},
 
 	/**
-	 * The main handler method. This get's called by all the other variants and
+	 * The main handler method. This gets called by all the other variants and
 	 * handles the actual logic of the overloaded method.
+	 * @func collection
+	 * @memberof Db
 	 * @param {Object} options An options object.
 	 * @returns {*}
 	 */
@@ -3266,6 +3301,7 @@ Db.prototype.collection = new Overload({
 
 /**
  * Determine if a collection with the passed name already exists.
+ * @memberof Db
  * @param {String} viewName The name of the collection to check for.
  * @returns {boolean}
  */
@@ -3275,6 +3311,7 @@ Db.prototype.collectionExists = function (viewName) {
 
 /**
  * Returns an array of collections the DB currently has.
+ * @memberof Db
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each collection
@@ -3329,6 +3366,13 @@ var Shared,
 
 Shared = _dereq_('./Shared');
 
+/**
+ * Creates a new collection group. Collection groups allow single operations to be
+ * propagated to multiple collections at once. CRUD operations against a collection
+ * group are in fed to the group's collections. Useful when separating out slightly
+ * different data into multiple collections but querying as one collection.
+ * @constructor
+ */
 var CollectionGroup = function () {
 	this.init.apply(this, arguments);
 };
@@ -3658,7 +3702,8 @@ Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
 
 /**
- * The main ForerunnerDB core object.
+ * Creates a new ForerunnerDB instance. Core instances handle the lifecycle of
+ * multiple database instances.
  * @constructor
  */
 var Core = function (name) {
@@ -3673,6 +3718,8 @@ Core.prototype.init = function () {
 Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -3698,6 +3745,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -3721,6 +3770,8 @@ Core.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Core
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.
@@ -3830,6 +3881,9 @@ module.exports = Core;
 },{"./Db.js":7,"./Metrics.js":14,"./Overload":27,"./Shared":32}],6:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * @mixin
+ */
 var crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
@@ -3858,16 +3912,6 @@ module.exports = function(str) {
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
 },{}],7:[function(_dereq_,module,exports){
-/*
- License
-
- Copyright (c) 2015 Irrelon Software Limited
- http://www.irrelon.com
- http://www.forerunnerdb.com
-
- Please visit the license page to see latest license information:
- http://www.forerunnerdb.com/licensing.html
- */
 "use strict";
 
 var Shared,
@@ -3881,7 +3925,7 @@ Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
 
 /**
- * The main ForerunnerDB db object.
+ * Creates a new ForerunnerDB database instance.
  * @constructor
  */
 var Db = function (name) {
@@ -3898,6 +3942,8 @@ Db.prototype.init = function (name) {
 Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @returns {Boolean} True if the module is loaded, false if not.
 	 */
@@ -3923,6 +3969,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * callback method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} callback The callback method to call if module is loaded.
 	 */
@@ -3946,6 +3994,8 @@ Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
+	 * @func moduleLoaded
+	 * @memberof Db
 	 * @param {String} moduleName The name of the module to check for.
 	 * @param {Function} success The callback method to call if module is loaded.
 	 * @param {Function} failure The callback method to call if module not loaded.
@@ -4214,6 +4264,8 @@ Db.prototype.peekCat = function (search) {
 Db.prototype.drop = new Overload({
 	/**
 	 * Drops the database.
+	 * @func drop
+	 * @memberof Db
 	 */
 	'': function () {
 		if (this._state !== 'dropped') {
@@ -4237,7 +4289,9 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
@@ -4271,7 +4325,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database with optional persistent storage drop. Persistent
+	 * storage is dropped by default if no preference is provided.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
@@ -4296,7 +4353,10 @@ Db.prototype.drop = new Overload({
 	},
 
 	/**
-	 * Drops the database.
+	 * Drops the database and optionally controls dropping persistent storage
+	 * and callback method.
+	 * @func drop
+	 * @memberof Db
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 * @param {Function} callback Optional callback method.
 	 */
@@ -4332,6 +4392,7 @@ Db.prototype.drop = new Overload({
 
 /**
  * Gets a database instance by name.
+ * @memberof Core
  * @param {String=} name Optional name of the database. If none is provided
  * a random name is assigned.
  * @returns {Db}
@@ -4347,6 +4408,7 @@ Core.prototype.db = function (name) {
 
 /**
  * Returns an array of databases that ForerunnerDB currently has.
+ * @memberof Core
  * @param {String|RegExp=} search The optional search string or regular expression to use
  * to match collection names against.
  * @returns {Array} An array of objects containing details of each database
@@ -4451,400 +4513,463 @@ var Shared,
 
 Shared = _dereq_('./Shared');
 
-(function init () {
-	var Document = function () {
-		this.init.apply(this, arguments);
-	};
+/**
+ * Creates a new Document instance. Documents allow you to create individual
+ * objects that can have standard ForerunnerDB CRUD operations run against
+ * them, as well as data-binding if the AutoBind module is included in your
+ * project.
+ * @name Document
+ * @class Document
+ * @constructor
+ */
+var FdbDocument = function () {
+	this.init.apply(this, arguments);
+};
 
-	Document.prototype.init = function (name) {
-		this._name = name;
-		this._data = {};
-	};
+FdbDocument.prototype.init = function (name) {
+	this._name = name;
+	this._data = {};
+};
 
-	Shared.addModule('Document', Document);
-	Shared.mixin(Document.prototype, 'Mixin.Common');
-	Shared.mixin(Document.prototype, 'Mixin.Events');
-	Shared.mixin(Document.prototype, 'Mixin.ChainReactor');
-	Shared.mixin(Document.prototype, 'Mixin.Constants');
-	Shared.mixin(Document.prototype, 'Mixin.Triggers');
-	//Shared.mixin(Document.prototype, 'Mixin.Updating');
+Shared.addModule('Document', FdbDocument);
+Shared.mixin(FdbDocument.prototype, 'Mixin.Common');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Events');
+Shared.mixin(FdbDocument.prototype, 'Mixin.ChainReactor');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Constants');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Triggers');
+//Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
 
-	Collection = _dereq_('./Collection');
-	Db = Shared.modules.Db;
+Collection = _dereq_('./Collection');
+Db = Shared.modules.Db;
 
-	/**
-	 * Gets / sets the current state.
-	 * @param {String=} val The name of the state to set.
-	 * @returns {*}
-	 */
-	Shared.synthesize(Document.prototype, 'state');
+/**
+ * Gets / sets the current state.
+ * @func state
+ * @memberof Document
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(FdbDocument.prototype, 'state');
 
-	/**
-	 * Gets / sets the db instance this class instance belongs to.
-	 * @param {Db=} db The db instance.
-	 * @returns {*}
-	 */
-	Shared.synthesize(Document.prototype, 'db');
+/**
+ * Gets / sets the db instance this class instance belongs to.
+ * @func db
+ * @memberof Document
+ * @param {Db=} db The db instance.
+ * @returns {*}
+ */
+Shared.synthesize(FdbDocument.prototype, 'db');
 
-	/**
-	 * Gets / sets the document name.
-	 * @param {String=} val The name to assign
-	 * @returns {*}
-	 */
-	Shared.synthesize(Document.prototype, 'name');
+/**
+ * Gets / sets the document name.
+ * @func name
+ * @memberof Document
+ * @param {String=} val The name to assign
+ * @returns {*}
+ */
+Shared.synthesize(FdbDocument.prototype, 'name');
 
-	Document.prototype.setData = function (data, options) {
-		var i,
-			$unset;
+/**
+ * Sets the data for the document.
+ * @func setData
+ * @memberof Document
+ * @param data
+ * @param options
+ * @returns {Document}
+ */
+FdbDocument.prototype.setData = function (data, options) {
+	var i,
+		$unset;
 
-		if (data) {
-			options = options || {
-				$decouple: true
-			};
+	if (data) {
+		options = options || {
+			$decouple: true
+		};
 
-			if (options && options.$decouple === true) {
-				data = this.decouple(data);
-			}
+		if (options && options.$decouple === true) {
+			data = this.decouple(data);
+		}
 
-			if (this._linked) {
-				$unset = {};
+		if (this._linked) {
+			$unset = {};
 
-				// Remove keys that don't exist in the new data from the current object
-				for (i in this._data) {
-					if (i.substr(0, 6) !== 'jQuery' && this._data.hasOwnProperty(i)) {
-						// Check if existing data has key
-						if (data[i] === undefined) {
-							// Add property name to those to unset
-							$unset[i] = 1;
-						}
+			// Remove keys that don't exist in the new data from the current object
+			for (i in this._data) {
+				if (i.substr(0, 6) !== 'jQuery' && this._data.hasOwnProperty(i)) {
+					// Check if existing data has key
+					if (data[i] === undefined) {
+						// Add property name to those to unset
+						$unset[i] = 1;
 					}
 				}
-
-				data.$unset = $unset;
-
-				// Now update the object with new data
-				this.updateObject(this._data, data, {});
-			} else {
-				// Straight data assignment
-				this._data = data;
 			}
-		}
 
-		return this;
-	};
+			data.$unset = $unset;
 
-	/**
-	 * Gets the document's data returned as a single object.
-	 * @param {Object} query The query object - currently unused, just
-	 * provide a blank object e.g. {}
-	 * @param {Object=} options An options object.
-	 * @returns {Object} The document's data object.
-	 */
-	Document.prototype.find = function (query, options) {
-		var result;
-
-		if (options && options.$decouple === false) {
-			result = this._data;
+			// Now update the object with new data
+			this.updateObject(this._data, data, {});
 		} else {
-			result = this.decouple(this._data);
+			// Straight data assignment
+			this._data = data;
 		}
+	}
 
-		return result;
-	};
+	return this;
+};
 
-	/**
-	 * Modifies the document. This will update the document with the data held in 'update'.
-	 *
-	 * @param {Object} query The query that must be matched for a document to be
-	 * operated on.
-	 * @param {Object} update The object containing updated key/values. Any keys that
-	 * match keys on the existing document will be overwritten with this data. Any
-	 * keys that do not currently exist on the document will be added to the document.
-	 * @param {Object=} options An options object.
-	 * @returns {Array} The items that were updated.
-	 */
-	Document.prototype.update = function (query, update, options) {
-		this.updateObject(this._data, update, query, options);
-	};
+/**
+ * Gets the document's data returned as a single object.
+ * @func find
+ * @memberof Document
+ * @param {Object} query The query object - currently unused, just
+ * provide a blank object e.g. {}
+ * @param {Object=} options An options object.
+ * @returns {Object} The document's data object.
+ */
+FdbDocument.prototype.find = function (query, options) {
+	var result;
 
-	/**
-	 * Internal method for document updating.
-	 * @param {Object} doc The document to update.
-	 * @param {Object} update The object with key/value pairs to update the document with.
-	 * @param {Object} query The query object that we need to match to perform an update.
-	 * @param {Object} options An options object.
-	 * @param {String} path The current recursive path.
-	 * @param {String} opType The type of update operation to perform, if none is specified
-	 * default is to set new data against matching fields.
-	 * @returns {Boolean} True if the document was updated with new / changed data or
-	 * false if it was not updated because the data was the same.
-	 * @private
-	 */
-	Document.prototype.updateObject = Collection.prototype.updateObject;
+	if (options && options.$decouple === false) {
+		result = this._data;
+	} else {
+		result = this.decouple(this._data);
+	}
 
-	/**
-	 * Determines if the passed key has an array positional mark (a dollar at the end
-	 * of its name).
-	 * @param {String} key The key to check.
-	 * @returns {Boolean} True if it is a positional or false if not.
-	 * @private
-	 */
-	Document.prototype._isPositionalKey = function (key) {
-		return key.substr(key.length - 2, 2) === '.$';
-	};
+	return result;
+};
 
-	/**
-	 * Updates a property on an object depending on if the collection is
-	 * currently running data-binding or not.
-	 * @param {Object} doc The object whose property is to be updated.
-	 * @param {String} prop The property to update.
-	 * @param {*} val The new value of the property.
-	 * @private
-	 */
-	Document.prototype._updateProperty = function (doc, prop, val) {
+/**
+ * Modifies the document. This will update the document with the data held in 'update'.
+ * @func update
+ * @memberof Document
+ * @param {Object} query The query that must be matched for a document to be
+ * operated on.
+ * @param {Object} update The object containing updated key/values. Any keys that
+ * match keys on the existing document will be overwritten with this data. Any
+ * keys that do not currently exist on the document will be added to the document.
+ * @param {Object=} options An options object.
+ * @returns {Array} The items that were updated.
+ */
+FdbDocument.prototype.update = function (query, update, options) {
+	this.updateObject(this._data, update, query, options);
+};
+
+/**
+ * Internal method for document updating.
+ * @func updateObject
+ * @memberof Document
+ * @param {Object} doc The document to update.
+ * @param {Object} update The object with key/value pairs to update the document with.
+ * @param {Object} query The query object that we need to match to perform an update.
+ * @param {Object} options An options object.
+ * @param {String} path The current recursive path.
+ * @param {String} opType The type of update operation to perform, if none is specified
+ * default is to set new data against matching fields.
+ * @returns {Boolean} True if the document was updated with new / changed data or
+ * false if it was not updated because the data was the same.
+ * @private
+ */
+FdbDocument.prototype.updateObject = Collection.prototype.updateObject;
+
+/**
+ * Determines if the passed key has an array positional mark (a dollar at the end
+ * of its name).
+ * @func _isPositionalKey
+ * @memberof Document
+ * @param {String} key The key to check.
+ * @returns {Boolean} True if it is a positional or false if not.
+ * @private
+ */
+FdbDocument.prototype._isPositionalKey = function (key) {
+	return key.substr(key.length - 2, 2) === '.$';
+};
+
+/**
+ * Updates a property on an object depending on if the collection is
+ * currently running data-binding or not.
+ * @func _updateProperty
+ * @memberof Document
+ * @param {Object} doc The object whose property is to be updated.
+ * @param {String} prop The property to update.
+ * @param {*} val The new value of the property.
+ * @private
+ */
+FdbDocument.prototype._updateProperty = function (doc, prop, val) {
+	if (this._linked) {
+		window.jQuery.observable(doc).setProperty(prop, val);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+		}
+	} else {
+		doc[prop] = val;
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+		}
+	}
+};
+
+/**
+ * Increments a value for a property on a document by the passed number.
+ * @func _updateIncrement
+ * @memberof Document
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to increment by.
+ * @private
+ */
+FdbDocument.prototype._updateIncrement = function (doc, prop, val) {
+	if (this._linked) {
+		window.jQuery.observable(doc).setProperty(prop, doc[prop] + val);
+	} else {
+		doc[prop] += val;
+	}
+};
+
+/**
+ * Changes the index of an item in the passed array.
+ * @func _updateSpliceMove
+ * @memberof Document
+ * @param {Array} arr The array to modify.
+ * @param {Number} indexFrom The index to move the item from.
+ * @param {Number} indexTo The index to move the item to.
+ * @private
+ */
+FdbDocument.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
+	if (this._linked) {
+		window.jQuery.observable(arr).move(indexFrom, indexTo);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+		}
+	} else {
+		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
+
+		if (this.debug()) {
+			console.log('ForerunnerDB.Document: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+		}
+	}
+};
+
+/**
+ * Inserts an item into the passed array at the specified index.
+ * @func _updateSplicePush
+ * @memberof Document
+ * @param {Array} arr The array to insert into.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
+ * @private
+ */
+FdbDocument.prototype._updateSplicePush = function (arr, index, doc) {
+	if (arr.length > index) {
 		if (this._linked) {
-			window.jQuery.observable(doc).setProperty(prop, val);
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Document: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-			}
+			window.jQuery.observable(arr).insert(index, doc);
 		} else {
-			doc[prop] = val;
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Document: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
-			}
+			arr.splice(index, 0, doc);
 		}
-	};
-
-	/**
-	 * Increments a value for a property on a document by the passed number.
-	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to modify.
-	 * @param {Number} val The amount to increment by.
-	 * @private
-	 */
-	Document.prototype._updateIncrement = function (doc, prop, val) {
-		if (this._linked) {
-			window.jQuery.observable(doc).setProperty(prop, doc[prop] + val);
-		} else {
-			doc[prop] += val;
-		}
-	};
-
-	/**
-	 * Changes the index of an item in the passed array.
-	 * @param {Array} arr The array to modify.
-	 * @param {Number} indexFrom The index to move the item from.
-	 * @param {Number} indexTo The index to move the item to.
-	 * @private
-	 */
-	Document.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
-		if (this._linked) {
-			window.jQuery.observable(arr).move(indexFrom, indexTo);
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Document: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-			}
-		} else {
-			arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
-
-			if (this.debug()) {
-				console.log('ForerunnerDB.Document: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
-			}
-		}
-	};
-
-	/**
-	 * Inserts an item into the passed array at the specified index.
-	 * @param {Array} arr The array to insert into.
-	 * @param {Number} index The index to insert at.
-	 * @param {Object} doc The document to insert.
-	 * @private
-	 */
-	Document.prototype._updateSplicePush = function (arr, index, doc) {
-		if (arr.length > index) {
-			if (this._linked) {
-				window.jQuery.observable(arr).insert(index, doc);
-			} else {
-				arr.splice(index, 0, doc);
-			}
-		} else {
-			if (this._linked) {
-				window.jQuery.observable(arr).insert(doc);
-			} else {
-				arr.push(doc);
-			}
-		}
-	};
-
-	/**
-	 * Inserts an item at the end of an array.
-	 * @param {Array} arr The array to insert the item into.
-	 * @param {Object} doc The document to insert.
-	 * @private
-	 */
-	Document.prototype._updatePush = function (arr, doc) {
+	} else {
 		if (this._linked) {
 			window.jQuery.observable(arr).insert(doc);
 		} else {
 			arr.push(doc);
 		}
-	};
+	}
+};
 
-	/**
-	 * Removes an item from the passed array.
-	 * @param {Array} arr The array to modify.
-	 * @param {Number} index The index of the item in the array to remove.
-	 * @private
-	 */
-	Document.prototype._updatePull = function (arr, index) {
+/**
+ * Inserts an item at the end of an array.
+ * @func _updatePush
+ * @memberof Document
+ * @param {Array} arr The array to insert the item into.
+ * @param {Object} doc The document to insert.
+ * @private
+ */
+FdbDocument.prototype._updatePush = function (arr, doc) {
+	if (this._linked) {
+		window.jQuery.observable(arr).insert(doc);
+	} else {
+		arr.push(doc);
+	}
+};
+
+/**
+ * Removes an item from the passed array.
+ * @func _updatePull
+ * @memberof Document
+ * @param {Array} arr The array to modify.
+ * @param {Number} index The index of the item in the array to remove.
+ * @private
+ */
+FdbDocument.prototype._updatePull = function (arr, index) {
+	if (this._linked) {
+		window.jQuery.observable(arr).remove(index);
+	} else {
+		arr.splice(index, 1);
+	}
+};
+
+/**
+ * Multiplies a value for a property on a document by the passed number.
+ * @func _updateMultiply
+ * @memberof Document
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to modify.
+ * @param {Number} val The amount to multiply by.
+ * @private
+ */
+FdbDocument.prototype._updateMultiply = function (doc, prop, val) {
+	if (this._linked) {
+		window.jQuery.observable(doc).setProperty(prop, doc[prop] * val);
+	} else {
+		doc[prop] *= val;
+	}
+};
+
+/**
+ * Renames a property on a document to the passed property.
+ * @func _updateRename
+ * @memberof Document
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to rename.
+ * @param {Number} val The new property name.
+ * @private
+ */
+FdbDocument.prototype._updateRename = function (doc, prop, val) {
+	var existingVal = doc[prop];
+	if (this._linked) {
+		window.jQuery.observable(doc).setProperty(val, existingVal);
+		window.jQuery.observable(doc).removeProperty(prop);
+	} else {
+		doc[val] = existingVal;
+		delete doc[prop];
+	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @func _updateUnset
+ * @memberof Document
+ * @param {Object} doc The document to modify.
+ * @param {String} prop The property to delete.
+ * @private
+ */
+FdbDocument.prototype._updateUnset = function (doc, prop) {
+	if (this._linked) {
+		window.jQuery.observable(doc).removeProperty(prop);
+	} else {
+		delete doc[prop];
+	}
+};
+
+/**
+ * Deletes a property on a document.
+ * @func _updatePop
+ * @memberof Document
+ * @param {Object} doc The document to modify.
+ * @param {*} val The property to delete.
+ * @return {Boolean}
+ * @private
+ */
+FdbDocument.prototype._updatePop = function (doc, val) {
+	var index,
+		updated = false;
+
+	if (doc.length > 0) {
 		if (this._linked) {
-			window.jQuery.observable(arr).remove(index);
+			if (val === 1) {
+				index = doc.length - 1;
+			} else if (val === -1) {
+				index = 0;
+			}
+
+			if (index > -1) {
+				window.jQuery.observable(doc).remove(index);
+				updated = true;
+			}
 		} else {
-			arr.splice(index, 1);
-		}
-	};
-
-	/**
-	 * Multiplies a value for a property on a document by the passed number.
-	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to modify.
-	 * @param {Number} val The amount to multiply by.
-	 * @private
-	 */
-	Document.prototype._updateMultiply = function (doc, prop, val) {
-		if (this._linked) {
-			window.jQuery.observable(doc).setProperty(prop, doc[prop] * val);
-		} else {
-			doc[prop] *= val;
-		}
-	};
-
-	/**
-	 * Renames a property on a document to the passed property.
-	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to rename.
-	 * @param {Number} val The new property name.
-	 * @private
-	 */
-	Document.prototype._updateRename = function (doc, prop, val) {
-		var existingVal = doc[prop];
-		if (this._linked) {
-			window.jQuery.observable(doc).setProperty(val, existingVal);
-			window.jQuery.observable(doc).removeProperty(prop);
-		} else {
-			doc[val] = existingVal;
-			delete doc[prop];
-		}
-	};
-
-	/**
-	 * Deletes a property on a document.
-	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to delete.
-	 * @private
-	 */
-	Document.prototype._updateUnset = function (doc, prop) {
-		if (this._linked) {
-			window.jQuery.observable(doc).removeProperty(prop);
-		} else {
-			delete doc[prop];
-		}
-	};
-
-	/**
-	 * Deletes a property on a document.
-	 * @param {Object} doc The document to modify.
-	 * @param {*} val The property to delete.
-	 * @return {Boolean}
-	 * @private
-	 */
-	Document.prototype._updatePop = function (doc, val) {
-		var index,
-			updated = false;
-
-		if (doc.length > 0) {
-			if (this._linked) {
-				if (val === 1) {
-					index = doc.length - 1;
-				} else if (val === -1) {
-					index = 0;
-				}
-
-				if (index > -1) {
-					window.jQuery.observable(doc).remove(index);
-					updated = true;
-				}
-			} else {
-				if (val === 1) {
-					doc.pop();
-					updated = true;
-				} else if (val === -1) {
-					doc.shift();
-					updated = true;
-				}
+			if (val === 1) {
+				doc.pop();
+				updated = true;
+			} else if (val === -1) {
+				doc.shift();
+				updated = true;
 			}
 		}
+	}
 
-		return updated;
-	};
+	return updated;
+};
 
-	Document.prototype.drop = function () {
-		if (this._state !== 'dropped') {
-			if (this._db && this._name) {
-				if (this._db && this._db._document && this._db._document[this._name]) {
-					this._state = 'dropped';
+/**
+ * Drops the document.
+ * @func drop
+ * @memberof Document
+ * @returns {boolean} True if successful, false if not.
+ */
+FdbDocument.prototype.drop = function () {
+	if (this._state !== 'dropped') {
+		if (this._db && this._name) {
+			if (this._db && this._db._document && this._db._document[this._name]) {
+				this._state = 'dropped';
 
-					delete this._db._document[this._name];
-					delete this._data;
+				delete this._db._document[this._name];
+				delete this._data;
 
-					this.emit('drop', this);
+				this.emit('drop', this);
 
-					return true;
-				}
-			}
-		} else {
-			return true;
-		}
-
-		return false;
-	};
-
-	Db.prototype.document = function (documentName) {
-		if (documentName) {
-			this._document = this._document || {};
-			this._document[documentName] = this._document[documentName] || new Document(documentName).db(this);
-			return this._document[documentName];
-		} else {
-			// Return an object of document data
-			return this._document;
-		}
-	};
-
-	/**
-	 * Returns an array of documents the DB currently has.
-	 * @returns {Array} An array of objects containing details of each document
-	 * the database is currently managing.
-	 */
-	Db.prototype.documents = function () {
-		var arr = [],
-			i;
-
-		for (i in this._document) {
-			if (this._document.hasOwnProperty(i)) {
-				arr.push({
-					name: i
-				});
+				return true;
 			}
 		}
+	} else {
+		return true;
+	}
 
-		return arr;
-	};
+	return false;
+};
 
-	Shared.finishModule('Document');
-	module.exports = Document;
-}());
+/**
+ * Creates a new document instance.
+ * @func document
+ * @memberof Db
+ * @param {String} documentName The name of the document to create.
+ * @returns {*}
+ */
+Db.prototype.document = function (documentName) {
+	if (documentName) {
+		this._document = this._document || {};
+		this._document[documentName] = this._document[documentName] || new FdbDocument(documentName).db(this);
+		return this._document[documentName];
+	} else {
+		// Return an object of document data
+		return this._document;
+	}
+};
+
+/**
+ * Returns an array of documents the DB currently has.
+ * @func documents
+ * @memberof Db
+ * @returns {Array} An array of objects containing details of each document
+ * the database is currently managing.
+ */
+Db.prototype.documents = function () {
+	var arr = [],
+		i;
+
+	for (i in this._document) {
+		if (this._document.hasOwnProperty(i)) {
+			arr.push({
+				name: i
+			});
+		}
+	}
+
+	return arr;
+};
+
+Shared.finishModule('Document');
+module.exports = FdbDocument;
 },{"./Collection":3,"./Shared":32}],9:[function(_dereq_,module,exports){
 "use strict";
 
@@ -4861,46 +4986,10 @@ var Shared,
 //Shared = ForerunnerDB.shared;
 Shared = _dereq_('./Shared');
 
-/*
-// As this is a separate module, use the external loader flow
-if (typeof jQuery !== 'undefined') {
-	// Define modules that we wish to work on (or wait for to load)
-	var modules = ['Collection', 'View'],
-		loaded = [],
-		moduleIndex;
-
-	// Extend modules that are finished loading
-	for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
-		Shared.moduleFinished(modules[moduleIndex], function (name, module) {
-			switch (name) {
-				case 'Collection':
-					Collection = module;
-					loaded.push(name);
-					break;
-
-				case 'View':
-					View = module;
-					loaded.push(name);
-					break;
-
-				default:
-					break;
-			}
-
-			if (loaded.length === modules.length) {
-				gridInit();
-			}
-		});
-	}
-
-	Shared.finishModule('AutoBind');
-} else {
-	throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
-}
-*/
-
 /**
- * The grid constructor.
+ * Creates a new grid instance.
+ * @name Grid
+ * @class Grid
  * @param {String} selector jQuery selector.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
@@ -4940,15 +5029,26 @@ DbInit = Db.prototype.init;
 
 /**
  * Gets / sets the current state.
+ * @func state
+ * @memberof Grid
  * @param {String=} val The name of the state to set.
- * @returns {*}
+ * @returns {Grid}
  */
 Shared.synthesize(Grid.prototype, 'state');
 
+/**
+ * Gets / sets the current name.
+ * @func name
+ * @memberof Grid
+ * @param {String=} val The name to set.
+ * @returns {Grid}
+ */
 Shared.synthesize(Grid.prototype, 'name');
 
 /**
  * Executes an insert against the grid's underlying data-source.
+ * @func insert
+ * @memberof Grid
  */
 Grid.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
@@ -4956,6 +5056,8 @@ Grid.prototype.insert = function () {
 
 /**
  * Executes an update against the grid's underlying data-source.
+ * @func update
+ * @memberof Grid
  */
 Grid.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
@@ -4963,6 +5065,8 @@ Grid.prototype.update = function () {
 
 /**
  * Executes an updateById against the grid's underlying data-source.
+ * @func updateById
+ * @memberof Grid
  */
 Grid.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
@@ -4970,6 +5074,8 @@ Grid.prototype.updateById = function () {
 
 /**
  * Executes a remove against the grid's underlying data-source.
+ * @func remove
+ * @memberof Grid
  */
 Grid.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
@@ -4977,6 +5083,8 @@ Grid.prototype.remove = function () {
 
 /**
  * Sets the collection from which the grid will assemble its data.
+ * @func from
+ * @memberof Grid
  * @param {Collection} collection The collection to use to assemble grid data.
  * @returns {Grid}
  */
@@ -5005,7 +5113,9 @@ Grid.prototype.from = function (collection) {
 
 /**
  * Gets / sets the DB the grid is bound against.
- * @param db
+ * @func db
+ * @memberof Grid
+ * @param {Db} db
  * @returns {*}
  */
 Grid.prototype.db = function (db) {
@@ -5026,6 +5136,8 @@ Grid.prototype._collectionDropped = function (collection) {
 
 /**
  * Drops a grid and all it's stored data from the database.
+ * @func drop
+ * @memberof Grid
  * @returns {boolean} True on success, false on failure.
  */
 Grid.prototype.drop = function () {
@@ -5064,6 +5176,13 @@ Grid.prototype.drop = function () {
 	return false;
 };
 
+/**
+ * Gets / sets the grid's HTML template to use when rendering.
+ * @func template
+ * @memberof Grid
+ * @param {Selector} template The template's jQuery selector.
+ * @returns {*}
+ */
 Grid.prototype.template = function (template) {
 	if (template !== undefined) {
 		this._template = template;
@@ -5089,6 +5208,8 @@ Grid.prototype._sortGridClick = function (e) {
 
 /**
  * Refreshes the grid data such as ordering etc.
+ * @func refresh
+ * @memberof Grid
  */
 Grid.prototype.refresh = function () {
 	if (this._from) {
@@ -5127,53 +5248,179 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.query) {
 				// Listen for filter requests
+				var queryObj = {};
+
 				elem.find('[data-grid-filter]').each(function (index, filterElem) {
 					filterElem = window.jQuery(filterElem);
 
 					var filterField = filterElem.attr('data-grid-filter'),
+						filterVarType = filterElem.attr('data-grid-vartype'),
 						filterObj = {},
 						title = filterElem.html(),
-						dropDown,
+						dropDownButton,
+						dropDownMenu,
 						template,
+						filterQuery,
 						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
 
 					filterObj[filterField] = 1;
 
+					filterQuery = {
+						$distinct: filterObj
+					};
+
 					filterView
-						.query({
-							$distinct: filterObj
-						})
+						.query(filterQuery)
 						.orderBy(filterObj)
-						.from(self._from);
+						.from(self._from._from);
 
 					template = [
 						'<div class="dropdown" id="' + self._id + '_' + filterField + '">',
-						'<button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">',
-						title + ' <span class="caret"></span>',
-						'</button>',
-						'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">',
-						'</ul>',
+							'<button class="btn btn-default dropdown-toggle" type="button" id="' + self._id + '_' + filterField + '_dropdownButton" data-toggle="dropdown" aria-expanded="true">',
+								title + ' <span class="caret"></span>',
+							'</button>',
 						'</div>'
 					];
 
-					dropDown = window.jQuery(template.join(''));
-					filterElem.html(dropDown);
+					dropDownButton = window.jQuery(template.join(''));
+					dropDownMenu = window.jQuery('<ul class="dropdown-menu" role="menu" id="' + self._id + '_' + filterField + '_dropdownMenu"></ul>');
+
+					dropDownButton.append(dropDownMenu);
+
+					filterElem.html(dropDownButton);
 
 					// Data-link the underlying data to the grid filter drop-down
-					filterView.link(dropDown.find('ul'), {
-						template: '{^{for options}}<li role="presentation"><a role="menuitem" tabindex="-1" href="#" data-val="{{:' + filterField + '}}">{^{if active}}<span class="glyphicons glyphicons-tick"></span> {{/if}}{{:' + filterField + '}}</a></li>{{/for}}'
+					filterView.link(dropDownMenu, {
+						template: [
+							'<li role="presentation" class="input-group" style="width: 240px; padding-left: 10px; padding-right: 10px; padding-top: 5px;">',
+								'<input type="search" class="form-control gridFilterSearch" placeholder="Search...">',
+								'<span class="input-group-btn">',
+									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle"></span></button>',
+								'</span>',
+							'</li>',
+							'<li role="presentation" class="divider"></li>',
+							'<li role="presentation" data-val="$all">',
+								'<a role="menuitem" tabindex="-1">',
+									'<input type="checkbox" checked>&nbsp;All',
+								'</a>',
+							'</li>',
+							'<li role="presentation" class="divider"></li>',
+							'{^{for options}}',
+								'<li role="presentation" data-link="data-val{:' + filterField + '}">',
+									'<a role="menuitem" tabindex="-1">',
+										'<input type="checkbox">&nbsp;{^{:' + filterField + '}}',
+									'</a>',
+								'</li>',
+							'{{/for}}'
+						].join('')
 					}, {
 						$wrap: 'options'
 					});
 
-					elem.on('click', '#' + self._id + '_' + filterField + ' ul.dropdown-menu li>a', function (e) {
-						e.preventDefault();
-						var queryObj = {};
+					elem.on('keyup', '#' + self._id + '_' + filterField + '_dropdownMenu .gridFilterSearch', function (e) {
+						var elem = window.jQuery(this),
+							query = filterView.query(),
+							search = elem.val();
 
-						queryObj[filterField] = window.jQuery(this).attr('data-val');
-						//filterView.update(queryObj, {active: 1});
+						if (search) {
+							query[filterField] = new RegExp(search, 'gi');
+						} else {
+							delete query[filterField];
+						}
 
-						self._from.queryAdd(queryObj);
+						filterView.query(query);
+					});
+
+					elem.on('click', '#' + self._id + '_' + filterField + '_dropdownMenu .gridFilterClearSearch', function (e) {
+						// Clear search text box
+						window.jQuery(this).parents('li').find('.gridFilterSearch').val('');
+
+						// Clear view query
+						var query = filterView.query();
+						delete query[filterField];
+						filterView.query(query);
+					});
+
+					elem.on('click', '#' + self._id + '_' + filterField + '_dropdownMenu li', function (e) {
+						e.stopPropagation();
+
+						var fieldValue,
+							elem = $(this),
+							checkbox = elem.find('input[type="checkbox"]'),
+							checked,
+							addMode = true,
+							fieldInArr,
+							liElem,
+							i;
+
+						// If the checkbox is not the one clicked on
+						if (!window.jQuery(e.target).is('input')) {
+							// Set checkbox to opposite of current value
+							checkbox.prop('checked', !checkbox.prop('checked'));
+							checked = checkbox.is(':checked');
+						} else {
+							checkbox.prop('checked', checkbox.prop('checked'));
+							checked = checkbox.is(':checked');
+						}
+
+						liElem = window.jQuery(this);
+						fieldValue = liElem.attr('data-val');
+
+						// Check if the selection is the "all" option
+						if (fieldValue === '$all') {
+							// Remove the field from the query
+							delete queryObj[filterField];
+
+							// Clear all other checkboxes
+							liElem.parent().find('li[data-val!="$all"]').find('input[type="checkbox"]').prop('checked', false);
+						} else {
+							// Clear the "all" checkbox
+							liElem.parent().find('[data-val="$all"]').find('input[type="checkbox"]').prop('checked', false);
+
+							// Check if the type needs casting
+							switch (filterVarType) {
+								case 'integer':
+									fieldValue = parseInt(fieldValue, 10);
+									break;
+
+								case 'float':
+									fieldValue = parseFloat(fieldValue);
+									break;
+
+								default:
+							}
+
+							// Check if the item exists already
+							queryObj[filterField] = queryObj[filterField] || {
+								$in: []
+							};
+
+							fieldInArr = queryObj[filterField].$in;
+
+							for (i = 0; i < fieldInArr.length; i++) {
+								if (fieldInArr[i] === fieldValue) {
+									// Item already exists
+									if (checked === false) {
+										// Remove the item
+										fieldInArr.splice(i, 1);
+									}
+									addMode = false;
+									break;
+								}
+							}
+
+							if (addMode && checked) {
+								fieldInArr.push(fieldValue);
+							}
+
+							if (!fieldInArr.length) {
+								// Remove the field from the query
+								delete queryObj[filterField];
+							}
+						}
+
+						// Set the view query
+						self._from.queryData(queryObj);
 					});
 				});
 			}
@@ -5188,7 +5435,19 @@ Grid.prototype.refresh = function () {
 };
 
 /**
+ * Returns the number of documents currently in the grid.
+ * @func count
+ * @memberof Grid
+ * @returns {Number}
+ */
+Grid.prototype.count = function () {
+	return this._from.count();
+};
+
+/**
  * Creates a grid and assigns the collection as its data source.
+ * @func grid
+ * @memberof Collection
  * @param {String} selector jQuery selector of grid output target.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -5217,6 +5476,8 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
  * Removes a grid safely from the DOM. Must be called when grid is
  * no longer required / is being removed from DOM otherwise references
  * will stick around and cause memory leaks.
+ * @func unGrid
+ * @memberof Collection
  * @param {String} selector jQuery selector of grid output target.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -5258,6 +5519,8 @@ Collection.prototype.unGrid = View.prototype.unGrid = function (selector, templa
 
 /**
  * Adds a grid to the internal grid lookup.
+ * @func _addGrid
+ * @memberof Collection
  * @param {Grid} grid The grid to add.
  * @returns {Collection}
  * @private
@@ -5273,6 +5536,8 @@ Collection.prototype._addGrid = CollectionGroup.prototype._addGrid = View.protot
 
 /**
  * Removes a grid from the internal grid lookup.
+ * @func _removeGrid
+ * @memberof Collection
  * @param {Grid} grid The grid to remove.
  * @returns {Collection}
  * @private
@@ -5296,6 +5561,8 @@ Db.prototype.init = function () {
 
 /**
  * Determine if a grid with the passed name already exists.
+ * @func gridExists
+ * @memberof Db
  * @param {String} selector The jQuery selector to bind the grid to.
  * @returns {boolean}
  */
@@ -5305,6 +5572,8 @@ Db.prototype.gridExists = function (selector) {
 
 /**
  * Gets a grid by it's name.
+ * @func grid
+ * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -5323,6 +5592,8 @@ Db.prototype.grid = function (selector, template, options) {
 
 /**
  * Gets a grid by it's name.
+ * @func unGrid
+ * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
  * @param {String} template The table template to use when rendering the grid.
  * @param {Object=} options The options object to apply to the grid.
@@ -5341,6 +5612,8 @@ Db.prototype.unGrid = function (selector, template, options) {
 
 /**
  * Returns an array of grids the DB currently has.
+ * @func grids
+ * @memberof Db
  * @returns {Array} An array of objects containing details of each grid
  * the database is currently managing.
  */
@@ -5677,6 +5950,8 @@ Collection.prototype.init = function () {
 Collection.prototype.pieChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func pieChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5697,6 +5972,8 @@ Collection.prototype.pieChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func pieChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} keyField The field to use as the data key.
 	 * @param {String} valField The field to use as the data value.
@@ -5723,6 +6000,8 @@ Collection.prototype.pieChart = new Overload({
 Collection.prototype.lineChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func lineChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5743,6 +6022,8 @@ Collection.prototype.lineChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func lineChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -5769,6 +6050,8 @@ Collection.prototype.lineChart = new Overload({
 Collection.prototype.areaChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func areaChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5789,6 +6072,8 @@ Collection.prototype.areaChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func areaChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -5815,6 +6100,8 @@ Collection.prototype.areaChart = new Overload({
 Collection.prototype.columnChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func columnChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5835,6 +6122,8 @@ Collection.prototype.columnChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func columnChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -5861,6 +6150,8 @@ Collection.prototype.columnChart = new Overload({
 Collection.prototype.barChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func barChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5881,6 +6172,8 @@ Collection.prototype.barChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func barChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -5907,6 +6200,8 @@ Collection.prototype.barChart = new Overload({
 Collection.prototype.stackedBarChart = new Overload({
 	/**
 	 * Chart via options object.
+	 * @func stackedBarChart
+	 * @memberof Highchart
 	 * @param {Object} options The options object.
 	 * @returns {*}
 	 */
@@ -5931,6 +6226,8 @@ Collection.prototype.stackedBarChart = new Overload({
 
 	/**
 	 * Chart via defined params and an options object.
+	 * @func stackedBarChart
+	 * @memberof Highchart
 	 * @param {String|jQuery} selector The element to render the chart to.
 	 * @param {String} seriesField The name of the series to plot.
 	 * @param {String} keyField The field to use as the data key.
@@ -5952,6 +6249,7 @@ Collection.prototype.stackedBarChart = new Overload({
 
 /**
  * Removes a chart from the page by it's selector.
+ * @memberof Collection
  * @param {String} selector The chart selector.
  */
 Collection.prototype.dropChart = function (selector) {
@@ -6912,8 +7210,15 @@ var CRUD = {
 module.exports = CRUD;
 },{}],16:[function(_dereq_,module,exports){
 "use strict";
-// TODO: Document the methods in this mixin
+/**
+ * The chain reactor mixin, provides a class with chain reaction capabilities.
+ * @mixin
+ */
 var ChainReactor = {
+	/**
+	 *
+	 * @param obj
+	 */
 	chain: function (obj) {
 		this._chain = this._chain || [];
 		var index = this._chain.indexOf(obj);
@@ -7320,6 +7625,8 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		options.$rootData = options.$rootData || {};
+
 		// Check if the comparison data are both strings or numbers
 		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
 			// The source and test data are flat types that do not require recursive searches,
@@ -7335,7 +7642,6 @@ var Matching = {
 					matchedAll = false;
 				}
 			}
-
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
@@ -7619,18 +7925,18 @@ var Matching = {
 
 			case '$distinct':
 				// Ensure options holds a distinct lookup
-				options.$rootQuery['//distinctLookup'] = options.$rootQuery['//distinctLookup'] || {};
+				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
 
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootQuery['//distinctLookup'][distinctProp] = options.$rootQuery['//distinctLookup'][distinctProp] || {};
+						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootQuery['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
 
 							// Allow the item in the results
 							return true;
@@ -10828,6 +11134,11 @@ module.exports = ReactorIO;
 },{"./Shared":32}],32:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * A shared object that can be used to store arbitrary data between class
+ * instances, and access helper methods.
+ * @mixin
+ */
 var Shared = {
 	version: '1.3.51',
 	modules: {},
@@ -10836,6 +11147,7 @@ var Shared = {
 
 	/**
 	 * Adds a module to ForerunnerDB.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} module The module class.
 	 */
@@ -10847,6 +11159,7 @@ var Shared = {
 	/**
 	 * Called by the module once all processing has been completed. Used to determine
 	 * if the module is ready for use by other modules.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 */
 	finishModule: function (name) {
@@ -10861,6 +11174,7 @@ var Shared = {
 	/**
 	 * Will call your callback method when the specified module has loaded. If the module
 	 * is already loaded the callback is called immediately.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @param {Function} callback The callback method to call when the module is loaded.
 	 */
@@ -10874,6 +11188,7 @@ var Shared = {
 
 	/**
 	 * Determines if a module has been added to ForerunnerDB or not.
+	 * @memberof Shared
 	 * @param {String} name The name of the module.
 	 * @returns {Boolean} True if the module exists or false if not.
 	 */
@@ -10883,6 +11198,7 @@ var Shared = {
 
 	/**
 	 * Adds the properties and methods defined in the mixin to the passed object.
+	 * @memberof Shared
 	 * @param {Object} obj The target object to add mixin key/values to.
 	 * @param {String} mixinName The name of the mixin to add to the object.
 	 */
@@ -10902,6 +11218,7 @@ var Shared = {
 
 	/**
 	 * Generates a generic getter/setter method for the passed method name.
+	 * @memberof Shared
 	 * @param {Object} obj The object to add the getter/setter to.
 	 * @param {String} name The name of the getter/setter to generate.
 	 * @param {Function=} extend A method to call before executing the getter/setter.
@@ -10938,6 +11255,7 @@ var Shared = {
 
 	/**
 	 * Allows a method to be overloaded.
+	 * @memberof Shared
 	 * @param arr
 	 * @returns {Function}
 	 * @constructor
@@ -10946,6 +11264,7 @@ var Shared = {
 
 	/**
 	 * Define the mixins that other modules can use as required.
+	 * @memberof Shared
 	 */
 	mixins: {
 		'Mixin.Common': _dereq_('./Mixin.Common'),
@@ -10980,10 +11299,10 @@ var Shared,
 Shared = _dereq_('./Shared');
 
 /**
- * The view constructor.
- * @param name
- * @param query
- * @param options
+ * Creates a new view instance.
+ * @param {String} name The name of the view.
+ * @param {Object=} query The view's query.
+ * @param {Object=} options An options object.
  * @constructor
  */
 var View = function (name, query, options) {
@@ -11029,12 +11348,23 @@ DbInit = Db.prototype.init;
  */
 Shared.synthesize(View.prototype, 'state');
 
+/**
+ * Gets / sets the current name.
+ * @param {String=} val The new name to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'name');
 
+/**
+ * Gets / sets the current cursor.
+ * @param {String=} val The new cursor to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'cursor');
 
 /**
  * Executes an insert against the view's underlying data-source.
+ * @see Collection::insert()
  */
 View.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
@@ -11042,6 +11372,7 @@ View.prototype.insert = function () {
 
 /**
  * Executes an update against the view's underlying data-source.
+ * @see Collection::update()
  */
 View.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
@@ -11049,6 +11380,7 @@ View.prototype.update = function () {
 
 /**
  * Executes an updateById against the view's underlying data-source.
+ * @see Collection::updateById()
  */
 View.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
@@ -11056,14 +11388,16 @@ View.prototype.updateById = function () {
 
 /**
  * Executes a remove against the view's underlying data-source.
+ * @see Collection::remove()
  */
 View.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
 };
 
 /**
- * Queries the view data. See Collection.find() for more information.
- * @returns {*}
+ * Queries the view data.
+ * @see Collection::find()
+ * @returns {Array} The result of the find query.
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
@@ -11215,6 +11549,12 @@ View.prototype.from = function (collection) {
 	return this;
 };
 
+/**
+ * Handles when an underlying collection the view is using as a data
+ * source is dropped.
+ * @param {Collection} collection The collection that has been dropped.
+ * @private
+ */
 View.prototype._collectionDropped = function (collection) {
 	if (collection) {
 		// Collection was dropped, remove from view
@@ -11222,10 +11562,20 @@ View.prototype._collectionDropped = function (collection) {
 	}
 };
 
+/**
+ * Creates an index on the view.
+ * @see Collection::ensureIndex()
+ * @returns {*}
+ */
 View.prototype.ensureIndex = function () {
 	return this._privateData.ensureIndex.apply(this._privateData, arguments);
 };
 
+/**
+ * The chain reaction handler method for the view.
+ * @param {Object} chainPacket The chain reaction packet to handle.
+ * @private
+ */
 View.prototype._chainHandler = function (chainPacket) {
 	var //self = this,
 		arr,
@@ -11360,16 +11710,28 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
+/**
+ * Listens for an event.
+ * @see Mixin.Events::on()
+ */
 View.prototype.on = function () {
-	this._privateData.on.apply(this._privateData, arguments);
+	return this._privateData.on.apply(this._privateData, arguments);
 };
 
+/**
+ * Cancels an event listener.
+ * @see Mixin.Events::off()
+ */
 View.prototype.off = function () {
-	this._privateData.off.apply(this._privateData, arguments);
+	return this._privateData.off.apply(this._privateData, arguments);
 };
 
+/**
+ * Emits an event.
+ * @see Mixin.Events::emit()
+ */
 View.prototype.emit = function () {
-	this._privateData.emit.apply(this._privateData, arguments);
+	return this._privateData.emit.apply(this._privateData, arguments);
 };
 
 /**
@@ -11386,6 +11748,7 @@ View.prototype.distinct = function (key, query, options) {
 
 /**
  * Gets the primary key for this view from the assigned collection.
+ * @see Collection::primaryKey()
  * @returns {String}
  */
 View.prototype.primaryKey = function () {
@@ -11459,9 +11822,11 @@ View.prototype.db = function (db) {
 };
 
 /**
- * Gets / sets the query that the view uses to build it's data set.
- * @param {Object=} query
- * @param {Boolean=} options An options object.
+ * Gets / sets the query object and query options that the view uses
+ * to build it's data set. This call modifies both the query and
+ * query options at the same time.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} options The query options object.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
  * @returns {*}
@@ -11528,22 +11893,25 @@ View.prototype.queryRemove = function (obj, refresh) {
 	var query = this._querySettings.query,
 		i;
 
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				delete query[i];
+	if (query) {
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					delete query[i];
+				}
 			}
 		}
-	}
 
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
 	}
 };
 
 /**
- * Gets / sets the query being used to generate the view data.
+ * Gets / sets the query being used to generate the view data. It
+ * does not change or modify the view's query options.
  * @param {Object=} query The query to set.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
