@@ -46,8 +46,13 @@ var ActiveBucket = function (orderBy) {
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
-Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 Shared.mixin(ActiveBucket.prototype, 'Mixin.Sorting');
+
+/**
+ * Gets / sets the primary key used by the active bucket.
+ * @returns {String} The current primary key.
+ */
+Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 
 /**
  * Quicksorts a single document into the passed array and
@@ -373,7 +378,10 @@ Shared.synthesize(Collection.prototype, 'state');
 Shared.synthesize(Collection.prototype, 'name');
 
 /**
- * Get the internal data
+ * Get the internal data array that represents the collection's data.
+ * This data is returned by reference and should not be altered outside
+ * of the provided CRUD functionality of the collection as doing so
+ * may cause unstable index behaviour within the collection.
  * @returns {Array}
  */
 Collection.prototype.data = function () {
@@ -893,6 +901,14 @@ Collection.prototype.update = function (query, update, options) {
 	return updated || [];
 };
 
+/**
+ * Replaces an existing object with data from the new object without
+ * breaking data references.
+ * @param {Object} currentObj The object to alter.
+ * @param {Object} newObj The new object to overwrite the existing one with.
+ * @returns {*} Chain.
+ * @private
+ */
 Collection.prototype._replaceObj = function (currentObj, newObj) {
 	var i;
 
@@ -922,7 +938,7 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
 	// Update the object in the collection data
 	//this._data.splice(this._data.indexOf(currentObj), 1, newObj);
 
-	return true;
+	return this;
 };
 
 /**
@@ -1844,8 +1860,8 @@ Collection.prototype.indexOfDocById = function (item) {
  * Uses the passed query to generate a new collection with results
  * matching the query parameters.
  *
- * @param query
- * @param options
+ * @param {Object} query The query object to generate the subset with.
+ * @param {Object=} options An options object.
  * @returns {*}
  */
 Collection.prototype.subset = function (query, options) {
