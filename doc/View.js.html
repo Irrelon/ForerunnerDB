@@ -41,10 +41,10 @@ var Shared,
 Shared = require('./Shared');
 
 /**
- * The view constructor.
- * @param name
- * @param query
- * @param options
+ * Creates a new view instance.
+ * @param {String} name The name of the view.
+ * @param {Object=} query The view's query.
+ * @param {Object=} options An options object.
  * @constructor
  */
 var View = function (name, query, options) {
@@ -90,12 +90,23 @@ DbInit = Db.prototype.init;
  */
 Shared.synthesize(View.prototype, 'state');
 
+/**
+ * Gets / sets the current name.
+ * @param {String=} val The new name to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'name');
 
+/**
+ * Gets / sets the current cursor.
+ * @param {String=} val The new cursor to set.
+ * @returns {*}
+ */
 Shared.synthesize(View.prototype, 'cursor');
 
 /**
  * Executes an insert against the view's underlying data-source.
+ * @see Collection::insert()
  */
 View.prototype.insert = function () {
 	this._from.insert.apply(this._from, arguments);
@@ -103,6 +114,7 @@ View.prototype.insert = function () {
 
 /**
  * Executes an update against the view's underlying data-source.
+ * @see Collection::update()
  */
 View.prototype.update = function () {
 	this._from.update.apply(this._from, arguments);
@@ -110,6 +122,7 @@ View.prototype.update = function () {
 
 /**
  * Executes an updateById against the view's underlying data-source.
+ * @see Collection::updateById()
  */
 View.prototype.updateById = function () {
 	this._from.updateById.apply(this._from, arguments);
@@ -117,14 +130,16 @@ View.prototype.updateById = function () {
 
 /**
  * Executes a remove against the view's underlying data-source.
+ * @see Collection::remove()
  */
 View.prototype.remove = function () {
 	this._from.remove.apply(this._from, arguments);
 };
 
 /**
- * Queries the view data. See Collection.find() for more information.
- * @returns {*}
+ * Queries the view data.
+ * @see Collection::find()
+ * @returns {Array} The result of the find query.
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
@@ -276,6 +291,12 @@ View.prototype.from = function (collection) {
 	return this;
 };
 
+/**
+ * Handles when an underlying collection the view is using as a data
+ * source is dropped.
+ * @param {Collection} collection The collection that has been dropped.
+ * @private
+ */
 View.prototype._collectionDropped = function (collection) {
 	if (collection) {
 		// Collection was dropped, remove from view
@@ -283,10 +304,20 @@ View.prototype._collectionDropped = function (collection) {
 	}
 };
 
+/**
+ * Creates an index on the view.
+ * @see Collection::ensureIndex()
+ * @returns {*}
+ */
 View.prototype.ensureIndex = function () {
 	return this._privateData.ensureIndex.apply(this._privateData, arguments);
 };
 
+/**
+ * The chain reaction handler method for the view.
+ * @param {Object} chainPacket The chain reaction packet to handle.
+ * @private
+ */
 View.prototype._chainHandler = function (chainPacket) {
 	var //self = this,
 		arr,
@@ -421,16 +452,28 @@ View.prototype._chainHandler = function (chainPacket) {
 	}
 };
 
+/**
+ * Listens for an event.
+ * @see Mixin.Events::on()
+ */
 View.prototype.on = function () {
-	this._privateData.on.apply(this._privateData, arguments);
+	return this._privateData.on.apply(this._privateData, arguments);
 };
 
+/**
+ * Cancels an event listener.
+ * @see Mixin.Events::off()
+ */
 View.prototype.off = function () {
-	this._privateData.off.apply(this._privateData, arguments);
+	return this._privateData.off.apply(this._privateData, arguments);
 };
 
+/**
+ * Emits an event.
+ * @see Mixin.Events::emit()
+ */
 View.prototype.emit = function () {
-	this._privateData.emit.apply(this._privateData, arguments);
+	return this._privateData.emit.apply(this._privateData, arguments);
 };
 
 /**
@@ -447,6 +490,7 @@ View.prototype.distinct = function (key, query, options) {
 
 /**
  * Gets the primary key for this view from the assigned collection.
+ * @see Collection::primaryKey()
  * @returns {String}
  */
 View.prototype.primaryKey = function () {
@@ -520,9 +564,11 @@ View.prototype.db = function (db) {
 };
 
 /**
- * Gets / sets the query that the view uses to build it's data set.
- * @param {Object=} query
- * @param {Boolean=} options An options object.
+ * Gets / sets the query object and query options that the view uses
+ * to build it's data set. This call modifies both the query and
+ * query options at the same time.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} options The query options object.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
  * @returns {*}
@@ -589,22 +635,25 @@ View.prototype.queryRemove = function (obj, refresh) {
 	var query = this._querySettings.query,
 		i;
 
-	if (obj !== undefined) {
-		// Loop object properties and add to existing query
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				delete query[i];
+	if (query) {
+		if (obj !== undefined) {
+			// Loop object properties and add to existing query
+			for (i in obj) {
+				if (obj.hasOwnProperty(i)) {
+					delete query[i];
+				}
 			}
 		}
-	}
 
-	if (refresh === undefined || refresh === true) {
-		this.refresh();
+		if (refresh === undefined || refresh === true) {
+			this.refresh();
+		}
 	}
 };
 
 /**
- * Gets / sets the query being used to generate the view data.
+ * Gets / sets the query being used to generate the view data. It
+ * does not change or modify the view's query options.
  * @param {Object=} query The query to set.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
@@ -1063,7 +1112,7 @@ module.exports = View;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Thu Jun 11 2015 11:17:41 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Fri Jun 12 2015 11:59:49 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
