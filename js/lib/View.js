@@ -492,9 +492,11 @@ View.prototype.db = function (db) {
 };
 
 /**
- * Gets / sets the query that the view uses to build it's data set.
- * @param {Object=} query
- * @param {Boolean=} options An options object.
+ * Gets / sets the query object and query options that the view uses
+ * to build it's data set. This call modifies both the query and
+ * query options at the same time.
+ * @param {Object=} query The query to set.
+ * @param {Boolean=} options The query options object.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
  * @returns {*}
@@ -578,7 +580,8 @@ View.prototype.queryRemove = function (obj, refresh) {
 };
 
 /**
- * Gets / sets the query being used to generate the view data.
+ * Gets / sets the query being used to generate the view data. It
+ * does not change or modify the view's query options.
  * @param {Object=} query The query to set.
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
