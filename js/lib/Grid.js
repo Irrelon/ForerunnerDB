@@ -322,7 +322,7 @@ Grid.prototype.refresh = function () {
 							'<li role="presentation" class="input-group" style="width: 240px; padding-left: 10px; padding-right: 10px; padding-top: 5px;">',
 								'<input type="search" class="form-control gridFilterSearch" placeholder="Search...">',
 								'<span class="input-group-btn">',
-									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle"></span></button>',
+									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle glyphicons glyphicons-remove"></span></button>',
 								'</span>',
 							'</li>',
 							'<li role="presentation" class="divider"></li>',
