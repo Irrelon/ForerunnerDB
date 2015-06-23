@@ -212,7 +212,7 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Save the collection data
-						this._db.persist.drop(this._name);
+						this._db.persist.drop(this._db._name + '::' + this._name);
 					} else {
 						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 					}
@@ -238,7 +238,7 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Save the collection data
-						this._db.persist.drop(this._name, callback);
+						this._db.persist.drop(this._db._name + '::' + this._name, callback);
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
