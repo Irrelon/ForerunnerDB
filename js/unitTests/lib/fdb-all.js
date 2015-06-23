@@ -5320,7 +5320,7 @@ Grid.prototype.refresh = function () {
 							'<li role="presentation" class="input-group" style="width: 240px; padding-left: 10px; padding-right: 10px; padding-top: 5px;">',
 								'<input type="search" class="form-control gridFilterSearch" placeholder="Search...">',
 								'<span class="input-group-btn">',
-									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle"></span></button>',
+									'<button class="btn btn-default gridFilterClearSearch" type="button"><span class="glyphicon glyphicon-remove-circle glyphicons glyphicons-remove"></span></button>',
 								'</span>',
 							'</li>',
 							'<li role="presentation" class="divider"></li>',
@@ -9967,7 +9967,7 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Save the collection data
-						this._db.persist.drop(this._name);
+						this._db.persist.drop(this._db._name + '::' + this._name);
 					} else {
 						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 					}
@@ -9993,7 +9993,7 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Save the collection data
-						this._db.persist.drop(this._name, callback);
+						this._db.persist.drop(this._db._name + '::' + this._name, callback);
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
@@ -10016,7 +10016,7 @@ Collection.prototype.save = function (callback) {
 	if (this._name) {
 		if (this._db) {
 			// Save the collection data
-			this._db.persist.save(this._name, this._data, callback);
+			this._db.persist.save(this._db._name + '::' + this._name, this._data, callback);
 		} else {
 			if (callback) {
 				callback('Cannot save a collection that is not attached to a database!');
@@ -10035,7 +10035,7 @@ Collection.prototype.load = function (callback) {
 	if (this._name) {
 		if (this._db) {
 			// Load the collection data
-			this._db.persist.load(this._name, function (err, data) {
+			this._db.persist.load(this._db._name + '::' + this._name, function (err, data) {
 				if (!err) {
 					if (data) {
 						self.setData(data);
