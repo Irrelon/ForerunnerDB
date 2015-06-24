@@ -129,6 +129,11 @@ AutoBind.extendCollection = function (Module) {
 
 							// Provide the document data as wrapper data
 							wrapper = doc._data;
+						} else if (typeof options.$wrapIn === 'object') {
+							wrapper = options.$wrapIn;
+							wrapper[options.$wrap] = this._data;
+						} else {
+							throw('ForerunnerDB.AutoBind: Unable to use passed $wrapIn option, should be either a ForerunnerDB Document instance or a JavaScript object!');
 						}
 
 						if (this.debug()) {
