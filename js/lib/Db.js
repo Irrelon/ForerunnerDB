@@ -14,11 +14,12 @@ Overload = require('./Overload');
  * Creates a new ForerunnerDB database instance.
  * @constructor
  */
-var Db = function (name) {
+var Db = function (name, core) {
 	this.init.apply(this, arguments);
 };
 
-Db.prototype.init = function (name) {
+Db.prototype.init = function (name, core) {
+	this.core(core);
 	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
@@ -488,7 +489,7 @@ Core.prototype.db = function (name) {
 		name = this.objectId();
 	}
 
-	this._db[name] = this._db[name] || new Db(name).core(this);
+	this._db[name] = this._db[name] || new Db(name, this);
 	return this._db[name];
 };
 
