@@ -30,7 +30,7 @@ var Core = function (name) {
 Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
-	this._name = name;
+	this._name = name || 'ForerunnerDB';
 };
 
 Core.prototype.moduleLoaded = new Overload({
