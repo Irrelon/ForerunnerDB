@@ -31,7 +31,7 @@ Grid.prototype.init = function (selector, template, options) {
 
 	this._selector = selector;
 	this._template = template;
-	this._options = options;
+	this._options = options || {};
 	this._debug = {};
 	this._id = this.objectId();
 
@@ -261,10 +261,11 @@ Grid.prototype.refresh = function () {
 				elem.off('click', '[data-grid-filter]', clickListener);
 			}
 
+			// Set wrap name if none is provided
+			self._options.$wrap = self._options.$wrap || 'gridRow';
+
 			// Auto-bind the data to the grid template
-			self._from.link(self._selector, self.template(), {
-				$wrap: 'gridRow'
-			});
+			self._from.link(self._selector, self.template(), self._options);
 
 			// Check if the data source (collection or view) has an
 			// orderBy method (usually only views) and if so activate
