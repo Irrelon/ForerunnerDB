@@ -18,10 +18,11 @@ Shared = require('./Shared');
  * @name Grid
  * @class Grid
  * @param {String} selector jQuery selector.
+ * @param {String} template The template selector.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
  */
-var Grid = function (selector, options) {
+var Grid = function (selector, template, options) {
 	this.init.apply(this, arguments);
 };
 
