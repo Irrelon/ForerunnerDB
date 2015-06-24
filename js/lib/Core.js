@@ -156,7 +156,7 @@ Metrics = require('./Metrics.js');
  * @param {String=} val The name of the instance to set.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'name');
+Shared.synthesize(Core.prototype, 'name');
 
 // Set a flag to determine environment
 Core.prototype._isServer = false;
