@@ -3738,7 +3738,7 @@ var Core = function (name) {
 Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
-	this._name = name;
+	this._name = name || 'ForerunnerDB';
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -3963,11 +3963,12 @@ Overload = _dereq_('./Overload');
  * Creates a new ForerunnerDB database instance.
  * @constructor
  */
-var Db = function (name) {
+var Db = function (name, core) {
 	this.init.apply(this, arguments);
 };
 
-Db.prototype.init = function (name) {
+Db.prototype.init = function (name, core) {
+	this.core(core);
 	this._primaryKey = '_id';
 	this._name = name;
 	this._collection = {};
@@ -4437,7 +4438,7 @@ Core.prototype.db = function (name) {
 		name = this.objectId();
 	}
 
-	this._db[name] = this._db[name] || new Db(name).core(this);
+	this._db[name] = this._db[name] || new Db(name, this);
 	return this._db[name];
 };
 
@@ -9790,13 +9791,14 @@ Persist.prototype.init = function (db) {
 	if (db.isClient()) {
 		if (window.Storage !== undefined) {
 			this.mode('localforage');
+
 			localforage.config({
 				driver: [
 					localforage.INDEXEDDB,
 					localforage.WEBSQL,
 					localforage.LOCALSTORAGE
 				],
-				name: 'ForerunnerDB',
+				name: String(db.core().name()),
 				storeName: 'FDB'
 			});
 		}
@@ -10076,8 +10078,8 @@ Collection.prototype.load = function (callback) {
 
 // Override the DB init to instantiate the plugin
 Db.prototype.init = function () {
-	this.persist = new Persist(this);
 	DbInit.apply(this, arguments);
+	this.persist = new Persist(this);
 };
 
 Db.prototype.load = function (callback) {
@@ -12137,7 +12139,7 @@ module.exports = asap;
     // Originally found in https://github.com/mozilla-b2g/gaia/blob/e8f624e4cc9ea945727278039b3bc9bcb9f8667a/shared/js/async_storage.js
 
     // Promises!
-    var Promise = (typeof module !== 'undefined' && module.exports) ?
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') ?
                   _dereq_('promise') : this.Promise;
 
     // Initialize IndexedDB; fall back to vendor-prefixed versions if needed.
@@ -12213,7 +12215,7 @@ module.exports = asap;
             })['catch'](reject);
         });
 
-        executeDeferedCallback(promise, callback);
+        executeCallback(promise, callback);
         return promise;
     }
 
@@ -12252,7 +12254,7 @@ module.exports = asap;
             })['catch'](reject);
         });
 
-        executeDeferedCallback(promise, callback);
+        executeCallback(promise, callback);
 
         return promise;
     }
@@ -12296,12 +12298,13 @@ module.exports = asap;
                     resolve(value);
                 };
                 transaction.onabort = transaction.onerror = function() {
-                    reject(req.error);
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
                 };
             })['catch'](reject);
         });
 
-        executeDeferedCallback(promise, callback);
+        executeCallback(promise, callback);
         return promise;
     }
 
@@ -12335,19 +12338,16 @@ module.exports = asap;
                     reject(req.error);
                 };
 
-                // The request will be aborted if we've exceeded our storage
-                // space. In this case, we will reject with a specific
-                // "QuotaExceededError".
-                transaction.onabort = function(event) {
-                    var error = event.target.error;
-                    if (error === 'QuotaExceededError') {
-                        reject(error);
-                    }
+                // The request will be also be aborted if we've exceeded our storage
+                // space.
+                transaction.onabort = function() {
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
                 };
             })['catch'](reject);
         });
 
-        executeDeferedCallback(promise, callback);
+        executeCallback(promise, callback);
         return promise;
     }
 
@@ -12366,12 +12366,13 @@ module.exports = asap;
                 };
 
                 transaction.onabort = transaction.onerror = function() {
-                    reject(req.error);
+                    var err = req.error ? req.error : req.transaction.error;
+                    reject(err);
                 };
             })['catch'](reject);
         });
 
-        executeDeferedCallback(promise, callback);
+        executeCallback(promise, callback);
         return promise;
     }
 
@@ -12496,29 +12497,6 @@ module.exports = asap;
         }
     }
 
-    function executeDeferedCallback(promise, callback) {
-        if (callback) {
-            promise.then(function(result) {
-                deferCallback(callback, result);
-            }, function(error) {
-                callback(error);
-            });
-        }
-    }
-
-    // Under Chrome the callback is called before the changes (save, clear)
-    // are actually made. So we use a defer function which wait that the
-    // call stack to be empty.
-    // For more info : https://github.com/mozilla/localForage/issues/175
-    // Pull request : https://github.com/mozilla/localForage/pull/178
-    function deferCallback(callback, result) {
-        if (callback) {
-            return setTimeout(function() {
-                return callback(null, result);
-            }, 0);
-        }
-    }
-
     var asyncStorage = {
         _driver: 'asyncStorage',
         _initStorage: _initStorage,
@@ -12532,7 +12510,7 @@ module.exports = asap;
         keys: keys
     };
 
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') {
         module.exports = asyncStorage;
     } else if (typeof define === 'function' && define.amd) {
         define('asyncStorage', function() {
@@ -12552,7 +12530,7 @@ module.exports = asap;
     'use strict';
 
     // Promises!
-    var Promise = (typeof module !== 'undefined' && module.exports) ?
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') ?
                   _dereq_('promise') : this.Promise;
 
     var globalObject = this;
@@ -12589,7 +12567,7 @@ module.exports = asap;
 
     // Find out what kind of module setup we have; if none, we'll just attach
     // localForage to the main window.
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') {
         moduleType = ModuleType.EXPORT;
     } else if (typeof define === 'function' && define.amd) {
         moduleType = ModuleType.DEFINE;
@@ -12888,7 +12866,7 @@ module.exports = asap;
     'use strict';
 
     // Promises!
-    var Promise = (typeof module !== 'undefined' && module.exports) ?
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') ?
                   _dereq_('promise') : this.Promise;
 
     var globalObject = this;
@@ -12912,7 +12890,7 @@ module.exports = asap;
 
     // Find out what kind of module setup we have; if none, we'll just attach
     // localForage to the main window.
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') {
         moduleType = ModuleType.EXPORT;
     } else if (typeof define === 'function' && define.amd) {
         moduleType = ModuleType.DEFINE;
@@ -13097,8 +13075,9 @@ module.exports = asap;
                             }, function(t, error) {
                                 reject(error);
                             });
-                        }, function(sqlError) { // The transaction failed; check
-                                                // to see if it's a quota error.
+                        }, function(sqlError) {
+                            // The transaction failed; check
+                            // to see if it's a quota error.
                             if (sqlError.code === sqlError.QUOTA_ERR) {
                                 // We reject the callback outright for now, but
                                 // it's worth trying to re-run the transaction.
@@ -13134,8 +13113,8 @@ module.exports = asap;
                 var dbInfo = self._dbInfo;
                 dbInfo.db.transaction(function(t) {
                     t.executeSql('DELETE FROM ' + dbInfo.storeName +
-                                 ' WHERE key = ?', [key], function() {
-
+                                 ' WHERE key = ?', [key],
+                                 function() {
                         resolve();
                     }, function(t, error) {
 
@@ -13297,7 +13276,7 @@ module.exports = asap;
     'use strict';
 
     // Promises!
-    var Promise = (typeof module !== 'undefined' && module.exports) ?
+    var Promise = (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') ?
                   _dereq_('promise') : this.Promise;
 
     // Custom drivers are stored here when `defineDriver()` is called.
@@ -13350,7 +13329,7 @@ module.exports = asap;
 
     // Find out what kind of module setup we have; if none, we'll just attach
     // localForage to the main window.
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') {
         moduleType = ModuleType.EXPORT;
     } else if (typeof define === 'function' && define.amd) {
         moduleType = ModuleType.DEFINE;
@@ -13621,43 +13600,39 @@ module.exports = asap;
             self._ready = null;
 
             if (isLibraryDriver(driverName)) {
-                // We allow localForage to be declared as a module or as a
-                // library available without AMD/require.js.
-                if (moduleType === ModuleType.DEFINE) {
-                    _dereq_([driverName], function(lib) {
-                        self._extend(lib);
-
-                        resolve();
-                    });
-
-                    return;
-                } else if (moduleType === ModuleType.EXPORT) {
-                    // Making it browserify friendly
-                    var driver;
-                    switch (driverName) {
-                        case self.INDEXEDDB:
-                            driver = _dereq_('./drivers/indexeddb');
-                            break;
-                        case self.LOCALSTORAGE:
-                            driver = _dereq_('./drivers/localstorage');
-                            break;
-                        case self.WEBSQL:
-                            driver = _dereq_('./drivers/websql');
+                var driverPromise = new Promise(function(resolve/*, reject*/) {
+                    // We allow localForage to be declared as a module or as a
+                    // library available without AMD/require.js.
+                    if (moduleType === ModuleType.DEFINE) {
+                        _dereq_([driverName], resolve);
+                    } else if (moduleType === ModuleType.EXPORT) {
+                        // Making it browserify friendly
+                        switch (driverName) {
+                            case self.INDEXEDDB:
+                                resolve(_dereq_('./drivers/indexeddb'));
+                                break;
+                            case self.LOCALSTORAGE:
+                                resolve(_dereq_('./drivers/localstorage'));
+                                break;
+                            case self.WEBSQL:
+                                resolve(_dereq_('./drivers/websql'));
+                                break;
+                        }
+                    } else {
+                        resolve(globalObject[driverName]);
                     }
-
+                });
+                driverPromise.then(function(driver) {
                     self._extend(driver);
-                } else {
-                    self._extend(globalObject[driverName]);
-                }
+                    resolve();
+                });
             } else if (CustomDrivers[driverName]) {
                 self._extend(CustomDrivers[driverName]);
+                resolve();
             } else {
                 self._driverSet = Promise.reject(error);
                 reject(error);
-                return;
             }
-
-            resolve();
         });
 
         function setDriverToConfig() {
@@ -13935,7 +13910,7 @@ module.exports = asap;
         bufferToString: bufferToString
     };
 
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module !== 'undefined' && module.exports && typeof _dereq_ !== 'undefined') {
         module.exports = localforageSerializer;
     } else if (typeof define === 'function' && define.amd) {
         define('localforageSerializer', function() {
