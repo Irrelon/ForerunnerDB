@@ -23,13 +23,14 @@ Persist.prototype.init = function (db) {
 	if (db.isClient()) {
 		if (window.Storage !== undefined) {
 			this.mode('localforage');
+
 			localforage.config({
 				driver: [
 					localforage.INDEXEDDB,
 					localforage.WEBSQL,
 					localforage.LOCALSTORAGE
 				],
-				name: 'ForerunnerDB',
+				name: String(db.core().name()),
 				storeName: 'FDB'
 			});
 		}
@@ -309,8 +310,8 @@ Collection.prototype.load = function (callback) {
 
 // Override the DB init to instantiate the plugin
 Db.prototype.init = function () {
-	this.persist = new Persist(this);
 	DbInit.apply(this, arguments);
+	this.persist = new Persist(this);
 };
 
 Db.prototype.load = function (callback) {
