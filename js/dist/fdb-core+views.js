@@ -3718,9 +3718,10 @@ var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
+	this._name = name;
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -3840,6 +3841,15 @@ Shared.mixin(Core.prototype, 'Mixin.Constants');
 Db = _dereq_('./Db.js');
 Metrics = _dereq_('./Metrics.js');
 
+/**
+ * Gets / sets the name of the instance. This is primarily used for
+ * name-spacing persistent storage.
+ * @param {String=} val The name of the instance to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'name');
+
+// Set a flag to determine environment
 Core.prototype._isServer = false;
 
 /**
@@ -7625,7 +7635,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.52',
+	version: '1.3.53',
 	modules: {},
 
 	_synth: {},

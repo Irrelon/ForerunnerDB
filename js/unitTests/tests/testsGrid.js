@@ -16,7 +16,11 @@ ForerunnerDB.moduleLoaded('Grid', function () {
 
 		var coll = db.collection('gridTest').truncate(),
 			view = db.view('gridTest').from(coll),
-			grid = view.grid('#testTarget2', '#gridTable');
+			grid = view.grid('#testTarget2', '#gridTable', {
+				$wrapIn: {
+					myData: 'Custom data wrapping object working'
+				}
+			});
 
 		coll.setData([{
 			firstName: 'Fred',

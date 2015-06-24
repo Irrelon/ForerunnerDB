@@ -3726,9 +3726,10 @@ var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
+	this._name = name;
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -3848,6 +3849,15 @@ Shared.mixin(Core.prototype, 'Mixin.Constants');
 Db = _dereq_('./Db.js');
 Metrics = _dereq_('./Metrics.js');
 
+/**
+ * Gets / sets the name of the instance. This is primarily used for
+ * name-spacing persistent storage.
+ * @param {String=} val The name of the instance to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'name');
+
+// Set a flag to determine environment
 Core.prototype._isServer = false;
 
 /**
@@ -5007,10 +5017,11 @@ Shared = _dereq_('./Shared');
  * @name Grid
  * @class Grid
  * @param {String} selector jQuery selector.
+ * @param {String} template The template selector.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
  */
-var Grid = function (selector, options) {
+var Grid = function (selector, template, options) {
 	this.init.apply(this, arguments);
 };
 
@@ -5019,7 +5030,7 @@ Grid.prototype.init = function (selector, template, options) {
 
 	this._selector = selector;
 	this._template = template;
-	this._options = options;
+	this._options = options || {};
 	this._debug = {};
 	this._id = this.objectId();
 
@@ -5249,10 +5260,11 @@ Grid.prototype.refresh = function () {
 				elem.off('click', '[data-grid-filter]', clickListener);
 			}
 
+			// Set wrap name if none is provided
+			self._options.$wrap = self._options.$wrap || 'gridRow';
+
 			// Auto-bind the data to the grid template
-			self._from.link(self._selector, self.template(), {
-				$wrap: 'gridRow'
-			});
+			self._from.link(self._selector, self.template(), self._options);
 
 			// Check if the data source (collection or view) has an
 			// orderBy method (usually only views) and if so activate
@@ -11156,7 +11168,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.52',
+	version: '1.3.53',
 	modules: {},
 
 	_synth: {},
