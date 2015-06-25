@@ -53,7 +53,7 @@ Collection.prototype.init = function (name) {
 	};
 
 	// Set the subset to itself since it is the root collection
-	this._subsetOf(this);
+	this.subsetOf(this);
 };
 
 Shared.addModule('Collection', Collection);
@@ -1263,16 +1263,21 @@ Collection.prototype.deferEmit = function () {
  * Processes a deferred action queue.
  * @param {String} type The queue name to process.
  * @param {Function} callback A method to call when the queue has processed.
+ * @param {Object=} resultObj A temp object to hold results in.
  */
-Collection.prototype.processQueue = function (type, callback) {
-	var queue = this._deferQueue[type],
+Collection.prototype.processQueue = function (type, callback, resultObj) {
+	var self = this,
+		queue = this._deferQueue[type],
 		deferThreshold = this._deferThreshold[type],
-		deferTime = this._deferTime[type];
+		deferTime = this._deferTime[type],
+		dataArr,
+		result;
+
+	resultObj = resultObj || {
+		deferred: true
+	};
 
 	if (queue.length) {
-		var self = this,
-			dataArr;
-
 		// Process items up to the threshold
 		if (queue.length) {
 			if (queue.length > deferThreshold) {
@@ -1283,15 +1288,25 @@ Collection.prototype.processQueue = function (type, callback) {
 				dataArr = queue.splice(0, queue.length);
 			}
 
-			this[type](dataArr);
+			result = self[type](dataArr);
+
+			switch (type) {
+				case 'insert':
+					resultObj.inserted = resultObj.inserted || [];
+					resultObj.failed = resultObj.failed || [];
+
+					resultObj.inserted = resultObj.inserted.concat(result.inserted);
+					resultObj.failed = resultObj.failed.concat(result.failed);
+					break;
+			}
 		}
 
 		// Queue another process
 		setTimeout(function () {
-			self.processQueue(type, callback);
+			self.processQueue.call(self, type, callback, resultObj);
 		}, deferTime);
 	} else {
-		if (callback) { callback(); }
+		if (callback) { callback(resultObj); }
 	}
 };
 
@@ -1333,6 +1348,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		inserted = [],
 		failed = [],
 		insertResult,
+		resultObj,
 		i;
 
 	if (data instanceof Array) {
@@ -1380,14 +1396,17 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	this.chainSend('insert', data, {index: index});
 	//op.time('Resolve chains');
 
-	this._onInsert(inserted, failed);
-	if (callback) { callback(); }
-	this.deferEmit('change', {type: 'insert', data: inserted});
-
-	return {
+	resultObj = {
+		deferred: false,
 		inserted: inserted,
 		failed: failed
 	};
+
+	this._onInsert(inserted, failed);
+	if (callback) { callback(resultObj); }
+	this.deferEmit('change', {type: 'insert', data: inserted});
+
+	return resultObj;
 };
 
 /**
@@ -1565,19 +1584,6 @@ Collection.prototype._rebuildIndexes = function () {
 };
 
 /**
- * Returns the index of the document identified by the passed item's primary key.
- * @param {Object} item The item whose primary key should be used to lookup.
- * @returns {Number} The index the item with the matching primary key is occupying.
- */
-Collection.prototype.indexOfDocById = function (item) {
-	return this._data.indexOf(
-		this._primaryIndex.get(
-			item[this._primaryKey]
-		)
-	);
-};
-
-/**
  * Uses the passed query to generate a new collection with results
  * matching the query parameters.
  *
@@ -1589,28 +1595,26 @@ Collection.prototype.subset = function (query, options) {
 	var result = this.find(query, options);
 
 	return new Collection()
-		._subsetOf(this)
+		.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
 };
 
 /**
- * Gets the collection that this collection is a subset of.
+ * Gets / sets the collection that this collection is a subset of.
+ * @param {Collection=} collection The collection to set as the parent of this subset.
  * @returns {Collection}
  */
-Collection.prototype.subsetOf = function () {
-	return this.__subsetOf;
-};
+Shared.synthesize(Collection.prototype, 'subsetOf');
 
 /**
- * Sets the collection that this collection is a subset of.
- * @param {Collection} collection The collection to set as the parent of this subset.
- * @returns {*} This object for chaining.
- * @private
+ * Checks if the collection is a subset of the passed collection.
+ * @param {Collection} collection The collection to test against.
+ * @returns {Boolean} True if the passed collection is the parent of
+ * the current collection.
  */
-Collection.prototype._subsetOf = function (collection) {
-	this.__subsetOf = collection;
-	return this;
+Collection.prototype.isSubsetOf = function (collection) {
+	return true;
 };
 
 /**
@@ -2146,6 +2150,26 @@ Collection.prototype.indexOf = function (query) {
 
 	if (item) {
 		return this._data.indexOf(item);
+	}
+};
+
+/**
+ * Returns the index of the document identified by the passed item's primary key.
+ * @param {*} item The document whose primary key should be used to lookup or the id
+ * to lookup.
+ * @returns {Number} The index the item with the matching primary key is occupying.
+ */
+Collection.prototype.indexOfDocById = function (item) {
+	if (typeof item !== 'object') {
+		return this._data.indexOf(
+			this._primaryIndex.get(item)
+		);
+	} else {
+		return this._data.indexOf(
+			this._primaryIndex.get(
+				item[this._primaryKey]
+			)
+		);
 	}
 };
 
