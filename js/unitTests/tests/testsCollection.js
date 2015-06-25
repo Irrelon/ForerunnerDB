@@ -2296,7 +2296,6 @@ QUnit.test("Collection $page, $limit :: Query with paging", function() {
 		data = [],
 		count = 100,
 		result,
-		newColl,
 		i;
 
 	// Generate random data
@@ -2334,7 +2333,6 @@ QUnit.test("Collection $skip :: Query with skip", function() {
 		data = [],
 		count = 100,
 		result,
-		newColl,
 		i;
 
 	// Generate random data
