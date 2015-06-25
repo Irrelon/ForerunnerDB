@@ -242,7 +242,7 @@ CollectionGroup.prototype.subset = function (query, options) {
 	var result = this.find(query, options);
 
 	return new Collection()
-		._subsetOf(this)
+		.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
 };
