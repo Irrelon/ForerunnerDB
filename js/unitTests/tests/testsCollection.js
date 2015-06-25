@@ -2288,3 +2288,70 @@ QUnit.test("Collection.subset() :: Get a collection as a subset of another colle
 
 	base.dbDown();
 });
+
+QUnit.test("Collection $page, $limit :: Query with paging", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		newColl,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.find({}, {
+		$page: 0,
+		$limit: 10
+	});
+
+	strictEqual(result.length, 10, 'Number of items is correct');
+	strictEqual(result[9].val, 9, 'ID of last item is correct');
+
+	result = coll.find({}, {
+		$page: 1,
+		$limit: 10
+	});
+
+	strictEqual(result.length, 10, 'Number of items is correct');
+	strictEqual(result[9].val, 19, 'ID of last item is correct');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection $skip :: Query with skip", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		newColl,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.find({}, {
+		$skip: 50
+	});
+
+	strictEqual(result.length, 50, 'Number of items is correct');
+	strictEqual(result[0].val, 50, 'ID of last item is correct');
+
+	base.dbDown();
+});
