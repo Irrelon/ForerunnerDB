@@ -882,10 +882,10 @@ QUnit.test("Collection.find() :: Options :: Multi join", function() {
 QUnit.test("Collection.find() :: Options :: Queries joined data", function() {
 	base.dbUp();
 	base.dataUp();
-debugger;
+
 	var result = user.find({
 		org: {
-			industry: 'it'
+			type: 'beta'
 		}
 	}, {
 		"$join": [{
@@ -898,9 +898,9 @@ debugger;
 		}]
 	});
 
-	strictEqual(result[0].orgId, result[0].org._id, "Complete");
-	strictEqual(result[1].orgId, result[1].org._id, "Complete");
-	strictEqual(result[2].orgId, result[2].org._id, "Complete");
+	strictEqual(result[0].orgId, result[0].org._id, "Joined org id matches rerturned data");
+	strictEqual(result[0].org.type, "beta", "Joined org type matches queried type");
+	strictEqual(result.length, 1, "Number of returned records is correct");
 
 	base.dbDown();
 });
@@ -2282,7 +2282,7 @@ QUnit.test("Collection.subset() :: Get a collection as a subset of another colle
 
 	newColl = coll.subset({val: {$gt: 50}});
 	result = newColl.find();
-debugger;
+
 	strictEqual(result.length, 49, 'Number of items is correct');
 	strictEqual(newColl.isSubsetOf(coll), true, 'The subset was created correctly');
 
