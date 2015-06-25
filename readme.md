@@ -404,6 +404,71 @@ Result is:
 		text: 'Uber'
 	}]
 
+### Pagination / Paging Through Results
+> Version >= 1.3.55
+
+It is often useful to limit the number of results and then page through the results one
+page at a time. ForerunnerDB supports an easy pagination system via the $page and $limit
+query options combination.
+
+#### Usage
+
+	var coll = db.collection('test'),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	
+	// Query the first 10 records (page indexes are zero-based
+	// so the first page is page 0 not page 1)
+	result = coll.find({}, {
+		$page: 0,
+		$limit: 10
+	});
+
+	// Query the next 10 records
+	result = coll.find({}, {
+		$page: 1,
+		$limit: 10
+	});
+
+### Skipping Records in a Query
+> Version >= 1.3.55
+
+You can skip records at the beginning of a query result by providing the $skip query
+option. This operates in a similar fashion to the MongoDB [skip()](http://docs.mongodb.org/manual/reference/method/cursor.skip/) method.
+
+#### Usage
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.find({}, {
+		$skip: 50
+	});
+
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
@@ -2070,10 +2135,10 @@ ForerunnerDB's project road-map:
 * $move
 * $splicePush
 * $elemsMatch (projection)
+* $page
 
 ### Future Updates
 * Data persistence on server-side
-* Collection / query paging-- e.g. select next 10, select previous 10
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
@@ -2104,6 +2169,7 @@ ForerunnerDB's project road-map:
 * Remove server from this repo, add to its own - COMPLETE
 * Trigger support - COMPLETE
 * Support localforage for storage instead of relying on localStorage (https://github.com/irrelon/ForerunnerDB/issues/5) - COMPLETE
+* Collection / query paging-- e.g. select next 10, select previous 10 - COMPLETE
 * Highcharts support from views instead of only collections
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
 
