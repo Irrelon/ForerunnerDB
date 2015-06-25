@@ -1740,7 +1740,6 @@ Collection.prototype.find = function (query, options) {
 
 	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
-	
 	options = this.options(options);
 
 	var op = this._metrics.create('find'),
@@ -1785,7 +1784,7 @@ Collection.prototype.find = function (query, options) {
 	if (query) {
 		// Get query analysis to execute best optimised code path
 		op.time('analyseQuery');
-		analysis = this._analyseQuery(query, options, op);
+		analysis = this._analyseQuery(self.decouple(query), options, op);
 		op.time('analyseQuery');
 		op.data('analysis', analysis);
 
@@ -1798,6 +1797,9 @@ Collection.prototype.find = function (query, options) {
 				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
 				joinQuery = joinPath.value(query)[0];
 				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+
+				// Remove join clause from main query
+				delete query[analysis.joinQueries[joinCollectionName]];
 			}
 			op.time('joinReferences');
 		}
@@ -1890,7 +1892,11 @@ Collection.prototype.find = function (query, options) {
 						resultCollectionName = joinCollectionName;
 
 						// Get the join collection instance from the DB
-						joinCollectionInstance = this._db.collection(joinCollectionName);
+						if (joinCollection[joinCollectionName]) {
+							joinCollectionInstance = joinCollection[joinCollectionName];
+						} else {
+							joinCollectionInstance = this._db.collection(joinCollectionName);
+						}
 
 						// Get the match data for the join
 						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
