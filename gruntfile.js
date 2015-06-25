@@ -4,13 +4,14 @@ var util = require('util'),
 	derequire = require('derequire');
 
 module.exports = function(grunt) {
-	grunt.loadNpmTasks('grunt-contrib-qunit');
+	//grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks("grunt-browserify");
-	grunt.loadNpmTasks('grunt-qunit-blanket-lcov');
+	//grunt.loadNpmTasks('grunt-qunit-blanket-lcov');
 	grunt.loadNpmTasks('grunt-umd');
 	grunt.loadNpmTasks('grunt-jsdoc');
+	grunt.loadNpmTasks('grunt-qunit-istanbul');
 
 	grunt.initConfig({
 		"jshint": {
@@ -40,13 +41,35 @@ module.exports = function(grunt) {
 			"source": {
 				"src": [
 					"js/unitTests/source.html"
-				]
+				],
+				options: {
+					'--web-security': 'no',
+					coverage: {
+						disposeCollector: true,
+						src: ['js/unitTests/lib/fdb-all.js'],
+						instrumentedFiles: 'temp/',
+						htmlReport: 'coverage/source',
+						coberturaReport: 'coverage//source',
+						linesThresholdPct: 60
+					}
+				}
 			},
 
 			"minified": {
 				"src": [
 					"js/unitTests/minified.html"
-				]
+				],
+				options: {
+					'--web-security': 'no',
+					coverage: {
+						disposeCollector: true,
+						src: ['js/unitTests/lib/fdb-all.min.js'],
+						instrumentedFiles: 'temp/',
+						htmlReport: 'coverage/minified',
+						coberturaReport: 'coverage/minified',
+						linesThresholdPct: 60
+					}
+				}
 			}
 		},
 
@@ -408,8 +431,8 @@ module.exports = function(grunt) {
 	});
 
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
-	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit_blanket_lcov", "qunit"]);
-	grunt.registerTask("3: Build And Test", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit_blanket_lcov", "qunit"]);
+	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit"]);
+	grunt.registerTask("3: Build And Test", ["jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("4: Generate JSDoc", ["jsdoc"]);
 	//grunt.registerTask("4: Build, Test and Increment Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
 	grunt.registerTask("5: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
