@@ -22,12 +22,14 @@
 	<script src="data.js"></script>
 	<script src="base.js"></script>
 	<script src="tests/testsActiveBucket.js"></script>
+	<script src="tests/testsDb.js"></script>
 	<!--<script src="tests/testsBind.js"></script>-->
 	<script src="tests/testsPerformance.js"></script>
+	<script src="tests/testsCore.js"></script>
+	<script src="tests/testsCollection.js"></script>
 	<script src="tests/testsCollectionToViewChain.js"></script>
 	<script src="tests/testsCollectionToCollectionGroupChain.js"></script>
 	<script src="tests/testsCollectionGroupToViewChain.js"></script>
-	<script src="tests/testsCore.js"></script>
 	<script src="tests/testsCollectionGroup.js"></script>
 	<script src="tests/testsIndex.js"></script>
 	<script src="tests/testsEvents.js"></script>
@@ -45,31 +47,38 @@
 	<!--<script src="tests/testsPaging.js"></script>-->
 
 	<script type="text/x-jsrender" id="gridTable">
-		<table class="gridTable">
-			<thead class="gridHead">
-				<tr>
-					<td data-grid-sort="firstName">First Name</td>
-					<td data-grid-sort="lastName">Last Name</td>
-					<td data-grid-sort="age">Age</td>
-				</tr>
-			</thead>
-			<tbody class="gridBody">
-				{^{for gridRow}}
-				<tr data-link="id{:_id}">
-					<td>{^{:firstName}}</td>
-					<td>{^{:lastName}}</td>
-					<td>{^{:age}}</td>
-				</tr>
-				{^{/for}}
-			</tbody>
-			<tfoot>
-				<tr>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			</tfoot>
-		</table>
+		{{:myData}}
+		<div class="container" role="main">
+			<div class="table-responsive">
+				<div class="gridContainer"></div>
+
+				<table class="table table-striped gridTable">
+					<thead class="gridHead">
+						<tr>
+							<td data-grid-filter="firstName">First Name</td>
+							<td data-grid-filter="lastName">Last Name</td>
+							<td data-grid-filter="age">Age</td>
+						</tr>
+					</thead>
+					<tbody class="gridBody">
+						{^{for gridRow}}
+						<tr data-link="id{:_id}">
+							<td>{^{:firstName}}</td>
+							<td>{^{:lastName}}</td>
+							<td>{^{:age}}</td>
+						</tr>
+						{^{/for}}
+					</tbody>
+					<tfoot>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
 	</script>
 </body>
 </html>
