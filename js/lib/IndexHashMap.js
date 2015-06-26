@@ -119,6 +119,14 @@ IndexHashMap.prototype.insert = function (dataItem, options) {
 	}
 };
 
+IndexHashMap.prototype.update = function (dataItem, options) {
+	// TODO: Write updates to work
+	// 1: Get uniqueHash for the dataItem primary key value (may need to generate a store for this)
+	// 2: Remove the uniqueHash as it currently stands
+	// 3: Generate a new uniqueHash for dataItem
+	// 4: Insert the new uniqueHash
+};
+
 IndexHashMap.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
 		uniqueHash,
