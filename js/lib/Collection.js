@@ -553,12 +553,15 @@ Collection.prototype.update = function (query, update, options) {
 		op = this._metrics.create('update'),
 		dataSet,
 		updated,
-		updateCall = function (originalDoc) {
-			var newDoc = self.decouple(originalDoc),
+		updateCall = function (referencedDoc) {
+			var oldDoc = self.decouple(referencedDoc),
+				newDoc,
 				triggerOperation,
 				result;
 
 			if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_UPDATE, self.PHASE_AFTER)) {
+				newDoc = self.decouple(referencedDoc);
+
 				triggerOperation = {
 					type: 'update',
 					query: self.decouple(query),
@@ -571,14 +574,14 @@ Collection.prototype.update = function (query, update, options) {
 				// like AFTER the update is processed
 				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) !== false) {
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, referencedDoc, newDoc) !== false) {
 					// No triggers complained so let's execute the replacement of the existing
 					// object with the new one
-					result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
+					result = self.updateObject(referencedDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
 
 					// NOTE: If for some reason we would only like to fire this event if changes are actually going
 					// to occur on the object from the proposed update then we can add "result &&" to the if
-					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc);
+					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, referencedDoc, newDoc);
 				} else {
 					// Trigger cancelled operation so tell result that it was not updated
 					result = false;
@@ -586,8 +589,11 @@ Collection.prototype.update = function (query, update, options) {
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
-				result = self.updateObject(originalDoc, update, query, options, '');
+				result = self.updateObject(referencedDoc, update, query, options, '');
 			}
+
+			// Inform indexes of the change
+			self._updateIndexes(oldDoc, referencedDoc);
 
 			return result;
 		};
@@ -1565,6 +1571,17 @@ Collection.prototype._removeFromIndexes = function (doc) {
 			arr[arrIndex].remove(doc);
 		}
 	}
+};
+
+/**
+ * Updates collection index data for the passed document.
+ * @param {Object} oldDoc The old document as it was before the update.
+ * @param {Object} newDoc The document as it now is after the update.
+ * @private
+ */
+Collection.prototype._updateIndexes = function (oldDoc, newDoc) {
+	this._removeFromIndexes(oldDoc);
+	this._insertIntoIndexes(newDoc);
 };
 
 /**
