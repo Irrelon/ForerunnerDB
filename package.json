@@ -60,6 +60,7 @@
     "grunt-contrib-uglify": "^0.9.1",
     "grunt-jsdoc": "^0.6.7",
     "grunt-qunit-blanket-lcov": "^0.3.1",
+    "grunt-qunit-istanbul": "^0.5.0",
     "grunt-umd": "^2.3.3",
     "install": "^0.1.8",
     "npm": "^2.7.6",
