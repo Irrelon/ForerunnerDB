@@ -2405,3 +2405,118 @@ QUnit.test("Collection.findOne() :: Find the first document that matches a query
 
 	base.dbDown();
 });
+
+QUnit.test("Collection.findSub() :: Find documents inside an array inside a document and return those that match", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i,
+			sub: [{
+				subVal: i + 1
+			}, {
+				subVal: i + 2
+			}, {
+				subVal: i + 3
+			}, {
+				subVal: i + 4
+			}]
+		});
+	}
+
+	coll.insert(data);
+
+	result = coll.findSub({
+		val: 2
+	}, 'sub', {}, {
+		//$stats: true,
+		//$split: true
+	});
+
+	strictEqual(result[0].subVal, 3, 'Value of sub-document 1 is correct');
+	strictEqual(result[1].subVal, 4, 'Value of sub-document 2 is correct');
+	strictEqual(result[2].subVal, 5, 'Value of sub-document 3 is correct');
+	strictEqual(result[3].subVal, 6, 'Value of sub-document 4 is correct');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.findSub() :: Find documents inside an array inside a document and return those that match", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.lastOp();
+
+	strictEqual(result.length, 0, 'No op should currently be recorded');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.diff() :: Run a diff against another collection", function() {
+	base.dbUp();
+
+	var coll1 = db.collection('test1').truncate(),
+		coll2 = db.collection('test2').truncate(),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll1.insert(data);
+	coll2.insert(data);
+
+	// Now remove 1 entry from coll2
+	coll2.remove({
+		val: 10
+	});
+
+	// Now insert 1 entry from coll2
+	coll2.insert({
+		val: 200
+	});
+
+	// Now update 1 entry from coll2
+	coll2.update({
+		_id: '1'
+	}, {
+		val: 300
+	});
+
+	result = coll1.diff(coll2);
+
+	strictEqual(result.insert.length, 1, 'Insert count correct');
+	strictEqual(result.update.length, 1, 'Update count correct');
+	strictEqual(result.remove.length, 1, 'Remove count correct');
+
+	base.dbDown();
+});
