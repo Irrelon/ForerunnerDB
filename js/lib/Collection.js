@@ -2580,10 +2580,14 @@ Collection.prototype.count = function (query, options) {
 
 /**
  * Finds sub-documents from the collection's documents.
- * @param match
- * @param path
- * @param subDocQuery
- * @param subDocOptions
+ * @param {Object} match The query object to use when matching parent documents
+ * from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the key in which
+ * sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching which sub-documents
+ * to return.
+ * @param {Object=} subDocOptions The options object to use when querying for
+ * sub-documents.
  * @returns {*}
  */
 Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
@@ -2611,7 +2615,12 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 				return subDocResults[0];
 			}
 
-			resultObj.subDocs.push(subDocResults);
+			if (subDocOptions.$split) {
+				resultObj.subDocs.push(subDocResults);
+			} else {
+				resultObj.subDocs = resultObj.subDocs.concat(subDocResults);
+			}
+
 			resultObj.subDocTotal += subDocResults.length;
 			resultObj.pathFound = true;
 		}
@@ -2621,7 +2630,9 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 	subDocCollection.drop();
 
 	// Check if the call should not return stats, if so return only subDocs array
-	if (subDocOptions.noStats) {
+	if (subDocOptions.$stats) {
+		return resultObj;
+	} else {
 		return resultObj.subDocs;
 	}
 
