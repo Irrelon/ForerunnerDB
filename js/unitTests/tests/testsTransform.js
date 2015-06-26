@@ -38,7 +38,7 @@ QUnit.test("Collection.transform() :: Assign a transform-out method to a collect
 				_id: data._id,
 				moo: data.foo,
 				goo: data.foo + 1
-			}
+			};
 		}
 	});
 
@@ -54,6 +54,31 @@ QUnit.test("Collection.transform() :: Assign a transform-out method to a collect
 	strictEqual(result.length, 1, "Insert");
 	strictEqual(collData[0].doo, 1, "Insert not transformed");
 	strictEqual(result[0].moo === 1 && result[0].goo === 2 && result[0].doo, undefined, "Find transformed");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() $transform :: Query data with a $transform operator", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate();
+
+	coll.insert({
+		_id: 'test1',
+		foo: 1
+	});
+
+	var result = coll.find({}, {
+		$transform: function (data) {
+			return {
+				_id: data._id,
+				moo: data.foo,
+				goo: data.foo + 1
+			};
+		}
+	});
+
+	strictEqual(result.length, 1, "Insert");
+	strictEqual(result[0].moo === 1 && result[0].goo, 2, "Insert transformed");
 
 	base.dbDown();
 });
