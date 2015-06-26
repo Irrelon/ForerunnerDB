@@ -138,11 +138,17 @@ Persist.prototype.load = function (key, callback) {
 			}
 
 			if (finished) {
-				finished(false, data);
+				finished(false, data, {
+					foundData: true,
+					rowCount: data.length
+				});
 			}
 		} else {
 			if (finished) {
-				finished(false, val);
+				finished(false, val, {
+					foundData: false,
+					rowCount: 0
+				});
 			}
 		}
 	};
