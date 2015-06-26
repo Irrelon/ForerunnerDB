@@ -2210,6 +2210,31 @@ QUnit.asyncTest("Collection.insert() :: Process insert with many defferred docum
 	});
 });
 
+QUnit.test("Collection.indexOf() :: Get a document's current array index by the document", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		i, result;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: i
+		});
+	}
+
+	coll.insert(data);
+
+	result = coll.indexOf(data[10]);
+
+	strictEqual(result, 10, 'Index of document is correct');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.indexOfDocById() :: Get a document's current array index by the document's ID directly", function() {
 	base.dbUp();
 
@@ -2350,6 +2375,33 @@ QUnit.test("Collection $skip :: Query with skip", function() {
 
 	strictEqual(result.length, 50, 'Number of items is correct');
 	strictEqual(result[0].val, 50, 'ID of last item is correct');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.findOne() :: Find the first document that matches a query", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 100,
+		result,
+		i;
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			_id: String(i),
+			val: 10
+		});
+	}
+
+	coll.insert(data);
+	result = coll.findOne({
+		val: 10
+	});
+
+	strictEqual(result.val, 10, 'ID of last item is correct');
 
 	base.dbDown();
 });
