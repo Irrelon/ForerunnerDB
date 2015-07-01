@@ -10741,7 +10741,13 @@ Shared.synthesize(View.prototype, 'name');
  * @param {String=} val The new cursor to set.
  * @returns {*}
  */
-Shared.synthesize(View.prototype, 'cursor');
+Shared.synthesize(View.prototype, 'cursor', function (val) {
+	if (val === undefined) {
+		return this._cursor || {};
+	}
+
+	this.$super.apply(this, arguments);
+});
 
 /**
  * Executes an insert against the view's underlying data-source.
