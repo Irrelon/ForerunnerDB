@@ -31,7 +31,7 @@ var Collection = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Collection.prototype.init = function (name) {
+Collection.prototype.init = function (name, options) {
 	this._primaryKey = '_id';
 	this._primaryIndex = new KeyValueStore('primary');
 	this._primaryCrc = new KeyValueStore('primaryCrc');
@@ -39,6 +39,13 @@ Collection.prototype.init = function (name) {
 	this._name = name;
 	this._data = [];
 	this._metrics = new Metrics();
+
+	this._options = options || {
+		changeTimestamp: false
+	};
+
+	// Create an object to store internal protected data
+	this._internalData = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -219,6 +226,17 @@ Collection.prototype._onRemove = function (items) {
 };
 
 /**
+ * Handles any change to the collection.
+ * @private
+ */
+Collection.prototype._onChange = function () {
+	if (this._options.changeTimestamp) {
+		// Record the last change timestamp
+		this._internalData.lastChange = new Date();
+	}
+};
+
+/**
  * Gets / sets the db instance this class instance belongs to.
  * @param {Db=} db The db instance.
  * @returns {*}
@@ -381,6 +399,7 @@ Collection.prototype.truncate = function () {
 	this._primaryCrc = new KeyValueStore('primaryCrc');
 	this._crcLookup = new KeyValueStore('crcLookup');
 
+	this._onChange();
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -627,6 +646,7 @@ Collection.prototype.update = function (query, update, options) {
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
+			this._onChange();
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -1226,6 +1246,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				this._onRemove(dataSet);
 			}
 
+			this._onChange();
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
@@ -1249,10 +1270,13 @@ Collection.prototype.removeById = function (id) {
  * Queues an event to be fired. This has automatic de-bouncing so that any
  * events of the same type that occur within 100 milliseconds of a previous
  * one will all be wrapped into a single emit rather than emitting tons of
- * events for lots of chained inserts etc.
+ * events for lots of chained inserts etc. Only the data from the last
+ * de-bounced event will be emitted.
+ * @param {String} eventName The name of the event to emit.
+ * @param {*=} data Optional data to emit with the event.
  * @private
  */
-Collection.prototype.deferEmit = function () {
+Collection.prototype.deferEmit = function (eventName, data) {
 	var self = this,
 		args;
 
@@ -1260,12 +1284,13 @@ Collection.prototype.deferEmit = function () {
 		args = arguments;
 
 		// Check for an existing timeout
-		if (this._changeTimeout) {
-			clearTimeout(this._changeTimeout);
+		this._deferTimeout = this._deferTimeout || {};
+		if (this._deferTimeout[eventName]) {
+			clearTimeout(this._deferTimeout[eventName]);
 		}
 
 		// Set a timeout
-		this._changeTimeout = setTimeout(function () {
+		this._deferTimeout[eventName] = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
 		}, 1);
@@ -1419,6 +1444,8 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 
 	this._onInsert(inserted, failed);
 	if (callback) { callback(resultObj); }
+
+	this._onChange();
 	this.deferEmit('change', {type: 'insert', data: inserted});
 
 	return resultObj;
