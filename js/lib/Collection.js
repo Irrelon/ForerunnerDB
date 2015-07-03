@@ -2200,6 +2200,8 @@ Collection.prototype.indexOf = function (query) {
 
 	if (item) {
 		return this._data.indexOf(item);
+	} else {
+		return -1;
 	}
 };
 
