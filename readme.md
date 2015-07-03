@@ -1656,6 +1656,7 @@ template.
 
 ## Views
 > Data Binding: Enabled
+
 A view is a queried subset of a collection that is automatically updated whenever the
 underlying collection is altered. Views are accessed in the same way as a collection and
 contain all the main CRUD functionality that a collection does. Inserting or updating on
