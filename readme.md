@@ -469,6 +469,47 @@ option. This operates in a similar fashion to the MongoDB [skip()](http://docs.m
 		$skip: 50
 	});
 
+### Finding and Returning Sub-Documents
+When you have documents that contain arrays of sub-documents it can be useful to search
+and extract them. Consider this data structure:
+
+	var coll = db.collection('test').truncate(),
+		result,
+		i;
+
+	coll.insert({
+		_id: '1',
+		arr: [{
+			_id: '332',
+			val: 20,
+			on: true
+		}, {
+			_id: '337',
+			val: 15,
+			on: false
+		}]
+	});
+
+	result = coll.findSub({
+		_id: '1'
+	}, 'arr', {
+		on: false
+	}, {
+		//$stats: true,
+		//$split: true
+	});
+
+The result of this query is an array containing the sub-documents that matched the 
+query parameters:
+
+	[{
+		_id: '337',
+		val: 15,
+		on: false
+	}]
+
+> The result of findSub never returns a parent document's data.
+
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
