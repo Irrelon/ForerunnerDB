@@ -490,6 +490,18 @@ and extract them. Consider this data structure:
 		}]
 	});
 
+	/**
+     * Finds sub-documents from the collection's documents.
+     * @param {Object} match The query object to use when matching parent documents
+     * from which the sub-documents are queried.
+     * @param {String} path The path string used to identify the key in which
+     * sub-documents are stored in parent documents.
+     * @param {Object=} subDocQuery The query to use when matching which sub-documents
+     * to return.
+     * @param {Object=} subDocOptions The options object to use when querying for
+     * sub-documents.
+     * @returns {*}
+     */
 	result = coll.findSub({
 		_id: '1'
 	}, 'arr', {
@@ -509,6 +521,10 @@ query parameters:
 	}]
 
 > The result of findSub never returns a parent document's data.
+
+The fourth parameter (options object) allows you to specify if you wish to have stats
+and if you wish to split your results into separate arrays for each matching parent
+document.
 
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
