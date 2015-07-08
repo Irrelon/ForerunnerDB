@@ -63,6 +63,7 @@ if ($ && $.views) {
 					value = object[key];
 					type = typeof value;
 					expandable = false;
+					childObj = undefined;
 
 					if (value && type === 'object') {
 						childObj = value;
