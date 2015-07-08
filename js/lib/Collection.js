@@ -2675,6 +2675,8 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 			err: ''
 		};
 
+	subDocOptions = subDocOptions || {};
+
 	for (docIndex = 0; docIndex < docCount; docIndex++) {
 		subDocArr = pathHandler.value(docArr[docIndex])[0];
 		if (subDocArr) {
