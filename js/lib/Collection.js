@@ -2226,6 +2226,29 @@ Collection.prototype.indexOfDocById = function (item) {
 };
 
 /**
+ * Removes a document from the collection by it's index in the collection's
+ * data array.
+ * @param {Number} index The index of the document to remove.
+ * @returns {Object} The document that has been removed or false if none was
+ * removed.
+ */
+Collection.prototype.removeByIndex = function (index) {
+	var doc,
+		docId;
+
+	doc = this._data[index];
+
+	if (doc !== undefined) {
+		doc = this.decouple(doc);
+		docId = doc[this.primaryKey()];
+
+		return this.removeById(docId);
+	}
+
+	return false;
+};
+
+/**
  * Gets / sets the collection transform options.
  * @param {Object} obj A collection transform options object.
  * @returns {*}
