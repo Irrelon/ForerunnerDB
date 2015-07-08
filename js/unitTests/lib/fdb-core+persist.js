@@ -2209,6 +2209,8 @@ Collection.prototype.indexOf = function (query) {
 
 	if (item) {
 		return this._data.indexOf(item);
+	} else {
+		return -1;
 	}
 };
 
@@ -2230,6 +2232,29 @@ Collection.prototype.indexOfDocById = function (item) {
 			)
 		);
 	}
+};
+
+/**
+ * Removes a document from the collection by it's index in the collection's
+ * data array.
+ * @param {Number} index The index of the document to remove.
+ * @returns {Object} The document that has been removed or false if none was
+ * removed.
+ */
+Collection.prototype.removeByIndex = function (index) {
+	var doc,
+		docId;
+
+	doc = this._data[index];
+
+	if (doc !== undefined) {
+		doc = this.decouple(doc);
+		docId = doc[this.primaryKey()];
+
+		return this.removeById(docId);
+	}
+
+	return false;
 };
 
 /**
@@ -2658,6 +2683,8 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 			pathFound: false,
 			err: ''
 		};
+
+	subDocOptions = subDocOptions || {};
 
 	for (docIndex = 0; docIndex < docCount; docIndex++) {
 		subDocArr = pathHandler.value(docArr[docIndex])[0];
@@ -7848,7 +7875,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.54',
+	version: '1.3.55',
 	modules: {},
 
 	_synth: {},
