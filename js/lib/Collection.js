@@ -1855,7 +1855,7 @@ Collection.prototype.find = function (query, options) {
 
 			// Get the data from the index
 			op.time('indexLookup');
-			resultArr = analysis.indexMatch[0].lookup;
+			resultArr = analysis.indexMatch[0].lookup || [];
 			op.time('indexLookup');
 
 			// Check if the index coverage is all keys, if not we still need to table scan it
