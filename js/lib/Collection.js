@@ -1773,11 +1773,30 @@ Collection.prototype.options = function (obj) {
  * @param {Object} query The query key/values that a document must match in
  * order for it to be returned in the result array.
  * @param {Object=} options An optional options object.
+ * @param {Function=} callback !! DO NOT USE, THIS IS NON-OPERATIONAL !!
+ * Optional callback. If specified the find process
+ * will not return a value and will assume that you wish to operate under an
+ * async mode. This will break up large find requests into smaller chunks and
+ * process them in a non-blocking fashion allowing large datasets to be queried
+ * without causing the browser UI to pause. Results from this type of operation
+ * will be passed back to the callback once completed.
  *
  * @returns {Array} The results array from the find operation, containing all
  * documents that matched the query.
  */
-Collection.prototype.find = function (query, options) {
+Collection.prototype.find = function (query, options, callback) {
+	if (callback) {
+		// Check the size of the collection's data array
+
+		// Split operation into smaller tasks and callback when complete
+		callback('Callbacks for the find() operation are not yet implemented!', []);
+		return [];
+	}
+
+	return this._find.apply(this, arguments);
+};
+
+Collection.prototype._find = function (query, options) {
 	if (this._state === 'dropped') {
 		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
 	}
@@ -1790,7 +1809,6 @@ Collection.prototype.find = function (query, options) {
 		pk = this.primaryKey(),
 		self = this,
 		analysis,
-		//finalQuery,
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
@@ -1973,12 +1991,12 @@ Collection.prototype.find = function (query, options) {
 												break;
 
 											/*default:
-												// Check for a double-dollar which is a back-reference to the root collection item
-												if (joinMatchIndex.substr(0, 3) === '$$.') {
-													// Back reference
-													// TODO: Support complex joins
-												}
-												break;*/
+											 // Check for a double-dollar which is a back-reference to the root collection item
+											 if (joinMatchIndex.substr(0, 3) === '$$.') {
+											 // Back reference
+											 // TODO: Support complex joins
+											 }
+											 break;*/
 										}
 									} else {
 										// TODO: Could optimise this by caching path objects
