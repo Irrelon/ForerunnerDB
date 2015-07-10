@@ -35,4 +35,8 @@ coll.setData([{
 }]);
 
 view.from(coll);
+view.queryData({}, {
+	$page: 0,
+	$limit: 3
+});
 view.grid('#gridContainer', '#gridTable');
