@@ -5374,7 +5374,7 @@ Grid.prototype.refresh = function () {
 		if (this._from.link) {
 			var self = this,
 				elem = window.jQuery(this._selector),
-				clickListener = function () {
+				sortClickListener = function () {
 					self._sortGridClick.apply(self, arguments);
 				};
 
@@ -5383,12 +5383,12 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.orderBy) {
 				// Remove listeners
-				elem.off('click', '[data-grid-sort]', clickListener);
+				elem.off('click', '[data-grid-sort]', sortClickListener);
 			}
 
 			if (self._from.query) {
 				// Remove listeners
-				elem.off('click', '[data-grid-filter]', clickListener);
+				elem.off('click', '[data-grid-filter]', sortClickListener );
 			}
 
 			// Set wrap name if none is provided
@@ -5402,7 +5402,7 @@ Grid.prototype.refresh = function () {
 			// the sorting system
 			if (self._from.orderBy) {
 				// Listen for sort requests
-				elem.on('click', '[data-grid-sort]', clickListener);
+				elem.on('click', '[data-grid-sort]', sortClickListener);
 			}
 
 			if (self._from.query) {
@@ -5580,6 +5580,9 @@ Grid.prototype.refresh = function () {
 
 						// Set the view query
 						self._from.queryData(queryObj);
+						if (self._from.pageFirst) {
+							self._from.pageFirst();
+						}
 					});
 				});
 			}
