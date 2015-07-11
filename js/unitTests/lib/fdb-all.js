@@ -1465,6 +1465,11 @@ Collection.prototype.remove = function (query, options, callback) {
 		doc,
 		newDoc;
 
+	if (typeof(options) === 'function') {
+		callback = options;
+		options = undefined;
+	}
+
 	if (query instanceof Array) {
 		returnArr = [];
 
@@ -10476,7 +10481,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.56',
+	version: '1.3.57',
 	modules: {},
 
 	_synth: {},
