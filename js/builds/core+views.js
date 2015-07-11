@@ -1,4 +1,4 @@
-var Core = require('../lib/Core'),
+var Core = require('./Core'),
 	View = require('../lib/View');
 
 if (typeof window !== 'undefined') {
