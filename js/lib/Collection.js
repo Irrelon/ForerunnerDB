@@ -1177,6 +1177,11 @@ Collection.prototype.remove = function (query, options, callback) {
 		doc,
 		newDoc;
 
+	if (typeof(options) === 'function') {
+		callback = options;
+		options = undefined;
+	}
+
 	if (query instanceof Array) {
 		returnArr = [];
 
