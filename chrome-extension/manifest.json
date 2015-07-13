@@ -1,6 +1,8 @@
 {
 	"name": "ForerunnerDB Explorer",
+	"author": "Irrelon Software Limited",
 	"version": "1.0.0",
+	"homepage_url": "http://www.forerunnerdb.com",
 	"manifest_version": 2,
 	"description": "Explore and run operations on ForerunnerDB databases in your browser.",
 	"devtools_page": "devtools.html",
