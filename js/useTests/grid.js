@@ -1,5 +1,5 @@
-window.fdb = new ForerunnerDB();
-window.db = window.fdb.db('gridTest');
+window.fdba = new ForerunnerDB();
+window.db = window.fdba.db('gridTest');
 
 var coll = window.db.collection('gridData'),
 	view = window.db.view('gridData');

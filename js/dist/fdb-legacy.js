@@ -3847,7 +3847,8 @@ module.exports = CollectionGroup;
 var Shared,
 	Db,
 	Metrics,
-	Overload;
+	Overload,
+	_instances = [];
 
 Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
@@ -3865,6 +3866,59 @@ Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
+
+	_instances.push(this);
+};
+
+/**
+ * Returns the number of instantiated ForerunnerDB objects.
+ * @returns {Number} The number of instantiated instances.
+ */
+Core.prototype.instantiatedCount = function () {
+	return _instances.length;
+};
+
+/**
+ * Get all instances as an array or a single ForerunnerDB instance
+ * by it's array index.
+ * @param {Number=} index Optional index of instance to get.
+ * @returns {Array|Object} Array of instances or a single instance.
+ */
+Core.prototype.instances = function (index) {
+	if (index !== undefined) {
+		return _instances[index];
+	}
+
+	return _instances;
+};
+
+/**
+ * Get all instances as an array of instance names or a single ForerunnerDB
+ * instance by it's name.
+ * @param {String=} name Optional name of instance to get.
+ * @returns {Array|Object} Array of instance names or a single instance.
+ */
+Core.prototype.namedInstances = function (name) {
+	var i,
+		instArr;
+
+	if (name !== undefined) {
+		for (i = 0; i < _instances.length; i++) {
+			if (_instances[i].name === name) {
+				return _instances[i];
+			}
+		}
+
+		return undefined;
+	}
+
+	instArr = [];
+
+	for (i = 0; i < _instances.length; i++) {
+		instArr.push(_instances[i].name);
+	}
+
+	return instArr;
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -3967,11 +4021,17 @@ Core.prototype.version = function (val, callback) {
 	return Shared.version;
 };
 
-// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+// Expose moduleLoaded() method to non-instantiated object ForerunnerDB
 Core.moduleLoaded = Core.prototype.moduleLoaded;
 
-// Expose version method to non-instantiated object ForerunnerDB
+// Expose version() method to non-instantiated object ForerunnerDB
 Core.version = Core.prototype.version;
+
+// Expose instances() method to non-instantiated object ForerunnerDB
+Core.instances = Core.prototype.instances;
+
+// Expose instantiatedCount() method to non-instantiated object ForerunnerDB
+Core.instantiatedCount = Core.prototype.instantiatedCount;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
@@ -11322,7 +11382,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.57',
+	version: '1.3.58',
 	modules: {},
 
 	_synth: {},

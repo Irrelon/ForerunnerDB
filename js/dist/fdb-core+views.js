@@ -1,12 +1,20 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
+	ShimIE8 = _dereq_('../lib/Shim.IE8');
+
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
+module.exports = Core;
+},{"../lib/Core":6,"../lib/Shim.IE8":27}],2:[function(_dereq_,module,exports){
+var Core = _dereq_('./Core'),
 	View = _dereq_('../lib/View');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":5,"../lib/View":26}],2:[function(_dereq_,module,exports){
+},{"../lib/View":28,"./Core":1}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -268,7 +276,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":25}],3:[function(_dereq_,module,exports){
+},{"./Shared":26}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -3498,7 +3506,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":6,"./IndexBinaryTree":8,"./IndexHashMap":9,"./KeyValueStore":10,"./Metrics":11,"./Overload":22,"./Path":23,"./ReactorIO":24,"./Shared":25}],4:[function(_dereq_,module,exports){
+},{"./Crc":7,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":23,"./Path":24,"./ReactorIO":25,"./Shared":26}],5:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3823,7 +3831,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":3,"./Shared":25}],5:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":26}],6:[function(_dereq_,module,exports){
 /*
  License
 
@@ -3839,7 +3847,8 @@ module.exports = CollectionGroup;
 var Shared,
 	Db,
 	Metrics,
-	Overload;
+	Overload,
+	_instances = [];
 
 Shared = _dereq_('./Shared');
 Overload = _dereq_('./Overload');
@@ -3857,6 +3866,59 @@ Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
+
+	_instances.push(this);
+};
+
+/**
+ * Returns the number of instantiated ForerunnerDB objects.
+ * @returns {Number} The number of instantiated instances.
+ */
+Core.prototype.instantiatedCount = function () {
+	return _instances.length;
+};
+
+/**
+ * Get all instances as an array or a single ForerunnerDB instance
+ * by it's array index.
+ * @param {Number=} index Optional index of instance to get.
+ * @returns {Array|Object} Array of instances or a single instance.
+ */
+Core.prototype.instances = function (index) {
+	if (index !== undefined) {
+		return _instances[index];
+	}
+
+	return _instances;
+};
+
+/**
+ * Get all instances as an array of instance names or a single ForerunnerDB
+ * instance by it's name.
+ * @param {String=} name Optional name of instance to get.
+ * @returns {Array|Object} Array of instance names or a single instance.
+ */
+Core.prototype.namedInstances = function (name) {
+	var i,
+		instArr;
+
+	if (name !== undefined) {
+		for (i = 0; i < _instances.length; i++) {
+			if (_instances[i].name === name) {
+				return _instances[i];
+			}
+		}
+
+		return undefined;
+	}
+
+	instArr = [];
+
+	for (i = 0; i < _instances.length; i++) {
+		instArr.push(_instances[i].name);
+	}
+
+	return instArr;
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -3959,11 +4021,17 @@ Core.prototype.version = function (val, callback) {
 	return Shared.version;
 };
 
-// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+// Expose moduleLoaded() method to non-instantiated object ForerunnerDB
 Core.moduleLoaded = Core.prototype.moduleLoaded;
 
-// Expose version method to non-instantiated object ForerunnerDB
+// Expose version() method to non-instantiated object ForerunnerDB
 Core.version = Core.prototype.version;
+
+// Expose instances() method to non-instantiated object ForerunnerDB
+Core.instances = Core.prototype.instances;
+
+// Expose instantiatedCount() method to non-instantiated object ForerunnerDB
+Core.instantiatedCount = Core.prototype.instantiatedCount;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
@@ -4031,7 +4099,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":7,"./Metrics.js":11,"./Overload":22,"./Shared":25}],6:[function(_dereq_,module,exports){
+},{"./Db.js":8,"./Metrics.js":12,"./Overload":23,"./Shared":26}],7:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -4064,7 +4132,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
-},{}],7:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -4658,7 +4726,7 @@ Core.prototype.databases = function (search) {
 };
 
 module.exports = Db;
-},{"./Collection.js":3,"./Crc.js":6,"./Metrics.js":11,"./Overload":22,"./Shared":25}],8:[function(_dereq_,module,exports){
+},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":12,"./Overload":23,"./Shared":26}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -4951,7 +5019,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":23,"./Shared":25}],9:[function(_dereq_,module,exports){
+},{"./Path":24,"./Shared":26}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5310,7 +5378,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":23,"./Shared":25}],10:[function(_dereq_,module,exports){
+},{"./Path":24,"./Shared":26}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -5525,7 +5593,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":25}],11:[function(_dereq_,module,exports){
+},{"./Shared":26}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5600,7 +5668,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":21,"./Shared":25}],12:[function(_dereq_,module,exports){
+},{"./Operation":22,"./Shared":26}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -5614,7 +5682,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 "use strict";
 /**
  * The chain reactor mixin, provides a class with chain reaction capabilities.
@@ -5683,7 +5751,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -5847,7 +5915,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":22}],15:[function(_dereq_,module,exports){
+},{"./Overload":23}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -5860,7 +5928,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],16:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -5995,7 +6063,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":22}],17:[function(_dereq_,module,exports){
+},{"./Overload":23}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -6357,7 +6425,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Sorting = {
@@ -6403,7 +6471,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -6819,7 +6887,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":22}],20:[function(_dereq_,module,exports){
+},{"./Overload":23}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Updating = {
@@ -6988,7 +7056,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7135,7 +7203,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":23,"./Shared":25}],22:[function(_dereq_,module,exports){
+},{"./Path":24,"./Shared":26}],23:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7295,7 +7363,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7708,7 +7776,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":25}],24:[function(_dereq_,module,exports){
+},{"./Shared":26}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7770,7 +7838,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":25}],25:[function(_dereq_,module,exports){
+},{"./Shared":26}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7779,7 +7847,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.57',
+	version: '1.3.58',
 	modules: {},
 
 	_synth: {},
@@ -7922,7 +7990,127 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":12,"./Mixin.ChainReactor":13,"./Mixin.Common":14,"./Mixin.Constants":15,"./Mixin.Events":16,"./Mixin.Matching":17,"./Mixin.Sorting":18,"./Mixin.Triggers":19,"./Mixin.Updating":20,"./Overload":22}],26:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Triggers":20,"./Mixin.Updating":21,"./Overload":23}],27:[function(_dereq_,module,exports){
+/* jshint strict:false */
+if (!Array.prototype.filter) {
+	Array.prototype.filter = function(fun/*, thisArg*/) {
+
+		if (this === void 0 || this === null) {
+			throw new TypeError();
+		}
+
+		var t = Object(this);
+		var len = t.length >>> 0; // jshint ignore:line
+		if (typeof fun !== 'function') {
+			throw new TypeError();
+		}
+
+		var res = [];
+		var thisArg = arguments.length >= 2 ? arguments[1] : void 0;
+		for (var i = 0; i < len; i++) {
+			if (i in t) {
+				var val = t[i];
+
+				// NOTE: Technically this should Object.defineProperty at
+				//       the next index, as push can be affected by
+				//       properties on Object.prototype and Array.prototype.
+				//       But that method's new, and collisions should be
+				//       rare, so use the more-compatible alternative.
+				if (fun.call(thisArg, val, i, t)) {
+					res.push(val);
+				}
+			}
+		}
+
+		return res;
+	};
+}
+
+if (typeof Object.create !== 'function') {
+	Object.create = (function() {
+		var Temp = function() {};
+		return function (prototype) {
+			if (arguments.length > 1) {
+				throw Error('Second argument not supported');
+			}
+			if (typeof prototype !== 'object') {
+				throw TypeError('Argument must be an object');
+			}
+			Temp.prototype = prototype;
+			var result = new Temp();
+			Temp.prototype = null;
+			return result;
+		};
+	})();
+}
+
+// Production steps of ECMA-262, Edition 5, 15.4.4.14
+// Reference: http://es5.github.io/#x15.4.4.14e
+if (!Array.prototype.indexOf) {
+	Array.prototype.indexOf = function(searchElement, fromIndex) {
+		var k;
+
+		// 1. Let O be the result of calling ToObject passing
+		//    the this value as the argument.
+		if (this === null) {
+			throw new TypeError('"this" is null or not defined');
+		}
+
+		var O = Object(this);
+
+		// 2. Let lenValue be the result of calling the Get
+		//    internal method of O with the argument "length".
+		// 3. Let len be ToUint32(lenValue).
+		var len = O.length >>> 0; // jshint ignore:line
+
+		// 4. If len is 0, return -1.
+		if (len === 0) {
+			return -1;
+		}
+
+		// 5. If argument fromIndex was passed let n be
+		//    ToInteger(fromIndex); else let n be 0.
+		var n = +fromIndex || 0;
+
+		if (Math.abs(n) === Infinity) {
+			n = 0;
+		}
+
+		// 6. If n >= len, return -1.
+		if (n >= len) {
+			return -1;
+		}
+
+		// 7. If n >= 0, then Let k be n.
+		// 8. Else, n<0, Let k be len - abs(n).
+		//    If k is less than 0, then let k be 0.
+		k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+
+		// 9. Repeat, while k < len
+		while (k < len) {
+			// a. Let Pk be ToString(k).
+			//   This is implicit for LHS operands of the in operator
+			// b. Let kPresent be the result of calling the
+			//    HasProperty internal method of O with argument Pk.
+			//   This step can be combined with c
+			// c. If kPresent is true, then
+			//    i.  Let elementK be the result of calling the Get
+			//        internal method of O with the argument ToString(k).
+			//   ii.  Let same be the result of applying the
+			//        Strict Equality Comparison Algorithm to
+			//        searchElement and elementK.
+			//  iii.  If same is true, return k.
+			if (k in O && O[k] === searchElement) {
+				return k;
+			}
+			k++;
+		}
+		return -1;
+	};
+}
+
+module.exports = {};
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9000,4 +9188,4 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":2,"./Collection":3,"./CollectionGroup":4,"./ReactorIO":24,"./Shared":25}]},{},[1]);
+},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":25,"./Shared":26}]},{},[2]);
