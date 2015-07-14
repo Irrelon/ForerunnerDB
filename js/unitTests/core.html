@@ -56,7 +56,9 @@
 	<!--<script src="tests/testsPaging.js"></script>-->
 
 	<script type="text/x-jsrender" id="gridTable">
-		{{:myData}}
+		<div id="myData">
+		{^{:myData}}
+		</div>
 		<div class="container" role="main">
 			<div class="table-responsive">
 				<div class="gridContainer"></div>
