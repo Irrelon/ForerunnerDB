@@ -49,7 +49,8 @@ var Overload = function (def) {
 		return function () {
 			var arr = [],
 				lookup,
-				type;
+				type,
+				name;
 
 			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
@@ -98,7 +99,8 @@ var Overload = function (def) {
 				}
 			}
 
-			throw('ForerunnerDB.Overload "' + this.name() + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
+			name = typeof this.name === 'function' ? this.name() : 'Unknown';
+			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
 		};
 	}
 
