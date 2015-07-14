@@ -140,6 +140,38 @@ Core.prototype.moduleLoaded = new Overload({
 	},
 
 	/**
+	 * Checks if an array of named modules are loaded and if so
+	 * calls the passed callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
+	 * @param {Array} moduleName The array of module names to check for.
+	 * @param {Function} callback The callback method to call if modules are loaded.
+	 */
+	'array, function': function (moduleNameArr, callback) {
+		var moduleName,
+			i;
+
+		for (i = 0; i < moduleNameArr.length; i++) {
+			moduleName = moduleNameArr[i];
+
+			if (moduleName !== undefined) {
+				moduleName = moduleName.replace(/ /g, '');
+
+				var modules = moduleName.split(','),
+					index;
+
+				for (index = 0; index < modules.length; index++) {
+					if (!Shared.modules[modules[index]]) {
+						return false;
+					}
+				}
+			}
+		}
+
+		callback();
+	},
+
+	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
 	 * @func moduleLoaded
