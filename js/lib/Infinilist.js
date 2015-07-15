@@ -58,7 +58,7 @@ var Infinilist = function (selector, template, options, view) {
 			self.scrollDebouceTimeout = setTimeout(function () {
 				self.scroll();
 				self.scrollDebouceTimeout = 0;
-			}, 30);
+			}, 16);
 		}
 	});
 
