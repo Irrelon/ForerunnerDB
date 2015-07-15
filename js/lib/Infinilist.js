@@ -81,6 +81,8 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 
 	if (val !== undefined) {
 		self.virtualHeight = self.total * val;
+		self._itemHeight = val;
+		self.resize();
 	}
 
 	return this.$super.apply(this, arguments);
