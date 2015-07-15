@@ -10578,7 +10578,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.75',
+	version: '1.3.76',
 	modules: {},
 
 	_synth: {},
@@ -10978,7 +10978,8 @@ View.prototype.data = function () {
 /**
  * Sets the collection from which the view will assemble its data.
  * @param {Collection} collection The collection to use to assemble view data.
- * @returns {View}
+ * @returns {*} If no argument is passed, returns the current value of from,
+ * otherwise returns itself for chaining.
  */
 View.prototype.from = function (collection) {
 	var self = this;
