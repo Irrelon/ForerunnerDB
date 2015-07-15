@@ -8000,7 +8000,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.62',
+	version: '1.3.64',
 	modules: {},
 
 	_synth: {},
