@@ -35,7 +35,6 @@ var Infinilist = function (selector, template, options, view) {
 	self.limit = 0;
 	self.ignoreScroll = false;
 	self.previousScrollTop = 0;
-	self.itemHeight = 30;
 	self.selector = selector;
 	self.template = template;
 	self.view = view;
@@ -43,6 +42,7 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemContainer = $("<div class='il_items'></div>");
 	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
 	self.total = self.view.from().count();
+	self.itemHeight(30);
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -63,6 +63,16 @@ var Infinilist = function (selector, template, options, view) {
 
 Shared.addModule('Infinilist', Infinilist);
 
+Shared.synthesize(Infinilist, 'itemHeight', function (val) {
+	var self = this;
+
+	if (val !== undefined) {
+		self.virtualHeight = self.total * val;
+	}
+
+	return this.$super.apply(this, arguments);
+});
+
 /**
  * Handle screen resizing.
  */
@@ -76,21 +86,15 @@ Infinilist.prototype.resize = function () {
 		self.oldHeight = newHeight;
 
 		// Calculate number of visible items
-		self.maxItemCount = Math.ceil(newHeight / self.itemHeight);
-		skipCount = Math.floor(scrollTop / self.itemHeight);
+		self.maxItemCount = Math.ceil(newHeight / self._itemHeight);
+		skipCount = Math.floor(scrollTop / self._itemHeight);
 
 		self.skip = skipCount;
 		self.limit = self.maxItemCount + 1;
 
-		// Calculate the list height
-		//self.virtualHeight = self.total * self.itemHeight;
-
-		// Set the bottom margin height
-		//self.itemBottomMargin.height(self.virtualHeight);
-
 		self.view.queryOptions(self.currentRange());
 
-		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self.itemHeight));
+		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
 	}
 };
 
@@ -119,13 +123,13 @@ Infinilist.prototype.scroll = function () {
 		// Check if a scroll change occurred
 		if (delta !== 0) {
 			// Determine the new item range
-			skipCount = Math.floor(scrollTop / self.itemHeight);
+			skipCount = Math.floor(scrollTop / self._itemHeight);
 
 			self.skip = skipCount;
 			self.view.queryOptions(self.currentRange());
 
-			self.itemTopMargin.height(skipCount * self.itemHeight);
-			self.itemBottomMargin.height(self.virtualHeight - (skipCount * self.itemHeight));
+			self.itemTopMargin.height(skipCount * self._itemHeight);
+			self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
 		}
 
 		// Set a timeout to stop ignoring events
@@ -159,7 +163,7 @@ Infinilist.prototype.drop = function () {
 	// Remove references
 	delete self.ignoreScroll;
 	delete self.previousScrollTop;
-	delete self.itemHeight;
+	delete self._itemHeight;
 	delete self.selector;
 	delete self.template;
 	delete self.view;
