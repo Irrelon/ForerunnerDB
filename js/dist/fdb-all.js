@@ -10578,7 +10578,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.73',
+	version: '1.3.75',
 	modules: {},
 
 	_synth: {},
@@ -11108,9 +11108,11 @@ View.prototype.from = function (collection) {
 		} else {
 			this.rebuildActiveBucket();
 		}
+
+		return this;
 	}
 
-	return this;
+	return this._from;
 };
 
 /**

@@ -86,6 +86,7 @@ QUnit.test("Collection.find() $transform :: Query data with a $transform operato
 ForerunnerDB.moduleLoaded('View', function () {
 	QUnit.test("View.transform() :: Assign a transform-in method to a view from a standard collection", function () {
 		base.dbUp();
+		debugger;
 		var coll = db.collection('transformColl').truncate();
 		coll.transform(false);
 

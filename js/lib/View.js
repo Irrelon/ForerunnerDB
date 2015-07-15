@@ -264,6 +264,8 @@ View.prototype.from = function (collection) {
 		} else {
 			this.rebuildActiveBucket();
 		}
+
+		return this;
 	}
 
 	return this._from;
