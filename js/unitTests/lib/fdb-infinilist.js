@@ -37,6 +37,12 @@ var Infinilist = function (selector, template, options, view) {
 
 	selector = $(selector);
 
+	options = options || {};
+
+	self.options = options.infinilist || {};
+
+	delete options.infinilist;
+
 	self.skip = 0;
 	self.limit = 0;
 	self.ignoreScroll = false;
@@ -48,7 +54,7 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemContainer = $("<div class='il_items'></div>");
 	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
 	self.total = self.view.from().count();
-	self.itemHeight(30);
+	self.itemHeight(self.options.itemHeight);
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -87,6 +93,8 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 
 	if (val !== undefined) {
 		self.virtualHeight = self.total * val;
+		self._itemHeight = val;
+		self.resize();
 	}
 
 	return this.$super.apply(this, arguments);
