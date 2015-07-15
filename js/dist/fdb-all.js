@@ -10995,6 +10995,14 @@ View.prototype.from = function (collection) {
 		this._from = collection;
 		this._from.on('drop', this._collectionDroppedWrap);
 
+		// Remove limiting options from query options before processing
+		var queryOptions = this.decouple(this._querySettings.options || {});
+		delete queryOptions.$skip;
+		delete queryOptions.$page;
+		delete queryOptions.$wrap;
+		delete queryOptions.$wrapIn;
+		delete queryOptions.$limit;
+
 		// Create a new reactor IO graph node that intercepts chain packets from the
 		// view's "from" collection and determines how they should be interpreted by
 		// this view. If the view does not have a query then this reactor IO will
@@ -11092,7 +11100,7 @@ View.prototype.from = function (collection) {
 			return false;
 		});
 
-		var collData = collection.find(this._querySettings.query, this._querySettings.options);
+		var collData = collection.find(this._querySettings.query, queryOptions);
 
 		this._transformPrimaryKey(collection.primaryKey());
 		this._transformSetData(collData);

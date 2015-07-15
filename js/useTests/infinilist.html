@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Infinilist Functionality Demo</title>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+	<script src="../unitTests/lib/jquery-1.11.0.min.js"></script>
+
+	<script src="../unitTests/lib/fdb-all.js" data-cover></script>
+	<script src="../unitTests/lib/fdb-autobind.js" data-cover></script>
+	<script src="../unitTests/lib/fdb-infinilist.js"></script>
+
+	<script src="../unitTests/lib/jsrender-helpers.js"></script>
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<style>
+		.il_topMargin {
+			height: 0;
+		}
+		
+		.il_items {
+			height: 0;
+		}
+
+		.il_bottomMargin {
+			height: 0;
+		}
+
+		#testContainer {
+			overflow-y: auto;
+			padding: 0;
+			margin: 0;
+			height: 400px;
+			width: 220px;
+		}
+
+		.item {
+			padding: 5px;
+			margin: 0px;
+			cursor: pointer;
+			position: relative;
+			white-space: nowrap;
+			padding-right: 30px;
+		}
+	</style>
+</head>
+<body>
+	<div id="testContainer"></div>
+
+	<script type="text/x-jsrender" id="listItem">
+		<div class="item" data-link="id{:_id}">{^{:name}}</div>
+	</script>
+
+	<script src="infinilist.js"></script>
+</body>
+</html>
