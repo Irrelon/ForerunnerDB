@@ -134,7 +134,8 @@ View.prototype.data = function () {
 /**
  * Sets the collection from which the view will assemble its data.
  * @param {Collection} collection The collection to use to assemble view data.
- * @returns {View}
+ * @returns {*} If no argument is passed, returns the current value of from,
+ * otherwise returns itself for chaining.
  */
 View.prototype.from = function (collection) {
 	var self = this;
