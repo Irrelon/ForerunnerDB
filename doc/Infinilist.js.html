@@ -1,10 +1,32 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
-var Infinilist = _dereq_('../lib/Infinilist');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: Infinilist.js</title>
 
-module.exports = Infinilist;
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
 
-},{"../lib/Infinilist":2}],2:[function(_dereq_,module,exports){
-"use strict";
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: Infinilist.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>"use strict";
 
 /**
  * Provides scrolling lists with large data sets that behave in a very
@@ -44,9 +66,9 @@ var Infinilist = function (selector, template, options, view) {
 	self.selector = selector;
 	self.template = template;
 	self.view = view;
-	self.itemTopMargin = $("<div class='il_topMargin'></div>");
-	self.itemContainer = $("<div class='il_items'></div>");
-	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
+	self.itemTopMargin = $("&lt;div class='il_topMargin'>&lt;/div>");
+	self.itemContainer = $("&lt;div class='il_items'>&lt;/div>");
+	self.itemBottomMargin = $("&lt;div class='il_bottomMargin'>&lt;/div>");
 	self.total = self.view.from().count();
 	self.itemHeight(30);
 
@@ -183,9 +205,9 @@ View.prototype.infinilist = function (targetSelector, templateSelector, options)
 
 	this._infinilist = this._infinilist || {};
 
-	if (templateSelector && typeof templateSelector === 'object') {
+	if (templateSelector &amp;&amp; typeof templateSelector === 'object') {
 		// Our second argument is an object, let's inspect
-		if (templateSelector.template && typeof templateSelector.template === 'string') {
+		if (templateSelector.template &amp;&amp; typeof templateSelector.template === 'string') {
 			// The template has been given to us as a string
 			templateId = this.objectId(templateSelector.template);
 		}
@@ -201,9 +223,9 @@ View.prototype.unInfinilist = function (targetSelector, templateSelector, option
 
 	this._infinilist = this._infinilist || {};
 
-	if (templateSelector && typeof templateSelector === 'object') {
+	if (templateSelector &amp;&amp; typeof templateSelector === 'object') {
 		// Our second argument is an object, let's inspect
-		if (templateSelector.template && typeof templateSelector.template === 'string') {
+		if (templateSelector.template &amp;&amp; typeof templateSelector.template === 'string') {
 			// The template has been given to us as a string
 			templateId = this.objectId(templateSelector.template);
 		}
@@ -225,5 +247,26 @@ Shared.moduleFinished('AutoBind', function () {
 	Shared.finishModule('Infinilist');
 });
 
-module.exports = Infinilist;
-},{}]},{},[1]);
+module.exports = Infinilist;</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Wed Jul 15 2015 11:36:05 GMT+0100 (BST)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

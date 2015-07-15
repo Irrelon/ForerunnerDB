@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>JSDoc: Class: AutoBind</title>
+    <title>JSDoc: Class: Infinilist</title>
 
     <script src="scripts/prettify/prettify.js"> </script>
     <script src="scripts/prettify/lang-css.js"> </script>
@@ -17,7 +17,7 @@
 
 <div id="main">
 
-    <h1 class="page-title">Class: AutoBind</h1>
+    <h1 class="page-title">Class: Infinilist</h1>
 
     
 
@@ -29,7 +29,7 @@
 <header>
     
         <h2>
-        AutoBind
+        Infinilist
         </h2>
         
     
@@ -42,16 +42,21 @@
 
     
 
-    <h4 class="name" id="AutoBind"><span class="type-signature"></span>new AutoBind<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="Infinilist"><span class="type-signature"></span>new Infinilist<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Provides data-binding functionality to ForerunnerDB. Allows collections
-and views to link to selectors and automatically generate DOM elements
-from jsViews (jsRender) templates.
+    Provides scrolling lists with large data sets that behave in a very
+performance-optimised fashion by controlling the DOM elements currently
+on screen to ensure that only the visible elements are rendered and
+all other elements are simulated by variable height divs at the top
+and bottom of the scrolling list.
+
+This module requires that the AutoBind module is loaded before it
+will work.
 </div>
 
 
@@ -95,7 +100,349 @@ from jsViews (jsRender) templates.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line3">line 3</a>
+        <a href="Infinilist.js.html">Infinilist.js</a>, <a href="Infinilist.js.html#line3">line 3</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+<h5>Requires:</h5>
+<ul>
+    <li>module:AutoBind</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    </div>
+
+    
+
+    
+        <h3 class="subsection-title">Requires</h3>
+
+        <ul>
+            <li>module:AutoBind</li>
+        </ul>
+    
+
+    
+
+     
+
+    
+
+    
+
+    
+        <h3 class="subsection-title">Methods</h3>
+
+        
+            
+
+    
+
+    <h4 class="name" id="resize"><span class="type-signature"></span>resize<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Handle screen resizing.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Infinilist.js.html">Infinilist.js</a>, <a href="Infinilist.js.html#line79">line 79</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+    
+
+    
+
+    
+</article>
+
+</section>
+
+
+
+
+
+
+
+<section>
+
+<header>
+    
+        <h2>
+        Infinilist
+        </h2>
+        
+    
+</header>
+
+<article>
+    <div class="container-overview">
+    
+        
+
+    
+
+    <h4 class="name" id="Infinilist"><span class="type-signature"></span>new Infinilist<span class="signature">(selector, template, options, view)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates an infinilist instance.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>selector</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Selector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A jQuery selector targeting the element that
+will contain the list items.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>template</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Selector</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">jQuery selector of the template to use when
+rendering an individual list item.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The options object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>view</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="View.html">View</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The view to read data from.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Infinilist.js.html">Infinilist.js</a>, <a href="Infinilist.js.html#line29">line 29</a>
     </li></ul></dd>
     
 
@@ -144,14 +491,14 @@ from jsViews (jsRender) templates.
 
     
 
-    <h4 class="name" id=".extendCollection"><span class="type-signature">(private, static) </span>extendCollection<span class="signature">(Module)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id="resize"><span class="type-signature"></span>resize<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Extends the Collection class with new binding capabilities.
+    Handle screen resizing.
 </div>
 
 
@@ -160,55 +507,6 @@ from jsViews (jsRender) templates.
 
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>Module</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The Collection class module.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -244,400 +542,7 @@ from jsViews (jsRender) templates.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line22">line 22</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".extendDocument"><span class="type-signature">(private, static) </span>extendDocument<span class="signature">(Module)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Extends the Document class with new binding capabilities.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>Module</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Document.html">Document</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The Document class module.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line635">line 635</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".extendOverview"><span class="type-signature">(private, static) </span>extendOverview<span class="signature">(Module)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Extends the Overview class with new binding capabilities.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>Module</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Overview.html">Overview</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The Overview class module.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line586">line 586</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".extendView"><span class="type-signature">(private, static) </span>extendView<span class="signature">(Module)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Extends the View class with new binding capabilities.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>Module</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="View.html">View</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The View class module.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line514">line 514</a>
+        <a href="Infinilist.js.html">Infinilist.js</a>, <a href="Infinilist.js.html#line79">line 79</a>
     </li></ul></dd>
     
 

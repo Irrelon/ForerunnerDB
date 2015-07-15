@@ -69,7 +69,7 @@ var Infinilist = function (selector, template, options, view) {
 
 Shared.addModule('Infinilist', Infinilist);
 
-Shared.synthesize(Infinilist, 'itemHeight', function (val) {
+Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 	var self = this;
 
 	if (val !== undefined) {
