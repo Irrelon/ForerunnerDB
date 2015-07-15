@@ -53,11 +53,25 @@ var Infinilist = function (selector, template, options, view) {
 	view.link(self.itemContainer, template, options);
 
 	selector.on('scroll', function () {
-		self.scroll();
+		// Debounce scroll event
+		if (self.scrollDebouceTimeout) {
+			clearTimeout(self.scrollDebouceTimeout);
+		}
+
+		self.scrollDebouceTimeout = setTimeout(function () {
+			self.scroll();
+		}, 16);
 	});
 
 	$(window).on('resize', function () {
-		self.resize();
+		// Debounce resize event
+		if (self.resizeDebouceTimeout) {
+			clearTimeout(self.resizeDebouceTimeout);
+		}
+
+		self.resizeDebouceTimeout = setTimeout(function () {
+			self.resize();
+		}, 16);
 	});
 };
 
@@ -111,39 +125,20 @@ Infinilist.prototype.scroll = function () {
 		skipCount,
 		scrollTop = self.selector.scrollTop();
 
-	// Debounce scroll event
-	if (!self.ignoreScroll) {
-		// Ignore future scroll events
-		self.ignoreScroll = true;
+	// Get the current scroll position
+	delta = scrollTop - self.previousScrollTop;
+	self.previousScrollTop = scrollTop;
 
-		// Get the current scroll position
-		delta = scrollTop - self.previousScrollTop;
-		self.previousScrollTop = scrollTop;
+	// Check if a scroll change occurred
+	if (delta !== 0) {
+		// Determine the new item range
+		skipCount = Math.floor(scrollTop / self._itemHeight);
 
-		// Check if a scroll change occurred
-		if (delta !== 0) {
-			// Determine the new item range
-			skipCount = Math.floor(scrollTop / self._itemHeight);
+		self.skip = skipCount;
+		self.view.queryOptions(self.currentRange());
 
-			self.skip = skipCount;
-			self.view.queryOptions(self.currentRange());
-
-			self.itemTopMargin.height(skipCount * self._itemHeight);
-			self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
-		}
-
-		// Set a timeout to stop ignoring events
-		setTimeout(function () {
-			self.ignoreScroll = false;
-		}, 16);
-	} else {
-		if (self.scrollDebouceTimeout) {
-			clearTimeout(self.scrollDebouceTimeout);
-		}
-
-		self.scrollDebouceTimeout = setTimeout(function () {
-			self.scroll(scrollTop);
-		}, 16);
+		self.itemTopMargin.height(skipCount * self._itemHeight);
+		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
 	}
 };
 
