@@ -6,7 +6,7 @@
 		i;
 
 	console.time('Create');
-	for (i = 0; i < 50000; i++) {
+	for (i = 0; i < 1213; i++) {
 		coll.insert({
 			_id: i,
 			name: 'Item ' + i
@@ -21,7 +21,11 @@
 
 	console.time('Infinilist');
 	console.profile('Infinilist');
-	view.infinilist('#testContainer', '#listItem');
+	view.infinilist('#testContainer', '#listItem', {
+		infinilist: {
+			itemHeight: 24
+		}
+	});
 	console.profileEnd('Infinilist');
 	console.timeEnd('Infinilist');
 })();

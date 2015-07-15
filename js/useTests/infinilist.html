@@ -19,6 +19,11 @@
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
 
 	<style>
+		* {
+			font-family: 'Open Sans', sans-serif;
+			font-size: 14px;
+		}
+
 		.il_topMargin {
 			height: 0;
 		}
@@ -32,14 +37,14 @@
 		}
 
 		#testContainer {
-			overflow-y: auto;
+			display: block;
+			height: 385px;
+			min-width: 200px;
+			border-right: 1px solid #ccc;
 			padding: 0;
 			margin: 0;
-			width: 220px;
-			position: absolute;
-			top: 0;
-			left: 0;
-			bottom: 0;
+			float: left;
+			overflow-y: auto;
 		}
 
 		.item {
@@ -49,6 +54,22 @@
 			position: relative;
 			white-space: nowrap;
 			padding-right: 30px;
+			height: 24px;
+		}
+
+		.item:after {
+			content: "";
+			border-top: 5px solid transparent;
+			border-bottom: 5px solid transparent;
+			border-left: 5px solid #999999;
+			position: absolute;
+			right: 10px;
+			top: 7px;
+		}
+
+		.tx {
+			margin-right: 20px;
+			white-space: nowrap;
 		}
 	</style>
 </head>
@@ -56,8 +77,12 @@
 	<div id="testContainer"></div>
 
 	<script type="text/x-jsrender" id="listItem">
-		<div class="item" data-link="id{:_id}">{^{:name}}</div>
+		<div class="item" data-link="id{:_id}"><input type="checkbox" /> <span class="glyphicon glyphicon-user"></span> <span class="tx">{^{:name}}</span></div>
 	</script>
+
+	<!--
+	<div tabindex="-1">{{if icon}}<span class="glyphicons glyphicons-{{:icon}}" data-link="style{:iconColor ? 'color: ' + iconColor + ';' : ''}"></span>{{/if}} <span class="tx">{{:label}}</span>{^{if badge}} <span class="badge">{^{:badge}}</span>{{/if}}</div>
+	-->
 
 	<script src="infinilist.js"></script>
 </body>
