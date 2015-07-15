@@ -460,13 +460,8 @@ module.exports = function(grunt) {
 
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("3: Build, Test, Tag and Push DEV", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "gitCommit", "gitPushAndTagDev"]);
-	grunt.registerTask("4: Generate JSDoc", ["jsdoc"]);
-	//grunt.registerTask("4: Build, Test and Increment Version", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("5: Git Commit New Version, Push and Tag - DEV", ["gitCommit", "gitPushAndTagDev"]);
-	grunt.registerTask("6: Merge Dev to Master, Push and Tag - MASTER", ["gitMergeDevIntoMaster", "gitPushAndTagMaster"]);
-	grunt.registerTask("7: NPM Publish", ["npmPublish"]);
-	grunt.registerTask("8: Full Build, Test, Version, Push, Merge and Publish", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
+	grunt.registerTask("3: Build, Test, Tag and Push DEV", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev"]);
+	grunt.registerTask("4: Release and Publish Master Build From Dev", ["gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };

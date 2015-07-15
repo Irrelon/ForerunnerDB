@@ -1,7 +1,7 @@
 "use strict";
 
 /**
- * Provides scrolling lists with large data sets to behave in a very
+ * Provides scrolling lists with large data sets that behave in a very
  * performance-optimised fashion by controlling the DOM elements currently
  * on screen to ensure that only the visible elements are rendered and
  * all other elements are simulated by variable height divs at the top
@@ -16,11 +16,23 @@
 var Shared = window.ForerunnerDB.shared,
 	View = Shared.modules.View;
 
+/**
+ * Creates an infinilist instance.
+ * @param {Selector} selector A jQuery selector targeting the element that
+ * will contain the list items.
+ * @param {Selector} template jQuery selector of the template to use when
+ * rendering an individual list item.
+ * @param {Object} options The options object.
+ * @param {View} view The view to read data from.
+ * @constructor
+ */
 var Infinilist = function (selector, template, options, view) {
 	var self = this;
 
 	selector = $(selector);
 
+	self.skip = 0;
+	self.limit = 0;
 	self.ignoreScroll = false;
 	self.previousScrollTop = 0;
 	self.itemHeight = 30;
@@ -30,6 +42,7 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemTopMargin = $("<div class='il_topMargin'></div>");
 	self.itemContainer = $("<div class='il_items'></div>");
 	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
+	self.total = self.view.from().count();
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -50,23 +63,35 @@ var Infinilist = function (selector, template, options, view) {
 
 Shared.addModule('Infinilist', Infinilist);
 
+/**
+ * Handle screen resizing.
+ */
 Infinilist.prototype.resize = function () {
-	var self = this;
+	var self = this,
+		newHeight = self.selector.height(),
+		skipCount,
+		scrollTop = self.selector.scrollTop();
 
-	// Calculate number of visible items
-	self.maxItemCount = Math.ceil(self.selector.height() / self.itemHeight);
+	if (self.oldHeight !== newHeight) {
+		self.oldHeight = newHeight;
 
-	self.skip = 0;
-	self.limit = self.maxItemCount + 1;
-	self.total = self.view.from().count();
+		// Calculate number of visible items
+		self.maxItemCount = Math.ceil(newHeight / self.itemHeight);
+		skipCount = Math.floor(scrollTop / self.itemHeight);
 
-	// Calculate the list height
-	self.virtualHeight = self.total * self.itemHeight;
+		self.skip = skipCount;
+		self.limit = self.maxItemCount + 1;
 
-	// Set the bottom margin height
-	self.itemBottomMargin.height(self.virtualHeight);
+		// Calculate the list height
+		//self.virtualHeight = self.total * self.itemHeight;
 
-	self.view.queryOptions(self.currentRange());
+		// Set the bottom margin height
+		//self.itemBottomMargin.height(self.virtualHeight);
+
+		self.view.queryOptions(self.currentRange());
+
+		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self.itemHeight));
+	}
 };
 
 Infinilist.prototype.currentRange = function () {

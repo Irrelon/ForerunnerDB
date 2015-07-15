@@ -50,7 +50,7 @@ var Collection = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Collection.prototype.init = function (name) {
+Collection.prototype.init = function (name, options) {
 	this._primaryKey = '_id';
 	this._primaryIndex = new KeyValueStore('primary');
 	this._primaryCrc = new KeyValueStore('primaryCrc');
@@ -58,6 +58,13 @@ Collection.prototype.init = function (name) {
 	this._name = name;
 	this._data = [];
 	this._metrics = new Metrics();
+
+	this._options = options || {
+		changeTimestamp: false
+	};
+
+	// Create an object to store internal protected data
+	this._internalData = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -81,7 +88,7 @@ Collection.prototype.init = function (name) {
 	};
 
 	// Set the subset to itself since it is the root collection
-	this._subsetOf(this);
+	this.subsetOf(this);
 };
 
 Shared.addModule('Collection', Collection);
@@ -235,6 +242,17 @@ Collection.prototype._onUpdate = function (items) {
  */
 Collection.prototype._onRemove = function (items) {
 	this.emit('remove', items);
+};
+
+/**
+ * Handles any change to the collection.
+ * @private
+ */
+Collection.prototype._onChange = function () {
+	if (this._options.changeTimestamp) {
+		// Record the last change timestamp
+		this._internalData.lastChange = new Date();
+	}
 };
 
 /**
@@ -400,6 +418,7 @@ Collection.prototype.truncate = function () {
 	this._primaryCrc = new KeyValueStore('primaryCrc');
 	this._crcLookup = new KeyValueStore('crcLookup');
 
+	this._onChange();
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -581,12 +600,15 @@ Collection.prototype.update = function (query, update, options) {
 		op = this._metrics.create('update'),
 		dataSet,
 		updated,
-		updateCall = function (originalDoc) {
-			var newDoc = self.decouple(originalDoc),
+		updateCall = function (referencedDoc) {
+			var oldDoc = self.decouple(referencedDoc),
+				newDoc,
 				triggerOperation,
 				result;
 
 			if (self.willTrigger(self.TYPE_UPDATE, self.PHASE_BEFORE) || self.willTrigger(self.TYPE_UPDATE, self.PHASE_AFTER)) {
+				newDoc = self.decouple(referencedDoc);
+
 				triggerOperation = {
 					type: 'update',
 					query: self.decouple(query),
@@ -599,14 +621,14 @@ Collection.prototype.update = function (query, update, options) {
 				// like AFTER the update is processed
 				result = self.updateObject(newDoc, triggerOperation.update, triggerOperation.query, triggerOperation.options, '');
 
-				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, originalDoc, newDoc) !== false) {
+				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, referencedDoc, newDoc) !== false) {
 					// No triggers complained so let's execute the replacement of the existing
 					// object with the new one
-					result = self.updateObject(originalDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
+					result = self.updateObject(referencedDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
 
 					// NOTE: If for some reason we would only like to fire this event if changes are actually going
 					// to occur on the object from the proposed update then we can add "result &amp;&amp;" to the if
-					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, originalDoc, newDoc);
+					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, referencedDoc, newDoc);
 				} else {
 					// Trigger cancelled operation so tell result that it was not updated
 					result = false;
@@ -614,8 +636,11 @@ Collection.prototype.update = function (query, update, options) {
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
-				result = self.updateObject(originalDoc, update, query, options, '');
+				result = self.updateObject(referencedDoc, update, query, options, '');
 			}
+
+			// Inform indexes of the change
+			self._updateIndexes(oldDoc, referencedDoc);
 
 			return result;
 		};
@@ -640,6 +665,7 @@ Collection.prototype.update = function (query, update, options) {
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
+			this._onChange();
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -1179,6 +1205,11 @@ Collection.prototype.remove = function (query, options, callback) {
 		doc,
 		newDoc;
 
+	if (typeof(options) === 'function') {
+		callback = options;
+		options = undefined;
+	}
+
 	if (query instanceof Array) {
 		returnArr = [];
 
@@ -1239,6 +1270,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				this._onRemove(dataSet);
 			}
 
+			this._onChange();
 			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
@@ -1262,10 +1294,13 @@ Collection.prototype.removeById = function (id) {
  * Queues an event to be fired. This has automatic de-bouncing so that any
  * events of the same type that occur within 100 milliseconds of a previous
  * one will all be wrapped into a single emit rather than emitting tons of
- * events for lots of chained inserts etc.
+ * events for lots of chained inserts etc. Only the data from the last
+ * de-bounced event will be emitted.
+ * @param {String} eventName The name of the event to emit.
+ * @param {*=} data Optional data to emit with the event.
  * @private
  */
-Collection.prototype.deferEmit = function () {
+Collection.prototype.deferEmit = function (eventName, data) {
 	var self = this,
 		args;
 
@@ -1273,12 +1308,13 @@ Collection.prototype.deferEmit = function () {
 		args = arguments;
 
 		// Check for an existing timeout
-		if (this._changeTimeout) {
-			clearTimeout(this._changeTimeout);
+		this._deferTimeout = this._deferTimeout || {};
+		if (this._deferTimeout[eventName]) {
+			clearTimeout(this._deferTimeout[eventName]);
 		}
 
 		// Set a timeout
-		this._changeTimeout = setTimeout(function () {
+		this._deferTimeout[eventName] = setTimeout(function () {
 			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
 			self.emit.apply(self, args);
 		}, 1);
@@ -1291,16 +1327,21 @@ Collection.prototype.deferEmit = function () {
  * Processes a deferred action queue.
  * @param {String} type The queue name to process.
  * @param {Function} callback A method to call when the queue has processed.
+ * @param {Object=} resultObj A temp object to hold results in.
  */
-Collection.prototype.processQueue = function (type, callback) {
-	var queue = this._deferQueue[type],
+Collection.prototype.processQueue = function (type, callback, resultObj) {
+	var self = this,
+		queue = this._deferQueue[type],
 		deferThreshold = this._deferThreshold[type],
-		deferTime = this._deferTime[type];
+		deferTime = this._deferTime[type],
+		dataArr,
+		result;
+
+	resultObj = resultObj || {
+		deferred: true
+	};
 
 	if (queue.length) {
-		var self = this,
-			dataArr;
-
 		// Process items up to the threshold
 		if (queue.length) {
 			if (queue.length > deferThreshold) {
@@ -1311,15 +1352,25 @@ Collection.prototype.processQueue = function (type, callback) {
 				dataArr = queue.splice(0, queue.length);
 			}
 
-			this[type](dataArr);
+			result = self[type](dataArr);
+
+			switch (type) {
+				case 'insert':
+					resultObj.inserted = resultObj.inserted || [];
+					resultObj.failed = resultObj.failed || [];
+
+					resultObj.inserted = resultObj.inserted.concat(result.inserted);
+					resultObj.failed = resultObj.failed.concat(result.failed);
+					break;
+			}
 		}
 
 		// Queue another process
 		setTimeout(function () {
-			self.processQueue(type, callback);
+			self.processQueue.call(self, type, callback, resultObj);
 		}, deferTime);
 	} else {
-		if (callback) { callback(); }
+		if (callback) { callback(resultObj); }
 	}
 };
 
@@ -1361,6 +1412,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		inserted = [],
 		failed = [],
 		insertResult,
+		resultObj,
 		i;
 
 	if (data instanceof Array) {
@@ -1408,14 +1460,19 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	this.chainSend('insert', data, {index: index});
 	//op.time('Resolve chains');
 
-	this._onInsert(inserted, failed);
-	if (callback) { callback(); }
-	this.deferEmit('change', {type: 'insert', data: inserted});
-
-	return {
+	resultObj = {
+		deferred: false,
 		inserted: inserted,
 		failed: failed
 	};
+
+	this._onInsert(inserted, failed);
+	if (callback) { callback(resultObj); }
+
+	this._onChange();
+	this.deferEmit('change', {type: 'insert', data: inserted});
+
+	return resultObj;
 };
 
 /**
@@ -1577,6 +1634,17 @@ Collection.prototype._removeFromIndexes = function (doc) {
 };
 
 /**
+ * Updates collection index data for the passed document.
+ * @param {Object} oldDoc The old document as it was before the update.
+ * @param {Object} newDoc The document as it now is after the update.
+ * @private
+ */
+Collection.prototype._updateIndexes = function (oldDoc, newDoc) {
+	this._removeFromIndexes(oldDoc);
+	this._insertIntoIndexes(newDoc);
+};
+
+/**
  * Rebuild collection indexes.
  * @private
  */
@@ -1593,19 +1661,6 @@ Collection.prototype._rebuildIndexes = function () {
 };
 
 /**
- * Returns the index of the document identified by the passed item's primary key.
- * @param {Object} item The item whose primary key should be used to lookup.
- * @returns {Number} The index the item with the matching primary key is occupying.
- */
-Collection.prototype.indexOfDocById = function (item) {
-	return this._data.indexOf(
-		this._primaryIndex.get(
-			item[this._primaryKey]
-		)
-	);
-};
-
-/**
  * Uses the passed query to generate a new collection with results
  * matching the query parameters.
  *
@@ -1617,28 +1672,26 @@ Collection.prototype.subset = function (query, options) {
 	var result = this.find(query, options);
 
 	return new Collection()
-		._subsetOf(this)
+		.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
 };
 
 /**
- * Gets the collection that this collection is a subset of.
+ * Gets / sets the collection that this collection is a subset of.
+ * @param {Collection=} collection The collection to set as the parent of this subset.
  * @returns {Collection}
  */
-Collection.prototype.subsetOf = function () {
-	return this.__subsetOf;
-};
+Shared.synthesize(Collection.prototype, 'subsetOf');
 
 /**
- * Sets the collection that this collection is a subset of.
- * @param {Collection} collection The collection to set as the parent of this subset.
- * @returns {*} This object for chaining.
- * @private
+ * Checks if the collection is a subset of the passed collection.
+ * @param {Collection} collection The collection to test against.
+ * @returns {Boolean} True if the passed collection is the parent of
+ * the current collection.
  */
-Collection.prototype._subsetOf = function (collection) {
-	this.__subsetOf = collection;
-	return this;
+Collection.prototype.isSubsetOf = function (collection) {
+	return true;
 };
 
 /**
@@ -1753,25 +1806,42 @@ Collection.prototype.options = function (obj) {
  * @param {Object} query The query key/values that a document must match in
  * order for it to be returned in the result array.
  * @param {Object=} options An optional options object.
+ * @param {Function=} callback !! DO NOT USE, THIS IS NON-OPERATIONAL !!
+ * Optional callback. If specified the find process
+ * will not return a value and will assume that you wish to operate under an
+ * async mode. This will break up large find requests into smaller chunks and
+ * process them in a non-blocking fashion allowing large datasets to be queried
+ * without causing the browser UI to pause. Results from this type of operation
+ * will be passed back to the callback once completed.
  *
  * @returns {Array} The results array from the find operation, containing all
  * documents that matched the query.
  */
-Collection.prototype.find = function (query, options) {
+Collection.prototype.find = function (query, options, callback) {
+	if (callback) {
+		// Check the size of the collection's data array
+
+		// Split operation into smaller tasks and callback when complete
+		callback('Callbacks for the find() operation are not yet implemented!', []);
+		return [];
+	}
+
+	return this._find.apply(this, arguments);
+};
+
+Collection.prototype._find = function (query, options) {
 	if (this._state === 'dropped') {
 		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
 	}
 
 	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
-	
 	options = this.options(options);
 
 	var op = this._metrics.create('find'),
 		pk = this.primaryKey(),
 		self = this,
 		analysis,
-		//finalQuery,
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
@@ -1809,7 +1879,7 @@ Collection.prototype.find = function (query, options) {
 	if (query) {
 		// Get query analysis to execute best optimised code path
 		op.time('analyseQuery');
-		analysis = this._analyseQuery(query, options, op);
+		analysis = this._analyseQuery(self.decouple(query), options, op);
 		op.time('analyseQuery');
 		op.data('analysis', analysis);
 
@@ -1822,6 +1892,9 @@ Collection.prototype.find = function (query, options) {
 				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
 				joinQuery = joinPath.value(query)[0];
 				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+
+				// Remove join clause from main query
+				delete query[analysis.joinQueries[joinCollectionName]];
 			}
 			op.time('joinReferences');
 		}
@@ -1833,7 +1906,7 @@ Collection.prototype.find = function (query, options) {
 
 			// Get the data from the index
 			op.time('indexLookup');
-			resultArr = analysis.indexMatch[0].lookup;
+			resultArr = analysis.indexMatch[0].lookup || [];
 			op.time('indexLookup');
 
 			// Check if the index coverage is all keys, if not we still need to table scan it
@@ -1914,7 +1987,11 @@ Collection.prototype.find = function (query, options) {
 						resultCollectionName = joinCollectionName;
 
 						// Get the join collection instance from the DB
-						joinCollectionInstance = this._db.collection(joinCollectionName);
+						if (joinCollection[joinCollectionName]) {
+							joinCollectionInstance = joinCollection[joinCollectionName];
+						} else {
+							joinCollectionInstance = this._db.collection(joinCollectionName);
+						}
 
 						// Get the match data for the join
 						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
@@ -1947,12 +2024,12 @@ Collection.prototype.find = function (query, options) {
 												break;
 
 											/*default:
-												// Check for a double-dollar which is a back-reference to the root collection item
-												if (joinMatchIndex.substr(0, 3) === '$$.') {
-													// Back reference
-													// TODO: Support complex joins
-												}
-												break;*/
+											 // Check for a double-dollar which is a back-reference to the root collection item
+											 if (joinMatchIndex.substr(0, 3) === '$$.') {
+											 // Back reference
+											 // TODO: Support complex joins
+											 }
+											 break;*/
 										}
 									} else {
 										// TODO: Could optimise this by caching path objects
@@ -2174,7 +2251,52 @@ Collection.prototype.indexOf = function (query) {
 
 	if (item) {
 		return this._data.indexOf(item);
+	} else {
+		return -1;
 	}
+};
+
+/**
+ * Returns the index of the document identified by the passed item's primary key.
+ * @param {*} item The document whose primary key should be used to lookup or the id
+ * to lookup.
+ * @returns {Number} The index the item with the matching primary key is occupying.
+ */
+Collection.prototype.indexOfDocById = function (item) {
+	if (typeof item !== 'object') {
+		return this._data.indexOf(
+			this._primaryIndex.get(item)
+		);
+	} else {
+		return this._data.indexOf(
+			this._primaryIndex.get(
+				item[this._primaryKey]
+			)
+		);
+	}
+};
+
+/**
+ * Removes a document from the collection by it's index in the collection's
+ * data array.
+ * @param {Number} index The index of the document to remove.
+ * @returns {Object} The document that has been removed or false if none was
+ * removed.
+ */
+Collection.prototype.removeByIndex = function (index) {
+	var doc,
+		docId;
+
+	doc = this._data[index];
+
+	if (doc !== undefined) {
+		doc = this.decouple(doc);
+		docId = doc[this.primaryKey()];
+
+		return this.removeById(docId);
+	}
+
+	return false;
 };
 
 /**
@@ -2578,10 +2700,14 @@ Collection.prototype.count = function (query, options) {
 
 /**
  * Finds sub-documents from the collection's documents.
- * @param match
- * @param path
- * @param subDocQuery
- * @param subDocOptions
+ * @param {Object} match The query object to use when matching parent documents
+ * from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the key in which
+ * sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching which sub-documents
+ * to return.
+ * @param {Object=} subDocOptions The options object to use when querying for
+ * sub-documents.
  * @returns {*}
  */
 Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
@@ -2600,6 +2726,8 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 			err: ''
 		};
 
+	subDocOptions = subDocOptions || {};
+
 	for (docIndex = 0; docIndex &lt; docCount; docIndex++) {
 		subDocArr = pathHandler.value(docArr[docIndex])[0];
 		if (subDocArr) {
@@ -2609,7 +2737,12 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 				return subDocResults[0];
 			}
 
-			resultObj.subDocs.push(subDocResults);
+			if (subDocOptions.$split) {
+				resultObj.subDocs.push(subDocResults);
+			} else {
+				resultObj.subDocs = resultObj.subDocs.concat(subDocResults);
+			}
+
 			resultObj.subDocTotal += subDocResults.length;
 			resultObj.pathFound = true;
 		}
@@ -2619,7 +2752,9 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 	subDocCollection.drop();
 
 	// Check if the call should not return stats, if so return only subDocs array
-	if (subDocOptions.noStats) {
+	if (subDocOptions.$stats) {
+		return resultObj;
+	} else {
 		return resultObj.subDocs;
 	}
 
@@ -3129,13 +3264,13 @@ module.exports = Collection;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Tue Jun 23 2015 16:22:31 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Wed Jul 15 2015 11:28:23 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>

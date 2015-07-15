@@ -46,10 +46,11 @@ Shared = require('./Shared');
  * @name Grid
  * @class Grid
  * @param {String} selector jQuery selector.
+ * @param {String} template The template selector.
  * @param {Object=} options The options object to apply to the grid.
  * @constructor
  */
-var Grid = function (selector, options) {
+var Grid = function (selector, template, options) {
 	this.init.apply(this, arguments);
 };
 
@@ -58,7 +59,7 @@ Grid.prototype.init = function (selector, template, options) {
 
 	this._selector = selector;
 	this._template = template;
-	this._options = options;
+	this._options = options || {};
 	this._debug = {};
 	this._id = this.objectId();
 
@@ -271,7 +272,7 @@ Grid.prototype.refresh = function () {
 		if (this._from.link) {
 			var self = this,
 				elem = window.jQuery(this._selector),
-				clickListener = function () {
+				sortClickListener = function () {
 					self._sortGridClick.apply(self, arguments);
 				};
 
@@ -280,25 +281,26 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.orderBy) {
 				// Remove listeners
-				elem.off('click', '[data-grid-sort]', clickListener);
+				elem.off('click', '[data-grid-sort]', sortClickListener);
 			}
 
 			if (self._from.query) {
 				// Remove listeners
-				elem.off('click', '[data-grid-filter]', clickListener);
+				elem.off('click', '[data-grid-filter]', sortClickListener );
 			}
 
+			// Set wrap name if none is provided
+			self._options.$wrap = self._options.$wrap || 'gridRow';
+
 			// Auto-bind the data to the grid template
-			self._from.link(self._selector, self.template(), {
-				$wrap: 'gridRow'
-			});
+			self._from.link(self._selector, self.template(), self._options);
 
 			// Check if the data source (collection or view) has an
 			// orderBy method (usually only views) and if so activate
 			// the sorting system
 			if (self._from.orderBy) {
 				// Listen for sort requests
-				elem.on('click', '[data-grid-sort]', clickListener);
+				elem.on('click', '[data-grid-sort]', sortClickListener);
 			}
 
 			if (self._from.query) {
@@ -476,6 +478,9 @@ Grid.prototype.refresh = function () {
 
 						// Set the view query
 						self._from.queryData(queryObj);
+						if (self._from.pageFirst) {
+							self._from.pageFirst();
+						}
 					});
 				});
 			}
@@ -699,13 +704,13 @@ module.exports = Grid;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Tue Jun 23 2015 16:22:31 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Wed Jul 15 2015 11:28:23 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>

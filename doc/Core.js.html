@@ -41,7 +41,8 @@
 var Shared,
 	Db,
 	Metrics,
-	Overload;
+	Overload,
+	_instances = [];
 
 Shared = require('./Shared');
 Overload = require('./Overload');
@@ -55,9 +56,63 @@ var Core = function (name) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function () {
+Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
+	this._name = name || 'ForerunnerDB';
+
+	_instances.push(this);
+};
+
+/**
+ * Returns the number of instantiated ForerunnerDB objects.
+ * @returns {Number} The number of instantiated instances.
+ */
+Core.prototype.instantiatedCount = function () {
+	return _instances.length;
+};
+
+/**
+ * Get all instances as an array or a single ForerunnerDB instance
+ * by it's array index.
+ * @param {Number=} index Optional index of instance to get.
+ * @returns {Array|Object} Array of instances or a single instance.
+ */
+Core.prototype.instances = function (index) {
+	if (index !== undefined) {
+		return _instances[index];
+	}
+
+	return _instances;
+};
+
+/**
+ * Get all instances as an array of instance names or a single ForerunnerDB
+ * instance by it's name.
+ * @param {String=} name Optional name of instance to get.
+ * @returns {Array|Object} Array of instance names or a single instance.
+ */
+Core.prototype.namedInstances = function (name) {
+	var i,
+		instArr;
+
+	if (name !== undefined) {
+		for (i = 0; i &lt; _instances.length; i++) {
+			if (_instances[i].name === name) {
+				return _instances[i];
+			}
+		}
+
+		return undefined;
+	}
+
+	instArr = [];
+
+	for (i = 0; i &lt; _instances.length; i++) {
+		instArr.push(_instances[i].name);
+	}
+
+	return instArr;
 };
 
 Core.prototype.moduleLoaded = new Overload({
@@ -113,6 +168,38 @@ Core.prototype.moduleLoaded = new Overload({
 	},
 
 	/**
+	 * Checks if an array of named modules are loaded and if so
+	 * calls the passed callback method.
+	 * @func moduleLoaded
+	 * @memberof Core
+	 * @param {Array} moduleName The array of module names to check for.
+	 * @param {Function} callback The callback method to call if modules are loaded.
+	 */
+	'array, function': function (moduleNameArr, callback) {
+		var moduleName,
+			i;
+
+		for (i = 0; i &lt; moduleNameArr.length; i++) {
+			moduleName = moduleNameArr[i];
+
+			if (moduleName !== undefined) {
+				moduleName = moduleName.replace(/ /g, '');
+
+				var modules = moduleName.split(','),
+					index;
+
+				for (index = 0; index &lt; modules.length; index++) {
+					if (!Shared.modules[modules[index]]) {
+						return false;
+					}
+				}
+			}
+		}
+
+		callback();
+	},
+
+	/**
 	 * Checks if a module is loaded and if so calls the passed
 	 * success method, otherwise calls the failure method.
 	 * @func moduleLoaded
@@ -160,11 +247,17 @@ Core.prototype.version = function (val, callback) {
 	return Shared.version;
 };
 
-// Expose moduleLoaded method to non-instantiated object ForerunnerDB
+// Expose moduleLoaded() method to non-instantiated object ForerunnerDB
 Core.moduleLoaded = Core.prototype.moduleLoaded;
 
-// Expose version method to non-instantiated object ForerunnerDB
+// Expose version() method to non-instantiated object ForerunnerDB
 Core.version = Core.prototype.version;
+
+// Expose instances() method to non-instantiated object ForerunnerDB
+Core.instances = Core.prototype.instances;
+
+// Expose instantiatedCount() method to non-instantiated object ForerunnerDB
+Core.instantiatedCount = Core.prototype.instantiatedCount;
 
 // Provide public access to the Shared object
 Core.shared = Shared;
@@ -177,6 +270,15 @@ Shared.mixin(Core.prototype, 'Mixin.Constants');
 Db = require('./Db.js');
 Metrics = require('./Metrics.js');
 
+/**
+ * Gets / sets the name of the instance. This is primarily used for
+ * name-spacing persistent storage.
+ * @param {String=} val The name of the instance to set.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'name');
+
+// Set a flag to determine environment
 Core.prototype._isServer = false;
 
 /**
@@ -232,13 +334,13 @@ module.exports = Core;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Shared.html">Shared</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Tue Jun 23 2015 16:22:31 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Wed Jul 15 2015 11:28:23 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
