@@ -266,7 +266,7 @@ View.prototype.from = function (collection) {
 		}
 	}
 
-	return this;
+	return this._from;
 };
 
 /**
