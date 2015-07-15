@@ -60,13 +60,12 @@ var Infinilist = function (selector, template, options, view) {
 
 	selector.on('scroll', function () {
 		// Debounce scroll event
-		if (self.scrollDebouceTimeout) {
-			clearTimeout(self.scrollDebouceTimeout);
+		if (!self.scrollDebouceTimeout) {
+			self.scrollDebouceTimeout = setTimeout(function () {
+				self.scroll();
+				self.scrollDebouceTimeout = 0;
+			}, 30);
 		}
-
-		self.scrollDebouceTimeout = setTimeout(function () {
-			self.scroll();
-		}, 16);
 	});
 
 	$(window).on('resize', function () {
