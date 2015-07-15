@@ -532,8 +532,11 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 });
 
 /**
- * Sets the collection's data to the array of documents passed.
- * @param data
+ * Sets the collection's data to the array / documents passed.  If any
+ * data already exists in the collection it will be removed before the
+ * new data is set.
+ * @param {Array|Object} data The array of documents or a single document
+ * that will be set as the collections data.
  * @param options Optional options object.
  * @param callback Optional callback function.
  */
@@ -10575,7 +10578,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.71',
+	version: '1.3.72',
 	modules: {},
 
 	_synth: {},
