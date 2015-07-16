@@ -1829,7 +1829,8 @@ Collection.prototype._find = function (query, options) {
 		joinCollectionInstance,
 		joinMatch,
 		joinMatchIndex,
-		joinSearch,
+		joinSearchQuery,
+		joinSearchOptions,
 		joinMulti,
 		joinRequire,
 		joinFindResults,
@@ -1977,7 +1978,7 @@ Collection.prototype._find = function (query, options) {
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
 							// Loop the join conditions and build a search object from them
-							joinSearch = {};
+							joinSearchQuery = {};
 							joinMulti = false;
 							joinRequire = false;
 							joinPrefix = '';
@@ -1988,6 +1989,11 @@ Collection.prototype._find = function (query, options) {
 									if (joinMatchIndex.substr(0, 1) === '$') {
 										// Special command
 										switch (joinMatchIndex) {
+											case '$where':
+												if (joinMatch[joinMatchIndex].query) { joinSearchQuery = joinMatch[joinMatchIndex].query; }
+												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
+												break;
+
 											case '$as':
 												// Rename the collection when stored in the result document
 												resultCollectionName = joinMatch[joinMatchIndex];
@@ -2008,24 +2014,19 @@ Collection.prototype._find = function (query, options) {
 												joinPrefix = joinMatch[joinMatchIndex];
 												break;
 
-											/*default:
-											 // Check for a double-dollar which is a back-reference to the root collection item
-											 if (joinMatchIndex.substr(0, 3) === '$$.') {
-											 // Back reference
-											 // TODO: Support complex joins
-											 }
-											 break;*/
+											default:
+ 												break;
 										}
 									} else {
-										// TODO: Could optimise this by caching path objects
 										// Get the data to match against and store in the search object
-										joinSearch[joinMatchIndex] = new Path(joinMatch[joinMatchIndex]).value(resultArr[resultIndex])[0];
+										// Resolve complex referenced query
+										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatch[joinMatchIndex], resultArr[resultIndex]);
 									}
 								}
 							}
 
 							// Do a find on the target collection against the match data
-							joinFindResults = joinCollectionInstance.find(joinSearch);
+							joinFindResults = joinCollectionInstance.find(joinSearchQuery, joinSearchOptions);
 
 							// Check if we require a joined row to allow the result item
 							if (!joinRequire || (joinRequire && joinFindResults[0])) {
@@ -2236,6 +2237,49 @@ Collection.prototype._find = function (query, options) {
 	resultArr.__fdbOp = op;
 	resultArr.$cursor = cursor;
 	return resultArr;
+};
+
+Collection.prototype._resolveDynamicQuery = function (query, item) {
+	var self = this,
+		newQuery,
+		propType,
+		propVal,
+		i;
+
+	if (typeof query === 'string') {
+		return new Path(query).value(item)[0];
+	}
+
+	newQuery = {};
+
+	for (i in query) {
+		if (query.hasOwnProperty(i)) {
+			propType = typeof query[i];
+			propVal = query[i];
+
+			switch (propType) {
+				case 'string':
+					// Check if the property name starts with a back-reference
+					if (propVal.substr(0, 3) === '$$.') {
+						// Fill the query with a back-referenced value
+						newQuery[i] = new Path(propVal.substr(3, propVal.length - 3)).value(item)[0];
+					} else {
+						newQuery[i] = propVal;
+					}
+					break;
+
+				case 'object':
+					newQuery[i] = self._resolveDynamicQuery(propVal, item);
+					break;
+
+				default:
+					newQuery[i] = propVal;
+					break;
+			}
+		}
+	}
+
+	return newQuery;
 };
 
 /**
