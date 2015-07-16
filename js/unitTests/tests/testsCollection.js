@@ -905,6 +905,30 @@ QUnit.test("Collection.find() :: Options :: Queries joined data", function() {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Options :: Join with mixin", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var result = user.find({}, {
+		"$join": [{
+			"organisation": {
+				"_id": "orgId",
+				"$as": "$root",
+				"$require": true,
+				"$multi": false,
+				"$prefix": 'org'
+			}
+		}]
+	});
+
+	strictEqual(result[0].orgname, 'Organisation 1', "Correct data mixed in 1");
+	strictEqual(result[1].orgname, 'Organisation 2', "Correct data mixed in 2");
+	strictEqual(result[2].orgname, 'Organisation 3', "Correct data mixed in 3");
+	strictEqual(result[3].orgname, 'Organisation 3', "Correct data mixed in 4");
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.update() :: $inc operator", function() {
 	base.dbUp();
 
