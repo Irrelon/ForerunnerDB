@@ -1833,11 +1833,14 @@ Collection.prototype._find = function (query, options) {
 		joinMulti,
 		joinRequire,
 		joinFindResults,
+		joinFindResult,
+		joinItem,
+		joinPrefix,
 		resultCollectionName,
 		resultIndex,
 		resultRemove = [],
 		index,
-		i, j, k,
+		i, j, k, l,
 		fieldListOn = [],
 		fieldListOff = [],
 		elemMatchPathSolver,
@@ -1977,6 +1980,8 @@ Collection.prototype._find = function (query, options) {
 							joinSearch = {};
 							joinMulti = false;
 							joinRequire = false;
+							joinPrefix = '';
+
 							for (joinMatchIndex in joinMatch) {
 								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
 									// Check the join condition name for a special command operator
@@ -1996,6 +2001,11 @@ Collection.prototype._find = function (query, options) {
 											case '$require':
 												// Remove the result item if no matching join data is found
 												joinRequire = joinMatch[joinMatchIndex];
+												break;
+
+											case '$prefix':
+												// Add a prefix to properties mixed in
+												joinPrefix = joinMatch[joinMatchIndex];
 												break;
 
 											/*default:
@@ -2020,7 +2030,30 @@ Collection.prototype._find = function (query, options) {
 							// Check if we require a joined row to allow the result item
 							if (!joinRequire || (joinRequire && joinFindResults[0])) {
 								// Join is not required or condition is met
-								resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+								if (resultCollectionName === '$root') {
+									// The property name to store the join results in is $root
+									// which means we need to mixin the results but this only
+									// works if joinMulti is disabled
+									if (joinMulti !== false) {
+										// Throw an exception here as this join is not physcially possible!
+										throw('ForerunnerDB.Collection "' + this.name() + '": Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
+									}
+
+									// Mixin the result
+									joinFindResult = joinFindResults[0];
+									joinItem = resultArr[resultIndex];
+
+									for (l in joinFindResult) {
+										if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
+											// Properties are only mixed in if they do not already exist
+											// in the target item (are undefined). Using a prefix denoted via
+											// $prefix is a good way to prevent property name conflicts
+											joinItem[joinPrefix + l] = joinFindResult[l];
+										}
+									}
+								} else {
+									resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+								}
 							} else {
 								// Join required but condition not met, add item to removal queue
 								resultRemove.push(resultArr[resultIndex]);
