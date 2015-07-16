@@ -9,6 +9,17 @@ QUnit.test("DB.collection() :: Create Collection", function() {
 	base.dbDown();
 });
 
+QUnit.test("DB.collection() :: Check that passing a collection to get a collection returns the same collection", function() {
+	base.dbUp();
+
+	var coll = db.collection('moo');
+	var coll2 = db.collection(coll);
+
+	strictEqual(coll, coll2, "Collections are the same");
+
+	base.dbDown();
+});
+
 QUnit.test("Drop DB", function() {
 	base.dbUp();
 

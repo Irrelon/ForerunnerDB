@@ -3347,6 +3347,11 @@ Db.prototype.collection = new Overload({
 	 * @returns {Collection}
 	 */
 	'object': function (options) {
+		// Handle being passed an instance
+		if (options instanceof Collection) {
+			return options;
+		}
+
 		return this.$main.call(this, options);
 	},
 
@@ -3805,6 +3810,11 @@ Db.prototype.init = function () {
 
 Db.prototype.collectionGroup = function (collectionGroupName) {
 	if (collectionGroupName) {
+		// Handle being passed an instance
+		if (collectionGroupName instanceof CollectionGroup) {
+			return collectionGroupName;
+		}
+
 		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
 		return this._collectionGroup[collectionGroupName];
 	} else {
@@ -4655,6 +4665,11 @@ Db.prototype.drop = new Overload({
  * @returns {Db}
  */
 Core.prototype.db = function (name) {
+	// Handle being passed an instance
+	if (name instanceof Db) {
+		return name;
+	}
+
 	if (!name) {
 		name = this.objectId();
 	}
@@ -7884,7 +7899,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.82',
+	version: '1.3.85',
 	modules: {},
 
 	_synth: {},
@@ -9186,6 +9201,11 @@ Db.prototype.init = function () {
  * @returns {*}
  */
 Db.prototype.view = function (viewName) {
+	// Handle being passed an instance
+	if (viewName instanceof View) {
+		return viewName;
+	}
+
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Db.View: Creating view ' + viewName);

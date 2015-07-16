@@ -3356,6 +3356,11 @@ Db.prototype.collection = new Overload({
 	 * @returns {Collection}
 	 */
 	'object': function (options) {
+		// Handle being passed an instance
+		if (options instanceof Collection) {
+			return options;
+		}
+
 		return this.$main.call(this, options);
 	},
 
@@ -3814,6 +3819,11 @@ Db.prototype.init = function () {
 
 Db.prototype.collectionGroup = function (collectionGroupName) {
 	if (collectionGroupName) {
+		// Handle being passed an instance
+		if (collectionGroupName instanceof CollectionGroup) {
+			return collectionGroupName;
+		}
+
 		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
 		return this._collectionGroup[collectionGroupName];
 	} else {
@@ -4664,6 +4674,11 @@ Db.prototype.drop = new Overload({
  * @returns {Db}
  */
 Core.prototype.db = function (name) {
+	// Handle being passed an instance
+	if (name instanceof Db) {
+		return name;
+	}
+
 	if (!name) {
 		name = this.objectId();
 	}
@@ -5203,6 +5218,11 @@ FdbDocument.prototype.drop = function () {
  */
 Db.prototype.document = function (documentName) {
 	if (documentName) {
+		// Handle being passed an instance
+		if (documentName instanceof FdbDocument) {
+			return documentName;
+		}
+
 		this._document = this._document || {};
 		this._document[documentName] = this._document[documentName] || new FdbDocument(documentName).db(this);
 		return this._document[documentName];
@@ -5842,7 +5862,7 @@ Db.prototype.gridExists = function (selector) {
 };
 
 /**
- * Gets a grid by it's name.
+ * Creates a grid based on the passed arguments.
  * @func grid
  * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
@@ -5862,7 +5882,7 @@ Db.prototype.grid = function (selector, template, options) {
 };
 
 /**
- * Gets a grid by it's name.
+ * Removes a grid based on the passed arguments.
  * @func unGrid
  * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
@@ -9563,6 +9583,11 @@ Overview.prototype.drop = function () {
 
 Db.prototype.overview = function (overviewName) {
 	if (overviewName) {
+		// Handle being passed an instance
+		if (overviewName instanceof Overview) {
+			return overviewName;
+		}
+
 		this._overview = this._overview || {};
 		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
 		return this._overview[overviewName];
@@ -10578,7 +10603,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.82',
+	version: '1.3.85',
 	modules: {},
 
 	_synth: {},
@@ -11880,6 +11905,11 @@ Db.prototype.init = function () {
  * @returns {*}
  */
 Db.prototype.view = function (viewName) {
+	// Handle being passed an instance
+	if (viewName instanceof View) {
+		return viewName;
+	}
+
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Db.View: Creating view ' + viewName);

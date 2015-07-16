@@ -3077,6 +3077,11 @@ Db.prototype.collection = new Overload({
 	 * @returns {Collection}
 	 */
 	'object': function (options) {
+		// Handle being passed an instance
+		if (options instanceof Collection) {
+			return options;
+		}
+
 		return this.$main.call(this, options);
 	},
 
@@ -4060,6 +4065,11 @@ Db.prototype.drop = new Overload({
  * @returns {Db}
  */
 Core.prototype.db = function (name) {
+	// Handle being passed an instance
+	if (name instanceof Db) {
+		return name;
+	}
+
 	if (!name) {
 		name = this.objectId();
 	}
@@ -7289,7 +7299,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.82',
+	version: '1.3.85',
 	modules: {},
 
 	_synth: {},
