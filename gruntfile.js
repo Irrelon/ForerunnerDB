@@ -460,8 +460,9 @@ module.exports = function(grunt) {
 
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("3: Build, Test, Tag and Push DEV", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev"]);
-	grunt.registerTask("4: Release and Publish Master Build From Dev", ["gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
+	grunt.registerTask("3: Build and Test", ["version", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev"]);
+	grunt.registerTask("5: Release and Publish Master Build From Dev", ["gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };

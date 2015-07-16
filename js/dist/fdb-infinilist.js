@@ -53,7 +53,7 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemTopMargin = $("<div class='il_topMargin'></div>");
 	self.itemContainer = $("<div class='il_items'></div>");
 	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
-	self.total = self.view.from().count();
+	self.total = self.view.from().count(self.options.countQuery);
 	self.itemHeight(self.options.itemHeight);
 
 	selector.append(self.itemTopMargin);
@@ -121,7 +121,7 @@ Infinilist.prototype.resize = function () {
 
 		self.view.queryOptions(self.currentRange());
 
-		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
+		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
 	}
 };
 
@@ -151,7 +151,7 @@ Infinilist.prototype.scroll = function () {
 		self.view.queryOptions(self.currentRange());
 
 		self.itemTopMargin.height(skipCount * self._itemHeight);
-		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight));
+		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
 	}
 };
 
