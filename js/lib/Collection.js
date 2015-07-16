@@ -2035,7 +2035,7 @@ Collection.prototype._find = function (query, options) {
 									// which means we need to mixin the results but this only
 									// works if joinMulti is disabled
 									if (joinMulti !== false) {
-										// Throw an exception here as this join is not physcially possible!
+										// Throw an exception here as this join is not physically possible!
 										throw('ForerunnerDB.Collection "' + this.name() + '": Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
 									}
 
