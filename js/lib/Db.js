@@ -485,6 +485,11 @@ Db.prototype.drop = new Overload({
  * @returns {Db}
  */
 Core.prototype.db = function (name) {
+	// Handle being passed an instance
+	if (name instanceof Db) {
+		return name;
+	}
+
 	if (!name) {
 		name = this.objectId();
 	}

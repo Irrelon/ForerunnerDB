@@ -430,6 +430,11 @@ FdbDocument.prototype.drop = function () {
  */
 Db.prototype.document = function (documentName) {
 	if (documentName) {
+		// Handle being passed an instance
+		if (documentName instanceof FdbDocument) {
+			return documentName;
+		}
+
 		this._document = this._document || {};
 		this._document[documentName] = this._document[documentName] || new FdbDocument(documentName).db(this);
 		return this._document[documentName];

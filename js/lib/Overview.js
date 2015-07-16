@@ -224,6 +224,11 @@ Overview.prototype.drop = function () {
 
 Db.prototype.overview = function (overviewName) {
 	if (overviewName) {
+		// Handle being passed an instance
+		if (overviewName instanceof Overview) {
+			return overviewName;
+		}
+
 		this._overview = this._overview || {};
 		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
 		return this._overview[overviewName];

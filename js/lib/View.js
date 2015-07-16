@@ -1036,6 +1036,11 @@ Db.prototype.init = function () {
  * @returns {*}
  */
 Db.prototype.view = function (viewName) {
+	// Handle being passed an instance
+	if (viewName instanceof View) {
+		return viewName;
+	}
+
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log('Db.View: Creating view ' + viewName);

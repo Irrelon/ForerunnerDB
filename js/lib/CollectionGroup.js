@@ -293,6 +293,11 @@ Db.prototype.init = function () {
 
 Db.prototype.collectionGroup = function (collectionGroupName) {
 	if (collectionGroupName) {
+		// Handle being passed an instance
+		if (collectionGroupName instanceof CollectionGroup) {
+			return collectionGroupName;
+		}
+
 		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
 		return this._collectionGroup[collectionGroupName];
 	} else {

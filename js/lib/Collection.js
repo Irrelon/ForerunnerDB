@@ -3068,6 +3068,11 @@ Db.prototype.collection = new Overload({
 	 * @returns {Collection}
 	 */
 	'object': function (options) {
+		// Handle being passed an instance
+		if (options instanceof Collection) {
+			return options;
+		}
+
 		return this.$main.call(this, options);
 	},
 
