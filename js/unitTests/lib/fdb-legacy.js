@@ -2108,15 +2108,19 @@ Collection.prototype._find = function (query, options) {
 		joinCollectionInstance,
 		joinMatch,
 		joinMatchIndex,
-		joinSearch,
+		joinSearchQuery,
+		joinSearchOptions,
 		joinMulti,
 		joinRequire,
 		joinFindResults,
+		joinFindResult,
+		joinItem,
+		joinPrefix,
 		resultCollectionName,
 		resultIndex,
 		resultRemove = [],
 		index,
-		i, j, k,
+		i, j, k, l,
 		fieldListOn = [],
 		fieldListOff = [],
 		elemMatchPathSolver,
@@ -2253,15 +2257,22 @@ Collection.prototype._find = function (query, options) {
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
 							// Loop the join conditions and build a search object from them
-							joinSearch = {};
+							joinSearchQuery = {};
 							joinMulti = false;
 							joinRequire = false;
+							joinPrefix = '';
+
 							for (joinMatchIndex in joinMatch) {
 								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
 									// Check the join condition name for a special command operator
 									if (joinMatchIndex.substr(0, 1) === '$') {
 										// Special command
 										switch (joinMatchIndex) {
+											case '$where':
+												if (joinMatch[joinMatchIndex].query) { joinSearchQuery = joinMatch[joinMatchIndex].query; }
+												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
+												break;
+
 											case '$as':
 												// Rename the collection when stored in the result document
 												resultCollectionName = joinMatch[joinMatchIndex];
@@ -2277,29 +2288,52 @@ Collection.prototype._find = function (query, options) {
 												joinRequire = joinMatch[joinMatchIndex];
 												break;
 
-											/*default:
-											 // Check for a double-dollar which is a back-reference to the root collection item
-											 if (joinMatchIndex.substr(0, 3) === '$$.') {
-											 // Back reference
-											 // TODO: Support complex joins
-											 }
-											 break;*/
+											case '$prefix':
+												// Add a prefix to properties mixed in
+												joinPrefix = joinMatch[joinMatchIndex];
+												break;
+
+											default:
+ 												break;
 										}
 									} else {
-										// TODO: Could optimise this by caching path objects
 										// Get the data to match against and store in the search object
-										joinSearch[joinMatchIndex] = new Path(joinMatch[joinMatchIndex]).value(resultArr[resultIndex])[0];
+										// Resolve complex referenced query
+										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatch[joinMatchIndex], resultArr[resultIndex]);
 									}
 								}
 							}
 
 							// Do a find on the target collection against the match data
-							joinFindResults = joinCollectionInstance.find(joinSearch);
+							joinFindResults = joinCollectionInstance.find(joinSearchQuery, joinSearchOptions);
 
 							// Check if we require a joined row to allow the result item
 							if (!joinRequire || (joinRequire && joinFindResults[0])) {
 								// Join is not required or condition is met
-								resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+								if (resultCollectionName === '$root') {
+									// The property name to store the join results in is $root
+									// which means we need to mixin the results but this only
+									// works if joinMulti is disabled
+									if (joinMulti !== false) {
+										// Throw an exception here as this join is not physically possible!
+										throw('ForerunnerDB.Collection "' + this.name() + '": Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
+									}
+
+									// Mixin the result
+									joinFindResult = joinFindResults[0];
+									joinItem = resultArr[resultIndex];
+
+									for (l in joinFindResult) {
+										if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
+											// Properties are only mixed in if they do not already exist
+											// in the target item (are undefined). Using a prefix denoted via
+											// $prefix is a good way to prevent property name conflicts
+											joinItem[joinPrefix + l] = joinFindResult[l];
+										}
+									}
+								} else {
+									resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+								}
 							} else {
 								// Join required but condition not met, add item to removal queue
 								resultRemove.push(resultArr[resultIndex]);
@@ -2482,6 +2516,49 @@ Collection.prototype._find = function (query, options) {
 	resultArr.__fdbOp = op;
 	resultArr.$cursor = cursor;
 	return resultArr;
+};
+
+Collection.prototype._resolveDynamicQuery = function (query, item) {
+	var self = this,
+		newQuery,
+		propType,
+		propVal,
+		i;
+
+	if (typeof query === 'string') {
+		return new Path(query).value(item)[0];
+	}
+
+	newQuery = {};
+
+	for (i in query) {
+		if (query.hasOwnProperty(i)) {
+			propType = typeof query[i];
+			propVal = query[i];
+
+			switch (propType) {
+				case 'string':
+					// Check if the property name starts with a back-reference
+					if (propVal.substr(0, 3) === '$$.') {
+						// Fill the query with a back-referenced value
+						newQuery[i] = new Path(propVal.substr(3, propVal.length - 3)).value(item)[0];
+					} else {
+						newQuery[i] = propVal;
+					}
+					break;
+
+				case 'object':
+					newQuery[i] = self._resolveDynamicQuery(propVal, item);
+					break;
+
+				default:
+					newQuery[i] = propVal;
+					break;
+			}
+		}
+	}
+
+	return newQuery;
 };
 
 /**
@@ -11444,7 +11521,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.85',
+	version: '1.3.105',
 	modules: {},
 
 	_synth: {},
