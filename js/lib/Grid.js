@@ -603,7 +603,7 @@ Db.prototype.gridExists = function (selector) {
 };
 
 /**
- * Gets a grid by it's name.
+ * Creates a grid based on the passed arguments.
  * @func grid
  * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
@@ -623,7 +623,7 @@ Db.prototype.grid = function (selector, template, options) {
 };
 
 /**
- * Gets a grid by it's name.
+ * Removes a grid based on the passed arguments.
  * @func unGrid
  * @memberof Db
  * @param {String} selector The jQuery selector of the grid to retrieve.
