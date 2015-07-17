@@ -160,7 +160,7 @@ Infinilist.prototype.drop = function () {
 
 	// Kill listeners
 	self.selector.off('scroll');
-	self.selector.off('resize');
+	$(window).off('resize');
 
 	// Remove references
 	delete self.ignoreScroll;
