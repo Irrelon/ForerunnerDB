@@ -3141,16 +3141,22 @@ Db.prototype.collection = new Overload({
 	 * then one is created for that name automatically.
 	 * @func collection
 	 * @memberof Db
-	 * @param {Object} options An options object.
+	 * @param {Object} data An options object or a collection instance.
 	 * @returns {Collection}
 	 */
-	'object': function (options) {
+	'object': function (data) {
 		// Handle being passed an instance
-		if (options instanceof Collection) {
-			return options;
+		if (data instanceof Collection) {
+			if (data.state() !== 'droppped') {
+				return data;
+			} else {
+				return this.$main.call(this, {
+					name: data.name()
+				});
+			}
 		}
 
-		return this.$main.call(this, options);
+		return this.$main.call(this, data);
 	},
 
 	/**
