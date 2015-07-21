@@ -10692,7 +10692,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.109',
+	version: '1.3.110',
 	modules: {},
 
 	_synth: {},
