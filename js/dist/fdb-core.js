@@ -5691,7 +5691,7 @@ var Matching = {
 					if (!operation && test[i] instanceof RegExp) {
 						operation = true;
 
-						if (typeof(source) === 'object' && source[i] !== undefined && test[i].test(source[i])) {
+						if (sourceType === 'object' && source[i] !== undefined && test[i].test(source[i])) {
 							if (opToApply === 'or') {
 								return true;
 							}
@@ -5900,7 +5900,9 @@ var Matching = {
 						inArrIndex;
 
 					for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-						if (inArr[inArrIndex] === source) {
+						if (inArr[inArrIndex] instanceof RegExp && inArr[inArrIndex].test(source)) {
+							return true;
+						} else if (inArr[inArrIndex] === source) {
 							return true;
 						}
 					}
@@ -7382,7 +7384,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.108',
+	version: '1.3.109',
 	modules: {},
 
 	_synth: {},

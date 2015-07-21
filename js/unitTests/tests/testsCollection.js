@@ -325,6 +325,36 @@ QUnit.test("Collection.find() :: $in clause primary key object", function() {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $in clause primary key object", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var coll = db.collection('testIn'),
+		result;
+
+	coll.setData([{
+		_id: 1,
+		name: 'Cat Litter',
+		price: 200
+	}, {
+		_id: 2,
+		name: 'Dog Food',
+		price: 100
+	}]);
+
+	result = coll.find({
+		name: {
+			$in: [
+				/oo/
+			]
+		}
+	});
+
+	strictEqual(result.length, 1, "Check result count is as expected");
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: $or clause", function() {
 	base.dbUp();
 	base.dataUp();
