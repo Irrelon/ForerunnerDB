@@ -432,7 +432,11 @@ Db.prototype.document = function (documentName) {
 	if (documentName) {
 		// Handle being passed an instance
 		if (documentName instanceof FdbDocument) {
-			return documentName;
+			if (documentName.state() !== 'droppped') {
+				return documentName;
+			} else {
+				documentName = documentName.name();
+			}
 		}
 
 		this._document = this._document || {};
