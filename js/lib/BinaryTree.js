@@ -25,17 +25,30 @@ Shared.synthesize(BinaryTree.prototype, 'hashFunc');
 Shared.synthesize(BinaryTree.prototype, 'indexDir');
 Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
 	if (index !== undefined) {
-		if (index[0]) {
-			this._indexProp = index[0].prop;
-			this._indexDir = index[0].dir;
-		} else {
-			this._indexProp = null;
-			this._indexDir = 0;
+		if (!(index instanceof Array)) {
+			// Convert the index object to an array of key val objects
+			index = this.keys(index);
 		}
 	}
 
 	return this.$super.call(this, index);
 });
+
+BinaryTree.prototype.keys = function (obj) {
+	var i,
+		keys = [];
+
+	for (i in obj) {
+		if (obj.hasOwnProperty(i)) {
+			keys.push({
+				key: i,
+				val: obj[i]
+			});
+		}
+	}
+
+	return keys;
+};
 
 BinaryTree.prototype.data = function (val) {
 	if (val !== undefined) {
@@ -86,10 +99,10 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 	for (i = 0; i < this._index.length; i++) {
 		indexData = this._index[i];
 
-		if (indexData.dir === 1) {
-			result = this.sortAsc(a[indexData.prop], b[indexData.prop]);
-		} else if (indexData.dir === -1) {
-			result = this.sortDesc(a[indexData.prop], b[indexData.prop]);
+		if (indexData.val === 1) {
+			result = this.sortAsc(a[indexData.key], b[indexData.key]);
+		} else if (indexData.val === -1) {
+			result = this.sortDesc(a[indexData.key], b[indexData.key]);
 		}
 
 		if (result !== 0) {
@@ -106,25 +119,67 @@ BinaryTree.prototype._compareFunc = function (a, b) {
  * @private
  */
 BinaryTree.prototype._hashFunc = function (obj) {
-	return obj[this._indexProp];
+	/*var i,
+		indexData,
+		hash = '';
+
+	for (i = 0; i < this._index.length; i++) {
+		indexData = this._index[i];
+
+		if (hash) { hash += '_'; }
+		hash += obj[indexData.key];
+	}
+
+	return hash;*/
+
+	return obj[this._index[0].key];
 };
 
 BinaryTree.prototype.insert = function (data) {
 	var result,
-		subIndex;
+		inserted,
+		failed,
+		i;
+
+	if (data instanceof Array) {
+		// Insert array of data
+		inserted = [];
+		failed = [];
+
+		for (i = 0; i < data.length; i++) {
+			if (this.insert(data[i])) {
+				inserted.push(data[i]);
+			} else {
+				failed.push(data[i]);
+			}
+		}
+
+		return {
+			inserted: inserted,
+			failed: failed
+		};
+	}
 
 	if (!this._data) {
 		// Insert into this node (overwrite) as there is no data
 		this.data(data);
-		this.push(data);
+		//this.push(data);
 		return true;
 	}
 
 	result = this._compareFunc(this._data, data);
 
 	if (result === 0) {
-		// Equal to this node, push to node's data array
-		this.push(data);
+		//this.push(data);
+
+		// Less than this node
+		if (this._left) {
+			// Propagate down the left branch
+			this._left.insert(data);
+		} else {
+			// Assign to left branch
+			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+		}
 
 		return true;
 	}
@@ -158,20 +213,26 @@ BinaryTree.prototype.insert = function (data) {
 	return false;
 };
 
-BinaryTree.prototype.lookup = function (data) {
+BinaryTree.prototype.lookup = function (data, resultArr) {
 	var result = this._compareFunc(this._data, data);
 
+	resultArr = resultArr || [];
+
 	if (result === 0) {
-		return this._store;
+		if (this._left) { this._left.lookup(data, resultArr); }
+		resultArr.push(this._data);
+		if (this._right) { this._right.lookup(data, resultArr); }
 	}
 
 	if (result === -1) {
-		return this._right.lookup(data);
+		if (this._right) { this._right.lookup(data, resultArr); }
 	}
 
 	if (result === 1) {
-		return this._left.lookup(data);
+		if (this._left) { this._left.lookup(data, resultArr); }
 	}
+
+	return resultArr;
 };
 
 BinaryTree.prototype.inOrder = function (type, resultArr) {
