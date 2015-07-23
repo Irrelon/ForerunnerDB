@@ -11,6 +11,7 @@ lookup
 
 var Shared = require('./Shared'),
 	Path = require('./Path'),
+	BinaryTree = require('./BinaryTree'),
 	btree = function () {};
 
 /**

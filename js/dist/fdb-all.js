@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/CollectionGroup":5,"../lib/Document":9,"../lib/Grid":10,"../lib/Highchart":11,"../lib/Odm":25,"../lib/Overview":28,"../lib/Persist":30,"../lib/Rest":32,"../lib/View":35,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":6,"../lib/Document":10,"../lib/Grid":11,"../lib/Highchart":12,"../lib/Odm":26,"../lib/Overview":29,"../lib/Persist":31,"../lib/Rest":33,"../lib/View":36,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":35}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -285,7 +285,278 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":33}],4:[function(_dereq_,module,exports){
+},{"./Shared":34}],4:[function(_dereq_,module,exports){
+"use strict";
+
+var Shared = _dereq_('./Shared');
+
+var BinaryTree = function (data, compareFunc, hashFunc) {
+	this.init.apply(this, arguments);
+};
+
+BinaryTree.prototype.init = function (data, index, compareFunc, hashFunc) {
+	this._store = [];
+
+	if (index !== undefined) { this.index(index); }
+	if (compareFunc !== undefined) { this.compareFunc(compareFunc); }
+	if (hashFunc !== undefined) { this.hashFunc(hashFunc); }
+	if (data !== undefined) { this.data(data); }
+};
+
+Shared.addModule('BinaryTree', BinaryTree);
+Shared.mixin(BinaryTree.prototype, 'Mixin.ChainReactor');
+Shared.mixin(BinaryTree.prototype, 'Mixin.Sorting');
+Shared.mixin(BinaryTree.prototype, 'Mixin.Common');
+
+Shared.synthesize(BinaryTree.prototype, 'compareFunc');
+Shared.synthesize(BinaryTree.prototype, 'hashFunc');
+Shared.synthesize(BinaryTree.prototype, 'indexDir');
+Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
+	if (index !== undefined) {
+		if (!(index instanceof Array)) {
+			// Convert the index object to an array of key val objects
+			index = this.keys(index);
+		}
+	}
+
+	return this.$super.call(this, index);
+});
+
+BinaryTree.prototype.keys = function (obj) {
+	var i,
+		keys = [];
+
+	for (i in obj) {
+		if (obj.hasOwnProperty(i)) {
+			keys.push({
+				key: i,
+				val: obj[i]
+			});
+		}
+	}
+
+	return keys;
+};
+
+BinaryTree.prototype.data = function (val) {
+	if (val !== undefined) {
+		this._data = val;
+
+		if (this._hashFunc) { this._hash = this._hashFunc(val); }
+		return this;
+	}
+
+	return this._data;
+};
+
+BinaryTree.prototype.push = function (val) {
+	if (val !== undefined) {
+		this._store.push(val);
+		return this;
+	}
+
+	return false;
+};
+
+BinaryTree.prototype.pull = function (val) {
+	if (val !== undefined) {
+		var index = this._store.indexOf(val);
+
+		if (index > -1) {
+			this._store.splice(index, 1);
+			return true;
+		}
+	}
+
+	return false;
+};
+
+/**
+ * Default compare method. Can be overridden.
+ * @param a
+ * @param b
+ * @returns {number}
+ * @private
+ */
+BinaryTree.prototype._compareFunc = function (a, b) {
+	// Loop the index array
+	var i,
+		indexData,
+		result = 0;
+
+	for (i = 0; i < this._index.length; i++) {
+		indexData = this._index[i];
+
+		if (indexData.val === 1) {
+			result = this.sortAsc(a[indexData.key], b[indexData.key]);
+		} else if (indexData.val === -1) {
+			result = this.sortDesc(a[indexData.key], b[indexData.key]);
+		}
+
+		if (result !== 0) {
+			return result;
+		}
+	}
+
+	return result;
+};
+
+/**
+ * Default hash function. Can be overridden.
+ * @param obj
+ * @private
+ */
+BinaryTree.prototype._hashFunc = function (obj) {
+	/*var i,
+		indexData,
+		hash = '';
+
+	for (i = 0; i < this._index.length; i++) {
+		indexData = this._index[i];
+
+		if (hash) { hash += '_'; }
+		hash += obj[indexData.key];
+	}
+
+	return hash;*/
+
+	return obj[this._index[0].key];
+};
+
+BinaryTree.prototype.insert = function (data) {
+	var result,
+		inserted,
+		failed,
+		i;
+
+	if (data instanceof Array) {
+		// Insert array of data
+		inserted = [];
+		failed = [];
+
+		for (i = 0; i < data.length; i++) {
+			if (this.insert(data[i])) {
+				inserted.push(data[i]);
+			} else {
+				failed.push(data[i]);
+			}
+		}
+
+		return {
+			inserted: inserted,
+			failed: failed
+		};
+	}
+
+	if (!this._data) {
+		// Insert into this node (overwrite) as there is no data
+		this.data(data);
+		//this.push(data);
+		return true;
+	}
+
+	result = this._compareFunc(this._data, data);
+
+	if (result === 0) {
+		this.push(data);
+
+		// Less than this node
+		if (this._left) {
+			// Propagate down the left branch
+			this._left.insert(data);
+		} else {
+			// Assign to left branch
+			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+		}
+
+		return true;
+	}
+
+	if (result === -1) {
+		// Greater than this node
+		if (this._right) {
+			// Propagate down the right branch
+			this._right.insert(data);
+		} else {
+			// Assign to right branch
+			this._right = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+		}
+
+		return true;
+	}
+
+	if (result === 1) {
+		// Less than this node
+		if (this._left) {
+			// Propagate down the left branch
+			this._left.insert(data);
+		} else {
+			// Assign to left branch
+			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+		}
+
+		return true;
+	}
+
+	return false;
+};
+
+BinaryTree.prototype.lookup = function (data, resultArr) {
+	var result = this._compareFunc(this._data, data);
+
+	resultArr = resultArr || [];
+
+	if (result === 0) {
+		if (this._left) { this._left.lookup(data, resultArr); }
+		resultArr.push(this._data);
+		if (this._right) { this._right.lookup(data, resultArr); }
+	}
+
+	if (result === -1) {
+		if (this._right) { this._right.lookup(data, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.lookup(data, resultArr); }
+	}
+
+	return resultArr;
+};
+
+BinaryTree.prototype.inOrder = function (type, resultArr) {
+	resultArr = resultArr || [];
+
+	if (this._left) {
+		this._left.inOrder(type, resultArr);
+	}
+
+	switch (type) {
+		case 'hash':
+			resultArr.push(this._hash);
+			break;
+
+		case 'key':
+			resultArr.push(this._data);
+			break;
+
+		default:
+			resultArr.push({
+				key: this._key,
+				arr: this._store
+			});
+			break;
+	}
+
+	if (this._right) {
+		this._right.inOrder(type, resultArr);
+	}
+
+	return resultArr;
+};
+
+Shared.finishModule('BinaryTree');
+module.exports = BinaryTree;
+},{"./Shared":34}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -3535,7 +3806,7 @@ Db.prototype.collection = new Overload({
 				}
 			}
 
-			this._collection[name] = this._collection[name] || new Collection(name).db(this);
+			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
 
 			if (options.primaryKey !== undefined) {
 				this._collection[name].primaryKey(options.primaryKey);
@@ -3606,7 +3877,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./IndexBinaryTree":12,"./IndexHashMap":13,"./KeyValueStore":14,"./Metrics":15,"./Overload":27,"./Path":29,"./ReactorIO":31,"./Shared":33}],5:[function(_dereq_,module,exports){
+},{"./Crc":8,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":28,"./Path":30,"./ReactorIO":32,"./Shared":34}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -3936,7 +4207,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":33}],6:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":34}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4236,7 +4507,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":8,"./Metrics.js":15,"./Overload":27,"./Shared":33}],7:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":16,"./Overload":28,"./Shared":34}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -4269,7 +4540,7 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -4868,7 +5139,7 @@ Core.prototype.databases = function (search) {
 };
 
 module.exports = Db;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":15,"./Overload":27,"./Shared":33}],9:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":16,"./Overload":28,"./Shared":34}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -5343,7 +5614,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":4,"./Shared":33}],10:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":34}],11:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -6013,7 +6284,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":4,"./CollectionGroup":5,"./ReactorIO":31,"./Shared":33,"./View":35}],11:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./ReactorIO":32,"./Shared":34,"./View":36}],12:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -6638,7 +6909,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":27,"./Shared":33}],12:[function(_dereq_,module,exports){
+},{"./Overload":28,"./Shared":34}],13:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6652,6 +6923,7 @@ lookup
 
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path'),
+	BinaryTree = _dereq_('./BinaryTree'),
 	btree = function () {};
 
 /**
@@ -6931,7 +7203,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./Path":29,"./Shared":33}],13:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":30,"./Shared":34}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7290,7 +7562,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":29,"./Shared":33}],14:[function(_dereq_,module,exports){
+},{"./Path":30,"./Shared":34}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7505,7 +7777,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":33}],15:[function(_dereq_,module,exports){
+},{"./Shared":34}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7580,7 +7852,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":26,"./Shared":33}],16:[function(_dereq_,module,exports){
+},{"./Operation":27,"./Shared":34}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -7594,7 +7866,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 "use strict";
 /**
  * The chain reactor mixin, provides a class with chain reaction capabilities.
@@ -7663,7 +7935,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],18:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -7827,7 +8099,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":27}],19:[function(_dereq_,module,exports){
+},{"./Overload":28}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -7840,7 +8112,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -7975,7 +8247,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":27}],21:[function(_dereq_,module,exports){
+},{"./Overload":28}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -8339,7 +8611,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Sorting = {
@@ -8385,7 +8657,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8801,7 +9073,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":27}],24:[function(_dereq_,module,exports){
+},{"./Overload":28}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Updating = {
@@ -8970,7 +9242,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9136,7 +9408,7 @@ Collection.prototype.odm = function () {
 
 Shared.finishModule('Odm');
 module.exports = Odm;
-},{"./Collection":4,"./Shared":33}],26:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":34}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9283,7 +9555,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":29,"./Shared":33}],27:[function(_dereq_,module,exports){
+},{"./Path":30,"./Shared":34}],28:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9445,7 +9717,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9709,7 +9981,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":4,"./Document":9,"./Shared":33}],29:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Document":10,"./Shared":34}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10122,7 +10394,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":33}],30:[function(_dereq_,module,exports){
+},{"./Shared":34}],31:[function(_dereq_,module,exports){
 "use strict";
 
 // TODO: Add doc comments to this class
@@ -10503,7 +10775,7 @@ Db.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":33,"localforage":43}],31:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./Shared":34,"localforage":44}],32:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10565,7 +10837,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":33}],32:[function(_dereq_,module,exports){
+},{"./Shared":34}],33:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10683,7 +10955,7 @@ Db.prototype.init = function () {
 
 Shared.finishModule('Rest');
 module.exports = Rest;
-},{"./Collection":4,"./CollectionGroup":5,"./Shared":33,"rest":46,"rest/interceptor/mime":51}],33:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./Shared":34,"rest":47,"rest/interceptor/mime":52}],34:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10692,7 +10964,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.110',
+	version: '1.3.114',
 	modules: {},
 
 	_synth: {},
@@ -10835,7 +11107,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":16,"./Mixin.ChainReactor":17,"./Mixin.Common":18,"./Mixin.Constants":19,"./Mixin.Events":20,"./Mixin.Matching":21,"./Mixin.Sorting":22,"./Mixin.Triggers":23,"./Mixin.Updating":24,"./Overload":27}],34:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Triggers":24,"./Mixin.Updating":25,"./Overload":28}],35:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -10955,7 +11227,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],35:[function(_dereq_,module,exports){
+},{}],36:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -12041,7 +12313,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":4,"./CollectionGroup":5,"./ReactorIO":31,"./Shared":33}],36:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":32,"./Shared":34}],37:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -12101,7 +12373,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],37:[function(_dereq_,module,exports){
+},{}],38:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -12208,7 +12480,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":39}],38:[function(_dereq_,module,exports){
+},{"asap":40}],39:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -12390,7 +12662,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":37,"asap":39}],39:[function(_dereq_,module,exports){
+},{"./core.js":38,"asap":40}],40:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -12507,7 +12779,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":36}],40:[function(_dereq_,module,exports){
+},{"_process":37}],41:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -12898,7 +13170,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":38}],41:[function(_dereq_,module,exports){
+},{"promise":39}],42:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -13229,7 +13501,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":44,"promise":38}],42:[function(_dereq_,module,exports){
+},{"./../utils/serializer":45,"promise":39}],43:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -13648,7 +13920,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":44,"promise":38}],43:[function(_dereq_,module,exports){
+},{"./../utils/serializer":45,"promise":39}],44:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -14066,7 +14338,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":40,"./drivers/localstorage":41,"./drivers/websql":42,"promise":38}],44:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":41,"./drivers/localstorage":42,"./drivers/websql":43,"promise":39}],45:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -14298,7 +14570,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],45:[function(_dereq_,module,exports){
+},{}],46:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14529,7 +14801,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./util/mixin":81}],46:[function(_dereq_,module,exports){
+},{"./util/mixin":82}],47:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14556,7 +14828,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client/default":48,"./client/xhr":49}],47:[function(_dereq_,module,exports){
+},{"./client/default":49,"./client/xhr":50}],48:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14622,7 +14894,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],48:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14748,7 +15020,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../client":47}],49:[function(_dereq_,module,exports){
+},{"../client":48}],50:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -14924,7 +15196,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":45,"../client":47,"../util/normalizeHeaderName":82,"../util/responsePromise":83,"when":78}],50:[function(_dereq_,module,exports){
+},{"../UrlBuilder":46,"../client":48,"../util/normalizeHeaderName":83,"../util/responsePromise":84,"when":79}],51:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15091,7 +15363,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client":47,"./client/default":48,"./util/mixin":81,"./util/responsePromise":83,"when":78}],51:[function(_dereq_,module,exports){
+},{"./client":48,"./client/default":49,"./util/mixin":82,"./util/responsePromise":84,"when":79}],52:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15203,7 +15475,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":50,"../mime":54,"../mime/registry":55,"when":78}],52:[function(_dereq_,module,exports){
+},{"../interceptor":51,"../mime":55,"../mime/registry":56,"when":79}],53:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15264,7 +15536,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":45,"../interceptor":50}],53:[function(_dereq_,module,exports){
+},{"../UrlBuilder":46,"../interceptor":51}],54:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15320,7 +15592,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":50,"../util/mixin":81,"../util/uriTemplate":85}],54:[function(_dereq_,module,exports){
+},{"../interceptor":51,"../util/mixin":82,"../util/uriTemplate":86}],55:[function(_dereq_,module,exports){
 /*
 * Copyright 2014 the original author or authors
 * @license MIT, see LICENSE.txt for details
@@ -15375,7 +15647,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],55:[function(_dereq_,module,exports){
+},{}],56:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15492,7 +15764,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../mime":54,"./type/application/hal":56,"./type/application/json":57,"./type/application/x-www-form-urlencoded":58,"./type/multipart/form-data":59,"./type/text/plain":60,"when":78}],56:[function(_dereq_,module,exports){
+},{"../mime":55,"./type/application/hal":57,"./type/application/json":58,"./type/application/x-www-form-urlencoded":59,"./type/multipart/form-data":60,"./type/text/plain":61,"when":79}],57:[function(_dereq_,module,exports){
 /*
  * Copyright 2013-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15633,7 +15905,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../../../interceptor/pathPrefix":52,"../../../interceptor/template":53,"../../../util/find":79,"../../../util/lazyPromise":80,"../../../util/responsePromise":83,"when":78}],57:[function(_dereq_,module,exports){
+},{"../../../interceptor/pathPrefix":53,"../../../interceptor/template":54,"../../../util/find":80,"../../../util/lazyPromise":81,"../../../util/responsePromise":84,"when":79}],58:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15682,7 +15954,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],58:[function(_dereq_,module,exports){
+},{}],59:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15774,7 +16046,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],59:[function(_dereq_,module,exports){
+},{}],60:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15849,7 +16121,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],60:[function(_dereq_,module,exports){
+},{}],61:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -15880,7 +16152,7 @@ module.exports = asap;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],61:[function(_dereq_,module,exports){
+},{}],62:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15899,7 +16171,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":62,"./env":74,"./makePromise":76}],62:[function(_dereq_,module,exports){
+},{"./Scheduler":63,"./env":75,"./makePromise":77}],63:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -15981,7 +16253,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],63:[function(_dereq_,module,exports){
+},{}],64:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16009,7 +16281,7 @@ define(function() {
 	return TimeoutError;
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-},{}],64:[function(_dereq_,module,exports){
+},{}],65:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16066,7 +16338,7 @@ define(function() {
 
 
 
-},{}],65:[function(_dereq_,module,exports){
+},{}],66:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16357,7 +16629,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../apply":64,"../state":77}],66:[function(_dereq_,module,exports){
+},{"../apply":65,"../state":78}],67:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16519,7 +16791,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],67:[function(_dereq_,module,exports){
+},{}],68:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16548,7 +16820,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],68:[function(_dereq_,module,exports){
+},{}],69:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16570,7 +16842,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../state":77}],69:[function(_dereq_,module,exports){
+},{"../state":78}],70:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16637,7 +16909,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],70:[function(_dereq_,module,exports){
+},{}],71:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16663,7 +16935,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],71:[function(_dereq_,module,exports){
+},{}],72:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16743,7 +17015,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../TimeoutError":63,"../env":74}],72:[function(_dereq_,module,exports){
+},{"../TimeoutError":64,"../env":75}],73:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16831,7 +17103,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../env":74,"../format":75}],73:[function(_dereq_,module,exports){
+},{"../env":75,"../format":76}],74:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -16871,7 +17143,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 
-},{}],74:[function(_dereq_,module,exports){
+},{}],75:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -16948,7 +17220,7 @@ define(function(_dereq_) {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":36}],75:[function(_dereq_,module,exports){
+},{"_process":37}],76:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -17006,7 +17278,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],76:[function(_dereq_,module,exports){
+},{}],77:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -17937,7 +18209,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":36}],77:[function(_dereq_,module,exports){
+},{"_process":37}],78:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -17974,7 +18246,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],78:[function(_dereq_,module,exports){
+},{}],79:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 
 /**
@@ -18205,7 +18477,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./lib/Promise":61,"./lib/TimeoutError":63,"./lib/apply":64,"./lib/decorators/array":65,"./lib/decorators/flow":66,"./lib/decorators/fold":67,"./lib/decorators/inspect":68,"./lib/decorators/iterate":69,"./lib/decorators/progress":70,"./lib/decorators/timed":71,"./lib/decorators/unhandledRejection":72,"./lib/decorators/with":73}],79:[function(_dereq_,module,exports){
+},{"./lib/Promise":62,"./lib/TimeoutError":64,"./lib/apply":65,"./lib/decorators/array":66,"./lib/decorators/flow":67,"./lib/decorators/fold":68,"./lib/decorators/inspect":69,"./lib/decorators/iterate":70,"./lib/decorators/progress":71,"./lib/decorators/timed":72,"./lib/decorators/unhandledRejection":73,"./lib/decorators/with":74}],80:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18248,7 +18520,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],80:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18305,7 +18577,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"when":78}],81:[function(_dereq_,module,exports){
+},{"when":79}],82:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18355,7 +18627,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],82:[function(_dereq_,module,exports){
+},{}],83:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18395,7 +18667,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],83:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 /*
  * Copyright 2014-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18537,7 +18809,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./normalizeHeaderName":82,"when":78}],84:[function(_dereq_,module,exports){
+},{"./normalizeHeaderName":83,"when":79}],85:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18718,7 +18990,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -18891,4 +19163,4 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./uriEncoder":84}]},{},[1]);
+},{"./uriEncoder":85}]},{},[1]);

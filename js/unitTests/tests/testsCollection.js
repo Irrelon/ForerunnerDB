@@ -2608,3 +2608,15 @@ QUnit.test("Collection.diff() :: Run a diff against another collection", functio
 
 	base.dbDown();
 });
+
+QUnit.test("Collection() :: Ensure collection options are carried through to constructor from DB.collection()", function() {
+	base.dbUp();
+
+	var coll = db.collection('test', {
+		changeTimestamp: true
+	});
+
+	strictEqual(coll._options.changeTimestamp, true, 'Change timestamp flag is set correctly');
+
+	base.dbDown();
+});

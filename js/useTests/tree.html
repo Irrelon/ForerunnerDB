@@ -1,226 +1,54 @@
 <html>
 <body>
+<script src="../dist/fdb-all.js"></script>
 <script>
-	var Node = function (key, val, compareFunc, hashFunc) {
-		this._store = [];
-
-		if (compareFunc !== undefined) { this.compareFunc(compareFunc); }
-		if (hashFunc !== undefined) { this.hashFunc(hashFunc); }
-		if (key !== undefined) { this.key(key); }
-		if (val !== undefined) { this.push(val); }
-	};
-
-	Node.prototype.key = function (val) {
-		if (val !== undefined) {
-			this._key = val;
-
-			if (this._hashFunc) { this._hash = this._hashFunc(val); }
-			return this;
-		}
-
-		return this._key;
-	};
-
-	Node.prototype.push = function (val) {
-		if (val !== undefined) {
-			this._store.push(val);
-			return this;
-		}
-
-		return false;
-	};
-
-	Node.prototype.pull = function (val) {
-		if (val !== undefined) {
-			var index = this._store.indexOf(val);
-
-			if (index > -1) {
-				this._store.splice(index, 1);
-				return true;
-			}
-		}
-
-		return false;
-	};
-
-	Node.prototype.compareFunc = function (val) {
-		if (val !== undefined) {
-			this._compareFunc = val;
-			return this;
-		}
-
-		return this._compareFunc;
-	};
-
-	Node.prototype.hashFunc = function (val) {
-		if (val !== undefined) {
-			this._hashFunc = val;
-			return this;
-		}
-
-		return this._hashFunc;
-	};
-
-	Node.prototype.insert = function (key, val) {
-		var result;
-
-		if (!this._key) {
-			// Insert into this node (overwrite) as there is no data
-			this.key(key);
-			this.push(val);
-			return true;
-		}
-
-		result = this._compareFunc(this._key, key);
-
-		if (result === 0) {
-			// Equal to this node
-			this.push(val);
-			return true;
-		}
-
-		if (result === -1) {
-			// Less than this node
-			if (this._left) {
-				// Propagate down the left branch
-				this._left.insert(key, val);
-			} else {
-				// Assign to left branch
-				this._left = new Node(key, val, this._compareFunc, this._hashFunc);
-			}
-
-			return true;
-		}
-
-		if (result === 1) {
-			// Greater than this node
-			if (this._right) {
-				// Propagate down the right branch
-				this._right.insert(key, val);
-			} else {
-				// Assign to right branch
-				this._right = new Node(key, val, this._compareFunc, this._hashFunc);
-			}
-
-			return true;
-		}
-
-		return false;
-	};
-
-	Node.prototype.lookup = function (key) {
-		var result = this._compareFunc(this._key, key);
-
-		if (result === 0) {
-			return this._store;
-		}
-
-		if (result === -1) {
-			return this._left.lookup(key);
-		}
-
-		if (result === 1) {
-			return this._right.lookup(key);
-		}
-	};
-
-	Node.prototype.inOrder = function (resultArr, type) {
-		if (this._left) {
-			this._left.inOrder(resultArr, type);
-		}
-
-		switch (type) {
-			case 'hash':
-				resultArr.push(this._hash);
-				break;
-
-			case 'key':
-				resultArr.push(this._key);
-				break;
-
-			default:
-				resultArr.push({
-					key: this._key,
-					arr: this._store
-				});
-				break;
-		}
-
-		if (this._right) {
-			this._right.inOrder(resultArr, type);
-		}
-
-		return resultArr;
-	};
-
-	var tree = new Node();
-
-	tree.compareFunc(function (a, b) {
-		if (a.name === b.name) {
-			return 0;
-		}
-
-		if (a.name < b.name) {
-			return 1;
-		}
-
-		if (a.name > b.name) {
-			return -1;
-		}
-
-		return null;
-	});
-
-	tree.hashFunc(function (obj) {
-		return JSON.stringify(obj);
-	});
-
-	tree.insert({name: 'Jim', age: 12}, {name: 'Jim', age: 12});
-	tree.insert({name: 'Alan', age: 5}, {name: 'Alan', age: 5});
-	tree.insert({name: 'Jim', age: 12}, {name: 'Jim', age: 12});
-	tree.insert({name: 'Bob', age: 12}, {name: 'Bob', age: 12});
-	tree.insert({name: 'Zelda', age: 12}, {name: 'Zelda', age: 12});
-	tree.insert({name: 'Catt', age: 12}, {name: 'Catt', age: 12});
-
-	var search,
+	var tree = new ForerunnerDB.shared.modules.BinaryTree(),
+		search,
 		alpha,
-		count = 1000000,
+		data = [],
+		count = 50000,
+		countMax = count,
 		total = count,
-		nameCount = 10,
-		nameIndex,
 		name,
 		obj,
 		start,
-		overall = 0;
+		overall = 0,
+		names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'];
 
-	alpha = 'abcdefghijklmnopqrstuvwxyz0123456789';
+	tree.index({
+		name: 1,
+		age: 1
+	});
 
 	// Generate names and ages
+	console.time('Generate ' + countMax + ' records');
 	while (count--) {
-		name = '';
-		for (nameIndex = 0; nameIndex < nameCount; nameIndex++) {
-			name += alpha[Math.floor(Math.random() * alpha.length)];
-		}
+		name = names[Math.floor(Math.random() * names.length)];
 
-		obj = {
+		data.push({
 			name: name,
-			age: Math.ceil(Math.random() * 100)
-		};
-
-		start = new Date().getTime();
-		tree.insert(obj, obj);
-		overall += (new Date().getTime() - start);
+			age: Math.ceil(Math.random() * 100),
+			cash: Math.ceil(Math.random() * 1000)
+		});
 	}
+	//console.log(data);
+	console.timeEnd('Generate ' + countMax + ' records');
 
-	console.log('Insert ' + total + ' records:', (new Date().getTime() - start) + 'ms');
+	console.time('Insert ' + countMax + ' records');
+	console.log(tree.insert(data));
+	console.timeEnd('Insert ' + countMax + ' records');
 
-	start = new Date().getTime();
-	tree.inOrder([], 'hash');
-	console.log('Walk tree in order:', (new Date().getTime() - start) + 'ms');
+	console.time('Walk tree in order');
+	tree.inOrder('hash');
+	console.timeEnd('Walk tree in order');
 
-	start = new Date().getTime();
+	console.time('Query tree single key');
+	console.log(tree.lookup({name: 'Jim'}));
+	console.timeEnd('Query tree single key');
+
+	console.time('Query tree multi key');
 	console.log(tree.lookup({name: 'Jim', age: 12}));
-	console.log('Key lookup:', (new Date().getTime() - start) + 'ms');
+	console.timeEnd('Query tree multi key');
 </script>
 </body>
 </html>
