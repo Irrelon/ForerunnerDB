@@ -170,7 +170,7 @@ BinaryTree.prototype.insert = function (data) {
 	result = this._compareFunc(this._data, data);
 
 	if (result === 0) {
-		//this.push(data);
+		this.push(data);
 
 		// Less than this node
 		if (this._left) {
