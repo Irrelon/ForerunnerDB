@@ -1,16 +1,23 @@
 QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
 	QUnit.asyncTest('Collection.save() :: Save data to storage and load it back', function () {
-		expect(6);
+		expect(7);
 
 		base.dbUp();
 
 		ok(db.persist.driver(), 'Check that there is a persistent storage driver: ' + db.persist.driver());
 
-		var coll = db.collection('test'), result;
+		var coll = db.collection('test', {
+				changeTimestamp: true
+			}),
+			result,
+			lastChange;
+
 		coll.insert({
 			name: 'Test'
 		});
+
+		lastChange = coll.metaData().lastChange;
 
 		coll.save(function (err) {
 			if (err) {
@@ -41,6 +48,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 				strictEqual(result.length, 1, 'Check that items were loaded correctly');
 				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
+				strictEqual(coll.metaData().lastChange, lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
 
 				base.dbDown();
 
