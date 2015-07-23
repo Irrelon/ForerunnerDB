@@ -324,7 +324,7 @@ Collection.prototype.init = function (name, options) {
 	};
 
 	// Create an object to store internal protected data
-	this._internalData = {};
+	this._metaData = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -394,7 +394,12 @@ Shared.synthesize(Collection.prototype, 'state');
 Shared.synthesize(Collection.prototype, 'name');
 
 /**
- * Get the internal data array that represents the collection's data.
+ * Gets / sets the metadata stored in the collection.
+ */
+Shared.synthesize(Collection.prototype, 'metaData');
+
+/**
+ * Get the data array that represents the collection's data.
  * This data is returned by reference and should not be altered outside
  * of the provided CRUD functionality of the collection as doing so
  * may cause unstable index behaviour within the collection.
@@ -511,7 +516,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._internalData.lastChange = new Date();
+		this._metaData.lastChange = new Date();
 	}
 };
 
@@ -8194,10 +8199,14 @@ Collection.prototype.drop = new Overload({
 });
 
 Collection.prototype.save = function (callback) {
-	if (this._name) {
-		if (this._db) {
+	var self = this;
+
+	if (self._name) {
+		if (self._db) {
 			// Save the collection data
-			this._db.persist.save(this._db._name + '::' + this._name, this._data, callback);
+			self._db.persist.save(self._db._name + '::' + self._name, self._data, function () {
+				self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), callback);
+			});
 		} else {
 			if (callback) {
 				callback('Cannot save a collection that is not attached to a database!');
@@ -8213,18 +8222,27 @@ Collection.prototype.save = function (callback) {
 Collection.prototype.load = function (callback) {
 	var self = this;
 
-	if (this._name) {
-		if (this._db) {
+	if (self._name) {
+		if (self._db) {
 			// Load the collection data
-			this._db.persist.load(this._db._name + '::' + this._name, function (err, data) {
+			self._db.persist.load(self._db._name + '::' + self._name, function (err, data) {
 				if (!err) {
 					if (data) {
 						self.setData(data);
 					}
 
-					if (callback) {
-						callback(false);
-					}
+					// Now load the collection's metadata
+					self._db.persist.load(self._db._name + '::' + self._name + '::metaData', function (err, data) {
+						if (!err) {
+							if (data) {
+								self.metaData(data);
+							}
+						}
+
+						if (callback) {
+							callback(false);
+						}
+					});
 				} else {
 					if (callback) {
 						callback(err);
@@ -8378,7 +8396,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.119',
+	version: '1.3.121',
 	modules: {},
 
 	_synth: {},

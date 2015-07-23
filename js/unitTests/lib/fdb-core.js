@@ -316,7 +316,7 @@ Collection.prototype.init = function (name, options) {
 	};
 
 	// Create an object to store internal protected data
-	this._internalData = {};
+	this._metaData = {};
 
 	this._deferQueue = {
 		insert: [],
@@ -386,7 +386,12 @@ Shared.synthesize(Collection.prototype, 'state');
 Shared.synthesize(Collection.prototype, 'name');
 
 /**
- * Get the internal data array that represents the collection's data.
+ * Gets / sets the metadata stored in the collection.
+ */
+Shared.synthesize(Collection.prototype, 'metaData');
+
+/**
+ * Get the data array that represents the collection's data.
  * This data is returned by reference and should not be altered outside
  * of the provided CRUD functionality of the collection as doing so
  * may cause unstable index behaviour within the collection.
@@ -503,7 +508,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._internalData.lastChange = new Date();
+		this._metaData.lastChange = new Date();
 	}
 };
 
@@ -7659,7 +7664,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.119',
+	version: '1.3.121',
 	modules: {},
 
 	_synth: {},
