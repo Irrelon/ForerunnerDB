@@ -3247,7 +3247,7 @@ Db.prototype.collection = new Overload({
 				}
 			}
 
-			this._collection[name] = this._collection[name] || new Collection(name).db(this);
+			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
 
 			if (options.primaryKey !== undefined) {
 				this._collection[name].primaryKey(options.primaryKey);
