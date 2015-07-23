@@ -4883,7 +4883,10 @@ lookup
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path'),
 	BinaryTree = _dereq_('./BinaryTree'),
+	treeInstance = new BinaryTree(),
 	btree = function () {};
+
+treeInstance.inOrder('hash');
 
 /**
  * The index class used to instantiate hash map indexes that the database can
@@ -8375,7 +8378,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.114',
+	version: '1.3.119',
 	modules: {},
 
 	_synth: {},

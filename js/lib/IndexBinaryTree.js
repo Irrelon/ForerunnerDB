@@ -12,7 +12,10 @@ lookup
 var Shared = require('./Shared'),
 	Path = require('./Path'),
 	BinaryTree = require('./BinaryTree'),
+	treeInstance = new BinaryTree(),
 	btree = function () {};
+
+treeInstance.inOrder('hash');
 
 /**
  * The index class used to instantiate hash map indexes that the database can
