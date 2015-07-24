@@ -6,7 +6,7 @@
  * @mixin
  */
 var Shared = {
-	version: '1.3.125',
+	version: '1.3.126',
 	modules: {},
 
 	_synth: {},
