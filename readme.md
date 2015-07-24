@@ -87,6 +87,18 @@ ForerunnerDB works in all modern browsers (IE8+)
 Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
 
 	<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
+
+### Chrome Extension: ForerunnerDB Explorer
+A chrome browser extension exists in the source repo as well as in the Chrome Web Store
+[available here](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm).
+
+You can inspect and explore your ForerunnerDB instance directly from Chrome's Dev Tools.
+
+1. [Install the extension](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm)
+2. Open Chrome's developer tools
+3. Navigate to a url using ForerunnerDB (either local or remote)
+4. Click the ForerunnerDB tab in dev tools to inspect instances
+5. Click the Refresh button to see any changes reflected
 	
 ## Use ForerunnerDB in Node.js
 After installing via npm (see above) you can require ForerunnerDB in your code:
