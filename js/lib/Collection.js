@@ -301,6 +301,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		op.stop();
 
+		this._onChange();
 		this.emit('setData', this._data, oldData);
 	}
 
