@@ -851,6 +851,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		op.stop();
 
+		this._onChange();
 		this.emit('setData', this._data, oldData);
 	}
 
@@ -11826,7 +11827,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.123',
+	version: '1.3.125',
 	modules: {},
 
 	_synth: {},
