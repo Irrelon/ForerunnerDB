@@ -3847,6 +3847,8 @@ Db.prototype.collectionExists = function (viewName) {
  */
 Db.prototype.collections = function (search) {
 	var arr = [],
+		collections = this._collection,
+		collection,
 		i;
 
 	if (search) {
@@ -3856,19 +3858,23 @@ Db.prototype.collections = function (search) {
 		}
 	}
 
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
+	for (i in collections) {
+		if (collections.hasOwnProperty(i)) {
+			collection = collections[i];
+
 			if (search) {
 				if (search.exec(i)) {
 					arr.push({
 						name: i,
-						count: this._collection[i].count()
+						count: collection.count(),
+						linked: collection.isLinked !== undefined ? collection.isLinked() : false
 					});
 				}
 			} else {
 				arr.push({
 					name: i,
-					count: this._collection[i].count()
+					count: collection.count(),
+					linked: collection.isLinked !== undefined ? collection.isLinked() : false
 				});
 			}
 		}
@@ -5605,12 +5611,16 @@ Db.prototype.document = function (documentName) {
  */
 Db.prototype.documents = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._document) {
 		if (this._document.hasOwnProperty(i)) {
+			item = this._document[i];
+
 			arr.push({
-				name: i
+				name: i,
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}
@@ -6274,13 +6284,17 @@ Db.prototype.unGrid = function (selector, template, options) {
  */
 Db.prototype.grids = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._grid) {
 		if (this._grid.hasOwnProperty(i)) {
+			item = this._grid[i];
+
 			arr.push({
 				name: i,
-				count: this._grid[i].count()
+				count: item.count(),
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}
@@ -9974,13 +9988,17 @@ Db.prototype.overview = function (overviewName) {
  */
 Db.prototype.overviews = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._overview) {
 		if (this._overview.hasOwnProperty(i)) {
+			item = this._overview[i];
+
 			arr.push({
 				name: i,
-				count: this._overview[i].count()
+				count: item.count(),
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}
@@ -10986,7 +11004,7 @@ module.exports = Rest;
  * @mixin
  */
 var Shared = {
-	version: '1.3.126',
+	version: '1.3.128',
 	modules: {},
 
 	_synth: {},
@@ -11373,6 +11391,15 @@ View.prototype.remove = function () {
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
+};
+
+/**
+ * Queries the view data by specific id.
+ * @see Collection::findById()
+ * @returns {Array} The result of the find query.
+ */
+View.prototype.findById = function (id, options) {
+	return this.publicData().findById(id, options);
 };
 
 /**
@@ -12319,13 +12346,17 @@ Db.prototype.viewExists = function (viewName) {
  */
 Db.prototype.views = function () {
 	var arr = [],
+		view,
 		i;
 
 	for (i in this._view) {
 		if (this._view.hasOwnProperty(i)) {
+			view = this._view[i];
+
 			arr.push({
 				name: i,
-				count: this._view[i].count()
+				count: view.count(),
+				linked: view.isLinked !== undefined ? view.isLinked() : false
 			});
 		}
 	}

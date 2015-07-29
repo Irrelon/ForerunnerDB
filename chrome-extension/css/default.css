@@ -57,3 +57,17 @@ body {
 .objectStart {
   background-color: #ecf6ff;
 }
+/* Override treeview css to make it a bit easier to read */
+.indent {
+  width: 0px !important;
+}
+.treeview span.indent {
+  margin-left: 7px !important;
+  margin-right: 7px !important;
+}
+.list-group-item {
+  padding: 5px 5px !important;
+}
+.list-group-item:first-child {
+  border-radius: 0 !important;
+}

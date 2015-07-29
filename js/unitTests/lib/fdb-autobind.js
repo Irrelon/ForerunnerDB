@@ -243,6 +243,14 @@ AutoBind.extendCollection = function (Module) {
 		return this;
 	};
 
+	/**
+	 * Get the data-bound links this module is using.
+	 * @returns {*}
+	 */
+	Module.prototype.links = function () {
+		return this._links;
+	};
+
 	Module.prototype._dataReplace = function (data) {
 		if (this._linked) {
 			// Remove all items
@@ -581,6 +589,14 @@ AutoBind.extendView = function (Module) {
 
 		return this;
 	};
+
+	/**
+	 * Get the data-bound links this module is using.
+	 * @returns {*}
+	 */
+	Module.prototype.links = function () {
+		return this.publicData().links();
+	};
 };
 
 /**
@@ -629,6 +645,14 @@ AutoBind.extendOverview = function (Module) {
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		this._data.unlink.apply(this._data, arguments);
 		this._refresh();
+	};
+
+	/**
+	 * Get the data-bound links this module is using.
+	 * @returns {*}
+	 */
+	Module.prototype.links = function () {
+		return this._data.links();
 	};
 };
 
@@ -824,6 +848,14 @@ AutoBind.extendDocument = function (Module) {
 		} else {
 			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
+	};
+
+	/**
+	 * Get the data-bound links this module is using.
+	 * @returns {*}
+	 */
+	Module.prototype.links = function () {
+		return this._links;
 	};
 };
 

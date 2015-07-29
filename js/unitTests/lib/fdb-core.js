@@ -3568,6 +3568,8 @@ Db.prototype.collectionExists = function (viewName) {
  */
 Db.prototype.collections = function (search) {
 	var arr = [],
+		collections = this._collection,
+		collection,
 		i;
 
 	if (search) {
@@ -3577,19 +3579,23 @@ Db.prototype.collections = function (search) {
 		}
 	}
 
-	for (i in this._collection) {
-		if (this._collection.hasOwnProperty(i)) {
+	for (i in collections) {
+		if (collections.hasOwnProperty(i)) {
+			collection = collections[i];
+
 			if (search) {
 				if (search.exec(i)) {
 					arr.push({
 						name: i,
-						count: this._collection[i].count()
+						count: collection.count(),
+						linked: collection.isLinked !== undefined ? collection.isLinked() : false
 					});
 				}
 			} else {
 				arr.push({
 					name: i,
-					count: this._collection[i].count()
+					count: collection.count(),
+					linked: collection.isLinked !== undefined ? collection.isLinked() : false
 				});
 			}
 		}
@@ -7665,7 +7671,7 @@ module.exports = ReactorIO;
  * @mixin
  */
 var Shared = {
-	version: '1.3.126',
+	version: '1.3.128',
 	modules: {},
 
 	_synth: {},

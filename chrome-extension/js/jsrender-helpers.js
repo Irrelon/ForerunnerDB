@@ -61,7 +61,7 @@ if ($ && $.views) {
 			for (key in object) {
 				if (object.hasOwnProperty(key)) {
 					value = object[key];
-					type = typeof value;
+					type = value !== undefined ? typeof value : 'undefined';
 					expandable = false;
 					childObj = undefined;
 
