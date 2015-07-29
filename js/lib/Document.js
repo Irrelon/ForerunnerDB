@@ -457,12 +457,16 @@ Db.prototype.document = function (documentName) {
  */
 Db.prototype.documents = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._document) {
 		if (this._document.hasOwnProperty(i)) {
+			item = this._document[i];
+
 			arr.push({
-				name: i
+				name: i,
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}

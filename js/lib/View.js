@@ -1067,13 +1067,17 @@ Db.prototype.viewExists = function (viewName) {
  */
 Db.prototype.views = function () {
 	var arr = [],
+		view,
 		i;
 
 	for (i in this._view) {
 		if (this._view.hasOwnProperty(i)) {
+			view = this._view[i];
+
 			arr.push({
 				name: i,
-				count: this._view[i].count()
+				count: view.count(),
+				linked: view.isLinked !== undefined ? view.isLinked() : false
 			});
 		}
 	}

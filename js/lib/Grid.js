@@ -651,13 +651,17 @@ Db.prototype.unGrid = function (selector, template, options) {
  */
 Db.prototype.grids = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._grid) {
 		if (this._grid.hasOwnProperty(i)) {
+			item = this._grid[i];
+
 			arr.push({
 				name: i,
-				count: this._grid[i].count()
+				count: item.count(),
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}

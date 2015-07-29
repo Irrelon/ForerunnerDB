@@ -245,13 +245,17 @@ Db.prototype.overview = function (overviewName) {
  */
 Db.prototype.overviews = function () {
 	var arr = [],
+		item,
 		i;
 
 	for (i in this._overview) {
 		if (this._overview.hasOwnProperty(i)) {
+			item = this._overview[i];
+
 			arr.push({
 				name: i,
-				count: this._overview[i].count()
+				count: item.count(),
+				linked: item.isLinked !== undefined ? item.isLinked() : false
 			});
 		}
 	}
