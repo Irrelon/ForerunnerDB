@@ -98,7 +98,7 @@ You can inspect and explore your ForerunnerDB instance directly from Chrome's De
 2. Open Chrome's developer tools
 3. Navigate to a url using ForerunnerDB (either local or remote)
 4. Click the ForerunnerDB tab in dev tools to inspect instances
-5. Click the Refresh button to see any changes reflected
+5. Click the Refresh button (the one in the ForerunnerDB explorer tab) to see any changes reflected
 	
 ## Use ForerunnerDB in Node.js
 After installing via npm (see above) you can require ForerunnerDB in your code:
