@@ -124,6 +124,15 @@ View.prototype.find = function (query, options) {
 };
 
 /**
+ * Queries the view data by specific id.
+ * @see Collection::findById()
+ * @returns {Array} The result of the find query.
+ */
+View.prototype.findById = function (id, options) {
+	return this.publicData().findById(id, options);
+};
+
+/**
  * Gets the module's internal data collection.
  * @returns {Collection}
  */
