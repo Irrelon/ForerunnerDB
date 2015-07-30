@@ -2302,36 +2302,60 @@ Collection.prototype.findOne = function () {
  * Gets the index in the collection data array of the first item matched by
  * the passed query object.
  * @param {Object} query The query to run to find the item to return the index of.
+ * @param {Object=} options An options object.
  * @returns {Number}
  */
-Collection.prototype.indexOf = function (query) {
-	var item = this.find(query, {$decouple: false})[0];
+Collection.prototype.indexOf = function (query, options) {
+	var item = this.find(query, {$decouple: false})[0],
+		sortedData;
 
 	if (item) {
-		return this._data.indexOf(item);
-	} else {
-		return -1;
+		if (!options || options && !options.$orderBy) {
+			// Basic lookup from order of insert
+			return this._data.indexOf(item);
+		} else {
+			// Trying to locate index based on query with sort order
+			options.$decouple = false;
+			sortedData = this.find(query, options);
+
+			return sortedData.indexOf(item);
+		}
 	}
+
+	return -1;
 };
 
 /**
  * Returns the index of the document identified by the passed item's primary key.
- * @param {*} item The document whose primary key should be used to lookup or the id
- * to lookup.
+ * @param {*} itemLookup The document whose primary key should be used to lookup
+ * or the id to lookup.
+ * @param {Object=} options An options object.
  * @returns {Number} The index the item with the matching primary key is occupying.
  */
-Collection.prototype.indexOfDocById = function (item) {
-	if (typeof item !== 'object') {
-		return this._data.indexOf(
-			this._primaryIndex.get(item)
-		);
+Collection.prototype.indexOfDocById = function (itemLookup, options) {
+	var item,
+		sortedData;
+
+	if (typeof itemLookup !== 'object') {
+		item = this._primaryIndex.get(itemLookup);
 	} else {
-		return this._data.indexOf(
-			this._primaryIndex.get(
-				item[this._primaryKey]
-			)
-		);
+		item = this._primaryIndex.get(itemLookup[this._primaryKey]);
 	}
+
+	if (item) {
+		if (!options || options && !options.$orderBy) {
+			// Basic lookup
+			return this._data.indexOf(item);
+		} else {
+			// Sorted lookup
+			options.$decouple = false;
+			sortedData = this.find({}, options);
+
+			return sortedData.indexOf(item);
+		}
+	}
+
+	return -1;
 };
 
 /**

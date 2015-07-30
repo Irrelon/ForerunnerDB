@@ -155,6 +155,19 @@ Infinilist.prototype.scroll = function () {
 	}
 };
 
+Infinilist.prototype.scrollToQuery = function (query) {
+	var self = this,
+		result;
+
+	// Run query and get first matching record (with current sort)
+	result = self.view.from().findOne(query, {
+		$orderBy: self.view.queryOptions().orderBy
+	});
+
+	// Find the position of the element inside the current view
+	// based on the sort order
+};
+
 Infinilist.prototype.drop = function () {
 	var self = this;
 

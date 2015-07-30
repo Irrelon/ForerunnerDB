@@ -273,6 +273,9 @@ var Matching = {
 			case '$ne': // Not equals
 				return source != test; // jshint ignore:line
 
+			case '$nee': // Not equals equals
+				return source !== test;
+
 			case '$or':
 				// Match true on ANY check to pass
 				for (var orIndex = 0; orIndex < test.length; orIndex++) {

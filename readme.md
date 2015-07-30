@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.128
+## Version 1.3.132
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -2192,6 +2192,7 @@ ForerunnerDB's project road-map:
 * $pull
 * $in
 * $nin
+* $ne
 * $mul
 * $rename
 * $unset
