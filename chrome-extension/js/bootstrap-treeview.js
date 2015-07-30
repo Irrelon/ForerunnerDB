@@ -150,6 +150,7 @@
 	Tree.prototype.init = function (options) {
 		this.tree = [];
 		this.nodes = [];
+		this.nodeLookup = {};
 
 		if (options.data) {
 			if (typeof options.data === 'string') {
@@ -262,9 +263,8 @@
 		var parent = node;
 		var _this = this;
 		$.each(node.nodes, function checkStates(index, node) {
-
 			// nodeId : unique, incremental identifier
-			node.nodeId = _this.nodes.length;
+			node.nodeId = node.nodeId || _this.nodes.length;
 
 			// parentId : transversing up the tree
 			node.parentId = parent.nodeId;
@@ -305,6 +305,7 @@
 			}
 
 			// index nodes in a flattened structure for use later
+			_this.nodeLookup[node.nodeId] = node;
 			_this.nodes.push(node);
 
 			// recurse child nodes and transverse the tree
@@ -350,7 +351,7 @@
 	Tree.prototype.findNode = function (target) {
 
 		var nodeId = target.closest('li.list-group-item').attr('data-nodeid');
-		var node = this.nodes[nodeId];
+		var node = this.nodeLookup[nodeId];
 
 		if (!node) {
 			console.log('Error: node does not exist');
@@ -704,7 +705,7 @@
 		@return {Object} node - Matching node
 	*/
 	Tree.prototype.getNode = function (nodeId) {
-		return this.nodes[nodeId];
+		return this.nodeLookup[nodeId];
 	};
 
 	/**
@@ -714,7 +715,7 @@
 	*/
 	Tree.prototype.getParent = function (identifier) {
 		var node = this.identifyNode(identifier);
-		return this.nodes[node.parentId];
+		return this.nodeLookup[node.parentId];
 	};
 
 	/**
@@ -920,7 +921,7 @@
 			while (parentNode) {
 				this.setExpandedState(parentNode, true, options);
 				parentNode = this.getParent(parentNode);
-			};
+			}
 		}, this));
 
 		this.render();
@@ -1093,7 +1094,7 @@
 	*/
 	Tree.prototype.identifyNode = function (identifier) {
 		return ((typeof identifier) === 'number') ?
-						this.nodes[identifier] :
+						this.nodeLookup[identifier] :
 						identifier;
 	};
 

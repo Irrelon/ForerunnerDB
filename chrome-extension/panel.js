@@ -1,7 +1,12 @@
 "use strict";
 
-var fdb = new ForerunnerDB(),
+var self = this,
+	fdb = new ForerunnerDB(),
 	db = fdb.db('fdbChromeExtension');
+
+self._expanded = {
+	'Databases': true
+};
 
 // Setup the main db data view collection
 db.collection('dataView').setData([]);
@@ -32,6 +37,135 @@ var typeIcon = function (module) {
 	}
 };
 
+var expandNodes = function (tree, node) {
+	var i;
+
+	if (self._expanded[node.nodeId]) {
+		tree.setExpandedState(node, true, {});
+	} else {
+		tree.setExpandedState(node, false, {});
+	}
+
+	// Loop node's child nodes
+	tree.render();
+
+	if (node.nodes && node.nodes.length) {
+		for (i = 0; i < node.nodes.length; i++) {
+			expandNodes(tree, node.nodes[i]);
+		}
+	}
+};
+
+var nodeChildren = function (node, callback) {
+	var entityItem,
+		entityNodes,
+		dbNode,
+		tree,
+		tmpNode,
+		postProcess,
+		totalCount,
+		processCount,
+		i, j, processPostNodeChildRequest;
+
+	tree = $('#tree').data('treeview').tree;
+
+	if (node.fdb) {
+		switch (node.fdb.type) {
+			case 'database':
+				// Loop the children of this db object
+				if (node.fdb.children) {
+					entityNodes = [];
+					postProcess = [];
+					processCount = 0;
+					totalCount = 0;
+					debugger;
+					for (j = 0; j < node.fdb.children.length; j++) {
+						entityItem = node.fdb.children[j];
+
+						tmpNode = {
+							parentId: node.nodeId,
+							fdb: {
+								id: entityItem.module,
+								type: 'module',
+								moduleData: entityItem
+							},
+							nodeId: db.objectId(entityItem.module),
+							text: entityItem.moduleName + ' (' + entityItem.count + ')',
+							icon: typeIcon(entityItem.module),
+							nodes: []
+						};
+
+						entityNodes.push(tmpNode);
+
+						if (self._expanded[tmpNode.nodeId]) {
+							// Add node to post-process array
+							postProcess.push(tmpNode);
+							totalCount++;
+						}
+					}
+
+					if (postProcess.length) {
+						processPostNodeChildRequest = function (tmpNode, callback) {
+							nodeChildren(tmpNode, function (err, tmpNodeData) {
+								tmpNode.nodes = tmpNodeData;
+								processCount++;
+
+								if (processCount === totalCount) {
+									callback(false, entityNodes);
+								}
+							});
+						};
+
+						while ((tmpNode = postProcess.shift())) {
+							processPostNodeChildRequest(tmpNode, callback);
+						}
+					} else {
+						callback(false, entityNodes);
+					}
+				}
+				break;
+
+			case 'module':
+				switch (node.fdb.moduleData.module) {
+					default:
+						dbNode = tree.getNode(node.parentId);
+
+						if (!dbNode || dbNode.fdb.type !== 'database') {
+							debugger;
+						}
+
+						(function (dbNode, node, callback) {
+							if (!dbNode) {
+								debugger;
+							}
+							// Get collections for this DB
+							getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + node.fdb.moduleData.module + "s()", function (result, isException) {
+								var moduleNodes = [];
+								debugger;
+								for (i = 0; i < result.length; i++) {
+									moduleNodes.push({
+										parentId: node.nodeId,
+										fdb: {
+											type: node.fdb.moduleData.module,
+											id: result[i].name,
+											linked: result[i].linked
+										},
+										nodeId: db.objectId(result[i].name),
+										text: result[i].name + ' (' + result[i].count + ')',
+										icon: typeIcon(node.fdb.moduleData.module)
+									});
+								}
+
+								callback(false, moduleNodes);
+							});
+						})(dbNode, node, callback);
+						break;
+				}
+				break;
+		}
+	}
+};
+
 var refreshDatabaseTree = function () {
 	// Get number of instances
 	getCall('ForerunnerDB.instantiatedCount()', function (result, isException) {
@@ -43,240 +177,236 @@ var refreshDatabaseTree = function () {
 				//console.log('databases', result);
 
 				var dbNodes = [],
-					entityItem,
-					entityNodes,
+					postProcess = [],
 					tree,
 					node,
-					dbNode,
-					i, j, moduleNode;
+					finishLoad,
+					tmpNode,
+					totalCount = 0,
+					processCount = 0,
+					i, processPostNodeChildRequest;
+
+				finishLoad = function (dbNodes) {
+					$('#tree').treeview({
+						data: [{
+							nodeId: 'Databases',
+							text: "Databases",
+							nodes: dbNodes
+						}],
+
+						onNodeCollapsed: function (event, data) {
+							// Record tree expanded data
+							self._expanded[data.nodeId] = false;
+							console.log(self._expanded);
+						},
+
+						onNodeExpanded: function (event, data) {
+							// Record tree expanded data
+							self._expanded[data.nodeId] = true;
+							console.log(self._expanded);
+
+							// Get child node data
+							tree = $('#tree').data('treeview').tree;
+							node = tree.getNode(data.nodeId);
+							nodeChildren(node, function (err, data) {
+								node.nodes = data;
+								tree.setInitialStates(node, 0);
+								tree.render();
+							});
+						},
+
+						onNodeSelected: function (event, data) {
+							var moduleNode,
+								dbNode;
+
+							tree = $('#tree').data('treeview').tree;
+							node = tree.getNode(data.nodeId);
+
+							if (node.fdb) {
+								switch (node.fdb.type) {
+									case 'collection':
+										moduleNode = tree.getNode(node.parentId);
+										dbNode = tree.getNode(moduleNode.parentId);
+
+										// Grab the collection data and display in the right pane
+										getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + moduleNode.fdb.moduleData.module + "('" + node.fdb.id + "').find()", function (result, isException) {
+											// Unlink any previous data-binding
+											db.view('dataView').unlink();
+											db.view('dataView').drop();
+											db.document('dataViewStatus').drop();
+
+											// Set the new data in the data view collection
+											db.collection('dataView').setData(result);
+
+											db.view('dataView').from(db.collection('dataView'));
+
+											db.view('dataView').queryData({}, {
+												$page: 0,
+												$limit: 10,
+												$orderBy: {
+													_id: 1
+												}
+											});
+
+											// Create document to wrap data in
+											var wrapperDoc = db.document('dataViewStatus')
+												.setData({
+													records: 0,
+													page: 1,
+													pages: 1
+												});
+
+											// Keep the record count up to date as changes occur to the view
+											db.view('dataView').on('change', function () {
+												var cursor = db.view('dataView').cursor();
+
+												if (cursor) {
+													wrapperDoc.update({}, {
+														records: cursor.records,
+														page: cursor.page + 1,
+														pages: cursor.pages
+													});
+												}
+											});
+
+											// Link the data view to collection data template
+											db.view('dataView').link('#dataView', '#dataViewTable', {
+												$wrap: 'items',
+												$wrapIn: wrapperDoc
+											});
+										});
+										break;
+
+									case 'view':
+										moduleNode = tree.getNode(node.parentId);
+										dbNode = tree.getNode(moduleNode.parentId);
+
+										// Grab the view data and display in the right pane
+										getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + moduleNode.fdb.moduleData.module + "('" + node.fdb.id + "').find()", function (result, isException) {
+											// Unlink any previous data-binding
+											db.view('dataView').unlink();
+											db.view('dataView').drop();
+											db.document('dataViewStatus').drop();
+
+											// Set the new data in the data view collection
+											db.collection('dataView').setData(result);
+
+											db.view('dataView').from(db.collection('dataView'));
+
+											db.view('dataView').queryData({}, {
+												$page: 0,
+												$limit: 10,
+												$orderBy: {
+													_id: 1
+												}
+											});
+
+											// Create document to wrap data in
+											var wrapperDoc = db.document('dataViewStatus')
+												.setData({
+													records: 0,
+													page: 1,
+													pages: 1
+												});
+
+											// Keep the record count up to date as changes occur to the view
+											db.view('dataView').on('change', function () {
+												var cursor = db.view('dataView').cursor();
+
+												if (cursor) {
+													wrapperDoc.update({}, {
+														records: cursor.records,
+														page: cursor.page + 1,
+														pages: cursor.pages
+													});
+												}
+											});
+
+											// Link the data view to collection data template
+											db.view('dataView').link('#dataView', '#dataViewTable', {
+												$wrap: 'items',
+												$wrapIn: wrapperDoc
+											});
+										});
+										break;
+
+									default:
+										tree.setExpandedState(node, true, {});
+										break;
+								}
+							}
+						}
+					});
+
+					var bodyElem = $('body');
+
+					// Handle pagination controls
+					bodyElem.on('click', '.pageFirst', function (e) {
+						e.stopPropagation();
+						db.view('dataView').pageFirst();
+					});
+
+					bodyElem.on('click', '.pagePrev', function (e) {
+						e.stopPropagation();
+						db.view('dataView').pageScan(-1);
+					});
+
+					bodyElem.on('click', '.pageNext', function (e) {
+						e.stopPropagation();
+						db.view('dataView').pageScan(1);
+					});
+
+					bodyElem.on('click', '.pageLast', function (e) {
+						e.stopPropagation();
+						db.view('dataView').pageLast();
+					});
+
+					// Traverse the tree and open previously expanded
+					// items
+					tree = $('#tree').data('treeview').tree;
+					expandNodes(tree, tree.getNode('Databases'));
+				};
 
 				for (i = 0; i < result.length; i++) {
-					dbNodes.push({
+					tmpNode = {
 						fdb: {
 							type: 'database',
 							id: result[i].name,
 							children: result[i].children
 						},
+						nodeId: db.objectId(result[i].name),
 						text: result[i].name,
-						icon: 'glyphicon glyphicon-align-justify'
-					});
+						icon: 'glyphicon glyphicon-align-justify',
+						nodes: []
+					};
+
+					dbNodes.push(tmpNode);
+
+					if (self._expanded[tmpNode.nodeId]) {
+						// Add node to post-process array
+						postProcess.push(tmpNode);
+						totalCount++;
+					}
 				}
 
-				$('#tree').treeview({
-					data: [{
-						text: "Databases",
-						nodes: dbNodes
-					}],
+				if (postProcess.length) {
+					processPostNodeChildRequest = function (tmpNode) {
+						nodeChildren(tmpNode, function (err, tmpNodeData) {
+							tmpNode.nodes = tmpNodeData;
+							processCount++;
 
-					onNodeSelected: function (event, data) {
-						var icon;
-
-						tree = $('#tree').data('treeview').tree;
-
-						if (data.fdb) {
-							switch (data.fdb.type) {
-								case 'database':
-									// Loop the children of this db object
-									if (data.fdb.children) {
-										entityNodes = [];
-
-										for (j = 0; j < data.fdb.children.length; j++) {
-											entityItem = data.fdb.children[j];
-
-											icon = typeIcon(entityItem.module);
-
-											entityNodes.push({
-												fdb: {
-													type: 'module',
-													moduleData: entityItem
-												},
-												text: entityItem.moduleName + ' (' + entityItem.count + ')',
-												icon: icon
-											});
-										}
-
-										node = tree.getNode(data.nodeId);
-										node.nodes = entityNodes;
-
-										tree.setInitialStates(node, 0);
-
-										node.state.expanded = true;
-
-										tree.render();
-									}
-									break;
-
-								case 'module':
-									switch (data.fdb.moduleData.module) {
-										default:
-											dbNode = tree.getNode(data.parentId);
-
-											// Get collections for this DB
-											getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + data.fdb.moduleData.module + "s()", function (result, isException) {
-												var moduleNodes = [],
-													icon;
-
-												icon = typeIcon(data.fdb.moduleData.module);
-
-												for (i = 0; i < result.length; i++) {
-													moduleNodes.push({
-														fdb: {
-															type: data.fdb.moduleData.module,
-															id: result[i].name,
-															linked: result[i].linked
-														},
-														text: result[i].name + ' (' + result[i].count + ')',
-														icon: icon
-													});
-												}
-
-												node = tree.getNode(data.nodeId);
-												node.nodes = moduleNodes;
-
-												tree.setInitialStates(node, 0);
-
-												node.state.expanded = true;
-
-												tree.render();
-											});
-											break;
-									}
-									break;
-
-								case 'collection':
-									moduleNode = tree.getNode(data.parentId);
-									dbNode = tree.getNode(moduleNode.parentId);
-
-									// Grab the collection data and display in the right pane
-									getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + moduleNode.fdb.moduleData.module + "('" + data.fdb.id + "').find()", function (result, isException) {
-										// Unlink any previous data-binding
-										db.view('dataView').unlink();
-										db.view('dataView').drop();
-										db.document('dataViewStatus').drop();
-
-										// Set the new data in the data view collection
-										db.collection('dataView').setData(result);
-
-										db.view('dataView').from(db.collection('dataView'));
-
-										db.view('dataView').queryData({}, {
-											$page: 0,
-											$limit: 10,
-											$orderBy: {
-												_id: 1
-											}
-										});
-
-										// Create document to wrap data in
-										var wrapperDoc = db.document('dataViewStatus')
-											.setData({
-												records: 0,
-												page: 1,
-												pages: 1
-											});
-
-										// Keep the record count up to date as changes occur to the view
-										db.view('dataView').on('change', function () {
-											var cursor = db.view('dataView').cursor();
-
-											if (cursor) {
-												wrapperDoc.update({}, {
-													records: cursor.records,
-													page: cursor.page + 1,
-													pages: cursor.pages
-												});
-											}
-										});
-
-										// Link the data view to collection data template
-										db.view('dataView').link('#dataView', '#dataViewTable', {
-											$wrap: 'items',
-											$wrapIn: wrapperDoc
-										});
-									});
-									break;
-
-								case 'view':
-									moduleNode = tree.getNode(data.parentId);
-									dbNode = tree.getNode(moduleNode.parentId);
-
-									// Grab the view data and display in the right pane
-									getCall("ForerunnerDB.instances()[0].db('" + dbNode.fdb.id + "')." + moduleNode.fdb.moduleData.module + "('" + data.fdb.id + "').find()", function (result, isException) {
-										// Unlink any previous data-binding
-										db.view('dataView').unlink();
-										db.view('dataView').drop();
-										db.document('dataViewStatus').drop();
-
-										// Set the new data in the data view collection
-										db.collection('dataView').setData(result);
-
-										db.view('dataView').from(db.collection('dataView'));
-
-										db.view('dataView').queryData({}, {
-											$page: 0,
-											$limit: 10,
-											$orderBy: {
-												_id: 1
-											}
-										});
-
-										// Create document to wrap data in
-										var wrapperDoc = db.document('dataViewStatus')
-											.setData({
-												records: 0,
-												page: 1,
-												pages: 1
-											});
-
-										// Keep the record count up to date as changes occur to the view
-										db.view('dataView').on('change', function () {
-											var cursor = db.view('dataView').cursor();
-
-											if (cursor) {
-												wrapperDoc.update({}, {
-													records: cursor.records,
-													page: cursor.page + 1,
-													pages: cursor.pages
-												});
-											}
-										});
-
-										// Link the data view to collection data template
-										db.view('dataView').link('#dataView', '#dataViewTable', {
-											$wrap: 'items',
-											$wrapIn: wrapperDoc
-										});
-									});
-									break;
-
-								default:
+							if (processCount === totalCount) {
+								finishLoad(dbNodes);
 							}
-						}
+						});
+					};
+
+					while ((tmpNode = postProcess.shift())) {
+						processPostNodeChildRequest(tmpNode);
 					}
-				});
-
-				var bodyElem = $('body');
-
-				// Handle pagination controls
-				bodyElem.on('click', '.pageFirst', function (e) {
-					e.stopPropagation();
-					db.view('dataView').pageFirst();
-				});
-
-				bodyElem.on('click', '.pagePrev', function (e) {
-					e.stopPropagation();
-					db.view('dataView').pageScan(-1);
-				});
-
-				bodyElem.on('click', '.pageNext', function (e) {
-					e.stopPropagation();
-					db.view('dataView').pageScan(1);
-				});
-
-				bodyElem.on('click', '.pageLast', function (e) {
-					e.stopPropagation();
-					db.view('dataView').pageLast();
-				});
+				} else {
+					finishLoad(dbNodes);
+				}
 			});
 		} else {
 			$('#noInstances').show();
@@ -292,7 +422,8 @@ $(document).ready(function () {
 		}
 	});
 
-	$('#refreshDatabaseTree').on('click', function () {
+	$('#refreshDatabaseTree').on('click', function (e) {
+		e.stopPropagation();
 		refreshDatabaseTree();
 	});
 });
