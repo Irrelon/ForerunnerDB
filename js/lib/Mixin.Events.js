@@ -35,6 +35,28 @@ var Events = {
 		}
 	}),
 
+	once: new Overload({
+		'string, function': function (eventName, callback) {
+			var self = this,
+				internalCallback = function () {
+					self.off(eventName, internalCallback);
+					callback.apply(self, arguments);
+				};
+
+			return this.on(eventName, internalCallback);
+		},
+		
+		'string, *, function': function (eventName, id, callback) {
+			var self = this,
+				internalCallback = function () {
+					self.off(eventName, id, internalCallback);
+					callback.apply(self, arguments);
+				};
+
+			return this.on(eventName, id, internalCallback);
+		}
+	}),
+
 	off: new Overload({
 		'string': function (event) {
 			if (this._listeners && this._listeners[event] && event in this._listeners) {
