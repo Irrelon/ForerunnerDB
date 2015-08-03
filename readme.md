@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.133
+## Version 1.3.139
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -1586,6 +1586,50 @@ You can then lookup the value at a later time:
 You can also remove a key/value from the store via the unStore() method:
 
 	db.collection('myColl').unStore('myKey');
+
+## Collection Groups
+ForerunnerDB supports aggregating collection data from multiple collections into a
+single CRUD-enabled entity called a collection group. Collection groups are useful
+when you have multiple collections that contain similar data and want to query the
+data as a whole rather than one collection at a time.
+
+This allows you to query and sort a super-set of data from multiple collections in
+a single operation and return that data as a single array of documents.
+
+    var coll1 = db.collection('test1'),
+    	coll2 = db.collection('test2'),
+    	group = db.collectionGroup('testGroup');
+    	
+    group.addCollection(coll1);
+    group.addCollection(coll2);
+    
+    coll1.insert({
+    	name: 'Jim'
+    });
+    
+    coll2.insert({
+		name: 'Bob'
+	});
+	
+	group.find();
+
+Result:
+
+	[{name: 'Jim'}, {name: 'Bob'}]
+
+### Adding and Removing Collections From a Group
+Collection groups work by adding collections as data sources. You can add a collection
+to a group via the addCollection() method which accepts a collection instance as the
+first argument.
+
+	var coll = db.collection('test'),
+		group = db.collectionGroup('test');
+	
+	group.addCollection(coll);
+
+You can remove a collection from a collection group via the removeCollection() method:
+
+    group.removeCollection(coll);
 
 ## Grid / Table Output
 > Data Binding: Enabled
