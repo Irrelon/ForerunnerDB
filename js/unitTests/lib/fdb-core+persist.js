@@ -1089,7 +1089,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					// Loop the array and find matches to our search
 					for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], '', {})) {
+						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], options, '', {})) {
 							tmpArray.push(tmpIndex);
 						}
 					}
@@ -1232,7 +1232,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
+									if (this._match(doc[i][tmpIndex], update[i], options, '', {})) {
 										tmpArray.push(tmpIndex);
 									}
 								}
@@ -1371,7 +1371,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Array) {
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
+									if (this._match(doc[i][tmpIndex], update[i], options, '', {})) {
 										var moveToIndex = update.$index;
 
 										if (moveToIndex !== undefined) {
@@ -2066,6 +2066,7 @@ Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
 	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
+	obj.$mongoEmulation = this.db() !== undefined ? this.db().mongoEmulation() : false;
 	
 	return obj;
 };
@@ -2145,7 +2146,7 @@ Collection.prototype._find = function (query, options) {
 		result,
 		cursor = {},
 		matcher = function (doc) {
-			return self._match(doc, query, 'and', matcherTmpOptions);
+			return self._match(doc, query, options, 'and', matcherTmpOptions);
 		};
 
 	op.start();
@@ -2475,7 +2476,7 @@ Collection.prototype._find = function (query, options) {
 						for (k = 0; k < elemMatchSubArr.length; k++) {
 
 							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], '', {})) {
+							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], options, '', {})) {
 								// The item matches the projection query so set the sub-array
 								// to an array that ONLY contains the matching item and then
 								// exit the loop since we only want to match the first item
@@ -2511,7 +2512,7 @@ Collection.prototype._find = function (query, options) {
 						for (k = 0; k < elemMatchSubArr.length; k++) {
 
 							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], '', {})) {
+							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], options, '', {})) {
 								// The item matches the projection query so add it to the final array
 								elemMatchSpliceArr.push(elemMatchSubArr[k]);
 							}
@@ -6292,6 +6293,7 @@ var Matching = {
 	 * Internal method that checks a document against a test object.
 	 * @param {*} source The source object or value to test against.
 	 * @param {*} test The test object or value to test with.
+	 * @param {Object} queryOptions The options the query was passed with.
 	 * @param {String=} opToApply The special operation to apply to the test such
 	 * as 'and' or an 'or' operator.
 	 * @param {Object=} options An object containing options to apply to the
@@ -6299,7 +6301,7 @@ var Matching = {
 	 * @returns {Boolean} True if the test was positive, false on negative.
 	 * @private
 	 */
-	_match: function (source, test, opToApply, options) {
+	_match: function (source, test, queryOptions, opToApply, options) {
 		// TODO: This method is quite long, break into smaller pieces
 		var operation,
 			applyOp,
@@ -6354,7 +6356,7 @@ var Matching = {
 					// Check if the property starts with a dollar (function)
 					if (substringCache.indexOf('$') === 0) {
 						// Ask the _matchOp method to handle the operation
-						opResult = this._matchOp(i, source, test[i], options);
+						opResult = this._matchOp(i, source, test[i], queryOptions, options);
 
 						// Check the result of the matchOp operation
 						// If the result is -1 then no operation took place, otherwise the result
@@ -6401,7 +6403,7 @@ var Matching = {
 									// match is found
 									recurseVal = false;
 									for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-										recurseVal = this._match(source[i][tmpIndex], test[i], applyOp, options);
+										recurseVal = this._match(source[i][tmpIndex], test[i], queryOptions, applyOp, options);
 
 										if (recurseVal) {
 											// One of the array items matched the query so we can
@@ -6424,7 +6426,7 @@ var Matching = {
 									recurseVal = false;
 
 									for (tmpIndex = 0; tmpIndex < test[i].length; tmpIndex++) {
-										recurseVal = this._match(source[i], test[i][tmpIndex], applyOp, options);
+										recurseVal = this._match(source[i], test[i][tmpIndex], queryOptions, applyOp, options);
 
 										if (recurseVal) {
 											// One of the array items matched the query so we can
@@ -6442,7 +6444,7 @@ var Matching = {
 									}
 								} else if (typeof(source) === 'object') {
 									// Recurse down the object tree
-									recurseVal = this._match(source[i], test[i], applyOp, options);
+									recurseVal = this._match(source[i], test[i], queryOptions, applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6452,7 +6454,7 @@ var Matching = {
 										matchedAll = false;
 									}
 								} else {
-									recurseVal = this._match(undefined, test[i], applyOp, options);
+									recurseVal = this._match(undefined, test[i], queryOptions, applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6466,7 +6468,7 @@ var Matching = {
 								// First check if the test match is an $exists
 								if (test[i] && test[i].$exists !== undefined) {
 									// Push the item through another match recurse
-									recurseVal = this._match(undefined, test[i], applyOp, options);
+									recurseVal = this._match(undefined, test[i], queryOptions, applyOp, options);
 
 									if (recurseVal) {
 										if (opToApply === 'or') {
@@ -6492,7 +6494,7 @@ var Matching = {
 								// match is found
 								recurseVal = false;
 								for (tmpIndex = 0; tmpIndex < source[i].length; tmpIndex++) {
-									recurseVal = this._match(source[i][tmpIndex], test[i], applyOp, options);
+									recurseVal = this._match(source[i][tmpIndex], test[i], queryOptions, applyOp, options);
 
 									if (recurseVal) {
 										// One of the array items matched the query so we can
@@ -6534,7 +6536,7 @@ var Matching = {
 	 * @returns {*}
 	 * @private
 	 */
-	_matchOp: function (key, source, test, options) {
+	_matchOp: function (key, source, test, queryOptions, options) {
 		// Check for commands
 		switch (key) {
 			case '$gt':
@@ -6566,7 +6568,7 @@ var Matching = {
 			case '$or':
 				// Match true on ANY check to pass
 				for (var orIndex = 0; orIndex < test.length; orIndex++) {
-					if (this._match(source, test[orIndex], 'and', options)) {
+					if (this._match(source, test[orIndex], queryOptions, 'and', options)) {
 						return true;
 					}
 				}
@@ -6576,7 +6578,7 @@ var Matching = {
 			case '$and':
 				// Match true on ALL checks to pass
 				for (var andIndex = 0; andIndex < test.length; andIndex++) {
-					if (!this._match(source, test[andIndex], 'and', options)) {
+					if (!this._match(source, test[andIndex], queryOptions, 'and', options)) {
 						return false;
 					}
 				}
@@ -8471,7 +8473,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.157',
+	version: '1.3.161',
 	modules: {},
 
 	_synth: {},
