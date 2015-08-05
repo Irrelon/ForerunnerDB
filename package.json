@@ -75,5 +75,6 @@
   "browserify": "./js/builds/all",
   "bugs": {
     "url": "http://github.com/irrelon/ForerunnerDB/issues"
-  }
+  },
+  "license": "MIT"
 }
