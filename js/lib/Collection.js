@@ -1672,7 +1672,7 @@ Shared.synthesize(Collection.prototype, 'subsetOf');
  * the current collection.
  */
 Collection.prototype.isSubsetOf = function (collection) {
-	return true;
+	return this._subsetOf === collection;
 };
 
 /**
