@@ -40,4 +40,70 @@ ForerunnerDB.moduleLoaded('CollectionGroup', function () {
 
 		base.dbDown();
 	});
+
+	QUnit.test("CollectionGroup.find() :: Multiple collections", function() {
+		base.dbUp();
+
+		var test1 = db.collection('test1'),
+			test2 = db.collection('test2'),
+			group = db.collectionGroup('testGroup')
+				.addCollection(test1)
+				.addCollection(test2);
+
+		test1.insert({
+			_id: '1',
+			name: 'Bill',
+			age: 12
+		});
+
+		test2.insert({
+			_id: '2',
+			name: 'Jim',
+			age: 6
+		});
+
+		var result = group.find({}, {
+			"$orderBy": {
+				"age": 1
+			}
+		});
+
+		strictEqual(result[0].name === 'Jim' && result[0].age, 6, "Name and Lookup");
+		strictEqual(result[1].name === 'Bill' && result[1].age, 12, "Name and Lookup");
+
+		base.dbDown();
+	});
+
+	QUnit.test("CollectionGroup.find() :: Multiple collections, descending sort", function() {
+		base.dbUp();
+
+		var test1 = db.collection('test1'),
+			test2 = db.collection('test2'),
+			group = db.collectionGroup('testGroup')
+				.addCollection(test1)
+				.addCollection(test2);
+
+		test1.insert({
+			_id: '1',
+			name: 'Bill',
+			age: 12
+		});
+
+		test2.insert({
+			_id: '2',
+			name: 'Jim',
+			age: 6
+		});
+
+		var result = group.find({}, {
+			"$orderBy": {
+				"age": -1
+			}
+		});
+
+		strictEqual(result[0].name === 'Bill' && result[0].age, 12, "Name and Lookup");
+		strictEqual(result[1].name === 'Jim' && result[1].age, 6, "Name and Lookup");
+
+		base.dbDown();
+	});
 });
