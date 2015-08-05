@@ -31,5 +31,28 @@
 		});
 		console.profileEnd('Infinilist');
 		console.timeEnd('Infinilist');
+
+		// Test scrollToQuery()
+		console.log('Testing scrolling to specific items...');
+		setTimeout(function () {
+			view.infinilist('#testContainer').scrollToQuery({
+				_id: 600
+			}, {
+				$incItem: -3
+			}, function () {
+				setTimeout(function () {
+					"use strict";
+					console.log('Callback worked 1');
+					view.infinilist('#testContainer').scrollToQuery({
+						_id: 200
+					}, {
+						$incItem: 0
+					}, function () {
+						console.log('Callback worked 2');
+
+					});
+				}, 1000);
+			});
+		}, 1000);
 	});
 })();

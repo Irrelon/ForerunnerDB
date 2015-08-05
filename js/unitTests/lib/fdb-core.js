@@ -5810,6 +5810,28 @@ var Events = {
 		}
 	}),
 
+	once: new Overload({
+		'string, function': function (eventName, callback) {
+			var self = this,
+				internalCallback = function () {
+					self.off(eventName, internalCallback);
+					callback.apply(self, arguments);
+				};
+
+			return this.on(eventName, internalCallback);
+		},
+		
+		'string, *, function': function (eventName, id, callback) {
+			var self = this,
+				internalCallback = function () {
+					self.off(eventName, id, internalCallback);
+					callback.apply(self, arguments);
+				};
+
+			return this.on(eventName, id, internalCallback);
+		}
+	}),
+
 	off: new Overload({
 		'string': function (event) {
 			if (this._listeners && this._listeners[event] && event in this._listeners) {
@@ -7692,13 +7714,15 @@ module.exports = ReactorIO;
 },{"./Shared":24}],24:[function(_dereq_,module,exports){
 "use strict";
 
+var Overload = _dereq_('./Overload');
+
 /**
  * A shared object that can be used to store arbitrary data between class
  * instances, and access helper methods.
  * @mixin
  */
 var Shared = {
-	version: '1.3.133',
+	version: '1.3.152',
 	modules: {},
 
 	_synth: {},
@@ -7760,19 +7784,33 @@ var Shared = {
 	 * @param {Object} obj The target object to add mixin key/values to.
 	 * @param {String} mixinName The name of the mixin to add to the object.
 	 */
-	mixin: function (obj, mixinName) {
-		var system = this.mixins[mixinName];
+	mixin: new Overload({
+		'object, string': function (obj, mixinName) {
+			var mixinObj;
 
-		if (system) {
-			for (var i in system) {
-				if (system.hasOwnProperty(i)) {
-					obj[i] = system[i];
+			if (typeof mixinName === 'string') {
+				mixinObj = this.mixins[mixinName];
+
+				if (!mixinObj) {
+					throw('ForerunnerDB.Shared: Cannot find mixin named: ' + mixinName);
 				}
 			}
-		} else {
-			throw('ForerunnerDB.Shared: Cannot find mixin named: ' + mixinName);
+
+			return this.$main.call(this, obj, mixinObj);
+		},
+
+		'object, object': function (obj, mixinObj) {
+			return this.$main.call(this, obj, mixinObj);
+		},
+
+		'$main': function (obj, mixinObj) {
+			for (var i in mixinObj) {
+				if (mixinObj.hasOwnProperty(i)) {
+					obj[i] = mixinObj[i];
+				}
+			}
 		}
-	},
+	}),
 
 	/**
 	 * Generates a generic getter/setter method for the passed method name.
@@ -7818,7 +7856,7 @@ var Shared = {
 	 * @returns {Function}
 	 * @constructor
 	 */
-	overload: _dereq_('./Overload'),
+	overload: Overload,
 
 	/**
 	 * Define the mixins that other modules can use as required.

@@ -87,6 +87,7 @@ var Infinilist = function (selector, template, options, view) {
 };
 
 Shared.addModule('Infinilist', Infinilist);
+Shared.mixin(Infinilist.prototype, 'Mixin.Events');
 
 Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 	var self = this;
@@ -153,19 +154,61 @@ Infinilist.prototype.scroll = function () {
 		self.itemTopMargin.height(skipCount * self._itemHeight);
 		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
 	}
+
+	self.emit('scroll');
 };
 
-Infinilist.prototype.scrollToQuery = function (query) {
+Infinilist.prototype.scrollToQuery = function (query, options, callback) {
 	var self = this,
-		result;
+		result,
+		index,
+		orderOp = {
+			$orderBy: self.view.queryOptions().$orderBy
+		},
+		tmpColl,
+		scrollPos;
+
+	if (typeof options === 'function') {
+		callback = options;
+		options = undefined;
+	}
+
+	// Ensure options has properties we expect
+	options = options || {};
+	options.$inc = options.$inc !== undefined ? options.$inc : 0;
+	options.$incItem = options.$incItem !== undefined ? options.$incItem : 0;
 
 	// Run query and get first matching record (with current sort)
-	result = self.view.from().findOne(query, {
-		$orderBy: self.view.queryOptions().orderBy
-	});
+	result = self.view.from().findOne(query, orderOp);
 
 	// Find the position of the element inside the current view
 	// based on the sort order
+	tmpColl = self.view.db().collection('tmpSortCollection');
+	tmpColl.setData(self.view.from().find(self.view.query()));
+	index = tmpColl.indexOf(result, orderOp);
+	tmpColl.drop();
+
+	if (index > -1) {
+		scrollPos = ((index + options.$incItem) * self._itemHeight) + options.$inc;
+		scrollPos = scrollPos > 0 ? scrollPos : 0;
+
+		if (self.selector.scrollTop() !== scrollPos) {
+			if (callback) {
+				self.once('scroll', function () {
+					callback();
+				});
+			}
+
+			// Scroll the main element to the position of the item
+			self.selector.scrollTop(scrollPos);
+		} else {
+			callback();
+		}
+
+		return true;
+	}
+
+	return false;
 };
 
 Infinilist.prototype.drop = function () {
@@ -194,41 +237,21 @@ Infinilist.prototype.drop = function () {
 };
 
 View.prototype.infinilist = function (targetSelector, templateSelector, options) {
-	var templateId;
+	var target = window.jQuery(targetSelector);
 
-	this._infinilist = this._infinilist || {};
-
-	if (templateSelector && typeof templateSelector === 'object') {
-		// Our second argument is an object, let's inspect
-		if (templateSelector.template && typeof templateSelector.template === 'string') {
-			// The template has been given to us as a string
-			templateId = this.objectId(templateSelector.template);
-		}
-	} else {
-		templateId = templateSelector;
+	if (templateSelector === undefined) {
+		return target.data('infinilist');
 	}
 
-	this._infinilist[templateId] = new Infinilist(targetSelector, templateSelector, options, this);
+	target.data('infinilist', new Infinilist(targetSelector, templateSelector, options, this));
 };
 
-View.prototype.unInfinilist = function (targetSelector, templateSelector, options) {
-	var templateId;
+View.prototype.unInfinilist = function (targetSelector) {
+	var target = window.jQuery(targetSelector);
 
-	this._infinilist = this._infinilist || {};
-
-	if (templateSelector && typeof templateSelector === 'object') {
-		// Our second argument is an object, let's inspect
-		if (templateSelector.template && typeof templateSelector.template === 'string') {
-			// The template has been given to us as a string
-			templateId = this.objectId(templateSelector.template);
-		}
-	} else {
-		templateId = templateSelector;
-	}
-
-	if (this._infinilist[templateId]) {
-		this._infinilist[templateId].drop();
-		delete this._infinilist[templateId];
+	if (target.data('infinilist')) {
+		target.data('infinilist').drop();
+		target.removeData('infinilist');
 
 		return true;
 	}
