@@ -1,4 +1,31 @@
 QUnit.module('Events');
+
+QUnit.asyncTest("Collection.once() :: Register an event listener to fire once", function() {
+	base.dbUp();
+	base.dataUp();
+
+	expect(1);
+
+	var eventFunc = function (successArr, failed) {
+		strictEqual(successArr.length, 1, "Insert single document");
+		start();
+	};
+
+	user.once('insert', eventFunc);
+
+	user.insert({
+		_id: '2342',
+		name: "hello"
+	});
+
+	user.insert({
+		_id: '2342',
+		name: "hello"
+	});
+
+	base.dbDown();
+});
+
 QUnit.asyncTest("Collection.on() :: Insert with Success", function() {
 	base.dbUp();
 	base.dataUp();
