@@ -801,7 +801,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 					// Loop the array and find matches to our search
 					for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], '', {})) {
+						if (this._match(doc[i][tmpIndex], pathInstance.value(query)[0], options, '', {})) {
 							tmpArray.push(tmpIndex);
 						}
 					}
@@ -944,7 +944,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
+									if (this._match(doc[i][tmpIndex], update[i], options, '', {})) {
 										tmpArray.push(tmpIndex);
 									}
 								}
@@ -1083,7 +1083,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Array) {
 								// Loop the array and find matches to our search
 								for (tmpIndex = 0; tmpIndex < doc[i].length; tmpIndex++) {
-									if (this._match(doc[i][tmpIndex], update[i], '', {})) {
+									if (this._match(doc[i][tmpIndex], update[i], options, '', {})) {
 										var moveToIndex = update.$index;
 
 										if (moveToIndex !== undefined) {
@@ -1778,6 +1778,7 @@ Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
 	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
+	obj.$mongoEmulation = this.db() !== undefined ? this.db().mongoEmulation() : false;
 	
 	return obj;
 };
@@ -1857,7 +1858,7 @@ Collection.prototype._find = function (query, options) {
 		result,
 		cursor = {},
 		matcher = function (doc) {
-			return self._match(doc, query, 'and', matcherTmpOptions);
+			return self._match(doc, query, options, 'and', matcherTmpOptions);
 		};
 
 	op.start();
@@ -2187,7 +2188,7 @@ Collection.prototype._find = function (query, options) {
 						for (k = 0; k < elemMatchSubArr.length; k++) {
 
 							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], '', {})) {
+							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], options, '', {})) {
 								// The item matches the projection query so set the sub-array
 								// to an array that ONLY contains the matching item and then
 								// exit the loop since we only want to match the first item
@@ -2223,7 +2224,7 @@ Collection.prototype._find = function (query, options) {
 						for (k = 0; k < elemMatchSubArr.length; k++) {
 
 							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], '', {})) {
+							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], options, '', {})) {
 								// The item matches the projection query so add it to the final array
 								elemMatchSpliceArr.push(elemMatchSubArr[k]);
 							}
