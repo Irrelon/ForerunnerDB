@@ -1952,7 +1952,7 @@ Shared.synthesize(Collection.prototype, 'subsetOf');
  * the current collection.
  */
 Collection.prototype.isSubsetOf = function (collection) {
-	return true;
+	return this._subsetOf === collection;
 };
 
 /**
@@ -3887,6 +3887,13 @@ Metrics = _dereq_('./Metrics.js');
  */
 Shared.synthesize(Core.prototype, 'name');
 
+/**
+ * Gets / sets mongodb emulation mode.
+ * @param {Boolean=} val True to enable, false to disable.
+ * @returns {*}
+ */
+Shared.synthesize(Core.prototype, 'mongoEmulation');
+
 // Set a flag to determine environment
 Core.prototype._isServer = false;
 
@@ -4143,6 +4150,13 @@ Shared.synthesize(Db.prototype, 'state');
  * @returns {*}
  */
 Shared.synthesize(Db.prototype, 'name');
+
+/**
+ * Gets / sets mongodb emulation mode.
+ * @param {Boolean=} val True to enable, false to disable.
+ * @returns {*}
+ */
+Shared.synthesize(Db.prototype, 'mongoEmulation');
 
 /**
  * Returns true if ForerunnerDB is running on a client browser.
@@ -4465,6 +4479,9 @@ Core.prototype.db = function (name) {
 	}
 
 	this._db[name] = this._db[name] || new Db(name, this);
+
+	this._db[name].mongoEmulation(this.mongoEmulation());
+
 	return this._db[name];
 };
 
@@ -7722,7 +7739,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.154',
+	version: '1.3.157',
 	modules: {},
 
 	_synth: {},

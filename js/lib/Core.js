@@ -255,7 +255,7 @@ Shared.synthesize(Core.prototype, 'name');
  * @param {Boolean=} val True to enable, false to disable.
  * @returns {*}
  */
-Shared.synthesize(Db.prototype, 'mongoEmulation');
+Shared.synthesize(Core.prototype, 'mongoEmulation');
 
 // Set a flag to determine environment
 Core.prototype._isServer = false;
