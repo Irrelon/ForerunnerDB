@@ -175,6 +175,13 @@ Shared.synthesize(Db.prototype, 'state');
 Shared.synthesize(Db.prototype, 'name');
 
 /**
+ * Gets / sets mongodb emulation mode.
+ * @param {Boolean=} val True to enable, false to disable.
+ * @returns {*}
+ */
+Shared.synthesize(Db.prototype, 'mongoEmulation');
+
+/**
  * Returns true if ForerunnerDB is running on a client browser.
  * @returns {boolean}
  */
@@ -495,6 +502,9 @@ Core.prototype.db = function (name) {
 	}
 
 	this._db[name] = this._db[name] || new Db(name, this);
+
+	this._db[name].mongoEmulation(this.mongoEmulation());
+
 	return this._db[name];
 };
 
