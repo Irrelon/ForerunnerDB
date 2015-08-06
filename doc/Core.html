@@ -321,15 +321,14 @@ success method, otherwise calls the failure method.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
 
 
 <div class="description">
-    Checks if an array of named modules are loaded and if so
-calls the passed callback method.
+    Checks if a module has been loaded into the database.
 </div>
 
 
@@ -371,7 +370,7 @@ calls the passed callback method.
             <td class="type">
             
                 
-<span class="param-type">Array</span>
+<span class="param-type">String</span>
 
 
             
@@ -381,30 +380,7 @@ calls the passed callback method.
 
             
 
-            <td class="description last">The array of module names to check for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if modules are loaded.</td>
+            <td class="description last">The name of the module to check for.</td>
         </tr>
 
     
@@ -445,7 +421,7 @@ calls the passed callback method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line91">line 91</a>
     </li></ul></dd>
     
 
@@ -468,6 +444,28 @@ calls the passed callback method.
 
 
 
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    True if the module is loaded, false if not.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
 
 
 
@@ -631,14 +629,15 @@ callback method.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Checks if a module has been loaded into the database.
+    Checks if an array of named modules are loaded and if so
+calls the passed callback method.
 </div>
 
 
@@ -680,7 +679,7 @@ callback method.
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Array</span>
 
 
             
@@ -690,7 +689,30 @@ callback method.
 
             
 
-            <td class="description last">The name of the module to check for.</td>
+            <td class="description last">The array of module names to check for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if modules are loaded.</td>
         </tr>
 
     
@@ -731,7 +753,7 @@ callback method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line91">line 91</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
     </li></ul></dd>
     
 
@@ -754,28 +776,6 @@ callback method.
 
 
 
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    True if the module is loaded, false if not.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Boolean</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -837,7 +837,7 @@ a collection directly from the core instance.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line295">line 295</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line302">line 302</a>
     </li></ul></dd>
     
 
@@ -972,7 +972,7 @@ to match collection names against.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line509">line 509</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line519">line 519</a>
     </li></ul></dd>
     
 
@@ -1139,7 +1139,7 @@ a random name is assigned.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line487">line 487</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line494">line 494</a>
     </li></ul></dd>
     
 
@@ -1513,7 +1513,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line277">line 277</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line284">line 284</a>
     </li></ul></dd>
     
 
@@ -1617,7 +1617,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line260">line 260</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line267">line 267</a>
     </li></ul></dd>
     
 
@@ -1718,7 +1718,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line286">line 286</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line293">line 293</a>
     </li></ul></dd>
     
 
@@ -1822,7 +1822,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line268">line 268</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line275">line 275</a>
     </li></ul></dd>
     
 
@@ -2230,7 +2230,7 @@ then the callback is called.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.1</a> on Wed Aug 05 2015 11:35:20 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Aug 06 2015 10:20:57 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
