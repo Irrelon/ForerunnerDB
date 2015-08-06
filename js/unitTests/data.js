@@ -24,7 +24,13 @@ var db,
 		log: {
 			val: 6
 		},
-		orgId: "4"
+		orgId: "4",
+		nested: {
+			name: 'Sam',
+			nested: {
+				age: 19
+			}
+		}
 	},
 	usersData = [{
 		_id: '2',
@@ -47,7 +53,13 @@ var db,
 			val: 7
 		},
 		orgId: "1",
-		friends: ["3", "4"]
+		friends: ["3", "4"],
+		nested: {
+			name: 'Jim',
+			nested: {
+				age: 15
+			}
+		}
 	}, {
 		_id: '3',
 		name: 'Kat',
@@ -68,7 +80,13 @@ var db,
 			val: 1
 		},
 		orgId: "2",
-		friends: ["2"]
+		friends: ["2"],
+		nested: {
+			name: 'Kat',
+			nested: {
+				age: 12
+			}
+		}
 	}, {
 		_id: '4',
 		name: 'Dean',
@@ -89,7 +107,13 @@ var db,
 			val: 2
 		},
 		orgId: "3",
-		friends: ["2", "3"]
+		friends: ["2", "3"],
+		nested: {
+			name: 'Dean',
+			nested: {
+				age: 5
+			}
+		}
 	}, {
 		_id: '5',
 		name: 'Dean',
@@ -110,7 +134,13 @@ var db,
 			val: 2
 		},
 		orgId: "3",
-		friends: ["1", "3"]
+		friends: ["1", "3"],
+		nested: {
+			name: 'Dean',
+			nested: {
+				age: 5
+			}
+		}
 	}],
 	organisationsData = [{
 		"_id": "1",

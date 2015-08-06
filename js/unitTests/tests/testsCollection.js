@@ -2620,3 +2620,45 @@ QUnit.test("Collection() :: Ensure collection options are carried through to con
 
 	base.dbDown();
 });
+
+QUnit.test("Collection.find() :: MongoDB Emulation Mode - Single Nest", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var result;
+
+	user.db().mongoEmulation(true);
+
+	result = user.find({
+		'nested.name': 'Jim'
+	});
+
+	strictEqual(result[0].nested.name, 'Jim', 'Correct data returned');
+	strictEqual(result.length, 1, 'Correct result count');
+
+	user.db().mongoEmulation(false);
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: MongoDB Emulation Mode - Multi Nest", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var result;
+
+	user.db().mongoEmulation(true);
+
+	result = user.find({
+		'nested.name': 'Jim',
+		'nested.nested.age': 15
+	});
+
+	strictEqual(result[0].nested.name, 'Jim', 'Correct data returned');
+	strictEqual(result[0].nested.nested.age, 15, 'Correct data returned');
+	strictEqual(result.length, 1, 'Correct result count');
+
+	user.db().mongoEmulation(false);
+
+	base.dbDown();
+});

@@ -8355,6 +8355,13 @@ var Matching = {
 			i;
 
 		options = options || {};
+		queryOptions = queryOptions || {};
+
+		// Convert queries from mongo dot notation to forerunner queries
+		if (queryOptions.$mongoEmulation) {
+			// Convert string to nested objects
+			this._convertToFdb(test);
+		}
 
 		// Check if options currently holds a root query object
 		if (!options.$rootQuery) {
@@ -8375,6 +8382,8 @@ var Matching = {
 				}
 			} else {
 				// String comparison
+				// TODO: We can probably use a queryOptions.$locale as a second parameter here
+				// TODO: to satisfy https://github.com/Irrelon/ForerunnerDB/issues/35
 				if (source.localeCompare(test)) {
 					matchedAll = false;
 				}
@@ -8564,6 +8573,40 @@ var Matching = {
 		}
 
 		return matchedAll;
+	},
+
+	_convertToFdb: function (obj) {
+		var varName,
+			splitArr,
+			objCopy,
+			i;
+
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				objCopy = obj;
+
+				if (i.indexOf('.') > -1) {
+					// Replace .$ with a placeholder before splitting by . char
+					i = i.replace('.$', '[|$|]');
+					splitArr = i.split('.');
+
+					while ((varName = splitArr.shift())) {
+						// Replace placeholder back to original .$
+						varName = varName.replace('[|$|]', '.$');
+
+						if (splitArr.length) {
+							objCopy[varName] = {};
+						} else {
+							objCopy[varName] = obj[i];
+						}
+
+						objCopy = objCopy[varName];
+					}
+
+					delete obj[i];
+				}
+			}
+		}
 	},
 
 	/**
