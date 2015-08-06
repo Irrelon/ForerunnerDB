@@ -529,6 +529,13 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 });
 
 /**
+ * Gets / sets mongodb emulation mode.
+ * @param {Boolean=} val True to enable, false to disable.
+ * @returns {*}
+ */
+Shared.synthesize(Collection.prototype, 'mongoEmulation');
+
+/**
  * Sets the collection's data to the array / documents passed.  If any
  * data already exists in the collection it will be removed before the
  * new data is set.
@@ -849,6 +856,12 @@ Collection.prototype.update = function (query, update, options) {
 
 	// Decouple the update data
 	update = this.decouple(update);
+
+	// Convert queries from mongo dot notation to forerunner queries
+	if (this.mongoEmulation()) {
+		this.convertToFdb(query);
+		this.convertToFdb(update);
+	}
 
 	// Handle transform
 	update = this.transformIn(update);
@@ -1468,7 +1481,12 @@ Collection.prototype.remove = function (query, options, callback) {
 
 	if (typeof(options) === 'function') {
 		callback = options;
-		options = undefined;
+		options = {};
+	}
+
+	// Convert queries from mongo dot notation to forerunner queries
+	if (this.mongoEmulation()) {
+		this.convertToFdb(query);
 	}
 
 	if (query instanceof Array) {
@@ -2058,7 +2076,6 @@ Collection.prototype.options = function (obj) {
 	obj = obj || {};
 	obj.$decouple = obj.$decouple !== undefined ? obj.$decouple : true;
 	obj.$explain = obj.$explain !== undefined ? obj.$explain : false;
-	obj.$mongoEmulation = this.db() !== undefined ? this.db().mongoEmulation() : false;
 	
 	return obj;
 };
@@ -2080,6 +2097,11 @@ Collection.prototype.options = function (obj) {
  * documents that matched the query.
  */
 Collection.prototype.find = function (query, options, callback) {
+	// Convert queries from mongo dot notation to forerunner queries
+	if (this.mongoEmulation()) {
+		this.convertToFdb(query);
+	}
+
 	if (callback) {
 		// Check the size of the collection's data array
 
@@ -3559,6 +3581,7 @@ Db.prototype.collection = new Overload({
 			}
 
 			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
+			this._collection[name].mongoEmulation(this.mongoEmulation());
 
 			if (options.primaryKey !== undefined) {
 				this._collection[name].primaryKey(options.primaryKey);
@@ -5773,7 +5796,46 @@ Common = {
 
 			return this._debug && this._debug.all;
 		}
-	])
+	]),
+
+	/**
+	 * Converts a query object with MongoDB dot notation syntax
+	 * to Forerunner's object notation syntax.
+	 * @param {Object} obj The object to convert.
+	 */
+	convertToFdb: function (obj) {
+		var varName,
+			splitArr,
+			objCopy,
+			i;
+
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				objCopy = obj;
+
+				if (i.indexOf('.') > -1) {
+					// Replace .$ with a placeholder before splitting by . char
+					i = i.replace('.$', '[|$|]');
+					splitArr = i.split('.');
+
+					while ((varName = splitArr.shift())) {
+						// Replace placeholder back to original .$
+						varName = varName.replace('[|$|]', '.$');
+
+						if (splitArr.length) {
+							objCopy[varName] = {};
+						} else {
+							objCopy[varName] = obj[i];
+						}
+
+						objCopy = objCopy[varName];
+					}
+
+					delete obj[i];
+				}
+			}
+		}
+	}
 };
 
 module.exports = Common;
@@ -5978,12 +6040,6 @@ var Matching = {
 
 		options = options || {};
 		queryOptions = queryOptions || {};
-
-		// Convert queries from mongo dot notation to forerunner queries
-		if (queryOptions.$mongoEmulation) {
-			// Convert string to nested objects
-			this._convertToFdb(test);
-		}
 
 		// Check if options currently holds a root query object
 		if (!options.$rootQuery) {
@@ -6195,40 +6251,6 @@ var Matching = {
 		}
 
 		return matchedAll;
-	},
-
-	_convertToFdb: function (obj) {
-		var varName,
-			splitArr,
-			objCopy,
-			i;
-
-		for (i in obj) {
-			if (obj.hasOwnProperty(i)) {
-				objCopy = obj;
-
-				if (i.indexOf('.') > -1) {
-					// Replace .$ with a placeholder before splitting by . char
-					i = i.replace('.$', '[|$|]');
-					splitArr = i.split('.');
-
-					while ((varName = splitArr.shift())) {
-						// Replace placeholder back to original .$
-						varName = varName.replace('[|$|]', '.$');
-
-						if (splitArr.length) {
-							objCopy[varName] = {};
-						} else {
-							objCopy[varName] = obj[i];
-						}
-
-						objCopy = objCopy[varName];
-					}
-
-					delete obj[i];
-				}
-			}
-		}
 	},
 
 	/**
@@ -7784,7 +7806,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.161',
+	version: '1.3.166',
 	modules: {},
 
 	_synth: {},

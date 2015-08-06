@@ -157,7 +157,46 @@ Common = {
 
 			return this._debug && this._debug.all;
 		}
-	])
+	]),
+
+	/**
+	 * Converts a query object with MongoDB dot notation syntax
+	 * to Forerunner's object notation syntax.
+	 * @param {Object} obj The object to convert.
+	 */
+	convertToFdb: function (obj) {
+		var varName,
+			splitArr,
+			objCopy,
+			i;
+
+		for (i in obj) {
+			if (obj.hasOwnProperty(i)) {
+				objCopy = obj;
+
+				if (i.indexOf('.') > -1) {
+					// Replace .$ with a placeholder before splitting by . char
+					i = i.replace('.$', '[|$|]');
+					splitArr = i.split('.');
+
+					while ((varName = splitArr.shift())) {
+						// Replace placeholder back to original .$
+						varName = varName.replace('[|$|]', '.$');
+
+						if (splitArr.length) {
+							objCopy[varName] = {};
+						} else {
+							objCopy[varName] = obj[i];
+						}
+
+						objCopy = objCopy[varName];
+					}
+
+					delete obj[i];
+				}
+			}
+		}
+	}
 };
 
 module.exports = Common;

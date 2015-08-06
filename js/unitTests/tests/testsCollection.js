@@ -2627,7 +2627,7 @@ QUnit.test("Collection.find() :: MongoDB Emulation Mode - Single Nest", function
 
 	var result;
 
-	user.db().mongoEmulation(true);
+	user.mongoEmulation(true);
 
 	result = user.find({
 		'nested.name': 'Jim'
@@ -2636,7 +2636,7 @@ QUnit.test("Collection.find() :: MongoDB Emulation Mode - Single Nest", function
 	strictEqual(result[0].nested.name, 'Jim', 'Correct data returned');
 	strictEqual(result.length, 1, 'Correct result count');
 
-	user.db().mongoEmulation(false);
+	user.mongoEmulation(false);
 
 	base.dbDown();
 });
@@ -2647,7 +2647,7 @@ QUnit.test("Collection.find() :: MongoDB Emulation Mode - Multi Nest", function(
 
 	var result;
 
-	user.db().mongoEmulation(true);
+	user.mongoEmulation(true);
 
 	result = user.find({
 		'nested.name': 'Jim',
@@ -2658,7 +2658,29 @@ QUnit.test("Collection.find() :: MongoDB Emulation Mode - Multi Nest", function(
 	strictEqual(result[0].nested.nested.age, 15, 'Correct data returned');
 	strictEqual(result.length, 1, 'Correct result count');
 
-	user.db().mongoEmulation(false);
+	user.mongoEmulation(false);
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.update() :: MongoDB Emulation Mode - Single Nest", function() {
+	base.dbUp();
+	base.dataUp();
+
+	var result;
+
+	user.mongoEmulation(true);
+
+	result = user.update({
+		'nested.name': 'Jim'
+	}, {
+		'nested.name': 'Jimbo'
+	});
+
+	strictEqual(result[0].nested.name, 'Jimbo', 'Correct data returned');
+	strictEqual(result.length, 1, 'Correct result count');
+
+	user.mongoEmulation(false);
 
 	base.dbDown();
 });
