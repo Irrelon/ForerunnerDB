@@ -5923,7 +5923,7 @@ Grid.prototype._sortGridClick = function (e) {
 		sortColText = elem.attr('data-grid-sort') || '',
 		sortColDir = elem.attr('data-grid-dir') || 1,
 		sortCols = sortColText.split(','),
-		sortObj = Shared.mixin({}, this._options.$orderBy),
+		sortObj = {},
 		i;
 
 	// Flip the sort direction
@@ -5932,6 +5932,8 @@ Grid.prototype._sortGridClick = function (e) {
 	for (i = 0; i < sortCols.length; i++) {
 		sortObj[sortCols] = sortColDir;
 	}
+
+	Shared.mixin(sortObj, this._options.$orderBy);
 
 	this._from.orderBy(sortObj);
 	this.emit('sort', sortObj);
@@ -5987,7 +5989,7 @@ Grid.prototype.refresh = function () {
 
 					var filterField = filterElem.attr('data-grid-filter'),
 						filterVarType = filterElem.attr('data-grid-vartype'),
-						filterObj = Shared.mixin({}, self._options.$orderBy),
+						filterSort = {},
 						title = filterElem.html(),
 						dropDownButton,
 						dropDownMenu,
@@ -5995,15 +5997,15 @@ Grid.prototype.refresh = function () {
 						filterQuery,
 						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
 
-					filterObj[filterField] = 1;
+					filterSort[filterField] = 1;
 
 					filterQuery = {
-						$distinct: filterObj
+						$distinct: filterSort
 					};
 
 					filterView
 						.query(filterQuery)
-						.orderBy(filterObj)
+						.orderBy(filterSort)
 						.from(self._from._from);
 
 					template = [
@@ -11164,7 +11166,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.178',
+	version: '1.3.179',
 	modules: {},
 
 	_synth: {},
