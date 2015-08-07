@@ -8,7 +8,7 @@ var Overload = require('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.173',
+	version: '1.3.177',
 	modules: {},
 
 	_synth: {},
@@ -85,7 +85,7 @@ var Shared = {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
-		'object, object': function (obj, mixinObj) {
+		'object, *': function (obj, mixinObj) {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
@@ -97,6 +97,8 @@ var Shared = {
 					}
 				}
 			}
+
+			return obj;
 		}
 	}),
 
