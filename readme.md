@@ -19,32 +19,17 @@ a UK registered company.
 </table>
 
 ## What is ForerunnerDB
-ForerunnerDB is a NoSQL JavaScript database with a query language loosly based on
-MongoDB (with some differences) and runs on browsers and Node.js.
-
-##### ForerunnerDB & MongoDB
-Please see the [differences from MongoDB](#differences-between-forerunnerdb-and-mongodb) section for more information.
+ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
+MongoDB (with some differences) and runs on browsers and Node.js. It is in use in
+many large production web applications and is transparently used by over 6 million
+clients. ForerunnerDB is the most advanced, battle-tested and production ready
+browser-based JSON database system available today.
 
 ## What is ForerunnerDB's Primary Use Case?
 ForerunnerDB was created primarily to allow web application developers to easily
 store, query and manipulate JSON data in the browser via a simple query language.
-It provides the ability to store data passed by an API to the front-end and query
-it throughout your application making handling JSON data client-side significantly
-easier.
-
-Furthermore, if you use the optional data-binding module, changes to your JSON
-data stored in ForerunnerDB are automatically propagated to the DOM. The data
-binding system in ForerunnerDB is state-of-the-art, high performance and supports
-features like partial updates.
-
-Some web application frameworks provide similar data-binding functionality which is
-why data-binding is an optional module that you can choose to include on a per-app
-basis as you choose.
-
-Many web applications take data from an API and then represent that on screen
-to the user. ForerunnerDB allows you to sort that data and filter it so that you
-don't have to make API calls whenever you want data in a different order or
-filtered by specific fields and values.
+It provides the ability to store data on the front-end and query it throughout your
+application making handling JSON data client-side significantly easier.
 
 ## Demo
 You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http://www.forerunnerdb.com/demo.html)
@@ -2122,13 +2107,15 @@ object but you do not want it to affect the outcome of the query.
 
 # Differences Between ForerunnerDB and MongoDB
 Developers familiar with the MongoDB query language will find ForerunnerDB quite similar
-however there are some fundamental differences that you should be aware of when writing
-queries for ForerunnerDB.
+however there are some differences that you should be aware of when writing queries for
+ForerunnerDB.
 
 > An update is being worked on that will allow a MongoDB emulation mode flag to be set
 to force ForerunnerDB to behave exactly like MongoDB when running find and update
 operations. For backward compatibility we cannot enable this by default or simply
 change default operation of CRUD calls.
+
+> 7th Aug 2015: This update is now going through testing.
 
 ## find
 ForerunnerDB uses objects instead of dot notation to match fields. See issue [#43](https://github.com/irrelon/ForerunnerDB/issues/43) for more
