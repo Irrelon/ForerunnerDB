@@ -7957,7 +7957,9 @@ module.exports = CRUD;
 },{}],18:[function(_dereq_,module,exports){
 "use strict";
 /**
- * The chain reactor mixin, provides a class with chain reaction capabilities.
+ * The chain reactor mixin, provides methods to the target object that allow chain
+ * reaction events to propagate to the target and be handled, processed and passed
+ * on down the chain.
  * @mixin
  */
 var ChainReactor = {
@@ -10953,6 +10955,19 @@ module.exports = Persist;
 
 var Shared = _dereq_('./Shared');
 
+/**
+ * Provides chain reactor node linking so that a chain reaction can propagate
+ * down a node tree.
+ * @param {*} reactorIn An object that has the Mixin.ChainReactor methods mixed
+ * in to it. Chain reactions that occur inside this object will be passed through
+ * to the reactoreOut object.
+ * @param {*} reactorOut An object that has the Mixin.ChainReactor methods mixed
+ * in to it. Chain reactions that occur in the reactorIn object will be passed
+ * through to this object.
+ * @param {Function} reactorProcess The processing method to use when chain
+ * reactions occur
+ * @constructor
+ */
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 	if (reactorIn && reactorOut && reactorProcess) {
 		this._reactorIn = reactorIn;
@@ -10975,6 +10990,11 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 
 Shared.addModule('ReactorIO', ReactorIO);
 
+/**
+ * Drop a reactor IO object, breaking the reactor link between the in and out
+ * reactor nodes.
+ * @returns {boolean}
+ */
 ReactorIO.prototype.drop = function () {
 	if (this._state !== 'dropped') {
 		this._state = 'dropped';
@@ -11139,7 +11159,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.170',
+	version: '1.3.172',
 	modules: {},
 
 	_synth: {},
