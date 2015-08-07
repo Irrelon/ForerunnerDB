@@ -5912,10 +5912,13 @@ Grid.prototype.template = function (template) {
 Grid.prototype._sortGridClick = function (e) {
 	var elem = window.jQuery(e.currentTarget),
 		sortColText = elem.attr('data-grid-sort') || '',
-		sortColDir = parseInt((elem.attr('data-grid-dir') || "1"), 10),
+		sortColDir = parseInt((elem.attr('data-grid-dir') || "-1"), 10),
 		sortCols = sortColText.split(','),
 		sortObj = {},
 		i;
+
+	// Remove all grid sort tags from the grid
+	this._selector.find('[data-grid-dir]').removeAttr('data-grid-dir');
 
 	// Flip the sort direction
 	elem.attr('data-grid-dir', sortColDir === 1 ? -1 : 1);
@@ -12007,7 +12010,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.184',
+	version: '1.3.185',
 	modules: {},
 
 	_synth: {},
