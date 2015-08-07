@@ -289,7 +289,7 @@ Grid.prototype.refresh = function () {
 
 					var filterField = filterElem.attr('data-grid-filter'),
 						filterVarType = filterElem.attr('data-grid-vartype'),
-						filterObj = Shared.mixin({}, this._options.$orderBy),
+						filterObj = Shared.mixin({}, self._options.$orderBy),
 						title = filterElem.html(),
 						dropDownButton,
 						dropDownMenu,
