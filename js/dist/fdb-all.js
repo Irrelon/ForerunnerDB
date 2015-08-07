@@ -5927,7 +5927,7 @@ Grid.prototype._sortGridClick = function (e) {
 		i;
 
 	// Flip the sort direction
-	elem.attr('data-grid-sort-dir', sortColDir === 1 ? -1 : 1);
+	elem.attr('data-grid-dir', sortColDir === 1 ? -1 : 1);
 
 	for (i = 0; i < sortCols.length; i++) {
 		sortObj[sortCols] = sortColDir;
@@ -11166,7 +11166,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.179',
+	version: '1.3.180',
 	modules: {},
 
 	_synth: {},

@@ -229,7 +229,7 @@ Grid.prototype._sortGridClick = function (e) {
 		i;
 
 	// Flip the sort direction
-	elem.attr('data-grid-sort-dir', sortColDir === 1 ? -1 : 1);
+	elem.attr('data-grid-dir', sortColDir === 1 ? -1 : 1);
 
 	for (i = 0; i < sortCols.length; i++) {
 		sortObj[sortCols] = sortColDir;
