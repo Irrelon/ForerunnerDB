@@ -5912,7 +5912,7 @@ Grid.prototype.template = function (template) {
 Grid.prototype._sortGridClick = function (e) {
 	var elem = window.jQuery(e.currentTarget),
 		sortColText = elem.attr('data-grid-sort') || '',
-		sortColDir = elem.attr('data-grid-dir') || 1,
+		sortColDir = parseInt((elem.attr('data-grid-dir') || "1"), 10),
 		sortCols = sortColText.split(','),
 		sortObj = {},
 		i;
@@ -5921,7 +5921,7 @@ Grid.prototype._sortGridClick = function (e) {
 	elem.attr('data-grid-dir', sortColDir === 1 ? -1 : 1);
 
 	for (i = 0; i < sortCols.length; i++) {
-		sortObj[sortCols] = parseInt(sortColDir, 10);
+		sortObj[sortCols] = sortColDir;
 	}
 
 	Shared.mixin(sortObj, this._options.$orderBy);
@@ -12007,7 +12007,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.183',
+	version: '1.3.184',
 	modules: {},
 
 	_synth: {},
