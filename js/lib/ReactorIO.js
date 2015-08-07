@@ -2,6 +2,19 @@
 
 var Shared = require('./Shared');
 
+/**
+ * Provides chain reactor node linking so that a chain reaction can propagate
+ * down a node tree.
+ * @param {*} reactorIn An object that has the Mixin.ChainReactor methods mixed
+ * in to it. Chain reactions that occur inside this object will be passed through
+ * to the reactoreOut object.
+ * @param {*} reactorOut An object that has the Mixin.ChainReactor methods mixed
+ * in to it. Chain reactions that occur in the reactorIn object will be passed
+ * through to this object.
+ * @param {Function} reactorProcess The processing method to use when chain
+ * reactions occur
+ * @constructor
+ */
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 	if (reactorIn && reactorOut && reactorProcess) {
 		this._reactorIn = reactorIn;
@@ -24,6 +37,11 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 
 Shared.addModule('ReactorIO', ReactorIO);
 
+/**
+ * Drop a reactor IO object, breaking the reactor link between the in and out
+ * reactor nodes.
+ * @returns {boolean}
+ */
 ReactorIO.prototype.drop = function () {
 	if (this._state !== 'dropped') {
 		this._state = 'dropped';

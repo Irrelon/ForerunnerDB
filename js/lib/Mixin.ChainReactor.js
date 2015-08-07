@@ -1,6 +1,8 @@
 "use strict";
 /**
- * The chain reactor mixin, provides a class with chain reaction capabilities.
+ * The chain reactor mixin, provides methods to the target object that allow chain
+ * reaction events to propagate to the target and be handled, processed and passed
+ * on down the chain.
  * @mixin
  */
 var ChainReactor = {
