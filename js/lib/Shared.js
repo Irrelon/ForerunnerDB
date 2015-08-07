@@ -90,9 +90,11 @@ var Shared = {
 		},
 
 		'$main': function (obj, mixinObj) {
-			for (var i in mixinObj) {
-				if (mixinObj.hasOwnProperty(i)) {
-					obj[i] = mixinObj[i];
+			if (mixinObj && typeof mixinObj === 'object') {
+				for (var i in mixinObj) {
+					if (mixinObj.hasOwnProperty(i)) {
+						obj[i] = mixinObj[i];
+					}
 				}
 			}
 		}
