@@ -1,8 +1,8 @@
 <html>
 <body>
-<script src="../dist/fdb-all.js"></script>
+<script src="../lib/BTree.js"></script>
 <script>
-	var tree = new ForerunnerDB.shared.modules.BinaryTree(),
+	var tree = new BinaryTree(),
 		search,
 		alpha,
 		data = [],
@@ -35,11 +35,12 @@
 	console.timeEnd('Generate ' + countMax + ' records');
 
 	console.time('Insert ' + countMax + ' records');
+	debugger;
 	console.log(tree.insert(data));
 	console.timeEnd('Insert ' + countMax + ' records');
 
 	console.time('Walk tree in order');
-	tree.inOrder('hash');
+	console.log(tree.inOrder());
 	console.timeEnd('Walk tree in order');
 
 	console.time('Query tree single key');
