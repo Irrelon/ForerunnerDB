@@ -8426,7 +8426,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.173',
+	version: '1.3.178',
 	modules: {},
 
 	_synth: {},
@@ -8503,16 +8503,20 @@ var Shared = {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
-		'object, object': function (obj, mixinObj) {
+		'object, *': function (obj, mixinObj) {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
 		'$main': function (obj, mixinObj) {
-			for (var i in mixinObj) {
-				if (mixinObj.hasOwnProperty(i)) {
-					obj[i] = mixinObj[i];
+			if (mixinObj && typeof mixinObj === 'object') {
+				for (var i in mixinObj) {
+					if (mixinObj.hasOwnProperty(i)) {
+						obj[i] = mixinObj[i];
+					}
 				}
 			}
+
+			return obj;
 		}
 	}),
 
