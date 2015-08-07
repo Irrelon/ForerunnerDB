@@ -5921,7 +5921,7 @@ Grid.prototype._sortGridClick = function (e) {
 	elem.attr('data-grid-dir', sortColDir === 1 ? -1 : 1);
 
 	for (i = 0; i < sortCols.length; i++) {
-		sortObj[sortCols] = sortColDir;
+		sortObj[sortCols] = parseInt(sortColDir, 10);
 	}
 
 	Shared.mixin(sortObj, this._options.$orderBy);
@@ -12007,7 +12007,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.181',
+	version: '1.3.182',
 	modules: {},
 
 	_synth: {},
