@@ -4,6 +4,7 @@
 // Import external names locally
 var Shared = require('./Shared'),
 	localforage = require('localforage'),
+	pako = require('pako'),
 	Db,
 	Collection,
 	CollectionDrop,
@@ -17,6 +18,8 @@ var Shared = require('./Shared'),
 Persist = function () {
 	this.init.apply(this, arguments);
 };
+
+Persist.prototype.localforage = localforage;
 
 Persist.prototype.init = function (db) {
 	// Check environment
@@ -87,22 +90,44 @@ Persist.prototype.save = function (key, data, callback) {
 	var encode;
 
 	encode = function (val, finished) {
+		var before,
+			after,
+			compressedVal;
+
 		if (typeof val === 'object') {
 			val = 'json::fdb::' + JSON.stringify(val);
 		} else {
 			val = 'raw::fdb::' + val;
 		}
 
+		// Compress the data
+		before = val.length;
+		compressedVal = 'c1::' + pako.deflate(val, { to: 'string' });
+		after = compressedVal.length;
+
+		// If the compressed version is smaller than the original, use it!
+		if (after < before) {
+			val = compressedVal;
+		}
+
 		if (finished) {
-			finished(false, val);
+			finished(false, val, {
+				foundData: true,
+				rowCount: data.length,
+				compression: {
+					compressedBytes: after,
+					uncompressedBytes: before,
+					effect: Math.round((100 / before) * after) + '%'
+				}
+			});
 		}
 	};
 
 	switch (this.mode()) {
 		case 'localforage':
-			encode(data, function (err, data) {
+			encode(data, function (err, data, tableStats) {
 				localforage.setItem(key, data).then(function (data) {
-					if (callback) { callback(false, data); }
+					if (callback) { callback(false, data, tableStats); }
 				}, function (err) {
 					if (callback) { callback(err); }
 				});
@@ -121,7 +146,24 @@ Persist.prototype.load = function (key, callback) {
 		decode;
 
 	decode = function (val, finished) {
+		var compressionEnabled = false,
+			before,
+			after;
+
 		if (val) {
+			// Check if we need to decompress the string
+			if (val.substr(0, 4) === 'c1::') {
+				val = val.substr(4);
+
+				before = val.length;
+				val = pako.inflate(val, {to: 'string'});
+				after = val.length;
+
+				compressionEnabled = true;
+			} else {
+				before = after = val.length;
+			}
+
 			parts = val.split('::fdb::');
 
 			switch (parts[0]) {
@@ -140,14 +182,25 @@ Persist.prototype.load = function (key, callback) {
 			if (finished) {
 				finished(false, data, {
 					foundData: true,
-					rowCount: data.length
+					rowCount: data.length,
+					compression: {
+						enabled: compressionEnabled,
+						compressedBytes: before,
+						uncompressedBytes: after,
+						effect: Math.round((100 / after) * before) + '%'
+					}
 				});
 			}
 		} else {
 			if (finished) {
 				finished(false, val, {
 					foundData: false,
-					rowCount: 0
+					rowCount: 0,
+					compression: {
+						compressedBytes: 0,
+						uncompressedBytes: 0,
+						effect: '0%'
+					}
 				});
 			}
 		}
@@ -218,8 +271,9 @@ Collection.prototype.drop = new Overload({
 			if (removePersistent) {
 				if (this._name) {
 					if (this._db) {
-						// Save the collection data
+						// Drop the collection data from storage
 						this._db.persist.drop(this._db._name + '::' + this._name);
+						this._db.persist.drop(this._db._name + '::' + this._name + '::metaData');
 					} else {
 						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 					}
@@ -239,13 +293,17 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'boolean, function': function (removePersistent, callback) {
+		var self = this;
+
 		if (this._state !== 'dropped') {
 			// Remove persistent storage
 			if (removePersistent) {
 				if (this._name) {
 					if (this._db) {
-						// Save the collection data
-						this._db.persist.drop(this._db._name + '::' + this._name, callback);
+						// Drop the collection data from storage
+						this._db.persist.drop(this._db._name + '::' + this._name, function () {
+							self._db.persist.drop(self._db._name + '::' + self._name + '::metaData', callback);
+						});
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
@@ -270,8 +328,18 @@ Collection.prototype.save = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			// Save the collection data
-			self._db.persist.save(self._db._name + '::' + self._name, self._data, function () {
-				self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), callback);
+			self._db.persist.save(self._db._name + '::' + self._name, self._data, function (err, data, tableStats) {
+				if (!err) {
+					self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), function (err, data, metaStats) {
+						if (callback) {
+							callback(err, data, tableStats, metaStats);
+						}
+					});
+				} else {
+					if (callback) {
+						callback(err);
+					}
+				}
 			});
 		} else {
 			if (callback) {
@@ -291,14 +359,14 @@ Collection.prototype.load = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			// Load the collection data
-			self._db.persist.load(self._db._name + '::' + self._name, function (err, data) {
+			self._db.persist.load(self._db._name + '::' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
 						self.setData(data);
 					}
 
 					// Now load the collection's metadata
-					self._db.persist.load(self._db._name + '::' + self._name + '::metaData', function (err, data) {
+					self._db.persist.load(self._db._name + '::' + self._name + '::metaData', function (err, data, metaStats) {
 						if (!err) {
 							if (data) {
 								self.metaData(data);
@@ -306,7 +374,7 @@ Collection.prototype.load = function (callback) {
 						}
 
 						if (callback) {
-							callback(false);
+							callback(err, tableStats, metaStats);
 						}
 					});
 				} else {
