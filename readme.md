@@ -546,6 +546,18 @@ You can target individual documents for update by their id (primary key) via a q
 This will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
+
+* [$overwrite](#overwrite)
+* [$each](#each)
+* [$inc](#inc)
+* [$push](#push)
+* [$splicePush](#splicePush)
+* [$addToSet](#addToSet)
+* [$pull](#pull)
+* [$move](#move)
+* [$cast](#cast)
+* [Array Positional (.$)](#array-positional-)
+
 #### $overwrite
 The $overwrite operator replaces a key's value with the one passed, overwriting it
 completely. This operates the same way that MongoDB's default update behaviour works
