@@ -1921,6 +1921,31 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 	} else {
 		if (callback) { callback(resultObj); }
 	}
+
+	// Check if all queues are complete
+	if (!this.isProcessingQueue()) {
+		this.emit('queuesComplete');
+	}
+};
+
+/**
+ * Checks if any CRUD operations have been deferred and are still waiting to
+ * be processed.
+ * @returns {Boolean} True if there are still deferred CRUD operations to process
+ * or false if all queues are clear.
+ */
+Collection.prototype.isProcessingQueue = function () {
+	var i;
+
+	for (i in this._deferQueue) {
+		if (this._deferQueue.hasOwnProperty(i)) {
+			if (this._deferQueue[i].length) {
+				return true;
+			}
+		}
+	}
+
+	return false;
 };
 
 /**
@@ -8426,7 +8451,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.203',
+	version: '1.3.205',
 	modules: {},
 
 	_synth: {},

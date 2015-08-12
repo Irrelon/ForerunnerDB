@@ -322,24 +322,38 @@ Collection.prototype.drop = new Overload({
 });
 
 Collection.prototype.save = function (callback) {
-	var self = this;
+	var self = this,
+		processSave;
 
 	if (self._name) {
 		if (self._db) {
-			// Save the collection data
-			self._db.persist.save(self._db._name + '::' + self._name, self._data, function (err, data, tableStats) {
-				if (!err) {
-					self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), function (err, data, metaStats) {
+			processSave = function () {
+				// Save the collection data
+				self._db.persist.save(self._db._name + '::' + self._name, self._data, function (err, data, tableStats) {
+					if (!err) {
+						self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), function (err, data, metaStats) {
+							if (callback) {
+								callback(err, data, tableStats, metaStats);
+							}
+						});
+					} else {
 						if (callback) {
-							callback(err, data, tableStats, metaStats);
+							callback(err);
 						}
-					});
-				} else {
-					if (callback) {
-						callback(err);
 					}
-				}
-			});
+				});
+			};
+
+			// Check for processing queues
+			if (self.isProcessingQueue()) {
+				// Hook queue complete to process save
+				self.on('queuesComplete', function () {
+					processSave();
+				});
+			} else {
+				// Process save immediately
+				processSave();
+			}
 		} else {
 			if (callback) {
 				callback('Cannot save a collection that is not attached to a database!');
