@@ -5240,7 +5240,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Events');
 Shared.mixin(FdbDocument.prototype, 'Mixin.ChainReactor');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Constants');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Triggers');
-//Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
 
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
@@ -12010,7 +12010,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.188',
+	version: '1.3.190',
 	modules: {},
 
 	_synth: {},
