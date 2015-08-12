@@ -11614,46 +11614,108 @@ Persist.prototype.driver = function (val) {
 	return localforage.driver();
 };
 
-Persist.prototype.save = function (key, data, callback) {
-	var encode;
+Persist.prototype.decode = function (val, finished) {
+	var compressionEnabled = false,
+		before,
+		after,
+		parts,
+		data;
 
-	encode = function (val, finished) {
-		var before,
-			after,
-			compressedVal;
+	if (val) {
+		// Check if we need to decompress the string
+		if (val.substr(0, 4) === 'c1::') {
+			val = val.substr(4);
 
-		if (typeof val === 'object') {
-			val = 'json::fdb::' + JSON.stringify(val);
+			before = val.length;
+			val = pako.inflate(val, {to: 'string'});
+			after = val.length;
+
+			compressionEnabled = true;
 		} else {
-			val = 'raw::fdb::' + val;
+			before = after = val.length;
 		}
 
-		// Compress the data
-		before = val.length;
-		compressedVal = 'c1::' + pako.deflate(val, { to: 'string' });
-		after = compressedVal.length;
+		parts = val.split('::fdb::');
 
-		// If the compressed version is smaller than the original, use it!
-		if (after < before) {
-			val = compressedVal;
+		switch (parts[0]) {
+			case 'json':
+				data = JSON.parse(parts[1]);
+				break;
+
+			case 'raw':
+				data = parts[1];
+				break;
+
+			default:
+				break;
 		}
 
 		if (finished) {
-			finished(false, val, {
+			finished(false, data, {
 				foundData: true,
 				rowCount: data.length,
 				compression: {
-					compressedBytes: after,
-					uncompressedBytes: before,
-					effect: Math.round((100 / before) * after) + '%'
+					enabled: compressionEnabled,
+					compressedBytes: before,
+					uncompressedBytes: after,
+					effect: Math.round((100 / after) * before) + '%'
 				}
 			});
 		}
-	};
+	} else {
+		if (finished) {
+			finished(false, val, {
+				foundData: false,
+				rowCount: 0,
+				compression: {
+					compressedBytes: 0,
+					uncompressedBytes: 0,
+					effect: '0%'
+				}
+			});
+		}
+	}
+};
 
+Persist.prototype.encode = function (val, finished) {
+	var data = val,
+		before,
+		after,
+		compressedVal;
+
+	if (typeof val === 'object') {
+		val = 'json::fdb::' + JSON.stringify(val);
+	} else {
+		val = 'raw::fdb::' + val;
+	}
+
+	// Compress the data
+	before = val.length;
+	compressedVal = 'c1::' + pako.deflate(val, { to: 'string' });
+	after = compressedVal.length;
+
+	// If the compressed version is smaller than the original, use it!
+	if (after < before) {
+		val = compressedVal;
+	}
+
+	if (finished) {
+		finished(false, val, {
+			foundData: true,
+			rowCount: data.length,
+			compression: {
+				compressedBytes: after,
+				uncompressedBytes: before,
+				effect: Math.round((100 / before) * after) + '%'
+			}
+		});
+	}
+};
+
+Persist.prototype.save = function (key, data, callback) {
 	switch (this.mode()) {
 		case 'localforage':
-			encode(data, function (err, data, tableStats) {
+			this.encode(data, function (err, data, tableStats) {
 				localforage.setItem(key, data).then(function (data) {
 					if (callback) { callback(false, data, tableStats); }
 				}, function (err) {
@@ -11669,75 +11731,12 @@ Persist.prototype.save = function (key, data, callback) {
 };
 
 Persist.prototype.load = function (key, callback) {
-	var parts,
-		data,
-		decode;
-
-	decode = function (val, finished) {
-		var compressionEnabled = false,
-			before,
-			after;
-
-		if (val) {
-			// Check if we need to decompress the string
-			if (val.substr(0, 4) === 'c1::') {
-				val = val.substr(4);
-
-				before = val.length;
-				val = pako.inflate(val, {to: 'string'});
-				after = val.length;
-
-				compressionEnabled = true;
-			} else {
-				before = after = val.length;
-			}
-
-			parts = val.split('::fdb::');
-
-			switch (parts[0]) {
-				case 'json':
-					data = JSON.parse(parts[1]);
-					break;
-
-				case 'raw':
-					data = parts[1];
-					break;
-
-				default:
-					break;
-			}
-
-			if (finished) {
-				finished(false, data, {
-					foundData: true,
-					rowCount: data.length,
-					compression: {
-						enabled: compressionEnabled,
-						compressedBytes: before,
-						uncompressedBytes: after,
-						effect: Math.round((100 / after) * before) + '%'
-					}
-				});
-			}
-		} else {
-			if (finished) {
-				finished(false, val, {
-					foundData: false,
-					rowCount: 0,
-					compression: {
-						compressedBytes: 0,
-						uncompressedBytes: 0,
-						effect: '0%'
-					}
-				});
-			}
-		}
-	};
+	var self = this;
 
 	switch (this.mode()) {
 		case 'localforage':
 			localforage.getItem(key).then(function (val) {
-				decode(val, callback);
+				self.decode(val, callback);
 			}, function (err) {
 				if (callback) { callback(err); }
 			});
@@ -12078,7 +12077,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.201',
+	version: '1.3.203',
 	modules: {},
 
 	_synth: {},
