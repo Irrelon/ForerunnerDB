@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.185
+## Version 1.3.187
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -548,7 +548,8 @@ This will update the document with the _id field of 1 to a new price of 180.
 ### Update Operators
 #### $overwrite
 The $overwrite operator replaces a key's value with the one passed, overwriting it
-completely. This operates the same way that MongoDB's default update behaviour works.
+completely. This operates the same way that MongoDB's default update behaviour works
+without using the $set operator.
 
 This operator is most useful when updating an array field to a new type such as an object.
 By default ForerunnerDB will detect an array and step into the array objects one at a time
