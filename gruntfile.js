@@ -50,7 +50,7 @@ module.exports = function(grunt) {
 						instrumentedFiles: 'temp/',
 						htmlReport: 'coverage/source',
 						coberturaReport: 'coverage//source',
-						linesThresholdPct: 60
+						linesThresholdPct: 10
 					}
 				}
 			},
@@ -67,7 +67,7 @@ module.exports = function(grunt) {
 						instrumentedFiles: 'temp/',
 						htmlReport: 'coverage/minified',
 						coberturaReport: 'coverage/minified',
-						linesThresholdPct: 60
+						linesThresholdPct: 10
 					}
 				}
 			}

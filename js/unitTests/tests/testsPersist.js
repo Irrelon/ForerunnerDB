@@ -35,8 +35,9 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			// Make sure the item does not currently exist
 			result = coll.find();
 			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
-
+debugger;
 			coll.load(function (err) {
+				debugger;
 				if (err) {
 					console.log(err);
 					ok(false, err);
