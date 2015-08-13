@@ -142,21 +142,28 @@ var Updating = {
 	},
 
 	/**
-	 * Pops an item from the array stack.
+	 * Pops an item or items from the array stack.
 	 * @param {Object} doc The document to modify.
-	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @param {Number} val If set to a positive integer, will pop the number specified
+	 * from the stack, if set to a negative integer will shift the number specified
+	 * from the stack.
 	 * @return {Boolean}
 	 * @private
 	 */
 	_updatePop: function (doc, val) {
-		var updated = false;
+		var updated = false,
+			i;
 
 		if (doc.length > 0) {
-			if (val === 1) {
-				doc.pop();
+			if (val > 0) {
+				for (i = 0; i < val; i++) {
+					doc.pop();
+				}
 				updated = true;
-			} else if (val === -1) {
-				doc.shift();
+			} else if (val < 0) {
+				for (i = 0; i > val; i--) {
+					doc.shift();
+				}
 				updated = true;
 			}
 		}

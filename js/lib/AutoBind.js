@@ -471,7 +471,8 @@ AutoBind.extendCollection = function (Module) {
 	 */
 	Module.prototype._updatePop = function (doc, val) {
 		var index,
-			updated = false;
+			updated = false,
+			i;
 
 		if (this._linked) {
 			if (doc.length > 0) {
@@ -479,14 +480,21 @@ AutoBind.extendCollection = function (Module) {
 					console.log('ForerunnerDB.AutoBind: Popping item from sub-array in document for collection "' + this.name() + '"');
 				}
 
-				if (val === 1) {
-					index = doc.length - 1;
-				} else if (val === -1) {
+				if (val > 0) {
+					for (i = 0; i < val; i++) {
+						index = doc.length - 1;
+						if (index > -1) {
+							window.jQuery.observable(doc).remove(index);
+						}
+					}
+					updated = true;
+				} else if (val < 0) {
 					index = 0;
-				}
-
-				if (index > -1) {
-					window.jQuery.observable(doc).remove(index);
+					for (i = 0; i > val; i--) {
+						if (doc.length) {
+							window.jQuery.observable(doc).remove(index);
+						}
+					}
 					updated = true;
 				}
 			}
