@@ -1,5 +1,7 @@
 "use strict";
-
+// TODO: Remove the _update* methods because we are already mixing them
+// TODO: in now via Mixin.Updating and update autobind to extend the _update*
+// TODO: methods like we already do with collection
 var Shared,
 	Collection,
 	Db;
@@ -353,45 +355,6 @@ FdbDocument.prototype._updateUnset = function (doc, prop) {
 	} else {
 		delete doc[prop];
 	}
-};
-
-/**
- * Deletes a property on a document.
- * @func _updatePop
- * @memberof Document
- * @param {Object} doc The document to modify.
- * @param {*} val The property to delete.
- * @return {Boolean}
- * @private
- */
-FdbDocument.prototype._updatePop = function (doc, val) {
-	var index,
-		updated = false;
-
-	if (doc.length > 0) {
-		if (this._linked) {
-			if (val === 1) {
-				index = doc.length - 1;
-			} else if (val === -1) {
-				index = 0;
-			}
-
-			if (index > -1) {
-				window.jQuery.observable(doc).remove(index);
-				updated = true;
-			}
-		} else {
-			if (val === 1) {
-				doc.pop();
-				updated = true;
-			} else if (val === -1) {
-				doc.shift();
-				updated = true;
-			}
-		}
-	}
-
-	return updated;
 };
 
 /**

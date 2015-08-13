@@ -665,6 +665,8 @@ AutoBind.extendOverview = function (Module) {
  * @private
  */
 AutoBind.extendDocument = function (Module) {
+	var superUpdatePop = Module.prototype._updatePop;
+
 	/**
 	 * Checks if the instance is data-bound to any DOM elements.
 	 * @func isLinked
@@ -858,6 +860,49 @@ AutoBind.extendDocument = function (Module) {
 	 */
 	Module.prototype.links = function () {
 		return this._links;
+	};
+
+	/**
+	 * Pops an item from the array stack.
+	 * @param {Object} doc The document to modify.
+	 * @param {Number=} val Optional, if set to 1 will pop, if set to -1 will shift.
+	 * @return {Boolean}
+	 * @private
+	 */
+	Module.prototype._updatePop = function (doc, val) {
+		var index,
+			updated = false,
+			i;
+
+		if (this._linked) {
+			if (doc.length > 0) {
+				if (this.debug()) {
+					console.log('ForerunnerDB.AutoBind: Popping item from sub-array for collection "' + this.name() + '"');
+				}
+
+				if (val > 0) {
+					for (i = 0; i < val; i++) {
+						index = doc.length - 1;
+						if (index > -1) {
+							window.jQuery.observable(doc).remove(index);
+						}
+					}
+					updated = true;
+				} else if (val < 0) {
+					index = 0;
+					for (i = 0; i > val; i--) {
+						if (doc.length) {
+							window.jQuery.observable(doc).remove(index);
+						}
+					}
+					updated = true;
+				}
+			}
+		} else {
+			updated = superUpdatePop.apply(this, arguments);
+		}
+
+		return updated;
 	};
 };
 
