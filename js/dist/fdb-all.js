@@ -1709,6 +1709,12 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							}
 							break;
 
+						case '$toggle':
+							// Toggle the boolean property between true and false
+							this._updateProperty(doc, i, !doc[i]);
+							updated = true;
+							break;
+
 						default:
 							if (doc[i] !== update[i]) {
 								this._updateProperty(doc, i, update[i]);
@@ -5276,6 +5282,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Events');
 Shared.mixin(FdbDocument.prototype, 'Mixin.ChainReactor');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Constants');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Triggers');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Matching');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
 
 Collection = _dereq_('./Collection');
@@ -11245,7 +11252,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.209',
+	version: '1.3.212',
 	modules: {},
 
 	_synth: {},

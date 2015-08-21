@@ -2684,3 +2684,36 @@ QUnit.test("Collection.update() :: MongoDB Emulation Mode - Single Nest", functi
 
 	base.dbDown();
 });
+
+QUnit.test("Collection.update() :: $toggle boolean property", function() {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.insert({
+		b: true
+	});
+
+	coll.update({}, {
+		$toggle: {
+			b: 1
+		}
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].b, false, 'Correct data returned');
+
+	coll.update({}, {
+		$toggle: {
+			b: 1
+		}
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].b, true, 'Correct result count');
+
+	base.dbDown();
+});

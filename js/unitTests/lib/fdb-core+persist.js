@@ -1438,6 +1438,12 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							}
 							break;
 
+						case '$toggle':
+							// Toggle the boolean property between true and false
+							this._updateProperty(doc, i, !doc[i]);
+							updated = true;
+							break;
+
 						default:
 							if (doc[i] !== update[i]) {
 								this._updateProperty(doc, i, update[i]);
@@ -8671,7 +8677,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.209',
+	version: '1.3.212',
 	modules: {},
 
 	_synth: {},

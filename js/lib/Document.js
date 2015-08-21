@@ -32,6 +32,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Events');
 Shared.mixin(FdbDocument.prototype, 'Mixin.ChainReactor');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Constants');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Triggers');
+Shared.mixin(FdbDocument.prototype, 'Mixin.Matching');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
 
 Collection = require('./Collection');
