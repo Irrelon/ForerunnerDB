@@ -497,20 +497,28 @@ Grid.prototype.count = function () {
  */
 Collection.prototype.grid = View.prototype.grid = function (selector, template, options) {
 	if (this._db && this._db._grid ) {
-		if (!this._db._grid[selector]) {
-			var grid = new Grid(selector, template, options)
-				.db(this._db)
-				.from(this);
+		if (selector !== undefined) {
+			if (template !== undefined) {
+				if (!this._db._grid[selector]) {
+					var grid = new Grid(selector, template, options)
+						.db(this._db)
+						.from(this);
 
-			this._grid = this._grid || [];
-			this._grid.push(grid);
+					this._grid = this._grid || [];
+					this._grid.push(grid);
 
-			this._db._grid[selector] = grid;
+					this._db._grid[selector] = grid;
 
-			return grid;
-		} else {
-			throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + name);
+					return grid;
+				} else {
+					throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + selector);
+				}
+			}
+
+			return this._db._grid[selector];
 		}
+
+		return this._db._grid;
 	}
 };
 
