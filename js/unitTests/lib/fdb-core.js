@@ -902,7 +902,7 @@ Collection.prototype.update = function (query, update, options) {
 
 					// NOTE: If for some reason we would only like to fire this event if changes are actually going
 					// to occur on the object from the proposed update then we can add "result &&" to the if
-					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, referencedDoc, newDoc);
+					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, newDoc);
 				} else {
 					// Trigger cancelled operation so tell result that it was not updated
 					result = false;
@@ -7864,7 +7864,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.218',
+	version: '1.3.219',
 	modules: {},
 
 	_synth: {},
