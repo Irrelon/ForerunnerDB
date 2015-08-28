@@ -1,7 +1,7 @@
 "use strict";
 
-var Shared = require('./Shared'),
-	pako = require('pako');
+var Shared = require('./Shared');//,
+	//pako = require('pako');
 
 var Plugin = function () {
 	this.init.apply(this, arguments);

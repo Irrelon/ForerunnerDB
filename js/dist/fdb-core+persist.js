@@ -8114,7 +8114,6 @@ module.exports = Path;
 },{"./Shared":27}],25:[function(_dereq_,module,exports){
 "use strict";
 
-// TODO: Add doc comments to this class
 // Import external names locally
 var Shared = _dereq_('./Shared'),
 	localforage = _dereq_('localforage'),
@@ -8129,12 +8128,24 @@ var Shared = _dereq_('./Shared'),
 	Persist,
 	Overload;
 
+/**
+ * The persistent storage class handles loading and saving data to browser
+ * storage.
+ * @constructor
+ */
 Persist = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * The local forage library.
+ */
 Persist.prototype.localforage = localforage;
 
+/**
+ * The init method that can be overridden or extended.
+ * @param {Db} db The ForerunnerDB database instance.
+ */
 Persist.prototype.init = function (db) {
 	// Check environment
 	if (db.isClient()) {
@@ -8166,6 +8177,13 @@ DbInit = Db.prototype.init;
 DbDrop = Db.prototype.drop;
 Overload = Shared.overload;
 
+/**
+ * Gets / sets the persistent storage mode (the library used
+ * to persist data to the browser - defaults to localForage).
+ * @param {String} type The library to use for storage. Defaults
+ * to localForage.
+ * @returns {*}
+ */
 Persist.prototype.mode = function (type) {
 	if (type !== undefined) {
 		this._mode = type;
@@ -8175,6 +8193,12 @@ Persist.prototype.mode = function (type) {
 	return this._mode;
 };
 
+/**
+ * Gets / sets the driver used when persisting data.
+ * @param {String} val Specify the driver type (LOCALSTORAGE,
+ * WEBSQL or INDEXEDDB)
+ * @returns {*}
+ */
 Persist.prototype.driver = function (val) {
 	if (val !== undefined) {
 		switch (val.toUpperCase()) {
@@ -8200,6 +8224,12 @@ Persist.prototype.driver = function (val) {
 	return localforage.driver();
 };
 
+/**
+ * Takes encoded data and decodes it for use as JS native objects and arrays.
+ * @param {String} val The currently encoded string data.
+ * @param {Function} finished The callback method to call when decoding is
+ * completed.
+ */
 Persist.prototype.decode = function (val, finished) {
 	var compressionEnabled = false,
 		before,
@@ -8263,6 +8293,12 @@ Persist.prototype.decode = function (val, finished) {
 	}
 };
 
+/**
+ * Takes native JS data and encodes it for for storage as a string.
+ * @param {Object} val The current unencoded data.
+ * @param {Function} finished The callback method to call when encoding is
+ * completed.
+ */
 Persist.prototype.encode = function (val, finished) {
 	var data = val,
 		before,
@@ -8298,6 +8334,15 @@ Persist.prototype.encode = function (val, finished) {
 	}
 };
 
+/**
+ * Encodes passed data and then stores it in the browser's persistent
+ * storage layer.
+ * @param {String} key The key to store the data under in the persistent
+ * storage.
+ * @param {Object} data The data to store under the key.
+ * @param {Function=} callback The method to call when the save process
+ * has completed.
+ */
 Persist.prototype.save = function (key, data, callback) {
 	switch (this.mode()) {
 		case 'localforage':
@@ -8316,6 +8361,13 @@ Persist.prototype.save = function (key, data, callback) {
 	}
 };
 
+/**
+ * Loads and decodes data from the passed key.
+ * @param {String} key The key to retrieve data from in the persistent
+ * storage.
+ * @param {Function=} callback The method to call when the load process
+ * has completed.
+ */
 Persist.prototype.load = function (key, callback) {
 	var self = this;
 
@@ -8334,6 +8386,11 @@ Persist.prototype.load = function (key, callback) {
 	}
 };
 
+/**
+ * Deletes data in persistent storage stored under the passed key.
+ * @param {String} key The key to drop data for in the storage.
+ * @param {Function=} callback The method to call when the data is dropped.
+ */
 Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localforage':
@@ -8435,6 +8492,11 @@ Collection.prototype.drop = new Overload({
 	}
 });
 
+/**
+ * Saves an entire collection's data to persistent storage.
+ * @param {Function=} callback The method to call when the save function
+ * has completed.
+ */
 Collection.prototype.save = function (callback) {
 	var self = this,
 		processSave;
@@ -8480,6 +8542,11 @@ Collection.prototype.save = function (callback) {
 	}
 };
 
+/**
+ * Loads an entire collection's data from persistent storage.
+ * @param {Function=} callback The method to call when the load function
+ * has completed.
+ */
 Collection.prototype.load = function (callback) {
 	var self = this;
 
@@ -8528,6 +8595,11 @@ Db.prototype.init = function () {
 	this.persist = new Persist(this);
 };
 
+/**
+ * Loads an entire database's data from persistent storage.
+ * @param {Function=} callback The method to call when the load function
+ * has completed.
+ */
 Db.prototype.load = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
@@ -8556,6 +8628,11 @@ Db.prototype.load = function (callback) {
 	}
 };
 
+/**
+ * Saves an entire database's data to persistent storage.
+ * @param {Function=} callback The method to call when the save function
+ * has completed.
+ */
 Db.prototype.save = function (callback) {
 	// Loop the collections in the database
 	var obj = this._collection,
@@ -8677,7 +8754,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.214',
+	version: '1.3.217',
 	modules: {},
 
 	_synth: {},
