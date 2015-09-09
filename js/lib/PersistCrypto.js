@@ -17,6 +17,12 @@ Plugin.prototype.init = function (options) {
 	this._pass = options.pass;
 };
 
+/**
+ * Gets / sets the current pass-phrase being used to encrypt / decrypt
+ * data with the plugin.
+ */
+Shared.synthesize(Plugin.prototype, 'pass');
+
 Plugin.prototype._jsonFormatter = {
 	stringify: function (cipherParams) {
 		// create json object with ciphertext

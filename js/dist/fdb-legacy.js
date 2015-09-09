@@ -12243,6 +12243,12 @@ Plugin.prototype.init = function (options) {
 	this._pass = options.pass;
 };
 
+/**
+ * Gets / sets the current pass-phrase being used to encrypt / decrypt
+ * data with the plugin.
+ */
+Shared.synthesize(Plugin.prototype, 'pass');
+
 Plugin.prototype._jsonFormatter = {
 	stringify: function (cipherParams) {
 		// create json object with ciphertext
@@ -12421,7 +12427,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.235',
+	version: '1.3.236',
 	modules: {},
 	plugins: {},
 

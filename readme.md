@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.235
+## Version 1.3.236
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -1562,6 +1562,84 @@ driver() method:
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
 	db.persist.driver('LocalStorage');
+
+### Plugins
+> Version >= 1.3.235
+
+The persistent storage module supports adding plugins to the transcoder. The transcoder
+is the part of the module that encodes data for saving to persistent storage when
+.save() is called, and decodes data currently stored in persistent storage when .load()
+is called.
+
+The transcoder is made up of steps, each step can modify the data and pass it on to the
+next step. By default there is only one step in the transcoder which either stringifies
+JSON data (for saving) or parses it (for loading).
+ 
+By adding a plugin as a transcoder step the plugin is able to make its own modifications
+to the data before it is saved or loaded. Plugins must ensure that the final data they
+provide in their callback is a string as we must allow support for LocalStorage and are
+currently only able to store string data against keys in LocalStorage.
+
+### Data Compression and Encryption
+> Version >= 1.3.235
+
+ForerunnerDB includes compression and encryption plugins that integrate with the persistent
+storage module. When compression or encryption (or both) are enabled, extra steps are executed
+in the persistent storage transcoder that modify the final stored data.
+
+> Please keep in mind that the order that you add transcoder steps is the order they are
+executed in so adding compression after encryption will store data that has first been
+encrypted, then compressed.
+
+The compression and encryption plugins register themselves in the db's shared plugins
+repository available via:
+
+	db.shared.plugins.FdbCompress
+	db.shared.plugins.FdbCrypto
+
+The plugins are meant to be instantiated before use as shown in the examples below.
+
+#### Compression
+The compression plugin takes data from the previous transcoder step and performs a zip
+operation on it. If the compressed data is smaller in size to the original data then the
+compressed data is used. If the compressed data is not smaller, no changes are made to
+the original data and it is stored uncompressed.
+
+To enable the compression plugin in the persistent storage module you must add it as a
+transcoder step:
+
+	db.persist.addStep(new db.shared.plugins.FdbCompress());
+
+#### Encryption
+The encryption plugin takes data from the previous transcoder step and encrypts / decrypts
+it based on the pass-phrase that the plugin is instantiated with. By default the plugin
+uses AES-256 as the encryption cypher algorithm.
+
+To enable the encryption plugin in the persistent storage module you must add it as a
+transcoder step:
+
+	db.persist.addStep(new db.shared.plugins.FdbCrypto({
+		pass: 'testing'
+	}));
+
+The plugin accepts an options object as the first argument during instantiation and supports
+ the following keys:
+
+* pass: The pass-phrase that will be used to encrypt / decrypt data.
+* algo: The algorithm to use. Currently defaults to "AES". Supports: "AES", "DES", "TripleDES",
+"Rabbit", "RC4" and "RC4Drop".
+
+If you need to change the encryption pass-phrase on the fly after the instantiation of the
+plugin you can hold a reference to the plugin and use its pass() method:
+ 
+	var crypto = new db.shared.plugins.FdbCrypto({
+		pass: 'testing'
+	});
+	
+	db.persist.addStep(crypto);
+	
+	// At a later time, change the pass-phrase
+	crypto.pass('myNewPassPhrase');
 
 ## Storing Arbitrary Key/Value Data
 Sometimes it can be useful to store key/value data on a class instance such as the core db
