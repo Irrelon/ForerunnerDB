@@ -2,8 +2,10 @@
 
 // Import external names locally
 var Shared = require('./Shared'),
+	async = require('async'),
 	localforage = require('localforage'),
-	pako = require('pako'),
+	FdbCompress = require('./PersistCompress'),// jshint ignore:line
+	FdbCrypto = require('./PersistCrypto'),// jshint ignore:line
 	Db,
 	Collection,
 	CollectionDrop,
@@ -33,6 +35,13 @@ Persist.prototype.localforage = localforage;
  * @param {Db} db The ForerunnerDB database instance.
  */
 Persist.prototype.init = function (db) {
+	this._encodeSteps = [
+		this._encode
+	];
+	this._decodeSteps = [
+		this._decode
+	];
+
 	// Check environment
 	if (db.isClient()) {
 		if (window.Storage !== undefined) {
@@ -111,32 +120,106 @@ Persist.prototype.driver = function (val) {
 };
 
 /**
- * Takes encoded data and decodes it for use as JS native objects and arrays.
- * @param {String} val The currently encoded string data.
- * @param {Function} finished The callback method to call when decoding is
- * completed.
+ * Starts a decode waterfall process.
+ * @param {*} val The data to be decoded.
+ * @param {Function} finished The callback to pass final data to.
  */
 Persist.prototype.decode = function (val, finished) {
-	var compressionEnabled = false,
-		before,
-		after,
-		parts,
+	async.waterfall([function (callback) {
+		callback(false, val, {});
+	}].concat(this._decodeSteps), finished);
+};
+
+/**
+ * Starts an encode waterfall process.
+ * @param {*} val The data to be encoded.
+ * @param {Function} finished The callback to pass final data to.
+ */
+Persist.prototype.encode = function (val, finished) {
+	async.waterfall([function (callback) {
+		callback(false, val, {});
+	}].concat(this._encodeSteps), finished);
+};
+
+Shared.synthesize(Persist.prototype, 'encodeSteps');
+Shared.synthesize(Persist.prototype, 'decodeSteps');
+
+/**
+ * Adds an encode/decode step to the persistent storage system so
+ * that you can add custom functionality.
+ * @param {Function} encode The encode method called with the data from the
+ * previous encode step. When your method is complete it MUST call the
+ * callback method. If you provide anything other than false to the err
+ * parameter the encoder will fail and throw an error.
+ * @param {Function} decode The decode method called with the data from the
+ * previous decode step. When your method is complete it MUST call the
+ * callback method. If you provide anything other than false to the err
+ * parameter the decoder will fail and throw an error.
+ * @param {Number=} index Optional index to add the encoder step to. This
+ * allows you to place a step before or after other existing steps. If not
+ * provided your step is placed last in the list of steps. For instance if
+ * you are providing an encryption step it makes sense to place this last
+ * since all previous steps will then have their data encrypted by your
+ * final step.
+ */
+Persist.prototype.addStep = new Overload({
+	'object': function (obj) {
+		this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
+	},
+
+	'function, function': function (encode, decode) {
+		this.$main.call(this, encode, decode, 0);
+	},
+
+	'function, function, number': function (encode, decode, index) {
+		this.$main.call(this, encode, decode, index);
+	},
+
+	$main: function (encode, decode, index) {
+		if (index === 0 || index === undefined) {
+			this._encodeSteps.push(encode);
+			this._decodeSteps.unshift(decode);
+		} else {
+			// Place encoder step at index then work out correct
+			// index to place decoder step
+			this._encodeSteps.splice(index, 0, encode);
+			this._decodeSteps.splice(this._decodeSteps.length - index, 0, decode);
+		}
+	}
+});
+
+Persist.prototype.unwrap = function (dataStr) {
+	var parts = dataStr.split('::fdb::'),
+		data;
+
+	switch (parts[0]) {
+		case 'json':
+			data = JSON.parse(parts[1]);
+			break;
+
+		case 'raw':
+			data = parts[1];
+			break;
+
+		default:
+			break;
+	}
+};
+
+/**
+ * Takes encoded data and decodes it for use as JS native objects and arrays.
+ * @param {String} val The currently encoded string data.
+ * @param {Object} meta Meta data object that can be used to pass back useful
+ * supplementary data.
+ * @param {Function} finished The callback method to call when decoding is
+ * completed.
+ * @private
+ */
+Persist.prototype._decode = function (val, meta, finished) {
+	var parts,
 		data;
 
 	if (val) {
-		// Check if we need to decompress the string
-		if (val.substr(0, 4) === 'c1::') {
-			val = val.substr(4);
-
-			before = val.length;
-			val = pako.inflate(val, {to: 'string'});
-			after = val.length;
-
-			compressionEnabled = true;
-		} else {
-			before = after = val.length;
-		}
-
 		parts = val.split('::fdb::');
 
 		switch (parts[0]) {
@@ -152,44 +235,33 @@ Persist.prototype.decode = function (val, finished) {
 				break;
 		}
 
+		meta.foundData = true;
+		meta.rowCount = data.length;
+
 		if (finished) {
-			finished(false, data, {
-				foundData: true,
-				rowCount: data.length,
-				compression: {
-					enabled: compressionEnabled,
-					compressedBytes: before,
-					uncompressedBytes: after,
-					effect: Math.round((100 / after) * before) + '%'
-				}
-			});
+			finished(false, data, meta);
 		}
 	} else {
+		meta.foundData = false;
+		meta.rowCount = 0;
+
 		if (finished) {
-			finished(false, val, {
-				foundData: false,
-				rowCount: 0,
-				compression: {
-					compressedBytes: 0,
-					uncompressedBytes: 0,
-					effect: '0%'
-				}
-			});
+			finished(false, val, meta);
 		}
 	}
 };
 
 /**
  * Takes native JS data and encodes it for for storage as a string.
- * @param {Object} val The current unencoded data.
+ * @param {Object} val The current un-encoded data.
+ * @param {Object} meta Meta data object that can be used to pass back useful
+ * supplementary data.
  * @param {Function} finished The callback method to call when encoding is
  * completed.
+ * @private
  */
-Persist.prototype.encode = function (val, finished) {
-	var data = val,
-		before,
-		after,
-		compressedVal;
+Persist.prototype._encode = function (val, meta, finished) {
+	var data = val;
 
 	if (typeof val === 'object') {
 		val = 'json::fdb::' + JSON.stringify(val);
@@ -197,26 +269,11 @@ Persist.prototype.encode = function (val, finished) {
 		val = 'raw::fdb::' + val;
 	}
 
-	// Compress the data
-	before = val.length;
-	compressedVal = 'c1::' + pako.deflate(val, { to: 'string' });
-	after = compressedVal.length;
-
-	// If the compressed version is smaller than the original, use it!
-	if (after < before) {
-		val = compressedVal;
-	}
+	meta.foundData = true;
+	meta.rowCount = data.length;
 
 	if (finished) {
-		finished(false, val, {
-			foundData: true,
-			rowCount: data.length,
-			compression: {
-				compressedBytes: after,
-				uncompressedBytes: before,
-				effect: Math.round((100 / before) * after) + '%'
-			}
-		});
+		finished(false, val, meta);
 	}
 };
 
