@@ -852,6 +852,126 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.domDown();
 		base.dbDown();
 	});
+
+	QUnit.asyncTest('View chain propagation :: Collection -> View -> View -> View', function () {
+		"use strict";
+
+		expect(6);
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view1 = db.view('view1'),
+			view2 = db.view('view2'),
+			view3 = db.view('view3'),
+			elems1,
+			elems2,
+			elems3;
+
+		view1.from(coll);
+		view2.from(view1);
+		view3.from(view2);
+
+		$('<div id="testViewProp1"></div>').appendTo('body');
+		$('<div id="testViewProp2"></div>').appendTo('body');
+		$('<div id="testViewProp3"></div>').appendTo('body');
+
+		view1.link('#testViewProp1', {
+			template: '<div class="item">{^{:moo}}</div>'
+		});
+
+		view2.link('#testViewProp2', {
+			template: '<div class="item">{^{:moo}}</div>'
+		});
+
+		view3.link('#testViewProp3', {
+			template: '<div class="item">{^{:moo}}</div>'
+		});
+
+		coll.insert({
+			moo: true
+		});
+
+		elems1 = $('#testViewProp1').find('.item');
+		elems2 = $('#testViewProp2').find('.item');
+		elems3 = $('#testViewProp3').find('.item');
+
+		setTimeout(function () {
+			strictEqual(elems1.text(), 'true', 'Value 1 correct');
+			strictEqual(elems2.text(), 'true', 'Value 2 correct');
+			strictEqual(elems3.text(), 'true', 'Value 3 correct');
+
+			coll.update({}, {
+				moo: false
+			});
+
+			setTimeout(function () {
+				strictEqual(elems1.text(), 'false', 'Value 1 correct');
+				strictEqual(elems2.text(), 'false', 'Value 2 correct');
+				strictEqual(elems3.text(), 'false', 'Value 3 correct');
+
+				$('#testViewProp1').remove();
+				$('#testViewProp2').remove();
+				$('#testViewProp3').remove();
+
+				base.dbDown();
+
+				start();
+			}, 1);
+		}, 1);
+	});
+
+	QUnit.asyncTest('View chain propagation to document :: Collection -> View -> Document', function () {
+		"use strict";
+
+		expect(2);
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view1 = db.view('view1'),
+			view2 = db.view('view2'),
+			view3 = db.view('view3'),
+			doc1 = db.document('doc1'),
+			elems1;
+
+		view1.from(coll);
+		view2.from(view1);
+		view3.from(view2);
+
+		$('<div id="testViewProp1"></div>').appendTo('body');
+
+		view3.link('#testViewProp1', {
+			template: '{{:~log(#data)}}{^{if items && items.length}}{^{for items}}<div class="item">{^{:moo}}</div>{{/for}}{{else}}<div>No items</div>{{/if}}',
+		}, {
+			$wrap: 'items',
+			$wrapIn: doc1
+		});
+
+		setTimeout(function () {
+			coll.insert({
+				moo: true
+			});
+
+			elems1 = $('#testViewProp1').find('.item');
+
+			setTimeout(function () {
+				strictEqual(elems1.text(), 'true', 'Value 1 correct');
+
+				coll.update({}, {
+					moo: false
+				});
+
+				setTimeout(function () {
+					strictEqual(elems1.text(), 'false', 'Value 1 correct');
+
+					$('#testViewProp1').remove();
+
+					base.dbDown();
+
+					start();
+				}, 1000);
+			}, 1000);
+		}, 2000);
+	});
 });
 
 ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
