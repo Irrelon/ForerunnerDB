@@ -542,7 +542,7 @@ View.prototype.drop = function () {
  * @memberof View
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db', function (db) {
+Shared.synthesize(View.prototype, 'db', function (db) {
 	if (db) {
 		this.privateData().db(db);
 		this.publicData().db(db);

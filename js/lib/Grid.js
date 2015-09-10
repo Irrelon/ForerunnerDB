@@ -146,7 +146,7 @@ Grid.prototype.from = function (collection) {
  * @param {Db=} db The db instance.
  * @returns {*}
  */
-Shared.synthesize(Collection.prototype, 'db', function (db) {
+Shared.synthesize(Grid.prototype, 'db', function (db) {
 	if (db) {
 		// Apply the same debug settings
 		this.debug(db.debug());
