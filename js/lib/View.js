@@ -537,21 +537,24 @@ View.prototype.drop = function () {
 };
 
 /**
- * Gets / sets the DB the view is bound against. Automatically set
- * when the db.oldView(viewName) method is called.
- * @param db
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Db=} db The db instance.
+ * @memberof View
  * @returns {*}
  */
-View.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
 		this.privateData().db(db);
 		this.publicData().db(db);
-		return this;
+
+		// Apply the same debug settings
+		this.debug(db.debug());
+		this.privateData().debug(db.debug());
+		this.publicData().debug(db.debug());
 	}
 
-	return this._db;
-};
+	return this.$super.apply(this, arguments);
+});
 
 /**
  * Gets / sets the query object and query options that the view uses

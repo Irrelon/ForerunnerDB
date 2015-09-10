@@ -140,20 +140,20 @@ Grid.prototype.from = function (collection) {
 };
 
 /**
- * Gets / sets the DB the grid is bound against.
+ * Gets / sets the db instance this class instance belongs to.
  * @func db
  * @memberof Grid
- * @param {Db} db
+ * @param {Db=} db The db instance.
  * @returns {*}
  */
-Grid.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
-		return this;
+Shared.synthesize(Collection.prototype, 'db', function (db) {
+	if (db) {
+		// Apply the same debug settings
+		this.debug(db.debug());
 	}
 
-	return this._db;
-};
+	return this.$super.apply(this, arguments);
+});
 
 Grid.prototype._collectionDropped = function (collection) {
 	if (collection) {

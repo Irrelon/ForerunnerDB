@@ -242,6 +242,9 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		if (this.primaryKey() === '_id') {
 			// Set primary key to the db's key by default
 			this.primaryKey(db.primaryKey());
+
+			// Apply the same debug settings
+			this.debug(db.debug());
 		}
 	}
 
