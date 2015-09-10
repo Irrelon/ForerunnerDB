@@ -235,8 +235,12 @@ Persist.prototype._decode = function (val, meta, finished) {
 				break;
 		}
 
-		meta.foundData = true;
-		meta.rowCount = data.length;
+		if (data) {
+			meta.foundData = true;
+			meta.rowCount = data.length;
+		} else {
+			meta.foundData = false;
+		}
 
 		if (finished) {
 			finished(false, data, meta);
@@ -269,8 +273,12 @@ Persist.prototype._encode = function (val, meta, finished) {
 		val = 'raw::fdb::' + val;
 	}
 
-	meta.foundData = true;
-	meta.rowCount = data.length;
+	if (data) {
+		meta.foundData = true;
+		meta.rowCount = data.length;
+	} else {
+		meta.foundData = false;
+	}
 
 	if (finished) {
 		finished(false, val, meta);
