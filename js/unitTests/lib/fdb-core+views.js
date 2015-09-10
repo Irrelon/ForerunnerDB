@@ -6212,6 +6212,10 @@ var ChainReactor = {
 	 * @param obj
 	 */
 	chain: function (obj) {
+		if (this.debug && this.debug()) {
+			console.log('ForerunnerDB.ChainReactor: Adding target "' + obj.name() + '" to the chain reactor target list for this entity "' + this.name() + '"');
+		}
+
 		this._chain = this._chain || [];
 		var index = this._chain.indexOf(obj);
 
@@ -6221,6 +6225,10 @@ var ChainReactor = {
 	},
 
 	unChain: function (obj) {
+		if (this.debug && this.debug()) {
+			console.log('ForerunnerDB.ChainReactor: Removing target "' + obj.name() + '" from the chain reactor target list for this entity "' + this.name() + '"');
+		}
+
 		if (this._chain) {
 			var index = this._chain.indexOf(obj);
 
@@ -6241,6 +6249,10 @@ var ChainReactor = {
 				arrItem = arr[index];
 
 				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
+					if (this.debug && this.debug()) {
+						console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + this.name() + '" to "' + arrItem.name() + '"');
+					}
+
 					arrItem.chainReceive(this, type, data, options);
 				} else {
 					console.log('Reactor Data:', type, data, options);
@@ -6259,6 +6271,10 @@ var ChainReactor = {
 			data: data,
 			options: options
 		};
+
+		if (this.debug && this.debug()) {
+			console.log('ForerunnerDB.ChainReactor: "' + this.name() + '" received data from parent reactor node');
+		}
 
 		// Fire our internal handler
 		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
@@ -8464,7 +8480,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.239',
+	version: '1.3.240',
 	modules: {},
 	plugins: {},
 
