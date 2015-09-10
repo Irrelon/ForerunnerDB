@@ -792,6 +792,9 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		if (this.primaryKey() === '_id') {
 			// Set primary key to the db's key by default
 			this.primaryKey(db.primaryKey());
+
+			// Apply the same debug settings
+			this.debug(db.debug());
 		}
 	}
 
@@ -8480,7 +8483,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.241',
+	version: '1.3.244',
 	modules: {},
 	plugins: {},
 
@@ -9302,21 +9305,24 @@ View.prototype.drop = function () {
 };
 
 /**
- * Gets / sets the DB the view is bound against. Automatically set
- * when the db.oldView(viewName) method is called.
- * @param db
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Db=} db The db instance.
+ * @memberof View
  * @returns {*}
  */
-View.prototype.db = function (db) {
-	if (db !== undefined) {
-		this._db = db;
+Shared.synthesize(View.prototype, 'db', function (db) {
+	if (db) {
 		this.privateData().db(db);
 		this.publicData().db(db);
-		return this;
+
+		// Apply the same debug settings
+		this.debug(db.debug());
+		this.privateData().debug(db.debug());
+		this.publicData().debug(db.debug());
 	}
 
-	return this._db;
-};
+	return this.$super.apply(this, arguments);
+});
 
 /**
  * Gets / sets the query object and query options that the view uses

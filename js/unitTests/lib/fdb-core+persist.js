@@ -530,6 +530,9 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
 		if (this.primaryKey() === '_id') {
 			// Set primary key to the db's key by default
 			this.primaryKey(db.primaryKey());
+
+			// Apply the same debug settings
+			this.debug(db.debug());
 		}
 	}
 
@@ -9027,7 +9030,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.241',
+	version: '1.3.244',
 	modules: {},
 	plugins: {},
 
