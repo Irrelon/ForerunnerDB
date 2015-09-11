@@ -26,6 +26,8 @@ Db.prototype.init = function (name, core) {
 	this._debug = {};
 };
 
+Shared.addModule('Db', Db);
+
 Db.prototype.moduleLoaded = new Overload({
 	/**
 	 * Checks if a module has been loaded into the database.
@@ -605,4 +607,5 @@ Core.prototype.databases = function (search) {
 	return arr;
 };
 
+Shared.finishModule('Db');
 module.exports = Db;
