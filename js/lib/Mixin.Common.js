@@ -159,6 +159,23 @@ Common = {
 		}
 	]),
 
+	classIdentifier: function () {
+		return 'ForerunnerDB.' + this.className;
+	},
+
+	/**
+	 * Returns a string describing the instance by it's class name and instance
+	 * object name.
+	 * @returns {String} The instance identifier.
+	 */
+	instanceIdentifier: function () {
+		return '[' + this.className + ']' + this.name();
+	},
+
+	logIdentifier: function () {
+		return this.classIdentifier() + ': ' + this.instanceIdentifier();
+	},
+
 	/**
 	 * Converts a query object with MongoDB dot notation syntax
 	 * to Forerunner's object notation syntax.
