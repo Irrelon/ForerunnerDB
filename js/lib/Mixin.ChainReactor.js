@@ -1,4 +1,6 @@
 "use strict";
+var Shared = require('./Shared');
+
 /**
  * The chain reactor mixin, provides methods to the target object that allow chain
  * reaction events to propagate to the target and be handled, processed and passed
@@ -12,7 +14,11 @@ var ChainReactor = {
 	 */
 	chain: function (obj) {
 		if (this.debug && this.debug()) {
-			console.log('ForerunnerDB.ChainReactor: Adding target "' + obj.name() + '" to the chain reactor target list for this entity "' + this.name() + '"');
+			if (obj._reactorIn && obj._reactorOut) {
+				console.log('ForerunnerDB.ChainReactor: Adding target "' + obj._reactorOut.instanceIdentifier() + '" to the chain reactor target list for entity "' + obj._reactorIn.instanceIdentifier() + '"');
+			} else {
+				console.log('ForerunnerDB.ChainReactor: Adding target "' + obj.instanceIdentifier() + '" to the chain reactor target list for entity "' + this.instanceIdentifier() + '"');
+			}
 		}
 
 		this._chain = this._chain || [];
@@ -25,7 +31,11 @@ var ChainReactor = {
 
 	unChain: function (obj) {
 		if (this.debug && this.debug()) {
-			console.log('ForerunnerDB.ChainReactor: Removing target "' + obj.name() + '" from the chain reactor target list for this entity "' + this.name() + '"');
+			if (obj._reactorIn && obj._reactorOut) {
+				console.log('ForerunnerDB.ChainReactor: Removing target "' + obj._reactorOut.instanceIdentifier() + '" from the chain reactor target list for entity "' + obj._reactorIn.instanceIdentifier() + '"');
+			} else {
+				console.log('ForerunnerDB.ChainReactor: Removing target "' + obj.instanceIdentifier() + '" from the chain reactor target list for entity "' + this.instanceIdentifier() + '"');
+			}
 		}
 
 		if (this._chain) {
@@ -49,7 +59,11 @@ var ChainReactor = {
 
 				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
 					if (this.debug && this.debug()) {
-						console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + this.name() + '" to "' + arrItem.name() + '"');
+						if (arrItem._reactorIn && arrItem._reactorOut) {
+							console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + arrItem._reactorIn.instanceIdentifier() + '" to "' + arrItem._reactorOut.instanceIdentifier() + '"');
+						} else {
+							console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + this.instanceIdentifier() + '" to "' + arrItem.instanceIdentifier() + '"');
+						}
 					}
 
 					arrItem.chainReceive(this, type, data, options);
@@ -72,7 +86,7 @@ var ChainReactor = {
 		};
 
 		if (this.debug && this.debug()) {
-			console.log('ForerunnerDB.ChainReactor: "' + this.name() + '" received data from parent reactor node');
+			console.log('ForerunnerDB.ChainReactor: "' + this.instanceIdentifier() + '" received data from parent reactor node');
 		}
 
 		// Fire our internal handler

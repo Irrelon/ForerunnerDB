@@ -269,7 +269,7 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  */
 Collection.prototype.setData = function (data, options, callback) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	if (data) {
@@ -363,7 +363,7 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			// Check for primary key violation
 			if (!pIndex.uniqueSet(arrItem[pKey], arrItem)) {
 				// Primary key violation
-				throw('ForerunnerDB.Collection "' + this.name() + '": Call to setData on collection failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
+				throw(this.logIdentifier() + ' Call to setData on collection failed because your data violates the primary key unique constraint. One or more documents are using the same primary key: ' + arrItem[this._primaryKey]);
 			}
 		} else {
 			pIndex.set(arrItem[pKey], arrItem);
@@ -396,7 +396,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  */
 Collection.prototype.truncate = function () {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	this.emit('truncate', this._data);
@@ -439,7 +439,7 @@ Collection.prototype.truncate = function () {
  */
 Collection.prototype.upsert = function (obj, callback) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	if (obj) {
@@ -574,7 +574,7 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  */
 Collection.prototype.update = function (query, update, options) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	// Decouple the update data
@@ -590,7 +590,7 @@ Collection.prototype.update = function (query, update, options) {
 	update = this.transformIn(update);
 
 	if (this.debug()) {
-		console.log('Updating some collection data for collection "' + this.name() + '"');
+		console.log(this.logIdentifier() + ' Updating some data');
 	}
 
 	var self = this,
@@ -704,7 +704,7 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
 
 	// Update the item in the primary index
 	if (!this._insertIntoIndexes(currentObj)) {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
+		throw(this.logIdentifier() + ' Primary key violation in update! Key violated: ' + currentObj[this._primaryKey]);
 	}
 
 	// Update the object in the collection data
@@ -914,7 +914,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									break;
 
 								default:
-									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot update cast to unknown type: ' + update[i]);
+									throw(this.logIdentifier() + ' Cannot update cast to unknown type: ' + update[i]);
 							}
 
 							break;
@@ -950,7 +950,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								}
 								updated = true;
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot push to a key that is not an array! (' + i + ')');
+								throw(this.logIdentifier() + ' Cannot push to a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -998,7 +998,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 										}
 									}
 								} else {
-									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot pullAll without being given an array of values to pull! (' + i + ')');
+									throw(this.logIdentifier() + ' Cannot pullAll without being given an array of values to pull! (' + i + ')');
 								}
 							}
 							break;
@@ -1062,7 +1062,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot addToSet on a key that is not an array! (' + i + ')');
+								throw(this.logIdentifier() + ' Cannot addToSet on a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -1088,10 +1088,10 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									this._updateSplicePush(doc[i], tempIndex, update[i]);
 									updated = true;
 								} else {
-									throw('ForerunnerDB.Collection "' + this.name() + '": Cannot splicePush without a $index integer value!');
+									throw(this.logIdentifier() + ' Cannot splicePush without a $index integer value!');
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot splicePush with a key that is not an array! (' + i + ')');
+								throw(this.logIdentifier() + ' Cannot splicePush with a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -1108,13 +1108,13 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 											this._updateSpliceMove(doc[i], tmpIndex, moveToIndex);
 											updated = true;
 										} else {
-											throw('ForerunnerDB.Collection "' + this.name() + '": Cannot move without a $index integer value!');
+											throw(this.logIdentifier() + ' Cannot move without a $index integer value!');
 										}
 										break;
 									}
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot move on a key that is not an array! (' + i + ')');
+								throw(this.logIdentifier() + ' Cannot move on a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -1149,7 +1149,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									updated = true;
 								}
 							} else {
-								throw('ForerunnerDB.Collection "' + this.name() + '": Cannot pop from a key that is not an array! (' + i + ')');
+								throw(this.logIdentifier() + ' Cannot pop from a key that is not an array! (' + i + ')');
 							}
 							break;
 
@@ -1195,7 +1195,7 @@ Collection.prototype._isPositionalKey = function (key) {
  */
 Collection.prototype.remove = function (query, options, callback) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	var self = this,
@@ -1416,7 +1416,7 @@ Collection.prototype.isProcessingQueue = function () {
  */
 Collection.prototype.insert = function (data, index, callback) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	if (typeof(index) === 'function') {
@@ -1737,7 +1737,7 @@ Collection.prototype.isSubsetOf = function (collection) {
  */
 Collection.prototype.distinct = function (key, query, options) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	var data = this.find(query, options),
@@ -1869,7 +1869,7 @@ Collection.prototype.find = function (query, options, callback) {
 
 Collection.prototype._find = function (query, options) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	// TODO: This method is quite long, break into smaller pieces
@@ -2100,7 +2100,7 @@ Collection.prototype._find = function (query, options) {
 									// works if joinMulti is disabled
 									if (joinMulti !== false) {
 										// Throw an exception here as this join is not physically possible!
-										throw('ForerunnerDB.Collection "' + this.name() + '": Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
+										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
 									}
 
 									// Mixin the result
@@ -2616,7 +2616,7 @@ Collection.prototype._sort = function (key, arr) {
 			return self.sortDesc(valA, valB);
 		};
 	} else {
-		throw('ForerunnerDB.Collection "' + this.name() + '": $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
+		throw(this.logIdentifier() + ' $orderBy clause has invalid direction: ' + dataPath.value + ', accepted values are 1 or -1 for ascending or descending!');
 	}
 
 	return arr.sort(sorterMethod);
@@ -2947,7 +2947,7 @@ Collection.prototype.insertIndexViolation = function (doc) {
  */
 Collection.prototype.ensureIndex = function (keys, options) {
 	if (this._state === 'dropped') {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Cannot operate in a dropped state!');
+		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	this._indexByName = this._indexByName || {};
@@ -3059,7 +3059,7 @@ Collection.prototype.diff = function (collection) {
 
 	// Check if the primary key index of each collection can be utilised
 	if (pm !== collection.primaryKey()) {
-		throw('ForerunnerDB.Collection "' + this.name() + '": Collection diffing requires that both collections have the same primary key!');
+		throw(this.logIdentifier() + ' Diffing requires that both collections have the same primary key!');
 	}
 
 	// Use the collection primary key index to do the diff (super-fast)
@@ -3325,7 +3325,7 @@ Db.prototype.collection = new Overload({
 			if (!this._collection[name]) {
 				if (options && options.autoCreate === false) {
 					if (options && options.throwError !== false) {
-						throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
 					}
 				}
 
@@ -3344,7 +3344,7 @@ Db.prototype.collection = new Overload({
 			return this._collection[name];
 		} else {
 			if (!options || (options && options.throwError !== false)) {
-				throw('ForerunnerDB.Db "' + this.name() + '": Cannot get collection with undefined name!');
+				throw(this.logIdentifier() + ' Cannot get collection with undefined name!');
 			}
 		}
 	}

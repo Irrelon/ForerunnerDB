@@ -317,7 +317,7 @@ var Matching = {
 
 					return false;
 				} else {
-					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use an $in operator on a non-array key: ' + key);
+					throw(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
 				}
 				break;
 
@@ -336,7 +336,7 @@ var Matching = {
 
 					return true;
 				} else {
-					throw('ForerunnerDB.Mixin.Matching "' + this.name() + '": Cannot use a $nin operator on a non-array key: ' + key);
+					throw(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
 				}
 				break;
 

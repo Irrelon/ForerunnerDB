@@ -195,13 +195,13 @@ FdbDocument.prototype._updateProperty = function (doc, prop, val) {
 		window.jQuery.observable(doc).setProperty(prop, val);
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Document: Setting data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Setting data-bound document property "' + prop + '"');
 		}
 	} else {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Document: Setting non-data-bound document property "' + prop + '" for collection "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
 		}
 	}
 };
@@ -237,13 +237,13 @@ FdbDocument.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 		window.jQuery.observable(arr).move(indexFrom, indexTo);
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Document: Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Moving data-bound document array index from "' + indexFrom + '" to "' + indexTo + '"');
 		}
 	} else {
 		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Document: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '"');
 		}
 	}
 };

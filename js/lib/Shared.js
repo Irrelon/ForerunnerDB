@@ -8,7 +8,7 @@ var Overload = require('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.244',
+	version: '1.3.258',
 	modules: {},
 	plugins: {},
 
@@ -21,7 +21,10 @@ var Shared = {
 	 * @param {Function} module The module class.
 	 */
 	addModule: function (name, module) {
+		// Store the module in the module registry
 		this.modules[name] = module;
+
+		// Tell the universe we are loading this module
 		this.emit('moduleLoad', [name, module]);
 	},
 
@@ -33,7 +36,13 @@ var Shared = {
 	 */
 	finishModule: function (name) {
 		if (this.modules[name]) {
+			// Set the finished loading flag to true
 			this.modules[name]._fdbFinished = true;
+
+			// Assign the module name to itself so it knows what it
+			// is called
+			this.modules[name].prototype ? this.modules[name].prototype.className = name : this.modules[name].className = name;
+
 			this.emit('moduleFinished', [name, this.modules[name]]);
 		} else {
 			throw('ForerunnerDB.Shared: finishModule called on a module that has not been registered with addModule(): ' + name);

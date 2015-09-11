@@ -511,7 +511,7 @@ Collection.prototype.grid = View.prototype.grid = function (selector, template, 
 
 					return grid;
 				} else {
-					throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot create a grid using this collection/view because a grid with this name already exists: ' + selector);
+					throw(this.logIdentifier() + ' Cannot create a grid because a grid with this name already exists: ' + selector);
 				}
 			}
 
@@ -545,7 +545,7 @@ Collection.prototype.unGrid = View.prototype.unGrid = function (selector, templa
 
 				return grid.drop();
 			} else {
-				throw('ForerunnerDB.Collection/View "' + this.name() + '": Cannot remove a grid using this collection/view because a grid with this name does not exist: ' + name);
+				throw(this.logIdentifier() + ' Cannot remove grid because a grid with this name does not exist: ' + name);
 			}
 		} else {
 			// No parameters passed, remove all grids from this module
@@ -557,7 +557,7 @@ Collection.prototype.unGrid = View.prototype.unGrid = function (selector, templa
 					grid.drop();
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.Collection/View "' + this.name() + '": Removed grid binding "' + i + '"');
+						console.log(this.logIdentifier() + ' Removed grid binding "' + i + '"');
 					}
 				}
 			}

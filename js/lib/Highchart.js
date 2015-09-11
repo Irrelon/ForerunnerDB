@@ -23,7 +23,7 @@ Highchart.prototype.init = function (collection, options) {
 	this._selector = window.jQuery(this._options.selector);
 
 	if (!this._selector[0]) {
-		throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart target element does not exist via selector: ' + this._options.selector);
+		throw(this.classIdentifier() + ' "' + collection.name() + '": Chart target element does not exist via selector: ' + this._options.selector);
 	}
 
 	this._listeners = {};
@@ -94,7 +94,7 @@ Highchart.prototype.init = function (collection, options) {
 			break;
 
 		default:
-			throw('ForerunnerDB.Highchart "' + collection.name() + '": Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
+			throw(this.classIdentifier() + ' "' + collection.name() + '": Chart type specified is not currently supported by ForerunnerDB: ' + this._options.type);
 	}
 
 	// Hook the collection events to auto-update the chart

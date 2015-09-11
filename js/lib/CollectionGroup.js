@@ -78,6 +78,13 @@ Shared.synthesize(CollectionGroup.prototype, 'state');
  */
 Shared.synthesize(CollectionGroup.prototype, 'db');
 
+/**
+ * Gets / sets the instance name.
+ * @param {Name=} name The new name to set.
+ * @returns {*}
+ */
+Shared.synthesize(CollectionGroup.prototype, 'name');
+
 CollectionGroup.prototype.addCollection = function (collection) {
 	if (collection) {
 		if (this._collections.indexOf(collection) === -1) {
@@ -86,7 +93,7 @@ CollectionGroup.prototype.addCollection = function (collection) {
 			// Check for compatible primary keys
 			if (this._collections.length) {
 				if (this._primaryKey !== collection.primaryKey()) {
-					throw('ForerunnerDB.CollectionGroup "' + this.name() + '": All collections in a collection group must have the same primary key!');
+					throw(this.logIdentifier() + ' All collections in a collection group must have the same primary key!');
 				}
 			} else {
 				// Set the primary key to the first collection added

@@ -327,7 +327,7 @@ View.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
-				console.log('ForerunnerDB.View: Setting data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Setting data in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Get the new data from our underlying data source sorted as we want
@@ -340,7 +340,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'insert':
 			if (this.debug()) {
-				console.log('ForerunnerDB.View: Inserting some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Inserting some data in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
@@ -375,7 +375,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'update':
 			if (this.debug()) {
-				console.log('ForerunnerDB.View: Updating some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Updating some data in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			primaryKey = this._privateData.primaryKey();
@@ -429,7 +429,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'remove':
 			if (this.debug()) {
-				console.log('ForerunnerDB.View: Removing some data on view "' + this.name() + '" in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Removing some data in underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Modify transform data
@@ -1000,7 +1000,7 @@ Collection.prototype.view = function (name, query, options) {
 
 			return view;
 		} else {
-			throw('ForerunnerDB.Collection "' + this.name() + '": Cannot create a view using this collection because a view with this name already exists: ' + name);
+			throw(this.logIdentifier() + ' Cannot create a view using this collection because a view with this name already exists: ' + name);
 		}
 	}
 };

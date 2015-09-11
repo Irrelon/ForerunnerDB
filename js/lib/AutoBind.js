@@ -93,7 +93,7 @@ AutoBind.extendCollection = function (Module) {
 							if (template.length) {
 								templateHtml = window.jQuery(template[0]).html();
 							} else {
-								throw('ForerunnerDB.AutoBind "' + this.name() + '": Unable to bind collection to target because template "' + templateSelector + '" does not exist');
+								throw('ForerunnerDB.AutoBind : ' + this.instanceIdentifier() + ' Unable to bind to target because template "' + templateSelector + '" does not exist');
 							}
 						}
 
@@ -133,11 +133,11 @@ AutoBind.extendCollection = function (Module) {
 							wrapper = options.$wrapIn;
 							wrapper[options.$wrap] = this._data;
 						} else {
-							throw('ForerunnerDB.AutoBind: Unable to use passed $wrapIn option, should be either a ForerunnerDB Document instance or a JavaScript object!');
+							throw('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Unable to use passed $wrapIn option, should be either a ForerunnerDB Document instance or a JavaScript object!');
 						}
 
 						if (this.debug()) {
-							console.log('ForerunnerDB.AutoBind: Binding with data wrapper "' + options.$wrap + '" for collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+							console.log('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Binding with data wrapper "' + options.$wrap + '" to output target: ' + outputTargetSelector);
 						}
 
 						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
@@ -153,18 +153,18 @@ AutoBind.extendCollection = function (Module) {
 					this._linked++;
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.AutoBind: Added binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+						console.log(this.logIdentifier() + ' Binding to output target: ' + outputTargetSelector);
 					}
 
 					return this;
 				} else {
-					throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot bind collection to target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					throw(this.logIdentifier() + ' Cannot bind collection to target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 				}
 			}
 
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Attempt to bind a duplicate link from collection to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			throw(this.logIdentifier() + ' Attempt to bind a duplicate link from collection to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 		} else {
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 	};
 
@@ -206,14 +206,14 @@ AutoBind.extendCollection = function (Module) {
 					this._linked--;
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.AutoBind: Removed binding collection "' + this.name() + '" to output target: ' + outputTargetSelector);
+						console.log(this.logIdentifier() + ' Removed binding to output target: ' + outputTargetSelector);
 					}
 
 					return this;
 				}
 
 				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from collection, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+					console.log(this.logIdentifier() + ' Cannot remove binding as it does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 				}
 			} else {
 				// No parameters passed, unlink all from this module
@@ -222,7 +222,7 @@ AutoBind.extendCollection = function (Module) {
 						window.jQuery.templates[i].unlink(this._links[i]);
 
 						if (this.debug()) {
-							console.log('ForerunnerDB.AutoBind: Removed binding collection "' + this.name() + '" to output target: ' + this._links[i]);
+							console.log(this.logIdentifier() + ' Removed binding to output target: ' + this._links[i]);
 						}
 					}
 				}
@@ -231,7 +231,7 @@ AutoBind.extendCollection = function (Module) {
 				this._linked = 0;
 			}
 		} else {
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 
 		return this;
@@ -249,7 +249,7 @@ AutoBind.extendCollection = function (Module) {
 		if (this._linked) {
 			// Remove all items
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Replacing some data in document for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Replacing some data in document');
 			}
 			window.jQuery.observable(this._data).refresh(data);
 		} else {
@@ -260,7 +260,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._dataInsertAtIndex = function (index, doc) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Inserting some data for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Inserting some data');
 			}
 			window.jQuery.observable(this._data).insert(index, doc);
 		} else {
@@ -271,7 +271,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._dataRemoveAtIndex = function (index) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Removing some data for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Removing some data');
 			}
 			window.jQuery.observable(this._data).remove(index);
 		} else {
@@ -290,7 +290,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateProperty = function (doc, prop, val) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Setting document property "' + prop + '" for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Setting document property "' + prop + '"');
 			}
 			window.jQuery.observable(doc).setProperty(prop, val);
 		} else {
@@ -308,7 +308,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateIncrement = function (doc, prop, val) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Incrementing document property "' + prop + '" for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Incrementing document property "' + prop + '"');
 			}
 			window.jQuery.observable(doc).setProperty(prop, doc[prop] + val);
 		} else {
@@ -326,7 +326,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateSpliceMove = function (arr, indexFrom, indexTo) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Moving document array index from "' + indexFrom + '" to "' + indexTo + '" for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Moving document array index from "' + indexFrom + '" to "' + indexTo + '"');
 			}
 			window.jQuery.observable(arr).move(indexFrom, indexTo);
 		} else {
@@ -344,7 +344,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateSplicePush = function (arr, index, doc) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Pushing item into document sub-array for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Pushing item into document sub-array');
 			}
 			if (arr.length > index) {
 				window.jQuery.observable(arr).insert(index, doc);
@@ -365,7 +365,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updatePush = function (arr, doc) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Pushing item into document sub-array for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Pushing item into document sub-array');
 			}
 			window.jQuery.observable(arr).insert(doc);
 		} else {
@@ -382,7 +382,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updatePull = function (arr, index) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Pulling item from document sub-array for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Pulling item from document sub-array');
 			}
 			window.jQuery.observable(arr).remove(index);
 		} else {
@@ -400,7 +400,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateMultiply = function (doc, prop, val) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Multiplying value for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Multiplying value');
 			}
 			window.jQuery.observable(doc).setProperty(prop, doc[prop] * val);
 		} else {
@@ -418,7 +418,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateRename = function (doc, prop, val) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Renaming property "' + prop + '" to "' + val + '" on document for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Renaming property "' + prop + '" to "' + val + '" on document');
 			}
 			window.jQuery.observable(doc).setProperty(val, doc[prop]);
 			window.jQuery.observable(doc).removeProperty(prop);
@@ -437,7 +437,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateOverwrite = function (doc, prop, val) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Setting document property "' + prop + '" for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Setting document property "' + prop + '"');
 			}
 			window.jQuery.observable(doc).setProperty(prop, val);
 		} else {
@@ -454,7 +454,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype._updateUnset = function (doc, prop) {
 		if (this._linked) {
 			if (this.debug()) {
-				console.log('ForerunnerDB.AutoBind: Removing property "' + prop + '" from document for collection "' + this.name() + '"');
+				console.log(this.logIdentifier() + ' Removing property "' + prop + '" from document');
 			}
 			window.jQuery.observable(doc).removeProperty(prop);
 		} else {
@@ -477,7 +477,7 @@ AutoBind.extendCollection = function (Module) {
 		if (this._linked) {
 			if (doc.length > 0) {
 				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind: Popping item from sub-array in document for collection "' + this.name() + '"');
+					console.log(this.logIdentifier() + ' Popping item from sub-array in document');
 				}
 
 				if (val > 0) {
@@ -564,7 +564,7 @@ AutoBind.extendView = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		var publicData = this.publicData();
 		if (this.debug()) {
-			console.log('ForerunnerDB.AutoBind: Setting up data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+			console.log(this.logIdentifier() + ' Setting up data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 		}
 
 		publicData.link(outputTargetSelector, templateSelector, options);
@@ -584,7 +584,7 @@ AutoBind.extendView = function (Module) {
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		var publicData = this.publicData();
 		if (this.debug()) {
-			console.log('ForerunnerDB.AutoBind: Removing data binding on view "' + this.name() + '" in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
+			console.log(this.logIdentifier() + ' Removing data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 		}
 
 		publicData.unlink(outputTargetSelector, templateSelector);
@@ -719,7 +719,7 @@ AutoBind.extendDocument = function (Module) {
 							if (template.length) {
 								templateHtml = window.jQuery(template[0]).html();
 							} else {
-								throw('ForerunnerDB.AutoBind "' + this.name() + '": Unable to bind document to target because template does not exist: ' + templateSelector);
+								throw(this.logIdentifier() + ' Unable to bind document to target because template does not exist: ' + templateSelector);
 							}
 						}
 
@@ -771,18 +771,18 @@ AutoBind.extendDocument = function (Module) {
 					this._linked++;
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.AutoBind: Added binding document "' + this.name() + '" to target: ' + outputTargetSelector);
+						console.log(this.logIdentifier() + ' Added binding to target: ' + outputTargetSelector);
 					}
 
 					return this;
 				} else {
-					throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot bind document to target "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					throw(this.logIdentifier() + ' Cannot bind document to target "' + outputTargetSelector + '" because it does not exist in the DOM!');
 				}
 			}
 
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot create a duplicate link from document to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			throw(this.logIdentifier() + ' Cannot create a duplicate link from document to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
 		} else {
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 	};
 
@@ -825,14 +825,14 @@ AutoBind.extendDocument = function (Module) {
 					this._linked--;
 
 					if (this.debug()) {
-						console.log('ForerunnerDB.AutoBind "' + this.name() + '": Removed binding document to target: ' + outputTargetSelector);
+						console.log(this.logIdentifier() + ' Removed binding document to target: ' + outputTargetSelector);
 					}
 
 					return this;
 				}
 
 				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind "' + this.name() + '": Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
+					console.log(this.logIdentifier() + ' Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 				}
 			} else {
 				// No parameters passed, unlink all from this module
@@ -841,7 +841,7 @@ AutoBind.extendDocument = function (Module) {
 						window.jQuery.templates[i].unlink(this._links[i]);
 
 						if (this.debug()) {
-							console.log('ForerunnerDB.AutoBind: Removed binding document "' + this.name() + '" to output target: ' + this._links[i]);
+							console.log(this.logIdentifier() + ' Removed binding to output target: ' + this._links[i]);
 						}
 					}
 				}
@@ -850,7 +850,7 @@ AutoBind.extendDocument = function (Module) {
 				this._linked = 0;
 			}
 		} else {
-			throw('ForerunnerDB.AutoBind "' + this.name() + '": Cannot data-bind without jQuery. Please add jQuery to your page!');
+			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 	};
 
@@ -877,7 +877,7 @@ AutoBind.extendDocument = function (Module) {
 		if (this._linked) {
 			if (doc.length > 0) {
 				if (this.debug()) {
-					console.log('ForerunnerDB.AutoBind: Popping item from sub-array for collection "' + this.name() + '"');
+					console.log(this.logIdentifier() + ' Popping item from sub-array');
 				}
 
 				if (val > 0) {

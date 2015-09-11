@@ -12,7 +12,7 @@ var Updating = {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Mixin.Updating: Setting non-data-bound document property "' + prop + '" for "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
 		}
 	},
 
@@ -38,7 +38,7 @@ var Updating = {
 		arr.splice(indexTo, 0, arr.splice(indexFrom, 1)[0]);
 
 		if (this.debug()) {
-			console.log('ForerunnerDB.Mixin.Updating: Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '" for "' + this.name() + '"');
+			console.log(this.logIdentifier() + ' Moving non-data-bound document array index from "' + indexFrom + '" to "' + indexTo + '"');
 		}
 	},
 

@@ -10,8 +10,10 @@ var Odm = function () {
 	this.init.apply(this, arguments);
 };
 
-Odm.prototype.init = function (from) {
+Odm.prototype.init = function (from, name) {
 	var self = this;
+
+	self.name(name);
 
 	self._collectionDroppedWrap = function () {
 		self._collectionDropped.apply(self, arguments);
@@ -28,6 +30,7 @@ Shared.mixin(Odm.prototype, 'Mixin.Events');
 
 Collection = require('./Collection');
 
+Shared.synthesize(Odm.prototype, 'name');
 Shared.synthesize(Odm.prototype, 'state');
 Shared.synthesize(Odm.prototype, 'parent');
 Shared.synthesize(Odm.prototype, 'query');
@@ -153,9 +156,9 @@ Odm.prototype.prop = function (prop, val) {
  * Get the ODM instance for this collection.
  * @returns {Odm}
  */
-Collection.prototype.odm = function () {
+Collection.prototype.odm = function (name) {
 	if (!this._odm) {
-		this._odm = new Odm(this);
+		this._odm = new Odm(this, name);
 	}
 
 	return this._odm;
