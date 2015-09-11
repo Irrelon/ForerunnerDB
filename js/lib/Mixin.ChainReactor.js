@@ -1,5 +1,4 @@
 "use strict";
-var Shared = require('./Shared');
 
 /**
  * The chain reactor mixin, provides methods to the target object that allow chain
