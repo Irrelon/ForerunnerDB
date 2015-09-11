@@ -8,7 +8,7 @@ var Overload = require('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.263',
+	version: '1.3.268',
 	modules: {},
 	plugins: {},
 
@@ -41,7 +41,11 @@ var Shared = {
 
 			// Assign the module name to itself so it knows what it
 			// is called
-			this.modules[name].prototype ? this.modules[name].prototype.className = name : this.modules[name].className = name;
+			if (this.modules[name].prototype) {
+				this.modules[name].prototype.className = name;
+			} else {
+				this.modules[name].className = name;
+			}
 
 			this.emit('moduleFinished', [name, this.modules[name]]);
 		} else {

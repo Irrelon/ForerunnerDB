@@ -131,8 +131,8 @@ Collection.prototype.drop = function (callback) {
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
-			}
 				console.log(this.logIdentifier() + ' Dropping');
+			}
 
 			this._state = 'dropped';
 

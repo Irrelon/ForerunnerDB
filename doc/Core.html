@@ -143,6 +143,339 @@ multiple database instances.
 
     
 
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Checks if a module is loaded and if so calls the passed
+success method, otherwise calls the failure method.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the module to check for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module is loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module not loaded.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Checks if an array of named modules are loaded and if so
+calls the passed callback method.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array of module names to check for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if modules are loaded.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
@@ -451,339 +784,6 @@ callback method.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Checks if an array of named modules are loaded and if so
-calls the passed callback method.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>moduleName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The array of module names to check for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if modules are loaded.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Checks if a module is loaded and if so calls the passed
-success method, otherwise calls the failure method.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>moduleName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the module to check for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>success</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module is loaded.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>failure</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module not loaded.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id="collection"><span class="type-signature"></span>collection<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
@@ -972,7 +972,7 @@ to match collection names against.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line519">line 519</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line521">line 521</a>
     </li></ul></dd>
     
 
@@ -1139,7 +1139,7 @@ a random name is assigned.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line494">line 494</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line496">line 496</a>
     </li></ul></dd>
     
 
@@ -1461,6 +1461,106 @@ by it's array index.
 
     
 
+    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns true if ForerunnerDB is running on a client browser.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line267">line 267</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="global.html#boolean">boolean</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
@@ -1566,14 +1666,14 @@ a server (node.js).
 
     
 
-    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
+    <h4 class="name" id="isServer"><span class="type-signature"></span>isServer<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
 
     
 
 
 
 <div class="description">
-    Returns true if ForerunnerDB is running on a client browser.
+    Returns true if ForerunnerDB is running on a server.
 </div>
 
 
@@ -1617,7 +1717,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line267">line 267</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line275">line 275</a>
     </li></ul></dd>
     
 
@@ -1757,106 +1857,6 @@ a server (node.js).
     <dd>
         
 <span class="param-type">Boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="isServer"><span class="type-signature"></span>isServer<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Returns true if ForerunnerDB is running on a server.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line275">line 275</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#boolean">boolean</a></span>
 
 
     </dd>
@@ -2230,7 +2230,7 @@ then the callback is called.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Thu Sep 10 2015 16:53:38 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.2</a> on Fri Sep 11 2015 14:41:23 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
