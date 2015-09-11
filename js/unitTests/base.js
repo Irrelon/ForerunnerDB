@@ -4,6 +4,7 @@ var Base = function () {
 
 Base.prototype.dbUp = function () {
 	db = fdb.db('testDb');
+	db.debug(true);
 	user = db.collection('user');
 	organisation = db.collection('organisation');
 
