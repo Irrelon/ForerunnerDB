@@ -131,8 +131,8 @@ Collection.prototype.drop = function (callback) {
 	if (this._state !== 'dropped') {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
-				console.log('Dropping collection ' + this._name);
 			}
+				console.log(this.logIdentifier() + ' Dropping');
 
 			this._state = 'dropped';
 
@@ -1323,7 +1323,10 @@ Collection.prototype.deferEmit = function (eventName, data) {
 
 		// Set a timeout
 		this._deferTimeout[eventName] = setTimeout(function () {
-			if (self.debug()) { console.log('ForerunnerDB.Collection: Emitting ' + args[0]); }
+			if (self.debug()) {
+				console.log(self.logIdentifier() + ' Emitting ' + args[0]);
+			}
+
 			self.emit.apply(self, args);
 		}, 1);
 	} else {
@@ -3330,7 +3333,7 @@ Db.prototype.collection = new Overload({
 				}
 
 				if (this.debug()) {
-					console.log('Creating collection ' + name);
+					console.log(this.logIdentifier() + ' Creating collection ' + name);
 				}
 			}
 

@@ -265,7 +265,7 @@ CollectionGroup.prototype.drop = function () {
 			viewArr;
 
 		if (this._debug) {
-			console.log('Dropping collection group ' + this._name);
+			console.log(this.logIdentifier() + ' Dropping');
 		}
 
 		this._state = 'dropped';

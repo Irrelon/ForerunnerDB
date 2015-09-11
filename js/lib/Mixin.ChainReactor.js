@@ -15,9 +15,9 @@ var ChainReactor = {
 	chain: function (obj) {
 		if (this.debug && this.debug()) {
 			if (obj._reactorIn && obj._reactorOut) {
-				console.log('ForerunnerDB.ChainReactor: Adding target "' + obj._reactorOut.instanceIdentifier() + '" to the chain reactor target list for entity "' + obj._reactorIn.instanceIdentifier() + '"');
+				console.log(obj._reactorIn.logIdentifier() + ' Adding target "' + obj._reactorOut.instanceIdentifier() + '" to the chain reactor target list');
 			} else {
-				console.log('ForerunnerDB.ChainReactor: Adding target "' + obj.instanceIdentifier() + '" to the chain reactor target list for entity "' + this.instanceIdentifier() + '"');
+				console.log(this.logIdentifier() + ' Adding target "' + obj.instanceIdentifier() + '" to the chain reactor target list');
 			}
 		}
 
@@ -32,9 +32,9 @@ var ChainReactor = {
 	unChain: function (obj) {
 		if (this.debug && this.debug()) {
 			if (obj._reactorIn && obj._reactorOut) {
-				console.log('ForerunnerDB.ChainReactor: Removing target "' + obj._reactorOut.instanceIdentifier() + '" from the chain reactor target list for entity "' + obj._reactorIn.instanceIdentifier() + '"');
+				console.log(obj._reactorIn.logIdentifier() + ' Removing target "' + obj._reactorOut.instanceIdentifier() + '" from the chain reactor target list');
 			} else {
-				console.log('ForerunnerDB.ChainReactor: Removing target "' + obj.instanceIdentifier() + '" from the chain reactor target list for entity "' + this.instanceIdentifier() + '"');
+				console.log(this.logIdentifier() + ' Removing target "' + obj.instanceIdentifier() + '" from the chain reactor target list');
 			}
 		}
 
@@ -60,9 +60,9 @@ var ChainReactor = {
 				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
 					if (this.debug && this.debug()) {
 						if (arrItem._reactorIn && arrItem._reactorOut) {
-							console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + arrItem._reactorIn.instanceIdentifier() + '" to "' + arrItem._reactorOut.instanceIdentifier() + '"');
+							console.log(arrItem._reactorIn.logIdentifier() + ' Sending data down the chain reactor pipe to "' + arrItem._reactorOut.instanceIdentifier() + '"');
 						} else {
-							console.log('ForerunnerDB.ChainReactor: Sending data down the chain reactor pipe from "' + this.instanceIdentifier() + '" to "' + arrItem.instanceIdentifier() + '"');
+							console.log(this.logIdentifier() + ' Sending data down the chain reactor pipe to "' + arrItem.instanceIdentifier() + '"');
 						}
 					}
 
@@ -86,7 +86,7 @@ var ChainReactor = {
 		};
 
 		if (this.debug && this.debug()) {
-			console.log('ForerunnerDB.ChainReactor: "' + this.instanceIdentifier() + '" received data from parent reactor node');
+			console.log(this.logIdentifier() + 'Received data from parent reactor node');
 		}
 
 		// Fire our internal handler

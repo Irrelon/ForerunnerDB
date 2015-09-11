@@ -179,7 +179,7 @@ Grid.prototype.drop = function () {
 			this._from._removeGrid(this);
 
 			if (this.debug() || (this._db && this._db.debug())) {
-				console.log('ForerunnerDB.Grid: Dropping grid ' + this._selector);
+				console.log(this.logIdentifier() + ' Dropping grid ' + this._selector);
 			}
 
 			this._state = 'dropped';
@@ -632,7 +632,7 @@ Db.prototype.gridExists = function (selector) {
 Db.prototype.grid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Db.Grid: Creating grid ' + selector);
+			console.log(this.logIdentifier() + ' Creating grid ' + selector);
 		}
 	}
 
@@ -652,7 +652,7 @@ Db.prototype.grid = function (selector, template, options) {
 Db.prototype.unGrid = function (selector, template, options) {
 	if (!this._grid[selector]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Db.Grid: Creating grid ' + selector);
+			console.log(this.logIdentifier() + ' Creating grid ' + selector);
 		}
 	}
 

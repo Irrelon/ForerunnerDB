@@ -498,7 +498,7 @@ View.prototype.drop = function () {
 			this._from._removeView(this);
 
 			if (this.debug() || (this._db && this._db.debug())) {
-				console.log('ForerunnerDB.View: Dropping view ' + this._name);
+				console.log(this.logIdentifier() + ' Dropping');
 			}
 
 			this._state = 'dropped';
@@ -1055,7 +1055,7 @@ Db.prototype.view = function (viewName) {
 
 	if (!this._view[viewName]) {
 		if (this.debug() || (this._db && this._db.debug())) {
-			console.log('Db.View: Creating view ' + viewName);
+			console.log(this.logIdentifier() + ' Creating view ' + viewName);
 		}
 	}
 
