@@ -8571,8 +8571,6 @@ Collection.prototype.drop = new Overload({
 						// Drop the collection data from storage
 						this._db.persist.drop(this._db._name + '::' + this._name);
 						this._db.persist.drop(this._db._name + '::' + this._name + '::metaData');
-					} else {
-						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 					}
 				} else {
 					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
@@ -9073,7 +9071,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.271',
+	version: '1.3.274',
 	modules: {},
 	plugins: {},
 

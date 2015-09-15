@@ -67,7 +67,7 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
-			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links');
+			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links'); //jshint ignore:line
 			if (!this._linked) { this._linked = 0; }
 
 			var templateId,
@@ -721,7 +721,7 @@ AutoBind.extendDocument = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
-			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links');
+			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links'); //jshint ignore:line
 			if (!this._linked) { this._linked = 0; }
 
 			if (outputTargetSelector && templateSelector) {
