@@ -1380,6 +1380,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.domUp();
 
+		var currentName, newName;
+
 		userView.link('#testTarget', {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
@@ -1389,7 +1391,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo1'
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		currentName = $('#testTarget').find('#2342').text();
 		strictEqual(currentName, 'moo1', "Bind is currently moo1");
 
 		user.update({
@@ -1398,7 +1400,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo2'
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		newName = $('#testTarget').find('#2342').text();
 		strictEqual(newName, 'moo2', "Update name is now moo2");
 
 		// Unlink
@@ -1412,7 +1414,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo3'
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		newName = $('#testTarget').find('#2342').text();
 		strictEqual(newName, 'moo2', "After unlink, name updated in data but HTML should still be moo2");
 
 		base.viewDown();
