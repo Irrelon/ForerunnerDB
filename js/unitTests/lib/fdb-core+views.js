@@ -8526,7 +8526,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.268',
+	version: '1.3.270',
 	modules: {},
 	plugins: {},
 
@@ -9661,7 +9661,11 @@ View.prototype.refresh = function () {
  * @returns {Number}
  */
 View.prototype.count = function () {
-	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
+	if (this.publicData()) {
+		return this.publicData().count.apply(this.publicData(), arguments);
+	}
+
+	return 0;
 };
 
 // Call underlying
