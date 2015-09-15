@@ -395,8 +395,6 @@ Collection.prototype.drop = new Overload({
 						// Drop the collection data from storage
 						this._db.persist.drop(this._db._name + '::' + this._name);
 						this._db.persist.drop(this._db._name + '::' + this._name + '::metaData');
-					} else {
-						throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
 					}
 				} else {
 					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
