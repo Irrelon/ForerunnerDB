@@ -118,6 +118,88 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
+	QUnit.test("View() :: Target selector as a jQuery object instead of string with directed unlink", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.link($('#testTarget'), {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		strictEqual(userView.isLinked(), true, "View reports it is linked");
+
+		user.insert({
+			_id: '2342',
+			name: "hello"
+		});
+
+		var elem = $('#testTarget').find('#2342');
+
+		strictEqual(elem.length, 1, "Insert single document");
+
+		// Now unlink the bind and check that we no longer get updates to the DOM
+		userView.unlink($('#testTarget'), {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		strictEqual(userView.isLinked(), false, "View reports it is no longer linked");
+
+		user.insert({
+			_id: '3444423',
+			name: "unbound"
+		});
+
+		elem = $('#testTarget').find('#3444423');
+
+		strictEqual(elem.length, 0, "Insert single document did not bind after unlink");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
+
+	QUnit.test("View() :: Target selector as a jQuery object instead of string with unlink all", function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.link($('#testTarget'), {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		strictEqual(userView.isLinked(), true, "View reports it is linked");
+
+		user.insert({
+			_id: '2342',
+			name: "hello"
+		});
+
+		var elem = $('#testTarget').find('#2342');
+
+		strictEqual(elem.length, 1, "Insert single document");
+
+		// Now unlink the bind and check that we no longer get updates to the DOM
+		userView.unlink();
+
+		strictEqual(userView.isLinked(), false, "View reports it is no longer linked");
+
+		user.insert({
+			_id: '3444423',
+			name: "unbound"
+		});
+
+		elem = $('#testTarget').find('#3444423');
+
+		strictEqual(elem.length, 0, "Insert single document did not bind after unlink");
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
+
 	QUnit.test("View.on() :: Update from Collection", function () {
 		base.dbUp();
 		base.dataUp();
