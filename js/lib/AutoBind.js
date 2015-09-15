@@ -67,102 +67,116 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
-			this._links = this._links || {};
+			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links');
+			if (!this._linked) { this._linked = 0; }
 
 			var templateId,
-				templateHtml;
+				templateHtml,
+				targetSelector;
 
-			if (templateSelector && typeof templateSelector === 'object') {
-				// Our second argument is an object, let's inspect
-				if (templateSelector.template && typeof templateSelector.template === 'string') {
-					// The template has been given to us as a string
-					templateId = this.objectId(templateSelector.template);
-					templateHtml = templateSelector.template;
-				}
-			} else {
-				templateId = templateSelector;
-			}
+			if (outputTargetSelector && templateSelector) {
+				targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
 
-			if (!this._links[templateId]) {
-				if (window.jQuery(outputTargetSelector).length) {
-					// Ensure the template is in memory and if not, try to get it
-					if (!window.jQuery.templates[templateId]) {
-						if (!templateHtml) {
-							// Grab the template
-							var template = window.jQuery(templateSelector);
-							if (template.length) {
-								templateHtml = window.jQuery(template[0]).html();
-							} else {
-								throw('ForerunnerDB.AutoBind : ' + this.instanceIdentifier() + ' Unable to bind to target because template "' + templateSelector + '" does not exist');
-							}
-						}
-
-						window.jQuery.views.templates(templateId, templateHtml);
+				if (templateSelector && typeof templateSelector === 'object') {
+					// Our second argument is an object, let's inspect
+					if (templateSelector.template && typeof templateSelector.template === 'string') {
+						// The template has been given to us as a string
+						templateId = this.objectId(templateSelector.template);
+						templateHtml = templateSelector.template;
 					}
+				} else {
+					templateId = templateSelector;
+				}
 
-					if (options && options.$wrap) {
-						var wrapper,
-							tmpObj,
-							doc;
+				if (!this._links.count({
+						target: targetSelector,
+						template: templateSelector
+					})) {
+					if (window.jQuery(outputTargetSelector).length) {
+						// Ensure the template is in memory and if not, try to get it
+						if (!window.jQuery.templates[templateId]) {
+							if (!templateHtml) {
+								// Grab the template
+								var template = window.jQuery(templateSelector);
+								if (template.length) {
+									templateHtml = window.jQuery(template[0]).html();
+								} else {
+									throw('ForerunnerDB.AutoBind : ' + this.instanceIdentifier() + ' Unable to bind to target because template "' + templateSelector + '" does not exist');
+								}
+							}
 
-						if (!options.$wrapIn) {
-							// Create the data binding wrapped in an object
-							wrapper = {};
-							wrapper[options.$wrap] = this._data;
-						} else if (options.$wrapIn instanceof window.ForerunnerDB.shared.modules.Document) {
-							// Document-based wrapper
-							// Grab the document instance
-							doc = options.$wrapIn;
-
-							// Get the current data by reference
-							tmpObj = doc._data;
-
-							// Set the wrapper property to the referenced data
-							// of this collection / view
-							tmpObj[options.$wrap] = this._data;
-
-							// Set the data back into the document by reference
-							doc.setData(tmpObj, {$decouple: false});
-
-							// Set it to data-bound mode
-							doc._linked = 1;
-
-							// Provide the document data as wrapper data
-							wrapper = doc._data;
-						} else if (typeof options.$wrapIn === 'object') {
-							wrapper = options.$wrapIn;
-							wrapper[options.$wrap] = this._data;
-						} else {
-							throw('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Unable to use passed $wrapIn option, should be either a ForerunnerDB Document instance or a JavaScript object!');
+							window.jQuery.views.templates(templateId, templateHtml);
 						}
+
+						if (options && options.$wrap) {
+							var wrapper,
+								tmpObj,
+								doc;
+
+							if (!options.$wrapIn) {
+								// Create the data binding wrapped in an object
+								wrapper = {};
+								wrapper[options.$wrap] = this._data;
+							} else if (options.$wrapIn instanceof window.ForerunnerDB.shared.modules.Document) {
+								// Document-based wrapper
+								// Grab the document instance
+								doc = options.$wrapIn;
+
+								// Get the current data by reference
+								tmpObj = doc._data;
+
+								// Set the wrapper property to the referenced data
+								// of this collection / view
+								tmpObj[options.$wrap] = this._data;
+
+								// Set the data back into the document by reference
+								doc.setData(tmpObj, {$decouple: false});
+
+								// Set it to data-bound mode
+								doc._linked = 1;
+
+								// Provide the document data as wrapper data
+								wrapper = doc._data;
+							} else if (typeof options.$wrapIn === 'object') {
+								wrapper = options.$wrapIn;
+								wrapper[options.$wrap] = this._data;
+							} else {
+								throw('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Unable to use passed $wrapIn option, should be either a ForerunnerDB Document instance or a JavaScript object!');
+							}
+
+							if (this.debug()) {
+								console.log('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Binding with data wrapper "' + options.$wrap + '" to output target: ' + outputTargetSelector);
+							}
+
+							window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
+						} else {
+							// Create the data binding
+							window.jQuery.templates[templateId].link(outputTargetSelector, this._data);
+						}
+
+						this._links.insert({
+							target: targetSelector,
+							template: templateSelector,
+							templateId: templateId
+						});
+
+						// Set the linked flag
+						this._linked++;
 
 						if (this.debug()) {
-							console.log('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Binding with data wrapper "' + options.$wrap + '" to output target: ' + outputTargetSelector);
+							console.log(this.logIdentifier() + ' Binding to output target: ' + outputTargetSelector);
 						}
 
-						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
+						return this;
 					} else {
-						// Create the data binding
-						window.jQuery.templates[templateId].link(outputTargetSelector, this._data);
+						throw(this.logIdentifier() + ' Cannot bind collection to target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 					}
-
-					// Add link to flags
-					this._links[templateId] = outputTargetSelector;
-
-					// Set the linked flag
-					this._linked++;
-
-					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Binding to output target: ' + outputTargetSelector);
-					}
-
-					return this;
-				} else {
-					throw(this.logIdentifier() + ' Cannot bind collection to target selector "' + outputTargetSelector + '" because it does not exist in the DOM!');
 				}
-			}
 
-			throw(this.logIdentifier() + ' Attempt to bind a duplicate link from collection to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+				throw(this.logIdentifier() + ' Attempt to bind a duplicate link from collection to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			} else {
+				throw(this.logIdentifier() + ' Cannot bind without a target / template!');
+			}
 		} else {
 			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
@@ -179,12 +193,14 @@ AutoBind.extendCollection = function (Module) {
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		if (window.jQuery) {
 			var templateId,
+				targetSelector,
+				link,
+				linkArr,
 				i;
 
-			// Check for binding
-			this._links = this._links || {};
-
 			if (outputTargetSelector && templateSelector) {
+				targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
+
 				if (templateSelector && typeof templateSelector === 'object') {
 					// Our second argument is an object, let's inspect
 					if (templateSelector.template && typeof templateSelector.template === 'string') {
@@ -195,21 +211,28 @@ AutoBind.extendCollection = function (Module) {
 					templateId = templateSelector;
 				}
 
-				if (this._links[templateId]) {
-					// Remove the data binding
-					window.jQuery.templates[templateId].unlink(outputTargetSelector);
+				if (this._links) {
+					link = this._links.findOne({
+						target: targetSelector,
+						template: templateSelector
+					});
 
-					// Remove link from flags
-					delete this._links[templateId];
+					if (link) {
+						// Remove the data binding
+						window.jQuery.templates[templateId].unlink(outputTargetSelector);
 
-					// Set the linked flag
-					this._linked--;
+						// Remove link from store
+						this._links.remove(link);
 
-					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Removed binding to output target: ' + outputTargetSelector);
+						// Set the linked count
+						this._linked--;
+
+						if (this.debug()) {
+							console.log(this.logIdentifier() + ' Removed binding document to target: ' + outputTargetSelector);
+						}
+
+						return this;
 					}
-
-					return this;
 				}
 
 				if (this.debug()) {
@@ -217,17 +240,17 @@ AutoBind.extendCollection = function (Module) {
 				}
 			} else {
 				// No parameters passed, unlink all from this module
-				for (i in this._links) {
-					if (this._links.hasOwnProperty(i)) {
-						window.jQuery.templates[i].unlink(this._links[i]);
+				linkArr = this._links.find();
+				for (i = 0; i < linkArr.length; i++) {
+					link = linkArr[i];
+					window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
-						if (this.debug()) {
-							console.log(this.logIdentifier() + ' Removed binding to output target: ' + this._links[i]);
-						}
+					if (this.debug()) {
+						console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
 					}
 				}
 
-				this._links = {};
+				this._links.remove();
 				this._linked = 0;
 			}
 		} else {
@@ -507,14 +530,18 @@ AutoBind.extendCollection = function (Module) {
 
 	Module.prototype.drop = function () {
 		// Unlink all linked data
-		var i;
-
 		if (this._linked) {
-			for (i in this._links) {
-				if (this._links.hasOwnProperty(i)) {
-					this.unlink(this._links[i], i);
-				}
+			var linkArr = this._links.find(),
+				i;
+
+			for (i = 0; i < linkArr.length; i++) {
+				this.unlink(jQuery(linkArr[i].target), linkArr[i].template);
 			}
+		}
+
+		if (this._links) {
+			this._links.drop();
+			delete this._links;
 		}
 
 		return superDrop.apply(this, arguments);
@@ -563,6 +590,7 @@ AutoBind.extendView = function (Module) {
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		var publicData = this.publicData();
+
 		if (this.debug()) {
 			console.log(this.logIdentifier() + ' Setting up data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 		}
@@ -583,6 +611,7 @@ AutoBind.extendView = function (Module) {
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		var publicData = this.publicData();
+
 		if (this.debug()) {
 			console.log(this.logIdentifier() + ' Removing data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
 		}
@@ -692,95 +721,106 @@ AutoBind.extendDocument = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		if (window.jQuery) {
 			// Make sure we have a data-binding store object to use
-			this._links = this._links || {};
+			this._links = this._links || new ForerunnerDB.shared.modules.Collection(this.instanceIdentifier() + '_links');
 			if (!this._linked) { this._linked = 0; }
 
-			var templateId,
-				templateHtml;
+			if (outputTargetSelector && templateSelector) {
+				var templateId,
+					templateHtml,
+					targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
 
-			if (templateSelector && typeof templateSelector === 'object') {
-				// Our second argument is an object, let's inspect
-				if (templateSelector.template && typeof templateSelector.template === 'string') {
-					// The template has been given to us as a string
-					templateId = this.objectId(templateSelector.template);
-					templateHtml = templateSelector.template;
-				}
-			} else {
-				templateId = templateSelector;
-			}
-
-			if (!this._links[templateId]) {
-				if (window.jQuery(outputTargetSelector).length) {
-					// Ensure the template is in memory and if not, try to get it
-					if (!window.jQuery.templates[templateId]) {
-						if (!templateHtml) {
-							// Grab the template
-							var template = window.jQuery(templateSelector);
-							if (template.length) {
-								templateHtml = window.jQuery(template[0]).html();
-							} else {
-								throw(this.logIdentifier() + ' Unable to bind document to target because template does not exist: ' + templateSelector);
-							}
-						}
-
-						window.jQuery.views.templates(templateId, templateHtml);
+				if (templateSelector && typeof templateSelector === 'object') {
+					// Our second argument is an object, let's inspect
+					if (templateSelector.template && typeof templateSelector.template === 'string') {
+						// The template has been given to us as a string
+						templateId = this.objectId(templateSelector.template);
+						templateHtml = templateSelector.template;
 					}
-
-					if (options && options.$wrap) {
-						// Create the data binding wrapped in an object
-						var wrapper,
-							tmpObj,
-							doc;
-
-						if (!options.$wrapIn) {
-							// Create the data binding wrapped in an object
-							wrapper = {};
-							wrapper[options.$wrap] = this._data;
-						} else if (options.$wrapIn instanceof Document) {
-							// Document-based wrapper
-							// Grab the document instance
-							doc = options.$wrapIn;
-
-							// Get the current data by reference
-							tmpObj = doc._data;
-
-							// Set the wrapper property to the referenced data
-							// of this collection / view
-							tmpObj[options.$wrap] = this._data;
-
-							// Set the data back into the document by reference
-							doc.setData(tmpObj, {$decouple: false});
-
-							// Set it to data-bound mode
-							doc._linked = 1;
-
-							// Provide the document data as wrapper data
-							wrapper = options.$wrap._data;
-						}
-
-						window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
-					} else {
-						// Create the data binding
-						window.jQuery.templates[templateId].link(outputTargetSelector, this._data);
-					}
-
-					// Add link to flags
-					this._links[templateId] = outputTargetSelector;
-
-					// Set the linked flag
-					this._linked++;
-
-					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Added binding to target: ' + outputTargetSelector);
-					}
-
-					return this;
 				} else {
-					throw(this.logIdentifier() + ' Cannot bind document to target "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					templateId = templateSelector;
 				}
-			}
 
-			throw(this.logIdentifier() + ' Cannot create a duplicate link from document to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+				if (!this._links.count({
+						target: targetSelector,
+						template: templateSelector
+					})) {
+					if (window.jQuery(outputTargetSelector).length) {
+						// Ensure the template is in memory and if not, try to get it
+						if (!window.jQuery.templates[templateId]) {
+							if (!templateHtml) {
+								// Grab the template
+								var template = window.jQuery(templateSelector);
+								if (template.length) {
+									templateHtml = window.jQuery(template[0]).html();
+								} else {
+									throw(this.logIdentifier() + ' Unable to bind document to target because template does not exist: ' + templateSelector);
+								}
+							}
+
+							window.jQuery.views.templates(templateId, templateHtml);
+						}
+
+						if (options && options.$wrap) {
+							// Create the data binding wrapped in an object
+							var wrapper,
+								tmpObj,
+								doc;
+
+							if (!options.$wrapIn) {
+								// Create the data binding wrapped in an object
+								wrapper = {};
+								wrapper[options.$wrap] = this._data;
+							} else if (options.$wrapIn instanceof Document) {
+								// Document-based wrapper
+								// Grab the document instance
+								doc = options.$wrapIn;
+
+								// Get the current data by reference
+								tmpObj = doc._data;
+
+								// Set the wrapper property to the referenced data
+								// of this collection / view
+								tmpObj[options.$wrap] = this._data;
+
+								// Set the data back into the document by reference
+								doc.setData(tmpObj, {$decouple: false});
+
+								// Set it to data-bound mode
+								doc._linked = 1;
+
+								// Provide the document data as wrapper data
+								wrapper = options.$wrap._data;
+							}
+
+							window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
+						} else {
+							// Create the data binding
+							window.jQuery.templates[templateId].link(outputTargetSelector, this._data);
+						}
+
+						this._links.insert({
+							target: targetSelector,
+							template: templateSelector,
+							templateId: templateId
+						});
+
+						// Set the linked flag
+						this._linked++;
+
+						if (this.debug()) {
+							console.log(this.logIdentifier() + ' Added binding to target: ' + outputTargetSelector);
+						}
+
+						return this;
+					} else {
+						throw(this.logIdentifier() + ' Cannot bind document to target "' + outputTargetSelector + '" because it does not exist in the DOM!');
+					}
+				}
+
+				throw(this.logIdentifier() + ' Cannot create a duplicate link from document to the target: ' + outputTargetSelector + ' with the template: ' + templateId);
+			} else {
+				throw(this.logIdentifier() + ' Cannot bind without a target / template!');
+			}
 		} else {
 			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
@@ -797,13 +837,15 @@ AutoBind.extendDocument = function (Module) {
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		if (window.jQuery) {
-			// Check for binding
-			this._links = this._links || {};
-
 			var templateId,
+				targetSelector,
+				link,
+				linkArr,
 				i;
 
 			if (outputTargetSelector && templateSelector) {
+				targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
+
 				if (templateSelector && typeof templateSelector === 'object') {
 					// Our second argument is an object, let's inspect
 					if (templateSelector.template && typeof templateSelector.template === 'string') {
@@ -814,21 +856,28 @@ AutoBind.extendDocument = function (Module) {
 					templateId = templateSelector;
 				}
 
-				if (this._links[templateId]) {
-					// Remove the data binding
-					window.jQuery.templates[templateId].unlink(outputTargetSelector);
+				if (this._links) {
+					link = this._links.findOne({
+						target: targetSelector,
+						template: templateSelector
+					});
 
-					// Remove link from flags
-					delete this._links[templateId];
+					if (link) {
+						// Remove the data binding
+						window.jQuery.templates[templateId].unlink(outputTargetSelector);
 
-					// Set the linked flag
-					this._linked--;
+						// Remove link from store
+						this._links.remove(link);
 
-					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Removed binding document to target: ' + outputTargetSelector);
+						// Set the linked count
+						this._linked--;
+
+						if (this.debug()) {
+							console.log(this.logIdentifier() + ' Removed binding document to target: ' + outputTargetSelector);
+						}
+
+						return this;
 					}
-
-					return this;
 				}
 
 				if (this.debug()) {
@@ -836,17 +885,17 @@ AutoBind.extendDocument = function (Module) {
 				}
 			} else {
 				// No parameters passed, unlink all from this module
-				for (i in this._links) {
-					if (this._links.hasOwnProperty(i)) {
-						window.jQuery.templates[i].unlink(this._links[i]);
+				linkArr = this._links.find();
+				for (i = 0; i < linkArr.length; i++) {
+					link = linkArr[i];
+					window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
-						if (this.debug()) {
-							console.log(this.logIdentifier() + ' Removed binding to output target: ' + this._links[i]);
-						}
+					if (this.debug()) {
+						console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
 					}
 				}
 
-				this._links = {};
+				this._links.remove();
 				this._linked = 0;
 			}
 		} else {
