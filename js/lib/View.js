@@ -837,7 +837,11 @@ View.prototype.refresh = function () {
  * @returns {Number}
  */
 View.prototype.count = function () {
-	return this._privateData && this._privateData._data ? this._privateData._data.length : 0;
+	if (this.publicData()) {
+		return this.publicData().count.apply(this.publicData(), arguments);
+	}
+
+	return 0;
 };
 
 // Call underlying
