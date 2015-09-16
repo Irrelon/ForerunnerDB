@@ -38,7 +38,7 @@ View.prototype.init = function (name, query, options) {
 		self._collectionDropped.apply(self, arguments);
 	};
 
-	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
+	this._privateData = new Collection(this.name() + '_internalPrivate');
 };
 
 Shared.addModule('View', View);
@@ -159,6 +159,15 @@ View.prototype.from = function (source) {
 
 		if (typeof(source) === 'string') {
 			source = this._db.collection(source);
+		}
+
+		if (source.className === 'View') {
+			// The source is a view so IO to the internal data collection
+			// instead of the view proper
+			source = source.privateData();
+			if (this.debug()) {
+				console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
+			}
 		}
 
 		this._from = source;
@@ -324,6 +333,10 @@ View.prototype._chainHandler = function (chainPacket) {
 		currentIndex,
 		i;
 
+	if (this.debug()) {
+		console.log(this.logIdentifier() + ' Received chain reactor data');
+	}
+
 	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
@@ -340,7 +353,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'insert':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Inserting some data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
@@ -429,7 +442,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'remove':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Removing some data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Removing some data from underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Modify transform data

@@ -8245,6 +8245,10 @@ Common = {
 		}
 	]),
 
+	/**
+	 * Returns a string describing the class this instance is derived from.
+	 * @returns {string}
+	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
 	},
@@ -8258,6 +8262,11 @@ Common = {
 		return '[' + this.className + ']' + this.name();
 	},
 
+	/**
+	 * Returns a string used to denote a console log against this instance,
+	 * consisting of the class identifier and instance identifier.
+	 * @returns {string} The log identifier.
+	 */
 	logIdentifier: function () {
 		return this.classIdentifier() + ': ' + this.instanceIdentifier();
 	},
@@ -11657,7 +11666,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.278',
+	version: '1.3.280',
 	modules: {},
 	plugins: {},
 
@@ -11993,7 +12002,7 @@ View.prototype.init = function (name, query, options) {
 		self._collectionDropped.apply(self, arguments);
 	};
 
-	this._privateData = new Collection('__FDB__view_privateData_' + this._name);
+	this._privateData = new Collection(this.name() + '_internalPrivate');
 };
 
 Shared.addModule('View', View);
@@ -12096,15 +12105,15 @@ View.prototype.data = function () {
 };
 
 /**
- * Sets the collection from which the view will assemble its data.
- * @param {Collection} collection The collection to use to assemble view data.
+ * Sets the source from which the view will assemble its data.
+ * @param {Collection|View} source The source to use to assemble view data.
  * @returns {*} If no argument is passed, returns the current value of from,
  * otherwise returns itself for chaining.
  */
-View.prototype.from = function (collection) {
+View.prototype.from = function (source) {
 	var self = this;
 
-	if (collection !== undefined) {
+	if (source !== undefined) {
 		// Check if we have an existing from
 		if (this._from) {
 			// Remove the listener to the drop event
@@ -12112,18 +12121,27 @@ View.prototype.from = function (collection) {
 			delete this._from;
 		}
 
-		if (typeof(collection) === 'string') {
-			collection = this._db.collection(collection);
+		if (typeof(source) === 'string') {
+			source = this._db.collection(source);
 		}
 
-		this._from = collection;
+		if (source.className === 'View') {
+			// The source is a view so IO to the internal data collection
+			// instead of the view proper
+			source = source.privateData();
+			if (this.debug()) {
+				console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
+			}
+		}
+
+		this._from = source;
 		this._from.on('drop', this._collectionDroppedWrap);
 
 		// Create a new reactor IO graph node that intercepts chain packets from the
-		// view's "from" collection and determines how they should be interpreted by
+		// view's "from" source and determines how they should be interpreted by
 		// this view. If the view does not have a query then this reactor IO will
 		// simply pass along the chain packet without modifying it.
-		this._io = new ReactorIO(collection, this, function (chainPacket) {
+		this._io = new ReactorIO(source, this, function (chainPacket) {
 			var data,
 				diff,
 				query,
@@ -12216,12 +12234,12 @@ View.prototype.from = function (collection) {
 			return false;
 		});
 
-		var collData = collection.find(this._querySettings.query, this._querySettings.options);
+		var collData = source.find(this._querySettings.query, this._querySettings.options);
 
-		this._transformPrimaryKey(collection.primaryKey());
+		this._transformPrimaryKey(source.primaryKey());
 		this._transformSetData(collData);
 
-		this._privateData.primaryKey(collection.primaryKey());
+		this._privateData.primaryKey(source.primaryKey());
 		this._privateData.setData(collData);
 
 		if (this._querySettings.options && this._querySettings.options.$orderBy) {
@@ -12279,6 +12297,10 @@ View.prototype._chainHandler = function (chainPacket) {
 		currentIndex,
 		i;
 
+	if (this.debug()) {
+		console.log(this.logIdentifier() + ' Received chain reactor data');
+	}
+
 	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
@@ -12295,7 +12317,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'insert':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Inserting some data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
@@ -12384,7 +12406,7 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'remove':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Removing some data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Removing some data from underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
 			// Modify transform data

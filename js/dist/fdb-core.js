@@ -5869,6 +5869,10 @@ Common = {
 		}
 	]),
 
+	/**
+	 * Returns a string describing the class this instance is derived from.
+	 * @returns {string}
+	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
 	},
@@ -5882,6 +5886,11 @@ Common = {
 		return '[' + this.className + ']' + this.name();
 	},
 
+	/**
+	 * Returns a string used to denote a console log against this instance,
+	 * consisting of the class identifier and instance identifier.
+	 * @returns {string} The log identifier.
+	 */
 	logIdentifier: function () {
 		return this.classIdentifier() + ': ' + this.instanceIdentifier();
 	},
@@ -7919,7 +7928,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.278',
+	version: '1.3.280',
 	modules: {},
 	plugins: {},
 

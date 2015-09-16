@@ -1055,7 +1055,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		}, 2000);
 	});
 
-	QUnit.asyncTest('View chain propagation to document with query :: Collection -> View -> Document', function () {
+	QUnit.asyncTest('View chain propagation to document with query and CRUDing document data :: Collection -> View -> Document', function () {
 		"use strict";
 
 		expect(53);
@@ -1304,6 +1304,179 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 									start();
 								}, 200);
 							}, 200);
+						}, 200);
+					}, 200);
+				}, 200);
+			}, 200);
+		}, 100);
+	});
+
+	QUnit.asyncTest('View chain propagation to document with query and changing queries with static data :: Collection -> View -> Document', function () {
+		"use strict";
+
+		expect(20);
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view1 = db.view('view1'),
+			view2 = db.view('view2'),
+			view3 = db.view('view3'),
+			doc1 = db.document('doc1'),
+			doc2 = db.document('doc2'),
+			doc3 = db.document('doc3'),
+			testViewStage,
+			parentElem1,
+			parentElem2,
+			parentElem3,
+			elems1,
+			elems2,
+			elems3;
+
+		view1.from(coll);
+		view2.from(view1);
+		view3.from(view2);
+
+		view1.query({
+			flag1: true
+		});
+
+		view2.query({
+			flag2: 'blue'
+		});
+
+		view3.query({
+			flag3: 'circle'
+		});
+
+		$('<div id="testViewStage">0</div>').appendTo('body');
+		$('<div id="testViewProp1"></div>').appendTo('body');
+		$('<div id="testViewProp2"></div>').appendTo('body');
+		$('<div id="testViewProp3"></div>').appendTo('body');
+
+		testViewStage = $('#testViewStage');
+		parentElem1 = $('#testViewProp1');
+		parentElem2 = $('#testViewProp2');
+		parentElem3 = $('#testViewProp3');
+
+		view1.link('#testViewProp1', {
+			template: '{{:~log(#data)}}<h4>View1 (true)</h4>{^{if items && items.length}}{^{for items}}<div class="item" data-link="id{:_id} data-flag1{:flag1} data-flag2{:flag2} data-flag3{:flag3}">{^{:_id}}: <strong>{^{:flag1}}</strong> {^{:flag2}} {^{:flag3}}</div>{{/for}}{{else}}<div>No items</div>{{/if}}'
+		}, {
+			$wrap: 'items',
+			$wrapIn: doc1
+		});
+
+		view2.link('#testViewProp2', {
+			template: '{{:~log(#data)}}<h4>View2 (blue)</h4>{^{if items && items.length}}{^{for items}}<div class="item" data-link="id{:_id} data-flag1{:flag1} data-flag2{:flag2} data-flag3{:flag3}">{^{:_id}}: <strong>{^{:flag1}} {^{:flag2}}</strong> {^{:flag3}}</div>{{/for}}{{else}}<div>No items</div>{{/if}}'
+		}, {
+			$wrap: 'items',
+			$wrapIn: doc2
+		});
+
+		view3.link('#testViewProp3', {
+			template: '{{:~log(#data)}}<h4>View3 (circle)</h4>{^{if items && items.length}}{^{for items}}<div class="item" data-link="id{:_id} data-flag1{:flag1} data-flag2{:flag2} data-flag3{:flag3}">{^{:_id}}: <strong>{^{:flag1}} {^{:flag2}} {^{:flag3}}</strong></div>{{/for}}{{else}}<div>No items</div>{{/if}}'
+		}, {
+			$wrap: 'items',
+			$wrapIn: doc3
+		});
+
+		setTimeout(function () {
+			coll.insert({
+				_id: '1',
+				flag1: false,
+				flag2: 'red',
+				flag3: 'square'
+			});
+
+			coll.insert({
+				_id: '2',
+				flag1: false,
+				flag2: 'blue',
+				flag3: 'circle'
+			});
+
+			coll.insert({
+				_id: '3',
+				flag1: true,
+				flag2: 'red',
+				flag3: 'triangle'
+			});
+
+			setTimeout(function () {
+				testViewStage.html('1');
+				elems1 = parentElem1.find('.item');
+				elems2 = parentElem2.find('.item');
+				elems3 = parentElem3.find('.item');
+
+				strictEqual(elems1.length, 1, 'View 1 has filtered correctly');
+				strictEqual(elems2.length, 0, 'View 2 has filtered correctly');
+				strictEqual(elems3.length, 0, 'View 3 has filtered correctly');
+
+				strictEqual($(elems1[0]).attr('id'), '3', 'Elem id correct');
+
+				// Now change the view2's query to encompass one of the existing items
+				view1.query({
+					flag1: false
+				});
+
+				setTimeout(function () {
+					testViewStage.html('2');
+					elems1 = parentElem1.find('.item');
+					elems2 = parentElem2.find('.item');
+					elems3 = parentElem3.find('.item');
+
+					strictEqual(elems1.length, 2, 'View 1 has filtered correctly');
+					strictEqual(elems2.length, 1, 'View 2 has filtered correctly');
+					strictEqual(elems3.length, 1, 'View 3 has filtered correctly');
+
+					strictEqual($(elems1[0]).attr('id'), '1', 'Elem id correct');
+					strictEqual($(elems1[1]).attr('id'), '2', 'Elem id correct');
+
+					strictEqual($(elems2[0]).attr('id'), '2', 'Elem id correct');
+
+					strictEqual($(elems3[0]).attr('id'), '2', 'Elem id correct');
+
+					view2.query({
+						flag2: 'red'
+					});
+
+					setTimeout(function () {
+						testViewStage.html('3');
+						elems1 = parentElem1.find('.item');
+						elems2 = parentElem2.find('.item');
+						elems3 = parentElem3.find('.item');
+
+						strictEqual(elems1.length, 2, 'View 1 has filtered correctly');
+						strictEqual(elems2.length, 1, 'View 2 has filtered correctly');
+						strictEqual(elems3.length, 0, 'View 3 has filtered correctly');
+
+						strictEqual($(elems1[0]).attr('id'), '1', 'Elem id correct');
+
+						view3.query({
+							flag3: 'square'
+						});
+
+						setTimeout(function () {
+							testViewStage.html('4');
+							elems1 = parentElem1.find('.item');
+							elems2 = parentElem2.find('.item');
+							elems3 = parentElem3.find('.item');
+
+							strictEqual(elems1.length, 2, 'View 1 has filtered correctly');
+							strictEqual(elems2.length, 1, 'View 2 has filtered correctly');
+							strictEqual(elems3.length, 1, 'View 3 has filtered correctly');
+
+							strictEqual($(elems1[0]).attr('id'), '1', 'Elem id correct');
+
+							strictEqual($(elems2[0]).attr('id'), '1', 'Elem id correct');
+
+							testViewStage.remove();
+							parentElem1.remove();
+							parentElem2.remove();
+							parentElem3.remove();
+
+							base.dbDown();
+
+							start();
 						}, 200);
 					}, 200);
 				}, 200);
