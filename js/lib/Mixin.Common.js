@@ -159,6 +159,10 @@ Common = {
 		}
 	]),
 
+	/**
+	 * Returns a string describing the class this instance is derived from.
+	 * @returns {string}
+	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
 	},
@@ -172,6 +176,11 @@ Common = {
 		return '[' + this.className + ']' + this.name();
 	},
 
+	/**
+	 * Returns a string used to denote a console log against this instance,
+	 * consisiting of the class identifier and instance identifier.
+	 * @returns {string} The log identifier.
+	 */
 	logIdentifier: function () {
 		return this.classIdentifier() + ': ' + this.instanceIdentifier();
 	},
