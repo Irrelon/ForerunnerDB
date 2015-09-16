@@ -592,10 +592,6 @@ AutoBind.extendView = function (Module) {
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
 		var publicData = this.publicData();
 
-		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Setting up data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-		}
-
 		publicData.link(outputTargetSelector, templateSelector, options);
 
 		return this;
@@ -612,10 +608,6 @@ AutoBind.extendView = function (Module) {
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
 		var publicData = this.publicData();
-
-		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Removing data binding in underlying (internal) view collection "' + publicData.name() + '" for output target: ' + outputTargetSelector);
-		}
 
 		publicData.unlink(outputTargetSelector, templateSelector);
 
