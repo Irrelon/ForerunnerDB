@@ -178,7 +178,7 @@ Common = {
 
 	/**
 	 * Returns a string used to denote a console log against this instance,
-	 * consisiting of the class identifier and instance identifier.
+	 * consisting of the class identifier and instance identifier.
 	 * @returns {string} The log identifier.
 	 */
 	logIdentifier: function () {
