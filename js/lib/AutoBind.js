@@ -191,27 +191,28 @@ AutoBind.extendCollection = function (Module) {
 	 * @param templateSelector
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
-		if (window.jQuery) {
-			var templateId,
-				targetSelector,
-				link,
-				linkArr,
-				i;
+		if (this._links) {
+			if (window.jQuery) {
+				var templateId,
+					targetSelector,
+					link,
+					linkArr,
+					i;
 
-			if (outputTargetSelector && templateSelector) {
-				targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
+				if (outputTargetSelector && templateSelector) {
+					targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
 
-				if (templateSelector && typeof templateSelector === 'object') {
-					// Our second argument is an object, let's inspect
-					if (templateSelector.template && typeof templateSelector.template === 'string') {
-						// The template has been given to us as a string
-						templateId = this.objectId(templateSelector.template);
+					if (templateSelector && typeof templateSelector === 'object') {
+						// Our second argument is an object, let's inspect
+						if (templateSelector.template && typeof templateSelector.template === 'string') {
+							// The template has been given to us as a string
+							templateId = this.objectId(templateSelector.template);
+						}
+					} else {
+						templateId = templateSelector;
 					}
-				} else {
-					templateId = templateSelector;
-				}
 
-				if (this._links) {
+
 					link = this._links.findOne({
 						target: targetSelector,
 						template: templateSelector
@@ -233,28 +234,28 @@ AutoBind.extendCollection = function (Module) {
 
 						return this;
 					}
-				}
-
-				if (this.debug()) {
-					console.log(this.logIdentifier() + ' Cannot remove binding as it does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-				}
-			} else {
-				// No parameters passed, unlink all from this module
-				linkArr = this._links.find();
-				for (i = 0; i < linkArr.length; i++) {
-					link = linkArr[i];
-					window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
 					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
+						console.log(this.logIdentifier() + ' Cannot remove binding as it does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 					}
-				}
+				} else {
+					// No parameters passed, unlink all from this module
+					linkArr = this._links.find();
+					for (i = 0; i < linkArr.length; i++) {
+						link = linkArr[i];
+						window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
-				this._links.remove();
-				this._linked = 0;
+						if (this.debug()) {
+							console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
+						}
+					}
+
+					this._links.remove();
+					this._linked = 0;
+				}
+			} else {
+				throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 			}
-		} else {
-			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
 
 		return this;
@@ -836,27 +837,27 @@ AutoBind.extendDocument = function (Module) {
 	 * @see link
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
-		if (window.jQuery) {
-			var templateId,
-				targetSelector,
-				link,
-				linkArr,
-				i;
+		if (this._links) {
+			if (window.jQuery) {
+				var templateId,
+					targetSelector,
+					link,
+					linkArr,
+					i;
 
-			if (outputTargetSelector && templateSelector) {
-				targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
+				if (outputTargetSelector && templateSelector) {
+					targetSelector = typeof outputTargetSelector === 'string' ? outputTargetSelector : outputTargetSelector.selector;
 
-				if (templateSelector && typeof templateSelector === 'object') {
-					// Our second argument is an object, let's inspect
-					if (templateSelector.template && typeof templateSelector.template === 'string') {
-						// The template has been given to us as a string
-						templateId = this.objectId(templateSelector.template);
+					if (templateSelector && typeof templateSelector === 'object') {
+						// Our second argument is an object, let's inspect
+						if (templateSelector.template && typeof templateSelector.template === 'string') {
+							// The template has been given to us as a string
+							templateId = this.objectId(templateSelector.template);
+						}
+					} else {
+						templateId = templateSelector;
 					}
-				} else {
-					templateId = templateSelector;
-				}
 
-				if (this._links) {
 					link = this._links.findOne({
 						target: targetSelector,
 						template: templateSelector
@@ -878,29 +879,31 @@ AutoBind.extendDocument = function (Module) {
 
 						return this;
 					}
-				}
-
-				if (this.debug()) {
-					console.log(this.logIdentifier() + ' Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
-				}
-			} else {
-				// No parameters passed, unlink all from this module
-				linkArr = this._links.find();
-				for (i = 0; i < linkArr.length; i++) {
-					link = linkArr[i];
-					window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
 					if (this.debug()) {
-						console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
+						console.log(this.logIdentifier() + ' Cannot remove link from document, one does not exist to the target: ' + outputTargetSelector + ' with the template: ' + templateSelector);
 					}
-				}
+				} else {
+					// No parameters passed, unlink all from this module
+					linkArr = this._links.find();
+					for (i = 0; i < linkArr.length; i++) {
+						link = linkArr[i];
+						window.jQuery.templates[link.templateId].unlink(jQuery(link.target));
 
-				this._links.remove();
-				this._linked = 0;
+						if (this.debug()) {
+							console.log(this.logIdentifier() + ' Removed binding to output target: ' + link.target);
+						}
+					}
+
+					this._links.remove();
+					this._linked = 0;
+				}
+			} else {
+				throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 			}
-		} else {
-			throw(this.logIdentifier() + ' Cannot data-bind without jQuery. Please add jQuery to your page!');
 		}
+
+		return this;
 	};
 
 	/**
