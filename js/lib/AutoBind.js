@@ -145,7 +145,7 @@ AutoBind.extendCollection = function (Module) {
 							}
 
 							if (this.debug()) {
-								console.log('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Binding with data wrapper "' + options.$wrap + '" to output target: ' + outputTargetSelector);
+								console.log('ForerunnerDB.AutoBind: ' + this.instanceIdentifier() + ' Binding data wrapped in an object with field called "' + options.$wrap + '" to output target: ' + outputTargetSelector);
 							}
 
 							window.jQuery.templates[templateId].link(outputTargetSelector, wrapper);
