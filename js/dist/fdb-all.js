@@ -9990,10 +9990,10 @@ Overview.prototype.init = function (name) {
 	this._name = name;
 	this._data = new DbDocument('__FDB__dc_data_' + this._name);
 	this._collData = new Collection();
-	this._collections = [];
+	this._sources = [];
 
-	this._collectionDroppedWrap = function () {
-		self._collectionDropped.apply(self, arguments);
+	this._sourceDroppedWrap = function () {
+		self._sourceDropped.apply(self, arguments);
 	};
 };
 
@@ -10045,17 +10045,17 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	return ret;
 });
 
-Overview.prototype.from = function (collection) {
-	if (collection !== undefined) {
-		if (typeof(collection) === 'string') {
-			collection = this._db.collection(collection);
+Overview.prototype.from = function (source) {
+	if (source !== undefined) {
+		if (typeof(source) === 'string') {
+			source = this._db.collection(source);
 		}
 
-		this._setFrom(collection);
+		this._setFrom(source);
 		return this;
 	}
 
-	return this._collections;
+	return this._sources;
 };
 
 Overview.prototype.find = function () {
@@ -10077,37 +10077,55 @@ Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
 };
 
-Overview.prototype._setFrom = function (collection) {
-	// Remove all collection references
-	while (this._collections.length) {
-		this._removeCollection(this._collections[0]);
+Overview.prototype._setFrom = function (source) {
+	// Remove all source references
+	while (this._sources.length) {
+		this._removeSource(this._sources[0]);
 	}
 
-	this._addCollection(collection);
+	this._addSource(source);
 
 	return this;
 };
 
-Overview.prototype._addCollection = function (collection) {
-	if (this._collections.indexOf(collection) === -1) {
-		this._collections.push(collection);
-		collection.chain(this);
+Overview.prototype._addSource = function (source) {
+	if (source && source.className === 'View') {
+		// The source is a view so IO to the internal data collection
+		// instead of the view proper
+		source = source.privateData();
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
+		}
+	}
 
-		collection.on('drop', this._collectionDroppedWrap);
+	if (this._sources.indexOf(source) === -1) {
+		this._sources.push(source);
+		source.chain(this);
+
+		source.on('drop', this._sourceDroppedWrap);
 
 		this._refresh();
 	}
 	return this;
 };
 
-Overview.prototype._removeCollection = function (collection) {
-	var collectionIndex = this._collections.indexOf(collection);
+Overview.prototype._removeSource = function (source) {
+	if (source && source.className === 'View') {
+		// The source is a view so IO to the internal data collection
+		// instead of the view proper
+		source = source.privateData();
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
+		}
+	}
 
-	if (collectionIndex > -1) {
-		this._collections.splice(collection, 1);
-		collection.unChain(this);
+	var sourceIndex = this._sources.indexOf(source);
 
-		collection.off('drop', this._collectionDroppedWrap);
+	if (sourceIndex > -1) {
+		this._sources.splice(source, 1);
+		source.unChain(this);
+
+		source.off('drop', this._sourceDroppedWrap);
 
 		this._refresh();
 	}
@@ -10115,22 +10133,22 @@ Overview.prototype._removeCollection = function (collection) {
 	return this;
 };
 
-Overview.prototype._collectionDropped = function (collection) {
-	if (collection) {
-		// Collection was dropped, remove from overview
-		this._removeCollection(collection);
+Overview.prototype._sourceDropped = function (source) {
+	if (source) {
+		// Source was dropped, remove from overview
+		this._removeSource(source);
 	}
 };
 
 Overview.prototype._refresh = function () {
 	if (this._state !== 'dropped') {
-		if (this._collections && this._collections[0]) {
-			this._collData.primaryKey(this._collections[0].primaryKey());
+		if (this._sources && this._sources[0]) {
+			this._collData.primaryKey(this._sources[0].primaryKey());
 			var tempArr = [],
 				i;
 
-			for (i = 0; i < this._collections.length; i++) {
-				tempArr = tempArr.concat(this._collections[i].find(this._query, this._queryOptions));
+			for (i = 0; i < this._sources.length; i++) {
+				tempArr = tempArr.concat(this._sources[i].find(this._query, this._queryOptions));
 			}
 
 			this._collData.setData(tempArr);
@@ -10175,12 +10193,12 @@ Overview.prototype.drop = function () {
 		delete this._data;
 		delete this._collData;
 
-		// Remove all collection references
-		while (this._collections.length) {
-			this._removeCollection(this._collections[0]);
+		// Remove all source references
+		while (this._sources.length) {
+			this._removeSource(this._sources[0]);
 		}
 
-		delete this._collections;
+		delete this._sources;
 
 		if (this._db && this._name) {
 			delete this._db._overview[this._name];
@@ -11666,7 +11684,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.280',
+	version: '1.3.282',
 	modules: {},
 	plugins: {},
 
