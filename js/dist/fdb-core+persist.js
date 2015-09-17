@@ -2244,7 +2244,7 @@ Collection.prototype._find = function (query, options) {
 
 			// Check if the index coverage is all keys, if not we still need to table scan it
 			if (analysis.indexMatch[0].keyData.totalKeyCount === analysis.indexMatch[0].keyData.score) {
-				// Require a table scan to find relevant documents
+				// Don't require a table scan to find relevant documents
 				requiresTableScan = false;
 			}
 		} else {
@@ -2264,13 +2264,15 @@ Collection.prototype._find = function (query, options) {
 				resultArr = this._data.filter(matcher);
 			}
 
-			// Order the array if we were passed a sort clause
-			if (options.$orderBy) {
-				op.time('sort');
-				resultArr = this.sort(options.$orderBy, resultArr);
-				op.time('sort');
-			}
+
 			op.time('tableScan: ' + scanLength);
+		}
+
+		// Order the array if we were passed a sort clause
+		if (options.$orderBy) {
+			op.time('sort');
+			resultArr = this.sort(options.$orderBy, resultArr);
+			op.time('sort');
 		}
 
 		if (options.$page !== undefined && options.$limit !== undefined) {
@@ -2826,7 +2828,7 @@ Collection.prototype.sort = function (sortObj, arr) {
 		if (sortObj.hasOwnProperty(sortKey)) {
 			sortSingleObj = {};
 			sortSingleObj[sortKey] = sortObj[sortKey];
-			sortSingleObj.___fdbKey = sortKey;
+			sortSingleObj.___fdbKey = String(sortKey);
 			sortArr.push(sortSingleObj);
 		}
 	}
@@ -2850,6 +2852,9 @@ Collection.prototype.sort = function (sortObj, arr) {
 Collection.prototype._bucketSort = function (keyArr, arr) {
 	var keyObj = keyArr.shift(),
 		arrCopy,
+		bucketData,
+		bucketOrder,
+		bucketKey,
 		buckets,
 		i,
 		finalArr = [];
@@ -2859,14 +2864,16 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
 		arr = this._sort(keyObj, arr);
 
 		// Split items into buckets
-		buckets = this.bucket(keyObj.___fdbKey, arr);
+		bucketData = this.bucket(keyObj.___fdbKey, arr);
+		bucketOrder = bucketData.order;
+		buckets = bucketData.buckets;
 
 		// Loop buckets and sort contents
-		for (i in buckets) {
-			if (buckets.hasOwnProperty(i)) {
-				arrCopy = [].concat(keyArr);
-				finalArr = finalArr.concat(this._bucketSort(arrCopy, buckets[i]));
-			}
+		for (i = 0; i < bucketOrder.length; i++) {
+			bucketKey = bucketOrder[i];
+
+			arrCopy = [].concat(keyArr);
+			finalArr = finalArr.concat(this._bucketSort(arrCopy, buckets[bucketKey]));
 		}
 
 		return finalArr;
@@ -2922,14 +2929,27 @@ Collection.prototype._sort = function (key, arr) {
  */
 Collection.prototype.bucket = function (key, arr) {
 	var i,
+		oldField,
+		field,
+		fieldArr = [],
 		buckets = {};
 
 	for (i = 0; i < arr.length; i++) {
-		buckets[arr[i][key]] = buckets[arr[i][key]] || [];
-		buckets[arr[i][key]].push(arr[i]);
+		field = String(arr[i][key]);
+
+		if (oldField !== field) {
+			fieldArr.push(field);
+			oldField = field;
+		}
+
+		buckets[field] = buckets[field] || [];
+		buckets[field].push(arr[i]);
 	}
 
-	return buckets;
+	return {
+		buckets: buckets,
+		order: fieldArr
+	};
 };
 
 /**
@@ -9080,7 +9100,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.282',
+	version: '1.3.285',
 	modules: {},
 	plugins: {},
 
