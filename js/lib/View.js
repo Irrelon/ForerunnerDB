@@ -186,81 +186,84 @@ View.prototype.from = function (source) {
 				pk,
 				i;
 
-			// Check if we have a constraining query
-			if (self._querySettings.query) {
-				if (chainPacket.type === 'insert') {
-					data = chainPacket.data;
+			// Check that the state of the "self" object is not dropped
+			if (self && self._state !== 'dropped') {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					if (chainPacket.type === 'insert') {
+						data = chainPacket.data;
 
-					// Check if the data matches our query
-					if (data instanceof Array) {
-						filteredData = [];
+						// Check if the data matches our query
+						if (data instanceof Array) {
+							filteredData = [];
 
-						for (i = 0; i < data.length; i++) {
-							if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
-								filteredData.push(data[i]);
+							for (i = 0; i < data.length; i++) {
+								if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
+									filteredData.push(data[i]);
+									doSend = true;
+								}
+							}
+						} else {
+							if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
+								filteredData = data;
 								doSend = true;
 							}
 						}
-					} else {
-						if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
-							filteredData = data;
-							doSend = true;
-						}
-					}
 
-					if (doSend) {
-						this.chainSend('insert', filteredData);
-					}
-
-					return true;
-				}
-
-				if (chainPacket.type === 'update') {
-					// Do a DB diff between this view's data and the underlying collection it reads from
-					// to see if something has changed
-					diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
-
-					if (diff.insert.length || diff.remove.length) {
-						// Now send out new chain packets for each operation
-						if (diff.insert.length) {
-							this.chainSend('insert', diff.insert);
+						if (doSend) {
+							this.chainSend('insert', filteredData);
 						}
 
-						if (diff.update.length) {
-							pk = self._privateData.primaryKey();
-							for (i = 0; i < diff.update.length; i++) {
-								query = {};
-								query[pk] = diff.update[i][pk];
-
-								this.chainSend('update', {
-									query: query,
-									update: diff.update[i]
-								});
-							}
-						}
-
-						if (diff.remove.length) {
-							pk = self._privateData.primaryKey();
-							var $or = [],
-								removeQuery = {
-									query: {
-										$or: $or
-									}
-								};
-
-							for (i = 0; i < diff.remove.length; i++) {
-								$or.push({_id: diff.remove[i][pk]});
-							}
-
-							this.chainSend('remove', removeQuery);
-						}
-
-						// Return true to stop further propagation of the chain packet
 						return true;
-					} else {
-						// Returning false informs the chain reactor to continue propagation
-						// of the chain packet down the graph tree
-						return false;
+					}
+
+					if (chainPacket.type === 'update') {
+						// Do a DB diff between this view's data and the underlying collection it reads from
+						// to see if something has changed
+						diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
+
+						if (diff.insert.length || diff.remove.length) {
+							// Now send out new chain packets for each operation
+							if (diff.insert.length) {
+								this.chainSend('insert', diff.insert);
+							}
+
+							if (diff.update.length) {
+								pk = self._privateData.primaryKey();
+								for (i = 0; i < diff.update.length; i++) {
+									query = {};
+									query[pk] = diff.update[i][pk];
+
+									this.chainSend('update', {
+										query: query,
+										update: diff.update[i]
+									});
+								}
+							}
+
+							if (diff.remove.length) {
+								pk = self._privateData.primaryKey();
+								var $or = [],
+									removeQuery = {
+										query: {
+											$or: $or
+										}
+									};
+
+								for (i = 0; i < diff.remove.length; i++) {
+									$or.push({_id: diff.remove[i][pk]});
+								}
+
+								this.chainSend('remove', removeQuery);
+							}
+
+							// Return true to stop further propagation of the chain packet
+							return true;
+						} else {
+							// Returning false informs the chain reactor to continue propagation
+							// of the chain packet down the graph tree
+							return false;
+						}
 					}
 				}
 			}
