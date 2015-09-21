@@ -106,6 +106,7 @@ Shared.addModule('Highchart', Highchart);
 Collection = Shared.modules.Collection;
 CollectionInit = Collection.prototype.init;
 
+Shared.mixin(Highchart.prototype, 'Mixin.Common');
 Shared.mixin(Highchart.prototype, 'Mixin.Events');
 
 /**
