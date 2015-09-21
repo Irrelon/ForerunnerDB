@@ -17,11 +17,32 @@
 
 	tree.index({
 		name: 1,
-		age: 1
+		age: -1,
+		type: 1
 	});
 
+	tree.insert({
+		name: 'Angel',
+		age: 20,
+		type: 'User'
+	});
+
+	/*tree.insert({
+		name: 'Angel',
+		age: 21,
+		type: 'User'
+	});*/
+
+	 /*tree.insert({
+		name: 'Angel',
+		age: 12,
+		type: 'User'
+	});*/
+
+	console.log(tree.inOrder());
+
 	// Generate names and ages
-	console.time('Generate ' + countMax + ' records');
+	/*console.time('Generate ' + countMax + ' records');
 	while (count--) {
 		name = names[Math.floor(Math.random() * names.length)];
 
@@ -49,7 +70,7 @@
 
 	console.time('Query tree multi key');
 	console.log(tree.lookup({name: 'Jim', age: 12}));
-	console.timeEnd('Query tree multi key');
+	console.timeEnd('Query tree multi key');*/
 </script>
 </body>
 </html>

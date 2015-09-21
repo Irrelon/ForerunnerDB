@@ -3,13 +3,16 @@
 var BinaryTree = function (val, index) {
 	this._store = [];
 
-	this.data(val);
+	if (val !== undefined) {
+		this.data(val);
+		this._store.push(val);
+	}
+
 	this.index(index);
 };
 
 BinaryTree.prototype.data = function (val) {
 	if (val !== undefined) {
-		this._store.push(val);
 		this._data = val;
 	}
 };
@@ -43,13 +46,18 @@ BinaryTree.prototype.right = function (val) {
 	return true;
 };
 
+/**
+ * Inserts a value into the binary tree.
+ * @param {String|Number|Array} val The value to insert.
+ * @returns {*}
+ */
 BinaryTree.prototype.insert = function (val) {
 	var inserted,
 		failed,
 		comp,
 		newIndex,
 		i;
-
+debugger;
 	if (val instanceof Array) {
 		// Insert array of data
 		inserted = [];
@@ -72,6 +80,7 @@ BinaryTree.prototype.insert = function (val) {
 	if (!this._data) {
 		// Store data for this node
 		this.data(val);
+		this._store.push(val);
 		return true;
 	}
 
@@ -114,9 +123,14 @@ BinaryTree.prototype.insert = function (val) {
 	}
 };
 
+/**
+ * Returns an array of all items in the tree in ascending order.
+ * @param {Array=} resultArr Used internally by the method.
+ * @returns {Array} Ascending order results array.
+ */
 BinaryTree.prototype.inOrder = function (resultArr) {
 	resultArr = resultArr || [];
-
+debugger;
 	if (this._left) {
 		resultArr = this._left.inOrder(resultArr);
 	}
@@ -134,6 +148,12 @@ BinaryTree.prototype.inOrder = function (resultArr) {
 	return resultArr;
 };
 
+/**
+ * Scans the passed object and returns an array of objects, each containing
+ * the key and the value of each object key.
+ * @param {Object} obj The object to scan keys from.
+ * @returns {Array} An array of key/val objects.
+ */
 BinaryTree.prototype.keys = function (obj) {
 	var i,
 		keys = [];
@@ -212,4 +232,26 @@ BinaryTree.prototype.sortDesc = function (a, b) {
 	}
 
 	return 0;
+};
+
+BinaryTree.prototype.lookup = function (data, resultArr) {
+	var result = this._compareFunc(this._data, data);
+
+	resultArr = resultArr || [];
+
+	if (result === 0) {
+		if (this._left) { this._left.lookup(data, resultArr); }
+		resultArr.push(this._data);
+		if (this._right) { this._right.lookup(data, resultArr); }
+	}
+
+	if (result === -1) {
+		if (this._right) { this._right.lookup(data, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.lookup(data, resultArr); }
+	}
+
+	return resultArr;
 };
