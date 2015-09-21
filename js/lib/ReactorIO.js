@@ -72,6 +72,7 @@ ReactorIO.prototype.drop = function () {
  */
 Shared.synthesize(ReactorIO.prototype, 'state');
 
+Shared.mixin(ReactorIO.prototype, 'Mixin.Common');
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
