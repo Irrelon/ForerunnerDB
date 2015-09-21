@@ -678,7 +678,7 @@ Collection.prototype.data = function () {
 Collection.prototype.drop = function (callback) {
 	var key;
 
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
 				console.log(this.logIdentifier() + ' Dropping');
@@ -818,7 +818,7 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param callback Optional callback function.
  */
 Collection.prototype.setData = function (data, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -945,7 +945,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -988,7 +988,7 @@ Collection.prototype.truncate = function () {
  * contains the return data from the operation used.
  */
 Collection.prototype.upsert = function (obj, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1123,7 +1123,7 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * @returns {Array} The items that were updated.
  */
 Collection.prototype.update = function (query, update, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1744,7 +1744,7 @@ Collection.prototype._isPositionalKey = function (key) {
  * @returns {Array} An array of the documents that were removed.
  */
 Collection.prototype.remove = function (query, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1968,7 +1968,7 @@ Collection.prototype.isProcessingQueue = function () {
  * objects to insert into the collection.
  */
 Collection.prototype.insert = function (data, index, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -2289,7 +2289,7 @@ Collection.prototype.isSubsetOf = function (collection) {
  * @returns {Array}
  */
 Collection.prototype.distinct = function (key, query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -2421,7 +2421,7 @@ Collection.prototype.find = function (query, options, callback) {
 };
 
 Collection.prototype._find = function (query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -3519,7 +3519,7 @@ Collection.prototype.insertIndexViolation = function (doc) {
  * @returns {*}
  */
 Collection.prototype.ensureIndex = function (keys, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -4247,7 +4247,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * @returns {boolean} True on success, false on failure.
  */
 CollectionGroup.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		var i,
 			collArr,
 			viewArr;
@@ -5029,7 +5029,7 @@ Db.prototype.drop = new Overload({
 	 * @memberof Db
 	 */
 	'': function () {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -5056,7 +5056,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,
@@ -5093,7 +5093,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -5122,7 +5122,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'boolean, function': function (removePersist, callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,
@@ -6293,7 +6293,7 @@ var ChainReactor = {
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
 
-				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
+				if (!arrItem._state || (arrItem._state && !arrItem.isDropped())) {
 					if (this.debug && this.debug()) {
 						if (arrItem._reactorIn && arrItem._reactorOut) {
 							console.log(arrItem._reactorIn.logIdentifier() + ' Sending data down the chain reactor pipe to "' + arrItem._reactorOut.instanceIdentifier() + '"');
@@ -6559,6 +6559,14 @@ Common = {
 				}
 			}
 		}
+	},
+
+	/**
+	 * Checks if the state is dropped.
+	 * @returns {boolean} True when dropped, false otherwise.
+	 */
+	isDropped: function () {
+		return this._state === 'dropped';
 	}
 };
 
@@ -8510,7 +8518,7 @@ Shared.addModule('ReactorIO', ReactorIO);
  * @returns {boolean}
  */
 ReactorIO.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		this._state = 'dropped';
 
 		// Remove links
@@ -8539,6 +8547,7 @@ ReactorIO.prototype.drop = function () {
  */
 Shared.synthesize(ReactorIO.prototype, 'state');
 
+Shared.mixin(ReactorIO.prototype, 'Mixin.Common');
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
@@ -8555,7 +8564,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.286',
+	version: '1.3.292',
 	modules: {},
 	plugins: {},
 
@@ -9039,81 +9048,84 @@ View.prototype.from = function (source) {
 				pk,
 				i;
 
-			// Check if we have a constraining query
-			if (self._querySettings.query) {
-				if (chainPacket.type === 'insert') {
-					data = chainPacket.data;
+			// Check that the state of the "self" object is not dropped
+			if (self && !self.isDropped()) {
+				// Check if we have a constraining query
+				if (self._querySettings.query) {
+					if (chainPacket.type === 'insert') {
+						data = chainPacket.data;
 
-					// Check if the data matches our query
-					if (data instanceof Array) {
-						filteredData = [];
+						// Check if the data matches our query
+						if (data instanceof Array) {
+							filteredData = [];
 
-						for (i = 0; i < data.length; i++) {
-							if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
-								filteredData.push(data[i]);
+							for (i = 0; i < data.length; i++) {
+								if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
+									filteredData.push(data[i]);
+									doSend = true;
+								}
+							}
+						} else {
+							if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
+								filteredData = data;
 								doSend = true;
 							}
 						}
-					} else {
-						if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
-							filteredData = data;
-							doSend = true;
-						}
-					}
 
-					if (doSend) {
-						this.chainSend('insert', filteredData);
-					}
-
-					return true;
-				}
-
-				if (chainPacket.type === 'update') {
-					// Do a DB diff between this view's data and the underlying collection it reads from
-					// to see if something has changed
-					diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
-
-					if (diff.insert.length || diff.remove.length) {
-						// Now send out new chain packets for each operation
-						if (diff.insert.length) {
-							this.chainSend('insert', diff.insert);
+						if (doSend) {
+							this.chainSend('insert', filteredData);
 						}
 
-						if (diff.update.length) {
-							pk = self._privateData.primaryKey();
-							for (i = 0; i < diff.update.length; i++) {
-								query = {};
-								query[pk] = diff.update[i][pk];
-
-								this.chainSend('update', {
-									query: query,
-									update: diff.update[i]
-								});
-							}
-						}
-
-						if (diff.remove.length) {
-							pk = self._privateData.primaryKey();
-							var $or = [],
-								removeQuery = {
-									query: {
-										$or: $or
-									}
-								};
-
-							for (i = 0; i < diff.remove.length; i++) {
-								$or.push({_id: diff.remove[i][pk]});
-							}
-
-							this.chainSend('remove', removeQuery);
-						}
-
-						// Return true to stop further propagation of the chain packet
 						return true;
-					} else {
-						// Returning false informs the chain reactor to continue propagation
-						// of the chain packet down the graph tree
-						return false;
+					}
+
+					if (chainPacket.type === 'update') {
+						// Do a DB diff between this view's data and the underlying collection it reads from
+						// to see if something has changed
+						diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
+
+						if (diff.insert.length || diff.remove.length) {
+							// Now send out new chain packets for each operation
+							if (diff.insert.length) {
+								this.chainSend('insert', diff.insert);
+							}
+
+							if (diff.update.length) {
+								pk = self._privateData.primaryKey();
+								for (i = 0; i < diff.update.length; i++) {
+									query = {};
+									query[pk] = diff.update[i][pk];
+
+									this.chainSend('update', {
+										query: query,
+										update: diff.update[i]
+									});
+								}
+							}
+
+							if (diff.remove.length) {
+								pk = self._privateData.primaryKey();
+								var $or = [],
+									removeQuery = {
+										query: {
+											$or: $or
+										}
+									};
+
+								for (i = 0; i < diff.remove.length; i++) {
+									$or.push({_id: diff.remove[i][pk]});
+								}
+
+								this.chainSend('remove', removeQuery);
+							}
+
+							// Return true to stop further propagation of the chain packet
+							return true;
+						} else {
+							// Returning false informs the chain reactor to continue propagation
+							// of the chain packet down the graph tree
+							return false;
+						}
 					}
 				}
 			}
@@ -9358,7 +9370,7 @@ View.prototype.primaryKey = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
 			this._from._removeView(this);

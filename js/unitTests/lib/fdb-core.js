@@ -408,7 +408,7 @@ Collection.prototype.data = function () {
 Collection.prototype.drop = function (callback) {
 	var key;
 
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
 				console.log(this.logIdentifier() + ' Dropping');
@@ -548,7 +548,7 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param callback Optional callback function.
  */
 Collection.prototype.setData = function (data, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -675,7 +675,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -718,7 +718,7 @@ Collection.prototype.truncate = function () {
  * contains the return data from the operation used.
  */
 Collection.prototype.upsert = function (obj, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -853,7 +853,7 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * @returns {Array} The items that were updated.
  */
 Collection.prototype.update = function (query, update, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1474,7 +1474,7 @@ Collection.prototype._isPositionalKey = function (key) {
  * @returns {Array} An array of the documents that were removed.
  */
 Collection.prototype.remove = function (query, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1698,7 +1698,7 @@ Collection.prototype.isProcessingQueue = function () {
  * objects to insert into the collection.
  */
 Collection.prototype.insert = function (data, index, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -2019,7 +2019,7 @@ Collection.prototype.isSubsetOf = function (collection) {
  * @returns {Array}
  */
 Collection.prototype.distinct = function (key, query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -2151,7 +2151,7 @@ Collection.prototype.find = function (query, options, callback) {
 };
 
 Collection.prototype._find = function (query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -3249,7 +3249,7 @@ Collection.prototype.insertIndexViolation = function (doc) {
  * @returns {*}
  */
 Collection.prototype.ensureIndex = function (keys, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -4422,7 +4422,7 @@ Db.prototype.drop = new Overload({
 	 * @memberof Db
 	 */
 	'': function () {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -4449,7 +4449,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,
@@ -4486,7 +4486,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -4515,7 +4515,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'boolean, function': function (removePersist, callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,
@@ -5686,7 +5686,7 @@ var ChainReactor = {
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
 
-				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
+				if (!arrItem._state || (arrItem._state && !arrItem.isDropped())) {
 					if (this.debug && this.debug()) {
 						if (arrItem._reactorIn && arrItem._reactorOut) {
 							console.log(arrItem._reactorIn.logIdentifier() + ' Sending data down the chain reactor pipe to "' + arrItem._reactorOut.instanceIdentifier() + '"');
@@ -5952,6 +5952,14 @@ Common = {
 				}
 			}
 		}
+	},
+
+	/**
+	 * Checks if the state is dropped.
+	 * @returns {boolean} True when dropped, false otherwise.
+	 */
+	isDropped: function () {
+		return this._state === 'dropped';
 	}
 };
 
@@ -7903,7 +7911,7 @@ Shared.addModule('ReactorIO', ReactorIO);
  * @returns {boolean}
  */
 ReactorIO.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		this._state = 'dropped';
 
 		// Remove links
@@ -7932,6 +7940,7 @@ ReactorIO.prototype.drop = function () {
  */
 Shared.synthesize(ReactorIO.prototype, 'state');
 
+Shared.mixin(ReactorIO.prototype, 'Mixin.Common');
 Shared.mixin(ReactorIO.prototype, 'Mixin.ChainReactor');
 Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
@@ -7948,7 +7957,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.286',
+	version: '1.3.292',
 	modules: {},
 	plugins: {},
 

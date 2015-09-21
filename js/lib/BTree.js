@@ -57,7 +57,7 @@ BinaryTree.prototype.insert = function (val) {
 		comp,
 		newIndex,
 		i;
-debugger;
+
 	if (val instanceof Array) {
 		// Insert array of data
 		inserted = [];
@@ -130,7 +130,7 @@ debugger;
  */
 BinaryTree.prototype.inOrder = function (resultArr) {
 	resultArr = resultArr || [];
-debugger;
+
 	if (this._left) {
 		resultArr = this._left.inOrder(resultArr);
 	}

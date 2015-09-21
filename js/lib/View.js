@@ -187,7 +187,7 @@ View.prototype.from = function (source) {
 				i;
 
 			// Check that the state of the "self" object is not dropped
-			if (self && !this.isDropped()) {
+			if (self && !self.isDropped()) {
 				// Check if we have a constraining query
 				if (self._querySettings.query) {
 					if (chainPacket.type === 'insert') {
