@@ -56,7 +56,7 @@ var ChainReactor = {
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
 
-				if (!arrItem._state || (arrItem._state && arrItem._state !== 'dropped')) {
+				if (!arrItem._state || (arrItem._state && !arrItem.isDropped())) {
 					if (this.debug && this.debug()) {
 						if (arrItem._reactorIn && arrItem._reactorOut) {
 							console.log(arrItem._reactorIn.logIdentifier() + ' Sending data down the chain reactor pipe to "' + arrItem._reactorOut.instanceIdentifier() + '"');

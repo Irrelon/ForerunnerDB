@@ -271,7 +271,7 @@ Highchart.prototype._changeListener = function () {
  * @returns {Boolean}
  */
 Highchart.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		this._state = 'dropped';
 
 		if (this._chart) {

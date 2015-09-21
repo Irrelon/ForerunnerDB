@@ -169,7 +169,7 @@ Grid.prototype._collectionDropped = function (collection) {
  * @returns {boolean} True on success, false on failure.
  */
 Grid.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._from) {
 			// Remove data-binding
 			this._from.unlink(this._selector, this.template());

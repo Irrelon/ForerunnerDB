@@ -62,7 +62,7 @@ Odm.prototype._chainHandler = function (chainPacket) {
 };
 
 Odm.prototype.drop = function () {
-	if (this.state() !== 'dropped') {
+	if (!this.isDropped()) {
 		this.state('dropped');
 
 		this.emit('drop', this);

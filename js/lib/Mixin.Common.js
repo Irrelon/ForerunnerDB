@@ -222,6 +222,14 @@ Common = {
 				}
 			}
 		}
+	},
+
+	/**
+	 * Checks if the state is dropped.
+	 * @returns {boolean} True when dropped, false otherwise.
+	 */
+	isDropped: function () {
+		return this._state === 'dropped';
 	}
 };
 

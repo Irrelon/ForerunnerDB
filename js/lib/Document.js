@@ -365,7 +365,7 @@ FdbDocument.prototype._updateUnset = function (doc, prop) {
  * @returns {boolean} True if successful, false if not.
  */
 FdbDocument.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._db && this._name) {
 			if (this._db && this._db._document && this._db._document[this._name]) {
 				this._state = 'dropped';

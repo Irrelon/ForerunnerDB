@@ -169,7 +169,7 @@ Overview.prototype._sourceDropped = function (source) {
 };
 
 Overview.prototype._refresh = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._sources && this._sources[0]) {
 			this._collData.primaryKey(this._sources[0].primaryKey());
 			var tempArr = [],
@@ -215,7 +215,7 @@ Overview.prototype.data = function () {
 };
 
 Overview.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		this._state = 'dropped';
 
 		delete this._data;

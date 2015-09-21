@@ -364,7 +364,7 @@ Db.prototype.drop = new Overload({
 	 * @memberof Db
 	 */
 	'': function () {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -391,7 +391,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'function': function (callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,
@@ -428,7 +428,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Boolean} removePersist Drop persistent storage for this database.
 	 */
 	'boolean': function (removePersist) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex;
@@ -457,7 +457,7 @@ Db.prototype.drop = new Overload({
 	 * @param {Function} callback Optional callback method.
 	 */
 	'boolean, function': function (removePersist, callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			var arr = this.collections(),
 				arrCount = arr.length,
 				arrIndex,

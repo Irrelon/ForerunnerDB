@@ -367,7 +367,7 @@ Collection.prototype.drop = new Overload({
 	 * Drop collection and persistent storage.
 	 */
 	'': function () {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			this.drop(true);
 		}
 	},
@@ -377,7 +377,7 @@ Collection.prototype.drop = new Overload({
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			this.drop(true, callback);
 		}
 	},
@@ -387,7 +387,7 @@ Collection.prototype.drop = new Overload({
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			// Remove persistent storage
 			if (removePersistent) {
 				if (this._name) {
@@ -414,7 +414,7 @@ Collection.prototype.drop = new Overload({
 	'boolean, function': function (removePersistent, callback) {
 		var self = this;
 
-		if (this._state !== 'dropped') {
+		if (!this.isDropped()) {
 			// Remove persistent storage
 			if (removePersistent) {
 				if (this._name) {

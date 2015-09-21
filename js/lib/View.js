@@ -187,7 +187,7 @@ View.prototype.from = function (source) {
 				i;
 
 			// Check that the state of the "self" object is not dropped
-			if (self && self._state !== 'dropped') {
+			if (self && !this.isDropped()) {
 				// Check if we have a constraining query
 				if (self._querySettings.query) {
 					if (chainPacket.type === 'insert') {
@@ -508,7 +508,7 @@ View.prototype.primaryKey = function () {
  * @returns {boolean} True on success, false on failure.
  */
 View.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
 			this._from._removeView(this);

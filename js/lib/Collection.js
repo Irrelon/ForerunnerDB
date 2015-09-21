@@ -128,7 +128,7 @@ Collection.prototype.data = function () {
 Collection.prototype.drop = function (callback) {
 	var key;
 
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		if (this._db && this._db._collection && this._name) {
 			if (this.debug()) {
 				console.log(this.logIdentifier() + ' Dropping');
@@ -268,7 +268,7 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param callback Optional callback function.
  */
 Collection.prototype.setData = function (data, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -395,7 +395,7 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -438,7 +438,7 @@ Collection.prototype.truncate = function () {
  * contains the return data from the operation used.
  */
 Collection.prototype.upsert = function (obj, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -573,7 +573,7 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * @returns {Array} The items that were updated.
  */
 Collection.prototype.update = function (query, update, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1194,7 +1194,7 @@ Collection.prototype._isPositionalKey = function (key) {
  * @returns {Array} An array of the documents that were removed.
  */
 Collection.prototype.remove = function (query, options, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1418,7 +1418,7 @@ Collection.prototype.isProcessingQueue = function () {
  * objects to insert into the collection.
  */
 Collection.prototype.insert = function (data, index, callback) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1739,7 +1739,7 @@ Collection.prototype.isSubsetOf = function (collection) {
  * @returns {Array}
  */
 Collection.prototype.distinct = function (key, query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -1871,7 +1871,7 @@ Collection.prototype.find = function (query, options, callback) {
 };
 
 Collection.prototype._find = function (query, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
@@ -2969,7 +2969,7 @@ Collection.prototype.insertIndexViolation = function (doc) {
  * @returns {*}
  */
 Collection.prototype.ensureIndex = function (keys, options) {
-	if (this._state === 'dropped') {
+	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 

@@ -43,7 +43,7 @@ Shared.addModule('ReactorIO', ReactorIO);
  * @returns {boolean}
  */
 ReactorIO.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		this._state = 'dropped';
 
 		// Remove links

@@ -259,7 +259,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * @returns {boolean} True on success, false on failure.
  */
 CollectionGroup.prototype.drop = function () {
-	if (this._state !== 'dropped') {
+	if (!this.isDropped()) {
 		var i,
 			collArr,
 			viewArr;
