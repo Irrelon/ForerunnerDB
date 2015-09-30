@@ -1,22 +1,42 @@
 "use strict";
 
+/**
+ * The binary tree class.
+ * @param {Object} val The object to index.
+ * @param {Object} index The index object.
+ * @constructor
+ */
 var BinaryTree = function (val, index) {
 	this._store = [];
+	this.index(index);
 
 	if (val !== undefined) {
 		this.data(val);
-		this._store.push(val);
+		this.insertMiddle(val);
 	}
-
-	this.index(index);
 };
 
+/**
+ * Gets / sets the data this tree node holds.
+ * @param {Object=} val The tree node data.
+ * @returns {*}
+ */
 BinaryTree.prototype.data = function (val) {
 	if (val !== undefined) {
 		this._data = val;
+		return this;
 	}
+
+	return this._data;
 };
 
+/**
+ * Gets / sets the index object used to determine which fields
+ * are indexed in the objects being added to the tree and in what
+ * order they are sorted.
+ * @param {Object=} obj The index object.
+ * @returns {*}
+ */
 BinaryTree.prototype.index = function (obj) {
 	if (obj !== undefined) {
 		if (obj instanceof Array) {
@@ -26,24 +46,52 @@ BinaryTree.prototype.index = function (obj) {
 		}
 
 		this._indexField = this._index[0];
+		return this;
 	}
 
 	return this._index;
 };
 
-BinaryTree.prototype.left = function (val) {
-	this._left = val;
-	return true;
+/**
+ * Gets / sets the node's left tree node.
+ * @param {BinaryTree=} tree The tree node.
+ * @returns {*}
+ */
+BinaryTree.prototype.left = function (tree) {
+	if (tree !== undefined) {
+		this._left = tree;
+		return this;
+	}
+
+	return this._left;
 };
 
-BinaryTree.prototype.middle = function (val) {
-	this._middle = val;
-	return true;
+/**
+ * Gets / sets the node's middle tree node.
+ * @param {BinaryTree=} tree The tree node.
+ * @returns {*}
+ */
+BinaryTree.prototype.middle = function (tree) {
+	if (tree !== undefined) {
+		this._middle = tree;
+		return this;
+	}
+
+	return this._middle;
 };
 
-BinaryTree.prototype.right = function (val) {
-	this._right = val;
-	return true;
+/**
+ * Gets / sets the node's right tree node.
+ * @param {BinaryTree=} tree The tree node.
+ * @returns {*}
+ */
+BinaryTree.prototype.right = function (tree) {
+	if (tree !== undefined) {
+		this._right = tree;
+		return this;
+	}
+
+	return this._right;
 };
 
 /**
@@ -55,7 +103,6 @@ BinaryTree.prototype.insert = function (val) {
 	var inserted,
 		failed,
 		comp,
-		newIndex,
 		i;
 
 	if (val instanceof Array) {
@@ -80,46 +127,79 @@ BinaryTree.prototype.insert = function (val) {
 	if (!this._data) {
 		// Store data for this node
 		this.data(val);
-		this._store.push(val);
+		this.insertMiddle(val);
 		return true;
 	}
 
 	comp = this._compareFunc(val, this._data);
 
 	if (comp === -1) {
-		// Store left
-		if (this._left) {
-			return this._left.insert(val);
-		} else {
-			return this.left(new BinaryTree(val, this._index));
-		}
+		this.insertLeft(val);
 	}
 
 	if (comp === 0) {
-		// Store reference in store
-		this._store.push(val);
-
-		// Store middle
-		if (this._middle) {
-			return this._middle.insert(val);
-		} else {
-			newIndex = this._index.slice(1);
-
-			if (newIndex[0]) {
-				return this.middle(new BinaryTree(val, newIndex));
-			} else {
-				return true;
-			}
-		}
+		this.insertMiddle(val);
 	}
 
 	if (comp === 1) {
-		// Store right
-		if (this._right) {
-			return this._right.insert(val);
+		this.insertRight(val);
+	}
+};
+
+/**
+ * Inserts an object into the left side of this node's tree, or
+ * creates a new tree node on the left and then inserts the object.
+ * @param {Object} val The object to insert.
+ * @returns {*}
+ */
+BinaryTree.prototype.insertLeft = function (val) {
+	// Store left
+	if (this._left) {
+		return this._left.insert(val);
+	} else {
+		return this.left(new BinaryTree(val, this._index));
+	}
+};
+
+/**
+ * Inserts an object into the middle of this node's tree, or
+ * creates a new tree node in the middle and then inserts the object.
+ * @param {Object} val The object to insert.
+ * @returns {*}
+ */
+BinaryTree.prototype.insertMiddle = function (val) {
+	var newIndexArr;
+
+	// Store reference in store
+	this._store.push(val);
+
+	// Store middle
+	if (this._middle) {
+		return this._middle.insert(val);
+	} else {
+		// Pull the first item off the index array and create new index array
+		newIndexArr = this._index.slice(1);
+
+		if (newIndexArr[0]) {
+			return this.middle(new BinaryTree(val, newIndexArr));
 		} else {
-			return this.right(new BinaryTree(val, this._index));
+			return true;
 		}
+	}
+};
+
+/**
+ * Inserts an object into the right side of this node's tree, or
+ * creates a new tree node on the right and then inserts the object.
+ * @param {Object} val The object to insert.
+ * @returns {*}
+ */
+BinaryTree.prototype.insertRight = function (val) {
+	// Store right
+	if (this._right) {
+		return this._right.insert(val);
+	} else {
+		return this.right(new BinaryTree(val, this._index));
 	}
 };
 
@@ -192,7 +272,22 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 	return result;
 };
 
+BinaryTree.prototype.varType = function (myVar) {
+	var type = typeof myVar;
 
+	if (type === 'object') {
+		// Work out the object type
+		if (myVar instanceof Array) {
+			return 'array';
+		}
+
+		if (myVar instanceof RegExp) {
+			return 'regexp';
+		}
+	}
+
+	return type;
+};
 
 /**
  * Sorts the passed value a against the passed value b ascending.
@@ -201,6 +296,7 @@ BinaryTree.prototype._compareFunc = function (a, b) {
  * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
  */
 BinaryTree.prototype.sortAsc = function (a, b) {
+
 	if (typeof(a) === 'string' && typeof(b) === 'string') {
 		return a.localeCompare(b);
 	} else {
@@ -234,23 +330,88 @@ BinaryTree.prototype.sortDesc = function (a, b) {
 	return 0;
 };
 
-BinaryTree.prototype.lookup = function (data, resultArr) {
-	var result = this._compareFunc(this._data, data);
+/**
+ * Returns a non-referenced version of the passed object / array.
+ * @param {Object} data The object or array to return as a non-referenced version.
+ * @param {Number=} copies Optional number of copies to produce. If specified, the return
+ * value will be an array of decoupled objects, each distinct from the other.
+ * @returns {*}
+ */
+BinaryTree.prototype.decouple = function (data, copies) {
+	if (data !== undefined) {
+		if (!copies) {
+			return JSON.parse(JSON.stringify(data));
+		} else {
+			var i,
+				json = JSON.stringify(data),
+				copyArr = [];
 
-	resultArr = resultArr || [];
+			for (i = 0; i < copies; i++) {
+				copyArr.push(JSON.parse(json));
+			}
 
-	if (result === 0) {
-		if (this._left) { this._left.lookup(data, resultArr); }
-		resultArr.push(this._data);
-		if (this._right) { this._right.lookup(data, resultArr); }
+			return copyArr;
+		}
+	}
+
+	return undefined;
+};
+
+/**
+ * Retrieves results based on the query object.
+ * @param {Object} query The query object.
+ * @returns {Array} The result array.
+ */
+BinaryTree.prototype.lookup = function (query) {
+	var result,
+		resultArr = [];
+
+	if (query[this._indexField.key]) {
+		result = this._compareFunc(query, this._data);
+	} else {
+		// Return all results in this b-tree
+		if (this._left) {
+			resultArr = resultArr.concat(this._left.lookup(query));
+		}
+
+		if (this._middle) {
+			resultArr = resultArr.concat(this._middle.lookup(query));
+		} else {
+			resultArr = resultArr.concat(this._store);
+		}
+
+		if (this._right) {
+			resultArr = resultArr.concat(this._right.lookup(query));
+		}
+
+		return resultArr;
 	}
 
 	if (result === -1) {
-		if (this._right) { this._right.lookup(data, resultArr); }
+		if (this._left) {
+			resultArr = resultArr.concat(this._left.lookup(query, resultArr));
+		}
+	}
+
+	if (result === 0) {
+		query = this.decouple(query);
+		delete query[this._indexField.key];
+
+		if (this._middle) {
+			if (query[this._middle._indexField.key] !== undefined) {
+				resultArr = resultArr.concat(this._middle.lookup(query, resultArr));
+			} else {
+				resultArr = resultArr.concat(this._middle.inOrder());
+			}
+		} else {
+			resultArr = resultArr.concat(this._store);
+		}
 	}
 
 	if (result === 1) {
-		if (this._left) { this._left.lookup(data, resultArr); }
+		if (this._right) {
+			resultArr = resultArr.concat(this._right.lookup(query));
+		}
 	}
 
 	return resultArr;

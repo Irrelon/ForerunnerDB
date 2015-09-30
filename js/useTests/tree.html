@@ -16,9 +16,21 @@
 		names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'];
 
 	tree.index({
-		name: 1,
+		name: -1,
 		age: -1,
-		type: 1
+		type: -1
+	});
+
+	tree.insert({
+		name: 'Charlie',
+		age: 15,
+		type: 'User'
+	});
+
+	tree.insert({
+		name: 'Charlie',
+		age: 12,
+		type: 'User'
 	});
 
 	tree.insert({
@@ -27,17 +39,53 @@
 		type: 'User'
 	});
 
-	/*tree.insert({
+	tree.insert({
+		name: 'Bill',
+		age: 11,
+		type: 'User'
+	});
+
+	tree.insert({
 		name: 'Angel',
 		age: 21,
 		type: 'User'
-	});*/
+	});
 
-	 /*tree.insert({
+	tree.insert({
+		name: 'Bill',
+		age: 50,
+		type: 'Staff'
+	});
+
+	 tree.insert({
 		name: 'Angel',
 		age: 12,
 		type: 'User'
-	});*/
+	});
+
+	tree.insert({
+		name: 'Angel',
+		age: 50,
+		type: 'Staff'
+	});
+
+	tree.insert({
+		name: 'Angel',
+		age: 82,
+		type: 'Staff'
+	});
+
+	tree.insert({
+		name: 'Angel',
+		age: 82,
+		type: 'Staff'
+	});
+
+	tree.insert({
+		name: 'Angel',
+		age: 82,
+		type: 'User'
+	});
 
 	console.log(tree.inOrder());
 

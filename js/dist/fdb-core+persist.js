@@ -6437,16 +6437,25 @@ var Events = {
 
 		if (event in this._listeners) {
 			var arrIndex,
-				arrCount;
+				arrCount,
+				tmpFunc,
+				arr,
+				listenerIdArr,
+				listenerIdCount,
+				listenerIdIndex;
 
 			// Handle global emit
 			if (this._listeners[event]['*']) {
-				var arr = this._listeners[event]['*'];
-
+				arr = this._listeners[event]['*'];
 				arrCount = arr.length;
 
 				for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-					arr[arrIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+					// Check we have a function to execute
+					tmpFunc = arr[arrIndex];
+
+					if (typeof tmpFunc === 'function') {
+						tmpFunc.apply(this, Array.prototype.slice.call(arguments, 1));
+					}
 				}
 			}
 
@@ -6455,10 +6464,7 @@ var Events = {
 				// Check if the array is an array of objects in the collection
 				if (data[0] && data[0][this._primaryKey]) {
 					// Loop the array and check for listeners against the primary key
-					var listenerIdArr = this._listeners[event],
-						listenerIdCount,
-						listenerIdIndex;
-
+					listenerIdArr = this._listeners[event];
 					arrCount = data.length;
 
 					for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
@@ -6466,7 +6472,11 @@ var Events = {
 							// Emit for this id
 							listenerIdCount = listenerIdArr[data[arrIndex][this._primaryKey]].length;
 							for (listenerIdIndex = 0; listenerIdIndex < listenerIdCount; listenerIdIndex++) {
-								listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+								tmpFunc = listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex];
+
+								if (typeof tmpFunc === 'function') {
+									listenerIdArr[data[arrIndex][this._primaryKey]][listenerIdIndex].apply(this, Array.prototype.slice.call(arguments, 1));
+								}
 							}
 						}
 					}
@@ -9109,7 +9119,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.292',
+	version: '1.3.294',
 	modules: {},
 	plugins: {},
 
