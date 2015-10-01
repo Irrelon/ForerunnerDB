@@ -310,7 +310,18 @@ NodePersist.prototype.drop = function (key, callback) {
 
 };
 
-Shared.synthesize(NodePersist.prototype, 'dataDir');
+Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
+	if (val !== undefined) {
+		// Ensure the folder exists
+		fs.stat(val, function (err, stats) {
+			if (!stats.isDirectory() && !stats.isFile()) {
+				fs.mkdir(val);
+			}
+		});
+	}
+
+	return this.$super.call(this, val);
+});
 
 NodePersist.prototype.saveDataFile = function (key, data, callback) {
 	fs.writeFile(this.dataDir() + "/" + key + '.fdb', data, callback);
