@@ -314,8 +314,16 @@ Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
 	if (val !== undefined) {
 		// Ensure the folder exists
 		fs.stat(val, function (err, stats) {
-			if (!stats.isDirectory() && !stats.isFile()) {
-				fs.mkdir(val);
+			if (!err) {
+				if (!stats.isDirectory() && !stats.isFile()) {
+					fs.mkdir(val);
+				}
+			} else {
+				try {
+					fs.mkdir(val);
+				} catch (e) {
+
+				}
 			}
 		});
 	}
