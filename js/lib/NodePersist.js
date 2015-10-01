@@ -332,11 +332,11 @@ Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
 });
 
 NodePersist.prototype.saveDataFile = function (key, data, callback) {
-	fs.writeFile(this.dataDir() + "/" + key + '.fdb', data, callback);
+	fs.writeFile(this.dataDir() + "/" + key + '.fdb', 'utf8', data, callback);
 };
 
 NodePersist.prototype.loadDataFile = function (key, callback) {
-	fs.readFile(this.dataDir() + "/" + key + '.fdb', callback);
+	fs.readFile(this.dataDir() + "/" + key + '.fdb', 'utf8', callback);
 };
 
 NodePersist.prototype.removeDataFile = function (key, callback) {
