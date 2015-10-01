@@ -74,7 +74,7 @@
     "socket.io": "^1.1.0",
     "stringify": "^3.1.0"
   },
-  "main": "./js/builds/core",
+  "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",
   "bugs": {
     "url": "http://github.com/irrelon/ForerunnerDB/issues"
