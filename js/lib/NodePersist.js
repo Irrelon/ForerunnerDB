@@ -25,6 +25,9 @@ NodePersist = function () {
  * @param {Db} db The ForerunnerDB database instance.
  */
 NodePersist.prototype.init = function (db) {
+	// Defaul to saving data via files
+	this.mode('file');
+
 	this._encodeSteps = [
 		this._encode
 	];
