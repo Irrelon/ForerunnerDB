@@ -2,7 +2,7 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
-## Version 1.3.300
+## Version 1.3.302
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -1590,7 +1590,7 @@ will attempt to create it for you as soon as you make the call to dataDir().
 
 ### Both Browser and Node.js
 
-### Plugins
+#### Plugins
 > Version >= 1.3.235
 
 The persistent storage module supports adding plugins to the transcoder. The transcoder
@@ -1607,7 +1607,7 @@ to the data before it is saved or loaded. Plugins must ensure that the final dat
 provide in their callback is a string as we must allow support for LocalStorage and are
 currently only able to store string data against keys in LocalStorage.
 
-### Data Compression and Encryption
+#### Data Compression and Encryption
 > Version >= 1.3.235
 
 ForerunnerDB includes compression and encryption plugins that integrate with the persistent
@@ -1626,7 +1626,7 @@ repository available via:
 
 The plugins are meant to be instantiated before use as shown in the examples below.
 
-#### Compression
+##### Compression
 The compression plugin takes data from the previous transcoder step and performs a zip
 operation on it. If the compressed data is smaller in size to the original data then the
 compressed data is used. If the compressed data is not smaller, no changes are made to
@@ -1637,7 +1637,7 @@ transcoder step:
 
 	db.persist.addStep(new db.shared.plugins.FdbCompress());
 
-#### Encryption
+##### Encryption
 The encryption plugin takes data from the previous transcoder step and encrypts / decrypts
 it based on the pass-phrase that the plugin is instantiated with. By default the plugin
 uses AES-256 as the encryption cypher algorithm.
