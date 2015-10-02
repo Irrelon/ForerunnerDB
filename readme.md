@@ -1543,6 +1543,9 @@ You can then load the collection's data back again via:
 If you call collection.load() when your application starts and collection.save() when you make changes
 to your collection you can ensure that your application always has up-to-date data.
 
+> An eager-saving mode is currently being worked on to automatically save changes to
+collections, please see #41 for more information.
+
 #### Manually Specifying Storage Engine
 If you would like to manually specify the storage engine that ForerunnerDB will use you can call the
 driver() method:
@@ -1572,9 +1575,8 @@ driver() method:
 Persistence in Node.js is currently handled via the NodePersist.js class and is included
 automatically when you require ForerunnerDB in your project.
 
-Usage of persistent storage is exactly the same as the in-browser usage as shown
-above except that you must first tell the persistence plugin where you wish to load
-and save data files to. You can do this via the dataDir() call:
+To use persistence in Node.js you must first tell the persistence plugin where you
+wish to load and save data files to. You can do this via the dataDir() call:
 
 	var fdb = new ForerunnerDB(),
     	db = fdb.db('test');
@@ -1587,6 +1589,35 @@ directory as './configData'.
 You can specify any directory path you wish but you must ensure you have permissions
 to access and read/write to that directory. If the directory does not exist, ForerunnerDB
 will attempt to create it for you as soon as you make the call to dataDir().
+
+Once you have your dataDir() setup, you can save and load data as shown below.
+
+> Persistence calls are async so a callback should be passed to ensure the operation has completed before
+relying on data either being saved or loaded.
+
+Persistence is handled by a very simple interface in the Collection class. You can
+save the current state of any collection by calling:
+
+    collection.save(function (err) {
+    	if (!err) {
+    		// Save was successful
+    	}
+    });
+
+You can then load the collection's data back again via:
+
+    collection.load(function (err) {
+		if (!err) {
+			// Load was successful
+		}
+	});
+
+If you call collection.load() when your application starts and collection.save() when
+you make changes to your collection you can ensure that your application always has
+up-to-date data.
+
+> An eager-saving mode is currently being worked on to automatically save changes to
+collections, please see #41 for more information.
 
 ### Both Browser and Node.js
 
