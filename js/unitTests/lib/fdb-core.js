@@ -1052,6 +1052,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 					case '$key':
 					case '$index':
 					case '$data':
+					case '$min':
+					case '$max':
 						// Ignore some operators
 						operation = true;
 						break;
@@ -1151,8 +1153,31 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 				} else {
 					switch (opType) {
 						case '$inc':
-							this._updateIncrement(doc, i, update[i]);
-							updated = true;
+							var doUpdate = true;
+
+							// Check for a $min / $max operator
+							if (update[i] > 0) {
+								if (update.$max) {
+									// Check current value
+									if (doc[i] >= update.$max) {
+										// Don't update
+										doUpdate = false;
+									}
+								}
+							} else if (update[i] < 0) {
+								if (update.$min) {
+									// Check current value
+									if (doc[i] <= update.$min) {
+										// Don't update
+										doUpdate = false;
+									}
+								}
+							}
+
+							if (doUpdate) {
+								this._updateIncrement(doc, i, update[i]);
+								updated = true;
+							}
 							break;
 
 						case '$cast':
@@ -7973,7 +7998,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.306',
+	version: '1.3.309',
 	modules: {},
 	plugins: {},
 
