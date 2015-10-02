@@ -1515,6 +1515,8 @@ Keep in mind that indices require memory to maintain and there is always a trade
 speed and memory usage.
 
 ## Data Persistence (Save and Load Between Pages)
+
+### Data Persistence In Browser
 Data persistence allows your database to survive the browser being closed, page reloads and navigation
 away from the current url. When you return to the page your data can be reloaded.
 
@@ -1541,27 +1543,52 @@ You can then load the collection's data back again via:
 If you call collection.load() when your application starts and collection.save() when you make changes
 to your collection you can ensure that your application always has up-to-date data.
 
-### Manually Specifying Storage Engine
+#### Manually Specifying Storage Engine
 If you would like to manually specify the storage engine that ForerunnerDB will use you can call the
 driver() method:
 
-#### IndexedDB
+##### IndexedDB
 
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
 	db.persist.driver('IndexedDB');
 
-#### WebSQL
+##### WebSQL
 
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
 	db.persist.driver('WebSQL');
 
-#### LocalStorage
+##### LocalStorage
 
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
 	db.persist.driver('LocalStorage');
+
+### Data Persistence In Node.js
+
+> Version >= 1.3.300
+
+Persistence in Node.js is currently handled via the NodePersist.js class and is included
+automatically when you require ForerunnerDB in your project.
+
+Usage of persistent storage is exactly the same as the in-browser usage as shown
+above except that you must first tell the persistence plugin where you wish to load
+and save data files to. You can do this via the dataDir() call:
+
+	var fdb = new ForerunnerDB(),
+    	db = fdb.db('test');
+    	
+	db.persist.dataDir('./configData');
+
+In the example above we set the data directory to be relative to the current working
+directory as './configData'.
+
+You can specify any directory path you wish but you must ensure you have permissions
+to access and read/write to that directory. If the directory does not exist, ForerunnerDB
+will attempt to create it for you as soon as you make the call to dataDir().
+
+### Both Browser and Node.js
 
 ### Plugins
 > Version >= 1.3.235
