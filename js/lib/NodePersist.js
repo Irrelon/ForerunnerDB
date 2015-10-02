@@ -335,7 +335,7 @@ Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
 });
 
 NodePersist.prototype.saveDataFile = function (key, data, callback) {
-	fs.writeFile(this.dataDir() + "/" + key + '.fdb', 'utf8', data, callback);
+	fs.writeFile(this.dataDir() + "/" + key + '.fdb', data, callback);
 };
 
 NodePersist.prototype.loadDataFile = function (key, callback) {
