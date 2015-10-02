@@ -2,6 +2,18 @@
 ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
+ForerunnerDB is used in live projects that serve millions of users a day, is production
+ready and battle tested in real-world applications.
+
+### Standout Features Include:
+
+* Views - Virtual collections that are built from existing collections and limited by live queries.
+* Joins - Query with joins across multiple collections.
+* Collection Groups - Add collections to a group and operate CRUD on them as a single entity.
+* Data Binding - (Browser Only) Bind data to your DOM and have it update your page in realtime as data changes.
+* Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
+* Compression & Encryption - Support for compressing and encrypting your persisted data.
+
 ## Version 1.3.303
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
