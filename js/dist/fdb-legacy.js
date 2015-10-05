@@ -12593,7 +12593,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.311',
+	version: '1.3.315',
 	modules: {},
 	plugins: {},
 
@@ -13283,43 +13283,43 @@ View.prototype.drop = function () {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
 			this._from._removeView(this);
-
-			if (this.debug() || (this._db && this._db.debug())) {
-				console.log(this.logIdentifier() + ' Dropping');
-			}
-
-			this._state = 'dropped';
-
-			// Clear io and chains
-			if (this._io) {
-				this._io.drop();
-			}
-
-			// Drop the view's internal collection
-			if (this._privateData) {
-				this._privateData.drop();
-			}
-
-			if (this._publicData && this._publicData !== this._privateData) {
-				this._publicData.drop();
-			}
-
-			if (this._db && this._name) {
-				delete this._db._view[this._name];
-			}
-
-			this.emit('drop', this);
-
-			delete this._chain;
-			delete this._from;
-			delete this._privateData;
-			delete this._io;
-			delete this._listeners;
-			delete this._querySettings;
-			delete this._db;
-
-			return true;
 		}
+
+		if (this.debug() || (this._db && this._db.debug())) {
+			console.log(this.logIdentifier() + ' Dropping');
+		}
+
+		this._state = 'dropped';
+
+		// Clear io and chains
+		if (this._io) {
+			this._io.drop();
+		}
+
+		// Drop the view's internal collection
+		if (this._privateData) {
+			this._privateData.drop();
+		}
+
+		if (this._publicData && this._publicData !== this._privateData) {
+			this._publicData.drop();
+		}
+
+		if (this._db && this._name) {
+			delete this._db._view[this._name];
+		}
+
+		this.emit('drop', this);
+
+		delete this._chain;
+		delete this._from;
+		delete this._privateData;
+		delete this._io;
+		delete this._listeners;
+		delete this._querySettings;
+		delete this._db;
+
+		return true;
 	} else {
 		return true;
 	}
