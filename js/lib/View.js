@@ -529,6 +529,10 @@ View.prototype.drop = function () {
 				this._privateData.drop();
 			}
 
+			if (this._publicData && this._publicData !== this._privateData) {
+				this._publicData.drop();
+			}
+
 			if (this._db && this._name) {
 				delete this._db._view[this._name];
 			}

@@ -12593,7 +12593,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.309',
+	version: '1.3.311',
 	modules: {},
 	plugins: {},
 
@@ -13298,6 +13298,10 @@ View.prototype.drop = function () {
 			// Drop the view's internal collection
 			if (this._privateData) {
 				this._privateData.drop();
+			}
+
+			if (this._publicData && this._publicData !== this._privateData) {
+				this._publicData.drop();
 			}
 
 			if (this._db && this._name) {
