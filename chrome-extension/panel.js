@@ -278,6 +278,9 @@ var refreshDatabaseTree = function () {
 										break;
 
 									case 'view':
+									case 'document':
+									case 'overview':
+									case 'collectionGroup':
 										moduleNode = tree.getNode(node.parentId);
 										dbNode = tree.getNode(moduleNode.parentId);
 
