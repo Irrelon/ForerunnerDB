@@ -8,8 +8,7 @@
  */
 
 var Shared = window.ForerunnerDB.shared,
-	Angular = {},
-	jsviews;
+	Angular = {};
 
 Shared.addModule('Angular', Angular);
 
