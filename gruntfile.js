@@ -110,6 +110,19 @@ module.exports = function(grunt) {
 				}
 			},
 
+			"angular": {
+				src: ["./js/builds/angular.js"],
+				dest: "./js/dist/fdb-angular.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
+
 			"infinilist": {
 				src: ["./js/builds/infinilist.js"],
 				dest: "./js/dist/fdb-infinilist.js",
@@ -189,6 +202,12 @@ module.exports = function(grunt) {
 				}
 			},
 
+			"angular": {
+				"files": {
+					"./js/dist/fdb-angular.min.js": ["./js/dist/fdb-angular.js"]
+				}
+			},
+
 			"infinilist": {
 				"files": {
 					"./js/dist/fdb-infinilist.min.js": ["./js/dist/fdb-infinilist.js"]
@@ -232,6 +251,13 @@ module.exports = function(grunt) {
 				options: {
 					src: './js/dist/fdb-autobind.js',
 					globalAlias: 'ForerunnerDB_AutoBind'
+				}
+			},
+
+			angular: {
+				options: {
+					src: './js/dist/fdb-angular.js',
+					globalAlias: 'ForerunnerDB_Angular'
 				}
 			},
 
@@ -297,6 +323,7 @@ module.exports = function(grunt) {
 		fixFile('fdb-all.js');
 		fixFile('fdb-core.js');
 		fixFile('fdb-autobind.js');
+		fixFile('fdb-angular.js');
 		fixFile('fdb-infinilist.js');
 		fixFile('fdb-core+persist.js');
 		fixFile('fdb-core+views.js');
@@ -322,6 +349,7 @@ module.exports = function(grunt) {
 
 		copyFile('fdb-all.min.js');
 		copyFile('fdb-autobind.min.js');
+		copyFile('fdb-angular.min.js');
 		copyFile('fdb-infinilist.min.js');
 		copyFile('fdb-core.min.js');
 		copyFile('fdb-core+persist.min.js');
