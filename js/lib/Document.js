@@ -108,6 +108,8 @@ FdbDocument.prototype.setData = function (data, options) {
 			// Straight data assignment
 			this._data = data;
 		}
+
+		this.deferEmit('change', {type: 'setData', data: this.decouple(this._data)});
 	}
 
 	return this;
@@ -147,7 +149,11 @@ FdbDocument.prototype.find = function (query, options) {
  * @returns {Array} The items that were updated.
  */
 FdbDocument.prototype.update = function (query, update, options) {
-	this.updateObject(this._data, update, query, options);
+	var result = this.updateObject(this._data, update, query, options);
+
+	if (result) {
+		this.deferEmit('change', {type: 'update', data: this.decouple(this._data)});
+	}
 };
 
 /**

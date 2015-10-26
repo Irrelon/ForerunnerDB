@@ -24,7 +24,8 @@
 	</script>
 	<script>
 		window._counter = 0;
-		var db = new ForerunnerDB(),
+		var fdb = new ForerunnerDB(),
+			db = fdb.db(),
 			test = db.collection('test');
 
 		//test.link('#coll', '#collTemplate');

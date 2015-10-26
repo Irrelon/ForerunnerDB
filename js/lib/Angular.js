@@ -96,6 +96,56 @@ Angular.extendView = function (Module) {
 	};
 };
 
+Angular.extendDocument = function (Module) {
+	var superDrop = Module.prototype.drop;
+
+	Module.prototype.ng = function (scope, varName, options) {
+		var self = this,
+			link,
+			i;
+
+		if (scope && varName) {
+			self._ngLinks = self._ngLinks || [];
+
+			link = {
+				scope: scope,
+				varName: varName,
+				callback: function () {
+					scope[varName] = self.find();
+					scope.$apply();
+				}
+			};
+
+			self._ngLinks.push(link);
+
+			// Hook the angular destroy event to remove this link
+			scope.$on("$destroy", function(){
+				if (self._ngLinks && self._ngLinks.length) {
+					for (i = self._ngLinks.length - 1; i >= 0; i--) {
+						if (self._ngLinks[i].scope === scope) {
+							self.off('change', link.callback);
+							self._ngLinks.splice(i, 1);
+						}
+					}
+				}
+			});
+
+			// Hook the ForerunnerDB change event to inform angular of a change
+			self.on('change', link.callback);
+		} else {
+			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
+		}
+	};
+
+	Module.prototype.drop = function () {
+		if (this._ngLinks) {
+			delete this._ngLinks;
+		}
+
+		return superDrop.apply(this, arguments);
+	};
+};
+
 /**
  * Extends the Overview class with new binding capabilities.
  * @extends Overview

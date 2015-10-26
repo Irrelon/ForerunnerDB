@@ -1883,42 +1883,6 @@ Collection.prototype.removeById = function (id) {
 };
 
 /**
- * Queues an event to be fired. This has automatic de-bouncing so that any
- * events of the same type that occur within 100 milliseconds of a previous
- * one will all be wrapped into a single emit rather than emitting tons of
- * events for lots of chained inserts etc. Only the data from the last
- * de-bounced event will be emitted.
- * @param {String} eventName The name of the event to emit.
- * @param {*=} data Optional data to emit with the event.
- * @private
- */
-Collection.prototype.deferEmit = function (eventName, data) {
-	var self = this,
-		args;
-
-	if (!this._noEmitDefer && (!this._db || (this._db && !this._db._noEmitDefer))) {
-		args = arguments;
-
-		// Check for an existing timeout
-		this._deferTimeout = this._deferTimeout || {};
-		if (this._deferTimeout[eventName]) {
-			clearTimeout(this._deferTimeout[eventName]);
-		}
-
-		// Set a timeout
-		this._deferTimeout[eventName] = setTimeout(function () {
-			if (self.debug()) {
-				console.log(self.logIdentifier() + ' Emitting ' + args[0]);
-			}
-
-			self.emit.apply(self, args);
-		}, 1);
-	} else {
-		this.emit.apply(this, arguments);
-	}
-};
-
-/**
  * Processes a deferred action queue.
  * @param {String} type The queue name to process.
  * @param {Function} callback A method to call when the queue has processed.
@@ -5425,6 +5389,8 @@ FdbDocument.prototype.setData = function (data, options) {
 			// Straight data assignment
 			this._data = data;
 		}
+
+		this.deferEmit('change', {type: 'setData', data: this.decouple(this._data)});
 	}
 
 	return this;
@@ -5464,7 +5430,11 @@ FdbDocument.prototype.find = function (query, options) {
  * @returns {Array} The items that were updated.
  */
 FdbDocument.prototype.update = function (query, update, options) {
-	this.updateObject(this._data, update, query, options);
+	var result = this.updateObject(this._data, update, query, options);
+
+	if (result) {
+		this.deferEmit('change', {type: 'update', data: this.decouple(this._data)});
+	}
 };
 
 /**
@@ -8545,6 +8515,43 @@ var Events = {
 					}
 				}
 			}
+		}
+
+		return this;
+	},
+
+	/**
+	 * Queues an event to be fired. This has automatic de-bouncing so that any
+	 * events of the same type that occur within 100 milliseconds of a previous
+	 * one will all be wrapped into a single emit rather than emitting tons of
+	 * events for lots of chained inserts etc. Only the data from the last
+	 * de-bounced event will be emitted.
+	 * @param {String} eventName The name of the event to emit.
+	 * @param {*=} data Optional data to emit with the event.
+	 */
+	deferEmit: function (eventName, data) {
+		var self = this,
+			args;
+
+		if (!this._noEmitDefer && (!this._db || (this._db && !this._db._noEmitDefer))) {
+			args = arguments;
+
+			// Check for an existing timeout
+			this._deferTimeout = this._deferTimeout || {};
+			if (this._deferTimeout[eventName]) {
+				clearTimeout(this._deferTimeout[eventName]);
+			}
+
+			// Set a timeout
+			this._deferTimeout[eventName] = setTimeout(function () {
+				if (self.debug()) {
+					console.log(self.logIdentifier() + ' Emitting ' + args[0]);
+				}
+
+				self.emit.apply(self, args);
+			}, 1);
+		} else {
+			this.emit.apply(this, arguments);
 		}
 
 		return this;
@@ -11755,7 +11762,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.320',
+	version: '1.3.322',
 	modules: {},
 	plugins: {},
 
