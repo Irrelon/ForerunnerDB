@@ -1,4 +1,4 @@
-var Core = require('./Core'),
+var Core = require('./core'),
 	Persist = require('../lib/Persist');
 
 if (typeof window !== 'undefined') {
