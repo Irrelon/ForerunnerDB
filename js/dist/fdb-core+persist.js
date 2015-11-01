@@ -1,4 +1,12 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+var Core = _dereq_('./core'),
+	Persist = _dereq_('../lib/Persist');
+
+if (typeof window !== 'undefined') {
+	window.ForerunnerDB = Core;
+}
+module.exports = Core;
+},{"../lib/Persist":25,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -6,15 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":30}],2:[function(_dereq_,module,exports){
-var Core = _dereq_('./Core'),
-	Persist = _dereq_('../lib/Persist');
-
-if (typeof window !== 'undefined') {
-	window.ForerunnerDB = Core;
-}
-module.exports = Core;
-},{"../lib/Persist":25,"./Core":1}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":6,"../lib/Shim.IE8":30}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9151,7 +9151,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.322',
+	version: '1.3.324',
 	modules: {},
 	plugins: {},
 
@@ -26059,4 +26059,4 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}]},{},[2]);
+},{}]},{},[1]);
