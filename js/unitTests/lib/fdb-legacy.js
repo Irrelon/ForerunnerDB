@@ -8569,7 +8569,7 @@ var Matching = {
 	_match: function (source, test, queryOptions, opToApply, options) {
 		// TODO: This method is quite long, break into smaller pieces
 		var operation,
-			applyOp,
+			applyOp = opToApply,
 			recurseVal,
 			tmpIndex,
 			sourceType = typeof source,
@@ -8914,6 +8914,33 @@ var Matching = {
 					}
 				}
 				break;
+
+			case '$count':
+				var countKey,
+					countArr,
+					countVal;
+
+				// Iterate the count object's keys
+				for (countKey in test) {
+					if (test.hasOwnProperty(countKey)) {
+						// Check the property exists and is an array. If the property being counted is not
+						// an array (or doesn't exist) then use a value of zero in any further count logic
+						countArr = source[countKey];
+						if (typeof countArr === 'object' && countArr instanceof Array) {
+							countVal = countArr.length;
+						} else {
+							countVal = 0;
+						}
+
+						// Now recurse down the query chain further to satisfy the query for this key (countKey)
+						if (!this._match(countVal, test[countKey], queryOptions, 'and', options)) {
+							return false;
+						}
+					}
+				}
+
+				// Allow the item in the results
+				return true;
 		}
 
 		return -1;
@@ -12600,7 +12627,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.324',
+	version: '1.3.326',
 	modules: {},
 	plugins: {},
 
