@@ -931,7 +931,7 @@ Result is:
 		}]
 	}
 
-Notice that all items matching the $elemMatch clause are returned in the names array.
+Notice that all items matching the $elemsMatch clause are returned in the names array.
 If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
 
 ### Ordering / Sorting Results
