@@ -245,7 +245,6 @@ MongoDB but which can help in browser-centric applications.
 * [$exists](#exists)
 * [$elemMatch](#elemMatch)
 * [$elemsMatch](#elemsMatch)
-* [Array Positional in Find (.$)](#array-positional-in-find)
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -919,9 +918,6 @@ Result is:
 
 Notice that all items matching the $elemMatch clause are returned in the names array.
 If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
-
-#### Array Positional in Find (.$)
-TODO
 
 ### Ordering / Sorting Results
 You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
