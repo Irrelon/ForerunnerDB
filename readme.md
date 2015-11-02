@@ -43,6 +43,21 @@ store, query and manipulate JSON data in the browser via a simple query language
 It provides the ability to store data on the front-end and query it throughout your
 application making handling JSON data client-side significantly easier.
 
+It is designed to compliment a server-side database / API to allow your client to
+easily handle data and CRUD it in a fast and efficient way. While it can run on
+the server in Node.js, ForerunnerDB is NOT designed as a replacement or substitute
+for MongoDB on the server-side. It's use in server-side applications is geared more
+towards having a rich query language to query an in-memory store for your application.
+
+ForerunnerDB supports data persistence on both the client (via LocalForage) and in
+Node.js (by saving and loading JSON data files).
+
+If you build advanced web applications with AngularJS or perhaps your own framework
+or if you are looking to build a server application / API that needs a fast
+queryable in-memory store with file-based data persistence and a very easy setup (
+simple installation via NPM and no requirements except Node.js) you will also find
+ForerunnerDB very useful.
+
 ## Demo
 You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http://www.forerunnerdb.com/demo.html)
 
