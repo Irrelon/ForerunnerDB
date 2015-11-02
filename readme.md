@@ -219,12 +219,591 @@ Supported search operators:
 * $exists Check that a key exists in the document
 * arrayKey.$ Positional selector query
 * $elemMatch (projection) - Limit sub-array documents by query
-* $elemsMatch (projection) - Mutliple document version of $elemMatch
+* $elemsMatch (projection) - Multiple document version of $elemMatch
 
 Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
 > See the *Special Considerations* section for details about how names of keys / properties
 in a query object can affect a query's operation.
+
+### Query Operators
+ForerunnerDB supports many of the same query operators that MongoDB does, and adds some that are not available in
+MongoDB but which can help in browser-centric applications.
+
+* [$gt](#gt)
+* [$gte](#gte)
+* [$lt](#lt)
+* [$lte](#lte)
+* [$ne](#ne)
+* [$nee](#nee)
+* [$in](#in)
+* [$nin](#nin)
+* [$distinct](#distinct)
+* [$count](#count)
+* [$or](#or)
+* [$and](#and)
+* [$exists](#exists)
+* [$elemMatch](#elemMatch)
+* [$elemsMatch](#elemsMatch)
+* [Array Positional in Find (.$)](#array-positional-in-find)
+
+#### $gt
+Selects those documents where the value of the field is greater than (i.e. >) the specified value.
+
+	{ field: {$gt: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$gt: 1
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $gte
+Selects the documents where the value of the field is greater than or equal to (i.e. >=) the specified
+value.
+
+	{ field: {$gte: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$gte: 1
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $lt
+Selects the documents where the value of the field is less than (i.e. <) the specified value.
+
+	{ field: { $lt: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$lt: 2
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}]
+
+#### $lte
+Selects the documents where the value of the field is less than or equal to (i.e. <=) the specified value.
+
+	{ field: { $lte: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$lte: 2
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}]
+
+#### $ne
+Selects the documents where the value of the field is not equal (i.e. !=) to the specified value.
+This includes documents that do not contain the field.
+
+	{field: {$ne: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$ne: 2
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $nee
+Selects the documents where the value of the field is not equal equal (i.e. !==) to the specified value. This
+allows for strict equality checks for instance zero will not be seen as false because 0 !== false and comparing
+a string with a number of the same value will also return false e.g. ('2' != 2) is false but ('2' !== 2) is true.
+This includes documents that do not contain the field.
+
+	{field: {$nee: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$nee: 2
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $in
+Selects documents where the value of a field equals any value in the specified array.
+
+	{ field: { $in: [<value1>, <value2>, ... <valueN> ] } }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$in: [1, 3]
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $nin
+Selects documents where the value of a field does not equal any value in the specified array.
+
+	{ field: { $nin: [ <value1>, <value2> ... <valueN> ]} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$nin: [1, 3]
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 2,
+		val: 2
+	}]
+
+#### $distinct
+Selects the first document matching a value of the specified field. If any further documents have the same
+value for the specified field they will not be returned.
+
+	{ $distinct: { field: 1 } }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 1
+	}, {
+		_id: 3,
+		val: 1
+	}, {
+		_id: 4,
+		val: 2
+	}]);
+	
+	result = coll.find({
+		$distinct: {
+			val: 1
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 4,
+		val: 2
+	}]
+
+#### $count
+> Version >= 1.3.326
+
+Selects documents based on the length (count) of items in an array inside a document.
+
+	{ $count: { field: <value> } }
+
+##### Select Documents Where The "arr" Array Field Has Only 1 Item
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		arr: []
+	}, {
+		_id: 2,
+		arr: [{
+			val: 1		
+		}]
+	}, {
+		_id: 3,
+		arr: [{
+			val: 1
+		}, {
+			val: 2		
+		}]
+	}]);
+	
+	result = coll.find({
+		$count: {
+			arr: 1
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 2,
+		arr: [{
+			val: 1		
+		}]
+	}]
+
+##### Select Documents Where The "arr" Array Field Has More Than 1 Item
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		arr: []
+	}, {
+		_id: 2,
+		arr: [{
+			val: 1		
+		}]
+	}, {
+		_id: 3,
+		arr: [{
+			val: 1
+		}, {
+			val: 2		
+		}]
+	}]);
+	
+	result = coll.find({
+		$count: {
+			arr: {
+				$gt: 1
+			}
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 3,
+		arr: [{
+			val: 1
+		}, {
+			val: 2		
+		}]
+	}]
+
+#### $or
+The $or operator performs a logical OR operation on an array of two or more <expressions> and selects the documents
+that satisfy at least one of the <expressions>.
+
+	{ $or: [ { <expression1> }, { <expression2> }, ... , { <expressionN> } ] }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		$or: [{
+			val: 1
+		}, {
+			val: {
+				$gte: 3 
+			}
+		}]
+	});
+	
+Result is:
+
+	[{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 3,
+		val: 3
+	}]
+
+#### $and
+Performs a logical AND operation on an array of two or more expressions (e.g. <expression1>, <expression2>, etc.)
+and selects the documents that satisfy all the expressions in the array. The $and operator uses short-circuit
+evaluation. If the first expression (e.g. <expression1>) evaluates to false, ForerunnerDB will not evaluate the
+remaining expressions.
+
+	{ $and: [ { <expression1> }, { <expression2> } , ... , { <expressionN> } ] }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		$and: [{
+			_id: 3
+		}, {
+			val: {
+				$gte: 3 
+			}
+		}]
+	});
+	
+Result is:
+
+	[{
+		_id: 3,
+		val: 3
+	}]
+
+#### $exists
+When <boolean> is true, $exists matches the documents that contain the field, including documents where the field
+value is null. If <boolean> is false, the query returns only the documents that do not contain the field.
+
+	{ field: { $exists: <boolean> } }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2,
+		moo: 'hello'
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		moo: {
+			$exists: true
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 2,
+		val: 2,
+		moo: 'hello'
+	}]
 
 ### Projection
 
@@ -238,7 +817,10 @@ The $elemMatch operator is specified in the *options* object of the find call ra
  
 ##### Usage
 
-	var coll = db.collection('test');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
 	coll.setData({
 		names: [{
 			_id: 1,
@@ -289,7 +871,10 @@ The $elemsMatch operator is specified in the *options* object of the find call r
  
 ##### Usage
 
-	var coll = db.collection('test');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
 	coll.setData({
 		names: [{
 			_id: 1,
@@ -335,6 +920,9 @@ Result is:
 Notice that all items matching the $elemMatch clause are returned in the names array.
 If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
 
+#### Array Positional in Find (.$)
+TODO
+
 ### Ordering / Sorting Results
 You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
 
@@ -360,7 +948,10 @@ from the results via "_id: 0".
 
 #### Usage
 
-	var coll = db.collection('test');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+	
 	coll.setData([{
 		_id: 1,
 		text: 'Jim',
@@ -422,7 +1013,9 @@ query options combination.
 
 #### Usage
 
-	var coll = db.collection('test'),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test'),
 		data = [],
 		count = 100,
 		result,
@@ -459,7 +1052,9 @@ option. This operates in a similar fashion to the MongoDB [skip()](http://docs.m
 
 #### Usage
 
-	var coll = db.collection('test').truncate(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test').truncate(),
 		data = [],
 		count = 100,
 		result,
@@ -482,7 +1077,9 @@ option. This operates in a similar fashion to the MongoDB [skip()](http://docs.m
 When you have documents that contain arrays of sub-documents it can be useful to search
 and extract them. Consider this data structure:
 
-	var coll = db.collection('test').truncate(),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test').truncate(),
 		result,
 		i;
 
@@ -568,7 +1165,7 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [$pull](#pull)
 * [$move](#move)
 * [$cast](#cast)
-* [Array Positional (.$)](#array-positional-)
+* [Array Positional in Updates (.$)](#array-positional-in-updates)
 
 #### $overwrite
 The $overwrite operator replaces a key's value with the one passed, overwriting it
@@ -1056,7 +1653,7 @@ Result:
 		}]
 	}]
 
-#### Array Positional (.$)
+#### Array Positional in Updates (.$)
 Often you want to update a sub-document stored inside an array. You can use the array positional
 operator to tell ForerunnerDB that you wish to update a sub-document that matches your query
 clause.
@@ -1722,6 +2319,7 @@ To use the store, simply call the store() method on a collection or view:
  
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
+		
 	db.collection('myColl').store('myKey', 'myVal');
 
 You can then lookup the value at a later time:
@@ -1742,7 +2340,9 @@ data as a whole rather than one collection at a time.
 This allows you to query and sort a super-set of data from multiple collections in
 a single operation and return that data as a single array of documents.
 
-    var coll1 = db.collection('test1'),
+    var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll1 = db.collection('test1'),
     	coll2 = db.collection('test2'),
     	group = db.collectionGroup('testGroup');
     	
@@ -1768,7 +2368,9 @@ Collection groups work by adding collections as data sources. You can add a coll
 to a group via the addCollection() method which accepts a collection instance as the
 first argument.
 
-	var coll = db.collection('test'),
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test'),
 		group = db.collectionGroup('test');
 	
 	group.addCollection(coll);
@@ -1873,7 +2475,9 @@ Views are instantiated the same way collections are:
 You must tell a view where to get it's data from using the *from()* method. Views can
  use collections and other views as data sources:
  
-	var myCollection = db.collection('myCollection');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		myCollection = db.collection('myCollection');
 	
 	myCollection.setData([{
 		name: 'Bob',
@@ -2135,7 +2739,9 @@ Function definition:
 Example:
 
 	// Create the collection
-	var coll = db.collection('chartData');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('chartData');
 	
 	// Set the collection data
 	coll.setData([{
@@ -2172,7 +2778,9 @@ Function definition:
 Example:
 
 	// Create the collection
-	var coll = db.collection('chartData');
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('chartData');
 
 	// Set the collection data
 	coll.setData([{
