@@ -209,6 +209,9 @@ or pass an array of documents:
  as possible, small differences are present in the query matching logic. The main
  difference is described here: [Find behaves differently from MongoDB](https://github.com/Irrelon/ForerunnerDB/issues/43)
 
+> See the *Special Considerations* section for details about how names of keys / properties
+in a query object can affect a query's operation.
+
 Much like MongoDB, searching for data in a collection is done using the find() method,
 which supports many of the same operators starting with a $ that MongoDB supports. For
 instance, finding documents in the collection where the price is greater than 90 but
@@ -226,9 +229,6 @@ And would return an array with all matching documents. If no documents match you
 ### Regular Expressions
 
 Searches support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
-
-> See the *Special Considerations* section for details about how names of keys / properties
-in a query object can affect a query's operation.
 
 ### Query Operators
 ForerunnerDB supports many of the same query operators that MongoDB does, and adds some that are not available in
