@@ -223,20 +223,9 @@ less than 150, would look like this:
 
 And would return an array with all matching documents. If no documents match your search, an empty array is returned.
 
-Supported search operators:
+### Regular Expressions
 
-* $gt Greater Than
-* $gte Greater Than / Equal To
-* $lt Less Than
-* $lte Less Than / Equal To
-* $or Match any of the conditions inside the sub-query
-* $and Match all conditions inside the sub-query
-* $exists Check that a key exists in the document
-* arrayKey.$ Positional selector query
-* $elemMatch (projection) - Limit sub-array documents by query
-* $elemsMatch (projection) - Multiple document version of $elemMatch
-
-Searches also support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
+Searches support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
 
 > See the *Special Considerations* section for details about how names of keys / properties
 in a query object can affect a query's operation.
@@ -245,21 +234,21 @@ in a query object can affect a query's operation.
 ForerunnerDB supports many of the same query operators that MongoDB does, and adds some that are not available in
 MongoDB but which can help in browser-centric applications.
 
-* [$gt](#gt)
-* [$gte](#gte)
-* [$lt](#lt)
-* [$lte](#lte)
-* [$ne](#ne)
-* [$nee](#nee)
-* [$in](#in)
-* [$nin](#nin)
-* [$distinct](#distinct)
-* [$count](#count)
-* [$or](#or)
-* [$and](#and)
-* [$exists](#exists)
-* [$elemMatch](#elemMatch)
-* [$elemsMatch](#elemsMatch)
+* [$gt](#gt) Greater Than
+* [$gte](#gte) Greater Than / Equal To
+* [$lt](#lt) Less Than
+* [$lte](#lte) Less Than / Equal To
+* [$ne](#ne) Not Equal To (!=)
+* [$nee](#nee) Strict Not Equal To (!==)
+* [$in](#in) Match Any Value In An Array Of Values
+* [$nin](#nin)  Match Any Value Not In An Array Of Values
+* [$distinct](#distinct) Match By Distinct Key/Value Pairs
+* [$count](#count) Match By Length Of Sub-Document Array
+* [$or](#or) Match any of the conditions inside the sub-query
+* [$and](#and) Match all conditions inside the sub-query
+* [$exists](#exists) Check that a key exists in the document
+* [$elemMatch](#elemMatch) Limit sub-array documents by query
+* [$elemsMatch](#elemsMatch) Multiple document version of $elemMatch
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -2904,7 +2893,7 @@ information. The reason we do this is for performance.
 ## update
 ForerunnerDB runs an update rather than a replace against documents that match the query
 clause. You can think about ForerunnerDB's update operations as having been automatically
-wrapped in the MonogDB $set operator.
+wrapped in the MongoDB $set operator.
 
 # Development
 
@@ -3018,9 +3007,13 @@ ForerunnerDB's project road-map:
 * $splicePush
 * $elemsMatch (projection)
 * $page
+* $count
+* $nee
+* $cast
+* $overwrite
 
 ### Future Updates
-* Data persistence on server-side
+* Data persistence on server-side - COMPLETED
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
 * Push to clients - allow server-side to push changes to client-side data automatically and instantly
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
@@ -3056,6 +3049,7 @@ ForerunnerDB's project road-map:
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
 
 #### Scheduled Features - Version 1.5
+* Support client sync with server-sent events
 * Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
 
