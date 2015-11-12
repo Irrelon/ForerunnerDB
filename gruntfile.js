@@ -470,6 +470,14 @@ module.exports = function(grunt) {
 		execSync('npm publish');
 	});
 
+	grunt.registerTask('npmPublishDev', 'NPM Publish New Dev Version', function () {
+		"use strict";
+
+		var execSync = require('child_process').execSync;
+
+		execSync('npm publish --tag dev');
+	});
+
 	grunt.registerTask('checkoutMaster', 'Git Checkout Master Branch', function () {
 		"use strict";
 
@@ -488,9 +496,9 @@ module.exports = function(grunt) {
 
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("3: Build and Test", ["version", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev"]);
-	grunt.registerTask("5: Release and Publish Master Build From Dev", ["gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
+	grunt.registerTask("3: Build and Test", ["checkoutDev", "version", "browserify", "postfix", "uglify", "copy", "qunit"]);
+	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
+	grunt.registerTask("5: Release and Publish Master Build From Dev", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
