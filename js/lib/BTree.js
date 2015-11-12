@@ -340,14 +340,14 @@ BinaryTree.prototype.sortDesc = function (a, b) {
 BinaryTree.prototype.decouple = function (data, copies) {
 	if (data !== undefined) {
 		if (!copies) {
-			return JSON.parse(JSON.stringify(data));
+			return this.jParse(this.jStringify(data));
 		} else {
 			var i,
-				json = JSON.stringify(data),
+				json = this.jStringify(data),
 				copyArr = [];
 
 			for (i = 0; i < copies; i++) {
-				copyArr.push(JSON.parse(json));
+				copyArr.push(this.jParse(json));
 			}
 
 			return copyArr;

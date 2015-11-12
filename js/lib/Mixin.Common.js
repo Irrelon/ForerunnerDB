@@ -57,14 +57,14 @@ Common = {
 	decouple: function (data, copies) {
 		if (data !== undefined) {
 			if (!copies) {
-				return JSON.parse(JSON.stringify(data));
+				return this.jParse(this.jStringify(data));
 			} else {
 				var i,
-					json = JSON.stringify(data),
+					json = this.jStringify(data),
 					copyArr = [];
 
 				for (i = 0; i < copies; i++) {
-					copyArr.push(JSON.parse(json));
+					copyArr.push(this.jParse(json));
 				}
 
 				return copyArr;
@@ -72,6 +72,24 @@ Common = {
 		}
 
 		return undefined;
+	},
+
+	/**
+	 * Parses and returns data from stringified version.
+	 * @param {String} data The stringified version of data to parse.
+	 * @returns {Object} The parsed JSON object from the data.
+	 */
+	jParse: function (data) {
+		return JSON.parse(data);
+	},
+
+	/**
+	 * Converts a JSON object into a stringified version.
+	 * @param {Object} data The data to stringify.
+	 * @returns {String} The stringified data.
+	 */
+	jStringify: function (data) {
+		return JSON.stringify(data);
 	},
 	
 	/**

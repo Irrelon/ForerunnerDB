@@ -100,7 +100,7 @@ var Overload = function (def) {
 			}
 
 			name = typeof this.name === 'function' ? this.name() : 'Unknown';
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
+			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 

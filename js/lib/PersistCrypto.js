@@ -17,61 +17,65 @@ Plugin.prototype.init = function (options) {
 	this._pass = options.pass;
 };
 
+Shared.mixin(Plugin.prototype, 'Mixin.Common');
+
 /**
  * Gets / sets the current pass-phrase being used to encrypt / decrypt
  * data with the plugin.
  */
 Shared.synthesize(Plugin.prototype, 'pass');
 
-Plugin.prototype._jsonFormatter = {
-	stringify: function (cipherParams) {
-		// create json object with ciphertext
-		var jsonObj = {
-			ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
-		};
+Plugin.prototype.stringify = function (cipherParams) {
+	// create json object with ciphertext
+	var jsonObj = {
+		ct: cipherParams.ciphertext.toString(CryptoJS.enc.Base64)
+	};
 
-		// optionally add iv and salt
-		if (cipherParams.iv) {
-			jsonObj.iv = cipherParams.iv.toString();
-		}
-		if (cipherParams.salt) {
-			jsonObj.s = cipherParams.salt.toString();
-		}
-
-		// stringify json object
-		return JSON.stringify(jsonObj);
-	},
-
-	parse: function (jsonStr) {
-		// parse json string
-		var jsonObj = JSON.parse(jsonStr);
-
-		// extract ciphertext from json object, and create cipher params object
-		var cipherParams = CryptoJS.lib.CipherParams.create({
-			ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
-		});
-
-		// optionally extract iv and salt
-		if (jsonObj.iv) {
-			cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv);
-		}
-		if (jsonObj.s) {
-			cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s);
-		}
-
-		return cipherParams;
+	// optionally add iv and salt
+	if (cipherParams.iv) {
+		jsonObj.iv = cipherParams.iv.toString();
 	}
+	if (cipherParams.salt) {
+		jsonObj.s = cipherParams.salt.toString();
+	}
+
+	// stringify json object
+	return this.jStringify(jsonObj);
+};
+
+Plugin.prototype.parse = function (jsonStr) {
+	// parse json string
+	var jsonObj = this.jParse(jsonStr);
+
+	// extract ciphertext from json object, and create cipher params object
+	var cipherParams = CryptoJS.lib.CipherParams.create({
+		ciphertext: CryptoJS.enc.Base64.parse(jsonObj.ct)
+	});
+
+	// optionally extract iv and salt
+	if (jsonObj.iv) {
+		cipherParams.iv = CryptoJS.enc.Hex.parse(jsonObj.iv);
+	}
+	if (jsonObj.s) {
+		cipherParams.salt = CryptoJS.enc.Hex.parse(jsonObj.s);
+	}
+
+	return cipherParams;
 };
 
 Plugin.prototype.encode = function (val, meta, finished) {
-	var wrapper = {
+	var self = this,
+		wrapper = {
 			type: 'fdbCrypto'
 		},
 		encryptedVal;
 
 	// Encrypt the data
 	encryptedVal = CryptoJS[this._algo].encrypt(val, this._pass, {
-		format: this._jsonFormatter
+		format: {
+			stringify: function () { return self.stringify.apply(self, arguments); },
+			parse: function () { return self.parse.apply(self, arguments); }
+		}
 	});
 
 	wrapper.data = encryptedVal.toString();
@@ -82,18 +86,22 @@ Plugin.prototype.encode = function (val, meta, finished) {
 	};
 
 	if (finished) {
-		finished(false, JSON.stringify(wrapper), meta);
+		finished(false, this.jStringify(wrapper), meta);
 	}
 };
 
 Plugin.prototype.decode = function (wrapper, meta, finished) {
-	var data;
+	var self = this,
+		data;
 
 	if (wrapper) {
-		wrapper = JSON.parse(wrapper);
+		wrapper = this.jParse(wrapper);
 
 		data = CryptoJS[this._algo].decrypt(wrapper.data, this._pass, {
-			format: this._jsonFormatter
+			format: {
+				stringify: function () { return self.stringify.apply(self, arguments); },
+				parse: function () { return self.parse.apply(self, arguments); }
+			}
 		}).toString(CryptoJS.enc.Utf8);
 
 		if (finished) {

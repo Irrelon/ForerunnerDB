@@ -35,11 +35,13 @@ Persist.prototype.localforage = localforage;
  * @param {Db} db The ForerunnerDB database instance.
  */
 Persist.prototype.init = function (db) {
+	var self = this;
+
 	this._encodeSteps = [
-		this._encode
+		function () { return self._encode.apply(self, arguments); }
 	];
 	this._decodeSteps = [
-		this._decode
+		function () { return self._decode.apply(self, arguments); }
 	];
 
 	// Check environment
@@ -62,6 +64,7 @@ Persist.prototype.init = function (db) {
 
 Shared.addModule('Persist', Persist);
 Shared.mixin(Persist.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Persist.prototype, 'Mixin.Common');
 
 Db = Shared.modules.Db;
 Collection = require('./Collection');
@@ -194,7 +197,7 @@ Persist.prototype.unwrap = function (dataStr) {
 
 	switch (parts[0]) {
 		case 'json':
-			data = JSON.parse(parts[1]);
+			data = this.jParse(parts[1]);
 			break;
 
 		case 'raw':
@@ -224,7 +227,7 @@ Persist.prototype._decode = function (val, meta, finished) {
 
 		switch (parts[0]) {
 			case 'json':
-				data = JSON.parse(parts[1]);
+				data = this.jParse(parts[1]);
 				break;
 
 			case 'raw':
@@ -268,7 +271,7 @@ Persist.prototype._encode = function (val, meta, finished) {
 	var data = val;
 
 	if (typeof val === 'object') {
-		val = 'json::fdb::' + JSON.stringify(val);
+		val = 'json::fdb::' + this.jStringify(val);
 	} else {
 		val = 'raw::fdb::' + val;
 	}

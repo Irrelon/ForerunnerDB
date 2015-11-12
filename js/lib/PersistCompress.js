@@ -11,6 +11,8 @@ Plugin.prototype.init = function (options) {
 
 };
 
+Shared.mixin(Plugin.prototype, 'Mixin.Common');
+
 Plugin.prototype.encode = function (val, meta, finished) {
 	var wrapper = {
 			data: val,
@@ -39,7 +41,7 @@ Plugin.prototype.encode = function (val, meta, finished) {
 		effect: Math.round((100 / before) * after) + '%'
 	};
 
-	finished(false, JSON.stringify(wrapper), meta);
+	finished(false, this.jStringify(wrapper), meta);
 };
 
 Plugin.prototype.decode = function (wrapper, meta, finished) {
@@ -47,7 +49,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 		data;
 
 	if (wrapper) {
-		wrapper = JSON.parse(wrapper);
+		wrapper = this.jParse(wrapper);
 
 		// Check if we need to decompress the string
 		if (wrapper.enabled) {

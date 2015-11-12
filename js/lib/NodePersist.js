@@ -37,6 +37,7 @@ NodePersist.prototype.init = function (db) {
 };
 
 Shared.addModule('NodePersist', NodePersist);
+Shared.mixin(NodePersist.prototype, 'Mixin.Common');
 Shared.mixin(NodePersist.prototype, 'Mixin.ChainReactor');
 
 Db = Shared.modules.Db;
@@ -138,7 +139,7 @@ NodePersist.prototype.unwrap = function (dataStr) {
 
 	switch (parts[0]) {
 		case 'json':
-			data = JSON.parse(parts[1]);
+			data = this.jParse(parts[1]);
 			break;
 
 		case 'raw':
@@ -168,7 +169,7 @@ NodePersist.prototype._decode = function (val, meta, finished) {
 
 		switch (parts[0]) {
 			case 'json':
-				data = JSON.parse(parts[1]);
+				data = this.jParse(parts[1]);
 				break;
 
 			case 'raw':
@@ -212,7 +213,7 @@ NodePersist.prototype._encode = function (val, meta, finished) {
 	var data = val;
 
 	if (typeof val === 'object') {
-		val = 'json::fdb::' + JSON.stringify(val);
+		val = 'json::fdb::' + this.jStringify(val);
 	} else {
 		val = 'raw::fdb::' + val;
 	}

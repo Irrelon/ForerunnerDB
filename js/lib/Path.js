@@ -19,6 +19,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
+Shared.mixin(Path.prototype, 'Mixin.Common');
 Shared.mixin(Path.prototype, 'Mixin.ChainReactor');
 
 /**
@@ -393,6 +394,38 @@ Path.prototype.keyValue = function (obj, path) {
 	}
 
 	return objPartHash;
+};
+
+/**
+ * Sets a value on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to update.
+ * @param {*} val The value to set the object path to.
+ * @returns {*}
+ */
+Path.prototype.set = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = val;
+		}
+	}
+
+	return obj;
 };
 
 /**
