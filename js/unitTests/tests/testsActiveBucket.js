@@ -37,7 +37,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 			view,
 			obj;
 
-		coll = db.collection('test');
+		coll = db.collection('test').truncate();
 		view = db.view('test')
 			.queryOptions({
 				$orderBy: {
@@ -84,6 +84,7 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		var elems = $('#testTarget').find('.item');
 
 		strictEqual(elems.length, 15, "Insert documents");
+		if(elems.length > 15) {debugger};
 
 		// Check sort order
 		strictEqual($(elems[0]).text(), 'Alice : 22', "Alphabetical 1");

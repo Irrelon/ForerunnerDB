@@ -2794,3 +2794,36 @@ QUnit.test("Collection() :: $count in query", function () {
 
 	base.dbDown();
 });
+
+/*QUnit.test("Collection.find() :: $as to rename fields", function () {
+	base.dbUp();
+
+	var result,
+		coll = db.collection('test');
+
+	coll.setData({
+		test: true,
+		arr: [{
+			'moo': 'foo'
+		}]
+	});
+
+	result = coll.find({}, {
+		$as: {
+			test: 'bool',
+			'arr': 'myArray',
+			'arr.moo': 'prop1'
+		}
+	});
+
+	strictEqual(typeof result[0].bool, 'boolean', 'Column "test" returned as "bool"');
+	strictEqual(result[0].test, undefined, 'Column "test" does not exist in return data');
+
+	strictEqual(typeof result[0].myArray, 'object', 'Column "arr" returned as "myArray"');
+	strictEqual(result[0].arr, undefined, 'Column "arr" does not exist in return data');
+
+	strictEqual(typeof result[0].myArray[0].prop1, 'string', 'Column "myArray.prop1" returned as "bool"');
+	strictEqual(result[0].myArray[0].moo, undefined, 'Column "myArray.moo" does not exist in return data');
+
+	base.dbDown();
+});*/

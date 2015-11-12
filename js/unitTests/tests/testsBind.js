@@ -1008,7 +1008,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		expect(2);
 		base.dbUp();
 
-		var coll = db.collection('test'),
+		var coll = db.collection(),
 			view1 = db.view('view1'),
 			view2 = db.view('view2'),
 			view3 = db.view('view3'),
