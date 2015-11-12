@@ -1905,8 +1905,8 @@ Collection.prototype._find = function (query, options) {
 		matcherTmpOptions = {},
 		result,
 		cursor = {},
-		renameFieldMethod,
-		renameFieldPath,
+		//renameFieldMethod,
+		//renameFieldPath,
 		matcher = function (doc) {
 			return self._match(doc, query, options, 'and', matcherTmpOptions);
 		};

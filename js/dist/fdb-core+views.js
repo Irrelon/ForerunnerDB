@@ -920,7 +920,7 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 		}
 
 		// Generate a CRC string
-		jString = JSON.stringify(arrItem);
+		jString = this.jStringify(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -1610,14 +1610,14 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									pathSolver = new Path(optionObj.key);
 									objHash = pathSolver.value(update[i])[0];
 								} else {
-									objHash = JSON.stringify(update[i]);
+									objHash = this.jStringify(update[i]);
 									hashMode = true;
 								}
 
 								for (targetArrIndex = 0; targetArrIndex < targetArrCount; targetArrIndex++) {
 									if (hashMode) {
 										// Check if objects match via a string hash (JSON)
-										if (JSON.stringify(targetArr[targetArrIndex]) === objHash) {
+										if (this.jStringify(targetArr[targetArrIndex]) === objHash) {
 											// The object already exists, don't add it
 											addObj = false;
 											break;
@@ -2168,7 +2168,7 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = JSON.stringify(doc);
+		jString = this.jStringify(doc);
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
@@ -2193,7 +2193,7 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = JSON.stringify(doc);
+		jString = this.jStringify(doc);
 
 	// Remove from primary key index
 	this._primaryIndex.unSet(doc[this._primaryKey]);
@@ -2335,7 +2335,7 @@ Collection.prototype.peek = function (search, options) {
 	if (typeOfSearch === 'string') {
 		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 			// Get json representation of object
-			arrItem = JSON.stringify(arr[arrIndex]);
+			arrItem = this.jStringify(arr[arrIndex]);
 
 			// Check if string exists in object json
 			if (arrItem.indexOf(search) > -1) {
@@ -2455,6 +2455,8 @@ Collection.prototype._find = function (query, options) {
 		matcherTmpOptions = {},
 		result,
 		cursor = {},
+		//renameFieldMethod,
+		//renameFieldPath,
 		matcher = function (doc) {
 			return self._match(doc, query, options, 'and', matcherTmpOptions);
 		};
@@ -2707,6 +2709,25 @@ Collection.prototype._find = function (query, options) {
 	} else {
 		resultArr = [];
 	}
+
+	// Check for an $as operator in the options object and if it exists
+	// iterate over the fields and generate a rename function that will
+	// operate over the entire returned data array and rename each object's
+	// fields to their new names
+	// TODO: Enable $as in collection find to allow renaming fields
+	/*if (options.$as) {
+		renameFieldPath = new Path();
+		renameFieldMethod = function (obj, oldFieldPath, newFieldName) {
+			renameFieldPath.path(oldFieldPath);
+			renameFieldPath.rename(newFieldName);
+		};
+
+		for (i in options.$as) {
+			if (options.$as.hasOwnProperty(i)) {
+
+			}
+		}
+	}*/
 
 	// Generate a list of fields to limit data by
 	// Each property starts off being enabled by default (= 1) then
@@ -3791,6 +3812,21 @@ Collection.prototype.collateRemove = function (collection) {
 };
 
 Db.prototype.collection = new Overload({
+	/**
+	 * Get a collection with no name (generates a random name). If the
+	 * collection does not already exist then one is created for that
+	 * name automatically.
+	 * @func collection
+	 * @memberof Db
+	 * @param {String} collectionName The name of the collection.
+	 * @returns {Collection}
+	 */
+	'': function () {
+		return this.$main.call(this, {
+			name: this.objectId()
+		});
+	},
+
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
@@ -6389,14 +6425,14 @@ Common = {
 	decouple: function (data, copies) {
 		if (data !== undefined) {
 			if (!copies) {
-				return JSON.parse(JSON.stringify(data));
+				return this.jParse(this.jStringify(data));
 			} else {
 				var i,
-					json = JSON.stringify(data),
+					json = this.jStringify(data),
 					copyArr = [];
 
 				for (i = 0; i < copies; i++) {
-					copyArr.push(JSON.parse(json));
+					copyArr.push(this.jParse(json));
 				}
 
 				return copyArr;
@@ -6404,6 +6440,24 @@ Common = {
 		}
 
 		return undefined;
+	},
+
+	/**
+	 * Parses and returns data from stringified version.
+	 * @param {String} data The stringified version of data to parse.
+	 * @returns {Object} The parsed JSON object from the data.
+	 */
+	jParse: function (data) {
+		return JSON.parse(data);
+	},
+
+	/**
+	 * Converts a JSON object into a stringified version.
+	 * @param {Object} data The data to stringify.
+	 * @returns {String} The stringified data.
+	 */
+	jStringify: function (data) {
+		return JSON.stringify(data);
 	},
 	
 	/**
@@ -8069,7 +8123,7 @@ var Overload = function (def) {
 			}
 
 			name = typeof this.name === 'function' ? this.name() : 'Unknown';
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + JSON.stringify(arr));
+			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
@@ -8150,6 +8204,7 @@ Path.prototype.init = function (path) {
 };
 
 Shared.addModule('Path', Path);
+Shared.mixin(Path.prototype, 'Mixin.Common');
 Shared.mixin(Path.prototype, 'Mixin.ChainReactor');
 
 /**
@@ -8527,6 +8582,38 @@ Path.prototype.keyValue = function (obj, path) {
 };
 
 /**
+ * Sets a value on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to update.
+ * @param {*} val The value to set the object path to.
+ * @returns {*}
+ */
+Path.prototype.set = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+			part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = val;
+		}
+	}
+
+	return obj;
+};
+
+/**
  * Removes leading period (.) from string and returns it.
  * @param {String} str The string to clean.
  * @returns {*}
@@ -8633,7 +8720,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.330',
+	version: '1.3.335',
 	modules: {},
 	plugins: {},
 
