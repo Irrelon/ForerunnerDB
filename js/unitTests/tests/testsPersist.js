@@ -48,7 +48,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 				strictEqual(result.length, 1, 'Check that items were loaded correctly');
 				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
-				strictEqual(coll.metaData().lastChange, lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
+				strictEqual(coll.metaData().lastChange.toISOString(), lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
 
 				base.dbDown();
 

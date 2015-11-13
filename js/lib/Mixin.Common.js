@@ -2,6 +2,7 @@
 
 var idCounter = 0,
 	Overload = require('./Overload'),
+	Serialiser = require('./Serialiser'),
 	Common;
 
 Common = {
@@ -80,7 +81,8 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return JSON.parse(data);
+		return Serialiser.parse(data);
+		//return JSON.parse(data);
 	},
 
 	/**
@@ -89,7 +91,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return JSON.stringify(data);
+		return Serialiser.stringify(data);
+		//return JSON.stringify(data);
 	},
 	
 	/**

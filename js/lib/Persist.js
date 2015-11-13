@@ -14,7 +14,8 @@ var Shared = require('./Shared'),
 	DbInit,
 	DbDrop,
 	Persist,
-	Overload;
+	Overload,
+	DataVersion = '2.0';
 
 /**
  * The persistent storage class handles loading and saving data to browser
