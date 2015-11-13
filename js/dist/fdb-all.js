@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/CollectionGroup":6,"../lib/Document":10,"../lib/Grid":11,"../lib/Highchart":12,"../lib/Odm":26,"../lib/Overview":29,"../lib/Persist":31,"../lib/Rest":35,"../lib/View":38,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":6,"../lib/Document":10,"../lib/Grid":11,"../lib/Highchart":12,"../lib/Odm":26,"../lib/Overview":29,"../lib/Persist":31,"../lib/Rest":35,"../lib/View":39,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":7,"../lib/Shim.IE8":37}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":38}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -285,7 +285,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":36}],4:[function(_dereq_,module,exports){
+},{"./Shared":37}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -556,7 +556,7 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Shared":36}],5:[function(_dereq_,module,exports){
+},{"./Shared":37}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -4025,7 +4025,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":8,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":28,"./Path":30,"./ReactorIO":34,"./Shared":36}],6:[function(_dereq_,module,exports){
+},{"./Crc":8,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":28,"./Path":30,"./ReactorIO":34,"./Shared":37}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4362,7 +4362,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":5,"./Shared":36}],7:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":37}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4669,7 +4669,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":9,"./Metrics.js":16,"./Overload":28,"./Shared":36}],8:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":16,"./Overload":28,"./Shared":37}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -5314,7 +5314,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":16,"./Overload":28,"./Shared":36}],10:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":16,"./Overload":28,"./Shared":37}],10:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -5763,7 +5763,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":5,"./Shared":36}],11:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":37}],11:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -6455,7 +6455,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":5,"./CollectionGroup":6,"./ReactorIO":34,"./Shared":36,"./View":38}],12:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./ReactorIO":34,"./Shared":37,"./View":39}],12:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7081,7 +7081,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":28,"./Shared":36}],13:[function(_dereq_,module,exports){
+},{"./Overload":28,"./Shared":37}],13:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -7378,7 +7378,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":4,"./Path":30,"./Shared":36}],14:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":30,"./Shared":37}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7737,7 +7737,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":30,"./Shared":36}],15:[function(_dereq_,module,exports){
+},{"./Path":30,"./Shared":37}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7952,7 +7952,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":36}],16:[function(_dereq_,module,exports){
+},{"./Shared":37}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8027,7 +8027,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":27,"./Shared":36}],17:[function(_dereq_,module,exports){
+},{"./Operation":27,"./Shared":37}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -8146,6 +8146,7 @@ module.exports = ChainReactor;
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
+	Serialiser = _dereq_('./Serialiser'),
 	Common;
 
 Common = {
@@ -8224,7 +8225,8 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return JSON.parse(data);
+		return Serialiser.parse(data);
+		//return JSON.parse(data);
 	},
 
 	/**
@@ -8233,7 +8235,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return JSON.stringify(data);
+		return Serialiser.stringify(data);
+		//return JSON.stringify(data);
 	},
 	
 	/**
@@ -8396,7 +8399,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":28}],20:[function(_dereq_,module,exports){
+},{"./Overload":28,"./Serialiser":36}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -9818,7 +9821,7 @@ Collection.prototype.odm = function (name) {
 
 Shared.finishModule('Odm');
 module.exports = Odm;
-},{"./Collection":5,"./Shared":36}],27:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":37}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9965,7 +9968,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":30,"./Shared":36}],28:[function(_dereq_,module,exports){
+},{"./Path":30,"./Shared":37}],28:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10413,7 +10416,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":5,"./Document":10,"./Shared":36}],30:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Document":10,"./Shared":37}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10859,7 +10862,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":36}],31:[function(_dereq_,module,exports){
+},{"./Shared":37}],31:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10876,7 +10879,8 @@ var Shared = _dereq_('./Shared'),
 	DbInit,
 	DbDrop,
 	Persist,
-	Overload;
+	Overload;//,
+	//DataVersion = '2.0';
 
 /**
  * The persistent storage class handles loading and saving data to browser
@@ -11477,7 +11481,7 @@ Db.prototype.save = function (callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":32,"./PersistCrypto":33,"./Shared":36,"async":39,"localforage":81}],32:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":32,"./PersistCrypto":33,"./Shared":37,"async":40,"localforage":82}],32:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -11558,7 +11562,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":36,"pako":83}],33:[function(_dereq_,module,exports){
+},{"./Shared":37,"pako":84}],33:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -11679,7 +11683,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":36,"crypto-js":48}],34:[function(_dereq_,module,exports){
+},{"./Shared":37,"crypto-js":49}],34:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11760,7 +11764,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":36}],35:[function(_dereq_,module,exports){
+},{"./Shared":37}],35:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -11878,7 +11882,71 @@ Db.prototype.init = function () {
 
 Shared.finishModule('Rest');
 module.exports = Rest;
-},{"./Collection":5,"./CollectionGroup":6,"./Shared":36,"rest":100,"rest/interceptor/mime":105}],36:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./Shared":37,"rest":101,"rest/interceptor/mime":106}],36:[function(_dereq_,module,exports){
+"use strict";
+
+var Serialiser = function () {
+
+};
+
+Serialiser.prototype.parse = function (data) {
+	return this._parse(JSON.parse(data));
+};
+
+Serialiser.prototype._parse = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types and restore them
+
+
+		// Iterate through the object's keys and parse
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				if (i.substr(0, 1) === '$') {
+					// This is a special object type, restore it
+					switch (i) {
+						case '$date':
+							return new Date(data[i]);
+					}
+				} else {
+					data[i] = this._parse(data[i]);
+				}
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+Serialiser.prototype.stringify = function (data) {
+	return JSON.stringify(this._stringify(data));
+};
+
+Serialiser.prototype._stringify = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types so they can be restored
+		if (data instanceof Date) {
+			return { $date: data.toISOString() };
+		}
+
+		// Iterate through the object's keys and serialise
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				data[i] = this._stringify(data[i]);
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+module.exports = new Serialiser();
+},{}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -11889,7 +11957,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.337',
+	version: '1.3.345',
 	modules: {},
 	plugins: {},
 
@@ -12064,7 +12132,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Triggers":24,"./Mixin.Updating":25,"./Overload":28}],37:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Triggers":24,"./Mixin.Updating":25,"./Overload":28}],38:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -12184,7 +12252,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],38:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -13310,8 +13378,8 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":34,"./Shared":36}],39:[function(_dereq_,module,exports){
-(function (process){
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":34,"./Shared":37}],40:[function(_dereq_,module,exports){
+(function (process,global){
 /*!
  * async
  * https://github.com/caolan/async
@@ -13319,18 +13387,32 @@ module.exports = View;
  * Copyright 2010-2014 Caolan McMahon
  * Released under the MIT license
  */
-/*jshint onevar: false, indent:4 */
-/*global setImmediate: false, setTimeout: false, console: false */
 (function () {
 
     var async = {};
+    function noop() {}
+    function identity(v) {
+        return v;
+    }
+    function toBool(v) {
+        return !!v;
+    }
+    function notId(v) {
+        return !v;
+    }
 
     // global on the server, window in the browser
-    var root, previous_async;
+    var previous_async;
 
-    root = this;
+    // Establish the root object, `window` (`self`) in the browser, `global`
+    // on the server, or `this` in some virtual machines. We use `self`
+    // instead of `window` for `WebWorker` support.
+    var root = typeof self === 'object' && self.self === self && self ||
+            typeof global === 'object' && global.global === global && global ||
+            this;
+
     if (root != null) {
-      previous_async = root.async;
+        previous_async = root.async;
     }
 
     async.noConflict = function () {
@@ -13339,12 +13421,19 @@ module.exports = View;
     };
 
     function only_once(fn) {
-        var called = false;
         return function() {
-            if (called) throw new Error("Callback was already called.");
-            called = true;
-            fn.apply(root, arguments);
-        }
+            if (fn === null) throw new Error("Callback was already called.");
+            fn.apply(this, arguments);
+            fn = null;
+        };
+    }
+
+    function _once(fn) {
+        return function() {
+            if (fn === null) return;
+            fn.apply(this, arguments);
+            fn = null;
+        };
     }
 
     //// cross-browser compatiblity functions ////
@@ -13355,37 +13444,66 @@ module.exports = View;
         return _toString.call(obj) === '[object Array]';
     };
 
-    var _each = function (arr, iterator) {
-        for (var i = 0; i < arr.length; i += 1) {
-            iterator(arr[i], i, arr);
-        }
+    // Ported from underscore.js isObject
+    var _isObject = function(obj) {
+        var type = typeof obj;
+        return type === 'function' || type === 'object' && !!obj;
     };
 
-    var _map = function (arr, iterator) {
-        if (arr.map) {
-            return arr.map(iterator);
-        }
-        var results = [];
-        _each(arr, function (x, i, a) {
-            results.push(iterator(x, i, a));
-        });
-        return results;
-    };
+    function _isArrayLike(arr) {
+        return _isArray(arr) || (
+            // has a positive integer length property
+            typeof arr.length === "number" &&
+            arr.length >= 0 &&
+            arr.length % 1 === 0
+        );
+    }
 
-    var _reduce = function (arr, iterator, memo) {
-        if (arr.reduce) {
-            return arr.reduce(iterator, memo);
+    function _arrayEach(arr, iterator) {
+        var index = -1,
+            length = arr.length;
+
+        while (++index < length) {
+            iterator(arr[index], index, arr);
         }
-        _each(arr, function (x, i, a) {
+    }
+
+    function _map(arr, iterator) {
+        var index = -1,
+            length = arr.length,
+            result = Array(length);
+
+        while (++index < length) {
+            result[index] = iterator(arr[index], index, arr);
+        }
+        return result;
+    }
+
+    function _range(count) {
+        return _map(Array(count), function (v, i) { return i; });
+    }
+
+    function _reduce(arr, iterator, memo) {
+        _arrayEach(arr, function (x, i, a) {
             memo = iterator(memo, x, i, a);
         });
         return memo;
-    };
+    }
 
-    var _keys = function (obj) {
-        if (Object.keys) {
-            return Object.keys(obj);
+    function _forEachOf(object, iterator) {
+        _arrayEach(_keys(object), function (key) {
+            iterator(object[key], key);
+        });
+    }
+
+    function _indexOf(arr, item) {
+        for (var i = 0; i < arr.length; i++) {
+            if (arr[i] === item) return i;
         }
+        return -1;
+    }
+
+    var _keys = Object.keys || function (obj) {
         var keys = [];
         for (var k in obj) {
             if (obj.hasOwnProperty(k)) {
@@ -13395,191 +13513,247 @@ module.exports = View;
         return keys;
     };
 
+    function _keyIterator(coll) {
+        var i = -1;
+        var len;
+        var keys;
+        if (_isArrayLike(coll)) {
+            len = coll.length;
+            return function next() {
+                i++;
+                return i < len ? i : null;
+            };
+        } else {
+            keys = _keys(coll);
+            len = keys.length;
+            return function next() {
+                i++;
+                return i < len ? keys[i] : null;
+            };
+        }
+    }
+
+    // Similar to ES6's rest param (http://ariya.ofilabs.com/2013/03/es6-and-rest-parameter.html)
+    // This accumulates the arguments passed into an array, after a given index.
+    // From underscore.js (https://github.com/jashkenas/underscore/pull/2140).
+    function _restParam(func, startIndex) {
+        startIndex = startIndex == null ? func.length - 1 : +startIndex;
+        return function() {
+            var length = Math.max(arguments.length - startIndex, 0);
+            var rest = Array(length);
+            for (var index = 0; index < length; index++) {
+                rest[index] = arguments[index + startIndex];
+            }
+            switch (startIndex) {
+                case 0: return func.call(this, rest);
+                case 1: return func.call(this, arguments[0], rest);
+            }
+            // Currently unused but handle cases outside of the switch statement:
+            // var args = Array(startIndex + 1);
+            // for (index = 0; index < startIndex; index++) {
+            //     args[index] = arguments[index];
+            // }
+            // args[startIndex] = rest;
+            // return func.apply(this, args);
+        };
+    }
+
+    function _withoutIndex(iterator) {
+        return function (value, index, callback) {
+            return iterator(value, callback);
+        };
+    }
+
     //// exported async module functions ////
 
     //// nextTick implementation with browser-compatible fallback ////
-    if (typeof process === 'undefined' || !(process.nextTick)) {
-        if (typeof setImmediate === 'function') {
-            async.nextTick = function (fn) {
-                // not a direct alias for IE10 compatibility
-                setImmediate(fn);
-            };
-            async.setImmediate = async.nextTick;
-        }
-        else {
-            async.nextTick = function (fn) {
-                setTimeout(fn, 0);
-            };
-            async.setImmediate = async.nextTick;
-        }
-    }
-    else {
-        async.nextTick = process.nextTick;
-        if (typeof setImmediate !== 'undefined') {
-            async.setImmediate = function (fn) {
-              // not a direct alias for IE10 compatibility
-              setImmediate(fn);
-            };
-        }
-        else {
-            async.setImmediate = async.nextTick;
-        }
-    }
 
+    // capture the global reference to guard against fakeTimer mocks
+    var _setImmediate = typeof setImmediate === 'function' && setImmediate;
+
+    var _delay = _setImmediate ? function(fn) {
+        // not a direct alias for IE10 compatibility
+        _setImmediate(fn);
+    } : function(fn) {
+        setTimeout(fn, 0);
+    };
+
+    if (typeof process === 'object' && typeof process.nextTick === 'function') {
+        async.nextTick = process.nextTick;
+    } else {
+        async.nextTick = _delay;
+    }
+    async.setImmediate = _setImmediate ? _delay : async.nextTick;
+
+
+    async.forEach =
     async.each = function (arr, iterator, callback) {
-        callback = callback || function () {};
-        if (!arr.length) {
-            return callback();
+        return async.eachOf(arr, _withoutIndex(iterator), callback);
+    };
+
+    async.forEachSeries =
+    async.eachSeries = function (arr, iterator, callback) {
+        return async.eachOfSeries(arr, _withoutIndex(iterator), callback);
+    };
+
+
+    async.forEachLimit =
+    async.eachLimit = function (arr, limit, iterator, callback) {
+        return _eachOfLimit(limit)(arr, _withoutIndex(iterator), callback);
+    };
+
+    async.forEachOf =
+    async.eachOf = function (object, iterator, callback) {
+        callback = _once(callback || noop);
+        object = object || [];
+
+        var iter = _keyIterator(object);
+        var key, completed = 0;
+
+        while ((key = iter()) != null) {
+            completed += 1;
+            iterator(object[key], key, only_once(done));
         }
-        var completed = 0;
-        _each(arr, function (x) {
-            iterator(x, only_once(done) );
-        });
+
+        if (completed === 0) callback(null);
+
         function done(err) {
-          if (err) {
-              callback(err);
-              callback = function () {};
-          }
-          else {
-              completed += 1;
-              if (completed >= arr.length) {
-                  callback();
-              }
-          }
+            completed--;
+            if (err) {
+                callback(err);
+            }
+            // Check key is null in case iterator isn't exhausted
+            // and done resolved synchronously.
+            else if (key === null && completed <= 0) {
+                callback(null);
+            }
         }
     };
-    async.forEach = async.each;
 
-    async.eachSeries = function (arr, iterator, callback) {
-        callback = callback || function () {};
-        if (!arr.length) {
-            return callback();
-        }
-        var completed = 0;
-        var iterate = function () {
-            iterator(arr[completed], function (err) {
+    async.forEachOfSeries =
+    async.eachOfSeries = function (obj, iterator, callback) {
+        callback = _once(callback || noop);
+        obj = obj || [];
+        var nextKey = _keyIterator(obj);
+        var key = nextKey();
+        function iterate() {
+            var sync = true;
+            if (key === null) {
+                return callback(null);
+            }
+            iterator(obj[key], key, only_once(function (err) {
                 if (err) {
                     callback(err);
-                    callback = function () {};
                 }
                 else {
-                    completed += 1;
-                    if (completed >= arr.length) {
-                        callback();
-                    }
-                    else {
-                        iterate();
+                    key = nextKey();
+                    if (key === null) {
+                        return callback(null);
+                    } else {
+                        if (sync) {
+                            async.setImmediate(iterate);
+                        } else {
+                            iterate();
+                        }
                     }
                 }
-            });
-        };
+            }));
+            sync = false;
+        }
         iterate();
     };
-    async.forEachSeries = async.eachSeries;
 
-    async.eachLimit = function (arr, limit, iterator, callback) {
-        var fn = _eachLimit(limit);
-        fn.apply(null, [arr, iterator, callback]);
+
+
+    async.forEachOfLimit =
+    async.eachOfLimit = function (obj, limit, iterator, callback) {
+        _eachOfLimit(limit)(obj, iterator, callback);
     };
-    async.forEachLimit = async.eachLimit;
 
-    var _eachLimit = function (limit) {
+    function _eachOfLimit(limit) {
 
-        return function (arr, iterator, callback) {
-            callback = callback || function () {};
-            if (!arr.length || limit <= 0) {
-                return callback();
+        return function (obj, iterator, callback) {
+            callback = _once(callback || noop);
+            obj = obj || [];
+            var nextKey = _keyIterator(obj);
+            if (limit <= 0) {
+                return callback(null);
             }
-            var completed = 0;
-            var started = 0;
+            var done = false;
             var running = 0;
+            var errored = false;
 
             (function replenish () {
-                if (completed >= arr.length) {
-                    return callback();
+                if (done && running <= 0) {
+                    return callback(null);
                 }
 
-                while (running < limit && started < arr.length) {
-                    started += 1;
+                while (running < limit && !errored) {
+                    var key = nextKey();
+                    if (key === null) {
+                        done = true;
+                        if (running <= 0) {
+                            callback(null);
+                        }
+                        return;
+                    }
                     running += 1;
-                    iterator(arr[started - 1], function (err) {
+                    iterator(obj[key], key, only_once(function (err) {
+                        running -= 1;
                         if (err) {
                             callback(err);
-                            callback = function () {};
+                            errored = true;
                         }
                         else {
-                            completed += 1;
-                            running -= 1;
-                            if (completed >= arr.length) {
-                                callback();
-                            }
-                            else {
-                                replenish();
-                            }
+                            replenish();
                         }
-                    });
+                    }));
                 }
             })();
         };
-    };
+    }
 
 
-    var doParallel = function (fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [async.each].concat(args));
+    function doParallel(fn) {
+        return function (obj, iterator, callback) {
+            return fn(async.eachOf, obj, iterator, callback);
         };
-    };
-    var doParallelLimit = function(limit, fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [_eachLimit(limit)].concat(args));
+    }
+    function doParallelLimit(fn) {
+        return function (obj, limit, iterator, callback) {
+            return fn(_eachOfLimit(limit), obj, iterator, callback);
         };
-    };
-    var doSeries = function (fn) {
-        return function () {
-            var args = Array.prototype.slice.call(arguments);
-            return fn.apply(null, [async.eachSeries].concat(args));
+    }
+    function doSeries(fn) {
+        return function (obj, iterator, callback) {
+            return fn(async.eachOfSeries, obj, iterator, callback);
         };
-    };
+    }
 
-
-    var _asyncMap = function (eachfn, arr, iterator, callback) {
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
+    function _asyncMap(eachfn, arr, iterator, callback) {
+        callback = _once(callback || noop);
+        arr = arr || [];
+        var results = _isArrayLike(arr) ? [] : {};
+        eachfn(arr, function (value, index, callback) {
+            iterator(value, function (err, v) {
+                results[index] = v;
+                callback(err);
+            });
+        }, function (err) {
+            callback(err, results);
         });
-        if (!callback) {
-            eachfn(arr, function (x, callback) {
-                iterator(x.value, function (err) {
-                    callback(err);
-                });
-            });
-        } else {
-            var results = [];
-            eachfn(arr, function (x, callback) {
-                iterator(x.value, function (err, v) {
-                    results[x.index] = v;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
-    };
+    }
+
     async.map = doParallel(_asyncMap);
     async.mapSeries = doSeries(_asyncMap);
-    async.mapLimit = function (arr, limit, iterator, callback) {
-        return _mapLimit(limit)(arr, iterator, callback);
-    };
-
-    var _mapLimit = function(limit) {
-        return doParallelLimit(limit, _asyncMap);
-    };
+    async.mapLimit = doParallelLimit(_asyncMap);
 
     // reduce only has a series version, as doing reduce in parallel won't
     // work in many situations.
+    async.inject =
+    async.foldl =
     async.reduce = function (arr, memo, iterator, callback) {
-        async.eachSeries(arr, function (x, callback) {
+        async.eachOfSeries(arr, function (x, i, callback) {
             iterator(memo, x, function (err, v) {
                 memo = v;
                 callback(err);
@@ -13588,118 +13762,106 @@ module.exports = View;
             callback(err, memo);
         });
     };
-    // inject alias
-    async.inject = async.reduce;
-    // foldl alias
-    async.foldl = async.reduce;
 
+    async.foldr =
     async.reduceRight = function (arr, memo, iterator, callback) {
-        var reversed = _map(arr, function (x) {
-            return x;
-        }).reverse();
+        var reversed = _map(arr, identity).reverse();
         async.reduce(reversed, memo, iterator, callback);
     };
-    // foldr alias
-    async.foldr = async.reduceRight;
 
-    var _filter = function (eachfn, arr, iterator, callback) {
-        var results = [];
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
+    async.transform = function (arr, memo, iterator, callback) {
+        if (arguments.length === 3) {
+            callback = iterator;
+            iterator = memo;
+            memo = _isArray(arr) ? [] : {};
+        }
+
+        async.eachOf(arr, function(v, k, cb) {
+            iterator(memo, v, k, cb);
+        }, function(err) {
+            callback(err, memo);
         });
-        eachfn(arr, function (x, callback) {
-            iterator(x.value, function (v) {
+    };
+
+    function _filter(eachfn, arr, iterator, callback) {
+        var results = [];
+        eachfn(arr, function (x, index, callback) {
+            iterator(x, function (v) {
                 if (v) {
-                    results.push(x);
+                    results.push({index: index, value: x});
                 }
                 callback();
             });
-        }, function (err) {
+        }, function () {
             callback(_map(results.sort(function (a, b) {
                 return a.index - b.index;
             }), function (x) {
                 return x.value;
             }));
         });
-    };
-    async.filter = doParallel(_filter);
-    async.filterSeries = doSeries(_filter);
-    // select alias
-    async.select = async.filter;
-    async.selectSeries = async.filterSeries;
+    }
 
-    var _reject = function (eachfn, arr, iterator, callback) {
-        var results = [];
-        arr = _map(arr, function (x, i) {
-            return {index: i, value: x};
-        });
-        eachfn(arr, function (x, callback) {
-            iterator(x.value, function (v) {
-                if (!v) {
-                    results.push(x);
-                }
-                callback();
+    async.select =
+    async.filter = doParallel(_filter);
+
+    async.selectLimit =
+    async.filterLimit = doParallelLimit(_filter);
+
+    async.selectSeries =
+    async.filterSeries = doSeries(_filter);
+
+    function _reject(eachfn, arr, iterator, callback) {
+        _filter(eachfn, arr, function(value, cb) {
+            iterator(value, function(v) {
+                cb(!v);
             });
-        }, function (err) {
-            callback(_map(results.sort(function (a, b) {
-                return a.index - b.index;
-            }), function (x) {
-                return x.value;
-            }));
-        });
-    };
+        }, callback);
+    }
     async.reject = doParallel(_reject);
+    async.rejectLimit = doParallelLimit(_reject);
     async.rejectSeries = doSeries(_reject);
 
-    var _detect = function (eachfn, arr, iterator, main_callback) {
-        eachfn(arr, function (x, callback) {
-            iterator(x, function (result) {
-                if (result) {
-                    main_callback(x);
-                    main_callback = function () {};
-                }
-                else {
+    function _createTester(eachfn, check, getResult) {
+        return function(arr, limit, iterator, cb) {
+            function done() {
+                if (cb) cb(getResult(false, void 0));
+            }
+            function iteratee(x, _, callback) {
+                if (!cb) return callback();
+                iterator(x, function (v) {
+                    if (cb && check(v)) {
+                        cb(getResult(true, x));
+                        cb = iterator = false;
+                    }
                     callback();
-                }
-            });
-        }, function (err) {
-            main_callback();
-        });
-    };
-    async.detect = doParallel(_detect);
-    async.detectSeries = doSeries(_detect);
+                });
+            }
+            if (arguments.length > 3) {
+                eachfn(arr, limit, iteratee, done);
+            } else {
+                cb = iterator;
+                iterator = limit;
+                eachfn(arr, iteratee, done);
+            }
+        };
+    }
 
-    async.some = function (arr, iterator, main_callback) {
-        async.each(arr, function (x, callback) {
-            iterator(x, function (v) {
-                if (v) {
-                    main_callback(true);
-                    main_callback = function () {};
-                }
-                callback();
-            });
-        }, function (err) {
-            main_callback(false);
-        });
-    };
-    // any alias
-    async.any = async.some;
+    async.any =
+    async.some = _createTester(async.eachOf, toBool, identity);
 
-    async.every = function (arr, iterator, main_callback) {
-        async.each(arr, function (x, callback) {
-            iterator(x, function (v) {
-                if (!v) {
-                    main_callback(false);
-                    main_callback = function () {};
-                }
-                callback();
-            });
-        }, function (err) {
-            main_callback(true);
-        });
-    };
-    // all alias
-    async.all = async.every;
+    async.someLimit = _createTester(async.eachOfLimit, toBool, identity);
+
+    async.all =
+    async.every = _createTester(async.eachOf, notId, notId);
+
+    async.everyLimit = _createTester(async.eachOfLimit, notId, notId);
+
+    function _findGetResult(v, x) {
+        return x;
+    }
+    async.detect = _createTester(async.eachOf, identity, _findGetResult);
+    async.detectSeries = _createTester(async.eachOfSeries, identity, _findGetResult);
+    async.detectLimit = _createTester(async.eachOfLimit, identity, _findGetResult);
 
     async.sortBy = function (arr, iterator, callback) {
         async.map(arr, function (x, callback) {
@@ -13716,147 +13878,201 @@ module.exports = View;
                 return callback(err);
             }
             else {
-                var fn = function (left, right) {
-                    var a = left.criteria, b = right.criteria;
-                    return a < b ? -1 : a > b ? 1 : 0;
-                };
-                callback(null, _map(results.sort(fn), function (x) {
+                callback(null, _map(results.sort(comparator), function (x) {
                     return x.value;
                 }));
             }
+
         });
+
+        function comparator(left, right) {
+            var a = left.criteria, b = right.criteria;
+            return a < b ? -1 : a > b ? 1 : 0;
+        }
     };
 
-    async.auto = function (tasks, callback) {
-        callback = callback || function () {};
+    async.auto = function (tasks, concurrency, callback) {
+        if (!callback) {
+            // concurrency is optional, shift the args.
+            callback = concurrency;
+            concurrency = null;
+        }
+        callback = _once(callback || noop);
         var keys = _keys(tasks);
-        var remainingTasks = keys.length
+        var remainingTasks = keys.length;
         if (!remainingTasks) {
-            return callback();
+            return callback(null);
+        }
+        if (!concurrency) {
+            concurrency = remainingTasks;
         }
 
         var results = {};
+        var runningTasks = 0;
 
         var listeners = [];
-        var addListener = function (fn) {
+        function addListener(fn) {
             listeners.unshift(fn);
-        };
-        var removeListener = function (fn) {
-            for (var i = 0; i < listeners.length; i += 1) {
-                if (listeners[i] === fn) {
-                    listeners.splice(i, 1);
-                    return;
-                }
-            }
-        };
-        var taskComplete = function () {
-            remainingTasks--
-            _each(listeners.slice(0), function (fn) {
+        }
+        function removeListener(fn) {
+            var idx = _indexOf(listeners, fn);
+            if (idx >= 0) listeners.splice(idx, 1);
+        }
+        function taskComplete() {
+            remainingTasks--;
+            _arrayEach(listeners.slice(0), function (fn) {
                 fn();
             });
-        };
+        }
 
         addListener(function () {
             if (!remainingTasks) {
-                var theCallback = callback;
-                // prevent final callback from calling itself if it errors
-                callback = function () {};
-
-                theCallback(null, results);
+                callback(null, results);
             }
         });
 
-        _each(keys, function (k) {
+        _arrayEach(keys, function (k) {
             var task = _isArray(tasks[k]) ? tasks[k]: [tasks[k]];
-            var taskCallback = function (err) {
-                var args = Array.prototype.slice.call(arguments, 1);
+            var taskCallback = _restParam(function(err, args) {
+                runningTasks--;
                 if (args.length <= 1) {
                     args = args[0];
                 }
                 if (err) {
                     var safeResults = {};
-                    _each(_keys(results), function(rkey) {
-                        safeResults[rkey] = results[rkey];
+                    _forEachOf(results, function(val, rkey) {
+                        safeResults[rkey] = val;
                     });
                     safeResults[k] = args;
                     callback(err, safeResults);
-                    // stop subsequent errors hitting callback multiple times
-                    callback = function () {};
                 }
                 else {
                     results[k] = args;
                     async.setImmediate(taskComplete);
                 }
-            };
-            var requires = task.slice(0, Math.abs(task.length - 1)) || [];
-            var ready = function () {
-                return _reduce(requires, function (a, x) {
+            });
+            var requires = task.slice(0, task.length - 1);
+            // prevent dead-locks
+            var len = requires.length;
+            var dep;
+            while (len--) {
+                if (!(dep = tasks[requires[len]])) {
+                    throw new Error('Has inexistant dependency');
+                }
+                if (_isArray(dep) && _indexOf(dep, k) >= 0) {
+                    throw new Error('Has cyclic dependencies');
+                }
+            }
+            function ready() {
+                return runningTasks < concurrency && _reduce(requires, function (a, x) {
                     return (a && results.hasOwnProperty(x));
                 }, true) && !results.hasOwnProperty(k);
-            };
+            }
             if (ready()) {
+                runningTasks++;
                 task[task.length - 1](taskCallback, results);
             }
             else {
-                var listener = function () {
-                    if (ready()) {
-                        removeListener(listener);
-                        task[task.length - 1](taskCallback, results);
-                    }
-                };
                 addListener(listener);
+            }
+            function listener() {
+                if (ready()) {
+                    runningTasks++;
+                    removeListener(listener);
+                    task[task.length - 1](taskCallback, results);
+                }
             }
         });
     };
 
+
+
     async.retry = function(times, task, callback) {
         var DEFAULT_TIMES = 5;
+        var DEFAULT_INTERVAL = 0;
+
         var attempts = [];
-        // Use defaults if times not passed
-        if (typeof times === 'function') {
+
+        var opts = {
+            times: DEFAULT_TIMES,
+            interval: DEFAULT_INTERVAL
+        };
+
+        function parseTimes(acc, t){
+            if(typeof t === 'number'){
+                acc.times = parseInt(t, 10) || DEFAULT_TIMES;
+            } else if(typeof t === 'object'){
+                acc.times = parseInt(t.times, 10) || DEFAULT_TIMES;
+                acc.interval = parseInt(t.interval, 10) || DEFAULT_INTERVAL;
+            } else {
+                throw new Error('Unsupported argument type for \'times\': ' + typeof t);
+            }
+        }
+
+        var length = arguments.length;
+        if (length < 1 || length > 3) {
+            throw new Error('Invalid arguments - must be either (task), (task, callback), (times, task) or (times, task, callback)');
+        } else if (length <= 2 && typeof times === 'function') {
             callback = task;
             task = times;
-            times = DEFAULT_TIMES;
         }
-        // Make sure times is a number
-        times = parseInt(times, 10) || DEFAULT_TIMES;
-        var wrappedTask = function(wrappedCallback, wrappedResults) {
-            var retryAttempt = function(task, finalAttempt) {
+        if (typeof times !== 'function') {
+            parseTimes(opts, times);
+        }
+        opts.callback = callback;
+        opts.task = task;
+
+        function wrappedTask(wrappedCallback, wrappedResults) {
+            function retryAttempt(task, finalAttempt) {
                 return function(seriesCallback) {
                     task(function(err, result){
                         seriesCallback(!err || finalAttempt, {err: err, result: result});
                     }, wrappedResults);
                 };
-            };
-            while (times) {
-                attempts.push(retryAttempt(task, !(times-=1)));
             }
+
+            function retryInterval(interval){
+                return function(seriesCallback){
+                    setTimeout(function(){
+                        seriesCallback(null);
+                    }, interval);
+                };
+            }
+
+            while (opts.times) {
+
+                var finalAttempt = !(opts.times-=1);
+                attempts.push(retryAttempt(opts.task, finalAttempt));
+                if(!finalAttempt && opts.interval > 0){
+                    attempts.push(retryInterval(opts.interval));
+                }
+            }
+
             async.series(attempts, function(done, data){
                 data = data[data.length - 1];
-                (wrappedCallback || callback)(data.err, data.result);
+                (wrappedCallback || opts.callback)(data.err, data.result);
             });
         }
+
         // If a callback is passed, run this as a controll flow
-        return callback ? wrappedTask() : wrappedTask
+        return opts.callback ? wrappedTask() : wrappedTask;
     };
 
     async.waterfall = function (tasks, callback) {
-        callback = callback || function () {};
+        callback = _once(callback || noop);
         if (!_isArray(tasks)) {
-          var err = new Error('First argument to waterfall must be an array of functions');
-          return callback(err);
+            var err = new Error('First argument to waterfall must be an array of functions');
+            return callback(err);
         }
         if (!tasks.length) {
             return callback();
         }
-        var wrapIterator = function (iterator) {
-            return function (err) {
+        function wrapIterator(iterator) {
+            return _restParam(function (err, args) {
                 if (err) {
-                    callback.apply(null, arguments);
-                    callback = function () {};
+                    callback.apply(null, [err].concat(args));
                 }
                 else {
-                    var args = Array.prototype.slice.call(arguments, 1);
                     var next = iterator.next();
                     if (next) {
                         args.push(wrapIterator(next));
@@ -13864,260 +14080,255 @@ module.exports = View;
                     else {
                         args.push(callback);
                     }
-                    async.setImmediate(function () {
-                        iterator.apply(null, args);
-                    });
+                    ensureAsync(iterator).apply(null, args);
                 }
-            };
-        };
+            });
+        }
         wrapIterator(async.iterator(tasks))();
     };
 
-    var _parallel = function(eachfn, tasks, callback) {
-        callback = callback || function () {};
-        if (_isArray(tasks)) {
-            eachfn.map(tasks, function (fn, callback) {
-                if (fn) {
-                    fn(function (err) {
-                        var args = Array.prototype.slice.call(arguments, 1);
-                        if (args.length <= 1) {
-                            args = args[0];
-                        }
-                        callback.call(null, err, args);
-                    });
+    function _parallel(eachfn, tasks, callback) {
+        callback = callback || noop;
+        var results = _isArrayLike(tasks) ? [] : {};
+
+        eachfn(tasks, function (task, key, callback) {
+            task(_restParam(function (err, args) {
+                if (args.length <= 1) {
+                    args = args[0];
                 }
-            }, callback);
-        }
-        else {
-            var results = {};
-            eachfn.each(_keys(tasks), function (k, callback) {
-                tasks[k](function (err) {
-                    var args = Array.prototype.slice.call(arguments, 1);
-                    if (args.length <= 1) {
-                        args = args[0];
-                    }
-                    results[k] = args;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
-    };
+                results[key] = args;
+                callback(err);
+            }));
+        }, function (err) {
+            callback(err, results);
+        });
+    }
 
     async.parallel = function (tasks, callback) {
-        _parallel({ map: async.map, each: async.each }, tasks, callback);
+        _parallel(async.eachOf, tasks, callback);
     };
 
     async.parallelLimit = function(tasks, limit, callback) {
-        _parallel({ map: _mapLimit(limit), each: _eachLimit(limit) }, tasks, callback);
+        _parallel(_eachOfLimit(limit), tasks, callback);
     };
 
-    async.series = function (tasks, callback) {
-        callback = callback || function () {};
-        if (_isArray(tasks)) {
-            async.mapSeries(tasks, function (fn, callback) {
-                if (fn) {
-                    fn(function (err) {
-                        var args = Array.prototype.slice.call(arguments, 1);
-                        if (args.length <= 1) {
-                            args = args[0];
-                        }
-                        callback.call(null, err, args);
-                    });
-                }
-            }, callback);
-        }
-        else {
-            var results = {};
-            async.eachSeries(_keys(tasks), function (k, callback) {
-                tasks[k](function (err) {
-                    var args = Array.prototype.slice.call(arguments, 1);
-                    if (args.length <= 1) {
-                        args = args[0];
-                    }
-                    results[k] = args;
-                    callback(err);
-                });
-            }, function (err) {
-                callback(err, results);
-            });
-        }
+    async.series = function(tasks, callback) {
+        _parallel(async.eachOfSeries, tasks, callback);
     };
 
     async.iterator = function (tasks) {
-        var makeCallback = function (index) {
-            var fn = function () {
+        function makeCallback(index) {
+            function fn() {
                 if (tasks.length) {
                     tasks[index].apply(null, arguments);
                 }
                 return fn.next();
-            };
+            }
             fn.next = function () {
                 return (index < tasks.length - 1) ? makeCallback(index + 1): null;
             };
             return fn;
-        };
+        }
         return makeCallback(0);
     };
 
-    async.apply = function (fn) {
-        var args = Array.prototype.slice.call(arguments, 1);
-        return function () {
+    async.apply = _restParam(function (fn, args) {
+        return _restParam(function (callArgs) {
             return fn.apply(
-                null, args.concat(Array.prototype.slice.call(arguments))
+                null, args.concat(callArgs)
             );
-        };
-    };
+        });
+    });
 
-    var _concat = function (eachfn, arr, fn, callback) {
-        var r = [];
-        eachfn(arr, function (x, cb) {
+    function _concat(eachfn, arr, fn, callback) {
+        var result = [];
+        eachfn(arr, function (x, index, cb) {
             fn(x, function (err, y) {
-                r = r.concat(y || []);
+                result = result.concat(y || []);
                 cb(err);
             });
         }, function (err) {
-            callback(err, r);
+            callback(err, result);
         });
-    };
+    }
     async.concat = doParallel(_concat);
     async.concatSeries = doSeries(_concat);
 
     async.whilst = function (test, iterator, callback) {
+        callback = callback || noop;
         if (test()) {
-            iterator(function (err) {
+            var next = _restParam(function(err, args) {
                 if (err) {
-                    return callback(err);
+                    callback(err);
+                } else if (test.apply(this, args)) {
+                    iterator(next);
+                } else {
+                    callback(null);
                 }
-                async.whilst(test, iterator, callback);
             });
-        }
-        else {
-            callback();
+            iterator(next);
+        } else {
+            callback(null);
         }
     };
 
     async.doWhilst = function (iterator, test, callback) {
-        iterator(function (err) {
-            if (err) {
-                return callback(err);
-            }
-            var args = Array.prototype.slice.call(arguments, 1);
-            if (test.apply(null, args)) {
-                async.doWhilst(iterator, test, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        var calls = 0;
+        return async.whilst(function() {
+            return ++calls <= 1 || test.apply(this, arguments);
+        }, iterator, callback);
     };
 
     async.until = function (test, iterator, callback) {
-        if (!test()) {
-            iterator(function (err) {
-                if (err) {
-                    return callback(err);
-                }
-                async.until(test, iterator, callback);
-            });
-        }
-        else {
-            callback();
-        }
+        return async.whilst(function() {
+            return !test.apply(this, arguments);
+        }, iterator, callback);
     };
 
     async.doUntil = function (iterator, test, callback) {
-        iterator(function (err) {
-            if (err) {
-                return callback(err);
-            }
-            var args = Array.prototype.slice.call(arguments, 1);
-            if (!test.apply(null, args)) {
-                async.doUntil(iterator, test, callback);
-            }
-            else {
-                callback();
-            }
-        });
+        return async.doWhilst(iterator, function() {
+            return !test.apply(this, arguments);
+        }, callback);
     };
 
-    async.queue = function (worker, concurrency) {
-        if (concurrency === undefined) {
+    async.during = function (test, iterator, callback) {
+        callback = callback || noop;
+
+        var next = _restParam(function(err, args) {
+            if (err) {
+                callback(err);
+            } else {
+                args.push(check);
+                test.apply(this, args);
+            }
+        });
+
+        var check = function(err, truth) {
+            if (err) {
+                callback(err);
+            } else if (truth) {
+                iterator(next);
+            } else {
+                callback(null);
+            }
+        };
+
+        test(check);
+    };
+
+    async.doDuring = function (iterator, test, callback) {
+        var calls = 0;
+        async.during(function(next) {
+            if (calls++ < 1) {
+                next(null, true);
+            } else {
+                test.apply(this, arguments);
+            }
+        }, iterator, callback);
+    };
+
+    function _queue(worker, concurrency, payload) {
+        if (concurrency == null) {
             concurrency = 1;
         }
+        else if(concurrency === 0) {
+            throw new Error('Concurrency must not be zero');
+        }
         function _insert(q, data, pos, callback) {
-          if (!q.started){
+            if (callback != null && typeof callback !== "function") {
+                throw new Error("task callback must be a function");
+            }
             q.started = true;
-          }
-          if (!_isArray(data)) {
-              data = [data];
-          }
-          if(data.length == 0) {
-             // call drain immediately if there are no tasks
-             return async.setImmediate(function() {
-                 if (q.drain) {
-                     q.drain();
-                 }
-             });
-          }
-          _each(data, function(task) {
-              var item = {
-                  data: task,
-                  callback: typeof callback === 'function' ? callback : null
-              };
+            if (!_isArray(data)) {
+                data = [data];
+            }
+            if(data.length === 0 && q.idle()) {
+                // call drain immediately if there are no tasks
+                return async.setImmediate(function() {
+                    q.drain();
+                });
+            }
+            _arrayEach(data, function(task) {
+                var item = {
+                    data: task,
+                    callback: callback || noop
+                };
 
-              if (pos) {
-                q.tasks.unshift(item);
-              } else {
-                q.tasks.push(item);
-              }
+                if (pos) {
+                    q.tasks.unshift(item);
+                } else {
+                    q.tasks.push(item);
+                }
 
-              if (q.saturated && q.tasks.length === q.concurrency) {
-                  q.saturated();
-              }
-              async.setImmediate(q.process);
-          });
+                if (q.tasks.length === q.concurrency) {
+                    q.saturated();
+                }
+            });
+            async.setImmediate(q.process);
+        }
+        function _next(q, tasks) {
+            return function(){
+                workers -= 1;
+
+                var removed = false;
+                var args = arguments;
+                _arrayEach(tasks, function (task) {
+                    _arrayEach(workersList, function (worker, index) {
+                        if (worker === task && !removed) {
+                            workersList.splice(index, 1);
+                            removed = true;
+                        }
+                    });
+
+                    task.callback.apply(task, args);
+                });
+                if (q.tasks.length + workers === 0) {
+                    q.drain();
+                }
+                q.process();
+            };
         }
 
         var workers = 0;
+        var workersList = [];
         var q = {
             tasks: [],
             concurrency: concurrency,
-            saturated: null,
-            empty: null,
-            drain: null,
+            payload: payload,
+            saturated: noop,
+            empty: noop,
+            drain: noop,
             started: false,
             paused: false,
             push: function (data, callback) {
-              _insert(q, data, false, callback);
+                _insert(q, data, false, callback);
             },
             kill: function () {
-              q.drain = null;
-              q.tasks = [];
+                q.drain = noop;
+                q.tasks = [];
             },
             unshift: function (data, callback) {
-              _insert(q, data, true, callback);
+                _insert(q, data, true, callback);
             },
             process: function () {
                 if (!q.paused && workers < q.concurrency && q.tasks.length) {
-                    var task = q.tasks.shift();
-                    if (q.empty && q.tasks.length === 0) {
-                        q.empty();
+                    while(workers < q.concurrency && q.tasks.length){
+                        var tasks = q.payload ?
+                            q.tasks.splice(0, q.payload) :
+                            q.tasks.splice(0, q.tasks.length);
+
+                        var data = _map(tasks, function (task) {
+                            return task.data;
+                        });
+
+                        if (q.tasks.length === 0) {
+                            q.empty();
+                        }
+                        workers += 1;
+                        workersList.push(tasks[0]);
+                        var cb = only_once(_next(q, tasks));
+                        worker(data, cb);
                     }
-                    workers += 1;
-                    var next = function () {
-                        workers -= 1;
-                        if (task.callback) {
-                            task.callback.apply(task, arguments);
-                        }
-                        if (q.drain && q.tasks.length + workers === 0) {
-                            q.drain();
-                        }
-                        q.process();
-                    };
-                    var cb = only_once(next);
-                    worker(task.data, cb);
                 }
             },
             length: function () {
@@ -14126,75 +14337,85 @@ module.exports = View;
             running: function () {
                 return workers;
             },
+            workersList: function () {
+                return workersList;
+            },
             idle: function() {
                 return q.tasks.length + workers === 0;
             },
             pause: function () {
-                if (q.paused === true) { return; }
                 q.paused = true;
             },
             resume: function () {
                 if (q.paused === false) { return; }
                 q.paused = false;
+                var resumeCount = Math.min(q.concurrency, q.tasks.length);
                 // Need to call q.process once per concurrent
                 // worker to preserve full concurrency after pause
-                for (var w = 1; w <= q.concurrency; w++) {
+                for (var w = 1; w <= resumeCount; w++) {
                     async.setImmediate(q.process);
                 }
             }
         };
+        return q;
+    }
+
+    async.queue = function (worker, concurrency) {
+        var q = _queue(function (items, cb) {
+            worker(items[0], cb);
+        }, concurrency, 1);
+
         return q;
     };
 
     async.priorityQueue = function (worker, concurrency) {
 
         function _compareTasks(a, b){
-          return a.priority - b.priority;
-        };
+            return a.priority - b.priority;
+        }
 
         function _binarySearch(sequence, item, compare) {
-          var beg = -1,
-              end = sequence.length - 1;
-          while (beg < end) {
-            var mid = beg + ((end - beg + 1) >>> 1);
-            if (compare(item, sequence[mid]) >= 0) {
-              beg = mid;
-            } else {
-              end = mid - 1;
+            var beg = -1,
+                end = sequence.length - 1;
+            while (beg < end) {
+                var mid = beg + ((end - beg + 1) >>> 1);
+                if (compare(item, sequence[mid]) >= 0) {
+                    beg = mid;
+                } else {
+                    end = mid - 1;
+                }
             }
-          }
-          return beg;
+            return beg;
         }
 
         function _insert(q, data, priority, callback) {
-          if (!q.started){
+            if (callback != null && typeof callback !== "function") {
+                throw new Error("task callback must be a function");
+            }
             q.started = true;
-          }
-          if (!_isArray(data)) {
-              data = [data];
-          }
-          if(data.length == 0) {
-             // call drain immediately if there are no tasks
-             return async.setImmediate(function() {
-                 if (q.drain) {
-                     q.drain();
-                 }
-             });
-          }
-          _each(data, function(task) {
-              var item = {
-                  data: task,
-                  priority: priority,
-                  callback: typeof callback === 'function' ? callback : null
-              };
+            if (!_isArray(data)) {
+                data = [data];
+            }
+            if(data.length === 0) {
+                // call drain immediately if there are no tasks
+                return async.setImmediate(function() {
+                    q.drain();
+                });
+            }
+            _arrayEach(data, function(task) {
+                var item = {
+                    data: task,
+                    priority: priority,
+                    callback: typeof callback === 'function' ? callback : noop
+                };
 
-              q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
+                q.tasks.splice(_binarySearch(q.tasks, item, _compareTasks) + 1, 0, item);
 
-              if (q.saturated && q.tasks.length === q.concurrency) {
-                  q.saturated();
-              }
-              async.setImmediate(q.process);
-          });
+                if (q.tasks.length === q.concurrency) {
+                    q.saturated();
+                }
+                async.setImmediate(q.process);
+            });
         }
 
         // Start with a normal queue
@@ -14202,7 +14423,7 @@ module.exports = View;
 
         // Override push to accept second parameter representing priority
         q.push = function (data, priority, callback) {
-          _insert(q, data, priority, callback);
+            _insert(q, data, priority, callback);
         };
 
         // Remove unshift function
@@ -14212,93 +14433,27 @@ module.exports = View;
     };
 
     async.cargo = function (worker, payload) {
-        var working     = false,
-            tasks       = [];
-
-        var cargo = {
-            tasks: tasks,
-            payload: payload,
-            saturated: null,
-            empty: null,
-            drain: null,
-            drained: true,
-            push: function (data, callback) {
-                if (!_isArray(data)) {
-                    data = [data];
-                }
-                _each(data, function(task) {
-                    tasks.push({
-                        data: task,
-                        callback: typeof callback === 'function' ? callback : null
-                    });
-                    cargo.drained = false;
-                    if (cargo.saturated && tasks.length === payload) {
-                        cargo.saturated();
-                    }
-                });
-                async.setImmediate(cargo.process);
-            },
-            process: function process() {
-                if (working) return;
-                if (tasks.length === 0) {
-                    if(cargo.drain && !cargo.drained) cargo.drain();
-                    cargo.drained = true;
-                    return;
-                }
-
-                var ts = typeof payload === 'number'
-                            ? tasks.splice(0, payload)
-                            : tasks.splice(0, tasks.length);
-
-                var ds = _map(ts, function (task) {
-                    return task.data;
-                });
-
-                if(cargo.empty) cargo.empty();
-                working = true;
-                worker(ds, function () {
-                    working = false;
-
-                    var args = arguments;
-                    _each(ts, function (data) {
-                        if (data.callback) {
-                            data.callback.apply(null, args);
-                        }
-                    });
-
-                    process();
-                });
-            },
-            length: function () {
-                return tasks.length;
-            },
-            running: function () {
-                return working;
-            }
-        };
-        return cargo;
+        return _queue(worker, 1, payload);
     };
 
-    var _console_fn = function (name) {
-        return function (fn) {
-            var args = Array.prototype.slice.call(arguments, 1);
-            fn.apply(null, args.concat([function (err) {
-                var args = Array.prototype.slice.call(arguments, 1);
-                if (typeof console !== 'undefined') {
+    function _console_fn(name) {
+        return _restParam(function (fn, args) {
+            fn.apply(null, args.concat([_restParam(function (err, args) {
+                if (typeof console === 'object') {
                     if (err) {
                         if (console.error) {
                             console.error(err);
                         }
                     }
                     else if (console[name]) {
-                        _each(args, function (x) {
+                        _arrayEach(args, function (x) {
                             console[name](x);
                         });
                     }
                 }
-            }]));
-        };
-    };
+            })]));
+        });
+    }
     async.log = _console_fn('log');
     async.dir = _console_fn('dir');
     /*async.info = _console_fn('info');
@@ -14308,15 +14463,12 @@ module.exports = View;
     async.memoize = function (fn, hasher) {
         var memo = {};
         var queues = {};
-        hasher = hasher || function (x) {
-            return x;
-        };
-        var memoized = function () {
-            var args = Array.prototype.slice.call(arguments);
+        hasher = hasher || identity;
+        var memoized = _restParam(function memoized(args) {
             var callback = args.pop();
             var key = hasher.apply(null, args);
             if (key in memo) {
-                async.nextTick(function () {
+                async.setImmediate(function () {
                     callback.apply(null, memo[key]);
                 });
             }
@@ -14325,106 +14477,159 @@ module.exports = View;
             }
             else {
                 queues[key] = [callback];
-                fn.apply(null, args.concat([function () {
-                    memo[key] = arguments;
+                fn.apply(null, args.concat([_restParam(function (args) {
+                    memo[key] = args;
                     var q = queues[key];
                     delete queues[key];
                     for (var i = 0, l = q.length; i < l; i++) {
-                      q[i].apply(null, arguments);
+                        q[i].apply(null, args);
                     }
-                }]));
+                })]));
             }
-        };
+        });
         memoized.memo = memo;
         memoized.unmemoized = fn;
         return memoized;
     };
 
     async.unmemoize = function (fn) {
-      return function () {
-        return (fn.unmemoized || fn).apply(null, arguments);
-      };
+        return function () {
+            return (fn.unmemoized || fn).apply(null, arguments);
+        };
     };
 
-    async.times = function (count, iterator, callback) {
-        var counter = [];
-        for (var i = 0; i < count; i++) {
-            counter.push(i);
-        }
-        return async.map(counter, iterator, callback);
-    };
+    function _times(mapper) {
+        return function (count, iterator, callback) {
+            mapper(_range(count), iterator, callback);
+        };
+    }
 
-    async.timesSeries = function (count, iterator, callback) {
-        var counter = [];
-        for (var i = 0; i < count; i++) {
-            counter.push(i);
-        }
-        return async.mapSeries(counter, iterator, callback);
+    async.times = _times(async.map);
+    async.timesSeries = _times(async.mapSeries);
+    async.timesLimit = function (count, limit, iterator, callback) {
+        return async.mapLimit(_range(count), limit, iterator, callback);
     };
 
     async.seq = function (/* functions... */) {
         var fns = arguments;
-        return function () {
+        return _restParam(function (args) {
             var that = this;
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
+
+            var callback = args[args.length - 1];
+            if (typeof callback == 'function') {
+                args.pop();
+            } else {
+                callback = noop;
+            }
+
             async.reduce(fns, args, function (newargs, fn, cb) {
-                fn.apply(that, newargs.concat([function () {
-                    var err = arguments[0];
-                    var nextargs = Array.prototype.slice.call(arguments, 1);
+                fn.apply(that, newargs.concat([_restParam(function (err, nextargs) {
                     cb(err, nextargs);
-                }]))
+                })]));
             },
             function (err, results) {
                 callback.apply(that, [err].concat(results));
             });
-        };
+        });
     };
 
     async.compose = function (/* functions... */) {
-      return async.seq.apply(null, Array.prototype.reverse.call(arguments));
+        return async.seq.apply(null, Array.prototype.reverse.call(arguments));
     };
 
-    var _applyEach = function (eachfn, fns /*args...*/) {
-        var go = function () {
-            var that = this;
-            var args = Array.prototype.slice.call(arguments);
-            var callback = args.pop();
-            return eachfn(fns, function (fn, cb) {
-                fn.apply(that, args.concat([cb]));
-            },
-            callback);
-        };
-        if (arguments.length > 2) {
-            var args = Array.prototype.slice.call(arguments, 2);
-            return go.apply(this, args);
-        }
-        else {
-            return go;
-        }
-    };
-    async.applyEach = doParallel(_applyEach);
-    async.applyEachSeries = doSeries(_applyEach);
+
+    function _applyEach(eachfn) {
+        return _restParam(function(fns, args) {
+            var go = _restParam(function(args) {
+                var that = this;
+                var callback = args.pop();
+                return eachfn(fns, function (fn, _, cb) {
+                    fn.apply(that, args.concat([cb]));
+                },
+                callback);
+            });
+            if (args.length) {
+                return go.apply(this, args);
+            }
+            else {
+                return go;
+            }
+        });
+    }
+
+    async.applyEach = _applyEach(async.eachOf);
+    async.applyEachSeries = _applyEach(async.eachOfSeries);
+
 
     async.forever = function (fn, callback) {
+        var done = only_once(callback || noop);
+        var task = ensureAsync(fn);
         function next(err) {
             if (err) {
-                if (callback) {
-                    return callback(err);
-                }
-                throw err;
+                return done(err);
             }
-            fn(next);
+            task(next);
         }
         next();
     };
 
+    function ensureAsync(fn) {
+        return _restParam(function (args) {
+            var callback = args.pop();
+            args.push(function () {
+                var innerArgs = arguments;
+                if (sync) {
+                    async.setImmediate(function () {
+                        callback.apply(null, innerArgs);
+                    });
+                } else {
+                    callback.apply(null, innerArgs);
+                }
+            });
+            var sync = true;
+            fn.apply(this, args);
+            sync = false;
+        });
+    }
+
+    async.ensureAsync = ensureAsync;
+
+    async.constant = _restParam(function(values) {
+        var args = [null].concat(values);
+        return function (callback) {
+            return callback.apply(this, args);
+        };
+    });
+
+    async.wrapSync =
+    async.asyncify = function asyncify(func) {
+        return _restParam(function (args) {
+            var callback = args.pop();
+            var result;
+            try {
+                result = func.apply(this, args);
+            } catch (e) {
+                return callback(e);
+            }
+            // if result is Promise object
+            if (_isObject(result) && typeof result.then === "function") {
+                result.then(function(value) {
+                    callback(null, value);
+                })["catch"](function(err) {
+                    callback(err.message ? err : new Error(err));
+                });
+            } else {
+                callback(null, result);
+            }
+        });
+    };
+
     // Node.js
-    if (typeof module !== 'undefined' && module.exports) {
+    if (typeof module === 'object' && module.exports) {
         module.exports = async;
     }
     // AMD / RequireJS
-    else if (typeof define !== 'undefined' && define.amd) {
+    else if (typeof define === 'function' && define.amd) {
         define([], function () {
             return async;
         });
@@ -14436,8 +14641,8 @@ module.exports = View;
 
 }());
 
-}).call(this,_dereq_('_process'))
-},{"_process":74}],40:[function(_dereq_,module,exports){
+}).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
+},{"_process":75}],41:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -14665,7 +14870,7 @@ module.exports = View;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":41,"./core":42,"./enc-base64":43,"./evpkdf":45,"./md5":50}],41:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],42:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -15541,7 +15746,7 @@ module.exports = View;
 
 
 }));
-},{"./core":42}],42:[function(_dereq_,module,exports){
+},{"./core":43}],43:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16284,7 +16489,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{}],43:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16408,7 +16613,7 @@ module.exports = View;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":42}],44:[function(_dereq_,module,exports){
+},{"./core":43}],45:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16558,7 +16763,7 @@ module.exports = View;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":42}],45:[function(_dereq_,module,exports){
+},{"./core":43}],46:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16691,7 +16896,7 @@ module.exports = View;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":42,"./hmac":47,"./sha1":66}],46:[function(_dereq_,module,exports){
+},{"./core":43,"./hmac":48,"./sha1":67}],47:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16758,7 +16963,7 @@ module.exports = View;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":41,"./core":42}],47:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],48:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16902,7 +17107,7 @@ module.exports = View;
 
 
 }));
-},{"./core":42}],48:[function(_dereq_,module,exports){
+},{"./core":43}],49:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16921,7 +17126,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./aes":40,"./cipher-core":41,"./core":42,"./enc-base64":43,"./enc-utf16":44,"./evpkdf":45,"./format-hex":46,"./hmac":47,"./lib-typedarrays":49,"./md5":50,"./mode-cfb":51,"./mode-ctr":53,"./mode-ctr-gladman":52,"./mode-ecb":54,"./mode-ofb":55,"./pad-ansix923":56,"./pad-iso10126":57,"./pad-iso97971":58,"./pad-nopadding":59,"./pad-zeropadding":60,"./pbkdf2":61,"./rabbit":63,"./rabbit-legacy":62,"./rc4":64,"./ripemd160":65,"./sha1":66,"./sha224":67,"./sha256":68,"./sha3":69,"./sha384":70,"./sha512":71,"./tripledes":72,"./x64-core":73}],49:[function(_dereq_,module,exports){
+},{"./aes":41,"./cipher-core":42,"./core":43,"./enc-base64":44,"./enc-utf16":45,"./evpkdf":46,"./format-hex":47,"./hmac":48,"./lib-typedarrays":50,"./md5":51,"./mode-cfb":52,"./mode-ctr":54,"./mode-ctr-gladman":53,"./mode-ecb":55,"./mode-ofb":56,"./pad-ansix923":57,"./pad-iso10126":58,"./pad-iso97971":59,"./pad-nopadding":60,"./pad-zeropadding":61,"./pbkdf2":62,"./rabbit":64,"./rabbit-legacy":63,"./rc4":65,"./ripemd160":66,"./sha1":67,"./sha224":68,"./sha256":69,"./sha3":70,"./sha384":71,"./sha512":72,"./tripledes":73,"./x64-core":74}],50:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16998,7 +17203,7 @@ module.exports = View;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":42}],50:[function(_dereq_,module,exports){
+},{"./core":43}],51:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17267,7 +17472,7 @@ module.exports = View;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":42}],51:[function(_dereq_,module,exports){
+},{"./core":43}],52:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17346,7 +17551,7 @@ module.exports = View;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":41,"./core":42}],52:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],53:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17463,7 +17668,7 @@ module.exports = View;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":41,"./core":42}],53:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],54:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17522,7 +17727,7 @@ module.exports = View;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":41,"./core":42}],54:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],55:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17563,7 +17768,7 @@ module.exports = View;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":41,"./core":42}],55:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],56:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17618,7 +17823,7 @@ module.exports = View;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":41,"./core":42}],56:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17668,7 +17873,7 @@ module.exports = View;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":41,"./core":42}],57:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17713,7 +17918,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":41,"./core":42}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17754,7 +17959,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":41,"./core":42}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17785,7 +17990,7 @@ module.exports = View;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":41,"./core":42}],60:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17831,7 +18036,7 @@ module.exports = View;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":41,"./core":42}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],62:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17977,7 +18182,7 @@ module.exports = View;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":42,"./hmac":47,"./sha1":66}],62:[function(_dereq_,module,exports){
+},{"./core":43,"./hmac":48,"./sha1":67}],63:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18168,7 +18373,7 @@ module.exports = View;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":41,"./core":42,"./enc-base64":43,"./evpkdf":45,"./md5":50}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18361,7 +18566,7 @@ module.exports = View;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":41,"./core":42,"./enc-base64":43,"./evpkdf":45,"./md5":50}],64:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],65:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18501,7 +18706,7 @@ module.exports = View;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":41,"./core":42,"./enc-base64":43,"./evpkdf":45,"./md5":50}],65:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],66:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18769,7 +18974,7 @@ module.exports = View;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":42}],66:[function(_dereq_,module,exports){
+},{"./core":43}],67:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18920,7 +19125,7 @@ module.exports = View;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":42}],67:[function(_dereq_,module,exports){
+},{"./core":43}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19001,7 +19206,7 @@ module.exports = View;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":42,"./sha256":68}],68:[function(_dereq_,module,exports){
+},{"./core":43,"./sha256":69}],69:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19201,7 +19406,7 @@ module.exports = View;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":42}],69:[function(_dereq_,module,exports){
+},{"./core":43}],70:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19525,7 +19730,7 @@ module.exports = View;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":42,"./x64-core":73}],70:[function(_dereq_,module,exports){
+},{"./core":43,"./x64-core":74}],71:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19609,7 +19814,7 @@ module.exports = View;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":42,"./sha512":71,"./x64-core":73}],71:[function(_dereq_,module,exports){
+},{"./core":43,"./sha512":72,"./x64-core":74}],72:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19933,7 +20138,7 @@ module.exports = View;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":42,"./x64-core":73}],72:[function(_dereq_,module,exports){
+},{"./core":43,"./x64-core":74}],73:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20704,7 +20909,7 @@ module.exports = View;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":41,"./core":42,"./enc-base64":43,"./evpkdf":45,"./md5":50}],73:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],74:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21009,7 +21214,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./core":42}],74:[function(_dereq_,module,exports){
+},{"./core":43}],75:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -21042,7 +21247,9 @@ function drainQueue() {
         currentQueue = queue;
         queue = [];
         while (++queueIndex < len) {
-            currentQueue[queueIndex].run();
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
         }
         queueIndex = -1;
         len = queue.length;
@@ -21094,14 +21301,13 @@ process.binding = function (name) {
     throw new Error('process.binding is not supported');
 };
 
-// TODO(shtylman)
 process.cwd = function () { return '/' };
 process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 process.umask = function() { return 0; };
 
-},{}],75:[function(_dereq_,module,exports){
+},{}],76:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -21208,7 +21414,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":77}],76:[function(_dereq_,module,exports){
+},{"asap":78}],77:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -21390,7 +21596,7 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":75,"asap":77}],77:[function(_dereq_,module,exports){
+},{"./core.js":76,"asap":78}],78:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -21507,7 +21713,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":74}],78:[function(_dereq_,module,exports){
+},{"_process":75}],79:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -22069,7 +22275,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":76}],79:[function(_dereq_,module,exports){
+},{"promise":77}],80:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -22400,7 +22606,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":82,"promise":76}],80:[function(_dereq_,module,exports){
+},{"./../utils/serializer":83,"promise":77}],81:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -22819,7 +23025,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":82,"promise":76}],81:[function(_dereq_,module,exports){
+},{"./../utils/serializer":83,"promise":77}],82:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -23238,7 +23444,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":78,"./drivers/localstorage":79,"./drivers/websql":80,"promise":76}],82:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":79,"./drivers/localstorage":80,"./drivers/websql":81,"promise":77}],83:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -23514,7 +23720,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],83:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -23530,7 +23736,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":84,"./lib/inflate":85,"./lib/utils/common":86,"./lib/zlib/constants":89}],84:[function(_dereq_,module,exports){
+},{"./lib/deflate":85,"./lib/inflate":86,"./lib/utils/common":87,"./lib/zlib/constants":90}],85:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -23908,7 +24114,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":86,"./utils/strings":87,"./zlib/deflate.js":91,"./zlib/messages":96,"./zlib/zstream":98}],85:[function(_dereq_,module,exports){
+},{"./utils/common":87,"./utils/strings":88,"./zlib/deflate.js":92,"./zlib/messages":97,"./zlib/zstream":99}],86:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -24010,7 +24216,7 @@ var Inflate = function(options) {
 
   var opt = this.options;
 
-  // Force sWindow size for `raw` data, if not set directly,
+  // Force window size for `raw` data, if not set directly,
   // because we have no header for autodetect.
   if (opt.raw && (opt.windowBits >= 0) && (opt.windowBits < 16)) {
     opt.windowBits = -opt.windowBits;
@@ -24024,7 +24230,7 @@ var Inflate = function(options) {
   }
 
   // Gzip header has no info about windows size, we can do autodetect only
-  // for deflate. So, if sWindow size not set, force it to max when gzip possible
+  // for deflate. So, if window size not set, force it to max when gzip possible
   if ((opt.windowBits > 15) && (opt.windowBits < 48)) {
     // bit 3 (16) -> gzipped data
     // bit 4 (32) -> autodetect gzip/deflate
@@ -24089,6 +24295,10 @@ Inflate.prototype.push = function(data, mode) {
   var status, _mode;
   var next_out_utf8, tail, utf8str;
 
+  // Flag to properly process Z_BUF_ERROR on testing inflate call
+  // when we check that all output data was flushed.
+  var allowBufError = false;
+
   if (this.ended) { return false; }
   _mode = (mode === ~~mode) ? mode : ((mode === true) ? c.Z_FINISH : c.Z_NO_FLUSH);
 
@@ -24113,6 +24323,11 @@ Inflate.prototype.push = function(data, mode) {
     }
 
     status = zlib_inflate.inflate(strm, c.Z_NO_FLUSH);    /* no bad return value */
+
+    if (status === c.Z_BUF_ERROR && allowBufError === true) {
+      status = c.Z_OK;
+      allowBufError = false;
+    }
 
     if (status !== c.Z_STREAM_END && status !== c.Z_OK) {
       this.onEnd(status);
@@ -24142,7 +24357,19 @@ Inflate.prototype.push = function(data, mode) {
         }
       }
     }
-  } while ((strm.avail_in > 0) && status !== c.Z_STREAM_END);
+
+    // When no more input data, we should check that internal inflate buffers
+    // are flushed. The only way to do it when avail_out = 0 - run one more
+    // inflate pass. But if output data not exists, inflate return Z_BUF_ERROR.
+    // Here we set flag to process this error properly.
+    //
+    // NOTE. Deflate does not return error in this case and does not needs such
+    // logic.
+    if (strm.avail_in === 0 && strm.avail_out === 0) {
+      allowBufError = true;
+    }
+
+  } while ((strm.avail_in > 0 || strm.avail_out === 0) && status !== c.Z_STREAM_END);
 
   if (status === c.Z_STREAM_END) {
     _mode = c.Z_FINISH;
@@ -24289,7 +24516,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":86,"./utils/strings":87,"./zlib/constants":89,"./zlib/gzheader":92,"./zlib/inflate.js":94,"./zlib/messages":96,"./zlib/zstream":98}],86:[function(_dereq_,module,exports){
+},{"./utils/common":87,"./utils/strings":88,"./zlib/constants":90,"./zlib/gzheader":93,"./zlib/inflate.js":95,"./zlib/messages":97,"./zlib/zstream":99}],87:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -24393,7 +24620,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],87:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -24580,7 +24807,7 @@ exports.utf8border = function(buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":86}],88:[function(_dereq_,module,exports){
+},{"./common":87}],89:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -24614,7 +24841,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 module.exports = {
 
   /* Allowed flush values; see deflate() and inflate() below for details */
@@ -24663,7 +24890,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],90:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -24706,7 +24933,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],91:[function(_dereq_,module,exports){
+},{}],92:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -24772,7 +24999,7 @@ var Z_DEFLATED  = 8;
 var MAX_MEM_LEVEL = 9;
 /* Maximum value for memLevel in deflateInit2 */
 var MAX_WBITS = 15;
-/* 32K LZ77 sWindow */
+/* 32K LZ77 window */
 var DEF_MEM_LEVEL = 8;
 
 
@@ -24927,13 +25154,13 @@ function longest_match(s, cur_match) {
   var limit = (s.strstart > (s.w_size - MIN_LOOKAHEAD)) ?
       s.strstart - (s.w_size - MIN_LOOKAHEAD) : 0/*NIL*/;
 
-  var _win = s.sWindow; // shortcut
+  var _win = s.window; // shortcut
 
   var wmask = s.w_mask;
   var prev  = s.prev;
 
   /* Stop when cur_match becomes <= limit. To simplify the code,
-   * we prevent matches with the string of sWindow index 0.
+   * we prevent matches with the string of window index 0.
    */
 
   var strend = s.strstart + MAX_MATCH;
@@ -24997,7 +25224,7 @@ function longest_match(s, cur_match) {
              _win[++scan] === _win[++match] && _win[++scan] === _win[++match] &&
              scan < strend);
 
-    // Assert(scan <= s->sWindow+(unsigned)(s->window_size-1), "wild scan");
+    // Assert(scan <= s->window+(unsigned)(s->window_size-1), "wild scan");
 
     len = MAX_MATCH - (strend - scan);
     scan = strend - MAX_MATCH;
@@ -25021,7 +25248,7 @@ function longest_match(s, cur_match) {
 
 
 /* ===========================================================================
- * Fill the sWindow when the lookahead becomes insufficient.
+ * Fill the window when the lookahead becomes insufficient.
  * Updates strstart and lookahead.
  *
  * IN assertion: lookahead < MIN_LOOKAHEAD
@@ -25054,12 +25281,12 @@ function fill_window(s) {
     //}
 
 
-    /* If the sWindow is almost full and there is insufficient lookahead,
+    /* If the window is almost full and there is insufficient lookahead,
      * move the upper half to the lower one to make room in the upper half.
      */
     if (s.strstart >= _w_size + (_w_size - MIN_LOOKAHEAD)) {
 
-      utils.arraySet(s.sWindow, s.sWindow, _w_size, _w_size, 0);
+      utils.arraySet(s.window, s.window, _w_size, _w_size, 0);
       s.match_start -= _w_size;
       s.strstart -= _w_size;
       /* we now have strstart >= MAX_DIST */
@@ -25107,22 +25334,22 @@ function fill_window(s) {
      * If there was sliding, more >= WSIZE. So in all cases, more >= 2.
      */
     //Assert(more >= 2, "more < 2");
-    n = read_buf(s.strm, s.sWindow, s.strstart + s.lookahead, more);
+    n = read_buf(s.strm, s.window, s.strstart + s.lookahead, more);
     s.lookahead += n;
 
     /* Initialize the hash value now that we have some input: */
     if (s.lookahead + s.insert >= MIN_MATCH) {
       str = s.strstart - s.insert;
-      s.ins_h = s.sWindow[str];
+      s.ins_h = s.window[str];
 
-      /* UPDATE_HASH(s, s->ins_h, s->sWindow[str + 1]); */
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[str + 1]) & s.hash_mask;
+      /* UPDATE_HASH(s, s->ins_h, s->window[str + 1]); */
+      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[str + 1]) & s.hash_mask;
 //#if MIN_MATCH != 3
 //        Call update_hash() MIN_MATCH-3 more times
 //#endif
       while (s.insert) {
-        /* UPDATE_HASH(s, s->ins_h, s->sWindow[str + MIN_MATCH-1]); */
-        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[str + MIN_MATCH-1]) & s.hash_mask;
+        /* UPDATE_HASH(s, s->ins_h, s->window[str + MIN_MATCH-1]); */
+        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[str + MIN_MATCH-1]) & s.hash_mask;
 
         s.prev[str & s.w_mask] = s.head[s.ins_h];
         s.head[s.ins_h] = str;
@@ -25152,23 +25379,23 @@ function fill_window(s) {
 //
 //    if (s.high_water < curr) {
 //      /* Previous high water mark below current data -- zero WIN_INIT
-//       * bytes or up to end of sWindow, whichever is less.
+//       * bytes or up to end of window, whichever is less.
 //       */
 //      init = s.window_size - curr;
 //      if (init > WIN_INIT)
 //        init = WIN_INIT;
-//      zmemzero(s->sWindow + curr, (unsigned)init);
+//      zmemzero(s->window + curr, (unsigned)init);
 //      s->high_water = curr + init;
 //    }
 //    else if (s->high_water < (ulg)curr + WIN_INIT) {
 //      /* High water mark at or above current data, but below current data
 //       * plus WIN_INIT -- zero out to current data plus WIN_INIT, or up
-//       * to end of sWindow, whichever is less.
+//       * to end of window, whichever is less.
 //       */
 //      init = (ulg)curr + WIN_INIT - s->high_water;
 //      if (init > s->window_size - s->high_water)
 //        init = s->window_size - s->high_water;
-//      zmemzero(s->sWindow + s->high_water, (unsigned)init);
+//      zmemzero(s->window + s->high_water, (unsigned)init);
 //      s->high_water += init;
 //    }
 //  }
@@ -25184,7 +25411,7 @@ function fill_window(s) {
  * uncompressible data is probably not useful. This function is used
  * only for the level=0 compression option.
  * NOTE: this function should be optimized to avoid extra copying from
- * sWindow to pending_buf.
+ * window to pending_buf.
  */
 function deflate_stored(s, flush) {
   /* Stored blocks are limited to 0xffff bytes, pending_buf is limited
@@ -25198,7 +25425,7 @@ function deflate_stored(s, flush) {
 
   /* Copy as much as possible from input to output: */
   for (;;) {
-    /* Fill the sWindow as much as possible: */
+    /* Fill the window as much as possible: */
     if (s.lookahead <= 1) {
 
       //Assert(s->strstart < s->w_size+MAX_DIST(s) ||
@@ -25304,13 +25531,13 @@ function deflate_fast(s, flush) {
       }
     }
 
-    /* Insert the string sWindow[strstart .. strstart+2] in the
+    /* Insert the string window[strstart .. strstart+2] in the
      * dictionary, and set hash_head to the head of the hash chain:
      */
     hash_head = 0/*NIL*/;
     if (s.lookahead >= MIN_MATCH) {
       /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
+      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
       hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
       s.head[s.ins_h] = s.strstart;
       /***/
@@ -25321,7 +25548,7 @@ function deflate_fast(s, flush) {
      */
     if (hash_head !== 0/*NIL*/ && ((s.strstart - hash_head) <= (s.w_size - MIN_LOOKAHEAD))) {
       /* To simplify the code, we prevent matches with the string
-       * of sWindow index 0 (in particular we have to avoid a match
+       * of window index 0 (in particular we have to avoid a match
        * of the string with itself at the start of the input file).
        */
       s.match_length = longest_match(s, hash_head);
@@ -25344,7 +25571,7 @@ function deflate_fast(s, flush) {
         do {
           s.strstart++;
           /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
+          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
           hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
           s.head[s.ins_h] = s.strstart;
           /***/
@@ -25357,9 +25584,9 @@ function deflate_fast(s, flush) {
       {
         s.strstart += s.match_length;
         s.match_length = 0;
-        s.ins_h = s.sWindow[s.strstart];
-        /* UPDATE_HASH(s, s.ins_h, s.sWindow[s.strstart+1]); */
-        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[s.strstart + 1]) & s.hash_mask;
+        s.ins_h = s.window[s.strstart];
+        /* UPDATE_HASH(s, s.ins_h, s.window[s.strstart+1]); */
+        s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + 1]) & s.hash_mask;
 
 //#if MIN_MATCH != 3
 //                Call UPDATE_HASH() MIN_MATCH-3 more times
@@ -25370,9 +25597,9 @@ function deflate_fast(s, flush) {
       }
     } else {
       /* No match, output a literal byte */
-      //Tracevv((stderr,"%c", s.sWindow[s.strstart]));
-      /*** _tr_tally_lit(s, s.sWindow[s.strstart], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.sWindow[s.strstart]);
+      //Tracevv((stderr,"%c", s.window[s.strstart]));
+      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+      bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
 
       s.lookahead--;
       s.strstart++;
@@ -25410,7 +25637,7 @@ function deflate_fast(s, flush) {
 /* ===========================================================================
  * Same as above, but achieves better compression. We use a lazy
  * evaluation for matches: a match is finally adopted only if there is
- * no better match at the next sWindow position.
+ * no better match at the next window position.
  */
 function deflate_slow(s, flush) {
   var hash_head;          /* head of hash chain */
@@ -25433,13 +25660,13 @@ function deflate_slow(s, flush) {
       if (s.lookahead === 0) { break; } /* flush the current block */
     }
 
-    /* Insert the string sWindow[strstart .. strstart+2] in the
+    /* Insert the string window[strstart .. strstart+2] in the
      * dictionary, and set hash_head to the head of the hash chain:
      */
     hash_head = 0/*NIL*/;
     if (s.lookahead >= MIN_MATCH) {
       /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
+      s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
       hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
       s.head[s.ins_h] = s.strstart;
       /***/
@@ -25454,7 +25681,7 @@ function deflate_slow(s, flush) {
     if (hash_head !== 0/*NIL*/ && s.prev_length < s.max_lazy_match &&
         s.strstart - hash_head <= (s.w_size-MIN_LOOKAHEAD)/*MAX_DIST(s)*/) {
       /* To simplify the code, we prevent matches with the string
-       * of sWindow index 0 (in particular we have to avoid a match
+       * of window index 0 (in particular we have to avoid a match
        * of the string with itself at the start of the input file).
        */
       s.match_length = longest_match(s, hash_head);
@@ -25491,7 +25718,7 @@ function deflate_slow(s, flush) {
       do {
         if (++s.strstart <= max_insert) {
           /*** INSERT_STRING(s, s.strstart, hash_head); ***/
-          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.sWindow[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
+          s.ins_h = ((s.ins_h << s.hash_shift) ^ s.window[s.strstart + MIN_MATCH - 1]) & s.hash_mask;
           hash_head = s.prev[s.strstart & s.w_mask] = s.head[s.ins_h];
           s.head[s.ins_h] = s.strstart;
           /***/
@@ -25515,9 +25742,9 @@ function deflate_slow(s, flush) {
        * single literal. If there was a match but the current match
        * is longer, truncate the previous match to a single literal.
        */
-      //Tracevv((stderr,"%c", s->sWindow[s->strstart-1]));
-      /*** _tr_tally_lit(s, s.sWindow[s.strstart-1], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.sWindow[s.strstart-1]);
+      //Tracevv((stderr,"%c", s->window[s->strstart-1]));
+      /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
+      bflush = trees._tr_tally(s, 0, s.window[s.strstart-1]);
 
       if (bflush) {
         /*** FLUSH_BLOCK_ONLY(s, 0) ***/
@@ -25540,9 +25767,9 @@ function deflate_slow(s, flush) {
   }
   //Assert (flush != Z_NO_FLUSH, "no flush?");
   if (s.match_available) {
-    //Tracevv((stderr,"%c", s->sWindow[s->strstart-1]));
-    /*** _tr_tally_lit(s, s.sWindow[s.strstart-1], bflush); ***/
-    bflush = trees._tr_tally(s, 0, s.sWindow[s.strstart-1]);
+    //Tracevv((stderr,"%c", s->window[s->strstart-1]));
+    /*** _tr_tally_lit(s, s.window[s.strstart-1], bflush); ***/
+    bflush = trees._tr_tally(s, 0, s.window[s.strstart-1]);
 
     s.match_available = 0;
   }
@@ -25579,7 +25806,7 @@ function deflate_rle(s, flush) {
   var prev;              /* byte at distance one to match */
   var scan, strend;      /* scan goes up to strend for length of run */
 
-  var _win = s.sWindow;
+  var _win = s.window;
 
   for (;;) {
     /* Make sure that we always have enough lookahead, except
@@ -25613,7 +25840,7 @@ function deflate_rle(s, flush) {
           s.match_length = s.lookahead;
         }
       }
-      //Assert(scan <= s->sWindow+(uInt)(s->window_size-1), "wild scan");
+      //Assert(scan <= s->window+(uInt)(s->window_size-1), "wild scan");
     }
 
     /* Emit match if have run of MIN_MATCH or longer, else emit literal */
@@ -25628,9 +25855,9 @@ function deflate_rle(s, flush) {
       s.match_length = 0;
     } else {
       /* No match, output a literal byte */
-      //Tracevv((stderr,"%c", s->sWindow[s->strstart]));
-      /*** _tr_tally_lit(s, s.sWindow[s.strstart], bflush); ***/
-      bflush = trees._tr_tally(s, 0, s.sWindow[s.strstart]);
+      //Tracevv((stderr,"%c", s->window[s->strstart]));
+      /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+      bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
 
       s.lookahead--;
       s.strstart++;
@@ -25686,9 +25913,9 @@ function deflate_huff(s, flush) {
 
     /* Output a literal byte */
     s.match_length = 0;
-    //Tracevv((stderr,"%c", s->sWindow[s->strstart]));
-    /*** _tr_tally_lit(s, s.sWindow[s.strstart], bflush); ***/
-    bflush = trees._tr_tally(s, 0, s.sWindow[s.strstart]);
+    //Tracevv((stderr,"%c", s->window[s->strstart]));
+    /*** _tr_tally_lit(s, s.window[s.strstart], bflush); ***/
+    bflush = trees._tr_tally(s, 0, s.window[s.strstart]);
     s.lookahead--;
     s.strstart++;
     if (bflush) {
@@ -25791,12 +26018,12 @@ function DeflateState() {
   this.method = Z_DEFLATED; /* can only be DEFLATED */
   this.last_flush = -1;   /* value of flush param for previous deflate call */
 
-  this.w_size = 0;  /* LZ77 sWindow size (32K by default) */
+  this.w_size = 0;  /* LZ77 window size (32K by default) */
   this.w_bits = 0;  /* log2(w_size)  (8..16) */
   this.w_mask = 0;  /* w_size - 1 */
 
-  this.sWindow = null;
-  /* Sliding sWindow. Input bytes are read into the second half of the sWindow,
+  this.window = null;
+  /* Sliding window. Input bytes are read into the second half of the window,
    * and move to the first half later to keep a dictionary of at least wSize
    * bytes. With this organization, matches are limited to a distance of
    * wSize-MAX_MATCH bytes, but this ensures that IO is always
@@ -25804,14 +26031,14 @@ function DeflateState() {
    */
 
   this.window_size = 0;
-  /* Actual size of sWindow: 2*wSize, except when the user input buffer
-   * is directly used as sliding sWindow.
+  /* Actual size of window: 2*wSize, except when the user input buffer
+   * is directly used as sliding window.
    */
 
   this.prev = null;
   /* Link to older string with same hash index. To limit the size of this
    * array to 64K, this link is maintained only for the last 32K strings.
-   * An index in this array is thus a sWindow index modulo 32K.
+   * An index in this array is thus a window index modulo 32K.
    */
 
   this.head = null;   /* Heads of the hash chains or NIL. */
@@ -25829,8 +26056,8 @@ function DeflateState() {
    */
 
   this.block_start = 0;
-  /* sWindow position at the beginning of the current output block. Gets
-   * negative when the sWindow is moved backwards.
+  /* Window position at the beginning of the current output block. Gets
+   * negative when the window is moved backwards.
    */
 
   this.match_length = 0;      /* length of best match */
@@ -25838,7 +26065,7 @@ function DeflateState() {
   this.match_available = 0;   /* set if previous match exists */
   this.strstart = 0;          /* start of string to insert */
   this.match_start = 0;       /* start of matching string */
-  this.lookahead = 0;         /* number of valid bytes ahead in sWindow */
+  this.lookahead = 0;         /* number of valid bytes ahead in window */
 
   this.prev_length = 0;
   /* Length of the best match at previous step. Matches not greater than this
@@ -25918,7 +26145,7 @@ function DeflateState() {
    * limiting lit_bufsize to 64K:
    *   - frequencies can be kept in 16 bit counters
    *   - if compression is not successful for the first block, all input
-   *     data is still in the sWindow so we can still emit a stored block even
+   *     data is still in the window so we can still emit a stored block even
    *     when input comes from standard input.  (This can also be done for
    *     all blocks if lit_bufsize is not greater than 32K.)
    *   - if compression is not successful for a file smaller than 64K, we can
@@ -25944,7 +26171,7 @@ function DeflateState() {
   this.opt_len = 0;       /* bit length of current block with optimal trees */
   this.static_len = 0;    /* bit length of current block with static trees */
   this.matches = 0;       /* number of string matches in current block */
-  this.insert = 0;        /* bytes at end of sWindow left to insert */
+  this.insert = 0;        /* bytes at end of window left to insert */
 
 
   this.bi_buf = 0;
@@ -25956,10 +26183,10 @@ function DeflateState() {
    * are always zero.
    */
 
-  // Used for sWindow memory init. We safely ignore it for JS. That makes
+  // Used for window memory init. We safely ignore it for JS. That makes
   // sense only for pointers and memory check tools.
   //this.high_water = 0;
-  /* High water mark offset in sWindow for initialized bytes -- bytes above
+  /* High water mark offset in window for initialized bytes -- bytes above
    * this are set to zero in order to avoid memory check warnings when
    * longest match routines access bytes past the input.  This is then
    * updated to the new high water mark.
@@ -26044,7 +26271,7 @@ function deflateInit2(strm, level, method, windowBits, memLevel, strategy) {
   if (windowBits === 8) {
     windowBits = 9;
   }
-  /* until 256-byte sWindow bug fixed */
+  /* until 256-byte window bug fixed */
 
   var s = new DeflateState();
 
@@ -26062,12 +26289,12 @@ function deflateInit2(strm, level, method, windowBits, memLevel, strategy) {
   s.hash_mask = s.hash_size - 1;
   s.hash_shift = ~~((s.hash_bits + MIN_MATCH - 1) / MIN_MATCH);
 
-  s.sWindow = new utils.Buf8(s.w_size * 2);
+  s.window = new utils.Buf8(s.w_size * 2);
   s.head = new utils.Buf16(s.hash_size);
   s.prev = new utils.Buf16(s.w_size);
 
   // Don't need mem init magic for JS.
-  //s.high_water = 0;  /* nothing written to s->sWindow yet */
+  //s.high_water = 0;  /* nothing written to s->window yet */
 
   s.lit_bufsize = 1 << (memLevel + 6); /* 16K elements by default */
 
@@ -26473,7 +26700,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":86,"./adler32":88,"./crc32":90,"./messages":96,"./trees":97}],92:[function(_dereq_,module,exports){
+},{"../utils/common":87,"./adler32":89,"./crc32":91,"./messages":97,"./trees":98}],93:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -26515,7 +26742,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],93:[function(_dereq_,module,exports){
+},{}],94:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -26567,10 +26794,11 @@ module.exports = function inflate_fast(strm, start) {
 //#ifdef INFLATE_STRICT
   var dmax;                   /* maximum distance from zlib header */
 //#endif
-  var wsize;                  /* sWindow size or zero if not using sWindow */
-  var whave;                  /* valid bytes in the sWindow */
-  var wnext;                  /* sWindow write index */
-  var sWindow;                 /* allocated sliding sWindow, if wsize != 0 */
+  var wsize;                  /* window size or zero if not using window */
+  var whave;                  /* valid bytes in the window */
+  var wnext;                  /* window write index */
+  // Use `s_window` instead `window`, avoid conflict with instrumentation tools
+  var s_window;               /* allocated sliding window, if wsize != 0 */
   var hold;                   /* local strm.hold */
   var bits;                   /* local strm.bits */
   var lcode;                  /* local strm.lencode */
@@ -26579,7 +26807,7 @@ module.exports = function inflate_fast(strm, start) {
   var dmask;                  /* mask for first level of distance codes */
   var here;                   /* retrieved table entry */
   var op;                     /* code bits, operation, extra bits, or */
-                              /*  sWindow position, sWindow bytes to copy */
+                              /*  window position, window bytes to copy */
   var len;                    /* match length, unused bytes */
   var dist;                   /* match distance */
   var from;                   /* where to copy match from */
@@ -26604,7 +26832,7 @@ module.exports = function inflate_fast(strm, start) {
   wsize = state.wsize;
   whave = state.whave;
   wnext = state.wnext;
-  sWindow = state.sWindow;
+  s_window = state.window;
   hold = state.hold;
   bits = state.bits;
   lcode = state.lencode;
@@ -26690,8 +26918,8 @@ module.exports = function inflate_fast(strm, start) {
             bits -= op;
             //Tracevv((stderr, "inflate:         distance %u\n", dist));
             op = _out - beg;                /* max distance in output */
-            if (dist > op) {                /* see if copy from sWindow */
-              op = dist - op;               /* distance back in sWindow */
+            if (dist > op) {                /* see if copy from window */
+              op = dist - op;               /* distance back in window */
               if (op > whave) {
                 if (state.sane) {
                   strm.msg = 'invalid distance too far back';
@@ -26721,45 +26949,45 @@ module.exports = function inflate_fast(strm, start) {
 //                }
 //#endif
               }
-              from = 0; // sWindow index
-              from_source = sWindow;
+              from = 0; // window index
+              from_source = s_window;
               if (wnext === 0) {           /* very common case */
                 from += wsize - op;
-                if (op < len) {         /* some from sWindow */
+                if (op < len) {         /* some from window */
                   len -= op;
                   do {
-                    output[_out++] = sWindow[from++];
+                    output[_out++] = s_window[from++];
                   } while (--op);
                   from = _out - dist;  /* rest from output */
                   from_source = output;
                 }
               }
-              else if (wnext < op) {      /* wrap around sWindow */
+              else if (wnext < op) {      /* wrap around window */
                 from += wsize + wnext - op;
                 op -= wnext;
-                if (op < len) {         /* some from end of sWindow */
+                if (op < len) {         /* some from end of window */
                   len -= op;
                   do {
-                    output[_out++] = sWindow[from++];
+                    output[_out++] = s_window[from++];
                   } while (--op);
                   from = 0;
-                  if (wnext < len) {  /* some from start of sWindow */
+                  if (wnext < len) {  /* some from start of window */
                     op = wnext;
                     len -= op;
                     do {
-                      output[_out++] = sWindow[from++];
+                      output[_out++] = s_window[from++];
                     } while (--op);
                     from = _out - dist;      /* rest from output */
                     from_source = output;
                   }
                 }
               }
-              else {                      /* contiguous in sWindow */
+              else {                      /* contiguous in window */
                 from += wnext - op;
-                if (op < len) {         /* some from sWindow */
+                if (op < len) {         /* some from window */
                   len -= op;
                   do {
-                    output[_out++] = sWindow[from++];
+                    output[_out++] = s_window[from++];
                   } while (--op);
                   from = _out - dist;  /* rest from output */
                   from_source = output;
@@ -26842,7 +27070,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],94:[function(_dereq_,module,exports){
+},{}],95:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -26933,7 +27161,7 @@ var ENOUGH_DISTS = 592;
 //var ENOUGH =  (ENOUGH_LENS+ENOUGH_DISTS);
 
 var MAX_WBITS = 15;
-/* 32K LZ77 sWindow */
+/* 32K LZ77 window */
 var DEF_WBITS = MAX_WBITS;
 
 
@@ -26957,12 +27185,12 @@ function InflateState() {
   // TODO: may be {}
   this.head = null;           /* where to save gzip header information */
 
-  /* sliding sWindow */
-  this.wbits = 0;             /* log base 2 of requested sWindow size */
-  this.wsize = 0;             /* sWindow size or zero if not using sWindow */
-  this.whave = 0;             /* valid bytes in the sWindow */
-  this.wnext = 0;             /* sWindow write index */
-  this.sWindow = null;         /* allocated sliding sWindow, if needed */
+  /* sliding window */
+  this.wbits = 0;             /* log base 2 of requested window size */
+  this.wsize = 0;             /* window size or zero if not using window */
+  this.whave = 0;             /* valid bytes in the window */
+  this.wnext = 0;             /* window write index */
+  this.window = null;         /* allocated sliding window, if needed */
 
   /* bit accumulator */
   this.hold = 0;              /* input bit accumulator */
@@ -27062,12 +27290,12 @@ function inflateReset2(strm, windowBits) {
     }
   }
 
-  /* set number of sWindow bits, free sWindow if different */
+  /* set number of window bits, free window if different */
   if (windowBits && (windowBits < 8 || windowBits > 15)) {
     return Z_STREAM_ERROR;
   }
-  if (state.sWindow !== null && state.wbits !== windowBits) {
-    state.sWindow = null;
+  if (state.window !== null && state.wbits !== windowBits) {
+    state.window = null;
   }
 
   /* update state and reset the rest of it */
@@ -27088,7 +27316,7 @@ function inflateInit2(strm, windowBits) {
   //if (state === Z_NULL) return Z_MEM_ERROR;
   //Tracev((stderr, "inflate: allocated\n"));
   strm.state = state;
-  state.sWindow = null/*Z_NULL*/;
+  state.window = null/*Z_NULL*/;
   ret = inflateReset2(strm, windowBits);
   if (ret !== Z_OK) {
     strm.state = null/*Z_NULL*/;
@@ -27150,15 +27378,15 @@ function fixedtables(state) {
 
 
 /*
- Update the sWindow with the last wsize (normally 32K) bytes written before
- returning.  If sWindow does not exist yet, create it.  This is only called
- when a sWindow is already in use, or when output has been written during this
+ Update the window with the last wsize (normally 32K) bytes written before
+ returning.  If window does not exist yet, create it.  This is only called
+ when a window is already in use, or when output has been written during this
  inflate call, but the end of the deflate stream has not been reached yet.
- It is also called to create a sWindow for dictionary data when a dictionary
+ It is also called to create a window for dictionary data when a dictionary
  is loaded.
 
  Providing output buffers larger than 32K to inflate() should provide a speed
- advantage, since only the last 32K of output is copied to the sliding sWindow
+ advantage, since only the last 32K of output is copied to the sliding window
  upon return from inflate(), and since all distances after the first 32K of
  output will fall in the output data, making match copies simpler and faster.
  The advantage may be dependent on the size of the processor's data caches.
@@ -27167,18 +27395,18 @@ function updatewindow(strm, src, end, copy) {
   var dist;
   var state = strm.state;
 
-  /* if it hasn't been done already, allocate space for the sWindow */
-  if (state.sWindow === null) {
+  /* if it hasn't been done already, allocate space for the window */
+  if (state.window === null) {
     state.wsize = 1 << state.wbits;
     state.wnext = 0;
     state.whave = 0;
 
-    state.sWindow = new utils.Buf8(state.wsize);
+    state.window = new utils.Buf8(state.wsize);
   }
 
-  /* copy state->wsize or less output bytes into the circular sWindow */
+  /* copy state->wsize or less output bytes into the circular window */
   if (copy >= state.wsize) {
-    utils.arraySet(state.sWindow,src, end - state.wsize, state.wsize, 0);
+    utils.arraySet(state.window,src, end - state.wsize, state.wsize, 0);
     state.wnext = 0;
     state.whave = state.wsize;
   }
@@ -27187,12 +27415,12 @@ function updatewindow(strm, src, end, copy) {
     if (dist > copy) {
       dist = copy;
     }
-    //zmemcpy(state->sWindow + state->wnext, end - copy, dist);
-    utils.arraySet(state.sWindow,src, end - copy, dist, state.wnext);
+    //zmemcpy(state->window + state->wnext, end - copy, dist);
+    utils.arraySet(state.window,src, end - copy, dist, state.wnext);
     copy -= dist;
     if (copy) {
-      //zmemcpy(state->sWindow, end - copy, copy);
-      utils.arraySet(state.sWindow,src, end - copy, copy, 0);
+      //zmemcpy(state->window, end - copy, copy);
+      utils.arraySet(state.window,src, end - copy, copy, 0);
       state.wnext = copy;
       state.whave = state.wsize;
     }
@@ -27311,7 +27539,7 @@ function inflate(strm, flush) {
         state.wbits = len;
       }
       else if (len > state.wbits) {
-        strm.msg = 'invalid sWindow size';
+        strm.msg = 'invalid window size';
         state.mode = BAD;
         break;
       }
@@ -28128,7 +28356,7 @@ function inflate(strm, flush) {
     case MATCH:
       if (left === 0) { break inf_leave; }
       copy = _out - left;
-      if (state.offset > copy) {         /* copy from sWindow */
+      if (state.offset > copy) {         /* copy from window */
         copy = state.offset - copy;
         if (copy > state.whave) {
           if (state.sane) {
@@ -28160,7 +28388,7 @@ function inflate(strm, flush) {
           from = state.wnext - copy;
         }
         if (copy > state.length) { copy = state.length; }
-        from_source = state.sWindow;
+        from_source = state.window;
       }
       else {                              /* copy from output */
         from_source = output;
@@ -28259,7 +28487,7 @@ function inflate(strm, flush) {
   /*
      Return from inflate(), updating the total counts and the check value.
      If there was no progress during the inflate() call, return a buffer
-     error.  Call updatewindow() to create and/or update the sWindow state.
+     error.  Call updatewindow() to create and/or update the window state.
      Note: a memory error from inflate() is non-recoverable.
    */
 
@@ -28304,8 +28532,8 @@ function inflateEnd(strm) {
   }
 
   var state = strm.state;
-  if (state.sWindow) {
-    state.sWindow = null;
+  if (state.window) {
+    state.window = null;
   }
   strm.state = null;
   return Z_OK;
@@ -28347,7 +28575,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":86,"./adler32":88,"./crc32":90,"./inffast":93,"./inftrees":95}],95:[function(_dereq_,module,exports){
+},{"../utils/common":87,"./adler32":89,"./crc32":91,"./inffast":94,"./inftrees":96}],96:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -28676,7 +28904,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":86}],96:[function(_dereq_,module,exports){
+},{"../utils/common":87}],97:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -28691,7 +28919,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],97:[function(_dereq_,module,exports){
+},{}],98:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -29231,7 +29459,7 @@ function copy_block(s, buf, len, header)
 //  while (len--) {
 //    put_byte(s, *buf++);
 //  }
-  utils.arraySet(s.pending_buf, s.sWindow, buf, len, s.pending);
+  utils.arraySet(s.pending_buf, s.window, buf, len, s.pending);
   s.pending += len;
 }
 
@@ -29892,7 +30120,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":86}],98:[function(_dereq_,module,exports){
+},{"../utils/common":87}],99:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -29923,7 +30151,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],99:[function(_dereq_,module,exports){
+},{}],100:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30154,7 +30382,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./util/mixin":135}],100:[function(_dereq_,module,exports){
+},{"./util/mixin":136}],101:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30181,7 +30409,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client/default":102,"./client/xhr":103}],101:[function(_dereq_,module,exports){
+},{"./client/default":103,"./client/xhr":104}],102:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30247,7 +30475,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],102:[function(_dereq_,module,exports){
+},{}],103:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30373,7 +30601,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../client":101}],103:[function(_dereq_,module,exports){
+},{"../client":102}],104:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30549,7 +30777,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":99,"../client":101,"../util/normalizeHeaderName":136,"../util/responsePromise":137,"when":132}],104:[function(_dereq_,module,exports){
+},{"../UrlBuilder":100,"../client":102,"../util/normalizeHeaderName":137,"../util/responsePromise":138,"when":133}],105:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30716,7 +30944,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"./client":101,"./client/default":102,"./util/mixin":135,"./util/responsePromise":137,"when":132}],105:[function(_dereq_,module,exports){
+},{"./client":102,"./client/default":103,"./util/mixin":136,"./util/responsePromise":138,"when":133}],106:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30828,7 +31056,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":104,"../mime":108,"../mime/registry":109,"when":132}],106:[function(_dereq_,module,exports){
+},{"../interceptor":105,"../mime":109,"../mime/registry":110,"when":133}],107:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30889,7 +31117,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../UrlBuilder":99,"../interceptor":104}],107:[function(_dereq_,module,exports){
+},{"../UrlBuilder":100,"../interceptor":105}],108:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -30945,7 +31173,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../interceptor":104,"../util/mixin":135,"../util/uriTemplate":139}],108:[function(_dereq_,module,exports){
+},{"../interceptor":105,"../util/mixin":136,"../util/uriTemplate":140}],109:[function(_dereq_,module,exports){
 /*
 * Copyright 2014 the original author or authors
 * @license MIT, see LICENSE.txt for details
@@ -31000,7 +31228,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],109:[function(_dereq_,module,exports){
+},{}],110:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31117,7 +31345,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../mime":108,"./type/application/hal":110,"./type/application/json":111,"./type/application/x-www-form-urlencoded":112,"./type/multipart/form-data":113,"./type/text/plain":114,"when":132}],110:[function(_dereq_,module,exports){
+},{"../mime":109,"./type/application/hal":111,"./type/application/json":112,"./type/application/x-www-form-urlencoded":113,"./type/multipart/form-data":114,"./type/text/plain":115,"when":133}],111:[function(_dereq_,module,exports){
 /*
  * Copyright 2013-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31258,7 +31486,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{"../../../interceptor/pathPrefix":106,"../../../interceptor/template":107,"../../../util/find":133,"../../../util/lazyPromise":134,"../../../util/responsePromise":137,"when":132}],111:[function(_dereq_,module,exports){
+},{"../../../interceptor/pathPrefix":107,"../../../interceptor/template":108,"../../../util/find":134,"../../../util/lazyPromise":135,"../../../util/responsePromise":138,"when":133}],112:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31307,7 +31535,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],112:[function(_dereq_,module,exports){
+},{}],113:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31399,7 +31627,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],113:[function(_dereq_,module,exports){
+},{}],114:[function(_dereq_,module,exports){
 /*
  * Copyright 2014 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31474,7 +31702,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],114:[function(_dereq_,module,exports){
+},{}],115:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -31505,7 +31733,7 @@ module.exports = ZStream;
 	// Boilerplate for AMD and Node
 ));
 
-},{}],115:[function(_dereq_,module,exports){
+},{}],116:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -31524,7 +31752,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./Scheduler":116,"./env":128,"./makePromise":130}],116:[function(_dereq_,module,exports){
+},{"./Scheduler":117,"./env":129,"./makePromise":131}],117:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -31606,7 +31834,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],117:[function(_dereq_,module,exports){
+},{}],118:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -31634,7 +31862,7 @@ define(function() {
 	return TimeoutError;
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-},{}],118:[function(_dereq_,module,exports){
+},{}],119:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -31691,7 +31919,7 @@ define(function() {
 
 
 
-},{}],119:[function(_dereq_,module,exports){
+},{}],120:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -31982,7 +32210,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../apply":118,"../state":131}],120:[function(_dereq_,module,exports){
+},{"../apply":119,"../state":132}],121:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32144,7 +32372,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],121:[function(_dereq_,module,exports){
+},{}],122:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32173,7 +32401,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],122:[function(_dereq_,module,exports){
+},{}],123:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32195,7 +32423,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../state":131}],123:[function(_dereq_,module,exports){
+},{"../state":132}],124:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32262,7 +32490,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],124:[function(_dereq_,module,exports){
+},{}],125:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32288,7 +32516,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],125:[function(_dereq_,module,exports){
+},{}],126:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32368,7 +32596,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../TimeoutError":117,"../env":128}],126:[function(_dereq_,module,exports){
+},{"../TimeoutError":118,"../env":129}],127:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32456,7 +32684,7 @@ define(function(_dereq_) {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
-},{"../env":128,"../format":129}],127:[function(_dereq_,module,exports){
+},{"../env":129,"../format":130}],128:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32496,7 +32724,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 
-},{}],128:[function(_dereq_,module,exports){
+},{}],129:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -32573,7 +32801,7 @@ define(function(_dereq_) {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":74}],129:[function(_dereq_,module,exports){
+},{"_process":75}],130:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -32631,7 +32859,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],130:[function(_dereq_,module,exports){
+},{}],131:[function(_dereq_,module,exports){
 (function (process){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
@@ -33562,7 +33790,7 @@ define(function() {
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
 }).call(this,_dereq_('_process'))
-},{"_process":74}],131:[function(_dereq_,module,exports){
+},{"_process":75}],132:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 /** @author Brian Cavalier */
 /** @author John Hann */
@@ -33599,7 +33827,7 @@ define(function() {
 });
 }(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
 
-},{}],132:[function(_dereq_,module,exports){
+},{}],133:[function(_dereq_,module,exports){
 /** @license MIT License (c) copyright 2010-2014 original author or authors */
 
 /**
@@ -33829,7 +34057,7 @@ define(function (_dereq_) {
 });
 })(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
 
-},{"./lib/Promise":115,"./lib/TimeoutError":117,"./lib/apply":118,"./lib/decorators/array":119,"./lib/decorators/flow":120,"./lib/decorators/fold":121,"./lib/decorators/inspect":122,"./lib/decorators/iterate":123,"./lib/decorators/progress":124,"./lib/decorators/timed":125,"./lib/decorators/unhandledRejection":126,"./lib/decorators/with":127}],133:[function(_dereq_,module,exports){
+},{"./lib/Promise":116,"./lib/TimeoutError":118,"./lib/apply":119,"./lib/decorators/array":120,"./lib/decorators/flow":121,"./lib/decorators/fold":122,"./lib/decorators/inspect":123,"./lib/decorators/iterate":124,"./lib/decorators/progress":125,"./lib/decorators/timed":126,"./lib/decorators/unhandledRejection":127,"./lib/decorators/with":128}],134:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -33872,7 +34100,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],134:[function(_dereq_,module,exports){
+},{}],135:[function(_dereq_,module,exports){
 /*
  * Copyright 2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -33929,7 +34157,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"when":132}],135:[function(_dereq_,module,exports){
+},{"when":133}],136:[function(_dereq_,module,exports){
 /*
  * Copyright 2012-2013 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -33979,7 +34207,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],136:[function(_dereq_,module,exports){
+},{}],137:[function(_dereq_,module,exports){
 /*
  * Copyright 2012 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -34019,7 +34247,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],137:[function(_dereq_,module,exports){
+},{}],138:[function(_dereq_,module,exports){
 /*
  * Copyright 2014-2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -34161,7 +34389,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./normalizeHeaderName":136,"when":132}],138:[function(_dereq_,module,exports){
+},{"./normalizeHeaderName":137,"when":133}],139:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -34342,7 +34570,7 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{}],139:[function(_dereq_,module,exports){
+},{}],140:[function(_dereq_,module,exports){
 /*
  * Copyright 2015 the original author or authors
  * @license MIT, see LICENSE.txt for details
@@ -34516,4 +34744,4 @@ define(function (_dereq_) {
 	// Boilerplate for AMD and Node
 ));
 
-},{"./uriEncoder":138}]},{},[1]);
+},{"./uriEncoder":139}]},{},[1]);

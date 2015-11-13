@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":4,"../lib/Shim.IE8":25}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/Shim.IE8":26}],2:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -277,7 +277,7 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Shared":24}],3:[function(_dereq_,module,exports){
+},{"./Shared":25}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -3746,7 +3746,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":5,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":21,"./Path":22,"./ReactorIO":23,"./Shared":24}],4:[function(_dereq_,module,exports){
+},{"./Crc":5,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":21,"./Path":22,"./ReactorIO":23,"./Shared":25}],4:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4053,7 +4053,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":6,"./Metrics.js":10,"./Overload":21,"./Shared":24}],5:[function(_dereq_,module,exports){
+},{"./Db.js":6,"./Metrics.js":10,"./Overload":21,"./Shared":25}],5:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -4698,7 +4698,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":3,"./Crc.js":5,"./Metrics.js":10,"./Overload":21,"./Shared":24}],7:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":5,"./Metrics.js":10,"./Overload":21,"./Shared":25}],7:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -4995,7 +4995,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":2,"./Path":22,"./Shared":24}],8:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./Path":22,"./Shared":25}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5354,7 +5354,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":22,"./Shared":24}],9:[function(_dereq_,module,exports){
+},{"./Path":22,"./Shared":25}],9:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -5569,7 +5569,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":24}],10:[function(_dereq_,module,exports){
+},{"./Shared":25}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5644,7 +5644,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":20,"./Shared":24}],11:[function(_dereq_,module,exports){
+},{"./Operation":20,"./Shared":25}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -5763,6 +5763,7 @@ module.exports = ChainReactor;
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
+	Serialiser = _dereq_('./Serialiser'),
 	Common;
 
 Common = {
@@ -5841,7 +5842,8 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return JSON.parse(data);
+		return Serialiser.parse(data);
+		//return JSON.parse(data);
 	},
 
 	/**
@@ -5850,7 +5852,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return JSON.stringify(data);
+		return Serialiser.stringify(data);
+		//return JSON.stringify(data);
 	},
 	
 	/**
@@ -6013,7 +6016,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":21}],14:[function(_dereq_,module,exports){
+},{"./Overload":21,"./Serialiser":24}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -7413,7 +7416,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":22,"./Shared":24}],21:[function(_dereq_,module,exports){
+},{"./Path":22,"./Shared":25}],21:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8021,7 +8024,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":24}],23:[function(_dereq_,module,exports){
+},{"./Shared":25}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8102,7 +8105,71 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":24}],24:[function(_dereq_,module,exports){
+},{"./Shared":25}],24:[function(_dereq_,module,exports){
+"use strict";
+
+var Serialiser = function () {
+
+};
+
+Serialiser.prototype.parse = function (data) {
+	return this._parse(JSON.parse(data));
+};
+
+Serialiser.prototype._parse = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types and restore them
+
+
+		// Iterate through the object's keys and parse
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				if (i.substr(0, 1) === '$') {
+					// This is a special object type, restore it
+					switch (i) {
+						case '$date':
+							return new Date(data[i]);
+					}
+				} else {
+					data[i] = this._parse(data[i]);
+				}
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+Serialiser.prototype.stringify = function (data) {
+	return JSON.stringify(this._stringify(data));
+};
+
+Serialiser.prototype._stringify = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types so they can be restored
+		if (data instanceof Date) {
+			return { $date: data.toISOString() };
+		}
+
+		// Iterate through the object's keys and serialise
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				data[i] = this._stringify(data[i]);
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+module.exports = new Serialiser();
+},{}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8113,7 +8180,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.337',
+	version: '1.3.345',
 	modules: {},
 	plugins: {},
 
@@ -8288,7 +8355,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Matching":16,"./Mixin.Sorting":17,"./Mixin.Triggers":18,"./Mixin.Updating":19,"./Overload":21}],25:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Matching":16,"./Mixin.Sorting":17,"./Mixin.Triggers":18,"./Mixin.Updating":19,"./Overload":21}],26:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {

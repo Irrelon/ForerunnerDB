@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/View":29,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/View":30,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":7,"../lib/Shim.IE8":28}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":29}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -276,7 +276,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":27}],4:[function(_dereq_,module,exports){
+},{"./Shared":28}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -547,7 +547,7 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Shared":27}],5:[function(_dereq_,module,exports){
+},{"./Shared":28}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -4016,7 +4016,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":8,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":27}],6:[function(_dereq_,module,exports){
+},{"./Crc":8,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":28}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4353,7 +4353,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":5,"./Shared":27}],7:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":28}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4660,7 +4660,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":9,"./Metrics.js":13,"./Overload":24,"./Shared":27}],8:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":13,"./Overload":24,"./Shared":28}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -5305,7 +5305,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":13,"./Overload":24,"./Shared":27}],10:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":13,"./Overload":24,"./Shared":28}],10:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5602,7 +5602,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":4,"./Path":25,"./Shared":27}],11:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":25,"./Shared":28}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5961,7 +5961,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":25,"./Shared":27}],12:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6176,7 +6176,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":27}],13:[function(_dereq_,module,exports){
+},{"./Shared":28}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6251,7 +6251,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":23,"./Shared":27}],14:[function(_dereq_,module,exports){
+},{"./Operation":23,"./Shared":28}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6370,6 +6370,7 @@ module.exports = ChainReactor;
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
+	Serialiser = _dereq_('./Serialiser'),
 	Common;
 
 Common = {
@@ -6448,7 +6449,8 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return JSON.parse(data);
+		return Serialiser.parse(data);
+		//return JSON.parse(data);
 	},
 
 	/**
@@ -6457,7 +6459,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return JSON.stringify(data);
+		return Serialiser.stringify(data);
+		//return JSON.stringify(data);
 	},
 	
 	/**
@@ -6620,7 +6623,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":24}],17:[function(_dereq_,module,exports){
+},{"./Overload":24,"./Serialiser":27}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -8020,7 +8023,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":25,"./Shared":27}],24:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],24:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8628,7 +8631,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":27}],26:[function(_dereq_,module,exports){
+},{"./Shared":28}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8709,7 +8712,71 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":27}],27:[function(_dereq_,module,exports){
+},{"./Shared":28}],27:[function(_dereq_,module,exports){
+"use strict";
+
+var Serialiser = function () {
+
+};
+
+Serialiser.prototype.parse = function (data) {
+	return this._parse(JSON.parse(data));
+};
+
+Serialiser.prototype._parse = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types and restore them
+
+
+		// Iterate through the object's keys and parse
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				if (i.substr(0, 1) === '$') {
+					// This is a special object type, restore it
+					switch (i) {
+						case '$date':
+							return new Date(data[i]);
+					}
+				} else {
+					data[i] = this._parse(data[i]);
+				}
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+Serialiser.prototype.stringify = function (data) {
+	return JSON.stringify(this._stringify(data));
+};
+
+Serialiser.prototype._stringify = function (data) {
+	var i;
+
+	if (typeof data === 'object') {
+		// Handle special object types so they can be restored
+		if (data instanceof Date) {
+			return { $date: data.toISOString() };
+		}
+
+		// Iterate through the object's keys and serialise
+		for (i in data) {
+			if (data.hasOwnProperty(i)) {
+				data[i] = this._stringify(data[i]);
+			}
+		}
+	}
+
+	// The data is a basic type
+	return data;
+};
+
+module.exports = new Serialiser();
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8720,7 +8787,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.337',
+	version: '1.3.345',
 	modules: {},
 	plugins: {},
 
@@ -8895,7 +8962,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],28:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],29:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -9015,7 +9082,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],29:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10141,4 +10208,4 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":26,"./Shared":27}]},{},[1]);
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":26,"./Shared":28}]},{},[1]);
