@@ -29,6 +29,10 @@ Serialiser.prototype._parse = function (data, target) {
 					switch (i) {
 						case '$date':
 							return new Date(data[i]);
+
+						default:
+							target[i] = this._parse(data[i], target[i]);
+							break;
 					}
 				} else {
 					target[i] = this._parse(data[i], target[i]);

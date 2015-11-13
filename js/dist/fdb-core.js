@@ -8116,10 +8116,16 @@ Serialiser.prototype.parse = function (data) {
 	return this._parse(JSON.parse(data));
 };
 
-Serialiser.prototype._parse = function (data) {
+Serialiser.prototype._parse = function (data, target) {
 	var i;
 
 	if (typeof data === 'object') {
+		if (data instanceof Array) {
+			target = target || [];
+		} else {
+			target = target || {};
+		}
+
 		// Handle special object types and restore them
 
 
@@ -8131,23 +8137,29 @@ Serialiser.prototype._parse = function (data) {
 					switch (i) {
 						case '$date':
 							return new Date(data[i]);
+
+						default:
+							target[i] = this._parse(data[i], target[i]);
+							break;
 					}
 				} else {
-					data[i] = this._parse(data[i]);
+					target[i] = this._parse(data[i], target[i]);
 				}
 			}
 		}
+	} else {
+		target = data;
 	}
 
 	// The data is a basic type
-	return data;
+	return target;
 };
 
 Serialiser.prototype.stringify = function (data) {
 	return JSON.stringify(this._stringify(data));
 };
 
-Serialiser.prototype._stringify = function (data) {
+Serialiser.prototype._stringify = function (data, target) {
 	var i;
 
 	if (typeof data === 'object') {
@@ -8156,16 +8168,24 @@ Serialiser.prototype._stringify = function (data) {
 			return { $date: data.toISOString() };
 		}
 
+		if (data instanceof Array) {
+			target = target || [];
+		} else {
+			target = target || {};
+		}
+
 		// Iterate through the object's keys and serialise
 		for (i in data) {
 			if (data.hasOwnProperty(i)) {
-				data[i] = this._stringify(data[i]);
+				target[i] = this._stringify(data[i], target[i]);
 			}
 		}
+	} else {
+		target = data;
 	}
 
 	// The data is a basic type
-	return data;
+	return target;
 };
 
 module.exports = new Serialiser();
@@ -8180,7 +8200,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.345',
+	version: '1.3.348',
 	modules: {},
 	plugins: {},
 
