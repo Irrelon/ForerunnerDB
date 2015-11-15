@@ -70,6 +70,14 @@ Angular.extendCollection = function (Module) {
 				}
 			});
 
+			// Hook the angular watch event to update our data if the
+			// angular data is updated by content
+			scope.$watch(varName, function(newValue, oldValue ) {
+				console.log('fdb var change from angular');
+				console.log(oldValue);
+				console.log(newValue);
+			}, true);
+
 			// Hook the ForerunnerDB change event to inform angular of a change
 			self.on('change', link.callback);
 		} else {
