@@ -70,14 +70,6 @@ Angular.extendCollection = function (Module) {
 				}
 			});
 
-			// Hook the angular watch event to update our data if the
-			// angular data is updated by content
-			scope.$watch(varName, function(newValue, oldValue ) {
-				console.log('fdb var change from angular');
-				console.log(oldValue);
-				console.log(newValue);
-			}, true);
-
 			// Hook the ForerunnerDB change event to inform angular of a change
 			self.on('change', link.callback);
 		} else {
@@ -115,8 +107,9 @@ Angular.extendDocument = function (Module) {
 
 	Module.prototype.ng = function (scope, varName, options) {
 		var self = this,
-			link,
-			i;
+				watchUpdating = false,
+				link,
+				i;
 
 		if (scope && varName) {
 			self._ngLinks = self._ngLinks || [];
@@ -144,8 +137,23 @@ Angular.extendDocument = function (Module) {
 				}
 			});
 
+			// Hook the angular watch event to update our data if the
+			// angular data is updated by content
+			scope.$watch(varName, function(newValue) {
+				watchUpdating = true;
+				console.log('Updating', newValue);
+				self.update({}, newValue);
+				watchUpdating = false;
+			}, true);
+
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', link.callback);
+			self.on('change', function () {
+				if (!watchUpdating) {
+					link.callback.apply(this, arguments);
+				} else {
+					console.log('Ignoring update as it is a watch update');
+				}
+			});
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
