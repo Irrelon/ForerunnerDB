@@ -3,9 +3,13 @@
 var idCounter = 0,
 	Overload = require('./Overload'),
 	Serialiser = require('./Serialiser'),
-	Common;
+	Common,
+	serialiser = new Serialiser();
 
 Common = {
+	// Expose the serialiser object so it can be extended with new data handlers.
+	serialiser: serialiser,
+
 	/**
 	 * Gets / sets data in the item store. The store can be used to set and
 	 * retrieve data against a key. Useful for adding arbitrary key/value data
@@ -81,7 +85,7 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return Serialiser.parse(data);
+		return serialiser.parse(data);
 		//return JSON.parse(data);
 	},
 
@@ -91,7 +95,7 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return Serialiser.stringify(data);
+		return serialiser.stringify(data);
 		//return JSON.stringify(data);
 	},
 	
