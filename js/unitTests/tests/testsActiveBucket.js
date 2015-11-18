@@ -323,3 +323,46 @@ ForerunnerDB.moduleLoaded('ActiveBucket', function () {
 		 }*/
 	});
 });
+
+test('ActiveBucket - Add documents, check correct indexes with string-based sorting', function () {
+	var ab = new ForerunnerDB.shared.modules.ActiveBucket({
+			name: -1,
+			_id: 1
+		}),
+		names = ['Rob', 'Jim', 'Alice', 'Sam', 'Bob'],
+		_ids = ['15', '18', '22', '27', '33', '41', '47', '52'],
+		i, k,
+		testIndex,
+		testArr = [],
+		obj,
+		objs = [],
+		index;
+
+	for (i = 0; i < names.length; i++) {
+		for (k = 0; k < _ids.length; k++) {
+			obj = {
+				name: names[i],
+				_id: _ids[k]
+			};
+
+			objs.push(obj);
+			ab.insert(obj);
+		}
+	}
+
+	ok(ab.count() === 40, 'Correct number of items: ' + ab.count());
+
+	for (i = 0; i < objs.length; i++) {
+		obj = objs[i];
+
+		index = ab.index(obj);
+
+		if (testArr[index]) {
+			testArr.splice(index, 0, obj);
+		} else {
+			testArr[index] = obj;
+		}
+	}
+
+	ok(testArr[0].name === 'Sam' && testArr[0]._id === '15', 'Items at correct index');
+});
