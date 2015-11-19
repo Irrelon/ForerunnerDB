@@ -8141,6 +8141,26 @@ Serialiser.prototype.init = function () {
 };
 
 /**
+ * Register an encoder that can handle encoding for a particular
+ * object type.
+ * @param {String} handles The name of the handler e.g. $date.
+ * @param {Function} method The encoder method.
+ */
+Serialiser.prototype.registerEncoder = function (handles, method) {
+	this._encoder.push(function (data) {
+		var methodVal = method(data),
+				returnObj;
+
+		if (methodVal !== undefined) {
+			returnObj = {};
+			returnObj[handles] = methodVal;
+		}
+
+		return returnObj;
+	});
+};
+
+/**
  * Register a decoder that can handle decoding for a particular
  * object type.
  * @param {String} handles The name of the handler e.g. $date. When an object
@@ -8151,26 +8171,6 @@ Serialiser.prototype.init = function () {
  */
 Serialiser.prototype.registerDecoder = function (handles, method) {
 	this._decoder[handles] = method;
-};
-
-/**
- * Register an encoder that can handle encoding for a particular
- * object type.
- * @param {String} handles The name of the handler e.g. $date.
- * @param {Function} method The encoder method.
- */
-Serialiser.prototype.registerEncoder = function (handles, method) {
-	this._encoder.push(function (data) {
-		var methodVal = method(data),
-			returnObj;
-
-		if (methodVal !== undefined) {
-			returnObj = {};
-			returnObj[handles] = methodVal;
-		}
-
-		return returnObj;
-	});
 };
 
 /**
@@ -8306,7 +8306,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.356',
+	version: '1.3.357',
 	modules: {},
 	plugins: {},
 
