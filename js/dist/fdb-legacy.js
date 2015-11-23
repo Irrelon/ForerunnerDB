@@ -4441,7 +4441,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * Drops a collection group from the database.
  * @returns {boolean} True on success, false on failure.
  */
-CollectionGroup.prototype.drop = function () {
+CollectionGroup.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		var i,
 			collArr,
@@ -4470,6 +4470,8 @@ CollectionGroup.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;
@@ -5866,7 +5868,7 @@ FdbDocument.prototype._updateUnset = function (doc, prop) {
  * @memberof Document
  * @returns {boolean} True if successful, false if not.
  */
-FdbDocument.prototype.drop = function () {
+FdbDocument.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._db && this._name) {
 			if (this._db && this._db._document && this._db._document[this._name]) {
@@ -5876,6 +5878,8 @@ FdbDocument.prototype.drop = function () {
 				delete this._data;
 
 				this.emit('drop', this);
+
+				if (callback) { callback(false, true); }
 
 				return true;
 			}
@@ -6114,7 +6118,7 @@ Grid.prototype._collectionDropped = function (collection) {
  * @memberof Grid
  * @returns {boolean} True on success, false on failure.
  */
-Grid.prototype.drop = function () {
+Grid.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._from) {
 			// Remove data-binding
@@ -6135,6 +6139,8 @@ Grid.prototype.drop = function () {
 			}
 
 			this.emit('drop', this);
+
+			if (callback) { callback(false, true); }
 
 			delete this._selector;
 			delete this._template;
@@ -6836,7 +6842,7 @@ Highchart.prototype._hookEvents = function () {
 	self._collection.on('change', function () { self._changeListener.apply(self, arguments); });
 
 	// If the collection is dropped, clean up after ourselves
-	self._collection.on('drop', function () { self.drop.apply(self, arguments); });
+	self._collection.on('drop', function () { self.drop.apply(self); });
 };
 
 /**
@@ -6909,7 +6915,7 @@ Highchart.prototype._changeListener = function () {
  * Destroys the chart and all internal references.
  * @returns {Boolean}
  */
-Highchart.prototype.drop = function () {
+Highchart.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
 
@@ -6931,6 +6937,8 @@ Highchart.prototype.drop = function () {
 		delete this._collection;
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 
 		return true;
 	} else {
@@ -9297,7 +9305,7 @@ Tags = {
 		if (self.on) {
 			self.on('drop', function () {
 				// We've been dropped so remove ourselves from the tag map
-				self.tagRemove(self);
+				self.tagRemove(name);
 			});
 		}
 
@@ -9337,17 +9345,30 @@ Tags = {
 	/**
 	 * Drops all instances that are tagged with the passed tag name.
 	 * @param {String} name The tag to lookup.
-	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @param {Function} callback Callback once dropping has completed
+	 * for all instances that match the passed tag name.
 	 * @returns {boolean}
 	 */
-	tagDrop: function (name, dropStorage) {
+	tagDrop: function (name, callback) {
 		var arr = this.tagLookup(name),
+			dropCb,
+			dropCount,
 			i;
 
+		dropCb = function () {
+			dropCount--;
+
+			if (callback && dropCount === 0) {
+				callback(false);
+			}
+		};
+
 		if (arr.length) {
+			dropCount = arr.length;
+
 			// Loop the array and drop all items
-			for (i = 0; i < arr.length; i++) {
-				arr[i].drop(dropStorage);
+			for (i = arr.length - 1; i >= 0; i--) {
+				arr[i].drop(dropCb);
 			}
 		}
 
@@ -11617,7 +11638,7 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
-Overview.prototype.drop = function () {
+Overview.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
 
@@ -11638,6 +11659,8 @@ Overview.prototype.drop = function () {
 		delete this._name;
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;
@@ -12541,7 +12564,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this);
+			CollectionDrop.call(this);
 		}
 	},
 
@@ -12562,6 +12585,8 @@ Collection.prototype.drop = new Overload({
 						this._db.persist.drop(this._db._name + '::' + this._name, function () {
 							self._db.persist.drop(self._db._name + '::' + self._name + '::metaData', callback);
 						});
+
+						return CollectionDrop.call(this);
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
@@ -12572,10 +12597,10 @@ Collection.prototype.drop = new Overload({
 						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 					}
 				}
+			} else {
+				// Call the original method
+				return CollectionDrop.call(this, callback);
 			}
-
-			// Call the original method
-			CollectionDrop.apply(this, callback);
 		}
 	}
 });
@@ -13231,7 +13256,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.365',
+	version: '1.3.368',
 	modules: {},
 	plugins: {},
 
@@ -13918,7 +13943,7 @@ View.prototype.primaryKey = function () {
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
-View.prototype.drop = function () {
+View.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
@@ -13950,6 +13975,8 @@ View.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 
 		delete this._chain;
 		delete this._from;

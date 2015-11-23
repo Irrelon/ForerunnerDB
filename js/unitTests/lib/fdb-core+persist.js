@@ -4179,7 +4179,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * Drops a collection group from the database.
  * @returns {boolean} True on success, false on failure.
  */
-CollectionGroup.prototype.drop = function () {
+CollectionGroup.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		var i,
 			collArr,
@@ -4208,6 +4208,8 @@ CollectionGroup.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;
@@ -7266,7 +7268,7 @@ Tags = {
 		if (self.on) {
 			self.on('drop', function () {
 				// We've been dropped so remove ourselves from the tag map
-				self.tagRemove(self);
+				self.tagRemove(name);
 			});
 		}
 
@@ -7306,17 +7308,30 @@ Tags = {
 	/**
 	 * Drops all instances that are tagged with the passed tag name.
 	 * @param {String} name The tag to lookup.
-	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @param {Function} callback Callback once dropping has completed
+	 * for all instances that match the passed tag name.
 	 * @returns {boolean}
 	 */
-	tagDrop: function (name, dropStorage) {
+	tagDrop: function (name, callback) {
 		var arr = this.tagLookup(name),
+			dropCb,
+			dropCount,
 			i;
 
+		dropCb = function () {
+			dropCount--;
+
+			if (callback && dropCount === 0) {
+				callback(false);
+			}
+		};
+
 		if (arr.length) {
+			dropCount = arr.length;
+
 			// Loop the array and drop all items
-			for (i = 0; i < arr.length; i++) {
-				arr[i].drop(dropStorage);
+			for (i = arr.length - 1; i >= 0; i--) {
+				arr[i].drop(dropCb);
 			}
 		}
 
@@ -9089,7 +9104,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this);
+			CollectionDrop.call(this);
 		}
 	},
 
@@ -9110,6 +9125,8 @@ Collection.prototype.drop = new Overload({
 						this._db.persist.drop(this._db._name + '::' + this._name, function () {
 							self._db.persist.drop(self._db._name + '::' + self._name + '::metaData', callback);
 						});
+
+						return CollectionDrop.call(this);
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
@@ -9120,10 +9137,10 @@ Collection.prototype.drop = new Overload({
 						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 					}
 				}
+			} else {
+				// Call the original method
+				return CollectionDrop.call(this, callback);
 			}
-
-			// Call the original method
-			CollectionDrop.apply(this, callback);
 		}
 	}
 });
@@ -9779,7 +9796,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.365',
+	version: '1.3.368',
 	modules: {},
 	plugins: {},
 

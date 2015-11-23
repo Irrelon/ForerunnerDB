@@ -198,7 +198,7 @@ Highchart.prototype._hookEvents = function () {
 	self._collection.on('change', function () { self._changeListener.apply(self, arguments); });
 
 	// If the collection is dropped, clean up after ourselves
-	self._collection.on('drop', function () { self.drop.apply(self, arguments); });
+	self._collection.on('drop', function () { self.drop.apply(self); });
 };
 
 /**

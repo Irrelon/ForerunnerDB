@@ -4441,7 +4441,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * Drops a collection group from the database.
  * @returns {boolean} True on success, false on failure.
  */
-CollectionGroup.prototype.drop = function () {
+CollectionGroup.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		var i,
 			collArr,
@@ -4470,6 +4470,8 @@ CollectionGroup.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;
@@ -7528,7 +7530,7 @@ Tags = {
 		if (self.on) {
 			self.on('drop', function () {
 				// We've been dropped so remove ourselves from the tag map
-				self.tagRemove(self);
+				self.tagRemove(name);
 			});
 		}
 
@@ -7568,17 +7570,30 @@ Tags = {
 	/**
 	 * Drops all instances that are tagged with the passed tag name.
 	 * @param {String} name The tag to lookup.
-	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @param {Function} callback Callback once dropping has completed
+	 * for all instances that match the passed tag name.
 	 * @returns {boolean}
 	 */
-	tagDrop: function (name, dropStorage) {
+	tagDrop: function (name, callback) {
 		var arr = this.tagLookup(name),
+			dropCb,
+			dropCount,
 			i;
 
+		dropCb = function () {
+			dropCount--;
+
+			if (callback && dropCount === 0) {
+				callback(false);
+			}
+		};
+
 		if (arr.length) {
+			dropCount = arr.length;
+
 			// Loop the array and drop all items
-			for (i = 0; i < arr.length; i++) {
-				arr[i].drop(dropStorage);
+			for (i = arr.length - 1; i >= 0; i--) {
+				arr[i].drop(dropCb);
 			}
 		}
 
@@ -9220,7 +9235,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.365',
+	version: '1.3.368',
 	modules: {},
 	plugins: {},
 
@@ -10027,7 +10042,7 @@ View.prototype.primaryKey = function () {
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
-View.prototype.drop = function () {
+View.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
@@ -10059,6 +10074,8 @@ View.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 
 		delete this._chain;
 		delete this._from;

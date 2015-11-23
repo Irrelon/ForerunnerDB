@@ -211,7 +211,7 @@ Infinilist.prototype.scrollToQuery = function (query, options, callback) {
 	return false;
 };
 
-Infinilist.prototype.drop = function () {
+Infinilist.prototype.drop = function (callback) {
 	var self = this;
 
 	// Unlink the view from the dom
@@ -234,6 +234,10 @@ Infinilist.prototype.drop = function () {
 	delete self.itemTopMargin;
 	delete self.itemContainer;
 	delete self.itemBottomMargin;
+
+	this.emit('drop', this);
+
+	if (callback) { callback(false, true); }
 };
 
 View.prototype.infinilist = function (targetSelector, templateSelector, options) {
