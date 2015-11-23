@@ -142,6 +142,7 @@ Shared.addModule('Db', Db);
 Shared.mixin(Db.prototype, 'Mixin.Common');
 Shared.mixin(Db.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Db.prototype, 'Mixin.Constants');
+Shared.mixin(Db.prototype, 'Mixin.Tags');
 
 Core = Shared.modules.Core;
 Collection = require('./Collection.js');

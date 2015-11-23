@@ -58,10 +58,21 @@ Tags = {
 		return false;
 	},
 
+	/**
+	 * Gets an array of all instances tagged with the passed tag name.
+	 * @param {String} name The tag to lookup.
+	 * @returns {Array} The array of instances that have the passed tag.
+	 */
 	tagLookup: function (name) {
 		return tagMap[name] || [];
 	},
 
+	/**
+	 * Drops all instances that are tagged with the passed tag name.
+	 * @param {String} name The tag to lookup.
+	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @returns {boolean}
+	 */
 	tagDrop: function (name, dropStorage) {
 		var arr = this.tagLookup(name),
 			i;
@@ -69,9 +80,7 @@ Tags = {
 		if (arr.length) {
 			// Loop the array and drop all items
 			for (i = 0; i < arr.length; i++) {
-				if (arr[i] === this) {
-					arr.drop(dropStorage);
-				}
+				arr[i].drop(dropStorage);
 			}
 		}
 
