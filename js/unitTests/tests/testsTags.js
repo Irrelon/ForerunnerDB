@@ -87,7 +87,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		arr = db.tagLookup('users/list');
 
-		strictEqual(arr.length, 2, 'OK');
+		strictEqual(arr.length >= 2, true, 'OK');
 
 		strictEqual(coll1.isDropped(), false, 'View 1 is not dropped');
 		strictEqual(coll2.isDropped(), false, 'View 2 is not dropped');
