@@ -6297,6 +6297,10 @@ var idCounter = 0,
 	Common,
 	serialiser = new Serialiser();
 
+/**
+ * Provides commonly used methods to most classes in ForerunnerDB.
+ * @mixin
+ */
 Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,
@@ -6553,6 +6557,10 @@ module.exports = Common;
 },{"./Overload":24,"./Serialiser":30}],16:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * Provides some database constants.
+ * @mixin
+ */
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,
@@ -6568,6 +6576,10 @@ module.exports = Constants;
 
 var Overload = _dereq_('./Overload');
 
+/**
+ * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
+ * @mixin
+ */
 var Events = {
 	on: new Overload({
 		/**
@@ -6770,6 +6782,10 @@ module.exports = Events;
 },{"./Overload":24}],18:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * Provides object matching algorithm methods.
+ * @mixin
+ */
 var Matching = {
 	/**
 	 * Internal method that checks a document against a test object.
@@ -7168,6 +7184,10 @@ module.exports = Matching;
 },{}],19:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * Provides sorting methods.
+ * @mixin
+ */
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.
@@ -7217,6 +7237,10 @@ module.exports = Sorting;
 var Tags,
 	tagMap = {};
 
+/**
+ * Provides class instance tagging and tag operation methods.
+ * @mixin
+ */
 Tags = {
 	/**
 	 * Tags a class instance for later lookup.
@@ -7295,6 +7319,10 @@ module.exports = Tags;
 
 var Overload = _dereq_('./Overload');
 
+/**
+ * Provides trigger functionality methods.
+ * @mixin
+ */
 var Triggers = {
 	/**
 	 * Add a trigger by id.
@@ -7709,6 +7737,10 @@ module.exports = Triggers;
 },{"./Overload":24}],22:[function(_dereq_,module,exports){
 "use strict";
 
+/**
+ * Provides methods to handle object update operations.
+ * @mixin
+ */
 var Updating = {
 	/**
 	 * Updates a property on an object.
@@ -9736,7 +9768,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.362',
+	version: '1.3.363',
 	modules: {},
 	plugins: {},
 
