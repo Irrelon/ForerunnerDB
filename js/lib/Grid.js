@@ -46,6 +46,7 @@ Shared.mixin(Grid.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Grid.prototype, 'Mixin.Constants');
 Shared.mixin(Grid.prototype, 'Mixin.Triggers');
 Shared.mixin(Grid.prototype, 'Mixin.Events');
+Shared.mixin(Grid.prototype, 'Mixin.Tags');
 
 Collection = require('./Collection');
 CollectionGroup = require('./CollectionGroup');

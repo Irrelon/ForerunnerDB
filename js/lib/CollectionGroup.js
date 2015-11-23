@@ -33,6 +33,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
 
 Collection = require('./Collection');
 Db = Shared.modules.Db;
