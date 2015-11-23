@@ -2,7 +2,8 @@
 
 var idCounter = 0,
 	Overload = require('./Overload'),
-	Common;
+	Common,
+	tagMap = {};
 
 Common = {
 	/**
@@ -248,36 +249,6 @@ Common = {
 	 */
 	isDropped: function () {
 		return this._state === 'dropped';
-	},
-
-	/**
-	 * Tags a class instance for later lookup.
-	 * @param {String} name The tag to add.
-	 * @returns {boolean}
-	 */
-	addTag: function (name) {
-		this._tags = this._tags || {};
-
-		// Add the tag
-		this._tags[name] = true;
-
-		return true;
-	},
-
-	/**
-	 * Removes a tag from a class instance.
-	 * @param {String} name The tag to remove.
-	 * @returns {boolean}
-	 */
-	removeTag: function (name) {
-		if (this._tags) {
-			this._tags = this._tags || {};
-
-			// Remove the tag
-			delete this._tags[name];
-		}
-
-		return true;
 	}
 };
 

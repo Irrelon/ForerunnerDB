@@ -73,6 +73,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Shared.mixin(Collection.prototype, 'Mixin.Matching');
 Shared.mixin(Collection.prototype, 'Mixin.Updating');
+Shared.mixin(Collection.prototype, 'Mixin.Tags');
 
 Metrics = require('./Metrics');
 KeyValueStore = require('./KeyValueStore');
