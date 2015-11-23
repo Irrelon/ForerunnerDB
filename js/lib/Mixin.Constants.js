@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * Provides some database constants.
+ * @mixin
+ */
 var Constants = {
 	TYPE_INSERT: 0,
 	TYPE_UPDATE: 1,

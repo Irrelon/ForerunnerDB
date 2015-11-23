@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * Provides sorting methods.
+ * @mixin
+ */
 var Sorting = {
 	/**
 	 * Sorts the passed value a against the passed value b ascending.

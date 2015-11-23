@@ -2,6 +2,10 @@
 
 var Overload = require('./Overload');
 
+/**
+ * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
+ * @mixin
+ */
 var Events = {
 	on: new Overload({
 		/**

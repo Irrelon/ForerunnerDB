@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * Provides object matching algorithm methods.
+ * @mixin
+ */
 var Matching = {
 	/**
 	 * Internal method that checks a document against a test object.

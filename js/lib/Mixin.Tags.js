@@ -3,6 +3,10 @@
 var Tags,
 	tagMap = {};
 
+/**
+ * Provides class instance tagging and tag operation methods.
+ * @mixin
+ */
 Tags = {
 	/**
 	 * Tags a class instance for later lookup.

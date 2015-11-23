@@ -6,6 +6,10 @@ var idCounter = 0,
 	Common,
 	serialiser = new Serialiser();
 
+/**
+ * Provides commonly used methods to most classes in ForerunnerDB.
+ * @mixin
+ */
 Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,

@@ -1,5 +1,9 @@
 "use strict";
 
+/**
+ * Provides methods to handle object update operations.
+ * @mixin
+ */
 var Updating = {
 	/**
 	 * Updates a property on an object.

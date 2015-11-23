@@ -2,6 +2,10 @@
 
 var Overload = require('./Overload');
 
+/**
+ * Provides trigger functionality methods.
+ * @mixin
+ */
 var Triggers = {
 	/**
 	 * Add a trigger by id.
