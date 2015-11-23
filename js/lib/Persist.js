@@ -406,7 +406,7 @@ Collection.prototype.drop = new Overload({
 			}
 
 			// Call the original method
-			CollectionDrop.apply(this);
+			CollectionDrop.call(this);
 		}
 	},
 
@@ -427,6 +427,8 @@ Collection.prototype.drop = new Overload({
 						this._db.persist.drop(this._db._name + '::' + this._name, function () {
 							self._db.persist.drop(self._db._name + '::' + self._name + '::metaData', callback);
 						});
+
+						return CollectionDrop.call(this);
 					} else {
 						if (callback) {
 							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
@@ -437,10 +439,10 @@ Collection.prototype.drop = new Overload({
 						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
 					}
 				}
+			} else {
+				// Call the original method
+				return CollectionDrop.call(this, callback);
 			}
-
-			// Call the original method
-			CollectionDrop.apply(this, callback);
 		}
 	}
 });
