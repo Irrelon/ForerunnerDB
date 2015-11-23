@@ -175,7 +175,8 @@ var Shared = {
 		'Mixin.Triggers': require('./Mixin.Triggers'),
 		'Mixin.Sorting': require('./Mixin.Sorting'),
 		'Mixin.Matching': require('./Mixin.Matching'),
-		'Mixin.Updating': require('./Mixin.Updating')
+		'Mixin.Updating': require('./Mixin.Updating'),
+		'Mixin.Tags': require('./Mixin.Tags')
 	}
 };
 
