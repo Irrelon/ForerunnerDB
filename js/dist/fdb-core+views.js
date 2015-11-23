@@ -279,7 +279,8 @@ module.exports = ActiveBucket;
 },{"./Shared":28}],4:[function(_dereq_,module,exports){
 "use strict";
 
-var Shared = _dereq_('./Shared');
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path');
 
 var BinaryTree = function (data, compareFunc, hashFunc) {
 	this.init.apply(this, arguments);
@@ -287,6 +288,7 @@ var BinaryTree = function (data, compareFunc, hashFunc) {
 
 BinaryTree.prototype.init = function (data, index, compareFunc, hashFunc) {
 	this._store = [];
+	this._keys = [];
 
 	if (index !== undefined) { this.index(index); }
 	if (compareFunc !== undefined) { this.compareFunc(compareFunc); }
@@ -302,18 +304,17 @@ Shared.mixin(BinaryTree.prototype, 'Mixin.Common');
 Shared.synthesize(BinaryTree.prototype, 'compareFunc');
 Shared.synthesize(BinaryTree.prototype, 'hashFunc');
 Shared.synthesize(BinaryTree.prototype, 'indexDir');
+Shared.synthesize(BinaryTree.prototype, 'keys');
 Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
 	if (index !== undefined) {
-		if (!(index instanceof Array)) {
-			// Convert the index object to an array of key val objects
-			index = this.keys(index);
-		}
+		// Convert the index object to an array of key val objects
+		this.keys(this.extractKeys(index));
 	}
 
 	return this.$super.call(this, index);
 });
 
-BinaryTree.prototype.keys = function (obj) {
+BinaryTree.prototype.extractKeys = function (obj) {
 	var i,
 		keys = [];
 
@@ -375,8 +376,8 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 		indexData,
 		result = 0;
 
-	for (i = 0; i < this._index.length; i++) {
-		indexData = this._index[i];
+	for (i = 0; i < this._keys.length; i++) {
+		indexData = this._keys[i];
 
 		if (indexData.val === 1) {
 			result = this.sortAsc(a[indexData.key], b[indexData.key]);
@@ -402,8 +403,8 @@ BinaryTree.prototype._hashFunc = function (obj) {
 		indexData,
 		hash = '';
 
-	for (i = 0; i < this._index.length; i++) {
-		indexData = this._index[i];
+	for (i = 0; i < this._keys.length; i++) {
+		indexData = this._keys[i];
 
 		if (hash) { hash += '_'; }
 		hash += obj[indexData.key];
@@ -411,7 +412,7 @@ BinaryTree.prototype._hashFunc = function (obj) {
 
 	return hash;*/
 
-	return obj[this._index[0].key];
+	return obj[this._keys[0].key];
 };
 
 BinaryTree.prototype.insert = function (data) {
@@ -526,13 +527,13 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 			resultArr.push(this._hash);
 			break;
 
-		case 'key':
+		case 'data':
 			resultArr.push(this._data);
 			break;
 
 		default:
 			resultArr.push({
-				key: this._key,
+				key: this._data,
 				arr: this._store
 			});
 			break;
@@ -545,9 +546,170 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
+BinaryTree.prototype.find = function (type, search, resultArr) {
+	resultArr = resultArr || [];
+
+	if (this._left) {
+		this._left.find(type, search, resultArr);
+	}
+
+	// Check if this node's data is greater or less than the from value
+	var fromResult = this.sortAsc(this._data[key], from),
+			toResult = this.sortAsc(this._data[key], to);
+
+	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
+		// This data node is greater than or equal to the from value,
+		// and less than or equal to the to value so include it
+		switch (type) {
+			case 'hash':
+				resultArr.push(this._hash);
+				break;
+
+			case 'data':
+				resultArr.push(this._data);
+				break;
+
+			default:
+				resultArr.push({
+					key: this._data,
+					arr: this._store
+				});
+				break;
+		}
+	}
+
+	if (this._right) {
+		this._right.find(type, search, resultArr);
+	}
+
+	return resultArr;
+};
+
+/**
+ *
+ * @param {String} type
+ * @param {String} key The data key to range search against.
+ * @param {Number} from Range search from this value (inclusive)
+ * @param {Number} to Range search to this value (inclusive)
+ * @param {Array=} resultArr Leave undefined when calling (internal use)
+ * @returns {Array} Array of matching document objects
+ */
+BinaryTree.prototype.findRange = function (type, key, from, to, resultArr) {
+	resultArr = resultArr || [];
+
+	if (this._left) {
+		this._left.findRange(type, key, from, to, resultArr);
+	}
+
+	// Check if this node's data is greater or less than the from value
+	var fromResult = this.sortAsc(this._data[key], from),
+		toResult = this.sortAsc(this._data[key], to);
+
+	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
+		// This data node is greater than or equal to the from value,
+		// and less than or equal to the to value so include it
+		switch (type) {
+			case 'hash':
+				resultArr.push(this._hash);
+				break;
+
+			case 'data':
+				resultArr.push(this._data);
+				break;
+
+			default:
+				resultArr.push({
+					key: this._data,
+					arr: this._store
+				});
+				break;
+		}
+	}
+
+	if (this._right) {
+		this._right.findRange(type, key, from, to, resultArr);
+	}
+
+	return resultArr;
+};
+
+BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
+	resultArr = resultArr || [];
+
+	if (this._left) {
+		this._left.findRegExp(type, key, pattern, resultArr);
+	}
+
+	// Check if this node's data is greater or less than the from value
+	var fromResult = this.sortAsc(this._data[key], from),
+			toResult = this.sortAsc(this._data[key], to);
+
+	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
+		// This data node is greater than or equal to the from value,
+		// and less than or equal to the to value so include it
+		switch (type) {
+			case 'hash':
+				resultArr.push(this._hash);
+				break;
+
+			case 'data':
+				resultArr.push(this._data);
+				break;
+
+			default:
+				resultArr.push({
+					key: this._data,
+					arr: this._store
+				});
+				break;
+		}
+	}
+
+	if (this._right) {
+		this._right.findRegExp(type, key, pattern, resultArr);
+	}
+
+	return resultArr;
+};
+
+BinaryTree.prototype.match = function (query, options) {
+	// Check if the passed query has data in the keys our index
+	// operates on and if so, is the query sort matching our order
+	var pathSolver = new Path(),
+		indexKeyArr = pathSolver.parseArr(this._index),
+		queryArr = pathSolver.parseArr(query),
+		matchedKeys = [],
+		matchedKeyCount = 0,
+		i;
+
+	// Loop the query array and check the order of keys against the
+	// index key array to see if this index can be used
+	for (i = 0; i < indexKeyArr.length; i++) {
+		if (queryArr[i] === indexKeyArr[i]) {
+			matchedKeyCount++;
+			matchedKeys.push(queryArr[i]);
+		} else {
+			// Query match failed - this is a hash map index so partial key match won't work
+			return {
+				matchedKeys: [],
+				totalKeyCount: queryArr.length,
+				score: 0
+			};
+		}
+	}
+
+	return {
+		matchedKeys: matchedKeys,
+		totalKeyCount: queryArr.length,
+		score: matchedKeyCount
+	};
+
+	//return pathSolver.countObjectPaths(this._keys, query);
+};
+
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Shared":28}],5:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
