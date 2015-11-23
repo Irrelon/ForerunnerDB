@@ -215,7 +215,7 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
-Overview.prototype.drop = function () {
+Overview.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
 
@@ -236,6 +236,8 @@ Overview.prototype.drop = function () {
 		delete this._name;
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;

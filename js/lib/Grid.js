@@ -169,7 +169,7 @@ Grid.prototype._collectionDropped = function (collection) {
  * @memberof Grid
  * @returns {boolean} True on success, false on failure.
  */
-Grid.prototype.drop = function () {
+Grid.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._from) {
 			// Remove data-binding
@@ -190,6 +190,8 @@ Grid.prototype.drop = function () {
 			}
 
 			this.emit('drop', this);
+
+			if (callback) { callback(false, true); }
 
 			delete this._selector;
 			delete this._template;

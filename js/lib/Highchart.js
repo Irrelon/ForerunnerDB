@@ -271,7 +271,7 @@ Highchart.prototype._changeListener = function () {
  * Destroys the chart and all internal references.
  * @returns {Boolean}
  */
-Highchart.prototype.drop = function () {
+Highchart.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
 
@@ -293,6 +293,8 @@ Highchart.prototype.drop = function () {
 		delete this._collection;
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 
 		return true;
 	} else {

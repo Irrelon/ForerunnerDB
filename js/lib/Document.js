@@ -371,7 +371,7 @@ FdbDocument.prototype._updateUnset = function (doc, prop) {
  * @memberof Document
  * @returns {boolean} True if successful, false if not.
  */
-FdbDocument.prototype.drop = function () {
+FdbDocument.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._db && this._name) {
 			if (this._db && this._db._document && this._db._document[this._name]) {
@@ -381,6 +381,8 @@ FdbDocument.prototype.drop = function () {
 				delete this._data;
 
 				this.emit('drop', this);
+
+				if (callback) { callback(false, true); }
 
 				return true;
 			}

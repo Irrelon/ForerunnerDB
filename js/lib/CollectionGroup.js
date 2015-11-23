@@ -259,7 +259,7 @@ CollectionGroup.prototype.subset = function (query, options) {
  * Drops a collection group from the database.
  * @returns {boolean} True on success, false on failure.
  */
-CollectionGroup.prototype.drop = function () {
+CollectionGroup.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		var i,
 			collArr,
@@ -288,6 +288,8 @@ CollectionGroup.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 	}
 
 	return true;

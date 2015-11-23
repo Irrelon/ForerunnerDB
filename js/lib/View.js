@@ -508,7 +508,7 @@ View.prototype.primaryKey = function () {
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
  */
-View.prototype.drop = function () {
+View.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		if (this._from) {
 			this._from.off('drop', this._collectionDroppedWrap);
@@ -540,6 +540,8 @@ View.prototype.drop = function () {
 		}
 
 		this.emit('drop', this);
+
+		if (callback) { callback(false, true); }
 
 		delete this._chain;
 		delete this._from;
