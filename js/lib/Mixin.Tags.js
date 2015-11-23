@@ -30,7 +30,7 @@ Tags = {
 		if (self.on) {
 			self.on('drop', function () {
 				// We've been dropped so remove ourselves from the tag map
-				self.tagRemove(self);
+				self.tagRemove(name);
 			});
 		}
 
@@ -70,17 +70,30 @@ Tags = {
 	/**
 	 * Drops all instances that are tagged with the passed tag name.
 	 * @param {String} name The tag to lookup.
-	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @param {Function} callback Callback once dropping has completed
+	 * for all instances that match the passed tag name.
 	 * @returns {boolean}
 	 */
-	tagDrop: function (name, dropStorage) {
+	tagDrop: function (name, callback) {
 		var arr = this.tagLookup(name),
+			dropCb,
+			dropCount,
 			i;
 
+		dropCb = function () {
+			dropCount--;
+
+			if (callback && dropCount === 0) {
+				callback(false);
+			}
+		};
+
 		if (arr.length) {
+			dropCount = arr.length;
+
 			// Loop the array and drop all items
-			for (i = 0; i < arr.length; i++) {
-				arr[i].drop(dropStorage);
+			for (i = arr.length - 1; i >= 0; i--) {
+				arr[i].drop(dropCb);
 			}
 		}
 
