@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/View":30,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/View":31,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":7,"../lib/Shim.IE8":29}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":30}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -276,7 +276,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":28}],4:[function(_dereq_,module,exports){
+},{"./Shared":29}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -546,7 +546,7 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
-BinaryTree.prototype.find = function (type, search, resultArr) {
+/*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
 	if (this._left) {
@@ -583,7 +583,7 @@ BinaryTree.prototype.find = function (type, search, resultArr) {
 	}
 
 	return resultArr;
-};
+};*/
 
 /**
  *
@@ -633,7 +633,7 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr) {
 	return resultArr;
 };
 
-BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
+/*BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
 	resultArr = resultArr || [];
 
 	if (this._left) {
@@ -670,7 +670,7 @@ BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
 	}
 
 	return resultArr;
-};
+};*/
 
 BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
@@ -709,7 +709,7 @@ BinaryTree.prototype.match = function (query, options) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":25,"./Shared":28}],5:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -785,6 +785,7 @@ Shared.mixin(Collection.prototype, 'Mixin.Triggers');
 Shared.mixin(Collection.prototype, 'Mixin.Sorting');
 Shared.mixin(Collection.prototype, 'Mixin.Matching');
 Shared.mixin(Collection.prototype, 'Mixin.Updating');
+Shared.mixin(Collection.prototype, 'Mixin.Tags');
 
 Metrics = _dereq_('./Metrics');
 KeyValueStore = _dereq_('./KeyValueStore');
@@ -4178,7 +4179,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":8,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":28}],6:[function(_dereq_,module,exports){
+},{"./Crc":8,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":25,"./Path":26,"./ReactorIO":27,"./Shared":29}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4515,7 +4516,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":5,"./Shared":28}],7:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":29}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4822,7 +4823,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":9,"./Metrics.js":13,"./Overload":24,"./Shared":28}],8:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":13,"./Overload":25,"./Shared":29}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -5149,6 +5150,28 @@ Db.prototype.emit = function(event, data) {
 	return this;
 };
 
+Db.prototype.peek = function (search) {
+	var i,
+			coll,
+			arr = [],
+			typeOfSearch = typeof search;
+
+	// Loop collections
+	for (i in this._collection) {
+		if (this._collection.hasOwnProperty(i)) {
+			coll = this._collection[i];
+
+			if (typeOfSearch === 'string') {
+				arr = arr.concat(coll.peek(search));
+			} else {
+				arr = arr.concat(coll.find(search));
+			}
+		}
+	}
+
+	return arr;
+};
+
 /**
  * Find all documents across all collections in the database that match the passed
  * string or search object.
@@ -5467,7 +5490,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":13,"./Overload":24,"./Shared":28}],10:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":13,"./Overload":25,"./Shared":29}],10:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5764,7 +5787,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":4,"./Path":25,"./Shared":28}],11:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":26,"./Shared":29}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6123,7 +6146,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":25,"./Shared":28}],12:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -6338,7 +6361,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":28}],13:[function(_dereq_,module,exports){
+},{"./Shared":29}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6413,7 +6436,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":23,"./Shared":28}],14:[function(_dereq_,module,exports){
+},{"./Operation":24,"./Shared":29}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6789,7 +6812,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":24,"./Serialiser":27}],17:[function(_dereq_,module,exports){
+},{"./Overload":25,"./Serialiser":28}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Constants = {
@@ -7006,7 +7029,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":24}],19:[function(_dereq_,module,exports){
+},{"./Overload":25}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Matching = {
@@ -7453,6 +7476,85 @@ module.exports = Sorting;
 },{}],21:[function(_dereq_,module,exports){
 "use strict";
 
+var Tags,
+	tagMap = {};
+
+Tags = {
+	/**
+	 * Tags a class instance for later lookup.
+	 * @param {String} name The tag to add.
+	 * @returns {boolean}
+	 */
+	tagAdd: function (name) {
+		var i,
+			self = this,
+			mapArr = tagMap[name] = tagMap[name] || [];
+
+		for (i = 0; i < mapArr.length; i++) {
+			if (mapArr[i] === self) {
+				return true;
+			}
+		}
+
+		mapArr.push(self);
+
+		// Hook the drop event for this so we can react
+		if (self.on) {
+			self.on('drop', function () {
+				// We've been dropped so remove ourselves from the tag map
+				self.tagRemove(self);
+			});
+		}
+
+		return true;
+	},
+
+	/**
+	 * Removes a tag from a class instance.
+	 * @param {String} name The tag to remove.
+	 * @returns {boolean}
+	 */
+	tagRemove: function (name) {
+		var i,
+			mapArr = tagMap[name];
+
+		if (mapArr) {
+			for (i = 0; i < mapArr.length; i++) {
+				if (mapArr[i] === this) {
+					mapArr.splice(i, 1);
+					return true;
+				}
+			}
+		}
+
+		return false;
+	},
+
+	tagLookup: function (name) {
+		return tagMap[name] || [];
+	},
+
+	tagDrop: function (name, dropStorage) {
+		var arr = this.tagLookup(name),
+			i;
+
+		if (arr.length) {
+			// Loop the array and drop all items
+			for (i = 0; i < arr.length; i++) {
+				if (arr[i] === this) {
+					arr.drop(dropStorage);
+				}
+			}
+		}
+
+		return true;
+	}
+};
+
+module.exports = Tags;
+},{}],22:[function(_dereq_,module,exports){
+"use strict";
+
 var Overload = _dereq_('./Overload');
 
 var Triggers = {
@@ -7866,7 +7968,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":24}],22:[function(_dereq_,module,exports){
+},{"./Overload":25}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Updating = {
@@ -8042,7 +8144,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8189,7 +8291,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":25,"./Shared":28}],24:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8351,7 +8453,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8797,7 +8899,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":28}],26:[function(_dereq_,module,exports){
+},{"./Shared":29}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8878,7 +8980,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":28}],27:[function(_dereq_,module,exports){
+},{"./Shared":29}],28:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9064,7 +9166,7 @@ Serialiser.prototype._stringify = function (data, target) {
 };
 
 module.exports = Serialiser;
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -9075,7 +9177,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.357',
+	version: '1.3.362',
 	modules: {},
 	plugins: {},
 
@@ -9242,7 +9344,8 @@ var Shared = {
 		'Mixin.Triggers': _dereq_('./Mixin.Triggers'),
 		'Mixin.Sorting': _dereq_('./Mixin.Sorting'),
 		'Mixin.Matching': _dereq_('./Mixin.Matching'),
-		'Mixin.Updating': _dereq_('./Mixin.Updating')
+		'Mixin.Updating': _dereq_('./Mixin.Updating'),
+		'Mixin.Tags': _dereq_('./Mixin.Tags')
 	}
 };
 
@@ -9250,7 +9353,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],29:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Tags":21,"./Mixin.Triggers":22,"./Mixin.Updating":23,"./Overload":25}],30:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -9370,7 +9473,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],30:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -10496,4 +10599,4 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":26,"./Shared":28}]},{},[1]);
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":27,"./Shared":29}]},{},[1]);

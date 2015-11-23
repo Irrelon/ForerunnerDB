@@ -267,7 +267,7 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
-BinaryTree.prototype.find = function (type, search, resultArr) {
+/*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
 	if (this._left) {
@@ -304,7 +304,7 @@ BinaryTree.prototype.find = function (type, search, resultArr) {
 	}
 
 	return resultArr;
-};
+};*/
 
 /**
  *
@@ -354,7 +354,7 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr) {
 	return resultArr;
 };
 
-BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
+/*BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
 	resultArr = resultArr || [];
 
 	if (this._left) {
@@ -391,7 +391,7 @@ BinaryTree.prototype.findRegExp = function (type, key, pattern, resultArr) {
 	}
 
 	return resultArr;
-};
+};*/
 
 BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
