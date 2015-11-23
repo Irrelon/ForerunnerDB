@@ -69,7 +69,7 @@ You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http:
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
-```
+```bash
 npm install forerunnerdb
 ```
 
@@ -153,12 +153,16 @@ You can inspect and explore your ForerunnerDB instance directly from Chrome's De
 ## Use ForerunnerDB in Node.js
 After installing via npm (see above) you can require ForerunnerDB in your code:
 
-	var ForerunnerDB = require('forerunnerdb');
-	var fdb = new ForerunnerDB();
+```js
+var ForerunnerDB = require('forerunnerdb');
+var fdb = new ForerunnerDB();
+```
 
 ## Create a Database
 
-	var db = fdb.db('myDatabaseName');
+```js
+var db = fdb.db('myDatabaseName');
+```
 
 > If you do not specify a database name a randomly generated one is provided instead.
 
@@ -167,11 +171,15 @@ After installing via npm (see above) you can require ForerunnerDB in your code:
 
 To create or get a reference to a collection object call (where collectionName is the name of your collection):
 
-	var collection = db.collection('collectionName');
+```js
+var collection = db.collection('collectionName');
+```
 
 In our examples we will use a collection called "item" which will store some fictitious items for sale:
 
-	var itemCollection = db.collection('item');
+```js
+var itemCollection = db.collection('item');
+```
 
 ### Auto-Creation
 
@@ -180,14 +188,18 @@ it already exists you are given the reference to the existing collection. If you
 ForerunnerDB to throw an error if a collection is requested that does not already exist
 you can pass an option to the *collection()* method instead:
 
+```js
 	var collection = db.collection('collectionName', {autoCreate: false});
-	
+```
+
 ### Specifying a Primary Key Up-Front
 
 On requesting a collection you can specify a primary key that the collection should be
 using. For instance to use a property called "name" as the primary key field:
 
+```js
 	var collection = db.collection('collectionName', {primaryKey: 'name'});
+```
 
 You can also read or specify a primary key after instantiation via the primaryKey() method.
 
@@ -196,7 +208,9 @@ You can also read or specify a primary key after instantiation via the primaryKe
 The *collection()* method accepts a number of argument patterns including passing the
 primary key as a string in the second argument e.g.
 
+```js
 	var collection = db.collection('collectionName', 'name');
+```
 
 > While this will work for legacy reasons it is best to use the options object as shown
 above to specify autoCreate and primaryKey option values as using an options object is
@@ -206,15 +220,17 @@ considered the "standard".
 When you get a collection instance for the first time it will contain no data. To set data on the collection pass an
 array of objects to the setData() method:
 
-	itemCollection.setData([{
-		_id: 1,
-		name: 'Cat Litter',
-		price: 200
-	}, {
-		_id: 2,
-		name: 'Dog Food',
-		price: 100
-	}]);
+```js
+itemCollection.setData([{
+	_id: 1,
+	name: 'Cat Litter',
+	price: 200
+}, {
+	_id: 2,
+	name: 'Dog Food',
+	price: 100
+}]);
+```
 
 Setting data on a collection will empty any existing data from the collection.
 
@@ -224,23 +240,27 @@ insert() method as soon as you have a collection reference.
 ## Inserting Documents
 You can either insert a single document object:
 
-	itemCollection.insert({
-		_id: 3,
-		price: 400,
-		name: 'Fish Bones'
-	});
+```js
+itemCollection.insert({
+	_id: 3,
+	price: 400,
+	name: 'Fish Bones'
+});
+```
 
 or pass an array of documents:
 
-	itemCollection.insert([{
-		_id: 4,
-		price: 267,
-		name:'Scooby Snacks'
-	}, {
-		_id: 5,
-		price: 234,
-		name: 'Chicken Yum Yum'
-	}]);
+```js
+itemCollection.insert([{
+	_id: 4,
+	price: 267,
+	name:'Scooby Snacks'
+}, {
+	_id: 5,
+	price: 234,
+	name: 'Chicken Yum Yum'
+}]);
+```
 
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
@@ -255,12 +275,14 @@ which supports many of the same operators starting with a $ that MongoDB support
 instance, finding documents in the collection where the price is greater than 90 but
 less than 150, would look like this:
 
-	itemCollection.find({
-		price: {
-			'$gt': 90,
-			'$lt': 150
-		}
-	});
+```js
+itemCollection.find({
+	price: {
+		'$gt': 90,
+		'$lt': 150
+	}
+});
+```
 
 And would return an array with all matching documents. If no documents match your search, an empty array is returned.
 
@@ -291,40 +313,46 @@ MongoDB but which can help in browser-centric applications.
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
 
-	{ field: {$gt: value} }
+```js
+{ field: {$gt: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$gt: 1
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$gt: 1
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $gte
 Selects the documents where the value of the field is greater than or equal to (i.e. >=) the specified
@@ -2946,13 +2974,13 @@ ForerunnerDB uses Browserify to compile to single-file distribution builds whils
 maintaining source in distinct module files. To build, ensure you have Node.js and
 browserify installed. To install browserify if you already have Node.js:
 
-```
+```bash
 npm install -g browserify
 ```
 
 Now you can then execute browserify to build ForerunnerDB:
 
-```
+```bash
 browserify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
@@ -2964,13 +2992,13 @@ Browserify will compile to a single-file each time you run it. If you would pref
 automatically compile each change (for faster development) you can run watchify instead.
 Install watchify:
 
-```
+```bash
 npm install -g watchify
 ```
 
 You can then run watchify using the same command line arguments as browserify:
 
-```
+```bash
 watchify ./js/build/all.js -o ./js/dist/fdb-all.js
 ```
 
