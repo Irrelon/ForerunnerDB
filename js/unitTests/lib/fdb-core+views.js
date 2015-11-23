@@ -4215,6 +4215,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.Common');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
 
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
@@ -5001,6 +5002,7 @@ Shared.addModule('Db', Db);
 Shared.mixin(Db.prototype, 'Mixin.Common');
 Shared.mixin(Db.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Db.prototype, 'Mixin.Constants');
+Shared.mixin(Db.prototype, 'Mixin.Tags');
 
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
@@ -7554,10 +7556,21 @@ Tags = {
 		return false;
 	},
 
+	/**
+	 * Gets an array of all instances tagged with the passed tag name.
+	 * @param {String} name The tag to lookup.
+	 * @returns {Array} The array of instances that have the passed tag.
+	 */
 	tagLookup: function (name) {
 		return tagMap[name] || [];
 	},
 
+	/**
+	 * Drops all instances that are tagged with the passed tag name.
+	 * @param {String} name The tag to lookup.
+	 * @param {boolean} dropStorage Drop persistent storage as well.
+	 * @returns {boolean}
+	 */
 	tagDrop: function (name, dropStorage) {
 		var arr = this.tagLookup(name),
 			i;
@@ -7565,9 +7578,7 @@ Tags = {
 		if (arr.length) {
 			// Loop the array and drop all items
 			for (i = 0; i < arr.length; i++) {
-				if (arr[i] === this) {
-					arr.drop(dropStorage);
-				}
+				arr[i].drop(dropStorage);
 			}
 		}
 
@@ -9209,7 +9220,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.363',
+	version: '1.3.365',
 	modules: {},
 	plugins: {},
 
@@ -9554,6 +9565,7 @@ Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 Shared.mixin(View.prototype, 'Mixin.Constants');
 Shared.mixin(View.prototype, 'Mixin.Triggers');
+Shared.mixin(View.prototype, 'Mixin.Tags');
 
 Collection = _dereq_('./Collection');
 CollectionGroup = _dereq_('./CollectionGroup');
