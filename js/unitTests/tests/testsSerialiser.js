@@ -15,3 +15,37 @@ QUnit.test("Serialiser() :: Check serialisation of null value is handled correct
 
 	base.dbDown();
 });
+
+QUnit.test("Serialiser() :: Date objects encode/decode working", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+			result;
+
+	coll.insert({
+		a: new Date()
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].a instanceof Date, true, 'After serialisation and de-serialisation the value is still a date object');
+
+	base.dbDown();
+});
+
+/*QUnit.test("Serialiser() :: NaN objects encode/decode working", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+			result;
+
+	coll.insert({
+		a: NaN
+	});
+
+	result = coll.find();
+
+	strictEqual(isNaN(result[0].a), true, 'After serialisation and de-serialisation the value is still an NaN');
+
+	base.dbDown();
+});*/
