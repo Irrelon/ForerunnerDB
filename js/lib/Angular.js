@@ -66,6 +66,9 @@ Angular.extendCollection = function (Module) {
 
 			// Hook the ForerunnerDB change event to inform angular of a change
 			self.on('change', link.callback);
+
+			// Now update the view
+			link.callback();
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
@@ -148,6 +151,9 @@ Angular.extendDocument = function (Module) {
 					console.log('Ignoring update as it is a watch update');
 				}
 			});
+
+			// Now update the view
+			link.callback();
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
