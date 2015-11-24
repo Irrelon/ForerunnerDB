@@ -8535,7 +8535,7 @@ Serialiser.prototype.parse = function (data) {
 Serialiser.prototype._parse = function (data, target) {
 	var i;
 
-	if (typeof data === 'object') {
+	if (typeof data === 'object' && data !== null) {
 		if (data instanceof Array) {
 			target = target || [];
 		} else {
@@ -8584,7 +8584,7 @@ Serialiser.prototype._stringify = function (data, target) {
 	var handledData,
 		i;
 
-	if (typeof data === 'object') {
+	if (typeof data === 'object' && data !== null) {
 		// Handle special object types so they can be encoded with
 		// a special marker and later restored by a decoder counterpart
 		handledData = this._encode(data);
@@ -8625,7 +8625,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.371',
+	version: '1.3.373',
 	modules: {},
 	plugins: {},
 
