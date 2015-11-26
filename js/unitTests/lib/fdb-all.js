@@ -901,6 +901,7 @@ Collection.prototype.drop = function (callback) {
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
 		if (this._primaryKey !== keyName) {
+			var oldKey = this._primaryKey;
 			this._primaryKey = keyName;
 
 			// Set the primary key index primary key
@@ -908,6 +909,9 @@ Collection.prototype.primaryKey = function (keyName) {
 
 			// Rebuild the primary key index
 			this.rebuildPrimaryKeyIndex();
+
+			// Propagate change down the chain
+			this.chainSend('primaryKey', keyName, {oldData: oldKey});
 		}
 		return this;
 	}
@@ -12029,15 +12033,19 @@ var Shared = _dereq_('./Shared');
 
 /**
  * Provides chain reactor node linking so that a chain reaction can propagate
- * down a node tree.
+ * down a node tree. Effectively creates a chain link between the reactorIn and
+ * reactorOut objects where a chain reaction from the reactorIn is passed through
+ * the reactorProcess before being passed to the reactorOut object. Reactor
+ * packets are only passed through to the reactorOut if the reactor IO method
+ * chainSend is used.
  * @param {*} reactorIn An object that has the Mixin.ChainReactor methods mixed
  * in to it. Chain reactions that occur inside this object will be passed through
- * to the reactoreOut object.
+ * to the reactorOut object.
  * @param {*} reactorOut An object that has the Mixin.ChainReactor methods mixed
  * in to it. Chain reactions that occur in the reactorIn object will be passed
  * through to this object.
  * @param {Function} reactorProcess The processing method to use when chain
- * reactions occur
+ * reactions occur.
  * @constructor
  */
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -12418,7 +12426,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.377',
+	version: '1.3.381',
 	modules: {},
 	plugins: {},
 
@@ -12861,10 +12869,11 @@ View.prototype.data = function () {
 /**
  * Sets the source from which the view will assemble its data.
  * @param {Collection|View} source The source to use to assemble view data.
+ * @param {Function=} callback A callback method.
  * @returns {*} If no argument is passed, returns the current value of from,
  * otherwise returns itself for chaining.
  */
-View.prototype.from = function (source) {
+View.prototype.from = function (source, callback) {
 	var self = this;
 
 	if (source !== undefined) {
@@ -12993,11 +13002,8 @@ View.prototype.from = function (source) {
 
 		var collData = source.find(this._querySettings.query, this._querySettings.options);
 
-		this._transformPrimaryKey(source.primaryKey());
-		this._transformSetData(collData);
-
 		this._privateData.primaryKey(source.primaryKey());
-		this._privateData.setData(collData);
+		this._privateData.setData(collData, {}, callback);
 
 		if (this._querySettings.options && this._querySettings.options.$orderBy) {
 			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
@@ -13044,15 +13050,10 @@ View.prototype._chainHandler = function (chainPacket) {
 		count,
 		index,
 		insertIndex,
-		//tempData,
-		//dataIsArray,
 		updates,
-		//finalUpdates,
 		primaryKey,
-		tQuery,
 		item,
-		currentIndex,
-		i;
+		currentIndex;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Received chain reactor data');
@@ -13066,9 +13067,6 @@ View.prototype._chainHandler = function (chainPacket) {
 
 			// Get the new data from our underlying data source sorted as we want
 			var collData = this._from.find(this._querySettings.query, this._querySettings.options);
-
-			// Modify transform data
-			this._transformSetData(collData);
 			this._privateData.setData(collData);
 			break;
 
@@ -13092,17 +13090,11 @@ View.prototype._chainHandler = function (chainPacket) {
 
 				for (index = 0; index < count; index++) {
 					insertIndex = this._activeBucket.insert(arr[index]);
-
-					// Modify transform data
-					this._transformInsert(chainPacket.data, insertIndex);
 					this._privateData._insertHandle(chainPacket.data, insertIndex);
 				}
 			} else {
 				// Set the insert index to the passed index, or if none, the end of the view data array
 				insertIndex = this._privateData._data.length;
-
-				// Modify transform data
-				this._transformInsert(chainPacket.data, insertIndex);
 				this._privateData._insertHandle(chainPacket.data, insertIndex);
 			}
 			break;
@@ -13147,18 +13139,6 @@ View.prototype._chainHandler = function (chainPacket) {
 					}
 				}
 			}
-
-			if (this._transformEnabled && this._transformIn) {
-				primaryKey = this._publicData.primaryKey();
-
-				for (i = 0; i < updates.length; i++) {
-					tQuery = {};
-					item = updates[i];
-					tQuery[primaryKey] = item[primaryKey];
-
-					this._transformUpdate(tQuery, item);
-				}
-			}
 			break;
 
 		case 'remove':
@@ -13166,8 +13146,6 @@ View.prototype._chainHandler = function (chainPacket) {
 				console.log(this.logIdentifier() + ' Removing some data from underlying (internal) view collection "' + this._privateData.name() + '"');
 			}
 
-			// Modify transform data
-			this._transformRemove(chainPacket.data.query, chainPacket.options);
 			this._privateData.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
@@ -13209,7 +13187,8 @@ View.prototype.emit = function () {
  * @returns {Array}
  */
 View.prototype.distinct = function (key, query, options) {
-	return this._privateData.distinct.apply(this._privateData, arguments);
+	var coll = this.publicData();
+	return coll.distinct.apply(coll, arguments);
 };
 
 /**
@@ -13218,7 +13197,7 @@ View.prototype.distinct = function (key, query, options) {
  * @returns {String}
  */
 View.prototype.primaryKey = function () {
-	return this._privateData.primaryKey();
+	return this.publicData().primaryKey();
 };
 
 /**
@@ -13268,8 +13247,6 @@ View.prototype.drop = function (callback) {
 		delete this._querySettings;
 		delete this._db;
 
-		return true;
-	} else {
 		return true;
 	}
 
@@ -13542,7 +13519,7 @@ View.prototype.refresh = function () {
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
-		pubData.remove();
+		//pubData.remove();
 
 		refreshResults = this._from.find(this._querySettings.query, this._querySettings.options);
 		this.cursor(refreshResults.$cursor);
@@ -13601,6 +13578,8 @@ View.prototype.subset = function () {
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
+	var self = this;
+
 	if (obj !== undefined) {
 		if (typeof obj === "object") {
 			if (obj.enabled !== undefined) {
@@ -13618,9 +13597,77 @@ View.prototype.transform = function (obj) {
 			this._transformEnabled = obj !== false;
 		}
 
-		// Update the transformed data object
-		this._transformPrimaryKey(this.privateData().primaryKey());
-		this._transformSetData(this.privateData().find());
+		if (this._transformEnabled) {
+			// Check for / create the public data collection
+			if (!this._publicData) {
+				// Create the public data collection
+				this._publicData = new Collection('__FDB__view_publicData_' + this._name);
+				this._publicData.db(this._privateData._db);
+				this._publicData.transform({
+					enabled: true,
+					dataIn: this._transformIn,
+					dataOut: this._transformOut
+				});
+
+				// Create a chain reaction IO node to keep the private and
+				// public data collections in sync
+				this._transformIo = new ReactorIO(this._privateData, this._publicData, function (chainPacket) {
+					var data = chainPacket.data;
+
+					switch (chainPacket.type) {
+						case 'primaryKey':
+							self._publicData.primaryKey(data);
+							this.chainSend('primaryKey', data);
+							break;
+
+						case 'setData':
+							self._publicData.setData(data);
+							this.chainSend('setData', data);
+							break;
+
+						case 'insert':
+							self._publicData.insert(data);
+							this.chainSend('insert', data);
+							break;
+
+						case 'update':
+							// Do the update
+							self._publicData.update(
+								data.query,
+								data.update,
+								data.options
+							);
+
+							this.chainSend('update', data);
+							break;
+
+						case 'remove':
+							self._publicData.remove(data.query, chainPacket.options);
+							this.chainSend('remove', data);
+							break;
+
+						default:
+							break;
+					}
+				});
+			}
+
+			// Set initial data and settings
+			this._publicData.primaryKey(this.privateData().primaryKey());
+			this._publicData.setData(this.privateData().find());
+		} else {
+			// Remove the public data collection
+			if (this._publicData) {
+				this._publicData.drop();
+				delete this._publicData;
+
+				if (this._transformIo) {
+					this._transformIo.drop();
+					delete this._transformIo;
+				}
+			}
+		}
+
 		return this;
 	}
 
@@ -13671,51 +13718,6 @@ View.prototype.publicData = function () {
 		return this._publicData;
 	} else {
 		return this._privateData;
-	}
-};
-
-/**
- * Updates the public data object to match data from the private data object
- * by running private data through the dataIn method provided in
- * the transform() call.
- * @private
- */
-View.prototype._transformSetData = function (data) {
-	if (this._transformEnabled) {
-		// Clear existing data
-		this._publicData = new Collection('__FDB__view_publicData_' + this._name);
-		this._publicData.db(this._privateData._db);
-		this._publicData.transform({
-			enabled: true,
-			dataIn: this._transformIn,
-			dataOut: this._transformOut
-		});
-
-		this._publicData.setData(data);
-	}
-};
-
-View.prototype._transformInsert = function (data, index) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.insert(data, index);
-	}
-};
-
-View.prototype._transformUpdate = function (query, update, options) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.update(query, update, options);
-	}
-};
-
-View.prototype._transformRemove = function (query, options) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.remove(query, options);
-	}
-};
-
-View.prototype._transformPrimaryKey = function (key) {
-	if (this._transformEnabled && this._publicData) {
-		this._publicData.primaryKey(key);
 	}
 };
 

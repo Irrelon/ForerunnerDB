@@ -622,6 +622,7 @@ Collection.prototype.drop = function (callback) {
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
 		if (this._primaryKey !== keyName) {
+			var oldKey = this._primaryKey;
 			this._primaryKey = keyName;
 
 			// Set the primary key index primary key
@@ -629,6 +630,9 @@ Collection.prototype.primaryKey = function (keyName) {
 
 			// Rebuild the primary key index
 			this.rebuildPrimaryKeyIndex();
+
+			// Propagate change down the chain
+			this.chainSend('primaryKey', keyName, {oldData: oldKey});
 		}
 		return this;
 	}
@@ -8354,15 +8358,19 @@ var Shared = _dereq_('./Shared');
 
 /**
  * Provides chain reactor node linking so that a chain reaction can propagate
- * down a node tree.
+ * down a node tree. Effectively creates a chain link between the reactorIn and
+ * reactorOut objects where a chain reaction from the reactorIn is passed through
+ * the reactorProcess before being passed to the reactorOut object. Reactor
+ * packets are only passed through to the reactorOut if the reactor IO method
+ * chainSend is used.
  * @param {*} reactorIn An object that has the Mixin.ChainReactor methods mixed
  * in to it. Chain reactions that occur inside this object will be passed through
- * to the reactoreOut object.
+ * to the reactorOut object.
  * @param {*} reactorOut An object that has the Mixin.ChainReactor methods mixed
  * in to it. Chain reactions that occur in the reactorIn object will be passed
  * through to this object.
  * @param {Function} reactorProcess The processing method to use when chain
- * reactions occur
+ * reactions occur.
  * @constructor
  */
 var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
@@ -8625,7 +8633,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.377',
+	version: '1.3.381',
 	modules: {},
 	plugins: {},
 
