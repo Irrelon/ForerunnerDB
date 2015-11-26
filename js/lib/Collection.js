@@ -180,6 +180,7 @@ Collection.prototype.drop = function (callback) {
 Collection.prototype.primaryKey = function (keyName) {
 	if (keyName !== undefined) {
 		if (this._primaryKey !== keyName) {
+			var oldKey = this._primaryKey;
 			this._primaryKey = keyName;
 
 			// Set the primary key index primary key
@@ -187,6 +188,9 @@ Collection.prototype.primaryKey = function (keyName) {
 
 			// Rebuild the primary key index
 			this.rebuildPrimaryKeyIndex();
+
+			// Propagate change down the chain
+			this.chainSend('primaryKey', keyName, {oldData: oldKey});
 		}
 		return this;
 	}
