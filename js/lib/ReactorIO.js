@@ -6,7 +6,9 @@ var Shared = require('./Shared');
  * Provides chain reactor node linking so that a chain reaction can propagate
  * down a node tree. Effectively creates a chain link between the reactorIn and
  * reactorOut objects where a chain reaction from the reactorIn is passed through
- * the reactorProcess before being passed to the reactorOut object.
+ * the reactorProcess before being passed to the reactorOut object. Reactor
+ * packets are only passed through to the reactorOut if the reactor IO method
+ * chainSend is used.
  * @param {*} reactorIn An object that has the Mixin.ChainReactor methods mixed
  * in to it. Chain reactions that occur inside this object will be passed through
  * to the reactorOut object.
