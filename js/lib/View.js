@@ -144,10 +144,11 @@ View.prototype.data = function () {
 /**
  * Sets the source from which the view will assemble its data.
  * @param {Collection|View} source The source to use to assemble view data.
+ * @param {Function=} callback A callback method.
  * @returns {*} If no argument is passed, returns the current value of from,
  * otherwise returns itself for chaining.
  */
-View.prototype.from = function (source) {
+View.prototype.from = function (source, callback) {
 	var self = this;
 
 	if (source !== undefined) {
@@ -280,7 +281,7 @@ View.prototype.from = function (source) {
 		this._transformSetData(collData);
 
 		this._privateData.primaryKey(source.primaryKey());
-		this._privateData.setData(collData);
+		this._privateData.setData(collData, {}, callback);
 
 		if (this._querySettings.options && this._querySettings.options.$orderBy) {
 			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
