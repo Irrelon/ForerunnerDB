@@ -51,7 +51,12 @@ Angular.extendCollection = function (Module) {
 				scope: scope,
 				varName: varName,
 				callback: function () {
-					scope[varName] = self.find();
+					if (options && options.$single) {
+						scope[varName] = self.findOne();
+					} else {
+						scope[varName] = self.find();
+					}
+
 					scope.$apply();
 				}
 			};
