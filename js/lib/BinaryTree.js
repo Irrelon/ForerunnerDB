@@ -62,6 +62,11 @@ BinaryTree.prototype.data = function (val) {
 	return this._data;
 };
 
+/**
+ * Pushes an item to the binary tree node's store array.
+ * @param {*} val The item to add to the store.
+ * @returns {*}
+ */
 BinaryTree.prototype.push = function (val) {
 	if (val !== undefined) {
 		this._store.push(val);
@@ -71,13 +76,18 @@ BinaryTree.prototype.push = function (val) {
 	return false;
 };
 
+/**
+ * Pulls an item from the binary tree node's store array.
+ * @param {*} val The item to remove from the store.
+ * @returns {*}
+ */
 BinaryTree.prototype.pull = function (val) {
 	if (val !== undefined) {
 		var index = this._store.indexOf(val);
 
 		if (index > -1) {
 			this._store.splice(index, 1);
-			return true;
+			return this;
 		}
 	}
 
@@ -309,22 +319,28 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 /**
  *
  * @param {String} type
- * @param {String} key The data key to range search against.
+ * @param {String} key The data key / path to range search against.
  * @param {Number} from Range search from this value (inclusive)
  * @param {Number} to Range search to this value (inclusive)
- * @param {Array=} resultArr Leave undefined when calling (internal use)
+ * @param {Array=} resultArr Leave undefined when calling (internal use),
+ * passes the result array between recursive calls to be returned when
+ * the recursion chain completes.
+ * @param {Path=} pathResolver Leave undefined when calling (internal use),
+ * caches the path resolver instance for performance.
  * @returns {Array} Array of matching document objects
  */
-BinaryTree.prototype.findRange = function (type, key, from, to, resultArr) {
+BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathResolver) {
 	resultArr = resultArr || [];
+	pathResolver = pathResolver || new Path(key);
 
 	if (this._left) {
-		this._left.findRange(type, key, from, to, resultArr);
+		this._left.findRange(type, key, from, to, resultArr, pathResolver);
 	}
 
 	// Check if this node's data is greater or less than the from value
-	var fromResult = this.sortAsc(this._data[key], from),
-		toResult = this.sortAsc(this._data[key], to);
+	var pathVal = pathResolver.value(this._data),
+		fromResult = this.sortAsc(pathVal, from),
+		toResult = this.sortAsc(pathVal, to);
 
 	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
 		// This data node is greater than or equal to the from value,
@@ -348,7 +364,7 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr) {
 	}
 
 	if (this._right) {
-		this._right.findRange(type, key, from, to, resultArr);
+		this._right.findRange(type, key, from, to, resultArr, pathResolver);
 	}
 
 	return resultArr;
@@ -397,11 +413,20 @@ BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var pathSolver = new Path(),
-		indexKeyArr = pathSolver.parseArr(this._index),
-		queryArr = pathSolver.parseArr(query),
+		indexKeyArr,
+		queryArr,
 		matchedKeys = [],
 		matchedKeyCount = 0,
 		i;
+
+	indexKeyArr = pathSolver.parseArr(this._index, {
+		verbose: true
+	});
+
+	queryArr = pathSolver.parseArr(query, {
+		ignore:/\$/,
+		verbose: true
+	});
 
 	// Loop the query array and check the order of keys against the
 	// index key array to see if this index can be used
@@ -409,13 +434,6 @@ BinaryTree.prototype.match = function (query, options) {
 		if (queryArr[i] === indexKeyArr[i]) {
 			matchedKeyCount++;
 			matchedKeys.push(queryArr[i]);
-		} else {
-			// Query match failed - this is a hash map index so partial key match won't work
-			return {
-				matchedKeys: [],
-				totalKeyCount: queryArr.length,
-				score: 0
-			};
 		}
 	}
 
