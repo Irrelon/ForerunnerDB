@@ -198,6 +198,14 @@ Path.prototype.parse = function (obj, withValue) {
  * an array of path strings that allow you to target all possible paths
  * in an object.
  *
+ * The options object accepts an "ignore" field with a regular expression
+ * as the value. If any key matches the expression it is not included in
+ * the results.
+ *
+ * The options object accepts a boolean "verbose" field. If set to true
+ * the results will include all paths leading up to endpoints as well as
+ * they endpoints themselves.
+ *
  * @returns {Array}
  */
 Path.prototype.parseArr = function (obj, options) {
@@ -222,6 +230,10 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
 				}
 
 				if (typeof(obj[i]) === 'object') {
+					if (options.verbose) {
+						paths.push(newPath);
+					}
+
 					this._parseArr(obj[i], newPath, paths, options);
 				} else {
 					paths.push(newPath);
