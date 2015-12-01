@@ -48,5 +48,5 @@ testrunner.run({
 	code: "js/unitTests/tests/testsNodeIntegration.js",
 	tests: "js/unitTests/tests/testsNodeIntegration.js"
 }, function () {
-	console.log(arguments);
+	//console.log(arguments);
 });

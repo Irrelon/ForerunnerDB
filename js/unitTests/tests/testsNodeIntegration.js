@@ -28,7 +28,7 @@ test('Instantiate a Collection Instance', 1, function () {
 });
 
 test('Save Collection Data and Load it Back From File-Based Persistent Storage', function () {
-	QUnit.expect(5);
+	QUnit.expect(6);
 	QUnit.stop();
 	this.fdb = new this.ForerunnerDB();
 	var self = this,
@@ -55,8 +55,9 @@ test('Save Collection Data and Load it Back From File-Based Persistent Storage',
 			QUnit.equal(err, false, 'Save did not produce an error');
 		}
 
-		db.drop();
+		db.drop(false);
 		db = self.fdb.db('temp');
+		db.persist.dataDir('./configData');
 
 		coll = db.collection('test');
 
@@ -76,7 +77,9 @@ test('Save Collection Data and Load it Back From File-Based Persistent Storage',
 
 			strictEqual(result.length, 1, 'Check that items were loaded correctly');
 			strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
-			strictEqual(coll.metaData().lastChange, lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
+			strictEqual(coll.metaData().lastChange.toISOString(), lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
+
+			db.drop();
 
 			start();
 		});
