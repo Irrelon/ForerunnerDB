@@ -7,7 +7,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 			search,
 			alpha,
 			data = [],
-			count = 50000,
+			count = 500,
 			countMax = count,
 			total = count,
 			name,
@@ -111,7 +111,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 
 		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
 			data = [],
-			count = 5000,
+			count = 500,
 			name,
 			names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'],
 			types = ['user', 'staff', 'student'],
@@ -141,9 +141,9 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 			$orderBy: indexOrdering
 		});
 
-		console.time('Tree insert');
+		//.time('Tree insert');
 		tree.insert(data);
-		console.timeEnd('Tree insert');
+		//console.timeEnd('Tree insert');
 
 		treeResult = tree.inOrder('data');
 
@@ -163,7 +163,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 
 		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
 			data = [],
-			count = 50000,
+			count = 500,
 			name,
 			collectionResult,
 			treeResult,
@@ -250,8 +250,8 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 		}
 
 		treeResult = tree.findRange('data', 'age', 10, 25);
-		console.table(collectionResult);
-		console.table(treeResult);
+		//console.table(collectionResult);
+		//console.table(treeResult);
 
 		strictEqual(collectionResult.length, treeResult.length, 'Number of results is correct');
 
@@ -269,7 +269,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 
 		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
 				data = [],
-				count = 5000,
+				count = 500,
 				name,
 				names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'],
 				types = ['user', 'staff', 'student'],
@@ -299,15 +299,15 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 		// This test passing relies on the fact that collection's sorting is
 		// already tested and bulletproof (which it is)
 
-		console.time('Collection insert');
+		//console.time('Collection insert');
 		db.collection('sorted').setData(data);
-		console.timeEnd('Collection insert');
+		//console.timeEnd('Collection insert');
 
-		console.time('Tree insert');
+		//console.time('Tree insert');
 		tree.insert(data);
-		console.timeEnd('Tree insert');
+		//console.timeEnd('Tree insert');
 
-		console.time('Collection search');
+		//console.time('Collection search');
 		startTime = new Date().getTime();
 		collectionResult = db.collection('sorted').find({
 			age: {
@@ -319,19 +319,105 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 			_id: 0
 		});
 		endTime = new Date().getTime();
-		console.timeEnd('Collection search');
+		//console.timeEnd('Collection search');
 
 		collectionTime = endTime - startTime;
 
-		console.time('Index search');
+		//console.time('Index search');
 		startTime = new Date().getTime();
 		treeResult = tree.findRange('data', 'age', 10, 25);
 		endTime = new Date().getTime();
-		console.timeEnd('Index search');
+		//console.timeEnd('Index search');
 
 		indexTime = endTime - startTime;
 
 		strictEqual(collectionResult.length, treeResult.length, 'Collection result count matches tree result count');
+		ok(indexTime < collectionTime, 'Index was faster than collection');
+
+		for (i = 0; i < collectionResult.length; i++) {
+			strictEqual(treeResult[i].name, collectionResult[i].name, 'Correct order of name for item ' + i);
+			strictEqual(treeResult[i].age, collectionResult[i].age, 'Correct order of age for item ' + i);
+			strictEqual(treeResult[i].type, collectionResult[i].type, 'Correct order of type for item ' + i);
+		}
+
+		base.dbDown();
+	});
+
+	QUnit.test("Binary Tree :: Test indexed range search on nested field", function () {
+		base.dbUp();
+
+		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
+			data = [],
+			count = 500,
+			name,
+			names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'],
+			types = ['user', 'staff', 'student'],
+			collectionResult,
+			treeResult,
+			startTime,
+			endTime,
+			collectionTime,
+			indexTime,
+			indexOrdering = {
+				name: -1,
+				obj: {
+					age: -1
+				},
+				type: 1
+			},
+			i;
+
+		for (i = 0; i < count; i++) {
+			data.push({
+				name: names[Math.floor(Math.random() * names.length)],
+				obj: {
+					age: Math.floor(Math.random() * 50)
+				},
+				type: types[Math.floor(Math.random() * types.length)]
+			});
+		}
+
+		tree.index(indexOrdering);
+
+		// This test passing relies on the fact that collection's sorting is
+		// already tested and bulletproof (which it is)
+
+		//console.time('Collection insert');
+		db.collection('sorted').setData(data);
+		//console.timeEnd('Collection insert');
+
+		//console.time('Tree insert');
+		tree.insert(data);
+		//console.timeEnd('Tree insert');
+
+		//console.time('Collection search');
+		startTime = new Date().getTime();
+		collectionResult = db.collection('sorted').find({
+			obj: {
+				age: {
+					$gte: 10,
+					$lte: 25
+				}
+			}
+		}, {
+			$orderBy: indexOrdering,
+			_id: 0
+		});
+		endTime = new Date().getTime();
+		//console.timeEnd('Collection search');
+
+		collectionTime = endTime - startTime;
+
+		//console.time('Index search');
+		startTime = new Date().getTime();
+		treeResult = tree.findRange('data', 'obj.age', 10, 25);
+		endTime = new Date().getTime();
+		//console.timeEnd('Index search');
+
+		indexTime = endTime - startTime;
+
+		strictEqual(treeResult.length, collectionResult.length, 'Collection result count (' + collectionResult.length + ') matches tree result count (' + treeResult.length + ')');
+		ok(indexTime < collectionTime, 'Index was faster than collection');
 
 		for (i = 0; i < collectionResult.length; i++) {
 			strictEqual(treeResult[i].name, collectionResult[i].name, 'Correct order of name for item ' + i);
@@ -347,7 +433,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 
 		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
 			data = [],
-			count = 5000,
+			count = 500,
 			name,
 			names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'],
 			types = ['user', 'staff', 'student'],
@@ -376,6 +462,61 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 				$gt: 1
 			}
 		});
+
+		strictEqual(matchResult.matchedKeys[0], 'name', 'Field 1 match');
+		strictEqual(matchResult.matchedKeys[1], 'age', 'Field 2 match');
+		strictEqual(matchResult.totalKeyCount, 2, 'Key count is correct');
+		strictEqual(matchResult.score, 2, 'Score is correct');
+
+		base.dbDown();
+	});
+
+	QUnit.test("Binary Tree :: Test query matching with nested indexed fields", function () {
+		base.dbUp();
+
+		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
+				data = [],
+				count = 500,
+				name,
+				names = ['Jim', 'Alan', 'Bob', 'Nigel', 'Jane', 'Alice', 'DJ Kool', 'Anne', 'Tamara'],
+				types = ['user', 'staff', 'student'],
+				matchResult,
+				indexOrdering = {
+					name: -1,
+					obj: {
+						age: -1
+					},
+					type: 1
+				},
+				i;
+
+		for (i = 0; i < count; i++) {
+			data.push({
+				name: names[Math.floor(Math.random() * names.length)],
+				obj: {
+					age: Math.floor(Math.random() * 50)
+				},
+				type: types[Math.floor(Math.random() * types.length)]
+			});
+		}
+
+		tree.index(indexOrdering);
+		tree.insert(data);
+
+		matchResult = tree.match({
+			name: 'Jim',
+			obj: {
+				age: {
+					$gt: 1
+				}
+			}
+		});
+
+		strictEqual(matchResult.matchedKeys[0], 'name', 'Field 1 match');
+		strictEqual(matchResult.matchedKeys[1], 'obj', 'Field 2 match');
+		strictEqual(matchResult.matchedKeys[2], 'obj.age', 'Field 3 match');
+		strictEqual(matchResult.totalKeyCount, 3, 'Key count is correct');
+		strictEqual(matchResult.score, 3, 'Score is correct');
 
 		base.dbDown();
 	});
