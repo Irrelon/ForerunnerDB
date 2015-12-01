@@ -12,6 +12,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks('grunt-umd');
 	grunt.loadNpmTasks('grunt-jsdoc');
 	grunt.loadNpmTasks('grunt-qunit-istanbul');
+	grunt.loadNpmTasks('grunt-node-qunit');
 
 	grunt.initConfig({
 		"jshint": {
@@ -69,6 +70,55 @@ module.exports = function(grunt) {
 						coberturaReport: 'coverage/minified',
 						linesThresholdPct: 10
 					}
+				}
+			}
+		},
+
+		"node-qunit": {
+			"ForerunnerDB": {
+				// logging options
+				log: {
+					// log assertions overview
+					assertions: true,
+
+					// log expected and actual values for failed tests
+					errors: true,
+
+					// log tests overview
+					tests: true,
+
+					// log summary
+					summary: true,
+
+					// log global summary (all files)
+					globalSummary: true,
+
+					// log coverage
+					coverage: true,
+
+					// log global coverage (all files)
+					globalCoverage: true,
+
+					// log currently testing code file
+					testing: true
+				},
+
+				// run test coverage tool
+				coverage: false,
+
+				// define dependencies, which are required then before code
+				deps: null,
+
+				// define namespace your code will be attached to on global['your namespace']
+				namespace: null,
+
+				// max amount of ms child can be blocked, after that we assume running an infinite loop
+				maxBlockDuration: 2000,
+
+				code: "js/unitTests/tests/testsNodeIntegration.js",
+				tests: "js/unitTests/tests/testsNodeIntegration.js",
+				done: function (err, res) {
+
 				}
 			}
 		},
@@ -495,10 +545,10 @@ module.exports = function(grunt) {
 	});
 
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
-	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit"]);
-	grunt.registerTask("3: Build and Test", ["checkoutDev", "version", "browserify", "postfix", "uglify", "copy", "qunit"]);
-	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
-	grunt.registerTask("5: Release and Publish Master Build From Dev", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "copy", "qunit", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
+	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit", "node-qunit"]);
+	grunt.registerTask("3: Build and Test", ["checkoutDev", "version", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
+	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
+	grunt.registerTask("5: Release and Publish Master Build From Dev", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
-	grunt.registerTask("default", ["qunit"]);
+	grunt.registerTask("default", ["qunit", "node-qunit"]);
 };

@@ -32,12 +32,12 @@ test('Save Collection Data and Load it Back From File-Based Persistent Storage',
 	QUnit.stop();
 	this.fdb = new this.ForerunnerDB();
 	var self = this,
-		db = this.fdb.db('temp'),
-		coll = db.collection('test', {
-			changeTimestamp: true
-		}),
-		result,
-		lastChange;
+			db = this.fdb.db('temp'),
+			coll = db.collection('test', {
+				changeTimestamp: true
+			}),
+			result,
+			lastChange;
 
 	db.persist.dataDir('./configData');
 
