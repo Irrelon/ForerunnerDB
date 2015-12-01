@@ -14,7 +14,7 @@ ready and battle tested in real-world applications.
 * Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
 
-## Version 1.3.394
+## Version 1.3.395
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
