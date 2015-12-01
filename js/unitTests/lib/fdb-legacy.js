@@ -12559,8 +12559,8 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Drop the collection data from storage
-						this._db.persist.drop(this._db._name + '::' + this._name);
-						this._db.persist.drop(this._db._name + '::' + this._name + '::metaData');
+						this._db.persist.drop(this._db._name + '-' + this._name);
+						this._db.persist.drop(this._db._name + '-' + this._name + '-metaData');
 					}
 				} else {
 					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
@@ -12586,8 +12586,8 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Drop the collection data from storage
-						this._db.persist.drop(this._db._name + '::' + this._name, function () {
-							self._db.persist.drop(self._db._name + '::' + self._name + '::metaData', callback);
+						this._db.persist.drop(this._db._name + '-' + this._name, function () {
+							self._db.persist.drop(self._db._name + '-' + self._name + '-metaData', callback);
 						});
 
 						return CollectionDrop.call(this);
@@ -12622,9 +12622,9 @@ Collection.prototype.save = function (callback) {
 		if (self._db) {
 			processSave = function () {
 				// Save the collection data
-				self._db.persist.save(self._db._name + '::' + self._name, self._data, function (err, data, tableStats) {
+				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, data, tableStats) {
 					if (!err) {
-						self._db.persist.save(self._db._name + '::' + self._name + '::metaData', self.metaData(), function (err, data, metaStats) {
+						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
 							if (callback) {
 								callback(err, data, tableStats, metaStats);
 							}
@@ -12670,14 +12670,14 @@ Collection.prototype.load = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			// Load the collection data
-			self._db.persist.load(self._db._name + '::' + self._name, function (err, data, tableStats) {
+			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
 						self.setData(data);
 					}
 
 					// Now load the collection's metadata
-					self._db.persist.load(self._db._name + '::' + self._name + '::metaData', function (err, data, metaStats) {
+					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
 						if (!err) {
 							if (data) {
 								self.metaData(data);
@@ -13264,7 +13264,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.388',
+	version: '1.3.392',
 	modules: {},
 	plugins: {},
 

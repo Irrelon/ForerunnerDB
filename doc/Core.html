@@ -143,7 +143,7 @@ multiple database instances.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
 
     
 
@@ -151,7 +151,7 @@ multiple database instances.
 
 <div class="description">
     Checks if a module is loaded and if so calls the passed
-callback method.
+success method, otherwise calls the failure method.
 </div>
 
 
@@ -210,7 +210,7 @@ callback method.
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>success</code></td>
             
 
             <td class="type">
@@ -227,6 +227,29 @@ callback method.
             
 
             <td class="description last">The callback method to call if module is loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module not loaded.</td>
         </tr>
 
     
@@ -267,7 +290,7 @@ callback method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line117">line 117</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
     </li></ul></dd>
     
 
@@ -451,7 +474,7 @@ callback method.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
 
     
 
@@ -459,7 +482,7 @@ callback method.
 
 <div class="description">
     Checks if a module is loaded and if so calls the passed
-success method, otherwise calls the failure method.
+callback method.
 </div>
 
 
@@ -518,7 +541,7 @@ success method, otherwise calls the failure method.
 
         <tr>
             
-                <td class="name"><code>success</code></td>
+                <td class="name"><code>callback</code></td>
             
 
             <td class="type">
@@ -535,29 +558,6 @@ success method, otherwise calls the failure method.
             
 
             <td class="description last">The callback method to call if module is loaded.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>failure</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module not loaded.</td>
         </tr>
 
     
@@ -598,7 +598,7 @@ success method, otherwise calls the failure method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line117">line 117</a>
     </li></ul></dd>
     
 
@@ -1461,6 +1461,106 @@ by it's array index.
 
     
 
+    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns true if ForerunnerDB is running on a client browser.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line267">line 267</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="global.html#boolean">boolean</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
@@ -1552,106 +1652,6 @@ a server (node.js).
     <dd>
         
 <span class="param-type">Boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Returns true if ForerunnerDB is running on a client browser.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line267">line 267</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="global.html#boolean">boolean</a></span>
 
 
     </dd>
@@ -2230,7 +2230,7 @@ then the callback is called.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Sat Nov 28 2015 13:34:32 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Dec 01 2015 09:16:53 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

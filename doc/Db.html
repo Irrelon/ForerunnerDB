@@ -208,6 +208,180 @@
 
     
 
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get a collection by name. If the collection does not already exist
+then one is created for that name automatically.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collectionName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the collection.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>primaryKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional primary key to specify the primary key field on the collection
+objects. Defaults to "_id".</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3322">line 3322</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Collection.html">Collection</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, options)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
 
     
@@ -381,7 +555,157 @@ then one is created for that name automatically.
 
     
 
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(options)</span><span class="type-signature"> &rarr; {*}</span></h4>
+
+    
+
+
+
+<div class="description">
+    The main handler method. This gets called by all the other variants and
+handles the actual logic of the overloaded method.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An options object.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3372">line 3372</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">*</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
 
     
 
@@ -445,30 +769,6 @@ then one is created for that name automatically.
         </tr>
 
     
-
-        <tr>
-            
-                <td class="name"><code>primaryKey</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional primary key to specify the primary key field on the collection
-objects. Defaults to "_id".</td>
-        </tr>
-
-    
     </tbody>
 </table>
 
@@ -506,7 +806,7 @@ objects. Defaults to "_id".</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3322">line 3322</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3308">line 3308</a>
     </li></ul></dd>
     
 
@@ -856,156 +1156,6 @@ name automatically.
 
     
 
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Get a collection by name. If the collection does not already exist
-then one is created for that name automatically.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collectionName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the collection.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3308">line 3308</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey, options)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
 
     
@@ -1189,156 +1339,6 @@ objects. Defaults to "_id".</td>
     <dd>
         
 <span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(options)</span><span class="type-signature"> &rarr; {*}</span></h4>
-
-    
-
-
-
-<div class="description">
-    The main handler method. This gets called by all the other variants and
-handles the actual logic of the overloaded method.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">An options object.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3372">line 3372</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">*</span>
 
 
     </dd>
@@ -1738,14 +1738,15 @@ the database is currently managing.
 
     
 
-    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">()</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">(removePersist)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Drops the database.
+    Drops the database with optional persistent storage drop. Persistent
+storage is dropped by default if no preference is provided.
 </div>
 
 
@@ -1754,6 +1755,55 @@ the database is currently managing.
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>removePersist</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Boolean</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Drop persistent storage for this database.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -1789,7 +1839,7 @@ the database is currently managing.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line384">line 384</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line446">line 446</a>
     </li></ul></dd>
     
 
@@ -1975,15 +2025,14 @@ and callback method.
 
     
 
-    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">(removePersist)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">()</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Drops the database with optional persistent storage drop. Persistent
-storage is dropped by default if no preference is provided.
+    Drops the database.
 </div>
 
 
@@ -1992,55 +2041,6 @@ storage is dropped by default if no preference is provided.
 
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>removePersist</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Drop persistent storage for this database.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -2076,7 +2076,7 @@ storage is dropped by default if no preference is provided.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line446">line 446</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line384">line 384</a>
     </li></ul></dd>
     
 
@@ -2584,6 +2584,184 @@ the database is currently managing.
 
     
 
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Checks if a module is loaded and if so calls the passed
+success method, otherwise calls the failure method.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the module to check for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>success</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module is loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module not loaded.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line83">line 83</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
 
     
@@ -2884,184 +3062,6 @@ callback method.
 </dl>
 
     
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Checks if a module is loaded and if so calls the passed
-success method, otherwise calls the failure method.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>moduleName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the module to check for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>success</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module is loaded.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>failure</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module not loaded.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line83">line 83</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -6775,7 +6775,7 @@ the database is currently managing.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Sat Nov 28 2015 13:34:32 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Tue Dec 01 2015 09:16:53 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

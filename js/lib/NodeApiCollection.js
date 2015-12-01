@@ -21,6 +21,7 @@ NodeApiCollection.prototype.init = function (api, collectionName, options) {
 	self._api = api;
 	self._name = collectionName;
 	self._options = options;
+	self._model = new NodeApiModel();
 };
 
 Shared.addModule('NodeApiCollection', NodeApiCollection);
