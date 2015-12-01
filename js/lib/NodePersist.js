@@ -346,7 +346,7 @@ NodePersist.prototype.loadDataFile = function (key, callback) {
 };
 
 NodePersist.prototype.removeDataFile = function (key, callback) {
-	fs.unlinkFile(this.dataDir() + "/" + key + '.fdb', callback);
+	fs.unlink(this.dataDir() + "/" + key + '.fdb', callback);
 };
 
 // Extend the Collection prototype with persist methods
