@@ -1,0 +1,1 @@
+// Extend NodeApiModel and provide user specific methods
