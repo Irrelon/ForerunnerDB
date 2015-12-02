@@ -1,5 +1,22 @@
 QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
+	QUnit.asyncTest('Collection.load() :: Load un-saved collection', function () {
+		expect(1);
+
+		base.dbUp();
+
+		try {
+			db.collection('random112354234').load(function (err, data) {
+				ok(true, 'Didn\'t cause an error');
+				base.dbDown();
+				start();
+			});
+		} catch (e) {
+			ok(false, 'Caused an error!');
+			start();
+		}
+	});
+
 	QUnit.asyncTest('Collection.save() :: Save data to storage and load it back', function () {
 		expect(7);
 
