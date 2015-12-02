@@ -443,6 +443,10 @@ module.exports = function(grunt) {
 		fileData = fs.readFileSync('./readme.md', {encoding: 'utf8'});
 		fileData = fileData.replace(oldVersion, versionString);
 		fs.writeFileSync('./readme.md', fileData);
+
+		fileData = fs.readFileSync('./bower.json', {encoding: 'utf8'});
+		fileData = fileData.replace(oldVersion, versionString);
+		fs.writeFileSync('./bower.json', fileData);
 	});
 
 	grunt.registerTask('gitCommit', 'Git Commit Updates', function () {
