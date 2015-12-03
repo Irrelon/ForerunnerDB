@@ -52,4 +52,38 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
+
+	QUnit.test('View.queryData() :: Set query and data and check that returned data matches expected result', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view = db.view('test'),
+			result;
+
+		view
+			.queryData({}, {
+				$orderBy: {
+					createdTs: -1
+				}
+			})
+			.from(coll);
+
+		coll.insert({
+			_id: 1,
+			createdTs: 1
+		});
+
+		coll.insert({
+			_id: 2,
+			createdTs: 2
+		});
+
+		result = view.find();
+
+		strictEqual(result[0]._id, 2, 'OK');
+		strictEqual(result[1]._id, 1, 'OK');
+
+		base.dbDown();
+	});
 });

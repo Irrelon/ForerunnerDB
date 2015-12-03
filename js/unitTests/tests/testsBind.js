@@ -1,5 +1,51 @@
 QUnit.module('AutoBind');
 ForerunnerDB.moduleLoaded('View, AutoBind', function () {
+	QUnit.test('View.queryData() :: Set query and data and check that bound data matches expected result', function () {
+		base.dbUp();
+		base.dataUp();
+		base.viewUp();
+		base.domUp();
+
+		userView.queryData({}, {
+			$orderBy: {
+				createdTs: -1
+			}
+		});
+
+		user.setData([{
+			_id: '1',
+			name: "hello",
+			createdTs: 1
+		}, {
+			_id: '2',
+			name: "foo",
+			createdTs: 3
+		}, {
+			_id: '3',
+			name: "boo",
+			createdTs: 2
+		}]);
+
+		userView.link('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		var elems = $('#testTarget').find('li');
+
+		strictEqual(elems.length, 3, "Document count is correct");
+		strictEqual($(elems[0]).text(), 'foo', "Output is correct");
+		strictEqual($(elems[1]).text(), 'boo', "Output is correct");
+		strictEqual($(elems[2]).text(), 'hello', "Output is correct");
+
+		userView.unlink('#testTarget', {
+			template: '<li data-link="id{:_id}">{^{:name}}</li>'
+		});
+
+		base.viewDown();
+		base.domDown();
+		base.dbDown();
+	});
+
 	QUnit.test("Collection.update() :: $unset operator inside sub-array propagates to bound data", function() {
 		base.dbUp();
 		base.domUp();
