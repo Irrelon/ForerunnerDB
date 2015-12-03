@@ -125,6 +125,15 @@ View.prototype.find = function (query, options) {
 };
 
 /**
+ * Queries the view data for a single document.
+ * @see Collection::findOne()
+ * @returns {Object} The result of the find query.
+ */
+View.prototype.findOne = function (query, options) {
+	return this.publicData().findOne(query, options);
+};
+
+/**
  * Queries the view data by specific id.
  * @see Collection::findById()
  * @returns {Array} The result of the find query.
