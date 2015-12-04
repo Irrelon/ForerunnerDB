@@ -16,7 +16,12 @@ ForerunnerDB.moduleLoaded('AiApi', function () {
 		db.api.url('http://localhost:9010');
 
 		// Create user
-		db.api.remote('user').create({username: 'foo', password: 'bar', firstName: 'Jim', lastName: 'Jones'}, function (err, user) {
+		db.api.remote('user').create({
+			username: 'foo@foo.com',
+			password: 'bar',
+			firstName: 'Jim',
+			lastName: 'Jones'
+		}, function (err, user) {
 			if (!err && user) {
 
 			}
@@ -31,10 +36,15 @@ ForerunnerDB.moduleLoaded('AiApi', function () {
 		db.api.url('http://localhost:9010');
 
 		// Create user
-		db.api.remote('user').create({username: 'foo', password: 'bar', firstName: 'Jim', lastName: 'Jones'}, function (err, user) {
+		db.api.remote('user').create({
+			username: 'foo@foo.com',
+			password: 'bar',
+			firstName: 'Jim',
+			lastName: 'Jones'
+		}, function (err, user) {
 			if (!err && user) {
 				// Authenticate
-				db.api.remote('user').login({username: 'foo', password: 'bar'}, function (err, tokenData) {
+				db.api.remote('user').login({username: 'foo@foo.com', password: 'bar'}, function (err, tokenData) {
 					if (!err && tokenData) {
 
 					}
@@ -51,10 +61,15 @@ ForerunnerDB.moduleLoaded('AiApi', function () {
 		db.api.url('http://localhost:9010');
 
 		// Create user
-		db.api.remote('user').create({username: 'foo', password: 'bar', firstName: 'Jim', lastName: 'Jones'}, function (err, user) {
+		db.api.remote('user').create({
+			username: 'foo@foo.com',
+			password: 'bar',
+			firstName: 'Jim',
+			lastName: 'Jones'
+		}, function (err, user) {
 			if (!err && user) {
 				// Authenticate
-				db.api.remote('user').login({username: 'foo', password: 'bar'}, function (err, tokenData) {
+				db.api.remote('user').login({username: 'foo@foo.com', password: 'bar'}, function (err, tokenData) {
 					var sessionId,
 						ttl,
 						created,
@@ -116,10 +131,15 @@ ForerunnerDB.moduleLoaded('AiApi', function () {
 		});
 
 		// Create user
-		db.api.remote('user', {$model: 'User'}).create({username: 'foo', password: 'bar', firstName: 'Jim', lastName: 'Jones'}, function (err, user) {
+		db.api.remote('user', {$model: 'User'}).create({
+			username: 'foo@foo.com',
+			password: 'bar',
+			firstName: 'Jim',
+			lastName: 'Jones'
+		}, function (err, user) {
 			if (!err && user) {
 				// Authenticate
-				db.api.remote('user').login({username: 'foo', password: 'bar'}, function (err, tokenData) {
+				db.api.remote('user').login({username: 'foo@foo.com', password: 'bar'}, function (err, tokenData) {
 					if (!err) {
 						// Test auth request
 						db.api.remote('school').find({}, function (err, data) {

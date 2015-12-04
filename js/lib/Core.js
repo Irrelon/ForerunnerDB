@@ -135,7 +135,7 @@ Core.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -168,7 +168,7 @@ Core.prototype.moduleLoaded = new Overload({
 			}
 		}
 
-		callback();
+		if (callback) { callback(); }
 	},
 
 	/**

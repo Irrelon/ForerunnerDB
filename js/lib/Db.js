@@ -76,7 +76,7 @@ Db.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
