@@ -79,7 +79,7 @@ Angular.extendCollection = function (Module) {
 			self.on('change', link.callback);
 
 			// Now update the view
-			link.callback();
+			if (link.callback) { link.callback(); }
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
@@ -164,7 +164,7 @@ Angular.extendDocument = function (Module) {
 			});
 
 			// Now update the view
-			link.callback();
+			if (link.callback) { link.callback(); }
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}

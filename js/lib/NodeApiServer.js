@@ -1,5 +1,7 @@
 "use strict";
 
+// jshint ignore: start
+
 // Import external names locally
 var Shared = require('./Shared'),
 	NodeApiCollection = require('./NodeApiCollection'),

@@ -4417,7 +4417,7 @@ Core.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -4450,7 +4450,7 @@ Core.prototype.moduleLoaded = new Overload({
 			}
 		}
 
-		callback();
+		if (callback) { callback(); }
 	},
 
 	/**
@@ -4698,7 +4698,7 @@ Db.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -8862,7 +8862,7 @@ Persist.prototype.driver = function (val) {
  */
 Persist.prototype.decode = function (val, finished) {
 	async.waterfall([function (callback) {
-		callback(false, val, {});
+		if (callback) { callback(false, val, {}); }
 	}].concat(this._decodeSteps), finished);
 };
 
@@ -8873,7 +8873,7 @@ Persist.prototype.decode = function (val, finished) {
  */
 Persist.prototype.encode = function (val, finished) {
 	async.waterfall([function (callback) {
-		callback(false, val, {});
+		if (callback) { callback(false, val, {}); }
 	}].concat(this._encodeSteps), finished);
 };
 
@@ -9089,9 +9089,7 @@ Persist.prototype.drop = function (key, callback) {
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler or unrecognised data type.');
-			}
+			if (callback) { callback('No data handler or unrecognised data type.'); }
 			break;
 	}
 
@@ -9162,14 +9160,10 @@ Collection.prototype.drop = new Overload({
 
 						return CollectionDrop.call(this);
 					} else {
-						if (callback) {
-							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
-						}
+						if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
 					}
 				} else {
-					if (callback) {
-						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
-					}
+					if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
 				}
 			} else {
 				// Call the original method
@@ -9195,14 +9189,10 @@ Collection.prototype.save = function (callback) {
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, data, tableStats) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
-							if (callback) {
-								callback(err, data, tableStats, metaStats);
-							}
+							if (callback) { callback(err, data, tableStats, metaStats); }
 						});
 					} else {
-						if (callback) {
-							callback(err);
-						}
+						if (callback) { callback(err); }
 					}
 				});
 			};
@@ -9218,14 +9208,10 @@ Collection.prototype.save = function (callback) {
 				processSave();
 			}
 		} else {
-			if (callback) {
-				callback('Cannot save a collection that is not attached to a database!');
-			}
+			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
 		}
 	} else {
-		if (callback) {
-			callback('Cannot save a collection with no assigned name!');
-		}
+		if (callback) { callback('Cannot save a collection with no assigned name!'); }
 	}
 };
 
@@ -9254,25 +9240,17 @@ Collection.prototype.load = function (callback) {
 							}
 						}
 
-						if (callback) {
-							callback(err, tableStats, metaStats);
-						}
+						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
-					if (callback) {
-						callback(err);
-					}
+					if (callback) { callback(err); }
 				}
 			});
 		} else {
-			if (callback) {
-				callback('Cannot load a collection that is not attached to a database!');
-			}
+			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
 		}
 	} else {
-		if (callback) {
-			callback('Cannot load a collection with no assigned name!');
-		}
+		if (callback) { callback('Cannot load a collection with no assigned name!'); }
 	}
 };
 
@@ -9834,7 +9812,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.407',
+	version: '1.3.411',
 	modules: {},
 	plugins: {},
 

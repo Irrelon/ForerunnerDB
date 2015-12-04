@@ -4069,7 +4069,7 @@ Core.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -4102,7 +4102,7 @@ Core.prototype.moduleLoaded = new Overload({
 			}
 		}
 
-		callback();
+		if (callback) { callback(); }
 	},
 
 	/**
@@ -4350,7 +4350,7 @@ Db.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -8663,7 +8663,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.407',
+	version: '1.3.411',
 	modules: {},
 	plugins: {},
 

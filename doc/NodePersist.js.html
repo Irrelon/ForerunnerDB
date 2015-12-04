@@ -101,7 +101,7 @@ NodePersist.prototype.mode = function (type) {
  */
 NodePersist.prototype.decode = function (val, finished) {
 	async.waterfall([function (callback) {
-		callback(false, val, {});
+		if (callback) { callback(false, val, {}); }
 	}].concat(this._decodeSteps), finished);
 };
 
@@ -112,7 +112,7 @@ NodePersist.prototype.decode = function (val, finished) {
  */
 NodePersist.prototype.encode = function (val, finished) {
 	async.waterfall([function (callback) {
-		callback(false, val, {});
+		if (callback) { callback(false, val, {}); }
 	}].concat(this._encodeSteps), finished);
 };
 
@@ -336,9 +336,7 @@ NodePersist.prototype.drop = function (key, callback) {
 			break;
 
 		default:
-			if (callback) {
-				callback('No data handler or unrecognised data type.');
-			}
+			if (callback) { callback('No data handler or unrecognised data type.'); }
 			break;
 	}
 
@@ -440,14 +438,10 @@ Collection.prototype.drop = new Overload({
 							self._db.persist.drop(self._db._name + '-' + self._name + '-metaData', callback);
 						});
 					} else {
-						if (callback) {
-							callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!');
-						}
+						if (callback) { callback('Cannot drop a collection\'s persistent storage when the collection is not attached to a database!'); }
 					}
 				} else {
-					if (callback) {
-						callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!');
-					}
+					if (callback) { callback('Cannot drop a collection\'s persistent storage when no name assigned to collection!'); }
 				}
 			}
 
@@ -473,14 +467,10 @@ Collection.prototype.save = function (callback) {
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, data, tableStats) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
-							if (callback) {
-								callback(err, data, tableStats, metaStats);
-							}
+							if (callback) { callback(err, data, tableStats, metaStats); }
 						});
 					} else {
-						if (callback) {
-							callback(err);
-						}
+						if (callback) { callback(err); }
 					}
 				});
 			};
@@ -496,14 +486,10 @@ Collection.prototype.save = function (callback) {
 				processSave();
 			}
 		} else {
-			if (callback) {
-				callback('Cannot save a collection that is not attached to a database!');
-			}
+			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
 		}
 	} else {
-		if (callback) {
-			callback('Cannot save a collection with no assigned name!');
-		}
+		if (callback) { callback('Cannot save a collection with no assigned name!'); }
 	}
 };
 
@@ -532,25 +518,17 @@ Collection.prototype.load = function (callback) {
 							}
 						}
 
-						if (callback) {
-							callback(err, tableStats, metaStats);
-						}
+						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
-					if (callback) {
-						callback(err);
-					}
+					if (callback) { callback(err); }
 				}
 			});
 		} else {
-			if (callback) {
-				callback('Cannot load a collection that is not attached to a database!');
-			}
+			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
 		}
 	} else {
-		if (callback) {
-			callback('Cannot load a collection with no assigned name!');
-		}
+		if (callback) { callback('Cannot load a collection with no assigned name!'); }
 	}
 };
 
@@ -638,13 +616,13 @@ module.exports = NodePersist;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Wed Dec 02 2015 13:03:05 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.3.3</a> on Fri Dec 04 2015 14:29:31 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

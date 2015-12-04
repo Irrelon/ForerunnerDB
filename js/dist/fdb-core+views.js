@@ -4679,7 +4679,7 @@ Core.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -4712,7 +4712,7 @@ Core.prototype.moduleLoaded = new Overload({
 			}
 		}
 
-		callback();
+		if (callback) { callback(); }
 	},
 
 	/**
@@ -4960,7 +4960,7 @@ Db.prototype.moduleLoaded = new Overload({
 				}
 			}
 
-			callback();
+			if (callback) { callback(); }
 		}
 	},
 
@@ -9273,7 +9273,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.407',
+	version: '1.3.411',
 	modules: {},
 	plugins: {},
 
@@ -9694,6 +9694,15 @@ View.prototype.remove = function () {
  */
 View.prototype.find = function (query, options) {
 	return this.publicData().find(query, options);
+};
+
+/**
+ * Queries the view data for a single document.
+ * @see Collection::findOne()
+ * @returns {Object} The result of the find query.
+ */
+View.prototype.findOne = function (query, options) {
+	return this.publicData().findOne(query, options);
 };
 
 /**

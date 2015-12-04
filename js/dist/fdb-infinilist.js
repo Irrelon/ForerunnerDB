@@ -202,7 +202,7 @@ Infinilist.prototype.scrollToQuery = function (query, options, callback) {
 			// Scroll the main element to the position of the item
 			self.selector.scrollTop(scrollPos);
 		} else {
-			callback();
+			if (callback) { callback(); }
 		}
 
 		return true;
