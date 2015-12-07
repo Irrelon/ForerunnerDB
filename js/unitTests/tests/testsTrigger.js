@@ -531,3 +531,5 @@ QUnit.test("Disable and then re-enable trigger by id only", function() {
 
 	base.dbDown();
 });
+
+// TODO Write a test to check that triggers interupt chain reactor messages if canceled

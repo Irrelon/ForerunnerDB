@@ -143,6 +143,24 @@ View.prototype.findById = function (id, options) {
 };
 
 /**
+ * Queries the view data in a sub-array.
+ * @see Collection::findSub()
+ * @returns {Array} The result of the find query.
+ */
+View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+	return this.publicData().findSub(match, path, subDocQuery, subDocOptions);
+};
+
+/**
+ * Queries the view data in a sub-array and returns first match.
+ * @see Collection::findSubOne()
+ * @returns {Object} The result of the find query.
+ */
+View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
+	return this.publicData().findSubOne(match, path, subDocQuery, subDocOptions);
+};
+
+/**
  * Gets the module's internal data collection.
  * @returns {Collection}
  */

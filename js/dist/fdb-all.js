@@ -2225,10 +2225,6 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		}
 	}
 
-	//op.time('Resolve chains');
-	this.chainSend('insert', data, {index: index});
-	//op.time('Resolve chains');
-
 	resultObj = {
 		deferred: false,
 		inserted: inserted,
@@ -2278,6 +2274,10 @@ Collection.prototype._insert = function (doc, index) {
 
 			// Insert the document
 			self._dataInsertAtIndex(index, doc);
+
+			//op.time('Resolve chains');
+			self.chainSend('insert', doc, {index: index});
+			//op.time('Resolve chains');
 		};
 
 		if (!indexViolation) {
@@ -3685,6 +3685,23 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 	}
 
 	return resultObj;
+};
+
+/**
+ * Finds the first sub-document from the collection's documents that matches
+ * the subDocQuery parameter.
+ * @param {Object} match The query object to use when matching parent documents
+ * from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the key in which
+ * sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching which sub-documents
+ * to return.
+ * @param {Object=} subDocOptions The options object to use when querying for
+ * sub-documents.
+ * @returns {Object}
+ */
+Collection.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
+	return this.findSub(match, path, subDocQuery, subDocOptions)[0];
 };
 
 /**
@@ -12434,7 +12451,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.412',
+	version: '1.3.416',
 	modules: {},
 	plugins: {},
 
@@ -12873,6 +12890,24 @@ View.prototype.findOne = function (query, options) {
  */
 View.prototype.findById = function (id, options) {
 	return this.publicData().findById(id, options);
+};
+
+/**
+ * Queries the view data in a sub-array.
+ * @see Collection::findSub()
+ * @returns {Array} The result of the find query.
+ */
+View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+	return this.publicData().findSub(match, path, subDocQuery, subDocOptions);
+};
+
+/**
+ * Queries the view data in a sub-array and returns first match.
+ * @see Collection::findSubOne()
+ * @returns {Object} The result of the find query.
+ */
+View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
+	return this.publicData().findSubOne(match, path, subDocQuery, subDocOptions);
 };
 
 /**

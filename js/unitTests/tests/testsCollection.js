@@ -2795,6 +2795,54 @@ QUnit.test("Collection() :: $count in query", function () {
 	base.dbDown();
 });
 
+/*QUnit.test("Collection() :: $query in query", function () {
+	base.dbUp();
+
+	var coll1 = db.collection('test1'),
+		coll2 = db.collection('test2');
+
+	coll1.setData([{
+		_id: 1,
+		moo: true
+	}, {
+		_id: 2,
+		moo: false
+	}, {
+		_id: 3,
+		moo: true
+	}, {
+		_id: 4,
+		moo: false
+	}, {
+		_id: 5,
+		moo: true
+	}]);
+
+	coll2.setData([{
+		_id: 1,
+		moo: true
+	}]);
+
+	var result = coll2.find({
+		_id: {
+			$nin: {
+				coll1: {
+					$query: {
+
+					},
+					$options: {
+						_id: 1
+					}
+				}
+			}
+		}
+	});
+
+	strictEqual(result.length, 2, 'Correct number of records have been returned');
+
+	base.dbDown();
+});*/
+
 /*QUnit.test("Collection.find() :: $as to rename fields", function () {
 	base.dbUp();
 
