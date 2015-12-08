@@ -1130,7 +1130,7 @@ Collection.prototype.update = function (query, update, options) {
 			this.chainSend('update', {
 				query: query,
 				update: update,
-				dataSet: dataSet
+				dataSet: updated
 			}, options);
 			op.time('Resolve chains');
 
@@ -1730,6 +1730,7 @@ Collection.prototype.remove = function (query, options, callback) {
 		if (callback) { callback(false, returnArr); }
 		return returnArr;
 	} else {
+		returnArr = [];
 		dataSet = this.find(query, {$decouple: false});
 
 		if (dataSet.length) {
@@ -1740,6 +1741,8 @@ Collection.prototype.remove = function (query, options, callback) {
 				// Remove data from internal stores
 				index = self._data.indexOf(dataItem);
 				self._dataRemoveAtIndex(index);
+
+				returnArr.push(dataItem);
 			};
 
 			// Remove the data from the collection
@@ -1765,23 +1768,25 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 			}
 
-			//op.time('Resolve chains');
-			this.chainSend('remove', {
-				query: query,
-				dataSet: dataSet
-			}, options);
-			//op.time('Resolve chains');
+			if (returnArr.length) {
+				//op.time('Resolve chains');
+				self.chainSend('remove', {
+					query: query,
+					dataSet: returnArr
+				}, options);
+				//op.time('Resolve chains');
 
-			if (!options || (options && !options.noEmit)) {
-				this._onRemove(dataSet);
+				if (!options || (options && !options.noEmit)) {
+					this._onRemove(returnArr);
+				}
+
+				this._onChange();
+				this.deferEmit('change', {type: 'remove', data: returnArr});
 			}
-
-			this._onChange();
-			this.deferEmit('change', {type: 'remove', data: dataSet});
 		}
 
-		if (callback) { callback(false, dataSet); }
-		return dataSet;
+		if (callback) { callback(false, returnArr); }
+		return returnArr;
 	}
 };
 
@@ -9829,7 +9834,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.416',
+	version: '1.3.419',
 	modules: {},
 	plugins: {},
 
