@@ -217,4 +217,4 @@ pip-log.txt
 templates_c
 cache
 
-node_modules
+node_modules*
