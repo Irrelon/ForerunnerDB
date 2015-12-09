@@ -1536,8 +1536,7 @@ Collection.prototype._insert = function (doc, index) {
 			insertMethod,
 			newDoc,
 			capped = this.capped(),
-			cappedSize = this.cappedSize(),
-			capRecord;
+			cappedSize = this.cappedSize();
 
 		this.ensurePrimaryKey(doc);
 

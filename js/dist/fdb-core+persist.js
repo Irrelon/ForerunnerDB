@@ -580,6 +580,18 @@ Shared.synthesize(Collection.prototype, 'name');
 Shared.synthesize(Collection.prototype, 'metaData');
 
 /**
+ * Gets / sets boolean to determine if the collection should be
+ * capped or not.
+ */
+Shared.synthesize(Collection.prototype, 'capped');
+
+/**
+ * Gets / sets capped collection size. This is the maximum number
+ * of records that the capped collection will store.
+ */
+Shared.synthesize(Collection.prototype, 'cappedSize');
+
+/**
  * Get the data array that represents the collection's data.
  * This data is returned by reference and should not be altered outside
  * of the provided CRUD functionality of the collection as doing so
@@ -1990,7 +2002,9 @@ Collection.prototype._insert = function (doc, index) {
 			indexViolation,
 			triggerOperation,
 			insertMethod,
-			newDoc;
+			newDoc,
+			capped = this.capped(),
+			cappedSize = this.cappedSize();
 
 		this.ensurePrimaryKey(doc);
 
@@ -2008,6 +2022,13 @@ Collection.prototype._insert = function (doc, index) {
 
 			// Insert the document
 			self._dataInsertAtIndex(index, doc);
+
+			// Check capped collection status and remove first record
+			// if we are over the threshold
+			if (capped && self._data.length > cappedSize) {
+				// Remove the first item in the data array
+				self.removeById(self._data[0][self._primaryKey]);
+			}
 
 			//op.time('Resolve chains');
 			self.chainSend('insert', doc, {index: index});
@@ -3888,6 +3909,16 @@ Db.prototype.collection = new Overload({
 
 			if (options.primaryKey !== undefined) {
 				this._collection[name].primaryKey(options.primaryKey);
+			}
+
+			if (options.capped !== undefined) {
+				// Check we have a size
+				if (options.size !== undefined) {
+					this._collection[name].capped(options.capped);
+					this._collection[name].cappedSize(options.size);
+				} else {
+					throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
+				}
 			}
 
 			return this._collection[name];
@@ -9834,7 +9865,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.432',
+	version: '1.3.434',
 	modules: {},
 	plugins: {},
 
