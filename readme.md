@@ -182,7 +182,6 @@ var itemCollection = db.collection('item');
 ```
 
 ### Auto-Creation
-
 When you request a collection that does not yet exist it is automatically created. If
 it already exists you are given the reference to the existing collection. If you want
 ForerunnerDB to throw an error if a collection is requested that does not already exist
@@ -193,7 +192,6 @@ you can pass an option to the *collection()* method instead:
 ```
 
 ### Specifying a Primary Key Up-Front
-
 On requesting a collection you can specify a primary key that the collection should be
 using. For instance to use a property called "name" as the primary key field:
 
@@ -202,6 +200,18 @@ using. For instance to use a property called "name" as the primary key field:
 ```
 
 You can also read or specify a primary key after instantiation via the primaryKey() method.
+
+### Capped Collections
+Occasionally it is useful to create a collection that will store a finite number of records.
+When that number is reached, any further documents inserted into the collection will cause
+the oldest inserted document to be removed from the collection on a first-in-first-out rule
+(FIFO).
+
+In this example we create a capped collection with a document limit of 5:
+
+```js
+	var collection = db.collection('collectionName', {capped: true, size: 5});
+```
 
 ### Other Patterns
 

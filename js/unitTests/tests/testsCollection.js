@@ -2795,6 +2795,60 @@ QUnit.test("Collection() :: $count in query", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection :: Create collection and specify primary key", function () {
+	base.dbUp();
+
+	var coll;
+
+	coll = db.collection('testPK', {
+		primaryKey: 'foo'
+	});
+
+	strictEqual(coll.primaryKey(), 'foo', 'Primary key is correct');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection :: Create capped collection", function () {
+	base.dbUp();
+
+	var coll;
+
+	coll = db.collection('testCapped', {
+		capped: true,
+		size: 5
+	});
+
+	coll.insert({_id: 1});
+	strictEqual(coll.count(), 1, 'Count is correct');
+
+	coll.insert({_id: 2});
+	strictEqual(coll.count(), 2, 'Count is correct');
+
+	coll.insert({_id: 3});
+	strictEqual(coll.count(), 3, 'Count is correct');
+
+	coll.insert({_id: 4});
+	strictEqual(coll.count(), 4, 'Count is correct');
+
+	coll.insert({_id: 5});
+	strictEqual(coll.count(), 5, 'Count is correct');
+
+	coll.insert({_id: 6});
+	strictEqual(coll.count(), 5, 'Count is correct');
+	strictEqual(coll.find()[0]._id, 2, 'Id for first record is correct');
+
+	coll.insert({_id: 7});
+	strictEqual(coll.count(), 5, 'Count is correct');
+	strictEqual(coll.find()[0]._id, 3, 'Id for first record is correct');
+
+	coll.insert({_id: 8});
+	strictEqual(coll.count(), 5, 'Count is correct');
+	strictEqual(coll.find()[0]._id, 4, 'Id for first record is correct');
+
+	base.dbDown();
+});
+
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
 
