@@ -152,6 +152,7 @@ Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyFie
 		query,
 		dataSearch,
 		seriesValues,
+		sData,
 		i, k;
 
 	// What we WANT to output:
@@ -181,10 +182,20 @@ Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyFie
 			}
 		}
 
-		seriesData.push({
+		sData = {
 			name: seriesName,
 			data: seriesValues
-		});
+		};
+
+		if (options.seriesOptions) {
+			for (k in options.seriesOptions) {
+				if (options.seriesOptions.hasOwnProperty(k)) {
+					sData[k] = options.seriesOptions[k];
+				}
+			}
+		}
+
+		seriesData.push(sData);
 	}
 
 	return {
