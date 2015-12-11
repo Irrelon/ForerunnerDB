@@ -527,6 +527,8 @@ Collection.prototype.init = function (name, options) {
 		upsert: 1
 	};
 
+	this._deferredCalls = true;
+
 	// Set the subset to itself since it is the root collection
 	this.subsetOf(this);
 };
@@ -559,6 +561,16 @@ ReactorIO = _dereq_('./ReactorIO');
  * @return {String} The checksum generated.
  */
 Collection.prototype.crc = Crc;
+
+/**
+ * Gets / sets the deferred calls flag. If set to true (default)
+ * then operations on large data sets can be broken up and done
+ * over multiple CPU cycles (creating an async state). For purely
+ * synchronous behaviour set this to false.
+ * @param {Boolean=} val The value to set.
+ * @returns {Boolean}
+ */
+Shared.synthesize(Collection.prototype, 'deferredCalls');
 
 /**
  * Gets / sets the current state.
@@ -929,15 +941,14 @@ Collection.prototype.upsert = function (obj, callback) {
 
 	if (obj) {
 		var queue = this._deferQueue.upsert,
-			deferThreshold = this._deferThreshold.upsert;
-
-		var returnData = {},
+			deferThreshold = this._deferThreshold.upsert,
+			returnData = {},
 			query,
 			i;
 
 		// Determine if the object passed is an array or not
 		if (obj instanceof Array) {
-			if (obj.length > deferThreshold) {
+			if (this._deferredCalls && obj.length > deferThreshold) {
 				// Break up upsert into blocks
 				this._deferQueue.upsert = queue.concat(obj);
 
@@ -1934,7 +1945,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		// Check if there are more insert items than the insert defer
 		// threshold, if so, break up inserts so we don't tie up the
 		// ui or thread
-		if (data.length > deferThreshold) {
+		if (this._deferredCalls && data.length > deferThreshold) {
 			// Break up insert into blocks
 			this._deferQueue.insert = queue.concat(data);
 
@@ -8265,6 +8276,7 @@ var Overload = function (def) {
 			}
 
 			name = typeof this.name === 'function' ? this.name() : 'Unknown';
+			console.log('Overload: ', def);
 			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
@@ -9282,7 +9294,10 @@ Collection.prototype.load = function (callback) {
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
-						self.setData(data);
+						// Remove all previous data
+						self.remove({});
+						self.insert(data);
+						//self.setData(data);
 					}
 
 					// Now load the collection's metadata
@@ -9865,7 +9880,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.435',
+	version: '1.3.439',
 	modules: {},
 	plugins: {},
 

@@ -590,37 +590,6 @@ QUnit.test("Collection.update() :: arrayKey.$ Positional array selector", functi
 	base.dbDown();
 });
 
-/*test("Collection.update() :: arrayKey.$ Positional array selector", function() {
- base.dbUp();
- base.dataUp();
-
- var coll = db.collection('test').truncate();
-
- coll.setData([{
- _id: 1,
- arr: [{
- _id: 1,
- name: 'A'
- }, {
- _id: 2,
- name: 'B'
- }]
- }, {
- _id: 2,
- arr: [{
- _id: 1,
- name: 'A'
- }, {
- _id: 2,
- name: 'B'
- }]
- }]);
-
- ok(true, "Test not yet written!");
-
- base.dbDown();
- });*/
-
 QUnit.test("Collection.update() :: $addToSet operator for unique push operation", function () {
 	base.dbUp();
 	base.dataUp();
