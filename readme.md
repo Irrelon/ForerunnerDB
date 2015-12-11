@@ -14,7 +14,7 @@ ready and battle tested in real-world applications.
 * Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
 
-## Version 1.3.435
+## Version 1.3.437
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -212,19 +212,6 @@ In this example we create a capped collection with a document limit of 5:
 ```js
 	var collection = db.collection('collectionName', {capped: true, size: 5});
 ```
-
-### Other Patterns
-
-The *collection()* method accepts a number of argument patterns including passing the
-primary key as a string in the second argument e.g.
-
-```js
-	var collection = db.collection('collectionName', 'name');
-```
-
-> While this will work for legacy reasons it is best to use the options object as shown
-above to specify autoCreate and primaryKey option values as using an options object is
-considered the "standard".
 
 ## Setting Initial Data
 When you get a collection instance for the first time it will contain no data. To set data on the collection pass an
@@ -2005,6 +1992,122 @@ affect all triggers that match the type / phase.
 ##### Disable a Trigger via ID, Type and Phase
 
 	db.collection('test').disableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+
+## Events
+Collections emit events when they carry out CRUD operations. You can hook an event using
+the on() method. Events that collections currently emit are:
+
+### insert
+Emitted after an insert operation has completed. The passed arguments to the listener are:
+
+* {Array} inserted An array of the successfully inserted documents.
+* {Array} failed An array of the documents that failed to insert (for instance because of
+an index violation or trigger cancelling the insert).
+
+```js
+	var coll = db.collection('myCollection');
+	
+	coll.on('insert', function (inserted, failed) {
+		console.log('Inserted:', inserted);
+		console.log('Failed:', failed);
+	});
+	
+	coll.insert({moo: true});
+```
+
+### update
+Emitted after an update operation has completed. The passed arguments to the listener are:
+
+* {Array} items An array of the documents that were updated by the update operation.
+
+```js
+	var coll = db.collection('myCollection');
+	coll.insert({moo: true});
+	
+	coll.on('update', function (updated) {
+		console.log('Updated:', updated);
+	});
+	
+	coll.update({moo: true}, {moo: false});
+```
+
+### remove
+Emitted after a remove operation has completed. The passed arguments to the listener are:
+
+* {Array} items An array of the documents that were removed by the remove operation.
+
+```js
+	var coll = db.collection('myCollection');
+	coll.insert({moo: true});
+	
+	coll.on('remove', function (removed) {
+		console.log('Removed:', removed);
+	});
+	
+	coll.remove({moo: true});
+```
+
+### setData
+Emitted after a setData operation has completed. The passed arguments to the listener are:
+
+* {Array} newData An array of the documents that were added to the collection by the operation.
+* {Array} oldData An array of the documents that were in the collection before the operation.
+
+```js
+	var coll = db.collection('myCollection');
+	coll.insert({moo: true});
+	
+	coll.on('setData', function (newData, oldData) {
+		console.log('New Data:', newData);
+		console.log('Old Data:', oldData);
+	});
+	
+	coll.setData({foo: -1});
+```
+
+### truncate
+Emitted **BEFORE** a truncate operation has completed. The passed arguments to the listener are:
+
+* {Array} data An array of the documents that will be truncated from the collection.
+
+```js
+	var coll = db.collection('myCollection');
+	coll.insert({moo: true});
+	
+	coll.on('truncate', function (data) {
+		console.log('New Data:', newData);
+	});
+	
+	coll.truncate();
+```
+
+### change
+Emitted after all CRUD operations have completed.
+
+```js
+	var coll = db.collection('myCollection');
+	
+	
+	coll.on('change', function () {
+		console.log('Changed');
+	});
+	
+	coll.insert({moo: true});
+```
+
+### drop
+Emitted after a collection is dropped.
+
+```js
+	var coll = db.collection('myCollection');
+	
+	
+	coll.on('drop', function () {
+		console.log('Dropped');
+	});
+	
+	coll.drop();
+```
 
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when
