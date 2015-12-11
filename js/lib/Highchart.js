@@ -83,7 +83,8 @@ Highchart.prototype.init = function (collection, options) {
 				this._options.seriesField,
 				this._options.keyField,
 				this._options.valField,
-				this._options.orderBy
+				this._options.orderBy,
+				this._options
 			);
 
 			this._options.chartOptions.xAxis = chartData.xAxis;
@@ -141,10 +142,10 @@ Highchart.prototype.pieDataFromCollectionData = function (data, keyField, valFie
  * @param valField
  * @param orderBy
  */
-Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyField, valField, orderBy) {
+Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyField, valField, orderBy, options) {
 	var data = this._collection.distinct(seriesField),
 		seriesData = [],
-		xAxis = {
+		xAxis = options && options.chartOptions && options.chartOptions.xAxis ? options.chartOptions.xAxis : {
 			categories: []
 		},
 		seriesName,
@@ -172,8 +173,12 @@ Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyFie
 
 		// Loop the keySearch data and grab the value for each item
 		for (k = 0; k < dataSearch.length; k++) {
-			xAxis.categories.push(dataSearch[k][keyField]);
-			seriesValues.push(dataSearch[k][valField]);
+			if (xAxis.categories) {
+				xAxis.categories.push(dataSearch[k][keyField]);
+				seriesValues.push(dataSearch[k][valField]);
+			} else {
+				seriesValues.push([dataSearch[k][keyField], dataSearch[k][valField]]);
+			}
 		}
 
 		seriesData.push({
@@ -195,10 +200,14 @@ Highchart.prototype.seriesDataFromCollectionData = function (seriesField, keyFie
 Highchart.prototype._hookEvents = function () {
 	var self = this;
 
-	self._collection.on('change', function () { self._changeListener.apply(self, arguments); });
+	self._collection.on('change', function () {
+		self._changeListener.apply(self, arguments);
+	});
 
 	// If the collection is dropped, clean up after ourselves
-	self._collection.on('drop', function () { self.drop.apply(self); });
+	self._collection.on('drop', function () {
+		self.drop.apply(self);
+	});
 };
 
 /**
@@ -210,7 +219,7 @@ Highchart.prototype._changeListener = function () {
 	var self = this;
 
 	// Update the series data on the chart
-	if(typeof self._collection !== 'undefined' && self._chart) {
+	if (typeof self._collection !== 'undefined' && self._chart) {
 		var data = self._collection.find(),
 			i;
 
@@ -235,12 +244,15 @@ Highchart.prototype._changeListener = function () {
 					self._options.seriesField,
 					self._options.keyField,
 					self._options.valField,
-					self._options.orderBy
+					self._options.orderBy,
+					self._options
 				);
 
-				self._chart.xAxis[0].setCategories(
-					seriesData.xAxis.categories
-				);
+				if (seriesData.xAxis.categories) {
+					self._chart.xAxis[0].setCategories(
+						seriesData.xAxis.categories
+					);
+				}
 
 				for (i = 0; i < seriesData.series.length; i++) {
 					if (self._chart.series[i]) {
@@ -294,7 +306,9 @@ Highchart.prototype.drop = function (callback) {
 
 		this.emit('drop', this);
 
-		if (callback) { callback(false, true); }
+		if (callback) {
+			callback(false, true);
+		}
 
 		return true;
 	} else {
@@ -363,6 +377,17 @@ Collection.prototype.pieChart = new Overload({
  * @type {Overload}
  */
 Collection.prototype.lineChart = new Overload({
+	/**
+	 * Chart via selector.
+	 * @func lineChart
+	 * @memberof Highchart
+	 * @param {String} selector The chart selector.
+	 * @returns {*}
+	 */
+	'string': function (selector) {
+		return this._highcharts[selector];
+	},
+
 	/**
 	 * Chart via options object.
 	 * @func lineChart
