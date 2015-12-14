@@ -6802,6 +6802,12 @@ var Matching = {
 				// Property exists
 				return (source === undefined) !== test;
 
+			case '$eq': // Equals
+				return source == test; // jshint ignore:line
+
+			case '$eeq': // Equals equals
+				return source === test;
+
 			case '$ne': // Not equals
 				return source != test; // jshint ignore:line
 
@@ -8728,7 +8734,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.439',
+	version: '1.3.441',
 	modules: {},
 	plugins: {},
 
