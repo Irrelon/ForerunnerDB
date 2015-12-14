@@ -295,6 +295,8 @@ MongoDB but which can help in browser-centric applications.
 * [$gte](#gte) Greater Than / Equal To
 * [$lt](#lt) Less Than
 * [$lte](#lte) Less Than / Equal To
+* [$eq](#eq) Equal To (==)
+* [$eeq](#eeq) Strict Equal To (===)
 * [$ne](#ne) Not Equal To (!=)
 * [$nee](#nee) Strict Not Equal To (!==)
 * [$in](#in) Match Any Value In An Array Of Values
@@ -462,6 +464,78 @@ Result is:
 		_id: 1,
 		val: 1
 	}, {
+		_id: 2,
+		val: 2
+	}]
+
+#### $eq
+Selects the documents where the value of the field is equal (i.e. ==) to the specified value.
+
+	{field: {$eq: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: 1
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: 3
+	}]);
+	
+	result = coll.find({
+		val: {
+			$eq: 2
+		}
+	});
+	
+Result is:
+
+	[{
+		_id: 2,
+		val: 2
+	}]
+
+#### $eeq
+Selects the documents where the value of the field is strict equal (i.e. ===) to the specified value. This
+allows for strict equality checks for instance zero will not be seen as false because 0 !== false and comparing
+a string with a number of the same value will also return false e.g. ('2' == 2) is true but ('2' === 2) is false.
+
+	{field: {$eeq: value} }
+
+##### Usage
+
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('test'),
+		coll = db.collection('test');
+		
+	coll.setData([{
+		_id: 1,
+		val: '2'
+	}, {
+		_id: 2,
+		val: 2
+	}, {
+		_id: 3,
+		val: '2'
+	}]);
+	
+	result = coll.find({
+		val: {
+			$eeq: 2
+		}
+	});
+	
+Result is:
+
+	[{
 		_id: 2,
 		val: 2
 	}]
@@ -3188,6 +3262,7 @@ ForerunnerDB's project road-map:
 * $page
 * $count
 * $nee
+* $eeq
 * $cast
 * $overwrite
 

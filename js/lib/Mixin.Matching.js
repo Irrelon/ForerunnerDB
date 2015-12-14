@@ -278,6 +278,12 @@ var Matching = {
 				// Property exists
 				return (source === undefined) !== test;
 
+			case '$eq': // Equals
+				return source == test; // jshint ignore:line
+
+			case '$eeq': // Equals equals
+				return source === test;
+
 			case '$ne': // Not equals
 				return source != test; // jshint ignore:line
 
