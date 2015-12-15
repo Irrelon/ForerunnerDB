@@ -2364,16 +2364,24 @@ Collection.prototype._resolveDynamicQuery = function (query, item) {
 		newQuery,
 		propType,
 		propVal,
+		pathResult,
 		i;
 
 	if (typeof query === 'string') {
 		// Check if the property name starts with a back-reference
 		if (query.substr(0, 3) === '$$.') {
 			// Fill the query with a back-referenced value
-			return new Path(query.substr(3, query.length - 3)).value(item)[0];
+			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
+			return
+		} else {
+			pathResult = new Path(query).value(item);
 		}
 
-		return new Path(query).value(item)[0];
+		if (pathResult.length > 1) {
+			return {$in: pathResult};
+		} else {
+			return pathResult[0];
+		}
 	}
 
 	newQuery = {};

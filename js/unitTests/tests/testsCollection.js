@@ -900,6 +900,72 @@ QUnit.test("Collection.find() :: Options :: Multi join", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Options :: Multi join with path to ids in an array", function () {
+	base.dbUp();
+
+	var coll1 = db.collection('coll1').truncate(),
+		coll2 = db.collection('coll2').truncate();
+
+	coll1.insert([{
+		_id: '1',
+		name: 'One'
+	}, {
+		_id: '2',
+		name: 'Two'
+	}, {
+		_id: '3',
+		name: 'Three'
+	}, {
+		_id: '4',
+		name: 'Four'
+	}, {
+		_id: '5',
+		name: 'Five'
+	}]);
+
+	coll2.insert([{
+		my: {
+			friends: [{friendId: '1'}, {friendId: '2'}]
+		}
+	}, {
+		my: {
+			friends: [{friendId: '3'}, {friendId: '4'}]
+		}
+	}, {
+		my: {
+			friends: [{friendId: '5'}]
+		}
+	}]);
+
+	var result = coll2.find({}, {
+		"$join": [{
+			"coll1": {
+				"_id": "my.friends.friendId",
+				"$as": "friendData",
+				"$require": false,
+				"$multi": true
+			}
+		}]
+	});
+
+	console.log(result);
+
+	ok(result[0] && result[0].friendData && result[0].friendData[0], 'friendData was joined');
+
+	if (result[0] && result[0].friendData && result[0].friendData[0]) {
+
+		strictEqual(result[0].my.friends[0].friendId, result[0].friendData[0]._id, "Complete");
+		strictEqual(result[0].my.friends[1].friendId, result[0].friendData[1]._id, "Complete");
+
+		strictEqual(result[1].my.friends[0].friendId, result[1].friendData[0]._id, "Complete");
+		strictEqual(result[1].my.friends[1].friendId, result[1].friendData[1]._id, "Complete");
+
+		strictEqual(result[2].my.friends[0].friendId, result[2].friendData[0]._id, "Complete");
+	}
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: Options :: Queries joined data", function () {
 	base.dbUp();
 	base.dataUp();
