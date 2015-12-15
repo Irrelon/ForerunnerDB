@@ -2372,7 +2372,6 @@ Collection.prototype._resolveDynamicQuery = function (query, item) {
 		if (query.substr(0, 3) === '$$.') {
 			// Fill the query with a back-referenced value
 			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
-			return
 		} else {
 			pathResult = new Path(query).value(item);
 		}

@@ -3094,16 +3094,23 @@ Collection.prototype._resolveDynamicQuery = function (query, item) {
 		newQuery,
 		propType,
 		propVal,
+		pathResult,
 		i;
 
 	if (typeof query === 'string') {
 		// Check if the property name starts with a back-reference
 		if (query.substr(0, 3) === '$$.') {
 			// Fill the query with a back-referenced value
-			return new Path(query.substr(3, query.length - 3)).value(item)[0];
+			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
+		} else {
+			pathResult = new Path(query).value(item);
 		}
 
-		return new Path(query).value(item)[0];
+		if (pathResult.length > 1) {
+			return {$in: pathResult};
+		} else {
+			return pathResult[0];
+		}
 	}
 
 	newQuery = {};
@@ -13382,7 +13389,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.441',
+	version: '1.3.444',
 	modules: {},
 	plugins: {},
 
