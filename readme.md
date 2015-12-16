@@ -1302,6 +1302,7 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [$splicePush](#splicepush)
 * [$addToSet](#addtoset)
 * [$pull](#pull)
+* [$pop](#pop)
 * [$move](#move)
 * [$cast](#cast)
 * [Array Positional in Updates (.$)](#array-positional-in-updates)
@@ -1680,6 +1681,58 @@ The following example removes the "Milk" entry from the "shoppingList" array:
 	});
 
 If an array element is an embedded document (JavaScript object), the $pull operator applies its specified query to the element as though it were a top-level object.
+
+#### $pop
+The $pop operator removes an element from an array at the beginning or end. If you wish to remove
+an element from the end of the array pass 1 in your value. If you wish to remove an element from
+the beginning of an array pass -1 in your value.
+
+	db.collection('test').update({
+		<query>
+	}, {
+		$pop: {
+			<field>: <value>
+		}
+	});
+
+The following example pops the item from the beginning of the "shoppingList" array:
+
+	db.collection('test').setData({
+		_id: "23231",
+		shoppingList: [{
+			_id: 1,
+			name: "One"
+		}, {
+			_id: 2,
+			name: "Two"
+		}, {
+			_id: 3,
+			name: "Three"
+		}]
+	});
+	
+	db.collection('test').update({
+		_id: "23231"
+	}, {
+		$pop: {
+			shoppingList: -1 // -1 pops from the beginning, 1 pops from the end
+		}
+	});
+	
+	JSON.stringify(db.collection('test').find());
+
+Result:
+
+	[{
+		_id: "23231",
+		shoppingList: [{
+			_id: 2,
+			name: "Two"
+		}, {
+			_id: 3,
+			name: "Three"
+		}]
+	}]
 
 #### $move
 The $move operator moves an item that exists inside a document's array from one index to another.
