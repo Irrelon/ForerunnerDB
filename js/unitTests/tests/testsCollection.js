@@ -2964,3 +2964,61 @@ QUnit.test("Collection :: Create capped collection", function () {
 
 	base.dbDown();
 });*/
+
+/* We are not supporting $size in this version of ForerunnerDB, you can use $count instead
+because of the way our query system operates it would be very inefficient to do $size
+QUnit.test("Collection() :: $size in query", function () {
+	base.dbUp();
+
+	var coll = db.collection('test');
+	coll.setData([{
+		arr: [{
+			_id: 1
+		}, {
+			_id: 2
+		}, {
+			_id: 3
+		}, {
+			_id: 4
+		}, {
+			_id: 5
+		}]
+	}, {
+		arr: [{
+			_id: 1
+		}]
+	}, {
+		arr: [{
+			_id: 1
+		}]
+	}, {
+		arr: [{
+			_id: 1
+		}, {
+			_id: 2
+		}]
+	}, {
+		arr: []
+	}]);
+
+	var result1 = coll.find({
+		arr: {
+			$size: {
+				$gt: 2
+			}
+		}
+	});
+
+	var result2 = coll.find({
+		arr: {
+			$size: {
+				$lt: 2
+			}
+		}
+	});
+
+	strictEqual(result1.length, 1, 'Correct number of records have been returned');
+	strictEqual(result2.length, 3, 'Correct number of records have been returned');
+
+	base.dbDown();
+});*/
