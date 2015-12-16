@@ -656,7 +656,7 @@ Collection.prototype.update = function (query, update, options) {
 					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, newDoc);
 				} else {
 					// Trigger cancelled operation so tell result that it was not updated
-					result = 'Trigger cancelled operation';
+					result = false;
 				}
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
