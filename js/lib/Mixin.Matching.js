@@ -251,6 +251,7 @@ var Matching = {
 	 * matching against.
 	 * @param {*} source The source data to match the query against.
 	 * @param {*} test The query to match the source against.
+	 * @param {Object} queryOptions The options the query was passed with.
 	 * @param {Object=} options An options object.
 	 * @returns {*}
 	 * @private
