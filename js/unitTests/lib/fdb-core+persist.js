@@ -2064,7 +2064,7 @@ Collection.prototype._insert = function (doc, index) {
 					}
 				} else {
 					// The trigger just wants to cancel the operation
-					return false;
+					return 'Trigger cancelled operation';
 				}
 			} else {
 				// No triggers to execute
@@ -7130,6 +7130,7 @@ var Matching = {
 	 * matching against.
 	 * @param {*} source The source data to match the query against.
 	 * @param {*} test The query to match the source against.
+	 * @param {Object} queryOptions The options the query was passed with.
 	 * @param {Object=} options An options object.
 	 * @returns {*}
 	 * @private
@@ -9893,7 +9894,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.445',
+	version: '1.3.449',
 	modules: {},
 	plugins: {},
 
