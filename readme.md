@@ -14,7 +14,7 @@ ready and battle tested in real-world applications.
 * Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
 
-## Version 1.3.445
+## Version 1.3.447
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -737,6 +737,8 @@ Result is:
 
 #### $count
 > Version >= 1.3.326
+
+> This is equivalent to MongoDB's $size operator but please see below for usage.
 
 Selects documents based on the length (count) of items in an array inside a document.
 
