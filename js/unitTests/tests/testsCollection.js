@@ -1048,7 +1048,7 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Join with query", function () {
+QUnit.test("Collection.find() :: Options :: Join with query and right-side back-reference", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1078,6 +1078,60 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 	strictEqual(result[1].friendArr[0]._id, result[1].friends[0], "Correct data delivered in 2");
 	strictEqual(result[2].friendArr[0]._id, result[2].friends[0], "Correct data delivered in 3");
 	strictEqual(result[3].friendArr[0]._id, result[3].friends[1], "Correct data delivered in 4");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Options :: Join with query with both a right-side back-reference and static query", function () {
+	base.dbUp();
+
+	var a = db.collection('a').truncate(),
+		b = db.collection('b').truncate();
+
+	a.insert([{
+		_id: 1
+	}, {
+		_id: 2
+	}, {
+		_id: 3
+	}, {
+		_id: 4
+	}]);
+
+	b.insert([{
+		id: 1,
+		name: 'test1'
+	}, {
+		id: 2,
+		name: 'test2'
+	}, {
+		id: 3,
+		name: 'test2'
+	}, {
+		id: 4,
+		name: 'test1'
+	}]);
+
+	var result = a.find({}, {
+		"$join": [{
+			"b": {
+				"$where": {
+					"query": {
+						"id": "$$._id",
+						"name": 'test1'
+					}
+				},
+				"$as": "$root",
+				"$require": false,
+				"$multi": false
+			}
+		}]
+	});
+
+	strictEqual(result[0].name, 'test1', "Correct data delivered in 1");
+	strictEqual(result[1].name, undefined, "Correct data delivered in 2");
+	strictEqual(result[2].name, undefined, "Correct data delivered in 3");
+	strictEqual(result[3].name, 'test1', "Correct data delivered in 4");
 
 	base.dbDown();
 });
