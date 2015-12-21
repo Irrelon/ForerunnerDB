@@ -3265,38 +3265,42 @@ coll.pieChart('#demo-chart', 'name', 'val', 'Food', {
 
 Function definition:
 
-	collection.lineChart(selector, seriesField, keyField, valField);
+```js
+collection.lineChart(selector, seriesField, keyField, valField);
+```
 
 Example:
 
-	// Create the collection
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('chartData');
+```js
+// Create the collection
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('chartData');
 
-	// Set the collection data
-	coll.setData([{
-		type: 'Jam',
-		date: String(new Date('2014-09-13')).substr(0, 15),
-		val: 100
-	}, {
-		type: 'Jam',
-		date: String(new Date('2014-09-14')).substr(0, 15),
-		val: 33
-	}, {
-		type: 'Jam',
-		date: String(new Date('2014-09-15')).substr(0, 15),
-		val: 24
-	}]);
+// Set the collection data
+coll.setData([{
+	type: 'Jam',
+	date: String(new Date('2014-09-13')).substr(0, 15),
+	val: 100
+}, {
+	type: 'Jam',
+	date: String(new Date('2014-09-14')).substr(0, 15),
+	val: 33
+}, {
+	type: 'Jam',
+	date: String(new Date('2014-09-15')).substr(0, 15),
+	val: 24
+}]);
 
-	// Create a pie chart on the element with the id "demo-chart"
-	coll.lineChart('#demo-chart', 'type', 'date', 'val', {
-		chartOptions: {
-			title: {
-				text: 'Jam Stores Over Time'
-			}
+// Create a pie chart on the element with the id "demo-chart"
+coll.lineChart('#demo-chart', 'type', 'date', 'val', {
+	chartOptions: {
+		title: {
+			text: 'Jam Stores Over Time'
 		}
-	});
+	}
+});
+```
 
 > Note that the options object passed as the 5th parameter in the call above has a
 chartOptions key. This key is passed to Highcharts directly so any options that are
@@ -3318,11 +3322,15 @@ You can drop a chart using the dropChart() method on the collection the chart is
 
 Function definition:
 
-	collection.dropChart(selector);
+```js
+collection.dropChart(selector);
+```
 	
 Example:
 
-	coll.dropChart('#demo-chart);
+```js
+coll.dropChart('#demo-chart);
+```
 	
 > Dropping a chart will remove it from the DOM and stop all further collection updates
 from propagating to Highcharts.
@@ -3351,20 +3359,22 @@ Properties that start with a double-slash are treated as comments and ignored du
 the query process. An example would be where you wish to store some data in the query
 object but you do not want it to affect the outcome of the query.
 
-	// Find documents that have a property "num" that equals 1:
-	db.collection('test').find({
-		'num': 1
-	});
-	
-	// Find documents that have a property "num" that equals 1
-	// -- this is exactly the same query as above because the //myData
-	// property is ignored completely
-	db.collection('test').find({
-		'num': 1,
-		'//myData': {
-			'someProp': 134223
-		}
-	});
+```js
+// Find documents that have a property "num" that equals 1:
+db.collection('test').find({
+	'num': 1
+});
+
+// Find documents that have a property "num" that equals 1
+// -- this is exactly the same query as above because the //myData
+// property is ignored completely
+db.collection('test').find({
+	'num': 1,
+	'//myData': {
+		'someProp': 134223
+	}
+});
+```
 
 # Differences Between ForerunnerDB and MongoDB
 Developers familiar with the MongoDB query language will find ForerunnerDB quite similar
@@ -3564,13 +3574,17 @@ In order to support multiple named databases Forerunner's instantiation has chan
 slightly. In previous versions you only had access to a single database that you
 instantiated via:
 
-	var db = new ForerunnerDB();
+```js
+var db = new ForerunnerDB();
+```
 
 Now you have access to multiple databases via from the main forerunner instance but this
 requires that you change your instantiation code to:
 
-	var fdb = new ForerunnerDB();
-	var db = fdb.db('myDatabaseName');
+```js
+var fdb = new ForerunnerDB();
+var db = fdb.db('myDatabaseName');
+```
 
 Multiple database support is a key requirement that unfortunately requires we change
 the instantiation pattern as detailed above. Although this is a fundamental change to
