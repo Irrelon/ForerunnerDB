@@ -2138,7 +2138,7 @@ Collection.prototype._find = function (query, options) {
 									// works if joinMulti is disabled
 									if (joinMulti !== false) {
 										// Throw an exception here as this join is not physically possible!
-										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
+										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
 									}
 
 									// Mixin the result
