@@ -1051,7 +1051,7 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 QUnit.test("Collection.find() :: Options :: Join with query", function () {
 	base.dbUp();
 	base.dataUp();
-debugger;
+
 	var result = user.find({}, {
 		"$join": [{
 			"user": {
