@@ -1908,7 +1908,11 @@ documents where the price is greater than or equal to 100:
 	});
 
 ### Joins
-Sometimes you want to join two or more collections when running a query and return a single document with all the data you need from those multiple collections. ForerunnerDB supports collection joins via a simple options key "$join". For instance, let's setup a second collection called "purchase" in which we will store some details about users who have ordered items from the "item" collection we initialised above:
+Sometimes you want to join two or more collections when running a query and return
+a single document with all the data you need from those multiple collections.
+ForerunnerDB supports collection joins via a simple options key "$join". For instance,
+let's setup a second collection called "purchase" in which we will store some details
+about users who have ordered items from the "item" collection we initialised above:
 
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test'),
@@ -1947,7 +1951,8 @@ Sometimes you want to join two or more collections when running a query and retu
 		quantity: 1
 	}]);
 
-Now, when we find data from the "item" collection we can grab all the users that ordered that item as well and store them in a key called "purchasedBy":
+Now, when we find data from the "item" collection we can grab all the users that
+ordered that item as well and store them in a key called "purchasedBy":
 
 	itemCollection.find({}, {
 		'$join': [{
@@ -2005,6 +2010,30 @@ The result of the call above is:
 		"name":"Chicken Yum Yum",
 		"purchasedBy":[]
 	}]
+
+#### Advanced Joins
+If your join has more advanced requirements than matching against foreign keys alone,
+you can specify a custom query that will match data from the foreign collection using
+the $where clause in your $join.
+
+For instance, to achieve the same results as the join in the above example, you can
+specify matching data in the foreign collection using the $$ back-reference operator:
+
+	itemCollection.find({}, {
+		'$join': [{
+			'purchase': {
+				'$where': {
+				    'itemId': '$$._id'
+				},
+				'$as': 'purchasedBy',
+				'$require': false,
+				'$multi': true
+			}
+		}]
+	});
+
+The $$ back-reference operator allows you to reference key/value data from the document
+currently being evaluated by the join operation.
 
 ## Triggers
 > Version >= 1.3.12
