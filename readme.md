@@ -188,7 +188,7 @@ ForerunnerDB to throw an error if a collection is requested that does not alread
 you can pass an option to the *collection()* method instead:
 
 ```js
-	var collection = db.collection('collectionName', {autoCreate: false});
+var collection = db.collection('collectionName', {autoCreate: false});
 ```
 
 ### Specifying a Primary Key Up-Front
@@ -196,7 +196,7 @@ On requesting a collection you can specify a primary key that the collection sho
 using. For instance to use a property called "name" as the primary key field:
 
 ```js
-	var collection = db.collection('collectionName', {primaryKey: 'name'});
+var collection = db.collection('collectionName', {primaryKey: 'name'});
 ```
 
 You can also read or specify a primary key after instantiation via the primaryKey() method.
@@ -210,7 +210,7 @@ the oldest inserted document to be removed from the collection on a first-in-fir
 In this example we create a capped collection with a document limit of 5:
 
 ```js
-	var collection = db.collection('collectionName', {capped: true, size: 5});
+var collection = db.collection('collectionName', {capped: true, size: 5});
 ```
 
 ## Setting Initial Data
@@ -2039,7 +2039,7 @@ specify matching data in the foreign collection using the $$ back-reference oper
 The $$ back-reference operator allows you to reference key/value data from the document
 currently being evaluated by the join operation. In the example above the query in the
 $where operator is being run against the **purchase** collection and the back-reference
-will lookup the current *_id* in the itemCollection for the document currently undergoing
+will lookup the current *_id* in the **itemCollection** for the document currently undergoing
 the join.
 
 #### Placing Results $as: "$root"
@@ -2214,14 +2214,14 @@ Emitted after an insert operation has completed. The passed arguments to the lis
 an index violation or trigger cancelling the insert).
 
 ```js
-	var coll = db.collection('myCollection');
-	
-	coll.on('insert', function (inserted, failed) {
-		console.log('Inserted:', inserted);
-		console.log('Failed:', failed);
-	});
-	
-	coll.insert({moo: true});
+var coll = db.collection('myCollection');
+
+coll.on('insert', function (inserted, failed) {
+	console.log('Inserted:', inserted);
+	console.log('Failed:', failed);
+});
+
+coll.insert({moo: true});
 ```
 
 ### update
@@ -2230,14 +2230,14 @@ Emitted after an update operation has completed. The passed arguments to the lis
 * {Array} items An array of the documents that were updated by the update operation.
 
 ```js
-	var coll = db.collection('myCollection');
-	coll.insert({moo: true});
-	
-	coll.on('update', function (updated) {
-		console.log('Updated:', updated);
-	});
-	
-	coll.update({moo: true}, {moo: false});
+var coll = db.collection('myCollection');
+coll.insert({moo: true});
+
+coll.on('update', function (updated) {
+	console.log('Updated:', updated);
+});
+
+coll.update({moo: true}, {moo: false});
 ```
 
 ### remove
@@ -2246,14 +2246,14 @@ Emitted after a remove operation has completed. The passed arguments to the list
 * {Array} items An array of the documents that were removed by the remove operation.
 
 ```js
-	var coll = db.collection('myCollection');
-	coll.insert({moo: true});
-	
-	coll.on('remove', function (removed) {
-		console.log('Removed:', removed);
-	});
-	
-	coll.remove({moo: true});
+var coll = db.collection('myCollection');
+coll.insert({moo: true});
+
+coll.on('remove', function (removed) {
+	console.log('Removed:', removed);
+});
+
+coll.remove({moo: true});
 ```
 
 ### setData
@@ -2263,15 +2263,15 @@ Emitted after a setData operation has completed. The passed arguments to the lis
 * {Array} oldData An array of the documents that were in the collection before the operation.
 
 ```js
-	var coll = db.collection('myCollection');
-	coll.insert({moo: true});
-	
-	coll.on('setData', function (newData, oldData) {
-		console.log('New Data:', newData);
-		console.log('Old Data:', oldData);
-	});
-	
-	coll.setData({foo: -1});
+var coll = db.collection('myCollection');
+coll.insert({moo: true});
+
+coll.on('setData', function (newData, oldData) {
+	console.log('New Data:', newData);
+	console.log('Old Data:', oldData);
+});
+
+coll.setData({foo: -1});
 ```
 
 ### truncate
@@ -2280,42 +2280,42 @@ Emitted **BEFORE** a truncate operation has completed. The passed arguments to t
 * {Array} data An array of the documents that will be truncated from the collection.
 
 ```js
-	var coll = db.collection('myCollection');
-	coll.insert({moo: true});
-	
-	coll.on('truncate', function (data) {
-		console.log('New Data:', newData);
-	});
-	
-	coll.truncate();
+var coll = db.collection('myCollection');
+coll.insert({moo: true});
+
+coll.on('truncate', function (data) {
+	console.log('New Data:', newData);
+});
+
+coll.truncate();
 ```
 
 ### change
 Emitted after all CRUD operations have completed.
 
 ```js
-	var coll = db.collection('myCollection');
-	
-	
-	coll.on('change', function () {
-		console.log('Changed');
-	});
-	
-	coll.insert({moo: true});
+var coll = db.collection('myCollection');
+
+
+coll.on('change', function () {
+	console.log('Changed');
+});
+
+coll.insert({moo: true});
 ```
 
 ### drop
 Emitted after a collection is dropped.
 
 ```js
-	var coll = db.collection('myCollection');
-	
-	
-	coll.on('drop', function () {
-		console.log('Dropped');
-	});
-	
-	coll.drop();
+var coll = db.collection('myCollection');
+
+
+coll.on('drop', function () {
+	console.log('Dropped');
+});
+
+coll.drop();
 ```
 
 ## Indices & Performance
@@ -2325,128 +2325,142 @@ ensureIndex() method. ForerunnerDB will utilise the index that most closely matc
 the query you are executing. In the case where a query matches multiple indexes
 the most relevant index is automatically determined. Let's setup some data to index:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
-		collection = db.collection('test'),
-		tempName,
-		tempAge,
-		i;
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
+	collection = db.collection('test'),
+	tempName,
+	tempAge,
+	i;
 
-	for (i = 0; i < 100000; i++) {
-		tempName = names[Math.ceil(Math.random() * names.length) - 1];
-		tempAge = Math.ceil(Math.random() * 100);
+for (i = 0; i < 100000; i++) {
+	tempName = names[Math.ceil(Math.random() * names.length) - 1];
+	tempAge = Math.ceil(Math.random() * 100);
 
-		collection.insert({
-			name: tempName,
-			age: tempAge
-		});
-	}
+	collection.insert({
+		name: tempName,
+		age: tempAge
+	});
+}
+```
 
 You can see that in our collection we have some random names and some random ages. If we ask Forerunner to explain the query plan for querying the name and age fields:
 
-	collection.explain({
-		name: 'Bill',
-        age: 17
-	});
+```js
+collection.explain({
+	name: 'Bill',
+	age: 17
+});
+```
 
 The result shows that the largest amount of time was taken in the "tableScan" step:
 
-	{
-		analysis: Object,
-		flag: Object,
-		index: Object,
-		log: Array[0],
-		operation: "find",
-		results: 128, // Will vary depending on your random entries inserted earlier
-		steps: Array[4] // Lists the steps Forerunner took to generate the results
-			[0]: Object
-				name: "analyseQuery",
-				totalMs: 0
-			[1]: Object
-				name: "checkIndexes",
-                totalMs: 0
-			[2]: Object
-				name: "tableScan",
-                totalMs: 54
-			[3]: Object
-				name: "decouple",
-                totalMs: 1,
-        time: Object
-	}
+```json
+{
+	analysis: Object,
+	flag: Object,
+	index: Object,
+	log: Array[0],
+	operation: "find",
+	results: 128, // Will vary depending on your random entries inserted earlier
+	steps: Array[4] // Lists the steps Forerunner took to generate the results
+		[0]: Object
+			name: "analyseQuery",
+			totalMs: 0
+		[1]: Object
+			name: "checkIndexes",
+			totalMs: 0
+		[2]: Object
+			name: "tableScan",
+			totalMs: 54
+		[3]: Object
+			name: "decouple",
+			totalMs: 1,
+	time: Object
+}
+```
 
 From the explain output we can see that a large amount of time was taken up doing a table scan. This means that the database had to scan through every item in the collection and determine if it matched the query you passed. Let's speed this up by creating an index on the "name" field so that lookups against that field are very fast. In the index below we are indexing against the "name" field in ascending order, which is what the 1 denotes in name: 1. If we wish to index in descending order we would use name: -1 instead.
 
-	collection.ensureIndex({
-		name: 1
-	});
+```js
+collection.ensureIndex({
+	name: 1
+});
+```
 
 The collection now contains an ascending index against the name field. Queries that check against the name field will now be optimised:
 
-	collection.explain({
-		name: 'Bill',
-		age: 17
-	});
+```js
+collection.explain({
+	name: 'Bill',
+	age: 17
+});
+```
 
 Now the explain output has some different results:
 
-	{
-		analysis: Object,
-		flag: Object,
-		index: Object,
-		log: Array[0],
-		operation: "find",
-		results: 128, // Will vary depending on your random entries inserted earlier
-		steps: Array[6] // Lists the steps Forerunner took to generate the results
-			[0]: Object
-				name: "analyseQuery",
-				totalMs: 1
-			[1]: Object
-				name: "checkIndexes",
-                totalMs: 1
-			[2]: Object
-				name: "checkIndexMatch: name:1",
-                totalMs: 0
-			[3]: Object
-				name: "indexLookup",
-                totalMs: 0,
-			[4]: Object
-				name: "tableScan",
-                totalMs: 13,
-			[5]: Object
-				name: "decouple",
-                totalMs: 1,
-        time: Object
-	}
+```json
+{
+	analysis: Object,
+	flag: Object,
+	index: Object,
+	log: Array[0],
+	operation: "find",
+	results: 128, // Will vary depending on your random entries inserted earlier
+	steps: Array[6] // Lists the steps Forerunner took to generate the results
+		[0]: Object
+			name: "analyseQuery",
+			totalMs: 1
+		[1]: Object
+			name: "checkIndexes",
+			totalMs: 1
+		[2]: Object
+			name: "checkIndexMatch: name:1",
+			totalMs: 0
+		[3]: Object
+			name: "indexLookup",
+			totalMs: 0,
+		[4]: Object
+			name: "tableScan",
+			totalMs: 13,
+		[5]: Object
+			name: "decouple",
+			totalMs: 1,
+	time: Object
+}
+```
 
 The query plan shows that the index was used because it has an "indexLookup" step, however we still have a "tableScan" step that took 13 milliseconds to execute. Why was this? If we delve into the query plan a little more by expanding the analysis object we can see why:
 
-	{
-		analysis: Object
-			hasJoin: false,
-			indexMatch: Array[1]
-				[0]: Object
-					index: Index,
-					keyData: Object
-						matchedKeyCount: 1,
-						totalKeyCount: 2,
-						matchedKeys: Object
-							age: false,
-							name: true
-					lookup: Array[12353]
-			joinQueries: Object,
-			options: Object,
-			queriesJoin: false,
-			queriesOn: Array[1],
-			query: Object
-		flag: Object,
-		index: Object,
-		log: Array[0],
-		operation: "find",
-		results: 128, // Will vary depending on your random entries inserted earlier
-		steps: Array[6] // Lists the steps Forerunner took to generate the results
-        time: Object
-	}
+```json
+{
+	analysis: Object
+		hasJoin: false,
+		indexMatch: Array[1]
+			[0]: Object
+				index: Index,
+				keyData: Object
+					matchedKeyCount: 1,
+					totalKeyCount: 2,
+					matchedKeys: Object
+						age: false,
+						name: true
+				lookup: Array[12353]
+		joinQueries: Object,
+		options: Object,
+		queriesJoin: false,
+		queriesOn: Array[1],
+		query: Object
+	flag: Object,
+	index: Object,
+	log: Array[0],
+	operation: "find",
+	results: 128, // Will vary depending on your random entries inserted earlier
+	steps: Array[6] // Lists the steps Forerunner took to generate the results
+	time: Object
+}
+```
 
 In the selected index to use (indexMatch[0]) the keyData shows that the index only matched 1 out of the 2 query keys.
 
@@ -2457,51 +2471,57 @@ In the case of the index and query above, Forerunner's process will be:
 
 This means that while the index can be used, a table scan of the index is still required. We can make our index better by using a compound index:
 
-	collection.ensureIndex({
-		name: 1,
-		age: 1
-	});
+```js
+collection.ensureIndex({
+	name: 1,
+	age: 1
+});
+```
 
 With the compound index, Forerunner can now pull the matching record right out of the hash table without doing a data scan which is very very fast:
 
-	collection.explain({
-		name: 'Bill',
-		age: 17
-	});
+```js
+collection.explain({
+	name: 'Bill',
+	age: 17
+});
+```
 
 Which gives:
 
-	{
-		analysis: Object,
-		flag: Object,
-		index: Object,
-		log: Array[0],
-		operation: "find",
-		results: 128, // Will vary depending on your random entries inserted earlier
-		steps: Array[7] // Lists the steps Forerunner took to generate the results
-			[0]: Object
-				name: "analyseQuery",
-				totalMs: 0
-			[1]: Object
-				name: "checkIndexes",
-                totalMs: 0
-			[2]: Object
-				name: "checkIndexMatch: name:1",
-                totalMs: 0
-			[3]: Object
-				name: "checkIndexMatch: name:1_age:1",
-                totalMs: 0,
-			[4]: Object
-				name: "findOptimalIndex",
-                totalMs: 0,
-			[5]: Object
-				name: "indexLookup",
-                totalMs: 0,
-			[6]: Object
-				name: "decouple",
-                totalMs: 0,
-        time: Object
-	}
+```json
+{
+	analysis: Object,
+	flag: Object,
+	index: Object,
+	log: Array[0],
+	operation: "find",
+	results: 128, // Will vary depending on your random entries inserted earlier
+	steps: Array[7] // Lists the steps Forerunner took to generate the results
+		[0]: Object
+			name: "analyseQuery",
+			totalMs: 0
+		[1]: Object
+			name: "checkIndexes",
+			totalMs: 0
+		[2]: Object
+			name: "checkIndexMatch: name:1",
+			totalMs: 0
+		[3]: Object
+			name: "checkIndexMatch: name:1_age:1",
+			totalMs: 0,
+		[4]: Object
+			name: "findOptimalIndex",
+			totalMs: 0,
+		[5]: Object
+			name: "indexLookup",
+			totalMs: 0,
+		[6]: Object
+			name: "decouple",
+			totalMs: 0,
+	time: Object
+}
+```
 
 Now we are able to query 100,000 records instantly, requiring zero milliseconds to return the results.
 
@@ -2523,19 +2543,23 @@ relying on data either being saved or loaded.
 Persistence is handled by a very simple interface in the Collection class. You can save the current state
 of any collection by calling:
 
-    collection.save(function (err) {
-    	if (!err) {
-    		// Save was successful
-    	}
-    });
+```js
+collection.save(function (err) {
+	if (!err) {
+		// Save was successful
+	}
+});
+```
 
 You can then load the collection's data back again via:
 
-    collection.load(function (err) {
-		if (!err) {
-			// Load was successful
-		}
-	});
+```js
+collection.load(function (err) {
+	if (!err) {
+		// Load was successful
+	}
+});
+```
 
 If you call collection.load() when your application starts and collection.save() when you make changes
 to your collection you can ensure that your application always has up-to-date data.
@@ -2549,21 +2573,27 @@ driver() method:
 
 ##### IndexedDB
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-	db.persist.driver('IndexedDB');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
+db.persist.driver('IndexedDB');
+```
 
 ##### WebSQL
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-	db.persist.driver('WebSQL');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
+db.persist.driver('WebSQL');
+```
 
 ##### LocalStorage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-	db.persist.driver('LocalStorage');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
+db.persist.driver('LocalStorage');
+```
 
 ### Data Persistence In Node.js
 
@@ -2575,10 +2605,12 @@ automatically when you require ForerunnerDB in your project.
 To use persistence in Node.js you must first tell the persistence plugin where you
 wish to load and save data files to. You can do this via the dataDir() call:
 
-	var fdb = new ForerunnerDB(),
-    	db = fdb.db('test');
-    	
-	db.persist.dataDir('./configData');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
+	
+db.persist.dataDir('./configData');
+```
 
 In the example above we set the data directory to be relative to the current working
 directory as './configData'.
@@ -2595,19 +2627,23 @@ relying on data either being saved or loaded.
 Persistence is handled by a very simple interface in the Collection class. You can
 save the current state of any collection by calling:
 
-    collection.save(function (err) {
-    	if (!err) {
-    		// Save was successful
-    	}
-    });
+```js
+collection.save(function (err) {
+	if (!err) {
+		// Save was successful
+	}
+});
+```
 
 You can then load the collection's data back again via:
 
-    collection.load(function (err) {
-		if (!err) {
-			// Load was successful
-		}
-	});
+```js
+collection.load(function (err) {
+	if (!err) {
+		// Load was successful
+	}
+});
+```
 
 If you call collection.load() when your application starts and collection.save() when
 you make changes to your collection you can ensure that your application always has
@@ -2663,7 +2699,9 @@ the original data and it is stored uncompressed.
 To enable the compression plugin in the persistent storage module you must add it as a
 transcoder step:
 
-	db.persist.addStep(new db.shared.plugins.FdbCompress());
+```js
+db.persist.addStep(new db.shared.plugins.FdbCompress());
+```
 
 ##### Encryption
 The encryption plugin takes data from the previous transcoder step and encrypts / decrypts
@@ -2673,9 +2711,11 @@ uses AES-256 as the encryption cypher algorithm.
 To enable the encryption plugin in the persistent storage module you must add it as a
 transcoder step:
 
-	db.persist.addStep(new db.shared.plugins.FdbCrypto({
-		pass: 'testing'
-	}));
+```js
+db.persist.addStep(new db.shared.plugins.FdbCrypto({
+	pass: 'testing'
+}));
+```
 
 The plugin accepts an options object as the first argument during instantiation and supports
  the following keys:
@@ -2686,15 +2726,17 @@ The plugin accepts an options object as the first argument during instantiation 
 
 If you need to change the encryption pass-phrase on the fly after the instantiation of the
 plugin you can hold a reference to the plugin and use its pass() method:
- 
-	var crypto = new db.shared.plugins.FdbCrypto({
-		pass: 'testing'
-	});
-	
-	db.persist.addStep(crypto);
-	
-	// At a later time, change the pass-phrase
-	crypto.pass('myNewPassPhrase');
+
+```js
+var crypto = new db.shared.plugins.FdbCrypto({
+	pass: 'testing'
+});
+
+db.persist.addStep(crypto);
+
+// At a later time, change the pass-phrase
+crypto.pass('myNewPassPhrase');
+```
 
 ## Storing Arbitrary Key/Value Data
 Sometimes it can be useful to store key/value data on a class instance such as the core db
@@ -2704,20 +2746,26 @@ main storage system of ForerunnerDB, does not persist, is not indexed or maintai
 be destroyed when the supporting instance is dropped.
 
 To use the store, simply call the store() method on a collection or view:
- 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-		
-	db.collection('myColl').store('myKey', 'myVal');
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
+	
+db.collection('myColl').store('myKey', 'myVal');
+```
 
 You can then lookup the value at a later time:
 
-	var value = db.collection('myColl').store('myKey');
-	console.log(value); // Will output "myVal"
+```js
+var value = db.collection('myColl').store('myKey');
+console.log(value); // Will output "myVal"
+```
 
 You can also remove a key/value from the store via the unStore() method:
 
-	db.collection('myColl').unStore('myKey');
+```js
+db.collection('myColl').unStore('myKey');
+```
 
 ## Collection Groups
 ForerunnerDB supports aggregating collection data from multiple collections into a
@@ -2728,44 +2776,52 @@ data as a whole rather than one collection at a time.
 This allows you to query and sort a super-set of data from multiple collections in
 a single operation and return that data as a single array of documents.
 
-    var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll1 = db.collection('test1'),
-    	coll2 = db.collection('test2'),
-    	group = db.collectionGroup('testGroup');
-    	
-    group.addCollection(coll1);
-    group.addCollection(coll2);
-    
-    coll1.insert({
-    	name: 'Jim'
-    });
-    
-    coll2.insert({
-		name: 'Bob'
-	});
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll1 = db.collection('test1'),
+	coll2 = db.collection('test2'),
+	group = db.collectionGroup('testGroup');
 	
-	group.find();
+group.addCollection(coll1);
+group.addCollection(coll2);
+
+coll1.insert({
+	name: 'Jim'
+});
+
+coll2.insert({
+	name: 'Bob'
+});
+
+group.find();
+```
 
 Result:
 
-	[{name: 'Jim'}, {name: 'Bob'}]
+```json
+[{name: 'Jim'}, {name: 'Bob'}]
+```
 
 ### Adding and Removing Collections From a Group
 Collection groups work by adding collections as data sources. You can add a collection
 to a group via the addCollection() method which accepts a collection instance as the
 first argument.
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test'),
-		group = db.collectionGroup('test');
-	
-	group.addCollection(coll);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test'),
+	group = db.collectionGroup('test');
+
+group.addCollection(coll);
+```
 
 You can remove a collection from a collection group via the removeCollection() method:
 
-    group.removeCollection(coll);
+```js
+group.removeCollection(coll);
+```
 
 ## Grid / Table Output
 > Data Binding: Enabled
@@ -2782,33 +2838,35 @@ data inside the collection / view.
 Grids work via a jsRender template that describes how your grid should be rendered to the browser. An
 example template called "gridTable" looks like this:
 
-	<script type="text/x-jsrender" id="gridTable">
-		<table class="gridTable">
-			<thead class="gridHead">
-				<tr>
-					<td data-grid-sort="firstName">First Name</td>
-					<td data-grid-sort="lastName">Last Name</td>
-					<td data-grid-sort="age">Age</td>
-				</tr>
-			</thead>
-			<tbody class="gridBody">
-				{^{for gridRow}}
-				<tr data-link="id{:_id}">
-					<td>{^{:firstName}}</td>
-					<td>{^{:lastName}}</td>
-					<td>{^{:age}}</td>
-				</tr>
-				{^{/for}}
-			</tbody>
-			<tfoot>
-				<tr>
-					<td></td>
-					<td></td>
-					<td></td>
-				</tr>
-			</tfoot>
-		</table>
-	</script>
+```html
+<script type="text/x-jsrender" id="gridTable">
+	<table class="gridTable">
+		<thead class="gridHead">
+			<tr>
+				<td data-grid-sort="firstName">First Name</td>
+				<td data-grid-sort="lastName">Last Name</td>
+				<td data-grid-sort="age">Age</td>
+			</tr>
+		</thead>
+		<tbody class="gridBody">
+			{^{for gridRow}}
+			<tr data-link="id{:_id}">
+				<td>{^{:firstName}}</td>
+				<td>{^{:lastName}}</td>
+				<td>{^{:age}}</td>
+			</tr>
+			{^{/for}}
+		</tbody>
+		<tfoot>
+			<tr>
+				<td></td>
+				<td></td>
+				<td></td>
+			</tr>
+		</tfoot>
+	</table>
+</script>
+```
 
 You'll note that the main body section of the table has a *for-loop* looping over the special gridRow
 array. This array is the data inside your collection / view that the grid has been told to read from
@@ -2818,26 +2876,30 @@ output the row data for each row in your collection.
 #### Creating a Grid
 First you need to identify a target element that will contain the rendered grid:
 
-	<div id="myGridContainer"></div>
+```html
+<div id="myGridContainer"></div>
+```
 
 You can create a grid on screen via the .grid() method, passing it your target jQuery selector as a
 string:
 
-	// Create our instances
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('testGrid'),
-		grid;
-	
-	// Insert some data into our collection
-	coll.insert({
-		firstName: 'Fred',
-		lastName: 'Jones',
-		age: 15
-	});
-	
-	// Create a grid from the collection using the template we defined earlier
-	coll.grid('#myGridContainer', '#gridTable');
+```js
+// Create our instances
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('testGrid'),
+	grid;
+
+// Insert some data into our collection
+coll.insert({
+	firstName: 'Fred',
+	lastName: 'Jones',
+	age: 15
+});
+
+// Create a grid from the collection using the template we defined earlier
+coll.grid('#myGridContainer', '#gridTable');
+```
 
 #### Auto-Sorting Tools
 The table can automatically handle sort requests when a column header is tapped/clicked on.
@@ -2857,56 +2919,66 @@ a view will alter the underlying collection.
 #### Instantiating a View
 Views are instantiated the same way collections are:
 
-	var myView = db.view('myView');
+```js
+var myView = db.view('myView');
+```
 
 #### Specify an Underlying Data Source
 You must tell a view where to get it's data from using the *from()* method. Views can
  use collections and other views as data sources:
- 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		myCollection = db.collection('myCollection');
-	
-	myCollection.setData([{
-		name: 'Bob',
-		age: 20
-	}, {
-		name: 'Jim',
-		age: 25
-	}, {
-		name: 'Bill',
-		age: 30
-	}]);
-	
-	myView.from(myCollection);
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	myCollection = db.collection('myCollection');
+
+myCollection.setData([{
+	name: 'Bob',
+	age: 20
+}, {
+	name: 'Jim',
+	age: 25
+}, {
+	name: 'Bill',
+	age: 30
+}]);
+
+myView.from(myCollection);
+```
 
 #### Setting a View's Query
 Since views represent live queried data / subsets of the underlying data source they
 usually take a query:
 
-	myView.query({
-		age: {
-			$gt: 24
-		}
-	});
+```js
+myView.query({
+	age: {
+		$gt: 24
+	}
+});
+```
 
 Using the collection data as defined in myCollection above, a call to the view's *find()*
  method will result in returning only records in myCollection whose age property is greater
  than 24:
 
-	myView.find();
+```js
+myView.find();
+```
 	
 Result:
 
-	[{
-		"name": "Jim",
-		"age": 25,
-		"_id": "2aee6ba38542220"
-	}, {
-		"name": "Bill",
-		"age": 30,
-		"_id": "2d3bb2f43da7aa0"
-	}]
+```json
+[{
+	"name": "Jim",
+	"age": 25,
+	"_id": "2aee6ba38542220"
+}, {
+	"name": "Bill",
+	"age": 30,
+	"_id": "2d3bb2f43da7aa0"
+}]
+```
 
 ## Overviews
 > Data Binding: Enabled
@@ -2921,55 +2993,69 @@ Consider a page with a shopping cart system and a cart summary which shows the n
 of items in the cart and the total cart value. Let's start by defining our cart
 collection:
 
-	var cart = db.collection('cart');
+```js
+var cart = db.collection('cart');
+```
 
 Now we add some data to the cart:
 
-	cart.insert([{
-		name: 'Cat Food',
-		price: 12.99,
-		quantity: 2
-	}, {
-		name: 'Dog Food',
-		price: 18.99,
-		quantity: 3
-	}]);
+```js
+cart.insert([{
+	name: 'Cat Food',
+	price: 12.99,
+	quantity: 2
+}, {
+	name: 'Dog Food',
+	price: 18.99,
+	quantity: 3
+}]);
+```
 
 Now we want to display a cart summary with number of items and the total cart price, so
 we create an overview:
 
-	var cartSummary = db.overview('cartSummary');
+```js
+var cartSummary = db.overview('cartSummary');
+```
 
 We need to tell the overview where to read data from:
 
-	cartSummary.from(cart);
+```js
+cartSummary.from(cart);
+```
 
 Now we give the overview some custom logic that will do our calculations against the data
  in the cart collection and return an object with our item count and price total:
 
-	cartSummary.reduce(function () {
-		var obj = {},
-			items = this.find(), // .find() on an overview runs find() against underlying collection
-			total = 0,
-			i;
+```js
+cartSummary.reduce(function () {
+	var obj = {},
+		items = this.find(), // .find() on an overview runs find() against underlying collection
+		total = 0,
+		i;
 
-		for (i = 0; i < items.length; i++) {
-			total += items[i].price * items[i].quantity;
-		}
+	for (i = 0; i < items.length; i++) {
+		total += items[i].price * items[i].quantity;
+	}
 
-		obj.count = items.length;
-		obj.total = total;
+	obj.count = items.length;
+	obj.total = total;
 
-		return obj;
-	});
+	return obj;
+});
+```
 
 You can execute the overview's reduce() method and get the result via the exec() method:
 
-	cartSummary.exec();
+```js
+cartSummary.exec();
+```
 
 Result:
 
-	{count: 2, total: 31.979999999999997}
+```json
+{count: 2, total: 31.979999999999997}
+```
 
 ## Data Binding
 >Data binding is an optional module that is included via the fdb-autobind.min.js file.
@@ -2991,18 +3077,22 @@ if you modify the collection:
 * The AutoBind module must be loaded
 
 ### HTML
-	<ul id="myList">
-	</ul>
-	<script id="myLinkFragment" type="text/x-jsrender">
-		<li data-link="id{:_id}">{^{:name}}</li>
-	</script>
+```html
+<ul id="myList">
+</ul>
+<script id="myLinkFragment" type="text/x-jsrender">
+	<li data-link="id{:_id}">{^{:name}}</li>
+</script>
+```
 
 ### JS
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		collection = db.collection('test');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	collection = db.collection('test');
 
-	collection.link('#myList', '#myLinkFragment');
+collection.link('#myList', '#myLinkFragment');
+```
 
 Now if you execute any insert, update or remove on the collection, the HTML will
 automatically update to reflect the
@@ -3013,18 +3103,22 @@ you to bind against multiple sections of the page with the same data. For instan
 instead of binding against an ID (e.g. #myList) you could bind against a class:
 
 ### HTML
-	<ul class="myList">
-	</ul>
-	
-	<ul class="myList">
-	</ul>
+```html
+<ul class="myList">
+</ul>
 
-	<script id="myLinkFragment" type="text/x-jsrender">
-        <li data-link="id{:_id}">{^{:name}}</li>
-    </script>
+<ul class="myList">
+</ul>
+
+<script id="myLinkFragment" type="text/x-jsrender">
+	<li data-link="id{:_id}">{^{:name}}</li>
+</script>
+```
 	
 ### JS
-	collection.link('#myList', '#myLinkFragment');
+```js
+collection.link('#myList', '#myLinkFragment');
+```
 
 The result of this is that both UL elements will get data binding updates when the
 underlying data changes.
@@ -3033,18 +3127,20 @@ underlying data changes.
 You can provide a bespoke template to the link method in the second argument by passing
 an object with a *template* property:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-		
-	db.collection('test').setData([{
-		name: 'Jim'
-	}, {
-		name: 'Bob'
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
 	
-	db.collection('test').link('#myTargetElement', {
-		template: '<div>{^{:name}}</div>'
-	});
+db.collection('test').setData([{
+	name: 'Jim'
+}, {
+	name: 'Bob'
+}]);
+
+db.collection('test').link('#myTargetElement', {
+	template: '<div>{^{:name}}</div>'
+});
+```
 
 This allows you to specify a template programmatically rather than defining your template
 as a static piece of HTML on your page.
@@ -3054,20 +3150,22 @@ Sometimes it is useful to provide data from a collection or view in an array for
 template. You can wrap all the data inside a property via the $wrap option passed to the
 link method like so:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test');
-		
-	db.collection('test').setData([{
-		name: 'Jim'
-	}, {
-		name: 'Bob'
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test');
 	
-	db.collection('test').link('#myTargetElement', {
-		template: '<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>'
-	}, {
-		$wrap: 'items'
-	});
+db.collection('test').setData([{
+	name: 'Jim'
+}, {
+	name: 'Bob'
+}]);
+
+db.collection('test').link('#myTargetElement', {
+	template: '<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>'
+}, {
+	$wrap: 'items'
+});
+```
 
 Setting the $wrap option to 'items' passes the entire collection's data array into the
 template inside the *items* property which can then be accessed and iterated through like
@@ -3079,30 +3177,32 @@ data-binding module.
 
 To wrap inside a document instance, pass the document in the $wrapIn option:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		doc;
-		
-	db.collection('test').setData([{
-		name: 'Jim'
-	}, {
-		name: 'Bob'
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	doc;
 	
-	doc = db.document('myWrapperDoc');
-	
-	doc.setData({
-		loading: true
-	});
-	
-	db.collection('test').link('#myTargetElement', {
-		template: '{^{if !loading}}<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>{{/if}}'
-	}, {
-		$wrap: 'items',
-		$wrapIn: doc
-	});
-	
-	doc.update({}, {loading: false});
+db.collection('test').setData([{
+	name: 'Jim'
+}, {
+	name: 'Bob'
+}]);
+
+doc = db.document('myWrapperDoc');
+
+doc.setData({
+	loading: true
+});
+
+db.collection('test').link('#myTargetElement', {
+	template: '{^{if !loading}}<ul>{^{for items}}<li>{^{:name}}</li>{{/for}}</ul>{{/if}}'
+}, {
+	$wrap: 'items',
+	$wrapIn: doc
+});
+
+doc.update({}, {loading: false});
+```
 
 ## Highcharts: Charts & Visualisations
 > Data Binding: Enabled
@@ -3122,35 +3222,39 @@ module so make sure that your version of ForerunnerDB has the Highcharts module 
 
 Function definition:
 
-	collection.pieChart(selector, keyField, valField, seriesName);
+```js
+collection.pieChart(selector, keyField, valField, seriesName);
+```
 	
 Example:
 
-	// Create the collection
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('chartData');
-	
-	// Set the collection data
-	coll.setData([{
-		name: 'Jam',
-		val: 100
-	}, {
-		name: 'Pie',
-		val: 33
-	}, {
-		name: 'Cake',
-		val: 24
-	}]);
-	
-	// Create a pie chart on the element with the id "demo-chart"
-	coll.pieChart('#demo-chart', 'name', 'val', 'Food', {
-		chartOptions: {
-			title: {
-				text: 'Food Eaten at Event'
-			}
+```js
+// Create the collection
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('chartData');
+
+// Set the collection data
+coll.setData([{
+	name: 'Jam',
+	val: 100
+}, {
+	name: 'Pie',
+	val: 33
+}, {
+	name: 'Cake',
+	val: 24
+}]);
+
+// Create a pie chart on the element with the id "demo-chart"
+coll.pieChart('#demo-chart', 'name', 'val', 'Food', {
+	chartOptions: {
+		title: {
+			text: 'Food Eaten at Event'
 		}
-	});
+	}
+});
+```
 
 > Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
  key is passed to Highcharts directly so any options that are described in the Highcharts documentation
