@@ -14,7 +14,7 @@ ready and battle tested in real-world applications.
 * Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
 
-## Version 1.3.460
+## Version 1.3.461
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -2011,7 +2011,7 @@ The result of the call above is:
 		"purchasedBy":[]
 	}]
 
-#### Advanced Joins
+#### Advanced Joins Using $where
 > Version => 1.3.455
 
 If your join has more advanced requirements than matching against foreign keys alone,
@@ -2025,7 +2025,9 @@ specify matching data in the foreign collection using the $$ back-reference oper
 		'$join': [{
 			'purchase': {
 				'$where': {
-				    'itemId': '$$._id'
+					"query": {
+				    	'itemId': '$$._id'
+				    }
 				},
 				'$as': 'purchasedBy',
 				'$require': false,
@@ -2035,7 +2037,54 @@ specify matching data in the foreign collection using the $$ back-reference oper
 	});
 
 The $$ back-reference operator allows you to reference key/value data from the document
-currently being evaluated by the join operation.
+currently being evaluated by the join operation. In the example above the query in the
+$where operator is being run against the **purchase** collection and the back-reference
+will lookup the current *_id* in the itemCollection for the document currently undergoing
+the join.
+
+#### Placing Results $as: "$root"
+Suppose we have two collections **"a"** and **"b"** and we run a find() on **"a"** and
+join against **"b"**.
+
+$root tells the join system to place the data from **"b"** into the root of the source
+document in **"a"** so that it is placed as part of the return documents at root level rather
+than under a new key.
+
+If you use *"$as": "$root"* you cannot use *"$multi": true* since that would simply
+overwrite the root keys in **"a"** that are copied from the foreign document over and over for
+each matching document in **"b"**.
+
+This query also copies the primary key field from matching documents in **"b"** to the document
+in **"a"**. If you don't want this, you need to specify the fields that the query will return.
+You can do this by specifying an "options" section in the $where clause:
+
+```js
+var result = a.find({}, {
+	"$join": [{
+		"b": {
+			"$where": {
+				"query": {
+					"_id": "$$._id"
+				},
+				"options": {
+					"_id": 0
+				}
+			},
+			"$as": "$root",
+			"$require": false,
+			"$multi": false
+		}
+	}]
+});
+```
+
+By providing the options object and specifying the *"_id"* field as zero we are telling
+ForerunnerDB to ignore and not return that field in the join data.
+
+    "id": 0
+
+The options section also allows you to join **b** against other collections as well which
+means you can created nested joins.
 
 ## Triggers
 > Version >= 1.3.12
