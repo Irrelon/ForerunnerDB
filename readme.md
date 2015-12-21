@@ -2012,6 +2012,8 @@ The result of the call above is:
 	}]
 
 #### Advanced Joins
+> Version => 1.3.455
+
 If your join has more advanced requirements than matching against foreign keys alone,
 you can specify a custom query that will match data from the foreign collection using
 the $where clause in your $join.
