@@ -2091,7 +2091,11 @@ Collection.prototype._find = function (query, options) {
 										// Special command
 										switch (joinMatchIndex) {
 											case '$where':
-												if (joinMatch[joinMatchIndex].query) { joinSearchQuery = joinMatch[joinMatchIndex].query; }
+												if (joinMatch[joinMatchIndex].query) {
+													// Commented old code here, new one does dynamic reverse lookups
+													//joinSearchQuery = joinMatch[joinMatchIndex].query;
+													joinSearchQuery = self._resolveDynamicQuery(joinMatch[joinMatchIndex].query, resultArr[resultIndex]);
+												}
 												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
 												break;
 
