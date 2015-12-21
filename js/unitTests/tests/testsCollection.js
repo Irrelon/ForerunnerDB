@@ -1048,6 +1048,40 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Options :: Join with query", function () {
+	base.dbUp();
+	base.dataUp();
+debugger;
+	var result = user.find({}, {
+		"$join": [{
+			"user": {
+				"$where": {
+					"query": {
+						"_id": {
+							"$in": "$$.friends"
+						}
+					},
+					"options": {
+						"$orderBy": {
+							"_id": 1
+						}
+					}
+				},
+				"$as": "friendArr",
+				"$require": false,
+				"$multi": true
+			}
+		}]
+	});
+
+	strictEqual(result[0].friendArr[0]._id, result[0].friends[0], "Correct data delivered in 1");
+	strictEqual(result[1].friendArr[0]._id, result[1].friends[0], "Correct data delivered in 2");
+	strictEqual(result[2].friendArr[0]._id, result[2].friends[0], "Correct data delivered in 3");
+	strictEqual(result[3].friendArr[0]._id, result[3].friends[1], "Correct data delivered in 4");
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.update() :: $inc operator", function () {
 	base.dbUp();
 

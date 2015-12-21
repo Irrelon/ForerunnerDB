@@ -2821,7 +2821,11 @@ Collection.prototype._find = function (query, options) {
 										// Special command
 										switch (joinMatchIndex) {
 											case '$where':
-												if (joinMatch[joinMatchIndex].query) { joinSearchQuery = joinMatch[joinMatchIndex].query; }
+												if (joinMatch[joinMatchIndex].query) {
+													// Commented old code here, new one does dynamic reverse lookups
+													//joinSearchQuery = joinMatch[joinMatchIndex].query;
+													joinSearchQuery = self._resolveDynamicQuery(joinMatch[joinMatchIndex].query, resultArr[resultIndex]);
+												}
 												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
 												break;
 
@@ -2868,7 +2872,7 @@ Collection.prototype._find = function (query, options) {
 									// works if joinMulti is disabled
 									if (joinMulti !== false) {
 										// Throw an exception here as this join is not physically possible!
-										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$joinMulti: true] in $join clause!');
+										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
 									}
 
 									// Mixin the result
@@ -13390,7 +13394,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.452',
+	version: '1.3.454',
 	modules: {},
 	plugins: {},
 
