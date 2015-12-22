@@ -1315,6 +1315,8 @@ and if you wish to split your results into separate arrays for each matching par
 document.
 
 ### Subqueries and Subquery Syntax
+> Version >= 1.3.469
+
 > Subqueries are ForerunnerDB specific and do not work in MongoDB
 
 A subquery is a query object within another query object.
