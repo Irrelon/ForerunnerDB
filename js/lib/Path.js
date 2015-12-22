@@ -245,6 +245,10 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
 	return paths;
 };
 
+Path.prototype.valueOne = function (obj, path) {
+	return this.value(obj, path)[0];
+};
+
 /**
  * Gets the value(s) that the object contains for the currently assigned path string.
  * @param {Object} obj The object to evaluate the path against.
@@ -252,14 +256,30 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
  * @returns {Array} An array of values for the given path.
  */
 Path.prototype.value = function (obj, path) {
+	var pathParts,
+		arr,
+		arrCount,
+		objPart,
+		objPartParent,
+		valuesArr,
+		returnArr,
+		i, k;
+
 	if (obj !== undefined && typeof obj === 'object') {
-		var pathParts,
-			arr,
-			arrCount,
-			objPart,
-			objPartParent,
-			valuesArr = [],
-			i, k;
+		// Check if we were passed an array of objects and if so,
+		// iterate over the array and return the value from each
+		// array item
+		if (obj instanceof Array) {
+			returnArr = [];
+
+			for (i = 0; i < obj.length; i++) {
+				returnArr.push(this.valueOne(obj[i], path));
+			}
+
+			return returnArr;
+		}
+
+		valuesArr = [];
 
 		if (path !== undefined) {
 			path = this.clean(path);
