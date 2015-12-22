@@ -377,6 +377,122 @@ QUnit.test("Collection.find() :: $in clause primary key object", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $nin with regex in array", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var result = user.find({
+		_id: {
+			$nin: [/2/, /3/]
+		}
+	});
+
+	strictEqual(result.length, 2, "Check result count is as expected");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Match against data retrieved from $find sub-query", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var testMatch = db.collection('testMatch').truncate();
+
+	testMatch.insert([{
+		userId: '2'
+	}, {
+		userId: '3'
+	}]);
+
+	var result = user.find({
+		_id: {
+			$nin: {
+				$find: {
+					$from: 'testMatch',
+					$query: {},
+					$options: {
+						$aggregate: 'userId'
+					}
+				}
+			}
+		}
+	});
+
+	strictEqual(result.length, 2, "Check result count is as expected");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Match against data retrieved from $find sub-query with contraint", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var testMatch = db.collection('testMatch').truncate();
+
+	testMatch.insert([{
+		userId: '2'
+	}, {
+		userId: '3'
+	}]);
+
+	var result = user.find({
+		_id: {
+			$in: {
+				$find: {
+					$from: 'testMatch',
+					$query: {
+						userId: '2'
+					},
+					$options: {
+						$aggregate: 'userId'
+					}
+				}
+			}
+		}
+	});
+
+	strictEqual(result.length, 1, "Check result count is as expected");
+	strictEqual(result[0].name, 'Jim', "Check result name is as expected");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Match against data retrieved from $findSub sub-query", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var testMatch = db.collection('testMatch').truncate();
+
+	testMatch.insert({
+		arr: [{
+			userId: '2'
+		}, {
+			userId: '3'
+		}]
+	});
+
+	var result = user.find({
+		_id: {
+			$nin: {
+				$findSub: {
+					$from: 'testMatch',
+					$path: 'arr',
+					$subQuery: {
+
+					},
+					$subOptions: {
+						$aggregate: 'userId'
+					}
+				}
+			}
+		}
+	});
+
+	strictEqual(result.length, 2, "Check result count is as expected");
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: $or clause", function () {
 	base.dbUp();
 	base.dataUp();
@@ -953,7 +1069,6 @@ QUnit.test("Collection.find() :: Options :: Multi join with path to ids in an ar
 	ok(result[0] && result[0].friendData && result[0].friendData[0], 'friendData was joined');
 
 	if (result[0] && result[0].friendData && result[0].friendData[0]) {
-
 		strictEqual(result[0].my.friends[0].friendId, result[0].friendData[0]._id, "Complete");
 		strictEqual(result[0].my.friends[1].friendId, result[0].friendData[1]._id, "Complete");
 
@@ -2682,7 +2797,7 @@ QUnit.test("Collection.findSub() :: Find documents inside an array inside a docu
 	base.dbDown();
 });
 
-QUnit.test("Collection.findSub() :: Find documents inside an array inside a document and return those that match", function () {
+QUnit.test("Collection.lastOp() :: Check lastOp results", function () {
 	base.dbUp();
 
 	var coll = db.collection('test').truncate(),
