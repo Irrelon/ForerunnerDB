@@ -58,12 +58,17 @@ var Matching = {
 					matchedAll = false;
 				}
 			}
+		} else if ((sourceType === 'string' || sourceType === 'number') && (testType === 'object' && test instanceof RegExp)) {
+			if (!test.test(source)) {
+				matchedAll = false;
+			}
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
 					// Reset operation flag
 					operation = false;
 
+					// Grab first two chars of the key name to check for $
 					substringCache = i.substr(0, 2);
 
 					// Check if the property is a comment (ignorable)
@@ -319,9 +324,7 @@ var Matching = {
 						inArrIndex;
 
 					for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-						if (inArr[inArrIndex] instanceof RegExp && inArr[inArrIndex].test(source)) {
-							return true;
-						} else if (inArr[inArrIndex] === source) {
+						if (this._match(source, inArr[inArrIndex], queryOptions, 'and', options)) {
 							return true;
 						}
 					}
@@ -340,7 +343,7 @@ var Matching = {
 						notInArrIndex;
 
 					for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
-						if (notInArr[notInArrIndex] === source) {
+						if (this._match(source, notInArr[notInArrIndex], queryOptions, 'and', options)) {
 							return false;
 						}
 					}
