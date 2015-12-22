@@ -2407,6 +2407,7 @@ Collection.prototype._find = function (query, options) {
 		matcherTmpOptions = {},
 		result,
 		cursor = {},
+		pathSolver,
 		//renameFieldMethod,
 		//renameFieldPath,
 		matcher = function (doc) {
@@ -2685,136 +2686,147 @@ Collection.prototype._find = function (query, options) {
 		}
 	}*/
 
-	// Generate a list of fields to limit data by
-	// Each property starts off being enabled by default (= 1) then
-	// if any property is explicitly specified as 1 then all switch to
-	// zero except _id.
-	//
-	// Any that are explicitly set to zero are switched off.
-	op.time('scanFields');
-	for (i in options) {
-		if (options.hasOwnProperty(i) && i.indexOf('$') !== 0) {
-			if (options[i] === 1) {
-				fieldListOn.push(i);
-			} else if (options[i] === 0) {
-				fieldListOff.push(i);
+	if (!options.$aggregate) {
+		// Generate a list of fields to limit data by
+		// Each property starts off being enabled by default (= 1) then
+		// if any property is explicitly specified as 1 then all switch to
+		// zero except _id.
+		//
+		// Any that are explicitly set to zero are switched off.
+		op.time('scanFields');
+		for (i in options) {
+			if (options.hasOwnProperty(i) && i.indexOf('$') !== 0) {
+				if (options[i] === 1) {
+					fieldListOn.push(i);
+				} else if (options[i] === 0) {
+					fieldListOff.push(i);
+				}
 			}
 		}
-	}
-	op.time('scanFields');
+		op.time('scanFields');
 
-	// Limit returned fields by the options data
-	if (fieldListOn.length || fieldListOff.length) {
-		op.data('flag.limitFields', true);
-		op.data('limitFields.on', fieldListOn);
-		op.data('limitFields.off', fieldListOff);
+		// Limit returned fields by the options data
+		if (fieldListOn.length || fieldListOff.length) {
+			op.data('flag.limitFields', true);
+			op.data('limitFields.on', fieldListOn);
+			op.data('limitFields.off', fieldListOff);
 
-		op.time('limitFields');
+			op.time('limitFields');
 
-		// We have explicit fields switched on or off
-		for (i = 0; i < resultArr.length; i++) {
-			result = resultArr[i];
+			// We have explicit fields switched on or off
+			for (i = 0; i < resultArr.length; i++) {
+				result = resultArr[i];
 
-			for (j in result) {
-				if (result.hasOwnProperty(j)) {
-					if (fieldListOn.length) {
-						// We have explicit fields switched on so remove all fields
-						// that are not explicitly switched on
+				for (j in result) {
+					if (result.hasOwnProperty(j)) {
+						if (fieldListOn.length) {
+							// We have explicit fields switched on so remove all fields
+							// that are not explicitly switched on
 
-						// Check if the field name is not the primary key
-						if (j !== pk) {
-							if (fieldListOn.indexOf(j) === -1) {
-								// This field is not in the on list, remove it
+							// Check if the field name is not the primary key
+							if (j !== pk) {
+								if (fieldListOn.indexOf(j) === -1) {
+									// This field is not in the on list, remove it
+									delete result[j];
+								}
+							}
+						}
+
+						if (fieldListOff.length) {
+							// We have explicit fields switched off so remove fields
+							// that are explicitly switched off
+							if (fieldListOff.indexOf(j) > -1) {
+								// This field is in the off list, remove it
 								delete result[j];
 							}
 						}
 					}
-
-					if (fieldListOff.length) {
-						// We have explicit fields switched off so remove fields
-						// that are explicitly switched off
-						if (fieldListOff.indexOf(j) > -1) {
-							// This field is in the off list, remove it
-							delete result[j];
-						}
-					}
 				}
 			}
+
+			op.time('limitFields');
 		}
 
-		op.time('limitFields');
-	}
+		// Now run any projections on the data required
+		if (options.$elemMatch) {
+			op.data('flag.elemMatch', true);
+			op.time('projection-elemMatch');
 
-	// Now run any projections on the data required
-	if (options.$elemMatch) {
-		op.data('flag.elemMatch', true);
-		op.time('projection-elemMatch');
+			for (i in options.$elemMatch) {
+				if (options.$elemMatch.hasOwnProperty(i)) {
+					elemMatchPathSolver = new Path(i);
 
-		for (i in options.$elemMatch) {
-			if (options.$elemMatch.hasOwnProperty(i)) {
-				elemMatchPathSolver = new Path(i);
+					// Loop the results array
+					for (j = 0; j < resultArr.length; j++) {
+						elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
 
-				// Loop the results array
-				for (j = 0; j < resultArr.length; j++) {
-					elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
+						// Check we have a sub-array to loop
+						if (elemMatchSubArr && elemMatchSubArr.length) {
 
-					// Check we have a sub-array to loop
-					if (elemMatchSubArr && elemMatchSubArr.length) {
+							// Loop the sub-array and check for projection query matches
+							for (k = 0; k < elemMatchSubArr.length; k++) {
 
-						// Loop the sub-array and check for projection query matches
-						for (k = 0; k < elemMatchSubArr.length; k++) {
-
-							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemMatch[i], options, '', {})) {
-								// The item matches the projection query so set the sub-array
-								// to an array that ONLY contains the matching item and then
-								// exit the loop since we only want to match the first item
-								elemMatchPathSolver.set(resultArr[j], i, [elemMatchSubArr[k]]);
-								break;
+								// Check if the current item in the sub-array matches the projection query
+								if (self._match(elemMatchSubArr[k], options.$elemMatch[i], options, '', {})) {
+									// The item matches the projection query so set the sub-array
+									// to an array that ONLY contains the matching item and then
+									// exit the loop since we only want to match the first item
+									elemMatchPathSolver.set(resultArr[j], i, [elemMatchSubArr[k]]);
+									break;
+								}
 							}
 						}
 					}
 				}
 			}
+
+			op.time('projection-elemMatch');
 		}
 
-		op.time('projection-elemMatch');
-	}
+		if (options.$elemsMatch) {
+			op.data('flag.elemsMatch', true);
+			op.time('projection-elemsMatch');
 
-	if (options.$elemsMatch) {
-		op.data('flag.elemsMatch', true);
-		op.time('projection-elemsMatch');
+			for (i in options.$elemsMatch) {
+				if (options.$elemsMatch.hasOwnProperty(i)) {
+					elemMatchPathSolver = new Path(i);
 
-		for (i in options.$elemsMatch) {
-			if (options.$elemsMatch.hasOwnProperty(i)) {
-				elemMatchPathSolver = new Path(i);
+					// Loop the results array
+					for (j = 0; j < resultArr.length; j++) {
+						elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
 
-				// Loop the results array
-				for (j = 0; j < resultArr.length; j++) {
-					elemMatchSubArr = elemMatchPathSolver.value(resultArr[j])[0];
+						// Check we have a sub-array to loop
+						if (elemMatchSubArr && elemMatchSubArr.length) {
+							elemMatchSpliceArr = [];
 
-					// Check we have a sub-array to loop
-					if (elemMatchSubArr && elemMatchSubArr.length) {
-						elemMatchSpliceArr = [];
+							// Loop the sub-array and check for projection query matches
+							for (k = 0; k < elemMatchSubArr.length; k++) {
 
-						// Loop the sub-array and check for projection query matches
-						for (k = 0; k < elemMatchSubArr.length; k++) {
-
-							// Check if the current item in the sub-array matches the projection query
-							if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], options, '', {})) {
-								// The item matches the projection query so add it to the final array
-								elemMatchSpliceArr.push(elemMatchSubArr[k]);
+								// Check if the current item in the sub-array matches the projection query
+								if (self._match(elemMatchSubArr[k], options.$elemsMatch[i], options, '', {})) {
+									// The item matches the projection query so add it to the final array
+									elemMatchSpliceArr.push(elemMatchSubArr[k]);
+								}
 							}
-						}
 
-						// Now set the final sub-array to the matched items
-						elemMatchPathSolver.set(resultArr[j], i, elemMatchSpliceArr);
+							// Now set the final sub-array to the matched items
+							elemMatchPathSolver.set(resultArr[j], i, elemMatchSpliceArr);
+						}
 					}
 				}
 			}
-		}
 
-		op.time('projection-elemsMatch');
+			op.time('projection-elemsMatch');
+		}
+	}
+
+	// Process aggregation
+	if (options.$aggregate) {
+		op.data('flag.aggregate', true);
+		op.time('aggregate');
+		pathSolver = new Path(options.$aggregate);
+		resultArr = pathSolver.value(resultArr);
+		op.time('aggregate');
 	}
 
 	op.stop();
@@ -6574,6 +6586,9 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		// Assign current query data
+		options.$currentQuery = test;
+
 		options.$rootData = options.$rootData || {};
 
 		// Check if the comparison data are both strings or numbers
@@ -6593,12 +6608,27 @@ var Matching = {
 					matchedAll = false;
 				}
 			}
+		} else if ((sourceType === 'string' || sourceType === 'number') && (testType === 'object' && test instanceof RegExp)) {
+			if (!test.test(source)) {
+				matchedAll = false;
+			}
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
+					// Assign previous query data
+					options.$previousQuery = options.$parent;
+
+					// Assign parent query data
+					options.$parent = {
+						query: test[i],
+						key: i,
+						parent: options.$previousQuery
+					};
+
 					// Reset operation flag
 					operation = false;
 
+					// Grab first two chars of the key name to check for $
 					substringCache = i.substr(0, 2);
 
 					// Check if the property is a comment (ignorable)
@@ -6854,14 +6884,14 @@ var Matching = {
 						inArrIndex;
 
 					for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-						if (inArr[inArrIndex] instanceof RegExp && inArr[inArrIndex].test(source)) {
-							return true;
-						} else if (inArr[inArrIndex] === source) {
+						if (this._match(source, inArr[inArrIndex], queryOptions, 'and', options)) {
 							return true;
 						}
 					}
 
 					return false;
+				} else if (typeof test === 'object') {
+					return this._match(source, test, queryOptions, 'and', options);
 				} else {
 					throw(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
 				}
@@ -6875,12 +6905,14 @@ var Matching = {
 						notInArrIndex;
 
 					for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
-						if (notInArr[notInArrIndex] === source) {
+						if (this._match(source, notInArr[notInArrIndex], queryOptions, 'and', options)) {
 							return false;
 						}
 					}
 
 					return true;
+				} else if (typeof test === 'object') {
+					return this._match(source, test, queryOptions, 'and', options);
 				} else {
 					throw(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
 				}
@@ -6934,6 +6966,58 @@ var Matching = {
 
 				// Allow the item in the results
 				return true;
+
+			case '$find':
+			case '$findOne':
+			case '$findSub':
+				var fromType = 'collection',
+					findQuery,
+					findOptions,
+					subQuery,
+					subOptions,
+					subPath,
+					result,
+					operation = {};
+
+				// Check we have a database object to work from
+				if (!this.db()) {
+					throw('Cannot operate a ' + key + ' sub-query on an anonymous collection (one with no db set)!');
+				}
+
+				// Check all parts of the $find operation exist
+				if (!test.$from) {
+					throw(key + ' missing $from property!');
+				}
+
+				if (test.$fromType) {
+					fromType = test.$fromType;
+
+					// Check the fromType exists as a method
+					if (!this.db()[fromType] || typeof this.db()[fromType] !== 'function') {
+						throw(key + ' cannot operate against $fromType "' + fromType + '" because the database does not recognise this type of object!');
+					}
+				}
+
+				// Perform the find operation
+				findQuery = test.$query || {};
+				findOptions = test.$options || {};
+
+				if (key === '$findSub') {
+					if (!test.$path) {
+						throw(key + ' missing $path property!');
+					}
+
+					subPath = test.$path;
+					subQuery = test.$subQuery || {};
+					subOptions = test.$subOptions || {};
+					result = this.db()[fromType](test.$from).findSub(findQuery, subPath, subQuery, subOptions);
+				} else {
+					result = this.db()[fromType](test.$from)[key.substr(1)](findQuery, findOptions);
+				}
+
+				operation[options.$parent.parent.key] = result;
+
+				return this._match(source, operation, queryOptions, 'and', options);
 		}
 
 		return -1;
@@ -8254,21 +8338,44 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
 	return paths;
 };
 
+Path.prototype.valueOne = function (obj, path) {
+	return this.value(obj, path)[0];
+};
+
 /**
  * Gets the value(s) that the object contains for the currently assigned path string.
  * @param {Object} obj The object to evaluate the path against.
  * @param {String=} path A path to use instead of the existing one passed in path().
+ * @param {Object=} options An optional options object.
  * @returns {Array} An array of values for the given path.
  */
-Path.prototype.value = function (obj, path) {
+Path.prototype.value = function (obj, path, options) {
+	var pathParts,
+		arr,
+		arrCount,
+		objPart,
+		objPartParent,
+		valuesArr,
+		returnArr,
+		i, k;
+
 	if (obj !== undefined && typeof obj === 'object') {
-		var pathParts,
-			arr,
-			arrCount,
-			objPart,
-			objPartParent,
-			valuesArr = [],
-			i, k;
+		if (!options || options && !options.skipArrCheck) {
+			// Check if we were passed an array of objects and if so,
+			// iterate over the array and return the value from each
+			// array item
+			if (obj instanceof Array) {
+				returnArr = [];
+
+				for (i = 0; i < obj.length; i++) {
+					returnArr.push(this.valueOne(obj[i], path));
+				}
+
+				return returnArr;
+			}
+		}
+
+		valuesArr = [];
 
 		if (path !== undefined) {
 			path = this.clean(path);
@@ -8285,7 +8392,7 @@ Path.prototype.value = function (obj, path) {
 			if (objPartParent instanceof Array) {
 				// Search inside the array for the next key
 				for (k = 0; k < objPartParent.length; k++) {
-					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i], {skipArrCheck: true}));
 				}
 
 				return valuesArr;
@@ -8746,7 +8853,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.465',
+	version: '1.3.469',
 	modules: {},
 	plugins: {},
 

@@ -7,6 +7,8 @@ ForerunnerDB.moduleLoaded('AiApi', function () {
 
 		db.api.url('http://localhost:9010');
 
+		strictEqual(db.api.url(), 'http://localhost:9010', 'Url is set correctly');
+
 		base.dbDown();
 	});
 

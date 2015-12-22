@@ -423,7 +423,7 @@ QUnit.test("Collection.find() :: Match against data retrieved from $find sub-que
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Match against data retrieved from $find sub-query with contraint", function () {
+QUnit.test("Collection.find() :: Match against data retrieved from $find sub-query with constraint", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -453,6 +453,64 @@ QUnit.test("Collection.find() :: Match against data retrieved from $find sub-que
 
 	strictEqual(result.length, 1, "Check result count is as expected");
 	strictEqual(result[0].name, 'Jim', "Check result name is as expected");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Match against data retrieved from $find sub-query with constraint 2", function () {
+	base.dbUp();
+
+	var result,
+		users = db.collection('users'),
+		admins = db.collection('admins');
+
+	users.insert([{
+		_id: 1,
+		name: 'Jim'
+	}, {
+		_id: 2,
+		name: 'Bob'
+	}, {
+		_id: 3,
+		name: 'Bob'
+	}, {
+		_id: 4,
+		name: 'Anne'
+	}, {
+		_id: 5,
+		name: 'Simon'
+	}]);
+
+	admins.insert([{
+		_id: 2,
+		enabled: true
+	}, {
+		_id: 4,
+		enabled: true
+	}, {
+		_id: 5,
+		enabled: false
+	}]);
+
+	result = users.find({
+		_id: {
+			$in: {
+				$find: {
+					$from: 'admins',
+					$query: {
+						enabled: true
+					},
+					$options: {
+						$aggregate: '_id'
+					}
+				}
+			}
+		}
+	});
+
+	strictEqual(result.length, 2, "Check result count is as expected");
+	strictEqual(result[0].name, 'Bob', "Check result name is as expected");
+	strictEqual(result[1].name, 'Anne', "Check result name is as expected");
 
 	base.dbDown();
 });

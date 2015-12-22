@@ -471,7 +471,6 @@ var Matching = {
 				operation[options.$parent.parent.key] = result;
 
 				return this._match(source, operation, queryOptions, 'and', options);
-				break;
 		}
 
 		return -1;

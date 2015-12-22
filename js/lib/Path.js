@@ -253,9 +253,10 @@ Path.prototype.valueOne = function (obj, path) {
  * Gets the value(s) that the object contains for the currently assigned path string.
  * @param {Object} obj The object to evaluate the path against.
  * @param {String=} path A path to use instead of the existing one passed in path().
+ * @param {Object=} options An optional options object.
  * @returns {Array} An array of values for the given path.
  */
-Path.prototype.value = function (obj, path) {
+Path.prototype.value = function (obj, path, options) {
 	var pathParts,
 		arr,
 		arrCount,
@@ -266,17 +267,19 @@ Path.prototype.value = function (obj, path) {
 		i, k;
 
 	if (obj !== undefined && typeof obj === 'object') {
-		// Check if we were passed an array of objects and if so,
-		// iterate over the array and return the value from each
-		// array item
-		if (obj instanceof Array) {
-			returnArr = [];
+		if (!options || options && !options.skipArrCheck) {
+			// Check if we were passed an array of objects and if so,
+			// iterate over the array and return the value from each
+			// array item
+			if (obj instanceof Array) {
+				returnArr = [];
 
-			for (i = 0; i < obj.length; i++) {
-				returnArr.push(this.valueOne(obj[i], path));
+				for (i = 0; i < obj.length; i++) {
+					returnArr.push(this.valueOne(obj[i], path));
+				}
+
+				return returnArr;
 			}
-
-			return returnArr;
 		}
 
 		valuesArr = [];
@@ -296,7 +299,7 @@ Path.prototype.value = function (obj, path) {
 			if (objPartParent instanceof Array) {
 				// Search inside the array for the next key
 				for (k = 0; k < objPartParent.length; k++) {
-					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i]));
+					valuesArr = valuesArr.concat(this.value(objPartParent, k + '.' + arr[i], {skipArrCheck: true}));
 				}
 
 				return valuesArr;

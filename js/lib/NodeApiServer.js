@@ -39,7 +39,7 @@ Overload = Shared.overload;
  * port number specified.
  * @param {String} host The IP address to listen on, set to 0.0.0.0 to
  * listen on all interfaces.
- * @param {Number} port The port to listen on.
+ * @param {String} port The port to listen on.
  * @param {Function=} callback The method to call when the server has
  * started (or failed to start).
  * @returns {NodeApiServer}
@@ -49,7 +49,7 @@ NodeApiServer.prototype.listen = function (host, port, callback) {
 
 	self._server = app.listen(port, host, function () {
 		console.log('Listening at http://%s:%s', host, port);
-		callback(false, self._server);
+		if (callback) { callback(false, self._server); }
 	});
 
 	return this;
