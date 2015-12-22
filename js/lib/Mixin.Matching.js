@@ -421,20 +421,25 @@ var Matching = {
 				return true;
 
 			case '$find':
+			case '$findOne':
+			case '$findSub':
 				var fromType = 'collection',
 					findQuery,
 					findOptions,
+					subQuery,
+					subOptions,
+					subPath,
 					result,
 					operation = {};
 
 				// Check we have a database object to work from
 				if (!this.db()) {
-					throw('Cannot operate a $find sub-query on an anonymous collection (one with no db set)!');
+					throw('Cannot operate a ' + key + ' sub-query on an anonymous collection (one with no db set)!');
 				}
 
 				// Check all parts of the $find operation exist
 				if (!test.$from) {
-					throw('$find missing $from property!');
+					throw(key + ' missing $from property!');
 				}
 
 				if (test.$fromType) {
@@ -442,7 +447,7 @@ var Matching = {
 
 					// Check the fromType exists as a method
 					if (!this.db()[fromType] || typeof this.db()[fromType] !== 'function') {
-						throw('$find cannot operate against $fromType "' + fromType + '" because the database does not recognise this type of object!');
+						throw(key + ' cannot operate against $fromType "' + fromType + '" because the database does not recognise this type of object!');
 					}
 				}
 
@@ -450,7 +455,18 @@ var Matching = {
 				findQuery = test.$query || {};
 				findOptions = test.$options || {};
 
-				result = this.db()[fromType](test.$from).find(findQuery, findOptions);
+				if (key === '$findSub') {
+					if (!test.$path) {
+						throw(key + ' missing $path property!');
+					}
+
+					subPath = test.$path;
+					subQuery = test.$subQuery || {};
+					subOptions = test.$subOptions || {};
+					result = this.db()[fromType](test.$from).findSub(findQuery, subPath, subQuery, subOptions);
+				} else {
+					result = this.db()[fromType](test.$from)[key.substr(1)](findQuery, findOptions);
+				}
 
 				operation[options.$parent.parent.key] = result;
 
