@@ -39,6 +39,9 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		// Assign current query data
+		options.$currentQuery = test;
+
 		options.$rootData = options.$rootData || {};
 
 		// Check if the comparison data are both strings or numbers
@@ -65,6 +68,16 @@ var Matching = {
 		} else {
 			for (i in test) {
 				if (test.hasOwnProperty(i)) {
+					// Assign previous query data
+					options.$previousQuery = options.$parent;
+
+					// Assign parent query data
+					options.$parent = {
+						query: test[i],
+						key: i,
+						parent: options.$previousQuery
+					};
+
 					// Reset operation flag
 					operation = false;
 
@@ -330,6 +343,8 @@ var Matching = {
 					}
 
 					return false;
+				} else if (typeof test === 'object') {
+					return this._match(source, test, queryOptions, 'and', options);
 				} else {
 					throw(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
 				}
@@ -349,6 +364,8 @@ var Matching = {
 					}
 
 					return true;
+				} else if (typeof test === 'object') {
+					return this._match(source, test, queryOptions, 'and', options);
 				} else {
 					throw(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
 				}
@@ -402,6 +419,43 @@ var Matching = {
 
 				// Allow the item in the results
 				return true;
+
+			case '$find':
+				var fromType = 'collection',
+					findQuery,
+					findOptions,
+					result,
+					operation = {};
+
+				// Check we have a database object to work from
+				if (!this.db()) {
+					throw('Cannot operate a $find sub-query on an anonymous collection (one with no db set)!');
+				}
+
+				// Check all parts of the $find operation exist
+				if (!test.$from) {
+					throw('$find missing $from property!');
+				}
+
+				if (test.$fromType) {
+					fromType = test.$fromType;
+
+					// Check the fromType exists as a method
+					if (!this.db()[fromType] || typeof this.db()[fromType] !== 'function') {
+						throw('$find cannot operate against $fromType "' + fromType + '" because the database does not recognise this type of object!');
+					}
+				}
+
+				// Perform the find operation
+				findQuery = test.$query || {};
+				findOptions = test.$options || {};
+
+				result = this.db()[fromType](test.$from).find(findQuery, findOptions);
+
+				operation[options.$parent.parent.key] = result;
+
+				return this._match(source, operation, queryOptions, 'and', options);
+				break;
 		}
 
 		return -1;
