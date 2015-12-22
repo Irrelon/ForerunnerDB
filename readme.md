@@ -14,7 +14,7 @@ ready and battle tested in real-world applications.
 * Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
 
-## Version 1.3.465
+## Version 1.3.467
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 
@@ -308,6 +308,7 @@ MongoDB but which can help in browser-centric applications.
 * [$exists](#exists) Check that a key exists in the document
 * [$elemMatch](#elemMatch) Limit sub-array documents by query
 * [$elemsMatch](#elemsMatch) Multiple document version of $elemMatch
+* [$aggregate](#aggregate) Converts an array of documents into an array of values base on a path / key
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -959,39 +960,41 @@ The $elemMatch operator is specified in the *options* object of the find call ra
  
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData({
-		names: [{
-			_id: 1,
-			text: 'Jim'
-		}, {
-			_id: 2,
-			text: 'Bob'
-		}, {
-			_id: 3,
-			text: 'Bob'
-		}, {
-			_id: 4,
-			text: 'Anne'
-		}, {
-			_id: 5,
-			text: 'Simon'
-		}, {
-			_id: 6,
-			text: 'Uber'
-		}]
-	});
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({}, {
-		$elemMatch: {
-			names: {
-				text: 'Bob'
-			}
+coll.setData({
+	names: [{
+		_id: 1,
+		text: 'Jim'
+	}, {
+		_id: 2,
+		text: 'Bob'
+	}, {
+		_id: 3,
+		text: 'Bob'
+	}, {
+		_id: 4,
+		text: 'Anne'
+	}, {
+		_id: 5,
+		text: 'Simon'
+	}, {
+		_id: 6,
+		text: 'Uber'
+	}]
+});
+
+result = coll.find({}, {
+	$elemMatch: {
+		names: {
+			text: 'Bob'
 		}
-	});
+	}
+});
+```
 	
 Result is:
 
@@ -1061,6 +1064,44 @@ Result is:
 
 Notice that all items matching the $elemsMatch clause are returned in the names array.
 If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
+
+#### $aggregate
+Coverts an array of documents into an array of values that are derived from a key or path in the
+documents. This is very useful when combined with the $find operator to run sub-queries and return
+arrays of values from the results.
+
+```js
+{ $aggregate: path}
+```
+
+##### Usage
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
+	
+coll.insert([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({}, {
+	$aggregate: 'val'
+});
+```
+	
+Result is:
+
+```json
+[1, 2, 3]
+```
 
 ### Ordering / Sorting Results
 You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
@@ -1265,11 +1306,99 @@ query parameters:
 		on: false
 	}]
 
-> The result of findSub never returns a parent document's data.
+> The result of findSub never returns a parent document's data, only data from the 
+matching sub-document(s)
 
 The fourth parameter (options object) allows you to specify if you wish to have stats
 and if you wish to split your results into separate arrays for each matching parent
 document.
+
+### Subqueries and Subquery Syntax
+> Subqueries are ForerunnerDB specific and do not work in MongoDB
+
+A subquery is a query object within another query object.
+
+Subqueries are useful when the query you wish to run is reliant on data inside another
+collection or view and you do not want to run a separate query first to retrieve that
+data.
+ 
+Subqueries in ForerunnerDB are specified using the $find operator inside your query.
+
+Take the following example data:
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	users = db.collection('users'),
+	admins = db.collection('admins');
+	
+users.insert([{
+	_id: 1,
+	name: 'Jim'
+}, {
+	_id: 2,
+	name: 'Bob'
+}, {
+	_id: 3,
+	name: 'Bob'
+}, {
+	_id: 4,
+	name: 'Anne'
+}, {
+	_id: 5,
+	name: 'Simon'
+}]);
+
+admins.insert([{
+	_id: 2,
+	enabled: true
+}, {
+	_id: 4,
+	enabled: true
+}, {
+	_id: 5,
+	enabled: false
+}]);
+
+result = users.find({
+	_id: {
+		$in: {
+			$find: {
+				$from: 'admins',
+				$query: {
+					enabled: true
+				},
+				$options: {
+					$aggregate: '_id'
+				}
+			}
+		}
+	}
+});
+```
+
+When this query is executed the $find sub-query object is replaced with the results from
+the sub-query so that the final query looks like this:
+
+```js
+result = users.find({
+	_id: {
+		$in: [3, 4]
+	}
+});
+```
+
+The result of the query after execution is:
+
+```json
+[{
+	_id: 3,
+	name: 'Bob'
+}, {
+	_id: 4,
+	name: 'Anne'
+}]
+```
 
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
