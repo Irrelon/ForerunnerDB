@@ -214,27 +214,6 @@ In this example we create a capped collection with a document limit of 5:
 var collection = db.collection('collectionName', {capped: true, size: 5});
 ```
 
-## Setting Initial Data
-When you get a collection instance for the first time it will contain no data. To set data on the collection pass an
-array of objects to the setData() method:
-
-```js
-itemCollection.setData([{
-	_id: 1,
-	name: 'Cat Litter',
-	price: 200
-}, {
-	_id: 2,
-	name: 'Dog Food',
-	price: 100
-}]);
-```
-
-Setting data on a collection will empty any existing data from the collection.
-
-You do not *have* to use setData(). You can simply begin inserting data using the
-insert() method as soon as you have a collection reference.
-
 ## Inserting Documents
 You can either insert a single document object:
 
@@ -282,15 +261,18 @@ itemCollection.find({
 });
 ```
 
-And would return an array with all matching documents. If no documents match your search, an empty array is returned.
+And would return an array with all matching documents. If no documents match your search,
+an empty array is returned.
 
 ### Regular Expressions
 
-Searches support regular expressions for advanced text-based queries. Simply pass the regular expression object as the value for the key you wish to search, just like when using regular expressions with MongoDB.
+Searches support regular expressions for advanced text-based queries. Simply pass the
+regular expression object as the value for the key you wish to search, just like when
+using regular expressions with MongoDB.
 
 ### Query Operators
-ForerunnerDB supports many of the same query operators that MongoDB does, and adds some that are not available in
-MongoDB but which can help in browser-centric applications.
+ForerunnerDB supports many of the same query operators that MongoDB does, and adds some
+that are not available in MongoDB but which can help in browser-centric applications.
 
 * [$gt](#gt) Greater Than
 * [$gte](#gte) Greater Than / Equal To
@@ -359,383 +341,445 @@ Result is:
 Selects the documents where the value of the field is greater than or equal to (i.e. >=) the specified
 value.
 
-	{ field: {$gte: value} }
+```js
+{ field: {$gte: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$gte: 1
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$gte: 1
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $lt
 Selects the documents where the value of the field is less than (i.e. <) the specified value.
 
-	{ field: { $lt: value} }
+```js
+{ field: { $lt: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$lt: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$lt: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}]
+```
 
 #### $lte
 Selects the documents where the value of the field is less than or equal to (i.e. <=) the specified value.
 
-	{ field: { $lte: value} }
+```js
+{ field: { $lte: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$lte: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$lte: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}]
+	```
 
 #### $eq
 Selects the documents where the value of the field is equal (i.e. ==) to the specified value.
 
-	{field: {$eq: value} }
+```js
+{field: {$eq: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$eq: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$eq: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		val: 2
-	}]
+```js
+[{
+	_id: 2,
+	val: 2
+}]
+```
 
 #### $eeq
-Selects the documents where the value of the field is strict equal (i.e. ===) to the specified value. This
-allows for strict equality checks for instance zero will not be seen as false because 0 !== false and comparing
-a string with a number of the same value will also return false e.g. ('2' == 2) is true but ('2' === 2) is false.
+Selects the documents where the value of the field is strict equal (i.e. ===) to the
+specified value. This allows for strict equality checks for instance zero will not be
+seen as false because 0 !== false and comparing a string with a number of the same value
+will also return false e.g. ('2' == 2) is true but ('2' === 2) is false.
 
-	{field: {$eeq: value} }
+```js
+{field: {$eeq: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: '2'
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: '2'
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$eeq: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: '2'
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: '2'
+}]);
+
+result = coll.find({
+	val: {
+		$eeq: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		val: 2
-	}]
+```js
+[{
+	_id: 2,
+	val: 2
+}]
+```
 
 #### $ne
 Selects the documents where the value of the field is not equal (i.e. !=) to the specified value.
 This includes documents that do not contain the field.
 
-	{field: {$ne: value} }
+```js
+{field: {$ne: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$ne: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$ne: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $nee
-Selects the documents where the value of the field is not equal equal (i.e. !==) to the specified value. This
-allows for strict equality checks for instance zero will not be seen as false because 0 !== false and comparing
-a string with a number of the same value will also return false e.g. ('2' != 2) is false but ('2' !== 2) is true.
-This includes documents that do not contain the field.
+Selects the documents where the value of the field is not equal equal (i.e. !==) to the
+specified value. This allows for strict equality checks for instance zero will not be
+seen as false because 0 !== false and comparing a string with a number of the same value
+will also return false e.g. ('2' != 2) is false but ('2' !== 2) is true. This includes
+documents that do not contain the field.
 
-	{field: {$nee: value} }
+```js
+{field: {$nee: value} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$nee: 2
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$nee: 2
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $in
 Selects documents where the value of a field equals any value in the specified array.
 
-	{ field: { $in: [<value1>, <value2>, ... <valueN> ] } }
+```js
+{ field: { $in: [<value1>, <value2>, ... <valueN> ] } }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$in: [1, 3]
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$in: [1, 3]
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $nin
 Selects documents where the value of a field does not equal any value in the specified array.
 
-	{ field: { $nin: [ <value1>, <value2> ... <valueN> ]} }
+```js
+{ field: { $nin: [ <value1>, <value2> ... <valueN> ]} }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		val: {
-			$nin: [1, 3]
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$nin: [1, 3]
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		val: 2
-	}]
+```js
+[{
+	_id: 2,
+	val: 2
+}]
+```
 
 #### $distinct
 Selects the first document matching a value of the specified field. If any further documents have the same
 value for the specified field they will not be returned.
 
-	{ $distinct: { field: 1 } }
+```js
+{ $distinct: { field: 1 } }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 1
-	}, {
-		_id: 3,
-		val: 1
-	}, {
-		_id: 4,
-		val: 2
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		$distinct: {
-			val: 1
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 1
+}, {
+	_id: 3,
+	val: 1
+}, {
+	_id: 4,
+	val: 2
+}]);
+
+result = coll.find({
+	$distinct: {
+		val: 1
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 4,
-		val: 2
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 4,
+	val: 2
+}]
+```
 
 #### $count
 > Version >= 1.3.326
@@ -744,130 +788,146 @@ Result is:
 
 Selects documents based on the length (count) of items in an array inside a document.
 
-	{ $count: { field: <value> } }
+```js
+{ $count: { field: <value> } }
+```
 
 ##### Select Documents Where The "arr" Array Field Has Only 1 Item
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		arr: []
-	}, {
-		_id: 2,
-		arr: [{
-			val: 1		
-		}]
-	}, {
-		_id: 3,
-		arr: [{
-			val: 1
-		}, {
-			val: 2		
-		}]
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		$count: {
-			arr: 1
-		}
-	});
+coll.setData([{
+	_id: 1,
+	arr: []
+}, {
+	_id: 2,
+	arr: [{
+		val: 1		
+	}]
+}, {
+	_id: 3,
+	arr: [{
+		val: 1
+	}, {
+		val: 2		
+	}]
+}]);
+
+result = coll.find({
+	$count: {
+		arr: 1
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		arr: [{
-			val: 1		
-		}]
+```js
+[{
+	_id: 2,
+	arr: [{
+		val: 1		
 	}]
+}]
+```
 
 ##### Select Documents Where The "arr" Array Field Has More Than 1 Item
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		arr: []
-	}, {
-		_id: 2,
-		arr: [{
-			val: 1		
-		}]
-	}, {
-		_id: 3,
-		arr: [{
-			val: 1
-		}, {
-			val: 2		
-		}]
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		$count: {
-			arr: {
-				$gt: 1
-			}
+coll.setData([{
+	_id: 1,
+	arr: []
+}, {
+	_id: 2,
+	arr: [{
+		val: 1		
+	}]
+}, {
+	_id: 3,
+	arr: [{
+		val: 1
+	}, {
+		val: 2		
+	}]
+}]);
+
+result = coll.find({
+	$count: {
+		arr: {
+			$gt: 1
 		}
-	});
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 3,
-		arr: [{
-			val: 1
-		}, {
-			val: 2		
-		}]
+```js
+[{
+	_id: 3,
+	arr: [{
+		val: 1
+	}, {
+		val: 2		
 	}]
+}]
+```
 
 #### $or
 The $or operator performs a logical OR operation on an array of two or more <expressions> and selects the documents
 that satisfy at least one of the <expressions>.
 
-	{ $or: [ { <expression1> }, { <expression2> }, ... , { <expressionN> } ] }
+```js
+{ $or: [ { <expression1> }, { <expression2> }, ... , { <expressionN> } ] }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
+	
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	$or: [{
 		val: 1
 	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
-	
-	result = coll.find({
-		$or: [{
-			val: 1
-		}, {
-			val: {
-				$gte: 3 
-			}
-		}]
-	});
+		val: {
+			$gte: 3 
+		}
+	}]
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $and
 Performs a logical AND operation on an array of two or more expressions (e.g. <expression1>, <expression2>, etc.)
@@ -875,79 +935,91 @@ and selects the documents that satisfy all the expressions in the array. The $an
 evaluation. If the first expression (e.g. <expression1>) evaluates to false, ForerunnerDB will not evaluate the
 remaining expressions.
 
-	{ $and: [ { <expression1> }, { <expression2> } , ... , { <expressionN> } ] }
+```js
+{ $and: [ { <expression1> }, { <expression2> } , ... , { <expressionN> } ] }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		$and: [{
-			_id: 3
-		}, {
-			val: {
-				$gte: 3 
-			}
-		}]
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	$and: [{
+		_id: 3
+	}, {
+		val: {
+			$gte: 3 
+		}
+	}]
+});
+```
 	
 Result is:
 
-	[{
-		_id: 3,
-		val: 3
-	}]
+```js
+[{
+	_id: 3,
+	val: 3
+}]
+```
 
 #### $exists
 When <boolean> is true, $exists matches the documents that contain the field, including documents where the field
 value is null. If <boolean> is false, the query returns only the documents that do not contain the field.
 
-	{ field: { $exists: <boolean> } }
+```js
+{ field: { $exists: <boolean> } }
+```
 
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData([{
-		_id: 1,
-		val: 1
-	}, {
-		_id: 2,
-		val: 2,
-		moo: 'hello'
-	}, {
-		_id: 3,
-		val: 3
-	}]);
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({
-		moo: {
-			$exists: true
-		}
-	});
+coll.setData([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2,
+	moo: 'hello'
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	moo: {
+		$exists: true
+	}
+});
+```
 	
 Result is:
 
-	[{
-		_id: 2,
-		val: 2,
-		moo: 'hello'
-	}]
+```js
+[{
+	_id: 2,
+	val: 2,
+	moo: 'hello'
+}]
+```
 
 ### Projection
 
@@ -999,12 +1071,14 @@ result = coll.find({}, {
 	
 Result is:
 
-	{
-		names: [{
-			_id: 2,
-			text: 'Bob'
-		}]
-	}
+```js
+{
+	names: [{
+		_id: 2,
+		text: 'Bob'
+	}]
+}
+```
 
 Notice that only the FIRST item matching the $elemMatch clause is returned in the names array.
 If you require multiple matches use the ForerunnerDB-specific $elemsMatch operator instead.
@@ -1017,51 +1091,55 @@ The $elemsMatch operator is specified in the *options* object of the find call r
  
 ##### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-		
-	coll.setData({
-		names: [{
-			_id: 1,
-			text: 'Jim'
-		}, {
-			_id: 2,
-			text: 'Bob'
-		}, {
-			_id: 3,
-			text: 'Bob'
-		}, {
-			_id: 4,
-			text: 'Anne'
-		}, {
-			_id: 5,
-			text: 'Simon'
-		}, {
-			_id: 6,
-			text: 'Uber'
-		}]
-	});
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
 	
-	result = coll.find({}, {
-		$elemsMatch: {
-			names: {
-				text: 'Bob'
-			}
+coll.setData({
+	names: [{
+		_id: 1,
+		text: 'Jim'
+	}, {
+		_id: 2,
+		text: 'Bob'
+	}, {
+		_id: 3,
+		text: 'Bob'
+	}, {
+		_id: 4,
+		text: 'Anne'
+	}, {
+		_id: 5,
+		text: 'Simon'
+	}, {
+		_id: 6,
+		text: 'Uber'
+	}]
+});
+
+result = coll.find({}, {
+	$elemsMatch: {
+		names: {
+			text: 'Bob'
 		}
-	});
+	}
+});
+```
 	
 Result is:
 
-	{
-		names: [{
-			_id: 2,
-			text: 'Bob'
-		}, {
-			_id: 3,
-			text: 'Bob'
-		}]
-	}
+```js
+{
+	names: [{
+		_id: 2,
+		text: 'Bob'
+	}, {
+		_id: 3,
+		text: 'Bob'
+	}]
+}
+```
 
 Notice that all items matching the $elemsMatch clause are returned in the names array.
 If you require match on ONLY the first item use the MongoDB-compliant $elemMatch operator instead.
@@ -1107,16 +1185,18 @@ Result is:
 ### Ordering / Sorting Results
 You can specify an $orderBy option along with the find call to order/sort your results. This uses the same syntax as MongoDB:
 
-	itemCollection.find({
-		price: {
-			'$gt': 90,
-			'$lt': 150
-		}
-	}, {
-		$orderBy: {
-			price: 1 // Sort ascending or -1 for descending
-		}
-	});
+```js
+itemCollection.find({
+	price: {
+		'$gt': 90,
+		'$lt': 150
+	}
+}, {
+	$orderBy: {
+		price: 1 // Sort ascending or -1 for descending
+	}
+});
+```
 
 ### Limiting Return Fields
 You can specify which fields are included in the return data for a query by adding them in
@@ -1129,61 +1209,65 @@ from the results via "_id: 0".
 
 #### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test');
-	
-	coll.setData([{
-		_id: 1,
-		text: 'Jim',
-		val: 2131232
-	}, {
-		_id: 2,
-		text: 'Bob',
-		val: 2425234321
-	}, {
-		_id: 3,
-		text: 'Bob',
-		val: 54353454
-	}, {
-		_id: 4,
-		text: 'Anne',
-		val: 1231432
-	}, {
-		_id: 5,
-		text: 'Simon',
-		val: 87567455
-	}, {
-		_id: 6,
-		text: 'Uber',
-		val: 93472834
-	}]);
-	
-	result = coll.find({}, {
-		text: 1
-	});
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test');
+
+coll.setData([{
+	_id: 1,
+	text: 'Jim',
+	val: 2131232
+}, {
+	_id: 2,
+	text: 'Bob',
+	val: 2425234321
+}, {
+	_id: 3,
+	text: 'Bob',
+	val: 54353454
+}, {
+	_id: 4,
+	text: 'Anne',
+	val: 1231432
+}, {
+	_id: 5,
+	text: 'Simon',
+	val: 87567455
+}, {
+	_id: 6,
+	text: 'Uber',
+	val: 93472834
+}]);
+
+result = coll.find({}, {
+	text: 1
+});
+```
 	
 Result is:
 
-	[{
-		_id: 1,
-		text: 'Jim'
-	}, {
-		_id: 2,
-		text: 'Bob'
-	}, {
-		_id: 3,
-		text: 'Bob'
-	}, {
-		_id: 4,
-		text: 'Anne'
-	}, {
-		_id: 5,
-		text: 'Simon'
-	}, {
-		_id: 6,
-		text: 'Uber'
-	}]
+```js
+[{
+	_id: 1,
+	text: 'Jim'
+}, {
+	_id: 2,
+	text: 'Bob'
+}, {
+	_id: 3,
+	text: 'Bob'
+}, {
+	_id: 4,
+	text: 'Anne'
+}, {
+	_id: 5,
+	text: 'Simon'
+}, {
+	_id: 6,
+	text: 'Uber'
+}]
+```
 
 ### Pagination / Paging Through Results
 > Version >= 1.3.55
@@ -1194,36 +1278,38 @@ query options combination.
 
 #### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test'),
-		data = [],
-		count = 100,
-		result,
-		i;
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test'),
+	data = [],
+	count = 100,
+	result,
+	i;
 
-	// Generate random data
-	for (i = 0; i < count; i++) {
-		data.push({
-			_id: String(i),
-			val: i
-		});
-	}
-
-	coll.insert(data);
-	
-	// Query the first 10 records (page indexes are zero-based
-	// so the first page is page 0 not page 1)
-	result = coll.find({}, {
-		$page: 0,
-		$limit: 10
+// Generate random data
+for (i = 0; i < count; i++) {
+	data.push({
+		_id: String(i),
+		val: i
 	});
+}
 
-	// Query the next 10 records
-	result = coll.find({}, {
-		$page: 1,
-		$limit: 10
-	});
+coll.insert(data);
+
+// Query the first 10 records (page indexes are zero-based
+// so the first page is page 0 not page 1)
+result = coll.find({}, {
+	$page: 0,
+	$limit: 10
+});
+
+// Query the next 10 records
+result = coll.find({}, {
+	$page: 1,
+	$limit: 10
+});
+```
 
 ### Skipping Records in a Query
 > Version >= 1.3.55
@@ -1233,79 +1319,85 @@ option. This operates in a similar fashion to the MongoDB [skip()](http://docs.m
 
 #### Usage
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test').truncate(),
-		data = [],
-		count = 100,
-		result,
-		i;
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test').truncate(),
+	data = [],
+	count = 100,
+	result,
+	i;
 
-	// Generate random data
-	for (i = 0; i < count; i++) {
-		data.push({
-			_id: String(i),
-			val: i
-		});
-	}
-
-	coll.insert(data);
-	result = coll.find({}, {
-		$skip: 50
+// Generate random data
+for (i = 0; i < count; i++) {
+	data.push({
+		_id: String(i),
+		val: i
 	});
+}
+
+coll.insert(data);
+result = coll.find({}, {
+	$skip: 50
+});
+```
 
 ### Finding and Returning Sub-Documents
 When you have documents that contain arrays of sub-documents it can be useful to search
 and extract them. Consider this data structure:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		coll = db.collection('test').truncate(),
-		result,
-		i;
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('test').truncate(),
+	result,
+	i;
 
-	coll.insert({
-		_id: '1',
-		arr: [{
-			_id: '332',
-			val: 20,
-			on: true
-		}, {
-			_id: '337',
-			val: 15,
-			on: false
-		}]
-	});
-
-	/**
-     * Finds sub-documents from the collection's documents.
-     * @param {Object} match The query object to use when matching parent documents
-     * from which the sub-documents are queried.
-     * @param {String} path The path string used to identify the key in which
-     * sub-documents are stored in parent documents.
-     * @param {Object=} subDocQuery The query to use when matching which sub-documents
-     * to return.
-     * @param {Object=} subDocOptions The options object to use when querying for
-     * sub-documents.
-     * @returns {*}
-     */
-	result = coll.findSub({
-		_id: '1'
-	}, 'arr', {
-		on: false
+coll.insert({
+	_id: '1',
+	arr: [{
+		_id: '332',
+		val: 20,
+		on: true
 	}, {
-		//$stats: true,
-		//$split: true
-	});
-
-The result of this query is an array containing the sub-documents that matched the 
-query parameters:
-
-	[{
 		_id: '337',
 		val: 15,
 		on: false
 	}]
+});
+
+/**
+ * Finds sub-documents from the collection's documents.
+ * @param {Object} match The query object to use when matching parent documents
+ * from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the key in which
+ * sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching which sub-documents
+ * to return.
+ * @param {Object=} subDocOptions The options object to use when querying for
+ * sub-documents.
+ * @returns {*}
+ */
+result = coll.findSub({
+	_id: '1'
+}, 'arr', {
+	on: false
+}, {
+	//$stats: true,
+	//$split: true
+});
+```
+
+The result of this query is an array containing the sub-documents that matched the 
+query parameters:
+
+```js
+[{
+	_id: '337',
+	val: 15,
+	on: false
+}]
+```
 
 > The result of findSub never returns a parent document's data, only data from the 
 matching sub-document(s)
@@ -1406,14 +1498,16 @@ The result of the query after execution is:
 ## Updating the Collection
 This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
 
-	collection.update({
-		price: {
-			'$gt': 90,
-			'$lt': 150
-		}
-	}, {
-		moo: true
-	});
+```js
+collection.update({
+	price: {
+		'$gt': 90,
+		'$lt': 150
+	}
+}, {
+	moo: true
+});
+```
 
 If you want to replace a key's value you can use the $overwrite operator described
 in the *Update Operators* section below.
@@ -1421,7 +1515,9 @@ in the *Update Operators* section below.
 ## Quick Updates
 You can target individual documents for update by their id (primary key) via a quick helper method:
 
-	collection.updateById(1, {price: 180});
+```js
+collection.updateById(1, {price: 180});
+```
 
 This will update the document with the _id field of 1 to a new price of 180.
 
@@ -1449,43 +1545,49 @@ By default ForerunnerDB will detect an array and step into the array objects one
 and apply the update to each object. When you use $overwrite you can replace the array
 instead of stepping into it.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$overwrite: {
-			<field>: <value>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$overwrite: {
+		<field>: <value>
+	}
+});
+```
 
 In the following example the "arr" field (initially an array) is replaced by an object:
 
-	db.collection('test').setData({
-		_id: "445324",
-		arr: [{
-			foo: 1
-		}]
-	});
+```js
+db.collection('test').setData({
+	_id: "445324",
+	arr: [{
+		foo: 1
+	}]
+});
 
-	db.collection('test').update({
-		_id: "445324"
-	}, {
-		$overwrite: {
-			arr: {
-				moo: 1
-			}
+db.collection('test').update({
+	_id: "445324"
+}, {
+	$overwrite: {
+		arr: {
+			moo: 1
 		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[{
-		"_id": "445324",
-		"arr": {
-			"moo": 1
-		}
-	}]
+```js
+[{
+	"_id": "445324",
+	"arr": {
+		"moo": 1
+	}
+}]
+```
 
 #### $each
 > Version >= 1.3.34
@@ -1498,95 +1600,103 @@ other calling update().
 Consider the following sequence of update calls that define a couple of nested arrays and
 then push a value to the inner-nested array:
 
-	db.collection('test').setData({
-		_id: "445324",
-		count: 5
-	});
-	
-	db.collection('test').update({
-		_id: "445324"
-	}, {
+```js
+db.collection('test').setData({
+	_id: "445324",
+	count: 5
+});
+
+db.collection('test').update({
+	_id: "445324"
+}, {
+	$cast: {
+		arr: "array",
+		$data: [{}]
+	}
+});
+
+db.collection('test').update({
+	_id: "445324"
+}, {
+	arr: {
+		$cast: {
+			secondArr: "array"
+		}
+	}
+});
+
+db.collection('test').update({
+	_id: "445324"
+}, {
+	arr: {
+		$push: {
+			secondArr: "moo"
+		}
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
+
+Result:
+
+```js
+[
+	{
+		"_id": "445324",
+		"count": 5,
+		"arr": [{"secondArr": ["moo"]}]
+	}
+]
+```
+
+These calls a wasteful because each update() call must query the collection for matching
+documents before running the update against them. With $each you can pass a sequence of
+update operations and they will be executed in order:
+
+```js
+db.collection('test').setData({
+	_id: "445324",
+	count: 5
+});
+
+db.collection('test').update({
+	_id: "445324"
+}, {
+	$each: [{
 		$cast: {
 			arr: "array",
 			$data: [{}]
 		}
-	});
-	
-	db.collection('test').update({
-		_id: "445324"
 	}, {
 		arr: {
 			$cast: {
 				secondArr: "array"
 			}
 		}
-	});
-	
-	db.collection('test').update({
-		_id: "445324"
 	}, {
 		arr: {
 			$push: {
 				secondArr: "moo"
 			}
 		}
-	});
+	}]
+});
 
-	JSON.stringify(db.collection('test').find());
-
-Result:
-
-	[
-    	{
-    		"_id": "445324",
-    		"count": 5,
-    		"arr": [{"secondArr": ["moo"]}]
-    	}
-    ]
-
-These calls a wasteful because each update() call must query the collection for matching
-documents before running the update against them. With $each you can pass a sequence of
-update operations and they will be executed in order:
-
-	db.collection('test').setData({
-		_id: "445324",
-		count: 5
-	});
-	
-	db.collection('test').update({
-		_id: "445324"
-	}, {
-		$each: [{
-			$cast: {
-				arr: "array",
-				$data: [{}]
-			}
-		}, {
-			arr: {
-				$cast: {
-					secondArr: "array"
-				}
-			}
-		}, {
-			arr: {
-				$push: {
-					secondArr: "moo"
-				}
-			}
-		}]
-	});
-
-	JSON.stringify(db.collection('test').find());
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[
-    	{
-    		"_id": "445324",
-    		"count": 5,
-    		"arr": [{"secondArr": ["moo"]}]
-    	}
-    ]
+```js
+[
+	{
+		"_id": "445324",
+		"count": 5,
+		"arr": [{"secondArr": ["moo"]}]
+	}
+]
+```
 
 As you can see the single sequenced call produces the same output as the multiple update()
 calls but will run slightly faster and use fewer resources.
@@ -1594,125 +1704,143 @@ calls but will run slightly faster and use fewer resources.
 #### $inc
 The $inc operator increments / decrements a field value by the given number.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$inc: {
-			<field>: <value>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$inc: {
+		<field>: <value>
+	}
+});
+```
 
 In the following example, the "count" field is decremented by 1 in the document that
 matches the id "445324":
 
-	db.collection('test').setData({
-		_id: "445324",
-		count: 5
-	});
-	
-	db.collection('test').update({
-		_id: "445324"
-	}, {
-		$inc: {
-			count: -1
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+```js
+db.collection('test').setData({
+	_id: "445324",
+	count: 5
+});
+
+db.collection('test').update({
+	_id: "445324"
+}, {
+	$inc: {
+		count: -1
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
     
 Result:
 
-	[{
-		"_id": "445324",
-		"count": 4
-	}]
+```js
+[{
+	"_id": "445324",
+	"count": 4
+}]
+```
 
 Using a positive number will increment, using a negative number will decrement.
 
 #### $push
 The $push operator appends a specified value to an array.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$push: {
-			<field>: <value>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$push: {
+		<field>: <value>
+	}
+});
+```
 
 The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
 
-	db.collection('test').setData({
-		_id: "23231",
-		shoppingList: []
-	});
-	
-	db.collection('test').update({
-		_id: "23231"
-	}, {
-		$push: {
-			shoppingList: "Milk"
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+```js
+db.collection('test').setData({
+	_id: "23231",
+	shoppingList: []
+});
+
+db.collection('test').update({
+	_id: "23231"
+}, {
+	$push: {
+		shoppingList: "Milk"
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[{
-		"_id": "23231",
-		"shoppingList": [
-			"Milk"
-		]
-    }]
+```js
+[{
+	"_id": "23231",
+	"shoppingList": [
+		"Milk"
+	]
+}]
+```
 
 #### $splicePush
 The $splicePush operator adds an item into an array at a specified index.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$splicePush: {
-			<field>: <value>
-			$index: <index>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$splicePush: {
+		<field>: <value>
+		$index: <index>
+	}
+});
+```
 
 The following example inserts "Milk" to the "shoppingList" array at index 1 in the document with the id "23231":
 
-	db.collection('test').setData({
-		_id: "23231",
-		shoppingList: [
-			"Sugar",
-			"Tea",
-			"Coffee"
-		]
-	});
-	
-	db.collection('test').update({
-		_id: "23231"
-	}, {
-		$splicePush: {
-			shoppingList: "Milk",
-			$index: 1
-		}
-	});
+```js
+db.collection('test').setData({
+	_id: "23231",
+	shoppingList: [
+		"Sugar",
+		"Tea",
+		"Coffee"
+	]
+});
 
-	JSON.stringify(db.collection('test').find());
+db.collection('test').update({
+	_id: "23231"
+}, {
+	$splicePush: {
+		shoppingList: "Milk",
+		$index: 1
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[
-    	{
-    		"_id": "23231",
-    		"shoppingList": [
-    			"Sugar",
-    			"Milk",
-    			"Tea",
-    			"Coffee"
-    		]
-    	}
-    ]
+```js
+[
+	{
+		"_id": "23231",
+		"shoppingList": [
+			"Sugar",
+			"Milk",
+			"Tea",
+			"Coffee"
+		]
+	}
+]
+```
 
 #### $addToSet
 Adds an item into an array only if the item does not already exist in the array.
@@ -1724,93 +1852,101 @@ uniqueness against by using the $key property.
 In the following example $addToSet is used to check uniqueness against the whole document
 being added:
 
-	// Create a collection document
-	db.collection('test').setData({
-		_id: "1",
-		arr: []
-	});
+```js
+// Create a collection document
+db.collection('test').setData({
+	_id: "1",
+	arr: []
+});
 
-	// Update the document by adding an object to the "arr" array
-	db.collection('test').update({
-		_id: "1"
-	}, {
-		$addToSet: {
-			arr: {
-				name: 'Fufu',
-				test: '1'
-			}
+// Update the document by adding an object to the "arr" array
+db.collection('test').update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			name: 'Fufu',
+			test: '1'
 		}
-	});
+	}
+});
 
-	// Try and do it again... this will fail because a
-	// matching item already exists in the array
-	db.collection('test').update({
-        _id: "1"
-    }, {
-        $addToSet: {
-            arr: {
-                name: 'Fufu',
-                test: '1'
-            }
-        }
-    });
+// Try and do it again... this will fail because a
+// matching item already exists in the array
+db.collection('test').update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			name: 'Fufu',
+			test: '1'
+		}
+	}
+});
+```
 
 Now in the example below we specify which key to test uniqueness against:
 
-	// Create a collection document
-	db.collection('test').setData({
-		_id: "1",
-		arr: []
-	});
+```js
+// Create a collection document
+db.collection('test').setData({
+	_id: "1",
+	arr: []
+});
 
-	// Update the document by adding an object to the "arr" array
-	db.collection('test').update({
-		_id: "1"
-	}, {
-		$addToSet: {
-			arr: {
-				name: 'Fufu',
-				test: '1'
-			}
+// Update the document by adding an object to the "arr" array
+db.collection('test').update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			name: 'Fufu',
+			test: '1'
 		}
-	});
+	}
+});
 
-	// Try and do it again... this will work because the
-	// key "test" is different for the existing and new objects
-	db.collection('test').update({
-        _id: "1"
-    }, {
-        $addToSet: {
-            arr: {
-            	$key: 'test',
-                name: 'Fufu',
-                test: '2'
-            }
-        }
-    });
+// Try and do it again... this will work because the
+// key "test" is different for the existing and new objects
+db.collection('test').update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			$key: 'test',
+			name: 'Fufu',
+			test: '2'
+		}
+	}
+});
+```
 
 You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
 
 #### $pull
 The $pull operator removes a specified value or values that match an input query.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$pull: {
-			<arrayField>: <value|query>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$pull: {
+		<arrayField>: <value|query>
+	}
+});
+```
 
 The following example removes the "Milk" entry from the "shoppingList" array:
 
-	db.users.update({
-		_id: "23231"
-	}, {
-		$pull: {
-			shoppingList: "Milk"
-		}
-	});
+```js
+db.users.update({
+	_id: "23231"
+}, {
+	$pull: {
+		shoppingList: "Milk"
+	}
+});
+```
 
 If an array element is an embedded document (JavaScript object), the $pull operator applies its specified query to the element as though it were a top-level object.
 
@@ -1819,76 +1955,86 @@ The $pop operator removes an element from an array at the beginning or end. If y
 an element from the end of the array pass 1 in your value. If you wish to remove an element from
 the beginning of an array pass -1 in your value.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$pop: {
-			<field>: <value>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$pop: {
+		<field>: <value>
+	}
+});
+```
 
 The following example pops the item from the beginning of the "shoppingList" array:
 
-	db.collection('test').setData({
-		_id: "23231",
-		shoppingList: [{
-			_id: 1,
-			name: "One"
-		}, {
-			_id: 2,
-			name: "Two"
-		}, {
-			_id: 3,
-			name: "Three"
-		}]
-	});
-	
-	db.collection('test').update({
-		_id: "23231"
+```js
+db.collection('test').setData({
+	_id: "23231",
+	shoppingList: [{
+		_id: 1,
+		name: "One"
 	}, {
-		$pop: {
-			shoppingList: -1 // -1 pops from the beginning, 1 pops from the end
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+		_id: 2,
+		name: "Two"
+	}, {
+		_id: 3,
+		name: "Three"
+	}]
+});
+
+db.collection('test').update({
+	_id: "23231"
+}, {
+	$pop: {
+		shoppingList: -1 // -1 pops from the beginning, 1 pops from the end
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[{
-		_id: "23231",
-		shoppingList: [{
-			_id: 2,
-			name: "Two"
-		}, {
-			_id: 3,
-			name: "Three"
-		}]
+```js
+[{
+	_id: "23231",
+	shoppingList: [{
+		_id: 2,
+		name: "Two"
+	}, {
+		_id: 3,
+		name: "Three"
 	}]
+}]
+```
 
 #### $move
 The $move operator moves an item that exists inside a document's array from one index to another.
 
-	db.collection('test').update({
-		<query>
-	}, {
-		$move: {
-			<arrayField>: <value|query>,
-			$index: <index>
-		}
-	});
+```js
+db.collection('test').update({
+	<query>
+}, {
+	$move: {
+		<arrayField>: <value|query>,
+		$index: <index>
+	}
+});
+```
 
 The following example moves "Milk" in the "shoppingList" array to index 1 in the
 document with the id "23231":
 
-	db.users.update({
-		_id: "23231"
-	}, {
-		$move: {
-			shoppingList: "Milk"
-			$index: 1
-		}
-	});
+```js
+db.users.update({
+	_id: "23231"
+}, {
+	$move: {
+		shoppingList: "Milk"
+		$index: 1
+	}
+});
+```
 
 #### $cast
 > Version >= 1.3.34
@@ -1899,83 +2045,95 @@ object respectively.
 
 This example changes the type of the "val" property from a string to a number:
 
-	db.collection('test').setData({
-		val: "1.2"
-	});
-	
-	db.collection('test').update({}, {
-		$cast: {
-			val: "number"
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+```js
+db.collection('test').setData({
+	val: "1.2"
+});
+
+db.collection('test').update({}, {
+	$cast: {
+		val: "number"
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[{
-		"_id": "1d6fbf16e080de0",
-		"val": 1.2
-	}]
+```js
+[{
+	"_id": "1d6fbf16e080de0",
+	"val": 1.2
+}]
+```
 
 You can also use cast to ensure that an array or object exists on a property without
 overwriting that property if one already exists:
 
-	db.collection('test').setData({
-		_id: "moo",
-		arr: [{
-			test: true
-		}]
-	});
-	
-	db.collection('test').update({
-		_id: "moo"
-	}, {
-		$cast: {
-			arr: "array"
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+```js
+db.collection('test').setData({
+	_id: "moo",
+	arr: [{
+		test: true
+	}]
+});
+
+db.collection('test').update({
+	_id: "moo"
+}, {
+	$cast: {
+		arr: "array"
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
 
-	[{
-		"_id": "moo",
-		"arr": [{
-			"test": true
-		}]
+```js
+[{
+	"_id": "moo",
+	"arr": [{
+		"test": true
 	}]
+}]
+```
 
 Should you wish to initialise an array or object with specific data if the property is
 not currently of that type rather than initialising as a blank array / object, you can 
 specify the data to use by including a $data property in your $cast operator object:
 
-	db.collection('test').setData({
-		_id: "moo"
-	});
-	
-	db.collection('test').update({
-		_id: "moo"
-	}, {
-		$cast: {
-			orders: "array",
-			$data: [{
-				initial: true
-			}]
-		}
-	});
-	
-	JSON.stringify(db.collection('test').find());
+```js
+db.collection('test').setData({
+	_id: "moo"
+});
+
+db.collection('test').update({
+	_id: "moo"
+}, {
+	$cast: {
+		orders: "array",
+		$data: [{
+			initial: true
+		}]
+	}
+});
+
+JSON.stringify(db.collection('test').find());
+```
 
 Result:
-	
-	[{
-		"_id": "moo",
-		"orders":[{
-			"initial": true
-		}]
+
+```js
+[{
+	"_id": "moo",
+	"orders":[{
+		"initial": true
 	}]
+}]
+```
 
 #### Array Positional in Updates (.$)
 Often you want to update a sub-document stored inside an array. You can use the array positional
@@ -1985,24 +2143,26 @@ clause.
 The following example updates the sub-document in the array *"arr"* with the _id *"foo"* so
 that the *"name"* property is set to *"John"*:
 
-	db.collection('test').setData({
-		_id: '2',
-		arr: [{
-			_id: 'foo',
-			name: 'Jim'
-		}]
-	});
-	
-	var result = db.collection('test').update({
-		_id: '2',
-		"arr": {
-			"_id": "foo"
-		}
-	}, {
-		"arr.$": {
-			name: 'John'
-		}
-	});
+```js
+db.collection('test').setData({
+	_id: '2',
+	arr: [{
+		_id: 'foo',
+		name: 'Jim'
+	}]
+});
+
+var result = db.collection('test').update({
+	_id: '2',
+	"arr": {
+		"_id": "foo"
+	}
+}, {
+	"arr.$": {
+		name: 'John'
+	}
+});
+```
 
 Internally this operation checks the update for property's ending in ".$" and then looks
 at the query part of the call to see if a corresponding clause exists for it. In the example
@@ -2012,9 +2172,11 @@ which determines which sub-documents are to be updated based on if they match or
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
 
-	var result = db.collection('item').find({}, {
-		$decouple: false
-	});
+```js
+var result = db.collection('item').find({}, {
+	$decouple: false
+});
+```
 
 If you do not specify a decouple option, ForerunnerDB will default to true and return decoupled objects.
 
@@ -2024,7 +2186,9 @@ Keep in mind that if you switch off decoupling for a query and then modify any o
 If your data uses different primary key fields from the default "_id" then you need to tell the collection. Simply call
 the primaryKey() method with the name of the field your primary key is stored in:
 
-	collection.primaryKey('itemId');
+```js
+collection.primaryKey('itemId');
+```
 
 When you change the primary key field name, methods like updateById will use this field automatically instead of the
 default one "_id".
@@ -2033,11 +2197,13 @@ default one "_id".
 Removing is as simple as doing a normal find() call, but with the search for docs you want to remove. Remove all
 documents where the price is greater than or equal to 100:
 
-	collection.remove({
-		price: {
-			'$gte': 100
-		}
-	});
+```js
+collection.remove({
+	price: {
+		'$gte': 100
+	}
+});
+```
 
 ### Joins
 Sometimes you want to join two or more collections when running a query and return
@@ -2046,56 +2212,60 @@ ForerunnerDB supports collection joins via a simple options key "$join". For ins
 let's setup a second collection called "purchase" in which we will store some details
 about users who have ordered items from the "item" collection we initialised above:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-		itemCollection = db.collection('item'),
-		purchaseCollection = db.collection('purchase');
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	itemCollection = db.collection('item'),
+	purchaseCollection = db.collection('purchase');
 
-	itemCollection.insert([{
-        _id: 1,
-        name: 'Cat Litter',
-        price: 200
-    }, {
-        _id: 2,
-        name: 'Dog Food',
-        price: 100
-    }, {
-        _id: 3,
-        price: 400,
-        name: 'Fish Bones'
-    }, {
-		_id: 4,
-		price: 267,
-		name:'Scooby Snacks'
-	}, {
-		_id: 5,
-		price: 234,
-		name: 'Chicken Yum Yum'
-	}]);
+itemCollection.insert([{
+	_id: 1,
+	name: 'Cat Litter',
+	price: 200
+}, {
+	_id: 2,
+	name: 'Dog Food',
+	price: 100
+}, {
+	_id: 3,
+	price: 400,
+	name: 'Fish Bones'
+}, {
+	_id: 4,
+	price: 267,
+	name:'Scooby Snacks'
+}, {
+	_id: 5,
+	price: 234,
+	name: 'Chicken Yum Yum'
+}]);
 
-	purchaseCollection.insert([{
-		itemId: 4,
-		user: 'Fred Bloggs',
-		quantity: 2
-	}, {
-		itemId: 4,
-		user: 'Jim Jones',
-		quantity: 1
-	}]);
+purchaseCollection.insert([{
+	itemId: 4,
+	user: 'Fred Bloggs',
+	quantity: 2
+}, {
+	itemId: 4,
+	user: 'Jim Jones',
+	quantity: 1
+}]);
+```
 
 Now, when we find data from the "item" collection we can grab all the users that
 ordered that item as well and store them in a key called "purchasedBy":
 
-	itemCollection.find({}, {
-		'$join': [{
-			'purchase': {
-				'itemId': '_id',
-				'$as': 'purchasedBy',
-				'$require': false,
-				'$multi': true
-			}
-		}]
-	});
+```js
+itemCollection.find({}, {
+	'$join': [{
+		'purchase': {
+			'itemId': '_id',
+			'$as': 'purchasedBy',
+			'$require': false,
+			'$multi': true
+		}
+	}]
+});
+```
 
 The "$join" key holds an array of joins to perform, each join object has a key which
 denotes the collection name to pull data from, then matching criteria which in this
@@ -2108,40 +2278,42 @@ operations (start with $) and indicate:
 
 The result of the call above is:
 
-	[{
-		"_id":1,
-		"name":"Cat Litter",
-		"price":200,
-		"purchasedBy":[]
-	},{
-		"_id":2,
-		"name":"Dog Food",
-		"price":100,
-		"purchasedBy":[]
-	},{
-		"_id":3,
-		"price":400,
-		"name":"Fish Bones",
-		"purchasedBy":[]
-	},{
-		"_id":4,
-		"price":267,
-		"name":"Scooby Snacks",
-		"purchasedBy": [{
-			"itemId":4,
-			"user":"Fred Bloggs",
-			"quantity":2
-		}, {
-			"itemId":4,
-			"user":"Jim Jones",
-			"quantity":1
-		}]
-	},{
-		"_id":5,
-		"price":234,
-		"name":"Chicken Yum Yum",
-		"purchasedBy":[]
+```json
+[{
+	"_id":1,
+	"name":"Cat Litter",
+	"price":200,
+	"purchasedBy":[]
+},{
+	"_id":2,
+	"name":"Dog Food",
+	"price":100,
+	"purchasedBy":[]
+},{
+	"_id":3,
+	"price":400,
+	"name":"Fish Bones",
+	"purchasedBy":[]
+},{
+	"_id":4,
+	"price":267,
+	"name":"Scooby Snacks",
+	"purchasedBy": [{
+		"itemId":4,
+		"user":"Fred Bloggs",
+		"quantity":2
+	}, {
+		"itemId":4,
+		"user":"Jim Jones",
+		"quantity":1
 	}]
+},{
+	"_id":5,
+	"price":234,
+	"name":"Chicken Yum Yum",
+	"purchasedBy":[]
+}]
+```
 
 #### Advanced Joins Using $where
 > Version => 1.3.455
@@ -2153,20 +2325,22 @@ the $where clause in your $join.
 For instance, to achieve the same results as the join in the above example, you can
 specify matching data in the foreign collection using the $$ back-reference operator:
 
-	itemCollection.find({}, {
-		'$join': [{
-			'purchase': {
-				'$where': {
-					"query": {
-				    	'itemId': '$$._id'
-				    }
-				},
-				'$as': 'purchasedBy',
-				'$require': false,
-				'$multi': true
-			}
-		}]
-	});
+```js
+itemCollection.find({}, {
+	'$join': [{
+		'purchase': {
+			'$where': {
+				"query": {
+					'itemId': '$$._id'
+				}
+			},
+			'$as': 'purchasedBy',
+			'$require': false,
+			'$multi': true
+		}
+	}]
+});
+```
 
 The $$ back-reference operator allows you to reference key/value data from the document
 currently being evaluated by the join operation. In the example above the query in the
@@ -2232,16 +2406,18 @@ Setting up triggers is very easy.
 Here is an example of a *before insert* trigger that will cancel the insert
 operation before the data is inserted into the database:
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-    	collection = db.collection('test');
-    
-    collection.addTrigger('myTrigger', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldData, newData) {
-    	// By returning false inside a "before" trigger we cancel the operation
-    	return false;
-    });
-    
-    collection.insert({test: true});
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	collection = db.collection('test');
+
+collection.addTrigger('myTrigger', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldData, newData) {
+	// By returning false inside a "before" trigger we cancel the operation
+	return false;
+});
+
+collection.insert({test: true});
+```
 
 The trigger method passed to addTrigger() as parameter 4 should handle these
 arguments:
@@ -2258,27 +2434,29 @@ When the update operation is run the *before update* trigger is fired and the
 document is modified before the update is applied. This allows you to make changes to
 an operation before the operation is carried out.
 
-	var fdb = new ForerunnerDB(),
-		db = fdb.db('test'),
-    	collection = db.collection('test');
-    
-    collection.addTrigger('myTrigger', db.TYPE_UPDATE, db.PHASE_BEFORE, function (operation, oldData, newData) {
-    	newData.updated = String(new Date());
-    });
-    
-    // Insert a document with the property "test" being true
-    collection.insert({test: true});
-    
-    // Now update that document to set "test" to false - this
-    // will fire the trigger code registered above and cause the
-    // final document to have a new property "updated" which
-    // contains the date/time that the update occurred on that
-    // document
-    collection.update({test: true}, {test: false});
-    
-    // Now inspect the document and it will show the "updated"
-    // property that the trigger added!
-    console.log(collection.find());
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	collection = db.collection('test');
+
+collection.addTrigger('myTrigger', db.TYPE_UPDATE, db.PHASE_BEFORE, function (operation, oldData, newData) {
+	newData.updated = String(new Date());
+});
+
+// Insert a document with the property "test" being true
+collection.insert({test: true});
+
+// Now update that document to set "test" to false - this
+// will fire the trigger code registered above and cause the
+// final document to have a new property "updated" which
+// contains the date/time that the update occurred on that
+// document
+collection.update({test: true}, {test: false});
+
+// Now inspect the document and it will show the "updated"
+// property that the trigger added!
+console.log(collection.find());
+```
 
 > Please keep in mind that you can only modify a document's data during a *before*
 phase trigger. Modifications to the document during an *after* phase trigger will
@@ -2297,19 +2475,27 @@ affect all triggers that match the type / phase.
 
 ##### Enable a Trigger via Trigger ID
 
-	db.collection('test').enableTrigger('myTriggerId');
+```js
+db.collection('test').enableTrigger('myTriggerId');
+```
 
 ##### Enable a Trigger via Type
 
-	db.collection('test').enableTrigger(db.TYPE_INSERT);
+```js
+db.collection('test').enableTrigger(db.TYPE_INSERT);
+```
 
 ##### Enable a Trigger via Type and Phase
 
-	db.collection('test').enableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+```js
+db.collection('test').enableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+```
 
 ##### Enable a Trigger via ID, Type and Phase
 
-	db.collection('test').enableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+```js
+db.collection('test').enableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+```
 
 #### Disabling a Trigger
 You can temporarily disable a trigger or multiple triggers using the disableTrigger()
@@ -2320,19 +2506,27 @@ affect all triggers that match the type / phase.
 
 ##### Disable a Trigger via Trigger ID
 
-	db.collection('test').disableTrigger('myTriggerId');
+```js
+db.collection('test').disableTrigger('myTriggerId');
+```
 
 ##### Disable a Trigger via Type
 
-	db.collection('test').disableTrigger(db.TYPE_INSERT);
+```js
+db.collection('test').disableTrigger(db.TYPE_INSERT);
+```
 
 ##### Disable a Trigger via Type and Phase
 
-	db.collection('test').disableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+```js
+db.collection('test').disableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
+```
 
 ##### Disable a Trigger via ID, Type and Phase
 
-	db.collection('test').disableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+```js
+db.collection('test').disableTrigger('myTriggerId', db.TYPE_INSERT, db.PHASE_BEFORE);
+```
 
 ## Events
 Collections emit events when they carry out CRUD operations. You can hook an event using
