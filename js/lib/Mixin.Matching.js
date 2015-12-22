@@ -39,6 +39,12 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		// Check if options currently holds a root source object
+		if (!options.$rootSource) {
+			// Root query not assigned, hold the root query
+			options.$rootSource = source;
+		}
+
 		// Assign current query data
 		options.$currentQuery = test;
 
