@@ -553,77 +553,218 @@ Collection.prototype.load = function (callback) {
 	}
 };
 
+/**
+ * Gets the data that represents this collection for easy storage using
+ * a third-party method / plugin instead of using the standard persistent
+ * storage system.
+ * @param {Function} callback The method to call with the data response.
+ */
+Collection.prototype.saveCustom = function (callback) {
+	var self = this,
+		myData = {},
+		processSave;
+
+	if (self._name) {
+		if (self._db) {
+			processSave = function () {
+				self.encode(self._data, function (err, data, tableStats) {
+					if (!err) {
+						myData.data = {
+							name: self._db._name + '-' + self._name,
+							store: data,
+							tableStats: tableStats
+						};
+
+						self.encode(self._data, function (err, data, tableStats) {
+							if (!err) {
+								myData.metaData = {
+									name: self._db._name + '-' + self._name + '-metaData',
+									store: data,
+									tableStats: tableStats
+								};
+
+								callback(false, myData);
+							} else {
+								callback(err);
+							}
+						});
+					} else {
+						callback(err);
+					}
+				});
+			};
+
+			// Check for processing queues
+			if (self.isProcessingQueue()) {
+				// Hook queue complete to process save
+				self.on('queuesComplete', function () {
+					processSave();
+				});
+			} else {
+				// Process save immediately
+				processSave();
+			}
+		} else {
+			if (callback) { callback('Cannot save a collection that is not attached to a database!'); }
+		}
+	} else {
+		if (callback) { callback('Cannot save a collection with no assigned name!'); }
+	}
+};
+
+/**
+ * Loads custom data loaded by a third-party plugin into the collection.
+ * @param {Object} myData Data object previously saved by using saveCustom()
+ * @param {Function} callback A callback method to receive notification when
+ * data has loaded.
+ */
+Collection.prototype.loadCustom = function (myData, callback) {
+	var self = this;
+
+	if (self._name) {
+		if (self._db) {
+			if (myData.data &amp;&amp; myData.data.store) {
+				if (myData.metaData &amp;&amp; myData.metaData.store) {
+					self.decode(myData.data.store, function (err, data, tableStats) {
+						if (!err) {
+							if (data) {
+								// Remove all previous data
+								self.remove({});
+								self.insert(data);
+
+								self.decode(myData.metaData.store, function (err, data, metaStats) {
+									if (!err) {
+										if (data) {
+											self.metaData(data);
+
+											if (callback) { callback(err, tableStats, metaStats); }
+										}
+									} else {
+										callback(err);
+									}
+								});
+							}
+						} else {
+							callback(err);
+						}
+					});
+				} else {
+					callback('No "metaData" key found in passed object!');
+				}
+			} else {
+				callback('No "data" key found in passed object!');
+			}
+		} else {
+			if (callback) { callback('Cannot load a collection that is not attached to a database!'); }
+		}
+	} else {
+		if (callback) { callback('Cannot load a collection with no assigned name!'); }
+	}
+};
+
 // Override the DB init to instantiate the plugin
 Db.prototype.init = function () {
 	DbInit.apply(this, arguments);
 	this.persist = new Persist(this);
 };
 
-/**
- * Loads an entire database's data from persistent storage.
- * @param {Function=} callback The method to call when the load function
- * has completed.
- */
-Db.prototype.load = function (callback) {
-	// Loop the collections in the database
-	var obj = this._collection,
-		keys = obj.keys(),
-		keyCount = keys.length,
-		loadCallback,
-		index;
+Db.prototype.load = new Overload({
+	/**
+	 * Loads an entire database's data from persistent storage.
+	 * @param {Function=} callback The method to call when the load function
+	 * has completed.
+	 */
+	'function': function (callback) {
+		this.$main.call(this, {}, callback);
+	},
 
-	loadCallback = function (err) {
-		if (!err) {
-			keyCount--;
+	'object, function': function (myData, callback) {
+		this.$main.call(this, myData, callback);
+	},
 
-			if (keyCount === 0) {
-				if (callback) { callback(false); }
+	'$main': function (myData, callback) {
+		// Loop the collections in the database
+		var obj = this._collection,
+			keys = obj.keys(),
+			keyCount = keys.length,
+			loadCallback,
+			index;
+
+		loadCallback = function (err) {
+			if (!err) {
+				keyCount--;
+
+				if (keyCount === 0) {
+					if (callback) {
+						callback(false);
+					}
+				}
+			} else {
+				if (callback) {
+					callback(err);
+				}
 			}
-		} else {
-			if (callback) { callback(err); }
-		}
-	};
+		};
 
-	for (index in obj) {
-		if (obj.hasOwnProperty(index)) {
-			// Call the collection load method
-			obj[index].load(loadCallback);
+		for (index in obj) {
+			if (obj.hasOwnProperty(index)) {
+				// Call the collection load method
+				if (!myData) {
+					obj[index].load(loadCallback);
+				} else {
+					obj[index].loadCustom(myData, loadCallback);
+				}
+			}
 		}
 	}
-};
+});
 
-/**
- * Saves an entire database's data to persistent storage.
- * @param {Function=} callback The method to call when the save function
- * has completed.
- */
-Db.prototype.save = function (callback) {
-	// Loop the collections in the database
-	var obj = this._collection,
-		keys = obj.keys(),
-		keyCount = keys.length,
-		saveCallback,
-		index;
+Db.prototype.save = new Overload({
+	/**
+	 * Saves an entire database's data to persistent storage.
+	 * @param {Function=} callback The method to call when the save function
+	 * has completed.
+	 */
+	'function': function (callback) {
+		this.$main.call(this, {}, callback);
+	},
 
-	saveCallback = function (err) {
-		if (!err) {
-			keyCount--;
+	'object, function': function (options, callback) {
+		this.$main.call(this, options, callback);
+	},
 
-			if (keyCount === 0) {
-				if (callback) { callback(false); }
+	'$main': function (options, callback) {
+		// Loop the collections in the database
+		var obj = this._collection,
+			keys = obj.keys(),
+			keyCount = keys.length,
+			saveCallback,
+			index;
+
+		saveCallback = function (err) {
+			if (!err) {
+				keyCount--;
+
+				if (keyCount === 0) {
+					if (callback) { callback(false); }
+				}
+			} else {
+				if (callback) { callback(err); }
 			}
-		} else {
-			if (callback) { callback(err); }
-		}
-	};
+		};
 
-	for (index in obj) {
-		if (obj.hasOwnProperty(index)) {
-			// Call the collection save method
-			obj[index].save(saveCallback);
+		for (index in obj) {
+			if (obj.hasOwnProperty(index)) {
+				// Call the collection save method
+				if (!options.custom) {
+					obj[index].save(saveCallback);
+				} else {
+					obj[index].saveCustom(saveCallback);
+				}
+			}
 		}
 	}
-};
+});
 
 Shared.finishModule('Persist');
 module.exports = Persist;</code></pre>
@@ -642,7 +783,7 @@ module.exports = Persist;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Dec 22 2015 15:10:32 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Jan 02 2016 16:11:06 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

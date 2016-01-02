@@ -233,8 +233,7 @@ NodePersist.prototype._encode = function (val, meta, finished) {
 };
 
 /**
- * Encodes passed data and then stores it in the browser's persistent
- * storage layer.
+ * Encodes passed data and then stores it in a data file.
  * @param {String} key The key to store the data under in the persistent
  * storage.
  * @param {Object} data The data to store under the key.

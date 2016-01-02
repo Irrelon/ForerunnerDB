@@ -7196,6 +7196,12 @@ var Matching = {
 			options.$rootQuery = test;
 		}
 
+		// Check if options currently holds a root source object
+		if (!options.$rootSource) {
+			// Root query not assigned, hold the root query
+			options.$rootSource = source;
+		}
+
 		// Assign current query data
 		options.$currentQuery = test;
 
@@ -9463,7 +9469,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.472',
+	version: '1.3.475',
 	modules: {},
 	plugins: {},
 
