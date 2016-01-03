@@ -3463,6 +3463,8 @@ Db.prototype.collection = new Overload({
 					if (options && options.throwError !== false) {
 						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
 					}
+
+					return undefined;
 				}
 
 				if (this.debug()) {
