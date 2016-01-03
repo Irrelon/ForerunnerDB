@@ -36,6 +36,8 @@ NodePersist.prototype.init = function (db) {
 	this._decodeSteps = [
 		function () { return self._decode.apply(self, arguments); }
 	];
+
+	this._db = db;
 };
 
 Shared.addModule('NodePersist', NodePersist);
@@ -344,6 +346,16 @@ NodePersist.prototype.loadDataFile = function (key, callback) {
 
 NodePersist.prototype.removeDataFile = function (key, callback) {
 	fs.unlink(this.dataDir() + "/" + key + '.fdb', callback);
+};
+
+NodePersist.prototype.checkDataFile = function (key, callback) {
+	fs.stat(this.dataDir() + "/" + key + '.fdb', function (err, stats) {
+		callback(false, err.code !== 'ENOENT', stats);
+	});
+};
+
+NodePersist.prototype.dataExists = function (collectionName, callback) {
+	this.checkDataFile(this._db._name + '-' + collectionName, callback);
 };
 
 // Extend the Collection prototype with persist methods
