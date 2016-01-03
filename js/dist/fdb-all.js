@@ -4202,6 +4202,8 @@ Db.prototype.collection = new Overload({
 					if (options && options.throwError !== false) {
 						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
 					}
+
+					return undefined;
 				}
 
 				if (this.debug()) {
@@ -12810,7 +12812,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.475',
+	version: '1.3.476',
 	modules: {},
 	plugins: {},
 
