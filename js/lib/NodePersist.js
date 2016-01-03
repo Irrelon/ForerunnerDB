@@ -350,7 +350,7 @@ NodePersist.prototype.removeDataFile = function (key, callback) {
 
 NodePersist.prototype.checkDataFile = function (key, callback) {
 	fs.stat(this.dataDir() + "/" + key + '.fdb', function (err, stats) {
-		callback(false, err && err.code !== 'ENOENT', stats);
+		callback(false, !err || err.code !== 'ENOENT', stats);
 	});
 };
 
