@@ -2,7 +2,7 @@
 
 - [ForerunnerDB - A NoSQL JSON Document DB](#)
 		- [Standout Features Include:](#)
-	- [Version 1.3.482](#)
+	- [Version 1.3.483](#)
 			- [TravisCI Build Test Status](#)
 	- [What is ForerunnerDB](#)
 	- [What is ForerunnerDB's Primary Use Case?](#)
