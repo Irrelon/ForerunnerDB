@@ -1409,7 +1409,8 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 
 	// Check if all queues are complete
 	if (!this.isProcessingQueue()) {
-		this.emit('queuesComplete');
+		this.deferEmit('queuesComplete');
+		this.deferEmit('ready');
 	}
 };
 
@@ -3495,9 +3496,11 @@ Db.prototype.collection = new Overload({
 
 			// Listen for events on this collection so we can fire global events
 			// on the database in response to it
-			this._collection[name].on('change', function () {
-				self.deferEmit('change');
+			self._collection[name].on('change', function () {
+				self.emit('change', [self._collection[name], 'collection', name]);
 			});
+
+			self.emit('create', [self._collection[name], 'collection', name]);
 
 			return this._collection[name];
 		} else {
