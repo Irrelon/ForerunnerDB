@@ -181,6 +181,7 @@ Collection.prototype.drop = function (callback) {
 			delete this._name;
 			delete this._data;
 			delete this._metrics;
+			delete this._listeners;
 
 			if (callback) { callback(false, true); }
 
@@ -3455,10 +3456,13 @@ Db.prototype.collection = new Overload({
 	 * @returns {*}
 	 */
 	'$main': function (options) {
-		var name = options.name;
+		var self = this,
+			name = options.name;
 
 		if (name) {
-			if (!this._collection[name]) {
+			if (this._collection[name]) {
+				return this._collection[name];
+			} else {
 				if (options && options.autoCreate === false) {
 					if (options && options.throwError !== false) {
 						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
@@ -3488,6 +3492,12 @@ Db.prototype.collection = new Overload({
 					throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
 				}
 			}
+
+			// Listen for events on this collection so we can fire global events
+			// on the database in response to it
+			this._collection[name].on('change', function () {
+				self.deferEmit('change');
+			});
 
 			return this._collection[name];
 		} else {
