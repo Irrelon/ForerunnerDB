@@ -1,9 +1,14 @@
+# ForerunnerDB - A NoSQL JSON Document DB
+ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
+a UK registered company.
+
+> ForerunnerDB is used in live projects that serve millions of users a day, is production
+ready and battle tested in real-world applications.
+
 **Table of Contents**
 
-- [ForerunnerDB - A NoSQL JSON Document DB](#)
-		- [Standout Features Include:](#)
-	- [Version 1.3.483](#)
-			- [TravisCI Build Test Status](#)
+- Introduction
+	- [Standout Features:](#)
 	- [What is ForerunnerDB](#)
 	- [What is ForerunnerDB's Primary Use Case?](#)
 	- [Demo](#)
@@ -159,15 +164,8 @@
 - [Breaking Changes](#)
 	- [Since Version 1.3.36](#)
 	- [Since Version 1.3.10](#)
-	
-# ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
-a UK registered company.
 
-> ForerunnerDB is used in live projects that serve millions of users a day, is production
-ready and battle tested in real-world applications.
-
-### Standout Features Include:
+### Standout Features
 
 * Views - Virtual collections that are built from existing collections and limited by live queries.
 * Joins - Query with joins across multiple collections and views.
