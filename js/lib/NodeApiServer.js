@@ -68,12 +68,28 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 	app.get('/:collection', function (req, res) {
 		// Check permissions
-		var modelName = req.params.collection;
+		var modelName = req.params.collection,
+			collection;
 
 		self.hasPermission(modelName, 'get', req, function (err, results) {
 			if (!err) {
+				collection = self._db.collection(req.params.collection);
+
 				// Return all data in the collection
-				res.send(self._db.collection(req.params.collection).find());
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+						res.send(self._db.collection(req.params.collection).find());
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).find());
+				}
 			} else {
 				res.status(403).send(err);
 			}
@@ -82,15 +98,32 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 	app.post('/:collection', function (req, res) {
 		// Check permissions
-		var modelName = req.params.collection;
+		var modelName = req.params.collection,
+			collection;
 
 		self.hasPermission(modelName, 'post', req, function (err, results) {
-			var result;
-
 			if (!err) {
-				// Return all data in the collection
-				result = self._db.collection(req.params.collection).insert(req.body);
-				res.send(result);
+				collection = self._db.collection(req.params.collection);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						self._db.collection(req.params.collection).insert(req.body, function (result) {
+							res.send(result);
+						});
+					});
+				} else {
+					self._db.collection(req.params.collection).insert(req.body, function (result) {
+						res.send(result);
+					});
+				}
 			} else {
 				res.status(403).send(err);
 			}
@@ -100,12 +133,28 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.get('/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
-			modelId = req.params.id;
+			modelId = req.params.id,
+			collection;
 
 		self.hasPermission(modelName, 'get', req, function (err) {
 			if (!err) {
-				// Return all data in the collection
-				res.send(self._db.collection(req.params.collection).findById(modelId));
+				collection = self._db.collection(req.params.collection);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						res.send(self._db.collection(req.params.collection).findById(modelId));
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).findById(modelId));
+				}
 			} else {
 				res.status(403).send(err);
 			}
@@ -115,12 +164,28 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.put('/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
-			modelId = req.params.id;
+			modelId = req.params.id,
+			collection;
 
 		self.hasPermission(modelName, 'put', req, function (err) {
 			if (!err) {
-				// Return all data in the collection
-				res.send(self._db.collection(req.params.collection).updateById(modelId, req.body));
+				collection = self._db.collection(req.params.collection);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						res.send(self._db.collection(req.params.collection).updateById(modelId, req.body));
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).updateById(modelId, req.body));
+				}
 			} else {
 				res.status(403).send(err);
 			}
@@ -130,12 +195,28 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.delete('/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
-			modelId = req.params.id;
+			modelId = req.params.id,
+			collection;
 
 		self.hasPermission(modelName, 'delete', req, function (err) {
 			if (!err) {
-				// Return all data in the collection
-				res.send(self._db.collection(req.params.collection).removeById(modelId));
+				collection = self._db.collection(req.params.collection);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						res.send(self._db.collection(req.params.collection).removeById(modelId));
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).removeById(modelId));
+				}
 			} else {
 				res.status(403).send(err);
 			}
