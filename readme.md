@@ -59,14 +59,6 @@ queryable in-memory store with file-based data persistence and a very easy setup
 simple installation via NPM and no requirements except Node.js) you will also find
 ForerunnerDB very useful.
 
-## Demo
-You can see an interactive demo at [http://www.forerunnerdb.com/demo.html](http://www.forerunnerdb.com/demo.html)
-
-## Tutorials
-[Tutorial 1: A Simple Todo List](http://www.forerunnerdb.com/tutorial/todoList.html)
-
-[Tutorial 2: Simple Chart](http://www.forerunnerdb.com/tutorial/simpleChart.html)
-
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
@@ -75,76 +67,6 @@ npm install forerunnerdb
 ```
 
 This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
-
-## License
-Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
-
-## Browser Compatibility
-ForerunnerDB works in all modern browsers (IE8+)
-
-* Android Browser 4
-* Blackberry 7
-* Chrome 23
-* Chrome for Android 32
-* Firefox 18
-* Firefox for Android 25
-* Firefox OS 1.0
-* IE 8
-* IE Mobile 10
-* Opera 15
-* Opera Mobile 11
-* Phonegap/Apache Cordova 1.2.0
-* Safari 4 (includes Mobile Safari)
-
-## Distribution Files
-The DB comes with a few different files in the ./js/dist folder that are pre-built
-to help you use ForerunnerDB easily.
-
-* fdb-all - Contains the whole of ForerunnerDB
-    * Collection - CRUD on collections (tables)
-    * CollectionGroup - Create groups of collections that can be CRUD on as one entity
-    * View - Virtual queried view of a collection (or other view)
-    * HighChart - Highcharts module to create dynamic charts from view data
-    * Persist - Persistent storage module for loading and saving in browser
-    * Document - Single document with CRUD
-    * Overview - Live aggregation of collection or view data
-    * Grid - Generate and maintain an HTML grid with sort and filter columns from data
-    
-* fdb-core - Contains only the core functionality
-	* Collection - CRUD on collections (tables)
-
-* fdb-core+persist - Core functionality + persistent storage
-	* Collection - CRUD on collections (tables)
-	* Persist - Persistent storage module for loading and saving in browser
-	
-* fdb-core+views - Core functionality + data views
-	* Collection - CRUD on collections (tables)
-	* View - Virtual queried view of a collection (or other view)
-
-* fdb-legacy - An old version of ForerunnerDB that some clients still require.
-Should not be used! This build will be removed in ForerunnerDB 2.0.
-
-The other files in ./js/dist are builds for various plugins that are part of the
-ForerunnerDB project but are entirely optional separate files that can be included
-in your project and added after the main ForerunnerDB dist file has been loaded.
-
-* fdb-angular - Adds data-binding to an angular scope back to ForerunnerDB
-* fdb-autobind - Adds data-binding for vanilla js projects to ForerunnerDB
-* fdb-infinilist - Adds the ability to create infinitely scrolling lists of huge
-amounts of data while only rendering the visible entities in the DOM for responsive
-UI even on a mobile device
-
-### Chrome Extension: ForerunnerDB Explorer
-A chrome browser extension exists in the source repo as well as in the Chrome Web Store
-[available here](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm).
-
-You can inspect and explore your ForerunnerDB instance directly from Chrome's Dev Tools.
-
-1. [Install the extension](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm)
-2. Open Chrome's developer tools
-3. Navigate to a url using ForerunnerDB (either local or remote)
-4. Click the ForerunnerDB tab in dev tools to inspect instances
-5. Click the Refresh button (the one in the ForerunnerDB explorer tab) to see any changes reflected
 
 # How to Use
 ## Use ForerunnerDB in *Browser*
@@ -3725,6 +3647,76 @@ information. The reason we do this is for performance.
 ForerunnerDB runs an update rather than a replace against documents that match the query
 clause. You can think about ForerunnerDB's update operations as having been automatically
 wrapped in the MongoDB $set operator.
+
+# License
+Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
+
+# Browser Compatibility
+ForerunnerDB works in all modern browsers (IE8+)
+
+* Android Browser 4
+* Blackberry 7
+* Chrome 23
+* Chrome for Android 32
+* Firefox 18
+* Firefox for Android 25
+* Firefox OS 1.0
+* IE 8
+* IE Mobile 10
+* Opera 15
+* Opera Mobile 11
+* Phonegap/Apache Cordova 1.2.0
+* Safari 4 (includes Mobile Safari)
+
+# Distribution Files
+The DB comes with a few different files in the ./js/dist folder that are pre-built
+to help you use ForerunnerDB easily.
+
+* fdb-all - Contains the whole of ForerunnerDB
+    * Collection - CRUD on collections (tables)
+    * CollectionGroup - Create groups of collections that can be CRUD on as one entity
+    * View - Virtual queried view of a collection (or other view)
+    * HighChart - Highcharts module to create dynamic charts from view data
+    * Persist - Persistent storage module for loading and saving in browser
+    * Document - Single document with CRUD
+    * Overview - Live aggregation of collection or view data
+    * Grid - Generate and maintain an HTML grid with sort and filter columns from data
+    
+* fdb-core - Contains only the core functionality
+	* Collection - CRUD on collections (tables)
+
+* fdb-core+persist - Core functionality + persistent storage
+	* Collection - CRUD on collections (tables)
+	* Persist - Persistent storage module for loading and saving in browser
+	
+* fdb-core+views - Core functionality + data views
+	* Collection - CRUD on collections (tables)
+	* View - Virtual queried view of a collection (or other view)
+
+* fdb-legacy - An old version of ForerunnerDB that some clients still require.
+Should not be used! This build will be removed in ForerunnerDB 2.0.
+
+The other files in ./js/dist are builds for various plugins that are part of the
+ForerunnerDB project but are entirely optional separate files that can be included
+in your project and added after the main ForerunnerDB dist file has been loaded.
+
+* fdb-angular - Adds data-binding to an angular scope back to ForerunnerDB
+* fdb-autobind - Adds data-binding for vanilla js projects to ForerunnerDB
+* fdb-infinilist - Adds the ability to create infinitely scrolling lists of huge
+amounts of data while only rendering the visible entities in the DOM for responsive
+UI even on a mobile device
+
+# Chrome Extension: ForerunnerDB Explorer
+A chrome browser extension exists in the source repo as well as in the Chrome Web Store
+[available here](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm).
+
+You can inspect and explore your ForerunnerDB instance directly from Chrome's Dev Tools.
+
+1. [Install the extension](https://chrome.google.com/webstore/detail/forerunnerdb-explorer/gkgnafoehgghdeimbkaeeodnhbegfldm)
+2. Open Chrome's developer tools
+3. Navigate to a url using ForerunnerDB (either local or remote)
+4. Click the ForerunnerDB tab in dev tools to inspect instances
+5. Click the Refresh button (the one in the ForerunnerDB explorer tab) to see any changes reflected
 
 # Development
 
