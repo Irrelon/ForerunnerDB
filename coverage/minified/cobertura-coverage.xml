@@ -1,13 +1,13 @@
 <?xml version="1.0" ?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage lines-valid="10"  lines-covered="10"  line-rate="1"  branches-valid="5995"  branches-covered="2393"  branch-rate="0.3992"  timestamp="1451947325285" complexity="0" version="0.1">
+<coverage lines-valid="10"  lines-covered="10"  line-rate="1"  branches-valid="5995"  branches-covered="2396"  branch-rate="0.3997"  timestamp="1451948220462" complexity="0" version="0.1">
 <sources>
 	<source>/Users/robevans/Dropbox/Development/ForerunnerDB</source>
 </sources>
 <packages>
-	<package name="lib"  line-rate="1"  branch-rate="0.3992" >
+	<package name="lib"  line-rate="1"  branch-rate="0.3997" >
 	<classes>
-		<class name="fdb-all.min.js"  filename="js/unitTests/lib/fdb-all.min.js"  line-rate="1"  branch-rate="0.3992" >
+		<class name="fdb-all.min.js"  filename="js/unitTests/lib/fdb-all.min.js"  line-rate="1"  branch-rate="0.3997" >
 		<methods>
 			<method name="a"  hits="1"  signature="()V" >
 				<lines><line number="1"  hits="1" /></lines>
@@ -30,11 +30,11 @@
 			<method name="(anonymous_7)"  hits="22"  signature="()V" >
 				<lines><line number="1"  hits="22" /></lines>
 			</method>
-			<method name="(anonymous_8)"  hits="3176"  signature="()V" >
-				<lines><line number="1"  hits="3176" /></lines>
+			<method name="(anonymous_8)"  hits="3169"  signature="()V" >
+				<lines><line number="1"  hits="3169" /></lines>
 			</method>
-			<method name="(anonymous_9)"  hits="31230"  signature="()V" >
-				<lines><line number="1"  hits="31230" /></lines>
+			<method name="(anonymous_9)"  hits="31121"  signature="()V" >
+				<lines><line number="1"  hits="31121" /></lines>
 			</method>
 			<method name="(anonymous_10)"  hits="4140"  signature="()V" >
 				<lines><line number="1"  hits="4140" /></lines>
@@ -252,8 +252,8 @@
 			<method name="(anonymous_81)"  hits="523"  signature="()V" >
 				<lines><line number="1"  hits="523" /></lines>
 			</method>
-			<method name="(anonymous_82)"  hits="34903"  signature="()V" >
-				<lines><line number="1"  hits="34903" /></lines>
+			<method name="(anonymous_82)"  hits="34816"  signature="()V" >
+				<lines><line number="1"  hits="34816" /></lines>
 			</method>
 			<method name="(anonymous_83)"  hits="43"  signature="()V" >
 				<lines><line number="1"  hits="43" /></lines>
@@ -288,8 +288,8 @@
 			<method name="(anonymous_93)"  hits="100"  signature="()V" >
 				<lines><line number="1"  hits="100" /></lines>
 			</method>
-			<method name="(anonymous_94)"  hits="133229"  signature="()V" >
-				<lines><line number="1"  hits="133229" /></lines>
+			<method name="(anonymous_94)"  hits="132533"  signature="()V" >
+				<lines><line number="1"  hits="132533" /></lines>
 			</method>
 			<method name="(anonymous_95)"  hits="21"  signature="()V" >
 				<lines><line number="1"  hits="21" /></lines>
@@ -1101,8 +1101,8 @@
 			<method name="(anonymous_364)"  hits="1"  signature="()V" >
 				<lines><line number="3"  hits="1" /></lines>
 			</method>
-			<method name="(anonymous_365)"  hits="35475"  signature="()V" >
-				<lines><line number="3"  hits="35475" /></lines>
+			<method name="(anonymous_365)"  hits="35388"  signature="()V" >
+				<lines><line number="3"  hits="35388" /></lines>
 			</method>
 			<method name="(anonymous_366)"  hits="363"  signature="()V" >
 				<lines><line number="3"  hits="363" /></lines>
@@ -1110,11 +1110,11 @@
 			<method name="(anonymous_367)"  hits="1"  signature="()V" >
 				<lines><line number="3"  hits="1" /></lines>
 			</method>
-			<method name="(anonymous_368)"  hits="163678"  signature="()V" >
-				<lines><line number="3"  hits="163678" /></lines>
+			<method name="(anonymous_368)"  hits="162857"  signature="()V" >
+				<lines><line number="3"  hits="162857" /></lines>
 			</method>
-			<method name="(anonymous_369)"  hits="792"  signature="()V" >
-				<lines><line number="3"  hits="792" /></lines>
+			<method name="(anonymous_369)"  hits="808"  signature="()V" >
+				<lines><line number="3"  hits="808" /></lines>
 			</method>
 			<method name="(anonymous_370)"  hits="1"  signature="()V" >
 				<lines><line number="3"  hits="1" /></lines>
@@ -1395,8 +1395,8 @@
 			<method name="(anonymous_462)"  hits="30"  signature="()V" >
 				<lines><line number="4"  hits="30" /></lines>
 			</method>
-			<method name="(anonymous_463)"  hits="276972"  signature="()V" >
-				<lines><line number="4"  hits="276972" /></lines>
+			<method name="(anonymous_463)"  hits="275580"  signature="()V" >
+				<lines><line number="4"  hits="275580" /></lines>
 			</method>
 			<method name="(anonymous_464)"  hits="0"  signature="()V" >
 				<lines><line number="4"  hits="0" /></lines>
@@ -3573,14 +3573,14 @@
 			<method name="f"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
 			</method>
-			<method name="(anonymous_1189)"  hits="228"  signature="()V" >
-				<lines><line number="7"  hits="228" /></lines>
+			<method name="(anonymous_1189)"  hits="225"  signature="()V" >
+				<lines><line number="7"  hits="225" /></lines>
 			</method>
-			<method name="g"  hits="227"  signature="()V" >
-				<lines><line number="7"  hits="227" /></lines>
+			<method name="g"  hits="224"  signature="()V" >
+				<lines><line number="7"  hits="224" /></lines>
 			</method>
-			<method name="h"  hits="11382"  signature="()V" >
-				<lines><line number="7"  hits="11382" /></lines>
+			<method name="h"  hits="11582"  signature="()V" >
+				<lines><line number="7"  hits="11582" /></lines>
 			</method>
 			<method name="(anonymous_1192)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
@@ -3603,62 +3603,62 @@
 			<method name="(anonymous_1198)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
 			</method>
-			<method name="i"  hits="11156"  signature="()V" >
-				<lines><line number="7"  hits="11156" /></lines>
+			<method name="i"  hits="11344"  signature="()V" >
+				<lines><line number="7"  hits="11344" /></lines>
 			</method>
-			<method name="j"  hits="11156"  signature="()V" >
-				<lines><line number="7"  hits="11156" /></lines>
+			<method name="j"  hits="11344"  signature="()V" >
+				<lines><line number="7"  hits="11344" /></lines>
 			</method>
-			<method name="c"  hits="1270"  signature="()V" >
-				<lines><line number="7"  hits="1270" /></lines>
+			<method name="c"  hits="1286"  signature="()V" >
+				<lines><line number="7"  hits="1286" /></lines>
 			</method>
 			<method name="d"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="k"  hits="8794"  signature="()V" >
-				<lines><line number="7"  hits="8794" /></lines>
+			<method name="k"  hits="8966"  signature="()V" >
+				<lines><line number="7"  hits="8966" /></lines>
 			</method>
-			<method name="l"  hits="8386"  signature="()V" >
-				<lines><line number="7"  hits="8386" /></lines>
+			<method name="l"  hits="8546"  signature="()V" >
+				<lines><line number="7"  hits="8546" /></lines>
 			</method>
-			<method name="m"  hits="10064"  signature="()V" >
-				<lines><line number="7"  hits="10064" /></lines>
+			<method name="m"  hits="10252"  signature="()V" >
+				<lines><line number="7"  hits="10252" /></lines>
 			</method>
-			<method name="n"  hits="18858"  signature="()V" >
-				<lines><line number="7"  hits="18858" /></lines>
+			<method name="n"  hits="19218"  signature="()V" >
+				<lines><line number="7"  hits="19218" /></lines>
 			</method>
-			<method name="(anonymous_1207)"  hits="2047"  signature="()V" >
-				<lines><line number="7"  hits="2047" /></lines>
+			<method name="(anonymous_1207)"  hits="2107"  signature="()V" >
+				<lines><line number="7"  hits="2107" /></lines>
 			</method>
 			<method name="(anonymous_1208)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="o"  hits="10064"  signature="()V" >
-				<lines><line number="7"  hits="10064" /></lines>
+			<method name="o"  hits="10252"  signature="()V" >
+				<lines><line number="7"  hits="10252" /></lines>
 			</method>
-			<method name="p"  hits="10064"  signature="()V" >
-				<lines><line number="7"  hits="10064" /></lines>
+			<method name="p"  hits="10252"  signature="()V" >
+				<lines><line number="7"  hits="10252" /></lines>
 			</method>
 			<method name="q"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="r"  hits="10064"  signature="()V" >
-				<lines><line number="7"  hits="10064" /></lines>
+			<method name="r"  hits="10252"  signature="()V" >
+				<lines><line number="7"  hits="10252" /></lines>
 			</method>
 			<method name="s"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1214)"  hits="9704"  signature="()V" >
-				<lines><line number="7"  hits="9704" /></lines>
+			<method name="(anonymous_1214)"  hits="9876"  signature="()V" >
+				<lines><line number="7"  hits="9876" /></lines>
 			</method>
-			<method name="(anonymous_1215)"  hits="9704"  signature="()V" >
-				<lines><line number="7"  hits="9704" /></lines>
+			<method name="(anonymous_1215)"  hits="9876"  signature="()V" >
+				<lines><line number="7"  hits="9876" /></lines>
 			</method>
-			<method name="(anonymous_1216)"  hits="1136"  signature="()V" >
-				<lines><line number="7"  hits="1136" /></lines>
+			<method name="(anonymous_1216)"  hits="1148"  signature="()V" >
+				<lines><line number="7"  hits="1148" /></lines>
 			</method>
-			<method name="(anonymous_1217)"  hits="1361"  signature="()V" >
-				<lines><line number="7"  hits="1361" /></lines>
+			<method name="(anonymous_1217)"  hits="1373"  signature="()V" >
+				<lines><line number="7"  hits="1373" /></lines>
 			</method>
 			<method name="(anonymous_1218)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
@@ -3690,11 +3690,11 @@
 			<method name="(anonymous_1227)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
 			</method>
-			<method name="b"  hits="18858"  signature="()V" >
-				<lines><line number="7"  hits="18858" /></lines>
+			<method name="b"  hits="19218"  signature="()V" >
+				<lines><line number="7"  hits="19218" /></lines>
 			</method>
-			<method name="c"  hits="41488"  signature="()V" >
-				<lines><line number="7"  hits="41488" /></lines>
+			<method name="c"  hits="42296"  signature="()V" >
+				<lines><line number="7"  hits="42296" /></lines>
 			</method>
 			<method name="d"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
@@ -3711,8 +3711,8 @@
 			<method name="(anonymous_1234)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
 			</method>
-			<method name="b"  hits="272"  signature="()V" >
-				<lines><line number="7"  hits="272" /></lines>
+			<method name="b"  hits="284"  signature="()V" >
+				<lines><line number="7"  hits="284" /></lines>
 			</method>
 			<method name="(anonymous_1236)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
@@ -3723,20 +3723,20 @@
 			<method name="(anonymous_1238)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
 			</method>
-			<method name="a"  hits="736"  signature="()V" >
-				<lines><line number="7"  hits="736" /></lines>
+			<method name="a"  hits="768"  signature="()V" >
+				<lines><line number="7"  hits="768" /></lines>
 			</method>
-			<method name="(anonymous_1240)"  hits="434"  signature="()V" >
-				<lines><line number="7"  hits="434" /></lines>
+			<method name="(anonymous_1240)"  hits="458"  signature="()V" >
+				<lines><line number="7"  hits="458" /></lines>
 			</method>
-			<method name="(anonymous_1241)"  hits="434"  signature="()V" >
-				<lines><line number="7"  hits="434" /></lines>
+			<method name="(anonymous_1241)"  hits="458"  signature="()V" >
+				<lines><line number="7"  hits="458" /></lines>
 			</method>
-			<method name="e"  hits="92"  signature="()V" >
-				<lines><line number="7"  hits="92" /></lines>
+			<method name="e"  hits="96"  signature="()V" >
+				<lines><line number="7"  hits="96" /></lines>
 			</method>
-			<method name="f"  hits="181"  signature="()V" >
-				<lines><line number="7"  hits="181" /></lines>
+			<method name="f"  hits="189"  signature="()V" >
+				<lines><line number="7"  hits="189" /></lines>
 			</method>
 			<method name="(anonymous_1244)"  hits="1"  signature="()V" >
 				<lines><line number="7"  hits="1" /></lines>
@@ -3768,14 +3768,14 @@
 			<method name="(anonymous_1253)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1254)"  hits="187"  signature="()V" >
-				<lines><line number="7"  hits="187" /></lines>
+			<method name="(anonymous_1254)"  hits="195"  signature="()V" >
+				<lines><line number="7"  hits="195" /></lines>
 			</method>
-			<method name="(anonymous_1255)"  hits="181"  signature="()V" >
-				<lines><line number="7"  hits="181" /></lines>
+			<method name="(anonymous_1255)"  hits="189"  signature="()V" >
+				<lines><line number="7"  hits="189" /></lines>
 			</method>
-			<method name="(anonymous_1256)"  hits="181"  signature="()V" >
-				<lines><line number="7"  hits="181" /></lines>
+			<method name="(anonymous_1256)"  hits="189"  signature="()V" >
+				<lines><line number="7"  hits="189" /></lines>
 			</method>
 			<method name="(anonymous_1257)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
@@ -3783,8 +3783,8 @@
 			<method name="(anonymous_1258)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1259)"  hits="181"  signature="()V" >
-				<lines><line number="7"  hits="181" /></lines>
+			<method name="(anonymous_1259)"  hits="189"  signature="()V" >
+				<lines><line number="7"  hits="189" /></lines>
 			</method>
 			<method name="(anonymous_1260)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
@@ -3795,53 +3795,53 @@
 			<method name="(anonymous_1262)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1263)"  hits="1524"  signature="()V" >
-				<lines><line number="7"  hits="1524" /></lines>
+			<method name="(anonymous_1263)"  hits="1548"  signature="()V" >
+				<lines><line number="7"  hits="1548" /></lines>
 			</method>
-			<method name="(anonymous_1264)"  hits="1342"  signature="()V" >
-				<lines><line number="7"  hits="1342" /></lines>
+			<method name="(anonymous_1264)"  hits="1366"  signature="()V" >
+				<lines><line number="7"  hits="1366" /></lines>
 			</method>
-			<method name="(anonymous_1265)"  hits="91"  signature="()V" >
-				<lines><line number="7"  hits="91" /></lines>
+			<method name="(anonymous_1265)"  hits="95"  signature="()V" >
+				<lines><line number="7"  hits="95" /></lines>
 			</method>
-			<method name="d"  hits="181"  signature="()V" >
-				<lines><line number="7"  hits="181" /></lines>
+			<method name="d"  hits="189"  signature="()V" >
+				<lines><line number="7"  hits="189" /></lines>
 			</method>
-			<method name="e"  hits="91"  signature="()V" >
-				<lines><line number="7"  hits="91" /></lines>
+			<method name="e"  hits="95"  signature="()V" >
+				<lines><line number="7"  hits="95" /></lines>
 			</method>
-			<method name="(anonymous_1268)"  hits="90"  signature="()V" >
-				<lines><line number="7"  hits="90" /></lines>
+			<method name="(anonymous_1268)"  hits="94"  signature="()V" >
+				<lines><line number="7"  hits="94" /></lines>
 			</method>
-			<method name="b"  hits="90"  signature="()V" >
-				<lines><line number="7"  hits="90" /></lines>
+			<method name="b"  hits="94"  signature="()V" >
+				<lines><line number="7"  hits="94" /></lines>
 			</method>
-			<method name="(anonymous_1270)"  hits="90"  signature="()V" >
-				<lines><line number="7"  hits="90" /></lines>
+			<method name="(anonymous_1270)"  hits="94"  signature="()V" >
+				<lines><line number="7"  hits="94" /></lines>
 			</method>
 			<method name="(anonymous_1271)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1272)"  hits="91"  signature="()V" >
-				<lines><line number="7"  hits="91" /></lines>
+			<method name="(anonymous_1272)"  hits="95"  signature="()V" >
+				<lines><line number="7"  hits="95" /></lines>
 			</method>
-			<method name="(anonymous_1273)"  hits="91"  signature="()V" >
-				<lines><line number="7"  hits="91" /></lines>
+			<method name="(anonymous_1273)"  hits="95"  signature="()V" >
+				<lines><line number="7"  hits="95" /></lines>
 			</method>
 			<method name="(anonymous_1274)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1275)"  hits="273"  signature="()V" >
-				<lines><line number="7"  hits="273" /></lines>
+			<method name="(anonymous_1275)"  hits="285"  signature="()V" >
+				<lines><line number="7"  hits="285" /></lines>
 			</method>
-			<method name="(anonymous_1276)"  hits="90"  signature="()V" >
-				<lines><line number="7"  hits="90" /></lines>
+			<method name="(anonymous_1276)"  hits="94"  signature="()V" >
+				<lines><line number="7"  hits="94" /></lines>
 			</method>
-			<method name="(anonymous_1277)"  hits="91"  signature="()V" >
-				<lines><line number="7"  hits="91" /></lines>
+			<method name="(anonymous_1277)"  hits="95"  signature="()V" >
+				<lines><line number="7"  hits="95" /></lines>
 			</method>
-			<method name="(anonymous_1278)"  hits="92"  signature="()V" >
-				<lines><line number="7"  hits="92" /></lines>
+			<method name="(anonymous_1278)"  hits="96"  signature="()V" >
+				<lines><line number="7"  hits="96" /></lines>
 			</method>
 			<method name="(anonymous_1279)"  hits="0"  signature="()V" >
 				<lines><line number="7"  hits="0" /></lines>
@@ -4197,29 +4197,29 @@
 			<method name="(anonymous_1396)"  hits="1"  signature="()V" >
 				<lines><line number="8"  hits="1" /></lines>
 			</method>
-			<method name="a"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="a"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
-			<method name="(anonymous_1398)"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="(anonymous_1398)"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
 			<method name="(anonymous_1399)"  hits="0"  signature="()V" >
 				<lines><line number="8"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1400)"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="(anonymous_1400)"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
-			<method name="(anonymous_1401)"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="(anonymous_1401)"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
 			<method name="(anonymous_1402)"  hits="0"  signature="()V" >
 				<lines><line number="8"  hits="0" /></lines>
 			</method>
-			<method name="(anonymous_1403)"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="(anonymous_1403)"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
-			<method name="(anonymous_1404)"  hits="90"  signature="()V" >
-				<lines><line number="8"  hits="90" /></lines>
+			<method name="(anonymous_1404)"  hits="94"  signature="()V" >
+				<lines><line number="8"  hits="94" /></lines>
 			</method>
 			<method name="d"  hits="12"  signature="()V" >
 				<lines><line number="8"  hits="12" /></lines>
@@ -4647,8 +4647,8 @@
 			<method name="h"  hits="113"  signature="()V" >
 				<lines><line number="9"  hits="113" /></lines>
 			</method>
-			<method name="i"  hits="400"  signature="()V" >
-				<lines><line number="9"  hits="400" /></lines>
+			<method name="i"  hits="402"  signature="()V" >
+				<lines><line number="9"  hits="402" /></lines>
 			</method>
 			<method name="j"  hits="0"  signature="()V" >
 				<lines><line number="9"  hits="0" /></lines>
@@ -4671,11 +4671,11 @@
 			<method name="p"  hits="0"  signature="()V" >
 				<lines><line number="9"  hits="0" /></lines>
 			</method>
-			<method name="q"  hits="837"  signature="()V" >
-				<lines><line number="9"  hits="837" /></lines>
+			<method name="q"  hits="858"  signature="()V" >
+				<lines><line number="9"  hits="858" /></lines>
 			</method>
-			<method name="r"  hits="192"  signature="()V" >
-				<lines><line number="9"  hits="192" /></lines>
+			<method name="r"  hits="197"  signature="()V" >
+				<lines><line number="9"  hits="197" /></lines>
 			</method>
 			<method name="s"  hits="2"  signature="()V" >
 				<lines><line number="9"  hits="2" /></lines>
@@ -6323,15 +6323,15 @@
 			</method>
 		</methods>
 		<lines>
-			<line number="1"  hits="133229"  branch="true"  condition-coverage="70.0960219478738% (511/729)" />
+			<line number="1"  hits="132533"  branch="true"  condition-coverage="70.0960219478738% (511/729)" />
 			<line number="2"  hits="2496"  branch="true"  condition-coverage="41.412213740458014% (217/524)" />
-			<line number="3"  hits="163678"  branch="true"  condition-coverage="62.66490765171504% (475/758)" />
-			<line number="4"  hits="277294"  branch="true"  condition-coverage="50% (347/694)" />
+			<line number="3"  hits="162857"  branch="true"  condition-coverage="62.66490765171504% (475/758)" />
+			<line number="4"  hits="275902"  branch="true"  condition-coverage="50% (347/694)" />
 			<line number="5"  hits="628"  branch="true"  condition-coverage="28.62669245647969% (148/517)" />
 			<line number="6"  hits="1118"  branch="true"  condition-coverage="12.585034013605442% (37/294)" />
-			<line number="7"  hits="41488"  branch="true"  condition-coverage="29.539951573849876% (122/413)" />
+			<line number="7"  hits="42296"  branch="true"  condition-coverage="29.539951573849876% (122/413)" />
 			<line number="8"  hits="70520"  branch="true"  condition-coverage="26.932367149758452% (223/828)" />
-			<line number="9"  hits="2926"  branch="true"  condition-coverage="23.50791717417783% (193/821)" />
+			<line number="9"  hits="2938"  branch="true"  condition-coverage="23.87332521315469% (196/821)" />
 			<line number="10"  hits="878"  branch="true"  condition-coverage="28.776978417266186% (120/417)" />
 		</lines>
 		</class>
