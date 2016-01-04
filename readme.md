@@ -3728,52 +3728,75 @@ Unit tests are available in the ./unitTests folder, load index.html to run the t
 build your own version.
 
 ForerunnerDB uses Browserify to compile to single-file distribution builds whilst
-maintaining source in distinct module files. To build, ensure you have Node.js and
-browserify installed. To install browserify if you already have Node.js:
+maintaining source in distinct module files. To build, ensure you have the dev
+dependencies installed by navigating to the ForerunnerDB source folder and running:
 
 ```bash
-npm install -g browserify
+npm install --dev
+npm install -g grunt-cli
 ```
 
-Now you can then execute browserify to build ForerunnerDB:
+Now you can then execute grunt to build ForerunnerDB and run all the unit tests:
 
 ```bash
-browserify ./js/build/all.js -o ./js/dist/fdb-all.js
+grunt "3: Build and Test"
 ```
 
-Grunt is used to execute regular tasks like build and test. Install grunt to access the
-grunt tasks.
+### Development Process
 
-## Continuous Compiling
-Browserify will compile to a single-file each time you run it. If you would prefer to
-automatically compile each change (for faster development) you can run watchify instead.
-Install watchify:
+1. Fork ForerunnerDB with GitHub and clone your repository to your local machine
+1. On your local machine, switch to the dev branch:
 
 ```bash
-npm install -g watchify
+git checkout dev
 ```
 
-You can then run watchify using the same command line arguments as browserify:
+2. Branch off to your own git branch (replace <MyBranchName> with your own branch name):
 
 ```bash
-watchify ./js/build/all.js -o ./js/dist/fdb-all.js
+git branch <MyBranchName>
 ```
 
-The fully minified version of ForerunnerDB is run through uglifyjs as part of the grunt
-build process.
+3. Write unit tests to cover your intended update (check the ./js/unitTests folder)
+4. Make changes to the source as you wish to satisfy the new unit tests
+5. Commit your changes via git
+5. Run the grunt command:
+
+```bash
+grunt "3: Build and Test"
+```
+
+6. If all passes successfully you can now push via:
+
+```bash
+git push
+```
+
+7. On GitHub on your ForerunnerDB forked repo, switch to your new branch and do a "Pull Request"
+8. Your pull request will be evaluated and may elicit questions or further discussion
+9. If your pull request is accepted it will be merged into the main repository
+10. Pat yourself on the back for being a true open-source warrior! :)
 
 ## Contributing to This Project
-Contributions through pull requests are welcome. Please ensure that if your pull request includes code changes that you have run the unit tests and they have all passed. If your code changes include new features not currently under test coverage from existing unit tests please create new unit tests to cover your changes and ensure they work as expected.
+Contributions through pull requests are welcome. Please ensure that if your pull request includes
+code changes that you have run the unit tests and they have all passed. If your code changes
+include new features not currently under test coverage from existing unit tests please create
+new unit tests to cover your changes and ensure they work as expected.
 
-Code style is also important. Tabs are in use instead of spaces for indentation. Braces should start at the end of lines rather than the next line down. Doc comments are in JSDoc format and must be fully written for public-facing methods in any code you write. Private methods also require doc comments in master but can be merged into the dev branch without them.
+Code style is also important. Tabs are in use instead of spaces for indentation. Braces should
+start at the end of lines rather than the next line down. Doc comments are in JSDoc format and
+must be fully written for methods in any code you write.
 
 So to summarise:
 
 * Always check unit tests are running and passing
 * Create new tests when you add or modify functionality that is not currently under test coverage
 * Make sure you document your code with JSDoc comments
+* Smile because you are making the world a better place :)
 
 # iOS Version
+> The iOS version has now been moved to its own repository
+
 You may notice in the repo that there is an iOS folder containing a version of Forerunner
 for iOS. This project is still at an alpha level and should be considered non-production
 code, however you are welcome to play around with it and get a feel for what will be
@@ -3786,56 +3809,6 @@ working as well as inserting and basic data queries, update and remove.
 # Future Updates
 ForerunnerDB's project road-map:
 
-### Roadmap Completed Items
-* Views that can join multiple documents together and data-bind - sort of like virtual collections
-* Primary key violation checking
-* Collection indexing
-* Index violation checking
-* Unit tests
-* Server-side login and CRUD security - allow client login to server with pre-determined credentials that can be locked down to CRUD not only on particular collections but also only matching documents-- e.g. a user account could have a CRUD security record containing {profileId: "352349thj439yh43"} so that only documents that match that query can be edited by the user. This means they would only have update privilege on their own records as an example, but their read privilege could be {} allowing read on all documents.
-* Query remote database from browser
-* Data persistence on client-side
-* NPM installation
-* Rewritten data propagation system
-* Added new class "Document" to allow data-binding against a single document object
-* Added new class "Overview" to allow data-binding against auto-propagated map-reduce data
-* Rewritten view sync system for performance
-
-#### Supported query operators
-* $ (array positional)
-* $gt
-* $gte
-* $lt
-* $lte
-* $or
-* $and
-* $exists
-* $push
-* $addToSet
-* $pull
-* $in
-* $nin
-* $ne
-* $mul
-* $rename
-* $unset
-* $pop
-* $position
-* $each
-* $pullAll
-* $elemMatch (projection)
-
-#### Operators that are unique to ForerunnerDB:
-* $move
-* $splicePush
-* $elemsMatch (projection)
-* $page
-* $count
-* $nee
-* $eeq
-* $cast
-* $overwrite
-
 ### Future Updates
 * Data persistence on server-side - COMPLETED
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
@@ -3844,7 +3817,7 @@ ForerunnerDB's project road-map:
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
 * Native iOS version
 * Native Android version
-* ES6 Code
+* ES6 Code with Babel transpilation
 
 #### Query operators still to implement
 * $setOnInsert
@@ -3883,7 +3856,7 @@ ForerunnerDB's project road-map:
 #### Version 2.0
 * Re-write with ES6 using Babel
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
-* Server-side operation in line with other production databases (e.g. command line argument support, persist to disk etc)
+* Server-side operation in line with other production databases (e.g. command line argument support, persist to disk with binary indexed searchable data etc)
 
 # Breaking Changes
 Please check below for details of any changes that break previous operation or
