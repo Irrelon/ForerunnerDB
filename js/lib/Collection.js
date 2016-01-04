@@ -1391,8 +1391,7 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 		deferThreshold = this._deferThreshold[type],
 		deferTime = this._deferTime[type],
 		dataArr,
-		result,
-		index;
+		result;
 
 	resultObj = resultObj || {
 		deferred: true
