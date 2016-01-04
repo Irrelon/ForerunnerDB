@@ -59,13 +59,76 @@ Overload = Shared.overload;
  * to file.
  * @returns {*}
  */
-NodePersist.prototype.mode = function (type) {
-	if (type !== undefined) {
-		this._mode = type;
-		return this;
+Shared.synthesize(NodePersist.prototype, 'mode');
+
+/**
+ * Gets / sets the auto flag which determines if the persistence module
+ * will automatically load data for collections the first time they are
+ * accessed and save data whenever it changes. This is disabled by
+ * default.
+ * @param {Boolean} val Set to true to enable, false to disable
+ * @returns {*}
+ */
+Shared.synthesize(NodePersist.prototype, 'auto', function (val) {
+	var self = this;
+
+	if (val !== undefined) {
+		if (val) {
+			// Hook db events
+			this._db.on('create', function () { self._autoLoad.apply(self, arguments); });
+			this._db.on('change', function () { self._autoSave.apply(self, arguments); });
+
+			if (this._db.debug()) {
+				console.log(this._db.logIdentifier() + ' Automatic load/save enabled');
+			}
+		} else {
+			// Un-hook db events
+			this._db.off('create', this._autoLoad);
+			this._db.off('change', this._autoSave);
+
+			if (this._db.debug()) {
+				console.log(this._db.logIdentifier() + ' Automatic load/save disbled');
+			}
+		}
 	}
 
-	return this._mode;
+	return this.$super.call(this, val);
+});
+
+NodePersist.prototype._autoLoad = function (obj, objType, name) {
+	var self = this;
+
+	if (typeof obj.load === 'function') {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-loading data for ' + objType + ':', name);
+		}
+
+		obj.load(function (err, data) {
+			if (err && self._db.debug()) {
+				console.log(self._db.logIdentifier() + ' Automatic load failed:', err);
+			}
+		});
+	} else {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-load for ' + objType + ':', name, 'no load method, skipping');
+		}
+	}
+};
+
+NodePersist.prototype._autoSave = function (obj, objType, name) {
+	var self = this;
+
+	if (typeof obj.save === 'function') {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-saving data for ' + objType + ':', name);
+		}
+
+		obj.save(function (err, data) {
+			if (err && self._db.debug()) {
+				console.log(self._db.logIdentifier() + ' Automatic save failed:', err);
+			}
+		});
+	}
 };
 
 /**
@@ -278,11 +341,19 @@ NodePersist.prototype.load = function (key, callback) {
 
 	switch (this.mode()) {
 		case 'file':
-			self.loadDataFile(key, function (err, val) {
+			self.checkDataFile(key, function (err) {
 				if (!err) {
-					self.decode(val, callback);
+					self.loadDataFile(key, function (err, val) {
+						if (!err) {
+							self.decode(val, callback);
+						} else {
+							if (callback) {
+								callback(err);
+							}
+						}
+					});
 				} else {
-					if (callback) { callback(err); }
+					callback(false);
 				}
 			});
 			break;
@@ -447,12 +518,15 @@ Collection.prototype.save = function (callback) {
 		if (self._db) {
 			processSave = function () {
 				// Save the collection data
+				self._asyncPending('save');
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, data, tableStats) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
+							self._asyncComplete('save');
 							if (callback) { callback(err, data, tableStats, metaStats); }
 						});
 					} else {
+						self._asyncComplete('save');
 						if (callback) { callback(err); }
 					}
 				});
@@ -487,6 +561,7 @@ Collection.prototype.load = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			// Load the collection data
+			self._asyncPending('load');
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
@@ -498,6 +573,7 @@ Collection.prototype.load = function (callback) {
 					// Now load the collection's metadata
 					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
 						if (!err) {
+							self._asyncComplete('load');
 							if (data) {
 								self.metaData(data);
 							}
@@ -506,6 +582,7 @@ Collection.prototype.load = function (callback) {
 						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
+					self._asyncComplete('load');
 					if (callback) { callback(err); }
 				}
 			});
