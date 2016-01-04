@@ -1096,18 +1096,25 @@ Db.prototype.init = function () {
  * @returns {*}
  */
 Db.prototype.view = function (viewName) {
+	var self = this;
+
 	// Handle being passed an instance
 	if (viewName instanceof View) {
 		return viewName;
 	}
 
-	if (!this._view[viewName]) {
+	if (this._view[viewName]) {
+		return this._view[viewName];
+	} else {
 		if (this.debug() || (this._db && this._db.debug())) {
 			console.log(this.logIdentifier() + ' Creating view ' + viewName);
 		}
 	}
 
 	this._view[viewName] = this._view[viewName] || new View(viewName).db(this);
+
+	self.emit('create', [self._view[viewName], 'view', viewName]);
+
 	return this._view[viewName];
 };
 
