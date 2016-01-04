@@ -595,11 +595,19 @@ module.exports = function(grunt) {
 		execSync('git checkout dev');
 	});
 
+	grunt.registerTask('generateTOC', 'Generate Table of Contents', function () {
+		/*"use strict";
+
+		var execSync = require('child_process').execSync;
+
+		execSync('doctoc readme.md');*/
+	});
+
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit", "node-qunit"]);
-	grunt.registerTask("3: Build and Test", ["checkoutDev", "version", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
-	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
-	grunt.registerTask("5: Release and Publish Master Build From Dev", ["checkoutDev", "version", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
+	grunt.registerTask("3: Build and Test", ["checkoutDev", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
+	grunt.registerTask("4: Build, Test, Tag and Push DEV", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
+	grunt.registerTask("5: Release and Publish Master Build From Dev", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
 	grunt.registerTask("default", ["qunit"]);
 };
