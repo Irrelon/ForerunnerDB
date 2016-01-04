@@ -5,6 +5,8 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
+[Jump to How to Use Section](#howtouse)
+
 ### Standout Features Include:
 
 * Views - Virtual collections that are built from existing collections and limited by live queries.
@@ -96,11 +98,6 @@ ForerunnerDB works in all modern browsers (IE8+)
 * Phonegap/Apache Cordova 1.2.0
 * Safari 4 (includes Mobile Safari)
 
-## Use ForerunnerDB in Browser
-Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
-
-	<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
-
 ## Distribution Files
 The DB comes with a few different files in the ./js/dist folder that are pre-built
 to help you use ForerunnerDB easily.
@@ -150,8 +147,16 @@ You can inspect and explore your ForerunnerDB instance directly from Chrome's De
 3. Navigate to a url using ForerunnerDB (either local or remote)
 4. Click the ForerunnerDB tab in dev tools to inspect instances
 5. Click the Refresh button (the one in the ForerunnerDB explorer tab) to see any changes reflected
-	
-## Use ForerunnerDB in Node.js
+
+# How to Use
+## Use ForerunnerDB in *Browser*
+Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
+
+```html
+<script src="./js/dist/fdb-all.min.js" type="text/javascript"></script>
+```
+
+## Use ForerunnerDB in *Node.js*
 After installing via npm (see above) you can require ForerunnerDB in your code:
 
 ```js
