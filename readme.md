@@ -169,7 +169,7 @@ itemCollection.insert([{
  as possible, small differences are present in the query matching logic. The main
  difference is described here: [Find behaves differently from MongoDB](https://github.com/Irrelon/ForerunnerDB/issues/43)
 
-> See the *Special Considerations* section for details about how names of keys / properties
+> See the *[Special Considerations](#special-considerations)* section for details about how names of keys / properties
 in a query object can affect a query's operation.
 
 Much like MongoDB, searching for data in a collection is done using the find() method,
