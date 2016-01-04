@@ -238,6 +238,8 @@ Overview.prototype.drop = function (callback) {
 		this.emit('drop', this);
 
 		if (callback) { callback(false, true); }
+
+		delete this._listeners;
 	}
 
 	return true;

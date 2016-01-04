@@ -72,6 +72,7 @@ Odm.prototype.drop = function () {
 		}
 
 		delete this._name;
+		delete this._listeners;
 	}
 
 	return true;

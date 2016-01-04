@@ -197,6 +197,7 @@ Grid.prototype.drop = function (callback) {
 			delete this._template;
 			delete this._from;
 			delete this._db;
+			delete this._listeners;
 
 			return true;
 		}

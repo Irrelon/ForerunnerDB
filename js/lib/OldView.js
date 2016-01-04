@@ -86,6 +86,8 @@ OldView.prototype.drop = function () {
 			delete this._from._oldViews[this._name];
 		}
 
+		delete this._listeners;
+
 		return true;
 	}
 

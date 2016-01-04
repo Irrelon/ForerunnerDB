@@ -232,6 +232,8 @@ Infinilist.prototype.drop = function (callback) {
 	this.emit('drop', this);
 
 	if (callback) { callback(false, true); }
+
+	delete self._listeners;
 };
 
 View.prototype.infinilist = function (targetSelector, templateSelector, options) {

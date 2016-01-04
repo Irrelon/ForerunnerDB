@@ -289,6 +289,8 @@ CollectionGroup.prototype.drop = function (callback) {
 
 		this.emit('drop', this);
 
+		delete this._listeners;
+
 		if (callback) { callback(false, true); }
 	}
 

@@ -64,6 +64,8 @@ ReactorIO.prototype.drop = function () {
 		delete this._chainHandler;
 
 		this.emit('drop', this);
+
+		delete this._listeners;
 	}
 
 	return true;

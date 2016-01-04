@@ -401,6 +401,7 @@ Db.prototype.drop = new Overload({
 
 			this.emit('drop', this);
 
+			delete this._listeners;
 			delete this._core._db[this._name];
 		}
 
@@ -437,6 +438,7 @@ Db.prototype.drop = new Overload({
 
 			this.emit('drop', this);
 
+			delete this._listeners;
 			delete this._core._db[this._name];
 		}
 
@@ -465,6 +467,7 @@ Db.prototype.drop = new Overload({
 
 			this.emit('drop', this);
 
+			delete this._listeners;
 			delete this._core._db[this._name];
 		}
 
@@ -502,6 +505,7 @@ Db.prototype.drop = new Overload({
 
 			this.emit('drop', this);
 
+			delete this._listeners;
 			delete this._core._db[this._name];
 		}
 

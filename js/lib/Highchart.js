@@ -321,6 +321,8 @@ Highchart.prototype.drop = function (callback) {
 			callback(false, true);
 		}
 
+		delete this._listeners;
+
 		return true;
 	} else {
 		return true;

@@ -384,6 +384,8 @@ FdbDocument.prototype.drop = function (callback) {
 
 				if (callback) { callback(false, true); }
 
+				delete this._listeners;
+
 				return true;
 			}
 		}
