@@ -766,7 +766,8 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
  * Helper method to update a document from it's id.
  * @param {String} id The id of the document.
  * @param {Object} update The object containing the key/values to update to.
- * @returns {Array} The items that were updated.
+ * @returns {Object} The document that was updated or undefined
+ * if no document was updated.
  */
 Collection.prototype.updateById = function (id, update) {
 	var searchObj = {};
@@ -1369,7 +1370,8 @@ Collection.prototype.remove = function (query, options, callback) {
 /**
  * Helper method that removes a document that matches the given id.
  * @param {String} id The id of the document to remove.
- * @returns {Array} An array of documents that were removed.
+ * @returns {Object} The document that was removed or undefined if
+ * nothing was removed.
  */
 Collection.prototype.removeById = function (id) {
 	var searchObj = {};
