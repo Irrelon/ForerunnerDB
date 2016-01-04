@@ -6,6 +6,8 @@
 var Shared = require('./Shared'),
 	NodeApiCollection = require('./NodeApiCollection'),
 	express = require('express'),
+	bodyParser = require('body-parser'),
+	async = require('async'),
 	app = express(),
 	Db,
 	DbInit,
@@ -47,12 +49,115 @@ Overload = Shared.overload;
 NodeApiServer.prototype.listen = function (host, port, callback) {
 	var self = this;
 
+	app.use(bodyParser.json());
+
+	// Define the default routes (catchall that resolves to collections etc)
+	self._defineRoutes();
+
+	// Start listener
 	self._server = app.listen(port, host, function () {
-		console.log('Listening at http://%s:%s', host, port);
+		console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
 		if (callback) { callback(false, self._server); }
 	});
 
 	return this;
+};
+
+NodeApiServer.prototype._defineRoutes = function () {
+	var self = this;
+
+	app.get('/:collection', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection;
+
+		self.hasPermission(modelName, 'get', req, function (err, results) {
+			if (!err) {
+				// Return all data in the collection
+				res.send(self._db.collection(req.params.collection).find());
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.post('/:collection', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection;
+
+		self.hasPermission(modelName, 'post', req, function (err, results) {
+			var result;
+
+			if (!err) {
+				// Return all data in the collection
+				result = self._db.collection(req.params.collection).insert(req.body);
+				res.send(result);
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.get('/:collection/:id', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			modelId = req.params.id;
+
+		self.hasPermission(modelName, 'get', req, function (err) {
+			if (!err) {
+				// Return all data in the collection
+				res.send(self._db.collection(req.params.collection).findById(modelId));
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.put('/:collection/:id', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			modelId = req.params.id;
+
+		self.hasPermission(modelName, 'put', req, function (err) {
+			if (!err) {
+				// Return all data in the collection
+				res.send(self._db.collection(req.params.collection).updateById(modelId, req.body));
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.delete('/:collection/:id', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			modelId = req.params.id;
+
+		self.hasPermission(modelName, 'delete', req, function (err) {
+			if (!err) {
+				// Return all data in the collection
+				res.send(self._db.collection(req.params.collection).removeById(modelId));
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+};
+
+NodeApiServer.prototype.hasPermission = function (modelName, methodName, req, callback) {
+	var permissionMethods = this.access(modelName, methodName);
+
+	if (!permissionMethods || !permissionMethods.length) {
+		// No permissions set, deny access by default
+		return callback('403 Access Forbidden');
+	}
+
+	permissionMethods.splice(0, 0, function (cb) {
+		cb(null, modelName, methodName, req);
+	});
+
+	// Loop the access methods and call each one in turn until a false
+	// response is found, then callback a failure
+	async.waterfall(permissionMethods, callback);
 };
 
 NodeApiServer.prototype.access = new Overload({
@@ -95,6 +200,8 @@ NodeApiServer.prototype.access = new Overload({
 	 * @returns {*}
 	 */
 	'$main': function (modelName, methodName, method) {
+		var self = this;
+
 		if (modelName !== undefined) {
 			if (methodName !== undefined) {
 				if (method !== undefined) {
@@ -106,20 +213,18 @@ NodeApiServer.prototype.access = new Overload({
 				}
 
 				if (this._access[modelName] && this._access[modelName][methodName]) {
-					return this._access[modelName][methodName];
+					return [].concat(this._access[modelName][methodName]);
+				} else if (this._access[modelName] && this._access[modelName]['*']) {
+					return [].concat(this._access[modelName]['*']);
+				} else if (this._access['*'] && this._access['*'][methodName]) {
+					return [].concat(this._access['*'][methodName]);
+				} else if (this._access['*'] && this._access['*']['*']) {
+					return [].concat(this._access['*']['*']);
 				}
-
-				return [];
 			}
-
-			if (this._access[modelName]) {
-				return this._access[modelName];
-			}
-
-			return {};
 		}
 
-		return this._access;
+		return [];
 	}
 });
 
