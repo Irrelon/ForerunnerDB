@@ -42,7 +42,8 @@ Collection.prototype.init = function (name, options) {
 		insert: [],
 		update: [],
 		remove: [],
-		upsert: []
+		upsert: [],
+		async: []
 	};
 
 	this._deferThreshold = {
@@ -134,6 +135,24 @@ Shared.synthesize(Collection.prototype, 'capped');
  * of records that the capped collection will store.
  */
 Shared.synthesize(Collection.prototype, 'cappedSize');
+
+Collection.prototype._asyncPending = function (key) {
+	this._deferQueue.async.push(key);
+};
+
+Collection.prototype._asyncComplete = function (key) {
+	// Remove async flag for this type
+	var index = this._deferQueue.async.indexOf(key);
+
+	while (index > -1) {
+		this._deferQueue.async.splice(index, 1);
+		index = this._deferQueue.async.indexOf(key);
+	}
+
+	if (this._deferQueue.async.length === 0) {
+		this.deferEmit('ready');
+	}
+};
 
 /**
  * Get the data array that represents the collection's data.
@@ -484,6 +503,7 @@ Collection.prototype.upsert = function (obj, callback) {
 			if (this._deferredCalls && obj.length > deferThreshold) {
 				// Break up upsert into blocks
 				this._deferQueue.upsert = queue.concat(obj);
+				this._asyncPending('upsert');
 
 				// Fire off the insert queue handler
 				this.processQueue('upsert', callback);
@@ -751,7 +771,7 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
 Collection.prototype.updateById = function (id, update) {
 	var searchObj = {};
 	searchObj[this._primaryKey] = id;
-	return this.update(searchObj, update);
+	return this.update(searchObj, update)[0];
 };
 
 /**
@@ -1354,7 +1374,7 @@ Collection.prototype.remove = function (query, options, callback) {
 Collection.prototype.removeById = function (id) {
 	var searchObj = {};
 	searchObj[this._primaryKey] = id;
-	return this.remove(searchObj);
+	return this.remove(searchObj)[0];
 };
 
 /**
@@ -1369,7 +1389,8 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 		deferThreshold = this._deferThreshold[type],
 		deferTime = this._deferTime[type],
 		dataArr,
-		result;
+		result,
+		index;
 
 	resultObj = resultObj || {
 		deferred: true
@@ -1377,26 +1398,24 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 
 	if (queue.length) {
 		// Process items up to the threshold
-		if (queue.length) {
-			if (queue.length > deferThreshold) {
-				// Grab items up to the threshold value
-				dataArr = queue.splice(0, deferThreshold);
-			} else {
-				// Grab all the remaining items
-				dataArr = queue.splice(0, queue.length);
-			}
+		if (queue.length > deferThreshold) {
+			// Grab items up to the threshold value
+			dataArr = queue.splice(0, deferThreshold);
+		} else {
+			// Grab all the remaining items
+			dataArr = queue.splice(0, queue.length);
+		}
 
-			result = self[type](dataArr);
+		result = self[type](dataArr);
 
-			switch (type) {
-				case 'insert':
-					resultObj.inserted = resultObj.inserted || [];
-					resultObj.failed = resultObj.failed || [];
+		switch (type) {
+			case 'insert':
+				resultObj.inserted = resultObj.inserted || [];
+				resultObj.failed = resultObj.failed || [];
 
-					resultObj.inserted = resultObj.inserted.concat(result.inserted);
-					resultObj.failed = resultObj.failed.concat(result.failed);
-					break;
-			}
+				resultObj.inserted = resultObj.inserted.concat(result.inserted);
+				resultObj.failed = resultObj.failed.concat(result.failed);
+				break;
 		}
 
 		// Queue another process
@@ -1405,12 +1424,13 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 		}, deferTime);
 	} else {
 		if (callback) { callback(resultObj); }
+
+		this._asyncComplete(type);
 	}
 
 	// Check if all queues are complete
 	if (!this.isProcessingQueue()) {
 		this.deferEmit('queuesComplete');
-		this.deferEmit('ready');
 	}
 };
 
@@ -1482,6 +1502,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 		if (this._deferredCalls && data.length > deferThreshold) {
 			// Break up insert into blocks
 			this._deferQueue.insert = queue.concat(data);
+			this._asyncPending('insert');
 
 			// Fire off the insert queue handler
 			this.processQueue('insert', callback);
@@ -3497,10 +3518,10 @@ Db.prototype.collection = new Overload({
 			// Listen for events on this collection so we can fire global events
 			// on the database in response to it
 			self._collection[name].on('change', function () {
-				self.emit('change', [self._collection[name], 'collection', name]);
+				self.emit('change', self._collection[name], 'collection', name);
 			});
 
-			self.emit('create', [self._collection[name], 'collection', name]);
+			self.emit('create', self._collection[name], 'collection', name);
 
 			return this._collection[name];
 		} else {
