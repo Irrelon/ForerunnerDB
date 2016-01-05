@@ -1,0 +1,16 @@
+<html>
+	<head>
+		<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+		<script src="../dist/fdb-all.js"></script>
+		<script src="../dist/fdb-autobind.js"></script>
+	</head>
+	<body>
+		<div id="booksList"></div>
+
+		<script type="text/x-jsrender" id="bookItem">
+			<div data-link="id{:_id}">{^{:text}}</div>
+		</script>
+
+		<script src="nodeApiClient.js"></script>
+	</body>
+</html>

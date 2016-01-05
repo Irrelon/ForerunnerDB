@@ -1,18 +1,27 @@
 "use strict";
 
-// jshint ignore: start
+// NOTE: This class instantiates individually but shares a single
+// http server after listen() is called on any instance
 
 // Import external names locally
 var Shared = require('./Shared'),
-	NodeApiCollection = require('./NodeApiCollection'),
 	express = require('express'),
 	bodyParser = require('body-parser'),
+	cors = require('cors'),
 	async = require('async'),
 	app = express(),
+	server,
 	Db,
 	DbInit,
 	NodeApiServer,
+	ReactorIO,
 	Overload;
+
+app.use(cors({origin: true}));
+app.use(bodyParser.json());
+
+// Allow preflight cors
+app.options('*', cors({origin: true}));
 
 NodeApiServer = function () {
 	this.init.apply(this, arguments);
@@ -26,6 +35,7 @@ NodeApiServer.prototype.init = function (db) {
 	var self = this;
 	self._db = db;
 	self._access = {};
+	this.name('ApiServer');
 };
 
 Shared.addModule('NodeApiServer', NodeApiServer);
@@ -34,7 +44,10 @@ Shared.mixin(NodeApiServer.prototype, 'Mixin.ChainReactor');
 
 Db = Shared.modules.Db;
 DbInit = Db.prototype.init;
+ReactorIO = Shared.modules.ReactorIO;
 Overload = Shared.overload;
+
+Shared.synthesize(NodeApiServer.prototype, 'name');
 
 /**
  * Starts the rest server listening for requests against the ip and
@@ -49,31 +62,108 @@ Overload = Shared.overload;
 NodeApiServer.prototype.listen = function (host, port, callback) {
 	var self = this;
 
-	app.use(bodyParser.json());
-
 	// Define the default routes (catchall that resolves to collections etc)
 	self._defineRoutes();
 
 	// Start listener
-	self._server = app.listen(port, host, function () {
-		console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
-		if (callback) { callback(false, self._server); }
-	});
+	if (!server) {
+		server = app.listen(port, host, function () {
+			console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+			if (callback) {
+				callback(false, server);
+			}
+		});
+	} else {
+		// Server already running
+		if (callback) {
+			callback(false, server);
+		}
+	}
 
 	return this;
 };
 
 NodeApiServer.prototype._defineRoutes = function () {
-	var self = this;
+	var self = this,
+		dbName = this._db.name();
 
-	app.get('/:collection', function (req, res) {
+	// Handle sync routes
+	app.get('/' +  dbName + '/:collection/_sync', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			collection,
+			sendMessage,
+			io,
+			messageId = 0;
+
+		self.hasPermission(modelName, 'sync', req, function (err) {
+			if (!err) {
+				collection = self._db.collection(modelName);
+
+				sendMessage = function(eventName, data) {
+					messageId++;
+
+					res.write('event: ' + eventName + '\n');
+					res.write('id: ' + messageId + '\n');
+					res.write("data: " + self.jStringify(data) + '\n\n');
+				};
+
+				// Let request last as long as possible
+				req.socket.setTimeout(0x7FFFFFFF);
+
+				// Setup a chain reactor IO node to intercept CRUD packets
+				// coming from the collection, and then pass them to the
+				// client socket
+				io = new ReactorIO(collection, self, function (chainPacket) {
+					switch (chainPacket.type) {
+						case 'insert':
+							sendMessage(chainPacket.type, chainPacket.data);
+							break;
+
+						case 'remove':
+							sendMessage(chainPacket.type, {query: chainPacket.data.query});
+							break;
+
+						case 'update':
+							sendMessage(chainPacket.type, {query: chainPacket.data.query, update: chainPacket.data.update});
+							break;
+
+						default:
+							break;
+					}
+
+
+					// Returning false informs the chain reactor to continue propagation
+					// of the chain packet down the graph tree
+					return false;
+				});
+
+				// Send headers for event-stream connection
+				res.writeHead(200, {
+					'Content-Type': 'text/event-stream',
+					'Cache-Control': 'no-cache',
+					'Connection': 'keep-alive'
+				});
+
+				res.write('\n');
+
+				req.on("close", function() {
+					io.drop();
+				});
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.get('/' +  dbName + '/:collection', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
 			collection;
 
 		self.hasPermission(modelName, 'get', req, function (err, results) {
 			if (!err) {
-				collection = self._db.collection(req.params.collection);
+				collection = self._db.collection(modelName);
 
 				// Return all data in the collection
 				if (collection.isProcessingQueue()) {
@@ -96,14 +186,14 @@ NodeApiServer.prototype._defineRoutes = function () {
 		});
 	});
 
-	app.post('/:collection', function (req, res) {
+	app.post('/' +  dbName + '/:collection', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
 			collection;
 
 		self.hasPermission(modelName, 'post', req, function (err, results) {
 			if (!err) {
-				collection = self._db.collection(req.params.collection);
+				collection = self._db.collection(modelName);
 
 				if (collection.isProcessingQueue()) {
 					if (self._db.debug()) {
@@ -130,7 +220,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		});
 	});
 
-	app.get('/:collection/:id', function (req, res) {
+	app.get('/' +  dbName + '/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
 			modelId = req.params.id,
@@ -138,7 +228,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 		self.hasPermission(modelName, 'get', req, function (err) {
 			if (!err) {
-				collection = self._db.collection(req.params.collection);
+				collection = self._db.collection(modelName);
 
 				if (collection.isProcessingQueue()) {
 					if (self._db.debug()) {
@@ -161,7 +251,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		});
 	});
 
-	app.put('/:collection/:id', function (req, res) {
+	app.put('/' +  dbName + '/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
 			modelId = req.params.id,
@@ -169,7 +259,38 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 		self.hasPermission(modelName, 'put', req, function (err) {
 			if (!err) {
-				collection = self._db.collection(req.params.collection);
+				collection = self._db.collection(modelName);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						res.send(self._db.collection(req.params.collection).updateById(modelId, {$replace: req.body}));
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).updateById(modelId, {$replace: req.body}));
+				}
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.patch('/' +  dbName + '/:collection/:id', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			modelId = req.params.id,
+			collection;
+
+		self.hasPermission(modelName, 'put', req, function (err) {
+			if (!err) {
+				collection = self._db.collection(modelName);
 
 				if (collection.isProcessingQueue()) {
 					if (self._db.debug()) {
@@ -192,7 +313,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		});
 	});
 
-	app.delete('/:collection/:id', function (req, res) {
+	app.delete('/' +  dbName + '/:collection/:id', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
 			modelId = req.params.id,
@@ -200,7 +321,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 		self.hasPermission(modelName, 'delete', req, function (err) {
 			if (!err) {
-				collection = self._db.collection(req.params.collection);
+				collection = self._db.collection(modelName);
 
 				if (collection.isProcessingQueue()) {
 					if (self._db.debug()) {
