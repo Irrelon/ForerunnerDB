@@ -107,7 +107,7 @@ var Updating = {
 	/**
 	 * Sets a property on a document to the passed value.
 	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to delete.
+	 * @param {String} prop The property to set.
 	 * @param {*} val The new property value.
 	 * @private
 	 */
