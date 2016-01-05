@@ -67,10 +67,15 @@ NodeApiServer.prototype.listen = function (host, port, callback) {
 
 	// Start listener
 	if (!server) {
-		server = app.listen(port, host, function () {
-			console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
-			if (callback) {
-				callback(false, server);
+		server = app.listen(port, host, function (err) {
+			if (!err) {
+				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+				if (callback) {
+					callback(false, server);
+				}
+			} else {
+				console.log('Listen error', err);
+				callback(err);
 			}
 		});
 	} else {
@@ -86,6 +91,13 @@ NodeApiServer.prototype.listen = function (host, port, callback) {
 NodeApiServer.prototype._defineRoutes = function () {
 	var self = this,
 		dbName = this._db.name();
+
+	app.get('/', function (req, res) {
+		res.send({
+			server: 'ForerunnerDB',
+			version: self._db.version()
+		});
+	});
 
 	// Handle sync routes
 	app.get('/' +  dbName + '/:collection/_sync', function (req, res) {
@@ -111,6 +123,8 @@ NodeApiServer.prototype._defineRoutes = function () {
 				// Let request last as long as possible
 				req.socket.setTimeout(0x7FFFFFFF);
 
+				// TODO: Make multiple connections share a single IO instance
+				// TODO: it will use less memory
 				// Setup a chain reactor IO node to intercept CRUD packets
 				// coming from the collection, and then pass them to the
 				// client socket
@@ -146,6 +160,8 @@ NodeApiServer.prototype._defineRoutes = function () {
 				});
 
 				res.write('\n');
+
+				sendMessage('connected', {});
 
 				req.on("close", function() {
 					io.drop();
