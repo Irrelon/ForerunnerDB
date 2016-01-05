@@ -51,7 +51,9 @@ Angular.extendCollection = function (Module) {
 						scope[varName] = self.find();
 					}
 
-					scope.$apply();
+					setTimeout(function () {
+						scope.$apply();
+					}, 0);
 				}
 			};
 
@@ -121,7 +123,10 @@ Angular.extendDocument = function (Module) {
 				varName: varName,
 				callback: function () {
 					scope[varName] = self.find();
-					scope.$apply();
+
+					setTimeout(function () {
+						scope.$apply();
+					}, 0);
 				}
 			};
 
