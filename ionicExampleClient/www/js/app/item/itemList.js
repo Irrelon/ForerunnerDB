@@ -6,9 +6,6 @@ angular.module('app.controllers')
 			db.collection('item').sync(function () {
 				$scope.$broadcast('scroll.refreshComplete');
 			});
-			/*$api.getInto('/ForerunnerDB_Ionic_App/item', 'items', function () {
-				$scope.$broadcast('scroll.refreshComplete');
-			});*/
 		};
 
 		$scope.addItem = function () {
@@ -30,6 +27,38 @@ angular.module('app.controllers')
 						type: 'button-positive',
 						onTap: function(e) {
 							$api.post('/ForerunnerDB_Ionic_App/item', {
+								"name": inputVal
+							}, function (err, data) {
+								if (!err) {
+									// Post successful
+								}
+							});
+						}
+					}
+				]
+			});
+		};
+
+		$scope.editItem = function (id) {
+			var inputVal = db.collection('item').findOne({_id: id}).name;
+
+			$scope.inputVal = inputVal;
+			$scope.inputValChange = function ($childScope, val) {
+				inputVal = val;
+			};
+
+			$ionicPopup.show({
+				template: '<input type="text" name="inputVal" ng-model="inputVal" ng-change="inputValChange(this, inputVal);" placeholder="e.g. My Item" />',
+				title: 'Edit Item Name',
+				subTitle: 'Enter the new name you want to give your item.',
+				scope: $scope,
+				buttons: [
+					{ text: 'Cancel' },
+					{
+						text: '<b>OK</b>',
+						type: 'button-positive',
+						onTap: function(e) {
+							$api.put('/ForerunnerDB_Ionic_App/item/' + id, {
 								"name": inputVal
 							}, function (err, data) {
 								if (!err) {

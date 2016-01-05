@@ -10,6 +10,7 @@
             <ion-item ng-repeat="item in items">
 				<i class="ion-android-apps"></i>&nbsp;<a href="#/index/items/{{item._id}}">{{item.name}}</a>
 				<p class="item-icon-right">
+                    <i class="icon ion-edit icon-accessory" style="padding-right: 20px" ng-click="editItem('{{item._id}}');"></i>
                     <i class="icon ion-minus-circled icon-accessory" ng-click="removeItem('{{item._id}}');"></i>
 				</p>
             </ion-item>
