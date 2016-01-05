@@ -2471,6 +2471,49 @@ QUnit.test('Collection.update() :: Use $overwrite to set a property value', func
 	base.dbDown();
 });
 
+QUnit.test('Collection.update() :: Use $replace to completely replace a document', function () {
+	"use strict";
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.insert({
+		_id: '3',
+		name: 'Kat',
+		age: 12,
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}]
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0].arr[0].val, 1, 'Data exists as expected before update');
+
+	coll.update({}, {
+		$replace: {
+			arr: {moo: 1},
+			newData: true
+		}
+	});
+
+	result = coll.find();
+
+	strictEqual(result[0]._id, '3', 'ID exists as expected after update');
+	strictEqual(result[0].arr.moo, 1, 'New data exists as expected after update');
+	strictEqual(typeof result[0].arr, 'object', 'New data exists as expected after update');
+	strictEqual(result[0].arr instanceof Array, false, 'New data exists as expected after update');
+	strictEqual(result[0].newData, true, 'New data exists as expected after update');
+	strictEqual(result[0].name, undefined, 'Old data does not exist as expected after update');
+	strictEqual(result[0].age, undefined, 'Old data does not exist as expected after update');
+	strictEqual(result[0].lookup, undefined, 'Old data does not exist as expected after update');
+
+	base.dbDown();
+});
+
 QUnit.test('Collection.filterUpdate() :: Use filter update to calculate and update values in documents', function () {
 	"use strict";
 	base.dbUp();
