@@ -1422,7 +1422,12 @@ The result of the query after execution is:
 ```
 
 ## Updating the Collection
-This is one of the areas where ForerunnerDB and MongoDB are different. By default ForerunnerDB updates only the keys you specify in your update document, rather than outright *replacing* the matching documents like MongoDB does. In this sense ForerunnerDB behaves more like MySQL. In the call below, the update will find all documents where the price is greater than 90 and less than 150 and then update the documents' key "moo" with the value true.
+This is one of the areas where ForerunnerDB and MongoDB are different. By default
+ForerunnerDB updates only the keys you specify in your update document, rather
+than outright *replacing* the matching documents like MongoDB does. In this sense
+ForerunnerDB behaves more like MySQL. In the call below, the update will find all
+documents where the price is greater than 90 and less than 150 and then update
+the documents' key "moo" with the value true.
 
 ```js
 collection.update({
@@ -1434,6 +1439,9 @@ collection.update({
 	moo: true
 });
 ```
+
+If you wish to fully replace a document with another one you can do so using the
+$replace operator described in the *Update Operators* section below.
 
 If you want to replace a key's value you can use the $overwrite operator described
 in the *Update Operators* section below.
@@ -1449,6 +1457,7 @@ This will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
 
+* [$replace](#replace)
 * [$overwrite](#overwrite)
 * [$each](#each)
 * [$inc](#inc)
@@ -1461,21 +1470,79 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [$cast](#cast)
 * [Array Positional in Updates (.$)](#array-positional-in-updates)
 
+#### $replace
+The $replace operator will take the passed object and overwrite the target document
+with the object's keys and values. If a key exists in the existing document but
+not in the passed object, ForerunnerDB will remove the key from the document.
+
+The $replace operator is equivalent to calling MongoDB's update without using a 
+MongoDB $set operator.
+
+When using $replace the primary key field will *NEVER* be replaced even if it is
+specified. If you wish to change a record's primary key id, remove the document
+and insert a new one with your desired id.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$replace: {
+		<field>: <value>,
+		<field>: <value>,
+		<field>: <value>
+	}
+});
+```
+
+In the following example the existing document is outright replaced by a new one:
+
+```js
+db.collection("test").setData({
+	_id: "445324",
+	name: "Jill",
+	age: 15
+});
+
+db.collection("test").update({
+	_id: "445324"
+}, {
+	$replace: {
+		job: "Frog Catcher"
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	"_id": "445324",
+	"job": "Frog Catcher"
+}]
+```
+
 #### $overwrite
 The $overwrite operator replaces a key's value with the one passed, overwriting it
 completely. This operates the same way that MongoDB's default update behaviour works
 without using the $set operator.
 
-This operator is most useful when updating an array field to a new type such as an object.
-By default ForerunnerDB will detect an array and step into the array objects one at a time
-and apply the update to each object. When you use $overwrite you can replace the array
-instead of stepping into it.
+If you wish to fully replace a document with another one you can do so using the
+$replace operator instead.
+
+The $overwrite operator is most useful when updating an array field to a new type
+such as an object. By default ForerunnerDB will detect an array and step into the
+array objects one at a time and apply the update to each object. When you use
+$overwrite you can replace the array instead of stepping into it.
 
 ```js
 db.collection("test").update({
 	<query>
 }, {
 	$overwrite: {
+		<field>: <value>,
+		<field>: <value>,
 		<field>: <value>
 	}
 });
@@ -3648,6 +3715,10 @@ information. The reason we do this is for performance.
 ForerunnerDB runs an update rather than a replace against documents that match the query
 clause. You can think about ForerunnerDB's update operations as having been automatically
 wrapped in the MongoDB $set operator.
+
+If you wish to fully replace a document with another one you can do so using the
+$replace operator described in the *Update Operators* section. $replace is the equivalent
+of calling a MongoDB update without the MongoDB $set operator.
 
 # License
 Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
