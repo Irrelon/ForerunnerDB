@@ -1,0 +1,16 @@
+<ion-view title="Item Detail">
+    <ion-content padding="" class="has-header">
+		<ion-refresher pulling-text="Pull to refresh..." on-refresh="refreshView()"></ion-refresher>
+        <form>
+			<ion-list>
+				<div class="item item-divider">
+					Item Details
+				</div>
+				<ion-item class="item item-input" name="itemName">
+					<span class="input-label">Name</span>
+					<input type="text" placeholder="Home Item" value="{{item.name}}">
+				</ion-item>
+			</ion-list>
+		</form>
+    </ion-content>
+</ion-view>

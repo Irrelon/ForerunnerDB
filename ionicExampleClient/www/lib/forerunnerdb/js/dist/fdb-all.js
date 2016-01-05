@@ -10342,11 +10342,36 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.sync = function (collectionInstance, path) {
-	// Hook SSE from the server
-	//noinspection JSUnresolvedFunction
+NodeApiClient.prototype.get = function (theUrl, callback) {
 	var self = this,
-		source = new EventSource(this.server() + path);
+		xmlHttp = new XMLHttpRequest();
+
+	xmlHttp.onreadystatechange = function() {
+		if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
+			callback(false, self.jParse(xmlHttp.responseText));
+		}
+	};
+
+	xmlHttp.open("GET", theUrl, true); // true for asynchronous
+	xmlHttp.send(null);
+};
+
+NodeApiClient.prototype.sync = function (collectionInstance, path, options, callback) {
+	var self = this,
+		source = new EventSource(this.server() + path + '/_sync');
+
+	if (this._db.debug()) {
+		console.log(this._db.logIdentifier() + ' Connecting to API server ' + this.server() + path);
+	}
+
+	collectionInstance.__apiConnection = source;
+
+	source.addEventListener('open', function (e) {
+		// The connection is open, grab the initial data
+		self.get(self.server() + path, function (err, data) {
+			collectionInstance.insert(data);
+		});
+	}, false);
 
 	source.addEventListener('insert', function(e) {
 		var data = self.jParse(e.data);
@@ -10362,20 +10387,48 @@ NodeApiClient.prototype.sync = function (collectionInstance, path) {
 		var data = self.jParse(e.data);
 		collectionInstance.remove(data.query);
 	}, false);
+
+	if (callback) {
+		source.addEventListener('connected', function (e) {
+			callback(false);
+		}, false);
+	}
 };
 
-Collection.prototype.sync = function (path, options) {
-	if (this._db) {
-		if (!path) {
-			path = '/' + this._db.name() +  '/' + this.name();
+Collection.prototype.sync = new Overload({
+	'function': function (callback) {
+		this.$main.call(this, null, null, callback);
+	},
+
+	'$main': function (path, options, callback) {
+		if (this._db) {
+			if (!this.__apiConnection) {
+				if (!path) {
+					path = '/' + this._db.name() + '/' + this.name();
+				}
+
+				this._db.api.sync(this, path, options, callback);
+			} else {
+				if (callback) {
+					callback(false);
+				}
+			}
+		} else {
+			throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 		}
-
-		path += '/_sync';
-
-		this._db.api.sync(this, path);
-	} else {
-		throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 	}
+});
+
+Collection.prototype.unSync = function () {
+	if (this.__apiConnection) {
+		this.__apiConnection.close();
+
+		delete this.__apiConnection;
+
+		return true;
+	}
+
+	return false;
 };
 
 // Override the DB init to instantiate the plugin
@@ -12698,7 +12751,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.501',
+	version: '1.3.503',
 	modules: {},
 	plugins: {},
 

@@ -1,0 +1,31 @@
+<ion-view title="Settings">
+    <ion-content class="has-header has-footer">
+        <form>
+            <ion-list>
+                <div class="item item-divider">
+                    Server Connection
+                </div>
+                <ion-item class="item item-input">
+                    <span class="input-label">Server</span>
+                    <input type="text" placeholder="my.server.com" ng-model="settings.host">
+                </ion-item>
+                <ion-item class="item item-input">
+                    <span class="input-label">Port</span>
+                    <input type="text" placeholder="8000" ng-model="settings.port">
+                </ion-item>
+                <div class="item item-divider">
+                    Connection Test
+                </div>
+                <ion-item>
+                    <button class="button button-positive button-block" ng-click="testConnection()">Test Connection...</button>
+                </ion-item>
+                <ion-item ng-if="settings.success">
+                    Your connection to the server is verified!
+                </ion-item>
+                <ion-item ng-if="settings.msg">
+                    {{settings.msg}}
+                </ion-item>
+            </ion-list>
+        </form>
+    </ion-content>
+</ion-view>
