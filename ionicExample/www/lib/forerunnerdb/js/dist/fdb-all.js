@@ -10342,11 +10342,13 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.sync = function (collectionInstance, path) {
+NodeApiClient.prototype.sync = function (collectionInstance, path, options, callback) {
 	// Hook SSE from the server
 	//noinspection JSUnresolvedFunction
 	var self = this,
 		source = new EventSource(this.server() + path);
+
+	collectionInstance.__apiConnection = source;
 
 	source.addEventListener('insert', function(e) {
 		var data = self.jParse(e.data);
@@ -10362,20 +10364,45 @@ NodeApiClient.prototype.sync = function (collectionInstance, path) {
 		var data = self.jParse(e.data);
 		collectionInstance.remove(data.query);
 	}, false);
+
+	if (callback) {
+		source.addEventListener('connected', function (e) {
+			var data = self.jParse(e.data);
+			callback(false, data);
+		}, false);
+	}
 };
 
-Collection.prototype.sync = function (path, options) {
-	if (this._db) {
-		if (!path) {
-			path = '/' + this._db.name() +  '/' + this.name();
+Collection.prototype.sync = new Overload({
+	'function': function (callback) {
+		this.$main.call(this, null, null, callback);
+	},
+
+	'$main': function (path, options, callback) {
+		if (this._db) {
+			if (!path) {
+				path = '/' + this._db.name() +  '/' + this.name();
+			}
+
+			path += '/_sync';
+
+			this._db.api.sync(this, path, options, callback);
+		} else {
+			throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 		}
-
-		path += '/_sync';
-
-		this._db.api.sync(this, path);
-	} else {
-		throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 	}
+});
+
+Collection.prototype.unSync = function () {
+	if (this.__apiConnection) {
+		this.__apiConnection.close();
+
+		delete this.__apiConnection;
+
+		return true;
+	}
+
+	return false;
 };
 
 // Override the DB init to instantiate the plugin
@@ -12698,7 +12725,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.501',
+	version: '1.3.502',
 	modules: {},
 	plugins: {},
 
