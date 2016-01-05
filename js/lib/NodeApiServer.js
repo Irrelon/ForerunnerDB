@@ -402,8 +402,6 @@ NodeApiServer.prototype.access = new Overload({
 	 * @returns {*}
 	 */
 	'$main': function (modelName, methodName, method) {
-		var self = this;
-
 		if (modelName !== undefined) {
 			if (methodName !== undefined) {
 				if (method !== undefined) {

@@ -1,5 +1,10 @@
 "use strict";
 
+// Tell JSHint about EventSource
+/*global
+	EventSource
+*/
+
 // Import external names locally
 var Shared = require('./Shared'),
 	Db,
@@ -44,6 +49,7 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 
 NodeApiClient.prototype.sync = function (collectionInstance, path) {
 	// Hook SSE from the server
+	//noinspection JSUnresolvedFunction
 	var self = this,
 		source = new EventSource(this.server() + path);
 

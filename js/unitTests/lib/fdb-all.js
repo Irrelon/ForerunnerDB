@@ -7,15 +7,14 @@ var Core = _dereq_('./core'),
 	Document = _dereq_('../lib/Document'),
 	Overview = _dereq_('../lib/Overview'),
 	Grid = _dereq_('../lib/Grid'),
-	Rest = _dereq_('../lib/Rest'),
-	Odm = _dereq_('../lib/Odm');
+	NodeApiClient = _dereq_('../lib/NodeApiClient');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 
 module.exports = Core;
-},{"../lib/CollectionGroup":6,"../lib/Document":10,"../lib/Grid":11,"../lib/Highchart":12,"../lib/Odm":27,"../lib/Overview":30,"../lib/Persist":32,"../lib/Rest":36,"../lib/View":40,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/CollectionGroup":6,"../lib/Document":10,"../lib/Grid":11,"../lib/Highchart":12,"../lib/NodeApiClient":27,"../lib/Overview":30,"../lib/Persist":32,"../lib/View":39,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +22,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":7,"../lib/Shim.IE8":39}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":38}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -285,7 +284,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":38}],4:[function(_dereq_,module,exports){
+},{"./Shared":37}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -736,7 +735,7 @@ BinaryTree.prototype.match = function (query, options) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":31,"./Shared":38}],5:[function(_dereq_,module,exports){
+},{"./Path":31,"./Shared":37}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -1543,6 +1542,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		tmpIndex,
 		tmpCount,
 		tempIndex,
+		tempKey,
+		replaceObj,
+		pk,
 		pathInstance,
 		sourceIsArray,
 		updateIsArray,
@@ -1581,6 +1583,32 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 						}
 
 						updated = updated || recurseUpdated;
+						break;
+
+					case '$replace':
+						operation = true;
+						replaceObj = update.$replace;
+						pk = this.primaryKey();
+
+						// Loop the existing item properties and compare with
+						// the replacement (never remove primary key)
+						for (tempKey in doc) {
+							if (doc.hasOwnProperty(tempKey) && tempKey !== pk) {
+								if (replaceObj[tempKey] === undefined) {
+									// The new document doesn't have this field, remove it from the doc
+									this._updateUnset(doc, tempKey);
+									updated = true;
+								}
+							}
+						}
+
+						// Loop the new item props and update the doc
+						for (tempKey in replaceObj) {
+							if (replaceObj.hasOwnProperty(tempKey) && tempKey !== pk) {
+								this._updateOverwrite(doc, tempKey, replaceObj[tempKey]);
+								updated = true;
+							}
+						}
 						break;
 
 					default:
@@ -4334,7 +4362,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":8,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":29,"./Path":31,"./ReactorIO":35,"./Shared":38}],6:[function(_dereq_,module,exports){
+},{"./Crc":8,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":29,"./Path":31,"./ReactorIO":35,"./Shared":37}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4676,7 +4704,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":5,"./Shared":38}],7:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":37}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4983,7 +5011,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":9,"./Metrics.js":16,"./Overload":29,"./Shared":38}],8:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":16,"./Overload":29,"./Shared":37}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -5655,7 +5683,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":16,"./Overload":29,"./Shared":38}],10:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Crc.js":8,"./Metrics.js":16,"./Overload":29,"./Shared":37}],10:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -6109,7 +6137,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":5,"./Shared":38}],11:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":37}],11:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -6805,7 +6833,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":5,"./CollectionGroup":6,"./ReactorIO":35,"./Shared":38,"./View":40}],12:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./ReactorIO":35,"./Shared":37,"./View":39}],12:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7471,7 +7499,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":29,"./Shared":38}],13:[function(_dereq_,module,exports){
+},{"./Overload":29,"./Shared":37}],13:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -7768,7 +7796,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":4,"./Path":31,"./Shared":38}],14:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":31,"./Shared":37}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8127,7 +8155,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":31,"./Shared":38}],15:[function(_dereq_,module,exports){
+},{"./Path":31,"./Shared":37}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8342,7 +8370,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":38}],16:[function(_dereq_,module,exports){
+},{"./Shared":37}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8417,7 +8445,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":28,"./Shared":38}],17:[function(_dereq_,module,exports){
+},{"./Operation":28,"./Shared":37}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -8797,7 +8825,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":29,"./Serialiser":37}],20:[function(_dereq_,module,exports){
+},{"./Overload":29,"./Serialiser":36}],20:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10194,7 +10222,7 @@ var Updating = {
 	/**
 	 * Sets a property on a document to the passed value.
 	 * @param {Object} doc The document to modify.
-	 * @param {String} prop The property to delete.
+	 * @param {String} prop The property to set.
 	 * @param {*} val The new property value.
 	 * @private
 	 */
@@ -10267,174 +10295,99 @@ module.exports = Updating;
 },{}],27:[function(_dereq_,module,exports){
 "use strict";
 
+// Tell JSHint about EventSource
+/*global
+	EventSource
+*/
+
 // Import external names locally
-var Shared,
-	Collection;
+var Shared = _dereq_('./Shared'),
+	Db,
+	DbInit,
+	Collection,
+	NodeApiClient,
+	Overload;
 
-Shared = _dereq_('./Shared');
-
-var Odm = function () {
+NodeApiClient = function () {
 	this.init.apply(this, arguments);
 };
 
-Odm.prototype.init = function (from, name) {
+/**
+ * The init method that can be overridden or extended.
+ * @param {Db} db The ForerunnerDB database instance.
+ */
+NodeApiClient.prototype.init = function (db) {
 	var self = this;
-
-	self.name(name);
-
-	self._collectionDroppedWrap = function () {
-		self._collectionDropped.apply(self, arguments);
-	};
-
-	self.from(from);
+	self._db = db;
+	self._access = {};
 };
 
-Shared.addModule('Odm', Odm);
-Shared.mixin(Odm.prototype, 'Mixin.Common');
-Shared.mixin(Odm.prototype, 'Mixin.ChainReactor');
-Shared.mixin(Odm.prototype, 'Mixin.Constants');
-Shared.mixin(Odm.prototype, 'Mixin.Events');
+Shared.addModule('NodeApiClient', NodeApiClient);
+Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
-Collection = _dereq_('./Collection');
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
+Collection = Shared.modules.Collection;
+Overload = Shared.overload;
 
-Shared.synthesize(Odm.prototype, 'name');
-Shared.synthesize(Odm.prototype, 'state');
-Shared.synthesize(Odm.prototype, 'parent');
-Shared.synthesize(Odm.prototype, 'query');
-Shared.synthesize(Odm.prototype, 'from', function (val) {
+Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	if (val !== undefined) {
-		val.chain(this);
-		val.on('drop', this._collectionDroppedWrap);
+		if (val.substr(val.length - 1, 1) === '/') {
+			// Strip trailing /
+			val = val.substr(0, val.length - 1);
+		}
 	}
 
-	return this.$super(val);
+	return this.$super.call(this, val);
 });
 
-Odm.prototype._collectionDropped = function (collection) {
-	this.drop();
+NodeApiClient.prototype.sync = function (collectionInstance, path) {
+	// Hook SSE from the server
+	//noinspection JSUnresolvedFunction
+	var self = this,
+		source = new EventSource(this.server() + path);
+
+	source.addEventListener('insert', function(e) {
+		var data = self.jParse(e.data);
+		collectionInstance.insert(data);
+	}, false);
+
+	source.addEventListener('update', function(e) {
+		var data = self.jParse(e.data);
+		collectionInstance.update(data.query, data.update);
+	}, false);
+
+	source.addEventListener('remove', function(e) {
+		var data = self.jParse(e.data);
+		collectionInstance.remove(data.query);
+	}, false);
 };
 
-Odm.prototype._chainHandler = function (chainPacket) {
-	switch (chainPacket.type) {
-		case 'setData':
-		case 'insert':
-		case 'update':
-		case 'remove':
-			//this._refresh();
-			break;
-
-		default:
-			break;
-	}
-};
-
-Odm.prototype.drop = function () {
-	if (!this.isDropped()) {
-		this.state('dropped');
-
-		this.emit('drop', this);
-
-		if (this._from) {
-			delete this._from._odm;
+Collection.prototype.sync = function (path, options) {
+	if (this._db) {
+		if (!path) {
+			path = '/' + this._db.name() +  '/' + this.name();
 		}
 
-		delete this._name;
-		delete this._listeners;
-	}
+		path += '/_sync';
 
-	return true;
-};
-
-/**
- * Queries the current object and returns a result that can
- * also be queried in the same way.
- * @param {String} prop The property to delve into.
- * @param {Object=} query Optional query that limits the returned documents.
- * @returns {Odm}
- */
-Odm.prototype.$ = function (prop, query) {
-	var data,
-		tmpQuery,
-		tmpColl,
-		tmpOdm;
-
-	if (prop === this._from.primaryKey()) {
-		// Query is against a specific PK id
-		tmpQuery = {};
-		tmpQuery[prop] = query;
-
-		data = this._from.find(tmpQuery, {$decouple: false});
-		tmpColl = new Collection();
-
-		tmpColl.setData(data, {$decouple: false});
-		tmpColl._linked = this._from._linked;
+		this._db.api.sync(this, path);
 	} else {
-		// Query is against an array of sub-documents
-		tmpColl = new Collection();
-		data = this._from.find({}, {$decouple: false});
-
-		if (data[0] && data[0][prop]) {
-			// Set the temp collection data to the array property
-			tmpColl.setData(data[0][prop], {$decouple: false});
-
-			// Check if we need to filter this array further
-			if (query) {
-				data = tmpColl.find(query, {$decouple: false});
-				tmpColl.setData(data, {$decouple: false});
-			}
-		}
-
-		tmpColl._linked = this._from._linked;
+		throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 	}
-
-	tmpOdm = new Odm(tmpColl);
-
-	tmpOdm.parent(this);
-	tmpOdm.query(query);
-
-	return tmpOdm;
 };
 
-/**
- * Gets / sets a property on the current ODM document.
- * @param {String} prop The name of the property.
- * @param {*} val Optional value to set.
- * @returns {*}
- */
-Odm.prototype.prop = function (prop, val) {
-	var tmpQuery;
-
-	if (prop !== undefined) {
-		if (val !== undefined) {
-			tmpQuery = {};
-			tmpQuery[prop] = val;
-
-			return this._from.update({}, tmpQuery);
-		}
-
-		if (this._from._data[0]) {
-			return this._from._data[0][prop];
-		}
-	}
-
-	return undefined;
+// Override the DB init to instantiate the plugin
+Db.prototype.init = function () {
+	DbInit.apply(this, arguments);
+	this.api = new NodeApiClient(this);
 };
 
-/**
- * Get the ODM instance for this collection.
- * @returns {Odm}
- */
-Collection.prototype.odm = function (name) {
-	if (!this._odm) {
-		this._odm = new Odm(this, name);
-	}
+Shared.finishModule('NodeApiClient');
 
-	return this._odm;
-};
-
-Shared.finishModule('Odm');
-module.exports = Odm;
-},{"./Collection":5,"./Shared":38}],28:[function(_dereq_,module,exports){
+module.exports = NodeApiClient;
+},{"./Shared":37}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10581,7 +10534,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":31,"./Shared":38}],29:[function(_dereq_,module,exports){
+},{"./Path":31,"./Shared":37}],29:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11035,7 +10988,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":5,"./Document":10,"./Shared":38}],31:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Document":10,"./Shared":37}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11516,7 +11469,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":38}],32:[function(_dereq_,module,exports){
+},{"./Shared":37}],32:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -12259,7 +12212,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":33,"./PersistCrypto":34,"./Shared":38,"async":41,"localforage":77}],33:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":33,"./PersistCrypto":34,"./Shared":37,"async":40,"localforage":76}],33:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12340,7 +12293,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":38,"pako":78}],34:[function(_dereq_,module,exports){
+},{"./Shared":37,"pako":77}],34:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12461,7 +12414,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":38,"crypto-js":50}],35:[function(_dereq_,module,exports){
+},{"./Shared":37,"crypto-js":49}],35:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -12548,125 +12501,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":38}],36:[function(_dereq_,module,exports){
-"use strict";
-
-var Shared = _dereq_('./Shared'),
-	RestClient = _dereq_('rest'),
-	mime = _dereq_('rest/interceptor/mime'),
-	Db,
-	Collection,
-	CollectionDrop,
-	CollectionGroup,
-	CollectionInit,
-	DbInit,
-	Overload;
-
-var Rest = function () {
-	this.init.apply(this, arguments);
-};
-
-Rest.prototype.init = function (db) {
-	this._endPoint = '';
-	this._client = RestClient.wrap(mime);
-};
-
-/**
- * Convert a JSON object to url query parameter format.
- * @param {Object} obj The object to convert.
- * @returns {String}
- * @private
- */
-Rest.prototype._params = function (obj) {
-	var parts = [];
-
-	for (var key in obj) {
-		if (obj.hasOwnProperty(key)) {
-			parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(obj[key]));
-		}
-	}
-
-	return parts.join('&');
-};
-
-Rest.prototype.get = function (path, data, callback) {
-	var self= this,
-		coll;
-
-	path = path !== undefined ? path : "";
-
-	//console.log('Getting: ', this.endPoint() + path + '?' + this._params(data));
-	this._client({
-		method: 'get',
-		path: this.endPoint() + path,
-		params: data
-	}).then(function (response) {
-		if (response.entity && response.entity.error) {
-			if (callback) { callback(response.entity.error, response.entity, response); }
-		} else {
-			// Check if we have a collection
-			coll = self.collection();
-
-			if (coll) {
-				// Upsert the records into the collection
-				coll.upsert(response.entity);
-			}
-
-			if (callback) { callback(false, response.entity, response); }
-		}
-	}, function(response) {
-		if (callback) { callback(true, response.entity, response); }
-	});
-};
-
-Rest.prototype.post = function (path, data, callback) {
-	this._client({
-		method: 'post',
-		path: this.endPoint() + path,
-		entity: data,
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	}).then(function (response) {
-		if (response.entity && response.entity.error) {
-			if (callback) { callback(response.entity.error, response.entity, response); }
-		} else {
-			if (callback) { callback(false, response.entity, response); }
-		}
-	}, function(response) {
-		if (callback) { callback(true, response); }
-	});
-};
-
-Shared.synthesize(Rest.prototype, 'sessionData');
-Shared.synthesize(Rest.prototype, 'endPoint');
-Shared.synthesize(Rest.prototype, 'collection');
-
-Shared.addModule('Rest', Rest);
-Shared.mixin(Rest.prototype, 'Mixin.ChainReactor');
-
-Db = Shared.modules.Db;
-Collection = _dereq_('./Collection');
-CollectionDrop = Collection.prototype.drop;
-CollectionGroup = _dereq_('./CollectionGroup');
-CollectionInit = Collection.prototype.init;
-DbInit = Db.prototype.init;
-Overload = Shared.overload;
-
-Collection.prototype.init = function () {
-	this.rest = new Rest();
-	this.rest.collection(this);
-	CollectionInit.apply(this, arguments);
-};
-
-Db.prototype.init = function () {
-	this.rest = new Rest();
-	DbInit.apply(this, arguments);
-};
-
-Shared.finishModule('Rest');
-module.exports = Rest;
-},{"./Collection":5,"./CollectionGroup":6,"./Shared":38,"rest":95,"rest/interceptor/mime":100}],37:[function(_dereq_,module,exports){
+},{"./Shared":37}],36:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -12852,7 +12687,7 @@ Serialiser.prototype._stringify = function (data, target) {
 };
 
 module.exports = Serialiser;
-},{}],38:[function(_dereq_,module,exports){
+},{}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -12863,7 +12698,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.497',
+	version: '1.3.501',
 	modules: {},
 	plugins: {},
 
@@ -13039,7 +12874,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Tags":24,"./Mixin.Triggers":25,"./Mixin.Updating":26,"./Overload":29}],39:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Tags":24,"./Mixin.Triggers":25,"./Mixin.Updating":26,"./Overload":29}],38:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -13159,7 +12994,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],40:[function(_dereq_,module,exports){
+},{}],39:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -14316,7 +14151,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":35,"./Shared":38}],41:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":35,"./Shared":37}],40:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
  * async
@@ -15580,7 +15415,7 @@ module.exports = View;
 }());
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":76}],42:[function(_dereq_,module,exports){
+},{"_process":75}],41:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -15808,7 +15643,7 @@ module.exports = View;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],43:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],42:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16684,7 +16519,7 @@ module.exports = View;
 
 
 }));
-},{"./core":44}],44:[function(_dereq_,module,exports){
+},{"./core":43}],43:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17427,7 +17262,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{}],45:[function(_dereq_,module,exports){
+},{}],44:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17551,7 +17386,7 @@ module.exports = View;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":44}],46:[function(_dereq_,module,exports){
+},{"./core":43}],45:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17701,7 +17536,7 @@ module.exports = View;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":44}],47:[function(_dereq_,module,exports){
+},{"./core":43}],46:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17834,7 +17669,7 @@ module.exports = View;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":44,"./hmac":49,"./sha1":68}],48:[function(_dereq_,module,exports){
+},{"./core":43,"./hmac":48,"./sha1":67}],47:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17901,7 +17736,7 @@ module.exports = View;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":43,"./core":44}],49:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],48:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18045,7 +17880,7 @@ module.exports = View;
 
 
 }));
-},{"./core":44}],50:[function(_dereq_,module,exports){
+},{"./core":43}],49:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18064,7 +17899,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./aes":42,"./cipher-core":43,"./core":44,"./enc-base64":45,"./enc-utf16":46,"./evpkdf":47,"./format-hex":48,"./hmac":49,"./lib-typedarrays":51,"./md5":52,"./mode-cfb":53,"./mode-ctr":55,"./mode-ctr-gladman":54,"./mode-ecb":56,"./mode-ofb":57,"./pad-ansix923":58,"./pad-iso10126":59,"./pad-iso97971":60,"./pad-nopadding":61,"./pad-zeropadding":62,"./pbkdf2":63,"./rabbit":65,"./rabbit-legacy":64,"./rc4":66,"./ripemd160":67,"./sha1":68,"./sha224":69,"./sha256":70,"./sha3":71,"./sha384":72,"./sha512":73,"./tripledes":74,"./x64-core":75}],51:[function(_dereq_,module,exports){
+},{"./aes":41,"./cipher-core":42,"./core":43,"./enc-base64":44,"./enc-utf16":45,"./evpkdf":46,"./format-hex":47,"./hmac":48,"./lib-typedarrays":50,"./md5":51,"./mode-cfb":52,"./mode-ctr":54,"./mode-ctr-gladman":53,"./mode-ecb":55,"./mode-ofb":56,"./pad-ansix923":57,"./pad-iso10126":58,"./pad-iso97971":59,"./pad-nopadding":60,"./pad-zeropadding":61,"./pbkdf2":62,"./rabbit":64,"./rabbit-legacy":63,"./rc4":65,"./ripemd160":66,"./sha1":67,"./sha224":68,"./sha256":69,"./sha3":70,"./sha384":71,"./sha512":72,"./tripledes":73,"./x64-core":74}],50:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18141,7 +17976,7 @@ module.exports = View;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":44}],52:[function(_dereq_,module,exports){
+},{"./core":43}],51:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18410,7 +18245,7 @@ module.exports = View;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":44}],53:[function(_dereq_,module,exports){
+},{"./core":43}],52:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18489,7 +18324,7 @@ module.exports = View;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":43,"./core":44}],54:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],53:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18606,7 +18441,7 @@ module.exports = View;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":43,"./core":44}],55:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],54:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18665,7 +18500,7 @@ module.exports = View;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":43,"./core":44}],56:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],55:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18706,7 +18541,7 @@ module.exports = View;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":43,"./core":44}],57:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],56:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18761,7 +18596,7 @@ module.exports = View;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":43,"./core":44}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18811,7 +18646,7 @@ module.exports = View;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":43,"./core":44}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18856,7 +18691,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":43,"./core":44}],60:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18897,7 +18732,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":43,"./core":44}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18928,7 +18763,7 @@ module.exports = View;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":43,"./core":44}],62:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18974,7 +18809,7 @@ module.exports = View;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":43,"./core":44}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43}],62:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19120,7 +18955,7 @@ module.exports = View;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":44,"./hmac":49,"./sha1":68}],64:[function(_dereq_,module,exports){
+},{"./core":43,"./hmac":48,"./sha1":67}],63:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19311,7 +19146,7 @@ module.exports = View;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],65:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19504,7 +19339,7 @@ module.exports = View;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],66:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],65:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19644,7 +19479,7 @@ module.exports = View;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],67:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],66:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19912,7 +19747,7 @@ module.exports = View;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":44}],68:[function(_dereq_,module,exports){
+},{"./core":43}],67:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20063,7 +19898,7 @@ module.exports = View;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":44}],69:[function(_dereq_,module,exports){
+},{"./core":43}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20144,7 +19979,7 @@ module.exports = View;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":44,"./sha256":70}],70:[function(_dereq_,module,exports){
+},{"./core":43,"./sha256":69}],69:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20344,7 +20179,7 @@ module.exports = View;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":44}],71:[function(_dereq_,module,exports){
+},{"./core":43}],70:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20668,7 +20503,7 @@ module.exports = View;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":44,"./x64-core":75}],72:[function(_dereq_,module,exports){
+},{"./core":43,"./x64-core":74}],71:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20752,7 +20587,7 @@ module.exports = View;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":44,"./sha512":73,"./x64-core":75}],73:[function(_dereq_,module,exports){
+},{"./core":43,"./sha512":72,"./x64-core":74}],72:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21076,7 +20911,7 @@ module.exports = View;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":44,"./x64-core":75}],74:[function(_dereq_,module,exports){
+},{"./core":43,"./x64-core":74}],73:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21847,7 +21682,7 @@ module.exports = View;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],75:[function(_dereq_,module,exports){
+},{"./cipher-core":42,"./core":43,"./enc-base64":44,"./evpkdf":46,"./md5":51}],74:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22152,7 +21987,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./core":44}],76:[function(_dereq_,module,exports){
+},{"./core":43}],75:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -22245,7 +22080,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],76:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
     localForage -- Offline Storage, Improved
@@ -25029,7 +24864,7 @@ return /******/ (function(modules) { // webpackBootstrap
 });
 ;
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":76}],78:[function(_dereq_,module,exports){
+},{"_process":75}],77:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -25045,7 +24880,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":79,"./lib/inflate":80,"./lib/utils/common":81,"./lib/zlib/constants":84}],79:[function(_dereq_,module,exports){
+},{"./lib/deflate":78,"./lib/inflate":79,"./lib/utils/common":80,"./lib/zlib/constants":83}],78:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -25423,7 +25258,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":81,"./utils/strings":82,"./zlib/deflate.js":86,"./zlib/messages":91,"./zlib/zstream":93}],80:[function(_dereq_,module,exports){
+},{"./utils/common":80,"./utils/strings":81,"./zlib/deflate.js":85,"./zlib/messages":90,"./zlib/zstream":92}],79:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -25825,7 +25660,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":81,"./utils/strings":82,"./zlib/constants":84,"./zlib/gzheader":87,"./zlib/inflate.js":89,"./zlib/messages":91,"./zlib/zstream":93}],81:[function(_dereq_,module,exports){
+},{"./utils/common":80,"./utils/strings":81,"./zlib/constants":83,"./zlib/gzheader":86,"./zlib/inflate.js":88,"./zlib/messages":90,"./zlib/zstream":92}],80:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -25929,7 +25764,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],82:[function(_dereq_,module,exports){
+},{}],81:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -26116,7 +25951,7 @@ exports.utf8border = function(buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":81}],83:[function(_dereq_,module,exports){
+},{"./common":80}],82:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -26150,7 +25985,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],84:[function(_dereq_,module,exports){
+},{}],83:[function(_dereq_,module,exports){
 module.exports = {
 
   /* Allowed flush values; see deflate() and inflate() below for details */
@@ -26199,7 +26034,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -26242,7 +26077,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],86:[function(_dereq_,module,exports){
+},{}],85:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -28009,7 +27844,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":81,"./adler32":83,"./crc32":85,"./messages":91,"./trees":92}],87:[function(_dereq_,module,exports){
+},{"../utils/common":80,"./adler32":82,"./crc32":84,"./messages":90,"./trees":91}],86:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -28051,7 +27886,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],88:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -28379,7 +28214,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -29884,7 +29719,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":81,"./adler32":83,"./crc32":85,"./inffast":88,"./inftrees":90}],90:[function(_dereq_,module,exports){
+},{"../utils/common":80,"./adler32":82,"./crc32":84,"./inffast":87,"./inftrees":89}],89:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -30213,7 +30048,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":81}],91:[function(_dereq_,module,exports){
+},{"../utils/common":80}],90:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -30228,7 +30063,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],92:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31429,7 +31264,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":81}],93:[function(_dereq_,module,exports){
+},{"../utils/common":80}],92:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31460,4597 +31295,4 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],94:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2013 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define, location) {
-	'use strict';
-
-	var undef;
-
-	define(function (_dereq_) {
-
-		var mixin, origin, urlRE, absoluteUrlRE, fullyQualifiedUrlRE;
-
-		mixin = _dereq_('./util/mixin');
-
-		urlRE = /([a-z][a-z0-9\+\-\.]*:)\/\/([^@]+@)?(([^:\/]+)(:([0-9]+))?)?(\/[^?#]*)?(\?[^#]*)?(#\S*)?/i;
-		absoluteUrlRE = /^([a-z][a-z0-9\-\+\.]*:\/\/|\/)/i;
-		fullyQualifiedUrlRE = /([a-z][a-z0-9\+\-\.]*:)\/\/([^@]+@)?(([^:\/]+)(:([0-9]+))?)?\//i;
-
-		/**
-		 * Apply params to the template to create a URL.
-		 *
-		 * Parameters that are not applied directly to the template, are appended
-		 * to the URL as query string parameters.
-		 *
-		 * @param {string} template the URI template
-		 * @param {Object} params parameters to apply to the template
-		 * @return {string} the resulting URL
-		 */
-		function buildUrl(template, params) {
-			// internal builder to convert template with params.
-			var url, name, queryStringParams, re;
-
-			url = template;
-			queryStringParams = {};
-
-			if (params) {
-				for (name in params) {
-					/*jshint forin:false */
-					re = new RegExp('\\{' + name + '\\}');
-					if (re.test(url)) {
-						url = url.replace(re, encodeURIComponent(params[name]), 'g');
-					}
-					else {
-						queryStringParams[name] = params[name];
-					}
-				}
-				for (name in queryStringParams) {
-					url += url.indexOf('?') === -1 ? '?' : '&';
-					url += encodeURIComponent(name);
-					if (queryStringParams[name] !== null && queryStringParams[name] !== undefined) {
-						url += '=';
-						url += encodeURIComponent(queryStringParams[name]);
-					}
-				}
-			}
-			return url;
-		}
-
-		function startsWith(str, test) {
-			return str.indexOf(test) === 0;
-		}
-
-		/**
-		 * Create a new URL Builder
-		 *
-		 * @param {string|UrlBuilder} template the base template to build from, may be another UrlBuilder
-		 * @param {Object} [params] base parameters
-		 * @constructor
-		 */
-		function UrlBuilder(template, params) {
-			if (!(this instanceof UrlBuilder)) {
-				// invoke as a constructor
-				return new UrlBuilder(template, params);
-			}
-
-			if (template instanceof UrlBuilder) {
-				this._template = template.template;
-				this._params = mixin({}, this._params, params);
-			}
-			else {
-				this._template = (template || '').toString();
-				this._params = params || {};
-			}
-		}
-
-		UrlBuilder.prototype = {
-
-			/**
-			 * Create a new UrlBuilder instance that extends the current builder.
-			 * The current builder is unmodified.
-			 *
-			 * @param {string} [template] URL template to append to the current template
-			 * @param {Object} [params] params to combine with current params.  New params override existing params
-			 * @return {UrlBuilder} the new builder
-			 */
-			append: function (template,  params) {
-				// TODO consider query strings and fragments
-				return new UrlBuilder(this._template + template, mixin({}, this._params, params));
-			},
-
-			/**
-			 * Create a new UrlBuilder with a fully qualified URL based on the
-			 * window's location or base href and the current templates relative URL.
-			 *
-			 * Path variables are preserved.
-			 *
-			 * *Browser only*
-			 *
-			 * @return {UrlBuilder} the fully qualified URL template
-			 */
-			fullyQualify: function () {
-				if (!location) { return this; }
-				if (this.isFullyQualified()) { return this; }
-
-				var template = this._template;
-
-				if (startsWith(template, '//')) {
-					template = origin.protocol + template;
-				}
-				else if (startsWith(template, '/')) {
-					template = origin.origin + template;
-				}
-				else if (!this.isAbsolute()) {
-					template = origin.origin + origin.pathname.substring(0, origin.pathname.lastIndexOf('/') + 1);
-				}
-
-				if (template.indexOf('/', 8) === -1) {
-					// default the pathname to '/'
-					template = template + '/';
-				}
-
-				return new UrlBuilder(template, this._params);
-			},
-
-			/**
-			 * True if the URL is absolute
-			 *
-			 * @return {boolean}
-			 */
-			isAbsolute: function () {
-				return absoluteUrlRE.test(this.build());
-			},
-
-			/**
-			 * True if the URL is fully qualified
-			 *
-			 * @return {boolean}
-			 */
-			isFullyQualified: function () {
-				return fullyQualifiedUrlRE.test(this.build());
-			},
-
-			/**
-			 * True if the URL is cross origin. The protocol, host and port must not be
-			 * the same in order to be cross origin,
-			 *
-			 * @return {boolean}
-			 */
-			isCrossOrigin: function () {
-				if (!origin) {
-					return true;
-				}
-				var url = this.parts();
-				return url.protocol !== origin.protocol ||
-				       url.hostname !== origin.hostname ||
-				       url.port !== origin.port;
-			},
-
-			/**
-			 * Split a URL into its consituent parts following the naming convention of
-			 * 'window.location'. One difference is that the port will contain the
-			 * protocol default if not specified.
-			 *
-			 * @see https://developer.mozilla.org/en-US/docs/DOM/window.location
-			 *
-			 * @returns {Object} a 'window.location'-like object
-			 */
-			parts: function () {
-				/*jshint maxcomplexity:20 */
-				var url, parts;
-				url = this.fullyQualify().build().match(urlRE);
-				parts = {
-					href: url[0],
-					protocol: url[1],
-					host: url[3] || '',
-					hostname: url[4] || '',
-					port: url[6],
-					pathname: url[7] || '',
-					search: url[8] || '',
-					hash: url[9] || ''
-				};
-				parts.origin = parts.protocol + '//' + parts.host;
-				parts.port = parts.port || (parts.protocol === 'https:' ? '443' : parts.protocol === 'http:' ? '80' : '');
-				return parts;
-			},
-
-			/**
-			 * Expand the template replacing path variables with parameters
-			 *
-			 * @param {Object} [params] params to combine with current params.  New params override existing params
-			 * @return {string} the expanded URL
-			 */
-			build: function (params) {
-				return buildUrl(this._template, mixin({}, this._params, params));
-			},
-
-			/**
-			 * @see build
-			 */
-			toString: function () {
-				return this.build();
-			}
-
-		};
-
-		origin = location ? new UrlBuilder(location.href).parts() : undef;
-
-		return UrlBuilder;
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); },
-	typeof window !== 'undefined' ? window.location : void 0
-	// Boilerplate for AMD and Node
-));
-
-},{"./util/mixin":130}],95:[function(_dereq_,module,exports){
-/*
- * Copyright 2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var rest = _dereq_('./client/default'),
-		    browser = _dereq_('./client/xhr');
-
-		rest.setPlatformDefaultClient(browser);
-
-		return rest;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"./client/default":97,"./client/xhr":98}],96:[function(_dereq_,module,exports){
-/*
- * Copyright 2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		/**
-		 * Add common helper methods to a client impl
-		 *
-		 * @param {function} impl the client implementation
-		 * @param {Client} [target] target of this client, used when wrapping other clients
-		 * @returns {Client} the client impl with additional methods
-		 */
-		return function client(impl, target) {
-
-			if (target) {
-
-				/**
-				 * @returns {Client} the target client
-				 */
-				impl.skip = function skip() {
-					return target;
-				};
-
-			}
-
-			/**
-			 * Allow a client to easily be wrapped by an interceptor
-			 *
-			 * @param {Interceptor} interceptor the interceptor to wrap this client with
-			 * @param [config] configuration for the interceptor
-			 * @returns {Client} the newly wrapped client
-			 */
-			impl.wrap = function wrap(interceptor, config) {
-				return interceptor(impl, config);
-			};
-
-			/**
-			 * @deprecated
-			 */
-			impl.chain = function chain() {
-				if (typeof console !== 'undefined') {
-					console.log('rest.js: client.chain() is deprecated, use client.wrap() instead');
-				}
-
-				return impl.wrap.apply(this, arguments);
-			};
-
-			return impl;
-
-		};
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],97:[function(_dereq_,module,exports){
-/*
- * Copyright 2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	var undef;
-
-	define(function (_dereq_) {
-
-		/**
-		 * Plain JS Object containing properties that represent an HTTP request.
-		 *
-		 * Depending on the capabilities of the underlying client, a request
-		 * may be cancelable. If a request may be canceled, the client will add
-		 * a canceled flag and cancel function to the request object. Canceling
-		 * the request will put the response into an error state.
-		 *
-		 * @field {string} [method='GET'] HTTP method, commonly GET, POST, PUT, DELETE or HEAD
-		 * @field {string|UrlBuilder} [path=''] path template with optional path variables
-		 * @field {Object} [params] parameters for the path template and query string
-		 * @field {Object} [headers] custom HTTP headers to send, in addition to the clients default headers
-		 * @field [entity] the HTTP entity, common for POST or PUT requests
-		 * @field {boolean} [canceled] true if the request has been canceled, set by the client
-		 * @field {Function} [cancel] cancels the request if invoked, provided by the client
-		 * @field {Client} [originator] the client that first handled this request, provided by the interceptor
-		 *
-		 * @class Request
-		 */
-
-		/**
-		 * Plain JS Object containing properties that represent an HTTP response
-		 *
-		 * @field {Object} [request] the request object as received by the root client
-		 * @field {Object} [raw] the underlying request object, like XmlHttpRequest in a browser
-		 * @field {number} [status.code] status code of the response (i.e. 200, 404)
-		 * @field {string} [status.text] status phrase of the response
-		 * @field {Object] [headers] response headers hash of normalized name, value pairs
-		 * @field [entity] the response body
-		 *
-		 * @class Response
-		 */
-
-		/**
-		 * HTTP client particularly suited for RESTful operations.
-		 *
-		 * @field {function} wrap wraps this client with a new interceptor returning the wrapped client
-		 *
-		 * @param {Request} the HTTP request
-		 * @returns {ResponsePromise<Response>} a promise the resolves to the HTTP response
-		 *
-		 * @class Client
-		 */
-
-		 /**
-		  * Extended when.js Promises/A+ promise with HTTP specific helpers
-		  *q
-		  * @method entity promise for the HTTP entity
-		  * @method status promise for the HTTP status code
-		  * @method headers promise for the HTTP response headers
-		  * @method header promise for a specific HTTP response header
-		  *
-		  * @class ResponsePromise
-		  * @extends Promise
-		  */
-
-		var client, target, platformDefault;
-
-		client = _dereq_('../client');
-
-		/**
-		 * Make a request with the default client
-		 * @param {Request} the HTTP request
-		 * @returns {Promise<Response>} a promise the resolves to the HTTP response
-		 */
-		function defaultClient() {
-			return target.apply(undef, arguments);
-		}
-
-		/**
-		 * Change the default client
-		 * @param {Client} client the new default client
-		 */
-		defaultClient.setDefaultClient = function setDefaultClient(client) {
-			target = client;
-		};
-
-		/**
-		 * Obtain a direct reference to the current default client
-		 * @returns {Client} the default client
-		 */
-		defaultClient.getDefaultClient = function getDefaultClient() {
-			return target;
-		};
-
-		/**
-		 * Reset the default client to the platform default
-		 */
-		defaultClient.resetDefaultClient = function resetDefaultClient() {
-			target = platformDefault;
-		};
-
-		/**
-		 * @private
-		 */
-		defaultClient.setPlatformDefaultClient = function setPlatformDefaultClient(client) {
-			if (platformDefault) {
-				throw new Error('Unable to redefine platformDefaultClient');
-			}
-			target = platformDefault = client;
-		};
-
-		return client(defaultClient);
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../client":96}],98:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define, global) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var when, UrlBuilder, normalizeHeaderName, responsePromise, client, headerSplitRE;
-
-		when = _dereq_('when');
-		UrlBuilder = _dereq_('../UrlBuilder');
-		normalizeHeaderName = _dereq_('../util/normalizeHeaderName');
-		responsePromise = _dereq_('../util/responsePromise');
-		client = _dereq_('../client');
-
-		// according to the spec, the line break is '\r\n', but doesn't hold true in practice
-		headerSplitRE = /[\r|\n]+/;
-
-		function parseHeaders(raw) {
-			// Note: Set-Cookie will be removed by the browser
-			var headers = {};
-
-			if (!raw) { return headers; }
-
-			raw.trim().split(headerSplitRE).forEach(function (header) {
-				var boundary, name, value;
-				boundary = header.indexOf(':');
-				name = normalizeHeaderName(header.substring(0, boundary).trim());
-				value = header.substring(boundary + 1).trim();
-				if (headers[name]) {
-					if (Array.isArray(headers[name])) {
-						// add to an existing array
-						headers[name].push(value);
-					}
-					else {
-						// convert single value to array
-						headers[name] = [headers[name], value];
-					}
-				}
-				else {
-					// new, single value
-					headers[name] = value;
-				}
-			});
-
-			return headers;
-		}
-
-		function safeMixin(target, source) {
-			Object.keys(source || {}).forEach(function (prop) {
-				// make sure the property already exists as
-				// IE 6 will blow up if we add a new prop
-				if (source.hasOwnProperty(prop) && prop in target) {
-					try {
-						target[prop] = source[prop];
-					}
-					catch (e) {
-						// ignore, expected for some properties at some points in the request lifecycle
-					}
-				}
-			});
-
-			return target;
-		}
-
-		return client(function xhr(request) {
-			return responsePromise.promise(function (resolve, reject) {
-				/*jshint maxcomplexity:20 */
-
-				var client, method, url, headers, entity, headerName, response, XMLHttpRequest;
-
-				request = typeof request === 'string' ? { path: request } : request || {};
-				response = { request: request };
-
-				if (request.canceled) {
-					response.error = 'precanceled';
-					reject(response);
-					return;
-				}
-
-				XMLHttpRequest = request.engine || global.XMLHttpRequest;
-				if (!XMLHttpRequest) {
-					reject({ request: request, error: 'xhr-not-available' });
-					return;
-				}
-
-				entity = request.entity;
-				request.method = request.method || (entity ? 'POST' : 'GET');
-				method = request.method;
-				url = new UrlBuilder(request.path || '', request.params).build();
-
-				try {
-					client = response.raw = new XMLHttpRequest();
-
-					// mixin extra request properties before and after opening the request as some properties require being set at different phases of the request
-					safeMixin(client, request.mixin);
-					client.open(method, url, true);
-					safeMixin(client, request.mixin);
-
-					headers = request.headers;
-					for (headerName in headers) {
-						/*jshint forin:false */
-						if (headerName === 'Content-Type' && headers[headerName] === 'multipart/form-data') {
-							// XMLHttpRequest generates its own Content-Type header with the
-							// appropriate multipart boundary when sending multipart/form-data.
-							continue;
-						}
-
-						client.setRequestHeader(headerName, headers[headerName]);
-					}
-
-					request.canceled = false;
-					request.cancel = function cancel() {
-						request.canceled = true;
-						client.abort();
-						reject(response);
-					};
-
-					client.onreadystatechange = function (/* e */) {
-						if (request.canceled) { return; }
-						if (client.readyState === (XMLHttpRequest.DONE || 4)) {
-							response.status = {
-								code: client.status,
-								text: client.statusText
-							};
-							response.headers = parseHeaders(client.getAllResponseHeaders());
-							response.entity = client.responseText;
-
-							if (response.status.code > 0) {
-								// check status code as readystatechange fires before error event
-								resolve(response);
-							}
-							else {
-								// give the error callback a chance to fire before resolving
-								// requests for file:// URLs do not have a status code
-								setTimeout(function () {
-									resolve(response);
-								}, 0);
-							}
-						}
-					};
-
-					try {
-						client.onerror = function (/* e */) {
-							response.error = 'loaderror';
-							reject(response);
-						};
-					}
-					catch (e) {
-						// IE 6 will not support error handling
-					}
-
-					client.send(entity);
-				}
-				catch (e) {
-					response.error = 'loaderror';
-					reject(response);
-				}
-
-			});
-		});
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); },
-	typeof window !== 'undefined' ? window : void 0
-	// Boilerplate for AMD and Node
-));
-
-},{"../UrlBuilder":94,"../client":96,"../util/normalizeHeaderName":131,"../util/responsePromise":132,"when":127}],99:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var defaultClient, mixin, responsePromise, client, when;
-
-		defaultClient = _dereq_('./client/default');
-		mixin = _dereq_('./util/mixin');
-		responsePromise = _dereq_('./util/responsePromise');
-		client = _dereq_('./client');
-		when = _dereq_('when');
-
-		/**
-		 * Interceptors have the ability to intercept the request and/org response
-		 * objects.  They may augment, prune, transform or replace the
-		 * request/response as needed.  Clients may be composed by wrapping
-		 * together multiple interceptors.
-		 *
-		 * Configured interceptors are functional in nature.  Wrapping a client in
-		 * an interceptor will not affect the client, merely the data that flows in
-		 * and out of that client.  A common configuration can be created once and
-		 * shared; specialization can be created by further wrapping that client
-		 * with custom interceptors.
-		 *
-		 * @param {Client} [target] client to wrap
-		 * @param {Object} [config] configuration for the interceptor, properties will be specific to the interceptor implementation
-		 * @returns {Client} A client wrapped with the interceptor
-		 *
-		 * @class Interceptor
-		 */
-
-		function defaultInitHandler(config) {
-			return config;
-		}
-
-		function defaultRequestHandler(request /*, config, meta */) {
-			return request;
-		}
-
-		function defaultResponseHandler(response /*, config, meta */) {
-			return response;
-		}
-
-		function race(promisesOrValues) {
-			// this function is different than when.any as the first to reject also wins
-			return when.promise(function (resolve, reject) {
-				promisesOrValues.forEach(function (promiseOrValue) {
-					when(promiseOrValue, resolve, reject);
-				});
-			});
-		}
-
-		/**
-		 * Alternate return type for the request handler that allows for more complex interactions.
-		 *
-		 * @param properties.request the traditional request return object
-		 * @param {Promise} [properties.abort] promise that resolves if/when the request is aborted
-		 * @param {Client} [properties.client] override the defined client with an alternate client
-		 * @param [properties.response] response for the request, short circuit the request
-		 */
-		function ComplexRequest(properties) {
-			if (!(this instanceof ComplexRequest)) {
-				// in case users forget the 'new' don't mix into the interceptor
-				return new ComplexRequest(properties);
-			}
-			mixin(this, properties);
-		}
-
-		/**
-		 * Create a new interceptor for the provided handlers.
-		 *
-		 * @param {Function} [handlers.init] one time intialization, must return the config object
-		 * @param {Function} [handlers.request] request handler
-		 * @param {Function} [handlers.response] response handler regardless of error state
-		 * @param {Function} [handlers.success] response handler when the request is not in error
-		 * @param {Function} [handlers.error] response handler when the request is in error, may be used to 'unreject' an error state
-		 * @param {Function} [handlers.client] the client to use if otherwise not specified, defaults to platform default client
-		 *
-		 * @returns {Interceptor}
-		 */
-		function interceptor(handlers) {
-
-			var initHandler, requestHandler, successResponseHandler, errorResponseHandler;
-
-			handlers = handlers || {};
-
-			initHandler            = handlers.init    || defaultInitHandler;
-			requestHandler         = handlers.request || defaultRequestHandler;
-			successResponseHandler = handlers.success || handlers.response || defaultResponseHandler;
-			errorResponseHandler   = handlers.error   || function () {
-				// Propagate the rejection, with the result of the handler
-				return when((handlers.response || defaultResponseHandler).apply(this, arguments), when.reject, when.reject);
-			};
-
-			return function (target, config) {
-
-				if (typeof target === 'object') {
-					config = target;
-				}
-				if (typeof target !== 'function') {
-					target = handlers.client || defaultClient;
-				}
-
-				config = initHandler(config || {});
-
-				function interceptedClient(request) {
-					var context, meta;
-					context = {};
-					meta = { 'arguments': Array.prototype.slice.call(arguments), client: interceptedClient };
-					request = typeof request === 'string' ? { path: request } : request || {};
-					request.originator = request.originator || interceptedClient;
-					return responsePromise(
-						requestHandler.call(context, request, config, meta),
-						function (request) {
-							var response, abort, next;
-							next = target;
-							if (request instanceof ComplexRequest) {
-								// unpack request
-								abort = request.abort;
-								next = request.client || next;
-								response = request.response;
-								// normalize request, must be last
-								request = request.request;
-							}
-							response = response || when(request, function (request) {
-								return when(
-									next(request),
-									function (response) {
-										return successResponseHandler.call(context, response, config, meta);
-									},
-									function (response) {
-										return errorResponseHandler.call(context, response, config, meta);
-									}
-								);
-							});
-							return abort ? race([response, abort]) : response;
-						},
-						function (error) {
-							return when.reject({ request: request, error: error });
-						}
-					);
-				}
-
-				return client(interceptedClient, target);
-			};
-		}
-
-		interceptor.ComplexRequest = ComplexRequest;
-
-		return interceptor;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"./client":96,"./client/default":97,"./util/mixin":130,"./util/responsePromise":132,"when":127}],100:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var interceptor, mime, registry, noopConverter, when;
-
-		interceptor = _dereq_('../interceptor');
-		mime = _dereq_('../mime');
-		registry = _dereq_('../mime/registry');
-		when = _dereq_('when');
-
-		noopConverter = {
-			read: function (obj) { return obj; },
-			write: function (obj) { return obj; }
-		};
-
-		/**
-		 * MIME type support for request and response entities.  Entities are
-		 * (de)serialized using the converter for the MIME type.
-		 *
-		 * Request entities are converted using the desired converter and the
-		 * 'Accept' request header prefers this MIME.
-		 *
-		 * Response entities are converted based on the Content-Type response header.
-		 *
-		 * @param {Client} [client] client to wrap
-		 * @param {string} [config.mime='text/plain'] MIME type to encode the request
-		 *   entity
-		 * @param {string} [config.accept] Accept header for the request
-		 * @param {Client} [config.client=<request.originator>] client passed to the
-		 *   converter, defaults to the client originating the request
-		 * @param {Registry} [config.registry] MIME registry, defaults to the root
-		 *   registry
-		 * @param {boolean} [config.permissive] Allow an unkown request MIME type
-		 *
-		 * @returns {Client}
-		 */
-		return interceptor({
-			init: function (config) {
-				config.registry = config.registry || registry;
-				return config;
-			},
-			request: function (request, config) {
-				var type, headers;
-
-				headers = request.headers || (request.headers = {});
-				type = mime.parse(headers['Content-Type'] = headers['Content-Type'] || config.mime || 'text/plain');
-				headers.Accept = headers.Accept || config.accept || type.raw + ', application/json;q=0.8, text/plain;q=0.5, */*;q=0.2';
-
-				if (!('entity' in request)) {
-					return request;
-				}
-
-				return config.registry.lookup(type).otherwise(function () {
-					// failed to resolve converter
-					if (config.permissive) {
-						return noopConverter;
-					}
-					throw 'mime-unknown';
-				}).then(function (converter) {
-					var client = config.client || request.originator;
-
-					return when.attempt(converter.write, request.entity, { client: client, request: request, mime: type, registry: config.registry })
-						.otherwise(function() {
-							throw 'mime-serialization';
-						})
-						.then(function(entity) {
-							request.entity = entity;
-							return request;
-						});
-				});
-			},
-			response: function (response, config) {
-				if (!(response.headers && response.headers['Content-Type'] && response.entity)) {
-					return response;
-				}
-
-				var type = mime.parse(response.headers['Content-Type']);
-
-				return config.registry.lookup(type).otherwise(function () { return noopConverter; }).then(function (converter) {
-					var client = config.client || response.request && response.request.originator;
-
-					return when.attempt(converter.read, response.entity, { client: client, response: response, mime: type, registry: config.registry })
-						.otherwise(function (e) {
-							response.error = 'mime-deserialization';
-							response.cause = e;
-							throw response;
-						})
-						.then(function (entity) {
-							response.entity = entity;
-							return response;
-						});
-				});
-			}
-		});
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../interceptor":99,"../mime":103,"../mime/registry":104,"when":127}],101:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2013 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var interceptor, UrlBuilder;
-
-		interceptor = _dereq_('../interceptor');
-		UrlBuilder = _dereq_('../UrlBuilder');
-
-		function startsWith(str, prefix) {
-			return str.indexOf(prefix) === 0;
-		}
-
-		function endsWith(str, suffix) {
-			return str.lastIndexOf(suffix) + suffix.length === str.length;
-		}
-
-		/**
-		 * Prefixes the request path with a common value.
-		 *
-		 * @param {Client} [client] client to wrap
-		 * @param {number} [config.prefix] path prefix
-		 *
-		 * @returns {Client}
-		 */
-		return interceptor({
-			request: function (request, config) {
-				var path;
-
-				if (config.prefix && !(new UrlBuilder(request.path).isFullyQualified())) {
-					path = config.prefix;
-					if (request.path) {
-						if (!endsWith(path, '/') && !startsWith(request.path, '/')) {
-							// add missing '/' between path sections
-							path += '/';
-						}
-						path += request.path;
-					}
-					request.path = path;
-				}
-
-				return request;
-			}
-		});
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../UrlBuilder":94,"../interceptor":99}],102:[function(_dereq_,module,exports){
-/*
- * Copyright 2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var interceptor, uriTemplate, mixin;
-
-		interceptor = _dereq_('../interceptor');
-		uriTemplate = _dereq_('../util/uriTemplate');
-		mixin = _dereq_('../util/mixin');
-
-		/**
-		 * Applies request params to the path as a URI Template
-		 *
-		 * Params are removed from the request object, as they have been consumed.
-		 *
-		 * @param {Client} [client] client to wrap
-		 * @param {Object} [config.params] default param values
-		 * @param {string} [config.template] default template
-		 *
-		 * @returns {Client}
-		 */
-		return interceptor({
-			init: function (config) {
-				config.params = config.params || {};
-				config.template = config.template || '';
-				return config;
-			},
-			request: function (request, config) {
-				var template, params;
-
-				template = request.path || config.template;
-				params = mixin({}, request.params, config.params);
-
-				request.path = uriTemplate.expand(template, params);
-				delete request.params;
-
-				return request;
-			}
-		});
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../interceptor":99,"../util/mixin":130,"../util/uriTemplate":134}],103:[function(_dereq_,module,exports){
-/*
-* Copyright 2014 the original author or authors
-* @license MIT, see LICENSE.txt for details
-*
-* @author Scott Andrews
-*/
-
-(function (define) {
-	'use strict';
-
-	var undef;
-
-	define(function (/* require */) {
-
-		/**
-		 * Parse a MIME type into it's constituent parts
-		 *
-		 * @param {string} mime MIME type to parse
-		 * @return {{
-		 *   {string} raw the original MIME type
-		 *   {string} type the type and subtype
-		 *   {string} [suffix] mime suffix, including the plus, if any
-		 *   {Object} params key/value pair of attributes
-		 * }}
-		 */
-		function parse(mime) {
-			var params, type;
-
-			params = mime.split(';');
-			type = params[0].trim().split('+');
-
-			return {
-				raw: mime,
-				type: type[0],
-				suffix: type[1] ? '+' + type[1] : '',
-				params: params.slice(1).reduce(function (params, pair) {
-					pair = pair.split('=');
-					params[pair[0].trim()] = pair[1] ? pair[1].trim() : undef;
-					return params;
-				}, {})
-			};
-		}
-
-		return {
-			parse: parse
-		};
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],104:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var mime, when, registry;
-
-		mime = _dereq_('../mime');
-		when = _dereq_('when');
-
-		function Registry(mimes) {
-
-			/**
-			 * Lookup the converter for a MIME type
-			 *
-			 * @param {string} type the MIME type
-			 * @return a promise for the converter
-			 */
-			this.lookup = function lookup(type) {
-				var parsed;
-
-				parsed = typeof type === 'string' ? mime.parse(type) : type;
-
-				if (mimes[parsed.raw]) {
-					return mimes[parsed.raw];
-				}
-				if (mimes[parsed.type + parsed.suffix]) {
-					return mimes[parsed.type + parsed.suffix];
-				}
-				if (mimes[parsed.type]) {
-					return mimes[parsed.type];
-				}
-				if (mimes[parsed.suffix]) {
-					return mimes[parsed.suffix];
-				}
-
-				return when.reject(new Error('Unable to locate converter for mime "' + parsed.raw + '"'));
-			};
-
-			/**
-			 * Create a late dispatched proxy to the target converter.
-			 *
-			 * Common when a converter is registered under multiple names and
-			 * should be kept in sync if updated.
-			 *
-			 * @param {string} type mime converter to dispatch to
-			 * @returns converter whose read/write methods target the desired mime converter
-			 */
-			this.delegate = function delegate(type) {
-				return {
-					read: function () {
-						var args = arguments;
-						return this.lookup(type).then(function (converter) {
-							return converter.read.apply(this, args);
-						}.bind(this));
-					}.bind(this),
-					write: function () {
-						var args = arguments;
-						return this.lookup(type).then(function (converter) {
-							return converter.write.apply(this, args);
-						}.bind(this));
-					}.bind(this)
-				};
-			};
-
-			/**
-			 * Register a custom converter for a MIME type
-			 *
-			 * @param {string} type the MIME type
-			 * @param converter the converter for the MIME type
-			 * @return a promise for the converter
-			 */
-			this.register = function register(type, converter) {
-				mimes[type] = when(converter);
-				return mimes[type];
-			};
-
-			/**
-			 * Create a child registry whoes registered converters remain local, while
-			 * able to lookup converters from its parent.
-			 *
-			 * @returns child MIME registry
-			 */
-			this.child = function child() {
-				return new Registry(Object.create(mimes));
-			};
-
-		}
-
-		registry = new Registry({});
-
-		// include provided serializers
-		registry.register('application/hal', _dereq_('./type/application/hal'));
-		registry.register('application/json', _dereq_('./type/application/json'));
-		registry.register('application/x-www-form-urlencoded', _dereq_('./type/application/x-www-form-urlencoded'));
-		registry.register('multipart/form-data', _dereq_('./type/multipart/form-data'));
-		registry.register('text/plain', _dereq_('./type/text/plain'));
-
-		registry.register('+json', registry.delegate('application/json'));
-
-		return registry;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../mime":103,"./type/application/hal":105,"./type/application/json":106,"./type/application/x-www-form-urlencoded":107,"./type/multipart/form-data":108,"./type/text/plain":109,"when":127}],105:[function(_dereq_,module,exports){
-/*
- * Copyright 2013-2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var pathPrefix, template, find, lazyPromise, responsePromise, when;
-
-		pathPrefix = _dereq_('../../../interceptor/pathPrefix');
-		template = _dereq_('../../../interceptor/template');
-		find = _dereq_('../../../util/find');
-		lazyPromise = _dereq_('../../../util/lazyPromise');
-		responsePromise = _dereq_('../../../util/responsePromise');
-		when = _dereq_('when');
-
-		function defineProperty(obj, name, value) {
-			Object.defineProperty(obj, name, {
-				value: value,
-				configurable: true,
-				enumerable: false,
-				writeable: true
-			});
-		}
-
-		/**
-		 * Hypertext Application Language serializer
-		 *
-		 * Implemented to https://tools.ietf.org/html/draft-kelly-json-hal-06
-		 *
-		 * As the spec is still a draft, this implementation will be updated as the
-		 * spec evolves
-		 *
-		 * Objects are read as HAL indexing links and embedded objects on to the
-		 * resource. Objects are written as plain JSON.
-		 *
-		 * Embedded relationships are indexed onto the resource by the relationship
-		 * as a promise for the related resource.
-		 *
-		 * Links are indexed onto the resource as a lazy promise that will GET the
-		 * resource when a handler is first registered on the promise.
-		 *
-		 * A `requestFor` method is added to the entity to make a request for the
-		 * relationship.
-		 *
-		 * A `clientFor` method is added to the entity to get a full Client for a
-		 * relationship.
-		 *
-		 * The `_links` and `_embedded` properties on the resource are made
-		 * non-enumerable.
-		 */
-		return {
-
-			read: function (str, opts) {
-				var client, console;
-
-				opts = opts || {};
-				client = opts.client;
-				console = opts.console || console;
-
-				function deprecationWarning(relationship, deprecation) {
-					if (deprecation && console && console.warn || console.log) {
-						(console.warn || console.log).call(console, 'Relationship \'' + relationship + '\' is deprecated, see ' + deprecation);
-					}
-				}
-
-				return opts.registry.lookup(opts.mime.suffix).then(function (converter) {
-					return when(converter.read(str, opts)).then(function (root) {
-
-						find.findProperties(root, '_embedded', function (embedded, resource, name) {
-							Object.keys(embedded).forEach(function (relationship) {
-								if (relationship in resource) { return; }
-								var related = responsePromise({
-									entity: embedded[relationship]
-								});
-								defineProperty(resource, relationship, related);
-							});
-							defineProperty(resource, name, embedded);
-						});
-						find.findProperties(root, '_links', function (links, resource, name) {
-							Object.keys(links).forEach(function (relationship) {
-								var link = links[relationship];
-								if (relationship in resource) { return; }
-								defineProperty(resource, relationship, responsePromise.make(lazyPromise(function () {
-									if (link.deprecation) { deprecationWarning(relationship, link.deprecation); }
-									if (link.templated === true) {
-										return template(client)({ path: link.href });
-									}
-									return client({ path: link.href });
-								})));
-							});
-							defineProperty(resource, name, links);
-							defineProperty(resource, 'clientFor', function (relationship, clientOverride) {
-								var link = links[relationship];
-								if (!link) {
-									throw new Error('Unknown relationship: ' + relationship);
-								}
-								if (link.deprecation) { deprecationWarning(relationship, link.deprecation); }
-								if (link.templated === true) {
-									return template(
-										clientOverride || client,
-										{ template: link.href }
-									);
-								}
-								return pathPrefix(
-									clientOverride || client,
-									{ prefix: link.href }
-								);
-							});
-							defineProperty(resource, 'requestFor', function (relationship, request, clientOverride) {
-								var client = this.clientFor(relationship, clientOverride);
-								return client(request);
-							});
-						});
-
-						return root;
-					});
-				});
-
-			},
-
-			write: function (obj, opts) {
-				return opts.registry.lookup(opts.mime.suffix).then(function (converter) {
-					return converter.write(obj, opts);
-				});
-			}
-
-		};
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"../../../interceptor/pathPrefix":101,"../../../interceptor/template":102,"../../../util/find":128,"../../../util/lazyPromise":129,"../../../util/responsePromise":132,"when":127}],106:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		/**
-		 * Create a new JSON converter with custom reviver/replacer.
-		 *
-		 * The extended converter must be published to a MIME registry in order
-		 * to be used. The existing converter will not be modified.
-		 *
-		 * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON
-		 *
-		 * @param {function} [reviver=undefined] custom JSON.parse reviver
-		 * @param {function|Array} [replacer=undefined] custom JSON.stringify replacer
-		 */
-		function createConverter(reviver, replacer) {
-			return {
-
-				read: function (str) {
-					return JSON.parse(str, reviver);
-				},
-
-				write: function (obj) {
-					return JSON.stringify(obj, replacer);
-				},
-
-				extend: createConverter
-
-			};
-		}
-
-		return createConverter();
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],107:[function(_dereq_,module,exports){
-/*
- * Copyright 2012 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		var encodedSpaceRE, urlEncodedSpaceRE;
-
-		encodedSpaceRE = /%20/g;
-		urlEncodedSpaceRE = /\+/g;
-
-		function urlEncode(str) {
-			str = encodeURIComponent(str);
-			// spec says space should be encoded as '+'
-			return str.replace(encodedSpaceRE, '+');
-		}
-
-		function urlDecode(str) {
-			// spec says space should be encoded as '+'
-			str = str.replace(urlEncodedSpaceRE, ' ');
-			return decodeURIComponent(str);
-		}
-
-		function append(str, name, value) {
-			if (Array.isArray(value)) {
-				value.forEach(function (value) {
-					str = append(str, name, value);
-				});
-			}
-			else {
-				if (str.length > 0) {
-					str += '&';
-				}
-				str += urlEncode(name);
-				if (value !== undefined && value !== null) {
-					str += '=' + urlEncode(value);
-				}
-			}
-			return str;
-		}
-
-		return {
-
-			read: function (str) {
-				var obj = {};
-				str.split('&').forEach(function (entry) {
-					var pair, name, value;
-					pair = entry.split('=');
-					name = urlDecode(pair[0]);
-					if (pair.length === 2) {
-						value = urlDecode(pair[1]);
-					}
-					else {
-						value = null;
-					}
-					if (name in obj) {
-						if (!Array.isArray(obj[name])) {
-							// convert to an array, perserving currnent value
-							obj[name] = [obj[name]];
-						}
-						obj[name].push(value);
-					}
-					else {
-						obj[name] = value;
-					}
-				});
-				return obj;
-			},
-
-			write: function (obj) {
-				var str = '';
-				Object.keys(obj).forEach(function (name) {
-					str = append(str, name, obj[name]);
-				});
-				return str;
-			}
-
-		};
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],108:[function(_dereq_,module,exports){
-/*
- * Copyright 2014 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Michael Jackson
- */
-
-/* global FormData, File, Blob */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		function isFormElement(object) {
-			return object &&
-				object.nodeType === 1 && // Node.ELEMENT_NODE
-				object.tagName === 'FORM';
-		}
-
-		function createFormDataFromObject(object) {
-			var formData = new FormData();
-
-			var value;
-			for (var property in object) {
-				if (object.hasOwnProperty(property)) {
-					value = object[property];
-
-					if (value instanceof File) {
-						formData.append(property, value, value.name);
-					} else if (value instanceof Blob) {
-						formData.append(property, value);
-					} else {
-						formData.append(property, String(value));
-					}
-				}
-			}
-
-			return formData;
-		}
-
-		return {
-
-			write: function (object) {
-				if (typeof FormData === 'undefined') {
-					throw new Error('The multipart/form-data mime serializer requires FormData support');
-				}
-
-				// Support FormData directly.
-				if (object instanceof FormData) {
-					return object;
-				}
-
-				// Support <form> elements.
-				if (isFormElement(object)) {
-					return new FormData(object);
-				}
-
-				// Support plain objects, may contain File/Blob as value.
-				if (typeof object === 'object' && object !== null) {
-					return createFormDataFromObject(object);
-				}
-
-				throw new Error('Unable to create FormData from object ' + object);
-			}
-
-		};
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],109:[function(_dereq_,module,exports){
-/*
- * Copyright 2012 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		return {
-
-			read: function (str) {
-				return str;
-			},
-
-			write: function (obj) {
-				return obj.toString();
-			}
-
-		};
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],110:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function (_dereq_) {
-
-	var makePromise = _dereq_('./makePromise');
-	var Scheduler = _dereq_('./Scheduler');
-	var async = _dereq_('./env').asap;
-
-	return makePromise({
-		scheduler: new Scheduler(async)
-	});
-
-});
-})(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
-
-},{"./Scheduler":111,"./env":123,"./makePromise":125}],111:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	// Credit to Twisol (https://github.com/Twisol) for suggesting
-	// this type of extensible queue + trampoline approach for next-tick conflation.
-
-	/**
-	 * Async task scheduler
-	 * @param {function} async function to schedule a single async function
-	 * @constructor
-	 */
-	function Scheduler(async) {
-		this._async = async;
-		this._running = false;
-
-		this._queue = this;
-		this._queueLen = 0;
-		this._afterQueue = {};
-		this._afterQueueLen = 0;
-
-		var self = this;
-		this.drain = function() {
-			self._drain();
-		};
-	}
-
-	/**
-	 * Enqueue a task
-	 * @param {{ run:function }} task
-	 */
-	Scheduler.prototype.enqueue = function(task) {
-		this._queue[this._queueLen++] = task;
-		this.run();
-	};
-
-	/**
-	 * Enqueue a task to run after the main task queue
-	 * @param {{ run:function }} task
-	 */
-	Scheduler.prototype.afterQueue = function(task) {
-		this._afterQueue[this._afterQueueLen++] = task;
-		this.run();
-	};
-
-	Scheduler.prototype.run = function() {
-		if (!this._running) {
-			this._running = true;
-			this._async(this.drain);
-		}
-	};
-
-	/**
-	 * Drain the handler queue entirely, and then the after queue
-	 */
-	Scheduler.prototype._drain = function() {
-		var i = 0;
-		for (; i < this._queueLen; ++i) {
-			this._queue[i].run();
-			this._queue[i] = void 0;
-		}
-
-		this._queueLen = 0;
-		this._running = false;
-
-		for (i = 0; i < this._afterQueueLen; ++i) {
-			this._afterQueue[i].run();
-			this._afterQueue[i] = void 0;
-		}
-
-		this._afterQueueLen = 0;
-	};
-
-	return Scheduler;
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],112:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	/**
-	 * Custom error type for promises rejected by promise.timeout
-	 * @param {string} message
-	 * @constructor
-	 */
-	function TimeoutError (message) {
-		Error.call(this);
-		this.message = message;
-		this.name = TimeoutError.name;
-		if (typeof Error.captureStackTrace === 'function') {
-			Error.captureStackTrace(this, TimeoutError);
-		}
-	}
-
-	TimeoutError.prototype = Object.create(Error.prototype);
-	TimeoutError.prototype.constructor = TimeoutError;
-
-	return TimeoutError;
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-},{}],113:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	makeApply.tryCatchResolve = tryCatchResolve;
-
-	return makeApply;
-
-	function makeApply(Promise, call) {
-		if(arguments.length < 2) {
-			call = tryCatchResolve;
-		}
-
-		return apply;
-
-		function apply(f, thisArg, args) {
-			var p = Promise._defer();
-			var l = args.length;
-			var params = new Array(l);
-			callAndResolve({ f:f, thisArg:thisArg, args:args, params:params, i:l-1, call:call }, p._handler);
-
-			return p;
-		}
-
-		function callAndResolve(c, h) {
-			if(c.i < 0) {
-				return call(c.f, c.thisArg, c.params, h);
-			}
-
-			var handler = Promise._handler(c.args[c.i]);
-			handler.fold(callAndResolveNext, c, void 0, h);
-		}
-
-		function callAndResolveNext(c, x, h) {
-			c.params[c.i] = x;
-			c.i -= 1;
-			callAndResolve(c, h);
-		}
-	}
-
-	function tryCatchResolve(f, thisArg, args, resolver) {
-		try {
-			resolver.resolve(f.apply(thisArg, args));
-		} catch(e) {
-			resolver.reject(e);
-		}
-	}
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-
-
-},{}],114:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function(_dereq_) {
-
-	var state = _dereq_('../state');
-	var applier = _dereq_('../apply');
-
-	return function array(Promise) {
-
-		var applyFold = applier(Promise);
-		var toPromise = Promise.resolve;
-		var all = Promise.all;
-
-		var ar = Array.prototype.reduce;
-		var arr = Array.prototype.reduceRight;
-		var slice = Array.prototype.slice;
-
-		// Additional array combinators
-
-		Promise.any = any;
-		Promise.some = some;
-		Promise.settle = settle;
-
-		Promise.map = map;
-		Promise.filter = filter;
-		Promise.reduce = reduce;
-		Promise.reduceRight = reduceRight;
-
-		/**
-		 * When this promise fulfills with an array, do
-		 * onFulfilled.apply(void 0, array)
-		 * @param {function} onFulfilled function to apply
-		 * @returns {Promise} promise for the result of applying onFulfilled
-		 */
-		Promise.prototype.spread = function(onFulfilled) {
-			return this.then(all).then(function(array) {
-				return onFulfilled.apply(this, array);
-			});
-		};
-
-		return Promise;
-
-		/**
-		 * One-winner competitive race.
-		 * Return a promise that will fulfill when one of the promises
-		 * in the input array fulfills, or will reject when all promises
-		 * have rejected.
-		 * @param {array} promises
-		 * @returns {Promise} promise for the first fulfilled value
-		 */
-		function any(promises) {
-			var p = Promise._defer();
-			var resolver = p._handler;
-			var l = promises.length>>>0;
-
-			var pending = l;
-			var errors = [];
-
-			for (var h, x, i = 0; i < l; ++i) {
-				x = promises[i];
-				if(x === void 0 && !(i in promises)) {
-					--pending;
-					continue;
-				}
-
-				h = Promise._handler(x);
-				if(h.state() > 0) {
-					resolver.become(h);
-					Promise._visitRemaining(promises, i, h);
-					break;
-				} else {
-					h.visit(resolver, handleFulfill, handleReject);
-				}
-			}
-
-			if(pending === 0) {
-				resolver.reject(new RangeError('any(): array must not be empty'));
-			}
-
-			return p;
-
-			function handleFulfill(x) {
-				/*jshint validthis:true*/
-				errors = null;
-				this.resolve(x); // this === resolver
-			}
-
-			function handleReject(e) {
-				/*jshint validthis:true*/
-				if(this.resolved) { // this === resolver
-					return;
-				}
-
-				errors.push(e);
-				if(--pending === 0) {
-					this.reject(errors);
-				}
-			}
-		}
-
-		/**
-		 * N-winner competitive race
-		 * Return a promise that will fulfill when n input promises have
-		 * fulfilled, or will reject when it becomes impossible for n
-		 * input promises to fulfill (ie when promises.length - n + 1
-		 * have rejected)
-		 * @param {array} promises
-		 * @param {number} n
-		 * @returns {Promise} promise for the earliest n fulfillment values
-		 *
-		 * @deprecated
-		 */
-		function some(promises, n) {
-			/*jshint maxcomplexity:7*/
-			var p = Promise._defer();
-			var resolver = p._handler;
-
-			var results = [];
-			var errors = [];
-
-			var l = promises.length>>>0;
-			var nFulfill = 0;
-			var nReject;
-			var x, i; // reused in both for() loops
-
-			// First pass: count actual array items
-			for(i=0; i<l; ++i) {
-				x = promises[i];
-				if(x === void 0 && !(i in promises)) {
-					continue;
-				}
-				++nFulfill;
-			}
-
-			// Compute actual goals
-			n = Math.max(n, 0);
-			nReject = (nFulfill - n + 1);
-			nFulfill = Math.min(n, nFulfill);
-
-			if(n > nFulfill) {
-				resolver.reject(new RangeError('some(): array must contain at least '
-				+ n + ' item(s), but had ' + nFulfill));
-			} else if(nFulfill === 0) {
-				resolver.resolve(results);
-			}
-
-			// Second pass: observe each array item, make progress toward goals
-			for(i=0; i<l; ++i) {
-				x = promises[i];
-				if(x === void 0 && !(i in promises)) {
-					continue;
-				}
-
-				Promise._handler(x).visit(resolver, fulfill, reject, resolver.notify);
-			}
-
-			return p;
-
-			function fulfill(x) {
-				/*jshint validthis:true*/
-				if(this.resolved) { // this === resolver
-					return;
-				}
-
-				results.push(x);
-				if(--nFulfill === 0) {
-					errors = null;
-					this.resolve(results);
-				}
-			}
-
-			function reject(e) {
-				/*jshint validthis:true*/
-				if(this.resolved) { // this === resolver
-					return;
-				}
-
-				errors.push(e);
-				if(--nReject === 0) {
-					results = null;
-					this.reject(errors);
-				}
-			}
-		}
-
-		/**
-		 * Apply f to the value of each promise in a list of promises
-		 * and return a new list containing the results.
-		 * @param {array} promises
-		 * @param {function(x:*, index:Number):*} f mapping function
-		 * @returns {Promise}
-		 */
-		function map(promises, f) {
-			return Promise._traverse(f, promises);
-		}
-
-		/**
-		 * Filter the provided array of promises using the provided predicate.  Input may
-		 * contain promises and values
-		 * @param {Array} promises array of promises and values
-		 * @param {function(x:*, index:Number):boolean} predicate filtering predicate.
-		 *  Must return truthy (or promise for truthy) for items to retain.
-		 * @returns {Promise} promise that will fulfill with an array containing all items
-		 *  for which predicate returned truthy.
-		 */
-		function filter(promises, predicate) {
-			var a = slice.call(promises);
-			return Promise._traverse(predicate, a).then(function(keep) {
-				return filterSync(a, keep);
-			});
-		}
-
-		function filterSync(promises, keep) {
-			// Safe because we know all promises have fulfilled if we've made it this far
-			var l = keep.length;
-			var filtered = new Array(l);
-			for(var i=0, j=0; i<l; ++i) {
-				if(keep[i]) {
-					filtered[j++] = Promise._handler(promises[i]).value;
-				}
-			}
-			filtered.length = j;
-			return filtered;
-
-		}
-
-		/**
-		 * Return a promise that will always fulfill with an array containing
-		 * the outcome states of all input promises.  The returned promise
-		 * will never reject.
-		 * @param {Array} promises
-		 * @returns {Promise} promise for array of settled state descriptors
-		 */
-		function settle(promises) {
-			return all(promises.map(settleOne));
-		}
-
-		function settleOne(p) {
-			var h = Promise._handler(p);
-			if(h.state() === 0) {
-				return toPromise(p).then(state.fulfilled, state.rejected);
-			}
-
-			h._unreport();
-			return state.inspect(h);
-		}
-
-		/**
-		 * Traditional reduce function, similar to `Array.prototype.reduce()`, but
-		 * input may contain promises and/or values, and reduceFunc
-		 * may return either a value or a promise, *and* initialValue may
-		 * be a promise for the starting value.
-		 * @param {Array|Promise} promises array or promise for an array of anything,
-		 *      may contain a mix of promises and values.
-		 * @param {function(accumulated:*, x:*, index:Number):*} f reduce function
-		 * @returns {Promise} that will resolve to the final reduced value
-		 */
-		function reduce(promises, f /*, initialValue */) {
-			return arguments.length > 2 ? ar.call(promises, liftCombine(f), arguments[2])
-					: ar.call(promises, liftCombine(f));
-		}
-
-		/**
-		 * Traditional reduce function, similar to `Array.prototype.reduceRight()`, but
-		 * input may contain promises and/or values, and reduceFunc
-		 * may return either a value or a promise, *and* initialValue may
-		 * be a promise for the starting value.
-		 * @param {Array|Promise} promises array or promise for an array of anything,
-		 *      may contain a mix of promises and values.
-		 * @param {function(accumulated:*, x:*, index:Number):*} f reduce function
-		 * @returns {Promise} that will resolve to the final reduced value
-		 */
-		function reduceRight(promises, f /*, initialValue */) {
-			return arguments.length > 2 ? arr.call(promises, liftCombine(f), arguments[2])
-					: arr.call(promises, liftCombine(f));
-		}
-
-		function liftCombine(f) {
-			return function(z, x, i) {
-				return applyFold(f, void 0, [z,x,i]);
-			};
-		}
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
-
-},{"../apply":113,"../state":126}],115:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function flow(Promise) {
-
-		var resolve = Promise.resolve;
-		var reject = Promise.reject;
-		var origCatch = Promise.prototype['catch'];
-
-		/**
-		 * Handle the ultimate fulfillment value or rejection reason, and assume
-		 * responsibility for all errors.  If an error propagates out of result
-		 * or handleFatalError, it will be rethrown to the host, resulting in a
-		 * loud stack track on most platforms and a crash on some.
-		 * @param {function?} onResult
-		 * @param {function?} onError
-		 * @returns {undefined}
-		 */
-		Promise.prototype.done = function(onResult, onError) {
-			this._handler.visit(this._handler.receiver, onResult, onError);
-		};
-
-		/**
-		 * Add Error-type and predicate matching to catch.  Examples:
-		 * promise['catch'](TypeError, handleTypeError)
-		 *   ['catch'](predicate, handleMatchedErrors)
-		 *   ['catch'](handleRemainingErrors)
-		 * @param onRejected
-		 * @returns {*}
-		 */
-		Promise.prototype['catch'] = Promise.prototype.otherwise = function(onRejected) {
-			if (arguments.length < 2) {
-				return origCatch.call(this, onRejected);
-			}
-
-			if(typeof onRejected !== 'function') {
-				return this.ensure(rejectInvalidPredicate);
-			}
-
-			return origCatch.call(this, createCatchFilter(arguments[1], onRejected));
-		};
-
-		/**
-		 * Wraps the provided catch handler, so that it will only be called
-		 * if the predicate evaluates truthy
-		 * @param {?function} handler
-		 * @param {function} predicate
-		 * @returns {function} conditional catch handler
-		 */
-		function createCatchFilter(handler, predicate) {
-			return function(e) {
-				return evaluatePredicate(e, predicate)
-					? handler.call(this, e)
-					: reject(e);
-			};
-		}
-
-		/**
-		 * Ensures that onFulfilledOrRejected will be called regardless of whether
-		 * this promise is fulfilled or rejected.  onFulfilledOrRejected WILL NOT
-		 * receive the promises' value or reason.  Any returned value will be disregarded.
-		 * onFulfilledOrRejected may throw or return a rejected promise to signal
-		 * an additional error.
-		 * @param {function} handler handler to be called regardless of
-		 *  fulfillment or rejection
-		 * @returns {Promise}
-		 */
-		Promise.prototype['finally'] = Promise.prototype.ensure = function(handler) {
-			if(typeof handler !== 'function') {
-				return this;
-			}
-
-			return this.then(function(x) {
-				return runSideEffect(handler, this, identity, x);
-			}, function(e) {
-				return runSideEffect(handler, this, reject, e);
-			});
-		};
-
-		function runSideEffect (handler, thisArg, propagate, value) {
-			var result = handler.call(thisArg);
-			return maybeThenable(result)
-				? propagateValue(result, propagate, value)
-				: propagate(value);
-		}
-
-		function propagateValue (result, propagate, x) {
-			return resolve(result).then(function () {
-				return propagate(x);
-			});
-		}
-
-		/**
-		 * Recover from a failure by returning a defaultValue.  If defaultValue
-		 * is a promise, it's fulfillment value will be used.  If defaultValue is
-		 * a promise that rejects, the returned promise will reject with the
-		 * same reason.
-		 * @param {*} defaultValue
-		 * @returns {Promise} new promise
-		 */
-		Promise.prototype['else'] = Promise.prototype.orElse = function(defaultValue) {
-			return this.then(void 0, function() {
-				return defaultValue;
-			});
-		};
-
-		/**
-		 * Shortcut for .then(function() { return value; })
-		 * @param  {*} value
-		 * @return {Promise} a promise that:
-		 *  - is fulfilled if value is not a promise, or
-		 *  - if value is a promise, will fulfill with its value, or reject
-		 *    with its reason.
-		 */
-		Promise.prototype['yield'] = function(value) {
-			return this.then(function() {
-				return value;
-			});
-		};
-
-		/**
-		 * Runs a side effect when this promise fulfills, without changing the
-		 * fulfillment value.
-		 * @param {function} onFulfilledSideEffect
-		 * @returns {Promise}
-		 */
-		Promise.prototype.tap = function(onFulfilledSideEffect) {
-			return this.then(onFulfilledSideEffect)['yield'](this);
-		};
-
-		return Promise;
-	};
-
-	function rejectInvalidPredicate() {
-		throw new TypeError('catch predicate must be a function');
-	}
-
-	function evaluatePredicate(e, predicate) {
-		return isError(predicate) ? e instanceof predicate : predicate(e);
-	}
-
-	function isError(predicate) {
-		return predicate === Error
-			|| (predicate != null && predicate.prototype instanceof Error);
-	}
-
-	function maybeThenable(x) {
-		return (typeof x === 'object' || typeof x === 'function') && x !== null;
-	}
-
-	function identity(x) {
-		return x;
-	}
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],116:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-/** @author Jeff Escalante */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function fold(Promise) {
-
-		Promise.prototype.fold = function(f, z) {
-			var promise = this._beget();
-
-			this._handler.fold(function(z, x, to) {
-				Promise._handler(z).fold(function(x, z, to) {
-					to.resolve(f.call(this, z, x));
-				}, x, this, to);
-			}, z, promise._handler.receiver, promise._handler);
-
-			return promise;
-		};
-
-		return Promise;
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],117:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function(_dereq_) {
-
-	var inspect = _dereq_('../state').inspect;
-
-	return function inspection(Promise) {
-
-		Promise.prototype.inspect = function() {
-			return inspect(Promise._handler(this));
-		};
-
-		return Promise;
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
-
-},{"../state":126}],118:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function generate(Promise) {
-
-		var resolve = Promise.resolve;
-
-		Promise.iterate = iterate;
-		Promise.unfold = unfold;
-
-		return Promise;
-
-		/**
-		 * @deprecated Use github.com/cujojs/most streams and most.iterate
-		 * Generate a (potentially infinite) stream of promised values:
-		 * x, f(x), f(f(x)), etc. until condition(x) returns true
-		 * @param {function} f function to generate a new x from the previous x
-		 * @param {function} condition function that, given the current x, returns
-		 *  truthy when the iterate should stop
-		 * @param {function} handler function to handle the value produced by f
-		 * @param {*|Promise} x starting value, may be a promise
-		 * @return {Promise} the result of the last call to f before
-		 *  condition returns true
-		 */
-		function iterate(f, condition, handler, x) {
-			return unfold(function(x) {
-				return [x, f(x)];
-			}, condition, handler, x);
-		}
-
-		/**
-		 * @deprecated Use github.com/cujojs/most streams and most.unfold
-		 * Generate a (potentially infinite) stream of promised values
-		 * by applying handler(generator(seed)) iteratively until
-		 * condition(seed) returns true.
-		 * @param {function} unspool function that generates a [value, newSeed]
-		 *  given a seed.
-		 * @param {function} condition function that, given the current seed, returns
-		 *  truthy when the unfold should stop
-		 * @param {function} handler function to handle the value produced by unspool
-		 * @param x {*|Promise} starting value, may be a promise
-		 * @return {Promise} the result of the last value produced by unspool before
-		 *  condition returns true
-		 */
-		function unfold(unspool, condition, handler, x) {
-			return resolve(x).then(function(seed) {
-				return resolve(condition(seed)).then(function(done) {
-					return done ? seed : resolve(unspool(seed)).spread(next);
-				});
-			});
-
-			function next(item, newSeed) {
-				return resolve(handler(item)).then(function() {
-					return unfold(unspool, condition, handler, newSeed);
-				});
-			}
-		}
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],119:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function progress(Promise) {
-
-		/**
-		 * @deprecated
-		 * Register a progress handler for this promise
-		 * @param {function} onProgress
-		 * @returns {Promise}
-		 */
-		Promise.prototype.progress = function(onProgress) {
-			return this.then(void 0, void 0, onProgress);
-		};
-
-		return Promise;
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],120:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function(_dereq_) {
-
-	var env = _dereq_('../env');
-	var TimeoutError = _dereq_('../TimeoutError');
-
-	function setTimeout(f, ms, x, y) {
-		return env.setTimer(function() {
-			f(x, y, ms);
-		}, ms);
-	}
-
-	return function timed(Promise) {
-		/**
-		 * Return a new promise whose fulfillment value is revealed only
-		 * after ms milliseconds
-		 * @param {number} ms milliseconds
-		 * @returns {Promise}
-		 */
-		Promise.prototype.delay = function(ms) {
-			var p = this._beget();
-			this._handler.fold(handleDelay, ms, void 0, p._handler);
-			return p;
-		};
-
-		function handleDelay(ms, x, h) {
-			setTimeout(resolveDelay, ms, x, h);
-		}
-
-		function resolveDelay(x, h) {
-			h.resolve(x);
-		}
-
-		/**
-		 * Return a new promise that rejects after ms milliseconds unless
-		 * this promise fulfills earlier, in which case the returned promise
-		 * fulfills with the same value.
-		 * @param {number} ms milliseconds
-		 * @param {Error|*=} reason optional rejection reason to use, defaults
-		 *   to a TimeoutError if not provided
-		 * @returns {Promise}
-		 */
-		Promise.prototype.timeout = function(ms, reason) {
-			var p = this._beget();
-			var h = p._handler;
-
-			var t = setTimeout(onTimeout, ms, reason, p._handler);
-
-			this._handler.visit(h,
-				function onFulfill(x) {
-					env.clearTimer(t);
-					this.resolve(x); // this = h
-				},
-				function onReject(x) {
-					env.clearTimer(t);
-					this.reject(x); // this = h
-				},
-				h.notify);
-
-			return p;
-		};
-
-		function onTimeout(reason, h, ms) {
-			var e = typeof reason === 'undefined'
-				? new TimeoutError('timed out after ' + ms + 'ms')
-				: reason;
-			h.reject(e);
-		}
-
-		return Promise;
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
-
-},{"../TimeoutError":112,"../env":123}],121:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function(_dereq_) {
-
-	var setTimer = _dereq_('../env').setTimer;
-	var format = _dereq_('../format');
-
-	return function unhandledRejection(Promise) {
-
-		var logError = noop;
-		var logInfo = noop;
-		var localConsole;
-
-		if(typeof console !== 'undefined') {
-			// Alias console to prevent things like uglify's drop_console option from
-			// removing console.log/error. Unhandled rejections fall into the same
-			// category as uncaught exceptions, and build tools shouldn't silence them.
-			localConsole = console;
-			logError = typeof localConsole.error !== 'undefined'
-				? function (e) { localConsole.error(e); }
-				: function (e) { localConsole.log(e); };
-
-			logInfo = typeof localConsole.info !== 'undefined'
-				? function (e) { localConsole.info(e); }
-				: function (e) { localConsole.log(e); };
-		}
-
-		Promise.onPotentiallyUnhandledRejection = function(rejection) {
-			enqueue(report, rejection);
-		};
-
-		Promise.onPotentiallyUnhandledRejectionHandled = function(rejection) {
-			enqueue(unreport, rejection);
-		};
-
-		Promise.onFatalRejection = function(rejection) {
-			enqueue(throwit, rejection.value);
-		};
-
-		var tasks = [];
-		var reported = [];
-		var running = null;
-
-		function report(r) {
-			if(!r.handled) {
-				reported.push(r);
-				logError('Potentially unhandled rejection [' + r.id + '] ' + format.formatError(r.value));
-			}
-		}
-
-		function unreport(r) {
-			var i = reported.indexOf(r);
-			if(i >= 0) {
-				reported.splice(i, 1);
-				logInfo('Handled previous rejection [' + r.id + '] ' + format.formatObject(r.value));
-			}
-		}
-
-		function enqueue(f, x) {
-			tasks.push(f, x);
-			if(running === null) {
-				running = setTimer(flush, 0);
-			}
-		}
-
-		function flush() {
-			running = null;
-			while(tasks.length > 0) {
-				tasks.shift()(tasks.shift());
-			}
-		}
-
-		return Promise;
-	};
-
-	function throwit(e) {
-		throw e;
-	}
-
-	function noop() {}
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
-
-},{"../env":123,"../format":124}],122:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function addWith(Promise) {
-		/**
-		 * Returns a promise whose handlers will be called with `this` set to
-		 * the supplied receiver.  Subsequent promises derived from the
-		 * returned promise will also have their handlers called with receiver
-		 * as `this`. Calling `with` with undefined or no arguments will return
-		 * a promise whose handlers will again be called in the usual Promises/A+
-		 * way (no `this`) thus safely undoing any previous `with` in the
-		 * promise chain.
-		 *
-		 * WARNING: Promises returned from `with`/`withThis` are NOT Promises/A+
-		 * compliant, specifically violating 2.2.5 (http://promisesaplus.com/#point-41)
-		 *
-		 * @param {object} receiver `this` value for all handlers attached to
-		 *  the returned promise.
-		 * @returns {Promise}
-		 */
-		Promise.prototype['with'] = Promise.prototype.withThis = function(receiver) {
-			var p = this._beget();
-			var child = p._handler;
-			child.receiver = receiver;
-			this._handler.chain(child, receiver);
-			return p;
-		};
-
-		return Promise;
-	};
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-
-},{}],123:[function(_dereq_,module,exports){
-(function (process){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-/*global process,document,setTimeout,clearTimeout,MutationObserver,WebKitMutationObserver*/
-(function(define) { 'use strict';
-define(function(_dereq_) {
-	/*jshint maxcomplexity:6*/
-
-	// Sniff "best" async scheduling option
-	// Prefer process.nextTick or MutationObserver, then check for
-	// setTimeout, and finally vertx, since its the only env that doesn't
-	// have setTimeout
-
-	var MutationObs;
-	var capturedSetTimeout = typeof setTimeout !== 'undefined' && setTimeout;
-
-	// Default env
-	var setTimer = function(f, ms) { return setTimeout(f, ms); };
-	var clearTimer = function(t) { return clearTimeout(t); };
-	var asap = function (f) { return capturedSetTimeout(f, 0); };
-
-	// Detect specific env
-	if (isNode()) { // Node
-		asap = function (f) { return process.nextTick(f); };
-
-	} else if (MutationObs = hasMutationObserver()) { // Modern browser
-		asap = initMutationObserver(MutationObs);
-
-	} else if (!capturedSetTimeout) { // vert.x
-		var vertxRequire = _dereq_;
-		var vertx = vertxRequire('vertx');
-		setTimer = function (f, ms) { return vertx.setTimer(ms, f); };
-		clearTimer = vertx.cancelTimer;
-		asap = vertx.runOnLoop || vertx.runOnContext;
-	}
-
-	return {
-		setTimer: setTimer,
-		clearTimer: clearTimer,
-		asap: asap
-	};
-
-	function isNode () {
-		return typeof process !== 'undefined' &&
-			Object.prototype.toString.call(process) === '[object process]';
-	}
-
-	function hasMutationObserver () {
-		return (typeof MutationObserver === 'function' && MutationObserver) ||
-			(typeof WebKitMutationObserver === 'function' && WebKitMutationObserver);
-	}
-
-	function initMutationObserver(MutationObserver) {
-		var scheduled;
-		var node = document.createTextNode('');
-		var o = new MutationObserver(run);
-		o.observe(node, { characterData: true });
-
-		function run() {
-			var f = scheduled;
-			scheduled = void 0;
-			f();
-		}
-
-		var i = 0;
-		return function (f) {
-			scheduled = f;
-			node.data = (i ^= 1);
-		};
-	}
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(_dereq_); }));
-
-}).call(this,_dereq_('_process'))
-},{"_process":76}],124:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return {
-		formatError: formatError,
-		formatObject: formatObject,
-		tryStringify: tryStringify
-	};
-
-	/**
-	 * Format an error into a string.  If e is an Error and has a stack property,
-	 * it's returned.  Otherwise, e is formatted using formatObject, with a
-	 * warning added about e not being a proper Error.
-	 * @param {*} e
-	 * @returns {String} formatted string, suitable for output to developers
-	 */
-	function formatError(e) {
-		var s = typeof e === 'object' && e !== null && (e.stack || e.message) ? e.stack || e.message : formatObject(e);
-		return e instanceof Error ? s : s + ' (WARNING: non-Error used)';
-	}
-
-	/**
-	 * Format an object, detecting "plain" objects and running them through
-	 * JSON.stringify if possible.
-	 * @param {Object} o
-	 * @returns {string}
-	 */
-	function formatObject(o) {
-		var s = String(o);
-		if(s === '[object Object]' && typeof JSON !== 'undefined') {
-			s = tryStringify(o, s);
-		}
-		return s;
-	}
-
-	/**
-	 * Try to return the result of JSON.stringify(x).  If that fails, return
-	 * defaultValue
-	 * @param {*} x
-	 * @param {*} defaultValue
-	 * @returns {String|*} JSON.stringify(x) or defaultValue
-	 */
-	function tryStringify(x, defaultValue) {
-		try {
-			return JSON.stringify(x);
-		} catch(e) {
-			return defaultValue;
-		}
-	}
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],125:[function(_dereq_,module,exports){
-(function (process){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return function makePromise(environment) {
-
-		var tasks = environment.scheduler;
-		var emitRejection = initEmitRejection();
-
-		var objectCreate = Object.create ||
-			function(proto) {
-				function Child() {}
-				Child.prototype = proto;
-				return new Child();
-			};
-
-		/**
-		 * Create a promise whose fate is determined by resolver
-		 * @constructor
-		 * @returns {Promise} promise
-		 * @name Promise
-		 */
-		function Promise(resolver, handler) {
-			this._handler = resolver === Handler ? handler : init(resolver);
-		}
-
-		/**
-		 * Run the supplied resolver
-		 * @param resolver
-		 * @returns {Pending}
-		 */
-		function init(resolver) {
-			var handler = new Pending();
-
-			try {
-				resolver(promiseResolve, promiseReject, promiseNotify);
-			} catch (e) {
-				promiseReject(e);
-			}
-
-			return handler;
-
-			/**
-			 * Transition from pre-resolution state to post-resolution state, notifying
-			 * all listeners of the ultimate fulfillment or rejection
-			 * @param {*} x resolution value
-			 */
-			function promiseResolve (x) {
-				handler.resolve(x);
-			}
-			/**
-			 * Reject this promise with reason, which will be used verbatim
-			 * @param {Error|*} reason rejection reason, strongly suggested
-			 *   to be an Error type
-			 */
-			function promiseReject (reason) {
-				handler.reject(reason);
-			}
-
-			/**
-			 * @deprecated
-			 * Issue a progress event, notifying all progress listeners
-			 * @param {*} x progress event payload to pass to all listeners
-			 */
-			function promiseNotify (x) {
-				handler.notify(x);
-			}
-		}
-
-		// Creation
-
-		Promise.resolve = resolve;
-		Promise.reject = reject;
-		Promise.never = never;
-
-		Promise._defer = defer;
-		Promise._handler = getHandler;
-
-		/**
-		 * Returns a trusted promise. If x is already a trusted promise, it is
-		 * returned, otherwise returns a new trusted Promise which follows x.
-		 * @param  {*} x
-		 * @return {Promise} promise
-		 */
-		function resolve(x) {
-			return isPromise(x) ? x
-				: new Promise(Handler, new Async(getHandler(x)));
-		}
-
-		/**
-		 * Return a reject promise with x as its reason (x is used verbatim)
-		 * @param {*} x
-		 * @returns {Promise} rejected promise
-		 */
-		function reject(x) {
-			return new Promise(Handler, new Async(new Rejected(x)));
-		}
-
-		/**
-		 * Return a promise that remains pending forever
-		 * @returns {Promise} forever-pending promise.
-		 */
-		function never() {
-			return foreverPendingPromise; // Should be frozen
-		}
-
-		/**
-		 * Creates an internal {promise, resolver} pair
-		 * @private
-		 * @returns {Promise}
-		 */
-		function defer() {
-			return new Promise(Handler, new Pending());
-		}
-
-		// Transformation and flow control
-
-		/**
-		 * Transform this promise's fulfillment value, returning a new Promise
-		 * for the transformed result.  If the promise cannot be fulfilled, onRejected
-		 * is called with the reason.  onProgress *may* be called with updates toward
-		 * this promise's fulfillment.
-		 * @param {function=} onFulfilled fulfillment handler
-		 * @param {function=} onRejected rejection handler
-		 * @param {function=} onProgress @deprecated progress handler
-		 * @return {Promise} new promise
-		 */
-		Promise.prototype.then = function(onFulfilled, onRejected, onProgress) {
-			var parent = this._handler;
-			var state = parent.join().state();
-
-			if ((typeof onFulfilled !== 'function' && state > 0) ||
-				(typeof onRejected !== 'function' && state < 0)) {
-				// Short circuit: value will not change, simply share handler
-				return new this.constructor(Handler, parent);
-			}
-
-			var p = this._beget();
-			var child = p._handler;
-
-			parent.chain(child, parent.receiver, onFulfilled, onRejected, onProgress);
-
-			return p;
-		};
-
-		/**
-		 * If this promise cannot be fulfilled due to an error, call onRejected to
-		 * handle the error. Shortcut for .then(undefined, onRejected)
-		 * @param {function?} onRejected
-		 * @return {Promise}
-		 */
-		Promise.prototype['catch'] = function(onRejected) {
-			return this.then(void 0, onRejected);
-		};
-
-		/**
-		 * Creates a new, pending promise of the same type as this promise
-		 * @private
-		 * @returns {Promise}
-		 */
-		Promise.prototype._beget = function() {
-			return begetFrom(this._handler, this.constructor);
-		};
-
-		function begetFrom(parent, Promise) {
-			var child = new Pending(parent.receiver, parent.join().context);
-			return new Promise(Handler, child);
-		}
-
-		// Array combinators
-
-		Promise.all = all;
-		Promise.race = race;
-		Promise._traverse = traverse;
-
-		/**
-		 * Return a promise that will fulfill when all promises in the
-		 * input array have fulfilled, or will reject when one of the
-		 * promises rejects.
-		 * @param {array} promises array of promises
-		 * @returns {Promise} promise for array of fulfillment values
-		 */
-		function all(promises) {
-			return traverseWith(snd, null, promises);
-		}
-
-		/**
-		 * Array<Promise<X>> -> Promise<Array<f(X)>>
-		 * @private
-		 * @param {function} f function to apply to each promise's value
-		 * @param {Array} promises array of promises
-		 * @returns {Promise} promise for transformed values
-		 */
-		function traverse(f, promises) {
-			return traverseWith(tryCatch2, f, promises);
-		}
-
-		function traverseWith(tryMap, f, promises) {
-			var handler = typeof f === 'function' ? mapAt : settleAt;
-
-			var resolver = new Pending();
-			var pending = promises.length >>> 0;
-			var results = new Array(pending);
-
-			for (var i = 0, x; i < promises.length && !resolver.resolved; ++i) {
-				x = promises[i];
-
-				if (x === void 0 && !(i in promises)) {
-					--pending;
-					continue;
-				}
-
-				traverseAt(promises, handler, i, x, resolver);
-			}
-
-			if(pending === 0) {
-				resolver.become(new Fulfilled(results));
-			}
-
-			return new Promise(Handler, resolver);
-
-			function mapAt(i, x, resolver) {
-				if(!resolver.resolved) {
-					traverseAt(promises, settleAt, i, tryMap(f, x, i), resolver);
-				}
-			}
-
-			function settleAt(i, x, resolver) {
-				results[i] = x;
-				if(--pending === 0) {
-					resolver.become(new Fulfilled(results));
-				}
-			}
-		}
-
-		function traverseAt(promises, handler, i, x, resolver) {
-			if (maybeThenable(x)) {
-				var h = getHandlerMaybeThenable(x);
-				var s = h.state();
-
-				if (s === 0) {
-					h.fold(handler, i, void 0, resolver);
-				} else if (s > 0) {
-					handler(i, h.value, resolver);
-				} else {
-					resolver.become(h);
-					visitRemaining(promises, i+1, h);
-				}
-			} else {
-				handler(i, x, resolver);
-			}
-		}
-
-		Promise._visitRemaining = visitRemaining;
-		function visitRemaining(promises, start, handler) {
-			for(var i=start; i<promises.length; ++i) {
-				markAsHandled(getHandler(promises[i]), handler);
-			}
-		}
-
-		function markAsHandled(h, handler) {
-			if(h === handler) {
-				return;
-			}
-
-			var s = h.state();
-			if(s === 0) {
-				h.visit(h, void 0, h._unreport);
-			} else if(s < 0) {
-				h._unreport();
-			}
-		}
-
-		/**
-		 * Fulfill-reject competitive race. Return a promise that will settle
-		 * to the same state as the earliest input promise to settle.
-		 *
-		 * WARNING: The ES6 Promise spec requires that race()ing an empty array
-		 * must return a promise that is pending forever.  This implementation
-		 * returns a singleton forever-pending promise, the same singleton that is
-		 * returned by Promise.never(), thus can be checked with ===
-		 *
-		 * @param {array} promises array of promises to race
-		 * @returns {Promise} if input is non-empty, a promise that will settle
-		 * to the same outcome as the earliest input promise to settle. if empty
-		 * is empty, returns a promise that will never settle.
-		 */
-		function race(promises) {
-			if(typeof promises !== 'object' || promises === null) {
-				return reject(new TypeError('non-iterable passed to race()'));
-			}
-
-			// Sigh, race([]) is untestable unless we return *something*
-			// that is recognizable without calling .then() on it.
-			return promises.length === 0 ? never()
-				 : promises.length === 1 ? resolve(promises[0])
-				 : runRace(promises);
-		}
-
-		function runRace(promises) {
-			var resolver = new Pending();
-			var i, x, h;
-			for(i=0; i<promises.length; ++i) {
-				x = promises[i];
-				if (x === void 0 && !(i in promises)) {
-					continue;
-				}
-
-				h = getHandler(x);
-				if(h.state() !== 0) {
-					resolver.become(h);
-					visitRemaining(promises, i+1, h);
-					break;
-				} else {
-					h.visit(resolver, resolver.resolve, resolver.reject);
-				}
-			}
-			return new Promise(Handler, resolver);
-		}
-
-		// Promise internals
-		// Below this, everything is @private
-
-		/**
-		 * Get an appropriate handler for x, without checking for cycles
-		 * @param {*} x
-		 * @returns {object} handler
-		 */
-		function getHandler(x) {
-			if(isPromise(x)) {
-				return x._handler.join();
-			}
-			return maybeThenable(x) ? getHandlerUntrusted(x) : new Fulfilled(x);
-		}
-
-		/**
-		 * Get a handler for thenable x.
-		 * NOTE: You must only call this if maybeThenable(x) == true
-		 * @param {object|function|Promise} x
-		 * @returns {object} handler
-		 */
-		function getHandlerMaybeThenable(x) {
-			return isPromise(x) ? x._handler.join() : getHandlerUntrusted(x);
-		}
-
-		/**
-		 * Get a handler for potentially untrusted thenable x
-		 * @param {*} x
-		 * @returns {object} handler
-		 */
-		function getHandlerUntrusted(x) {
-			try {
-				var untrustedThen = x.then;
-				return typeof untrustedThen === 'function'
-					? new Thenable(untrustedThen, x)
-					: new Fulfilled(x);
-			} catch(e) {
-				return new Rejected(e);
-			}
-		}
-
-		/**
-		 * Handler for a promise that is pending forever
-		 * @constructor
-		 */
-		function Handler() {}
-
-		Handler.prototype.when
-			= Handler.prototype.become
-			= Handler.prototype.notify // deprecated
-			= Handler.prototype.fail
-			= Handler.prototype._unreport
-			= Handler.prototype._report
-			= noop;
-
-		Handler.prototype._state = 0;
-
-		Handler.prototype.state = function() {
-			return this._state;
-		};
-
-		/**
-		 * Recursively collapse handler chain to find the handler
-		 * nearest to the fully resolved value.
-		 * @returns {object} handler nearest the fully resolved value
-		 */
-		Handler.prototype.join = function() {
-			var h = this;
-			while(h.handler !== void 0) {
-				h = h.handler;
-			}
-			return h;
-		};
-
-		Handler.prototype.chain = function(to, receiver, fulfilled, rejected, progress) {
-			this.when({
-				resolver: to,
-				receiver: receiver,
-				fulfilled: fulfilled,
-				rejected: rejected,
-				progress: progress
-			});
-		};
-
-		Handler.prototype.visit = function(receiver, fulfilled, rejected, progress) {
-			this.chain(failIfRejected, receiver, fulfilled, rejected, progress);
-		};
-
-		Handler.prototype.fold = function(f, z, c, to) {
-			this.when(new Fold(f, z, c, to));
-		};
-
-		/**
-		 * Handler that invokes fail() on any handler it becomes
-		 * @constructor
-		 */
-		function FailIfRejected() {}
-
-		inherit(Handler, FailIfRejected);
-
-		FailIfRejected.prototype.become = function(h) {
-			h.fail();
-		};
-
-		var failIfRejected = new FailIfRejected();
-
-		/**
-		 * Handler that manages a queue of consumers waiting on a pending promise
-		 * @constructor
-		 */
-		function Pending(receiver, inheritedContext) {
-			Promise.createContext(this, inheritedContext);
-
-			this.consumers = void 0;
-			this.receiver = receiver;
-			this.handler = void 0;
-			this.resolved = false;
-		}
-
-		inherit(Handler, Pending);
-
-		Pending.prototype._state = 0;
-
-		Pending.prototype.resolve = function(x) {
-			this.become(getHandler(x));
-		};
-
-		Pending.prototype.reject = function(x) {
-			if(this.resolved) {
-				return;
-			}
-
-			this.become(new Rejected(x));
-		};
-
-		Pending.prototype.join = function() {
-			if (!this.resolved) {
-				return this;
-			}
-
-			var h = this;
-
-			while (h.handler !== void 0) {
-				h = h.handler;
-				if (h === this) {
-					return this.handler = cycle();
-				}
-			}
-
-			return h;
-		};
-
-		Pending.prototype.run = function() {
-			var q = this.consumers;
-			var handler = this.handler;
-			this.handler = this.handler.join();
-			this.consumers = void 0;
-
-			for (var i = 0; i < q.length; ++i) {
-				handler.when(q[i]);
-			}
-		};
-
-		Pending.prototype.become = function(handler) {
-			if(this.resolved) {
-				return;
-			}
-
-			this.resolved = true;
-			this.handler = handler;
-			if(this.consumers !== void 0) {
-				tasks.enqueue(this);
-			}
-
-			if(this.context !== void 0) {
-				handler._report(this.context);
-			}
-		};
-
-		Pending.prototype.when = function(continuation) {
-			if(this.resolved) {
-				tasks.enqueue(new ContinuationTask(continuation, this.handler));
-			} else {
-				if(this.consumers === void 0) {
-					this.consumers = [continuation];
-				} else {
-					this.consumers.push(continuation);
-				}
-			}
-		};
-
-		/**
-		 * @deprecated
-		 */
-		Pending.prototype.notify = function(x) {
-			if(!this.resolved) {
-				tasks.enqueue(new ProgressTask(x, this));
-			}
-		};
-
-		Pending.prototype.fail = function(context) {
-			var c = typeof context === 'undefined' ? this.context : context;
-			this.resolved && this.handler.join().fail(c);
-		};
-
-		Pending.prototype._report = function(context) {
-			this.resolved && this.handler.join()._report(context);
-		};
-
-		Pending.prototype._unreport = function() {
-			this.resolved && this.handler.join()._unreport();
-		};
-
-		/**
-		 * Wrap another handler and force it into a future stack
-		 * @param {object} handler
-		 * @constructor
-		 */
-		function Async(handler) {
-			this.handler = handler;
-		}
-
-		inherit(Handler, Async);
-
-		Async.prototype.when = function(continuation) {
-			tasks.enqueue(new ContinuationTask(continuation, this));
-		};
-
-		Async.prototype._report = function(context) {
-			this.join()._report(context);
-		};
-
-		Async.prototype._unreport = function() {
-			this.join()._unreport();
-		};
-
-		/**
-		 * Handler that wraps an untrusted thenable and assimilates it in a future stack
-		 * @param {function} then
-		 * @param {{then: function}} thenable
-		 * @constructor
-		 */
-		function Thenable(then, thenable) {
-			Pending.call(this);
-			tasks.enqueue(new AssimilateTask(then, thenable, this));
-		}
-
-		inherit(Pending, Thenable);
-
-		/**
-		 * Handler for a fulfilled promise
-		 * @param {*} x fulfillment value
-		 * @constructor
-		 */
-		function Fulfilled(x) {
-			Promise.createContext(this);
-			this.value = x;
-		}
-
-		inherit(Handler, Fulfilled);
-
-		Fulfilled.prototype._state = 1;
-
-		Fulfilled.prototype.fold = function(f, z, c, to) {
-			runContinuation3(f, z, this, c, to);
-		};
-
-		Fulfilled.prototype.when = function(cont) {
-			runContinuation1(cont.fulfilled, this, cont.receiver, cont.resolver);
-		};
-
-		var errorId = 0;
-
-		/**
-		 * Handler for a rejected promise
-		 * @param {*} x rejection reason
-		 * @constructor
-		 */
-		function Rejected(x) {
-			Promise.createContext(this);
-
-			this.id = ++errorId;
-			this.value = x;
-			this.handled = false;
-			this.reported = false;
-
-			this._report();
-		}
-
-		inherit(Handler, Rejected);
-
-		Rejected.prototype._state = -1;
-
-		Rejected.prototype.fold = function(f, z, c, to) {
-			to.become(this);
-		};
-
-		Rejected.prototype.when = function(cont) {
-			if(typeof cont.rejected === 'function') {
-				this._unreport();
-			}
-			runContinuation1(cont.rejected, this, cont.receiver, cont.resolver);
-		};
-
-		Rejected.prototype._report = function(context) {
-			tasks.afterQueue(new ReportTask(this, context));
-		};
-
-		Rejected.prototype._unreport = function() {
-			if(this.handled) {
-				return;
-			}
-			this.handled = true;
-			tasks.afterQueue(new UnreportTask(this));
-		};
-
-		Rejected.prototype.fail = function(context) {
-			this.reported = true;
-			emitRejection('unhandledRejection', this);
-			Promise.onFatalRejection(this, context === void 0 ? this.context : context);
-		};
-
-		function ReportTask(rejection, context) {
-			this.rejection = rejection;
-			this.context = context;
-		}
-
-		ReportTask.prototype.run = function() {
-			if(!this.rejection.handled && !this.rejection.reported) {
-				this.rejection.reported = true;
-				emitRejection('unhandledRejection', this.rejection) ||
-					Promise.onPotentiallyUnhandledRejection(this.rejection, this.context);
-			}
-		};
-
-		function UnreportTask(rejection) {
-			this.rejection = rejection;
-		}
-
-		UnreportTask.prototype.run = function() {
-			if(this.rejection.reported) {
-				emitRejection('rejectionHandled', this.rejection) ||
-					Promise.onPotentiallyUnhandledRejectionHandled(this.rejection);
-			}
-		};
-
-		// Unhandled rejection hooks
-		// By default, everything is a noop
-
-		Promise.createContext
-			= Promise.enterContext
-			= Promise.exitContext
-			= Promise.onPotentiallyUnhandledRejection
-			= Promise.onPotentiallyUnhandledRejectionHandled
-			= Promise.onFatalRejection
-			= noop;
-
-		// Errors and singletons
-
-		var foreverPendingHandler = new Handler();
-		var foreverPendingPromise = new Promise(Handler, foreverPendingHandler);
-
-		function cycle() {
-			return new Rejected(new TypeError('Promise cycle'));
-		}
-
-		// Task runners
-
-		/**
-		 * Run a single consumer
-		 * @constructor
-		 */
-		function ContinuationTask(continuation, handler) {
-			this.continuation = continuation;
-			this.handler = handler;
-		}
-
-		ContinuationTask.prototype.run = function() {
-			this.handler.join().when(this.continuation);
-		};
-
-		/**
-		 * Run a queue of progress handlers
-		 * @constructor
-		 */
-		function ProgressTask(value, handler) {
-			this.handler = handler;
-			this.value = value;
-		}
-
-		ProgressTask.prototype.run = function() {
-			var q = this.handler.consumers;
-			if(q === void 0) {
-				return;
-			}
-
-			for (var c, i = 0; i < q.length; ++i) {
-				c = q[i];
-				runNotify(c.progress, this.value, this.handler, c.receiver, c.resolver);
-			}
-		};
-
-		/**
-		 * Assimilate a thenable, sending it's value to resolver
-		 * @param {function} then
-		 * @param {object|function} thenable
-		 * @param {object} resolver
-		 * @constructor
-		 */
-		function AssimilateTask(then, thenable, resolver) {
-			this._then = then;
-			this.thenable = thenable;
-			this.resolver = resolver;
-		}
-
-		AssimilateTask.prototype.run = function() {
-			var h = this.resolver;
-			tryAssimilate(this._then, this.thenable, _resolve, _reject, _notify);
-
-			function _resolve(x) { h.resolve(x); }
-			function _reject(x)  { h.reject(x); }
-			function _notify(x)  { h.notify(x); }
-		};
-
-		function tryAssimilate(then, thenable, resolve, reject, notify) {
-			try {
-				then.call(thenable, resolve, reject, notify);
-			} catch (e) {
-				reject(e);
-			}
-		}
-
-		/**
-		 * Fold a handler value with z
-		 * @constructor
-		 */
-		function Fold(f, z, c, to) {
-			this.f = f; this.z = z; this.c = c; this.to = to;
-			this.resolver = failIfRejected;
-			this.receiver = this;
-		}
-
-		Fold.prototype.fulfilled = function(x) {
-			this.f.call(this.c, this.z, x, this.to);
-		};
-
-		Fold.prototype.rejected = function(x) {
-			this.to.reject(x);
-		};
-
-		Fold.prototype.progress = function(x) {
-			this.to.notify(x);
-		};
-
-		// Other helpers
-
-		/**
-		 * @param {*} x
-		 * @returns {boolean} true iff x is a trusted Promise
-		 */
-		function isPromise(x) {
-			return x instanceof Promise;
-		}
-
-		/**
-		 * Test just enough to rule out primitives, in order to take faster
-		 * paths in some code
-		 * @param {*} x
-		 * @returns {boolean} false iff x is guaranteed *not* to be a thenable
-		 */
-		function maybeThenable(x) {
-			return (typeof x === 'object' || typeof x === 'function') && x !== null;
-		}
-
-		function runContinuation1(f, h, receiver, next) {
-			if(typeof f !== 'function') {
-				return next.become(h);
-			}
-
-			Promise.enterContext(h);
-			tryCatchReject(f, h.value, receiver, next);
-			Promise.exitContext();
-		}
-
-		function runContinuation3(f, x, h, receiver, next) {
-			if(typeof f !== 'function') {
-				return next.become(h);
-			}
-
-			Promise.enterContext(h);
-			tryCatchReject3(f, x, h.value, receiver, next);
-			Promise.exitContext();
-		}
-
-		/**
-		 * @deprecated
-		 */
-		function runNotify(f, x, h, receiver, next) {
-			if(typeof f !== 'function') {
-				return next.notify(x);
-			}
-
-			Promise.enterContext(h);
-			tryCatchReturn(f, x, receiver, next);
-			Promise.exitContext();
-		}
-
-		function tryCatch2(f, a, b) {
-			try {
-				return f(a, b);
-			} catch(e) {
-				return reject(e);
-			}
-		}
-
-		/**
-		 * Return f.call(thisArg, x), or if it throws return a rejected promise for
-		 * the thrown exception
-		 */
-		function tryCatchReject(f, x, thisArg, next) {
-			try {
-				next.become(getHandler(f.call(thisArg, x)));
-			} catch(e) {
-				next.become(new Rejected(e));
-			}
-		}
-
-		/**
-		 * Same as above, but includes the extra argument parameter.
-		 */
-		function tryCatchReject3(f, x, y, thisArg, next) {
-			try {
-				f.call(thisArg, x, y, next);
-			} catch(e) {
-				next.become(new Rejected(e));
-			}
-		}
-
-		/**
-		 * @deprecated
-		 * Return f.call(thisArg, x), or if it throws, *return* the exception
-		 */
-		function tryCatchReturn(f, x, thisArg, next) {
-			try {
-				next.notify(f.call(thisArg, x));
-			} catch(e) {
-				next.notify(e);
-			}
-		}
-
-		function inherit(Parent, Child) {
-			Child.prototype = objectCreate(Parent.prototype);
-			Child.prototype.constructor = Child;
-		}
-
-		function snd(x, y) {
-			return y;
-		}
-
-		function noop() {}
-
-		function initEmitRejection() {
-			/*global process, self, CustomEvent*/
-			if(typeof process !== 'undefined' && process !== null
-				&& typeof process.emit === 'function') {
-				// Returning falsy here means to call the default
-				// onPotentiallyUnhandledRejection API.  This is safe even in
-				// browserify since process.emit always returns falsy in browserify:
-				// https://github.com/defunctzombie/node-process/blob/master/browser.js#L40-L46
-				return function(type, rejection) {
-					return type === 'unhandledRejection'
-						? process.emit(type, rejection.value, rejection)
-						: process.emit(type, rejection);
-				};
-			} else if(typeof self !== 'undefined' && typeof CustomEvent === 'function') {
-				return (function(noop, self, CustomEvent) {
-					var hasCustomEvent = false;
-					try {
-						var ev = new CustomEvent('unhandledRejection');
-						hasCustomEvent = ev instanceof CustomEvent;
-					} catch (e) {}
-
-					return !hasCustomEvent ? noop : function(type, rejection) {
-						var ev = new CustomEvent(type, {
-							detail: {
-								reason: rejection.value,
-								key: rejection
-							},
-							bubbles: false,
-							cancelable: true
-						});
-
-						return !self.dispatchEvent(ev);
-					};
-				}(noop, self, CustomEvent));
-			}
-
-			return noop;
-		}
-
-		return Promise;
-	};
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-}).call(this,_dereq_('_process'))
-},{"_process":76}],126:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-/** @author Brian Cavalier */
-/** @author John Hann */
-
-(function(define) { 'use strict';
-define(function() {
-
-	return {
-		pending: toPendingState,
-		fulfilled: toFulfilledState,
-		rejected: toRejectedState,
-		inspect: inspect
-	};
-
-	function toPendingState() {
-		return { state: 'pending' };
-	}
-
-	function toRejectedState(e) {
-		return { state: 'rejected', reason: e };
-	}
-
-	function toFulfilledState(x) {
-		return { state: 'fulfilled', value: x };
-	}
-
-	function inspect(handler) {
-		var state = handler.state();
-		return state === 0 ? toPendingState()
-			 : state > 0   ? toFulfilledState(handler.value)
-			               : toRejectedState(handler.value);
-	}
-
-});
-}(typeof define === 'function' && define.amd ? define : function(factory) { module.exports = factory(); }));
-
-},{}],127:[function(_dereq_,module,exports){
-/** @license MIT License (c) copyright 2010-2014 original author or authors */
-
-/**
- * Promises/A+ and when() implementation
- * when is part of the cujoJS family of libraries (http://cujojs.com/)
- * @author Brian Cavalier
- * @author John Hann
- */
-(function(define) { 'use strict';
-define(function (_dereq_) {
-
-	var timed = _dereq_('./lib/decorators/timed');
-	var array = _dereq_('./lib/decorators/array');
-	var flow = _dereq_('./lib/decorators/flow');
-	var fold = _dereq_('./lib/decorators/fold');
-	var inspect = _dereq_('./lib/decorators/inspect');
-	var generate = _dereq_('./lib/decorators/iterate');
-	var progress = _dereq_('./lib/decorators/progress');
-	var withThis = _dereq_('./lib/decorators/with');
-	var unhandledRejection = _dereq_('./lib/decorators/unhandledRejection');
-	var TimeoutError = _dereq_('./lib/TimeoutError');
-
-	var Promise = [array, flow, fold, generate, progress,
-		inspect, withThis, timed, unhandledRejection]
-		.reduce(function(Promise, feature) {
-			return feature(Promise);
-		}, _dereq_('./lib/Promise'));
-
-	var apply = _dereq_('./lib/apply')(Promise);
-
-	// Public API
-
-	when.promise     = promise;              // Create a pending promise
-	when.resolve     = Promise.resolve;      // Create a resolved promise
-	when.reject      = Promise.reject;       // Create a rejected promise
-
-	when.lift        = lift;                 // lift a function to return promises
-	when['try']      = attempt;              // call a function and return a promise
-	when.attempt     = attempt;              // alias for when.try
-
-	when.iterate     = Promise.iterate;      // DEPRECATED (use cujojs/most streams) Generate a stream of promises
-	when.unfold      = Promise.unfold;       // DEPRECATED (use cujojs/most streams) Generate a stream of promises
-
-	when.join        = join;                 // Join 2 or more promises
-
-	when.all         = all;                  // Resolve a list of promises
-	when.settle      = settle;               // Settle a list of promises
-
-	when.any         = lift(Promise.any);    // One-winner race
-	when.some        = lift(Promise.some);   // Multi-winner race
-	when.race        = lift(Promise.race);   // First-to-settle race
-
-	when.map         = map;                  // Array.map() for promises
-	when.filter      = filter;               // Array.filter() for promises
-	when.reduce      = lift(Promise.reduce);       // Array.reduce() for promises
-	when.reduceRight = lift(Promise.reduceRight);  // Array.reduceRight() for promises
-
-	when.isPromiseLike = isPromiseLike;      // Is something promise-like, aka thenable
-
-	when.Promise     = Promise;              // Promise constructor
-	when.defer       = defer;                // Create a {promise, resolve, reject} tuple
-
-	// Error types
-
-	when.TimeoutError = TimeoutError;
-
-	/**
-	 * Get a trusted promise for x, or by transforming x with onFulfilled
-	 *
-	 * @param {*} x
-	 * @param {function?} onFulfilled callback to be called when x is
-	 *   successfully fulfilled.  If promiseOrValue is an immediate value, callback
-	 *   will be invoked immediately.
-	 * @param {function?} onRejected callback to be called when x is
-	 *   rejected.
-	 * @param {function?} onProgress callback to be called when progress updates
-	 *   are issued for x. @deprecated
-	 * @returns {Promise} a new promise that will fulfill with the return
-	 *   value of callback or errback or the completion value of promiseOrValue if
-	 *   callback and/or errback is not supplied.
-	 */
-	function when(x, onFulfilled, onRejected, onProgress) {
-		var p = Promise.resolve(x);
-		if (arguments.length < 2) {
-			return p;
-		}
-
-		return p.then(onFulfilled, onRejected, onProgress);
-	}
-
-	/**
-	 * Creates a new promise whose fate is determined by resolver.
-	 * @param {function} resolver function(resolve, reject, notify)
-	 * @returns {Promise} promise whose fate is determine by resolver
-	 */
-	function promise(resolver) {
-		return new Promise(resolver);
-	}
-
-	/**
-	 * Lift the supplied function, creating a version of f that returns
-	 * promises, and accepts promises as arguments.
-	 * @param {function} f
-	 * @returns {Function} version of f that returns promises
-	 */
-	function lift(f) {
-		return function() {
-			for(var i=0, l=arguments.length, a=new Array(l); i<l; ++i) {
-				a[i] = arguments[i];
-			}
-			return apply(f, this, a);
-		};
-	}
-
-	/**
-	 * Call f in a future turn, with the supplied args, and return a promise
-	 * for the result.
-	 * @param {function} f
-	 * @returns {Promise}
-	 */
-	function attempt(f /*, args... */) {
-		/*jshint validthis:true */
-		for(var i=0, l=arguments.length-1, a=new Array(l); i<l; ++i) {
-			a[i] = arguments[i+1];
-		}
-		return apply(f, this, a);
-	}
-
-	/**
-	 * Creates a {promise, resolver} pair, either or both of which
-	 * may be given out safely to consumers.
-	 * @return {{promise: Promise, resolve: function, reject: function, notify: function}}
-	 */
-	function defer() {
-		return new Deferred();
-	}
-
-	function Deferred() {
-		var p = Promise._defer();
-
-		function resolve(x) { p._handler.resolve(x); }
-		function reject(x) { p._handler.reject(x); }
-		function notify(x) { p._handler.notify(x); }
-
-		this.promise = p;
-		this.resolve = resolve;
-		this.reject = reject;
-		this.notify = notify;
-		this.resolver = { resolve: resolve, reject: reject, notify: notify };
-	}
-
-	/**
-	 * Determines if x is promise-like, i.e. a thenable object
-	 * NOTE: Will return true for *any thenable object*, and isn't truly
-	 * safe, since it may attempt to access the `then` property of x (i.e.
-	 *  clever/malicious getters may do weird things)
-	 * @param {*} x anything
-	 * @returns {boolean} true if x is promise-like
-	 */
-	function isPromiseLike(x) {
-		return x && typeof x.then === 'function';
-	}
-
-	/**
-	 * Return a promise that will resolve only once all the supplied arguments
-	 * have resolved. The resolution value of the returned promise will be an array
-	 * containing the resolution values of each of the arguments.
-	 * @param {...*} arguments may be a mix of promises and values
-	 * @returns {Promise}
-	 */
-	function join(/* ...promises */) {
-		return Promise.all(arguments);
-	}
-
-	/**
-	 * Return a promise that will fulfill once all input promises have
-	 * fulfilled, or reject when any one input promise rejects.
-	 * @param {array|Promise} promises array (or promise for an array) of promises
-	 * @returns {Promise}
-	 */
-	function all(promises) {
-		return when(promises, Promise.all);
-	}
-
-	/**
-	 * Return a promise that will always fulfill with an array containing
-	 * the outcome states of all input promises.  The returned promise
-	 * will only reject if `promises` itself is a rejected promise.
-	 * @param {array|Promise} promises array (or promise for an array) of promises
-	 * @returns {Promise} promise for array of settled state descriptors
-	 */
-	function settle(promises) {
-		return when(promises, Promise.settle);
-	}
-
-	/**
-	 * Promise-aware array map function, similar to `Array.prototype.map()`,
-	 * but input array may contain promises or values.
-	 * @param {Array|Promise} promises array of anything, may contain promises and values
-	 * @param {function(x:*, index:Number):*} mapFunc map function which may
-	 *  return a promise or value
-	 * @returns {Promise} promise that will fulfill with an array of mapped values
-	 *  or reject if any input promise rejects.
-	 */
-	function map(promises, mapFunc) {
-		return when(promises, function(promises) {
-			return Promise.map(promises, mapFunc);
-		});
-	}
-
-	/**
-	 * Filter the provided array of promises using the provided predicate.  Input may
-	 * contain promises and values
-	 * @param {Array|Promise} promises array of promises and values
-	 * @param {function(x:*, index:Number):boolean} predicate filtering predicate.
-	 *  Must return truthy (or promise for truthy) for items to retain.
-	 * @returns {Promise} promise that will fulfill with an array containing all items
-	 *  for which predicate returned truthy.
-	 */
-	function filter(promises, predicate) {
-		return when(promises, function(promises) {
-			return Promise.filter(promises, predicate);
-		});
-	}
-
-	return when;
-});
-})(typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); });
-
-},{"./lib/Promise":110,"./lib/TimeoutError":112,"./lib/apply":113,"./lib/decorators/array":114,"./lib/decorators/flow":115,"./lib/decorators/fold":116,"./lib/decorators/inspect":117,"./lib/decorators/iterate":118,"./lib/decorators/progress":119,"./lib/decorators/timed":120,"./lib/decorators/unhandledRejection":121,"./lib/decorators/with":122}],128:[function(_dereq_,module,exports){
-/*
- * Copyright 2013 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		return {
-
-			/**
-			 * Find objects within a graph the contain a property of a certain name.
-			 *
-			 * NOTE: this method will not discover object graph cycles.
-			 *
-			 * @param {*} obj object to search on
-			 * @param {string} prop name of the property to search for
-			 * @param {Function} callback function to receive the found properties and their parent
-			 */
-			findProperties: function findProperties(obj, prop, callback) {
-				if (typeof obj !== 'object' || obj === null) { return; }
-				if (prop in obj) {
-					callback(obj[prop], obj, prop);
-				}
-				Object.keys(obj).forEach(function (key) {
-					findProperties(obj[key], prop, callback);
-				});
-			}
-
-		};
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],129:[function(_dereq_,module,exports){
-/*
- * Copyright 2013 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var when;
-
-		when = _dereq_('when');
-
-		/**
-		 * Create a promise whose work is started only when a handler is registered.
-		 *
-		 * The work function will be invoked at most once. Thrown values will result
-		 * in promise rejection.
-		 *
-		 * @param {Function} work function whose ouput is used to resolve the
-		 *   returned promise.
-		 * @returns {Promise} a lazy promise
-		 */
-		function lazyPromise(work) {
-			var defer, started, resolver, promise, then;
-
-			defer = when.defer();
-			started = false;
-
-			resolver = defer.resolver;
-			promise = defer.promise;
-			then = promise.then;
-
-			promise.then = function () {
-				if (!started) {
-					started = true;
-					when.attempt(work).then(resolver.resolve, resolver.reject);
-				}
-				return then.apply(promise, arguments);
-			};
-
-			return promise;
-		}
-
-		return lazyPromise;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"when":127}],130:[function(_dereq_,module,exports){
-/*
- * Copyright 2012-2013 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	// derived from dojo.mixin
-	define(function (/* require */) {
-
-		var empty = {};
-
-		/**
-		 * Mix the properties from the source object into the destination object.
-		 * When the same property occurs in more then one object, the right most
-		 * value wins.
-		 *
-		 * @param {Object} dest the object to copy properties to
-		 * @param {Object} sources the objects to copy properties from.  May be 1 to N arguments, but not an Array.
-		 * @return {Object} the destination object
-		 */
-		function mixin(dest /*, sources... */) {
-			var i, l, source, name;
-
-			if (!dest) { dest = {}; }
-			for (i = 1, l = arguments.length; i < l; i += 1) {
-				source = arguments[i];
-				for (name in source) {
-					if (!(name in dest) || (dest[name] !== source[name] && (!(name in empty) || empty[name] !== source[name]))) {
-						dest[name] = source[name];
-					}
-				}
-			}
-
-			return dest; // Object
-		}
-
-		return mixin;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],131:[function(_dereq_,module,exports){
-/*
- * Copyright 2012 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		/**
-		 * Normalize HTTP header names using the pseudo camel case.
-		 *
-		 * For example:
-		 *   content-type         -> Content-Type
-		 *   accepts              -> Accepts
-		 *   x-custom-header-name -> X-Custom-Header-Name
-		 *
-		 * @param {string} name the raw header name
-		 * @return {string} the normalized header name
-		 */
-		function normalizeHeaderName(name) {
-			return name.toLowerCase()
-				.split('-')
-				.map(function (chunk) { return chunk.charAt(0).toUpperCase() + chunk.slice(1); })
-				.join('-');
-		}
-
-		return normalizeHeaderName;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],132:[function(_dereq_,module,exports){
-/*
- * Copyright 2014-2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (_dereq_) {
-
-		var when = _dereq_('when'),
-			normalizeHeaderName = _dereq_('./normalizeHeaderName');
-
-		function property(promise, name) {
-			return promise.then(
-				function (value) {
-					return value && value[name];
-				},
-				function (value) {
-					return when.reject(value && value[name]);
-				}
-			);
-		}
-
-		/**
-		 * Obtain the response entity
-		 *
-		 * @returns {Promise} for the response entity
-		 */
-		function entity() {
-			/*jshint validthis:true */
-			return property(this, 'entity');
-		}
-
-		/**
-		 * Obtain the response status
-		 *
-		 * @returns {Promise} for the response status
-		 */
-		function status() {
-			/*jshint validthis:true */
-			return property(property(this, 'status'), 'code');
-		}
-
-		/**
-		 * Obtain the response headers map
-		 *
-		 * @returns {Promise} for the response headers map
-		 */
-		function headers() {
-			/*jshint validthis:true */
-			return property(this, 'headers');
-		}
-
-		/**
-		 * Obtain a specific response header
-		 *
-		 * @param {String} headerName the header to retrieve
-		 * @returns {Promise} for the response header's value
-		 */
-		function header(headerName) {
-			/*jshint validthis:true */
-			headerName = normalizeHeaderName(headerName);
-			return property(this.headers(), headerName);
-		}
-
-		/**
-		 * Follow a related resource
-		 *
-		 * The relationship to follow may be define as a plain string, an object
-		 * with the rel and params, or an array containing one or more entries
-		 * with the previous forms.
-		 *
-		 * Examples:
-		 *   response.follow('next')
-		 *
-		 *   response.follow({ rel: 'next', params: { pageSize: 100 } })
-		 *
-		 *   response.follow([
-		 *       { rel: 'items', params: { projection: 'noImages' } },
-		 *       'search',
-		 *       { rel: 'findByGalleryIsNull', params: { projection: 'noImages' } },
-		 *       'items'
-		 *   ])
-		 *
-		 * @param {String|Object|Array} rels one, or more, relationships to follow
-		 * @returns ResponsePromise<Response> related resource
-		 */
-		function follow(rels) {
-			/*jshint validthis:true */
-			rels = [].concat(rels);
-			return make(when.reduce(rels, function (response, rel) {
-				if (typeof rel === 'string') {
-					rel = { rel: rel };
-				}
-				if (typeof response.entity.clientFor !== 'function') {
-					throw new Error('Hypermedia response expected');
-				}
-				var client = response.entity.clientFor(rel.rel);
-				return client({ params: rel.params });
-			}, this));
-		}
-
-		/**
-		 * Wrap a Promise as an ResponsePromise
-		 *
-		 * @param {Promise<Response>} promise the promise for an HTTP Response
-		 * @returns {ResponsePromise<Response>} wrapped promise for Response with additional helper methods
-		 */
-		function make(promise) {
-			promise.status = status;
-			promise.headers = headers;
-			promise.header = header;
-			promise.entity = entity;
-			promise.follow = follow;
-			return promise;
-		}
-
-		function responsePromise() {
-			return make(when.apply(when, arguments));
-		}
-
-		responsePromise.make = make;
-		responsePromise.reject = function (val) {
-			return make(when.reject(val));
-		};
-		responsePromise.promise = function (func) {
-			return make(when.promise(func));
-		};
-
-		return responsePromise;
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"./normalizeHeaderName":131,"when":127}],133:[function(_dereq_,module,exports){
-/*
- * Copyright 2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	define(function (/* require */) {
-
-		var charMap;
-
-		charMap = (function () {
-			var strings = {
-				alpha: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-				digit: '0123456789'
-			};
-
-			strings.genDelims = ':/?#[]@';
-			strings.subDelims = '!$&\'()*+,;=';
-			strings.reserved = strings.genDelims + strings.subDelims;
-			strings.unreserved = strings.alpha + strings.digit + '-._~';
-			strings.url = strings.reserved + strings.unreserved;
-			strings.scheme = strings.alpha + strings.digit + '+-.';
-			strings.userinfo = strings.unreserved + strings.subDelims + ':';
-			strings.host = strings.unreserved + strings.subDelims;
-			strings.port = strings.digit;
-			strings.pchar = strings.unreserved + strings.subDelims + ':@';
-			strings.segment = strings.pchar;
-			strings.path = strings.segment + '/';
-			strings.query = strings.pchar + '/?';
-			strings.fragment = strings.pchar + '/?';
-
-			return Object.keys(strings).reduce(function (charMap, set) {
-				charMap[set] = strings[set].split('').reduce(function (chars, myChar) {
-					chars[myChar] = true;
-					return chars;
-				}, {});
-				return charMap;
-			}, {});
-		}());
-
-		function encode(str, allowed) {
-			if (typeof str !== 'string') {
-				throw new Error('String required for URL encoding');
-			}
-			return str.split('').map(function (myChar) {
-				if (allowed.hasOwnProperty(myChar)) {
-					return myChar;
-				}
-				var code = myChar.charCodeAt(0);
-				if (code <= 127) {
-					return '%' + code.toString(16).toUpperCase();
-				}
-				else {
-					return encodeURIComponent(myChar).toUpperCase();
-				}
-			}).join('');
-		}
-
-		function makeEncoder(allowed) {
-			allowed = allowed || charMap.unreserved;
-			return function (str) {
-				return encode(str, allowed);
-			};
-		}
-
-		function decode(str) {
-			return decodeURIComponent(str);
-		}
-
-		return {
-
-			/*
-			 * Decode URL encoded strings
-			 *
-			 * @param {string} URL encoded string
-			 * @returns {string} URL decoded string
-			 */
-			decode: decode,
-
-			/*
-			 * URL encode a string
-			 *
-			 * All but alpha-numerics and a very limited set of punctuation - . _ ~ are
-			 * encoded.
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encode: makeEncoder(),
-
-			/*
-			* URL encode a URL
-			*
-			* All character permitted anywhere in a URL are left unencoded even
-			* if that character is not permitted in that portion of a URL.
-			*
-			* Note: This method is typically not what you want.
-			*
-			* @param {string} string to encode
-			* @returns {string} URL encoded string
-			*/
-			encodeURL: makeEncoder(charMap.url),
-
-			/*
-			 * URL encode the scheme portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodeScheme: makeEncoder(charMap.scheme),
-
-			/*
-			 * URL encode the user info portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodeUserInfo: makeEncoder(charMap.userinfo),
-
-			/*
-			 * URL encode the host portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodeHost: makeEncoder(charMap.host),
-
-			/*
-			 * URL encode the port portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodePort: makeEncoder(charMap.port),
-
-			/*
-			 * URL encode a path segment portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodePathSegment: makeEncoder(charMap.segment),
-
-			/*
-			 * URL encode the path portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodePath: makeEncoder(charMap.path),
-
-			/*
-			 * URL encode the query portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodeQuery: makeEncoder(charMap.query),
-
-			/*
-			 * URL encode the fragment portion of a URL
-			 *
-			 * @param {string} string to encode
-			 * @returns {string} URL encoded string
-			 */
-			encodeFragment: makeEncoder(charMap.fragment)
-
-		};
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{}],134:[function(_dereq_,module,exports){
-/*
- * Copyright 2015 the original author or authors
- * @license MIT, see LICENSE.txt for details
- *
- * @author Scott Andrews
- */
-
-(function (define) {
-	'use strict';
-
-	var undef;
-
-	define(function (_dereq_) {
-
-		var uriEncoder, operations, prefixRE;
-
-		uriEncoder = _dereq_('./uriEncoder');
-
-		prefixRE = /^([^:]*):([0-9]+)$/;
-		operations = {
-			'':  { first: '',  separator: ',', named: false, empty: '',  encoder: uriEncoder.encode },
-			'+': { first: '',  separator: ',', named: false, empty: '',  encoder: uriEncoder.encodeURL },
-			'#': { first: '#', separator: ',', named: false, empty: '',  encoder: uriEncoder.encodeURL },
-			'.': { first: '.', separator: '.', named: false, empty: '',  encoder: uriEncoder.encode },
-			'/': { first: '/', separator: '/', named: false, empty: '',  encoder: uriEncoder.encode },
-			';': { first: ';', separator: ';', named: true,  empty: '',  encoder: uriEncoder.encode },
-			'?': { first: '?', separator: '&', named: true,  empty: '=', encoder: uriEncoder.encode },
-			'&': { first: '&', separator: '&', named: true,  empty: '=', encoder: uriEncoder.encode },
-			'=': { reserved: true },
-			',': { reserved: true },
-			'!': { reserved: true },
-			'@': { reserved: true },
-			'|': { reserved: true }
-		};
-
-		function apply(operation, expression, params) {
-			/*jshint maxcomplexity:11 */
-			return expression.split(',').reduce(function (result, variable) {
-				var opts, value;
-
-				opts = {};
-				if (variable.slice(-1) === '*') {
-					variable = variable.slice(0, -1);
-					opts.explode = true;
-				}
-				if (prefixRE.test(variable)) {
-					var prefix = prefixRE.exec(variable);
-					variable = prefix[1];
-					opts.maxLength = parseInt(prefix[2]);
-				}
-
-				variable = uriEncoder.decode(variable);
-				value = params[variable];
-
-				if (value === undef || value === null) {
-					return result;
-				}
-				if (Array.isArray(value)) {
-					result += value.reduce(function (result, value) {
-						if (result.length) {
-							result += opts.explode ? operation.separator : ',';
-							if (operation.named && opts.explode) {
-								result += operation.encoder(variable);
-								result += value.length ? '=' : operation.empty;
-							}
-						}
-						else {
-							result += operation.first;
-							if (operation.named) {
-								result += operation.encoder(variable);
-								result += value.length ? '=' : operation.empty;
-							}
-						}
-						result += operation.encoder(value);
-						return result;
-					}, '');
-				}
-				else if (typeof value === 'object') {
-					result += Object.keys(value).reduce(function (result, name) {
-						if (result.length) {
-							result += opts.explode ? operation.separator : ',';
-						}
-						else {
-							result += operation.first;
-							if (operation.named && !opts.explode) {
-								result += operation.encoder(variable);
-								result += value[name].length ? '=' : operation.empty;
-							}
-						}
-						result += operation.encoder(name);
-						result += opts.explode ? '=' : ',';
-						result += operation.encoder(value[name]);
-						return result;
-					}, '');
-				}
-				else {
-					value = String(value);
-					if (opts.maxLength) {
-						value = value.slice(0, opts.maxLength);
-					}
-					result += result.length ? operation.separator : operation.first;
-					if (operation.named) {
-						result += operation.encoder(variable);
-						result += value.length ? '=' : operation.empty;
-					}
-					result += operation.encoder(value);
-				}
-
-				return result;
-			}, '');
-		}
-
-		function expandExpression(expression, params) {
-			var operation;
-
-			operation = operations[expression.slice(0,1)];
-			if (operation) {
-				expression = expression.slice(1);
-			}
-			else {
-				operation = operations[''];
-			}
-
-			if (operation.reserved) {
-				throw new Error('Reserved expression operations are not supported');
-			}
-
-			return apply(operation, expression, params);
-		}
-
-		function expandTemplate(template, params) {
-			var start, end, uri;
-
-			uri = '';
-			end = 0;
-			while (true) {
-				start = template.indexOf('{', end);
-				if (start === -1) {
-					// no more expressions
-					uri += template.slice(end);
-					break;
-				}
-				uri += template.slice(end, start);
-				end = template.indexOf('}', start) + 1;
-				uri += expandExpression(template.slice(start + 1, end - 1), params);
-			}
-
-			return uri;
-		}
-
-		return {
-
-			/**
-			 * Expand a URI Template with parameters to form a URI.
-			 *
-			 * Full implementation (level 4) of rfc6570.
-			 * @see https://tools.ietf.org/html/rfc6570
-			 *
-			 * @param {string} template URI template
-			 * @param {Object} [params] params to apply to the template durring expantion
-			 * @returns {string} expanded URI
-			 */
-			expand: expandTemplate
-
-		};
-
-	});
-
-}(
-	typeof define === 'function' && define.amd ? define : function (factory) { module.exports = factory(_dereq_); }
-	// Boilerplate for AMD and Node
-));
-
-},{"./uriEncoder":133}]},{},[1]);
+},{}]},{},[1]);
