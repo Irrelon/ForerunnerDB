@@ -860,10 +860,15 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 									// The new document doesn't have this field, remove it from the doc
 									this._updateUnset(doc, tempKey);
 									updated = true;
-								} else {
-									this._updateOverwrite(doc, tempKey, replaceObj[tempKey]);
-									updated = true;
 								}
+							}
+						}
+
+						// Loop the new item props and update the doc
+						for (tempKey in replaceObj) {
+							if (replaceObj.hasOwnProperty(tempKey) && tempKey !== pk) {
+								this._updateOverwrite(doc, tempKey, replaceObj[tempKey]);
+								updated = true;
 							}
 						}
 						break;
