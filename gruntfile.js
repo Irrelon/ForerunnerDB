@@ -414,6 +414,11 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./js/unitTests/lib/' + file);
 			}
 
+			if (fs.existsSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file)) {
+				fs.unlinkSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
+			}
+
+			fs.copySync('./js/dist/' + file, './ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
 		};
 
@@ -440,13 +445,13 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./chrome-extension/js/' + file);
 			}
 
-			if (fs.existsSync('./ionicExample/www/js/forerunnerdb/js/dist/' + file)) {
-				fs.unlinkSync('./ionicExample/www/js/forerunnerdb/js/dist/' + file);
+			if (fs.existsSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file)) {
+				fs.unlinkSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 			}
 
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
 			fs.copySync('./js/dist/' + file, './chrome-extension/js/' + file);
-			fs.copySync('./js/dist/' + file, './ionicExample/www/js/forerunnerdb/js/dist/' + file);
+			fs.copySync('./js/dist/' + file, './ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 		};
 
 		copyFile('fdb-all.min.js');
