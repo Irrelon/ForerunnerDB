@@ -804,6 +804,9 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		tmpIndex,
 		tmpCount,
 		tempIndex,
+		tempKey,
+		replaceObj,
+		pk,
 		pathInstance,
 		sourceIsArray,
 		updateIsArray,
@@ -842,6 +845,27 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 						}
 
 						updated = updated || recurseUpdated;
+						break;
+
+					case '$replace':
+						operation = true;
+						replaceObj = update.$replace;
+						pk = this.primaryKey();
+
+						// Loop the existing item properties and compare with
+						// the replacement (never remove primary key)
+						for (tempKey in doc) {
+							if (doc.hasOwnProperty(tempKey) && tempKey !== pk) {
+								if (replaceObj[tempKey] === undefined) {
+									// The new document doesn't have this field, remove it from the doc
+									this._updateUnset(doc, tempKey);
+									updated = true;
+								} else {
+									this._updateOverwrite(doc, tempKey, replaceObj[tempKey]);
+									updated = true;
+								}
+							}
+						}
 						break;
 
 					default:
