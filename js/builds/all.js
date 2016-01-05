@@ -6,8 +6,7 @@ var Core = require('./core'),
 	Document = require('../lib/Document'),
 	Overview = require('../lib/Overview'),
 	Grid = require('../lib/Grid'),
-	Rest = require('../lib/Rest'),
-	Odm = require('../lib/Odm');
+	NodeApiClient = require('../lib/NodeApiClient');
 
 if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
