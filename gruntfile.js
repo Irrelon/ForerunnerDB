@@ -440,8 +440,13 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./chrome-extension/js/' + file);
 			}
 
+			if (fs.existsSync('./ionicExample/www/js/forerunnerdb/js/dist/' + file)) {
+				fs.unlinkSync('./ionicExample/www/js/forerunnerdb/js/dist/' + file);
+			}
+
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
 			fs.copySync('./js/dist/' + file, './chrome-extension/js/' + file);
+			fs.copySync('./js/dist/' + file, './ionicExample/www/js/forerunnerdb/js/dist/' + file);
 		};
 
 		copyFile('fdb-all.min.js');
