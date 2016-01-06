@@ -503,6 +503,10 @@ Collection.prototype.init = function (name, options) {
 		changeTimestamp: false
 	};
 
+	if (this._options.db) {
+		this.db(this._options.db);
+	}
+
 	// Create an object to store internal protected data
 	this._metaData = {};
 
@@ -10226,7 +10230,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.505',
+	version: '1.3.507',
 	modules: {},
 	plugins: {},
 
