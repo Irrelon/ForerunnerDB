@@ -40,25 +40,24 @@ clients. ForerunnerDB is the most advanced, battle-tested and production ready
 browser-based JSON database system available today.
 
 ## What is ForerunnerDB's Primary Use Case?
-ForerunnerDB was created primarily to allow web application developers to easily
-store, query and manipulate JSON data in the browser via a simple query language.
-It provides the ability to store data on the front-end and query it throughout your
-application making handling JSON data client-side significantly easier.
+ForerunnerDB was created primarily to allow web (and mobile web / hybrid)
+application developers to easily store, query and manipulate JSON data in
+the browser / mobile app via a simple query language, making handling JSON
+data significantly easier.
 
-It is designed to compliment a server-side database / API to allow your client to
-easily handle data and CRUD it in a fast and efficient way. While it can run on
-the server in Node.js, ForerunnerDB is NOT designed as a replacement or substitute
-for MongoDB on the server-side. It's use in server-side applications is geared more
-towards having a rich query language to query an in-memory store for your application.
+ForerunnerDB supports data persistence on both the client (via LocalForage)
+and in Node.js (by saving and loading JSON data files).
 
-ForerunnerDB supports data persistence on both the client (via LocalForage) and in
-Node.js (by saving and loading JSON data files).
+If you build advanced web applications with AngularJS or perhaps your own
+framework or if you are looking to build a server application / API that
+needs a fast queryable in-memory store with file-based data persistence and
+a very easy setup (simple installation via NPM and no requirements except
+Node.js) you will also find ForerunnerDB very useful.
 
-If you build advanced web applications with AngularJS or perhaps your own framework
-or if you are looking to build a server application / API that needs a fast
-queryable in-memory store with file-based data persistence and a very easy setup (
-simple installation via NPM and no requirements except Node.js) you will also find
-ForerunnerDB very useful.
+> An example hybrid application that runs on iOS, Android and Windows Mobile
+via Ionic (AngluarJS + Cordova with some nice extensions) is available in
+this repository under the ionicExampleClient folder.
+[See here for more details](#ionic-example-app). 
 
 ## Download
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
@@ -3970,3 +3969,210 @@ Migrating old code should be as simple as searching for instances of "join" and
 replacing with "$join" within ForerunnerDB queries in your application. Be careful not
 to search / replace your entire codebase for "join" to "$join" as this may break other
 code in your project. Ensure that changes are limited to ForerunnerDB query sections.
+
+# ForerunnerDB Built-In JSON REST API Server
+When running ForerunnerDB under Node.js you can activate a powerful REST API server
+that allows you to build a backend for your application in record speed, providing
+persistence, access control, replication etc without having to write complex code.
+
+To use the built-in REST API server simply install ForerunnerDB via NPM:
+
+```bash
+npm install forerunnerdb
+```
+
+Then create a JavaScript file with the contents:
+
+```js
+"use strict";
+
+var ForerunnerDB = require('forerunnerdb'),
+	fdb = new ForerunnerDB(),
+	db = fdb.db('testApi');
+
+// Enable database debug logging to the console (disable this in production)
+db.debug(true);
+
+// Set the persist plugin's data folder (where to store data files)
+db.persist.dataDir('./data');
+
+// Tell the database to load and save data for collections automatically
+// this will auto-persist any data inserted in the database to disk
+// and automatically load it when the server is restarted
+db.persist.auto(true);
+
+// Set access control to allow all HTTP verbs on all collections
+// db.api.access(<collection name>, <http verb>, <your control method>);
+db.api.access('*', '*', function (modelName, methodName, req, callback) {
+	callback(false, modelName, methodName, req);
+});
+
+// Ask the API server to start listening on all IP addresses assigned to
+// this machine on port 9010
+db.api.listen('0.0.0.0', '9010', function () {
+	console.log('Server started!');
+});
+```
+
+You can now access your REST API via: http://0.0.0.0:9010
+
+### Using the REST API
+The REST API follows standard REST conventions for using HTTP verbs to describe
+an action.
+
+##### Accessing all collection's documents:
+
+	GET http://0.0.0.0:9010/<database name>/<collection name>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "get",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection",
+	"dataType": "json",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+##### Accessing an individual document in a collection by id:
+
+	GET http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "get",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"dataType": "json",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+##### Creating a new document:
+
+	POST http://0.0.0.0:9010/<database name>/<collection name>
+	BODY <document contents>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "post",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection",
+	"dataType": "json",
+	"data": JSON.stringify({
+		"name": "test"
+	}),
+	"contentType": "application/json; charset=utf-8",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+##### Replacing a document by id:
+
+	PUT http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	BODY <document contents>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "put",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"dataType": "json",
+	"data": JSON.stringify({
+		"name": "test"
+	}),
+	"contentType": "application/json; charset=utf-8",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+##### Updating a document by id:
+
+	PATCH http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	BODY <document contents>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "patch",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"dataType": "json",
+	"data": JSON.stringify({
+		"name": "test"
+	}),
+	"contentType": "application/json; charset=utf-8",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+##### Deleting a document by id:
+
+	DELETE http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+
+Example in jQuery:
+
+```js
+$.ajax({
+	"method": "delete",
+	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"dataType": "json",
+	"contentType": "application/json; charset=utf-8",
+	"success": function (data) {
+		console.log(data);
+	}
+});
+```
+
+# Ionic Example App
+We've put together a very basic demo app that showcases ForerunnerDB's client-side
+usage in an Ionic app (AngularJS + Apache Cordova).
+
+## Running the Example App
+> You must have node.js installed to run the example because it uses ForerunnerDB's
+built-in REST API server for a quick and easy way to simulate a back-end.
+
+> The example app requires that you have already installed ionic on your sytem
+via *npm install -g ionic*
+
+1. Start the app's server
+
+```bash
+cd ./ionicExampleServer
+node server.js
+```
+
+2. Start ionic app
+
+```bash
+cd ./ionicExampleClient
+ionic run browser
+```
+
+The app will auto-navigate to the settings screen if no settings are found in the
+browser's persistent storage. Enter these details:
+
+```
+Server: http://0.0.0.0
+Port: 9010
+```
+
+Click the Test Connection button to check that the connection is working.
+
+Now you can click the menu icon top left and select "Items". Clicking the "Add"
+button top right will allow you to add more items. If you open more browser windows
+you can see them all synchronise as changes are made to the data on the server!
