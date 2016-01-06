@@ -1412,11 +1412,11 @@ The result of the query after execution is:
 
 ```json
 [{
-	_id: 3,
-	name: "Bob"
+	"_id": 3,
+	"name": "Bob"
 }, {
-	_id: 4,
-	name: "Anne"
+	"_id": 4,
+	"name": "Anne"
 }]
 ```
 
@@ -2674,28 +2674,28 @@ collection.explain({
 
 The result shows that the largest amount of time was taken in the "tableScan" step:
 
-```json
+```
 {
-	analysis: Object,
-	flag: Object,
-	index: Object,
-	log: Array[0],
-	operation: "find",
-	results: 128, // Will vary depending on your random entries inserted earlier
-	steps: Array[4] // Lists the steps Forerunner took to generate the results
+	"analysis": Object,
+	"flag": Object,
+	"index": Object,
+	"log": Array[0],
+	"operation": "find",
+	"results": 128, // Will vary depending on your random entries inserted earlier
+	"steps": Array[4] // Lists the steps Forerunner took to generate the results
 		[0]: Object
-			name: "analyseQuery",
-			totalMs: 0
+			"name": "analyseQuery",
+			"totalMs": 0
 		[1]: Object
-			name: "checkIndexes",
-			totalMs: 0
+			"name": "checkIndexes",
+			"totalMs": 0
 		[2]: Object
-			name: "tableScan",
-			totalMs: 54
+			"name": "tableScan",
+			"totalMs": 54
 		[3]: Object
-			name: "decouple",
-			totalMs: 1,
-	time: Object
+			"name": "decouple",
+			"totalMs": 1,
+	"time": Object
 }
 ```
 
@@ -2718,7 +2718,7 @@ collection.explain({
 
 Now the explain output has some different results:
 
-```json
+```
 {
 	analysis: Object,
 	flag: Object,
@@ -2751,7 +2751,7 @@ Now the explain output has some different results:
 
 The query plan shows that the index was used because it has an "indexLookup" step, however we still have a "tableScan" step that took 13 milliseconds to execute. Why was this? If we delve into the query plan a little more by expanding the analysis object we can see why:
 
-```json
+```
 {
 	analysis: Object
 		hasJoin: false,
@@ -2807,7 +2807,7 @@ collection.explain({
 
 Which gives:
 
-```json
+```
 {
 	analysis: Object,
 	flag: Object,
@@ -3118,7 +3118,7 @@ group.find();
 Result:
 
 ```json
-[{name: "Jim"}, {name: "Bob"}]
+[{"name": "Jim"}, {"name": "Bob"}]
 ```
 
 ### Adding and Removing Collections From a Group
@@ -3372,7 +3372,7 @@ cartSummary.exec();
 Result:
 
 ```json
-{count: 2, total: 31.979999999999997}
+{"count": 2, "total": 31.979999999999997}
 ```
 
 ## Data Binding
