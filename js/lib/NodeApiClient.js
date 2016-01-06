@@ -74,8 +74,15 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, options, call
 	source.addEventListener('open', function (e) {
 		// The connection is open, grab the initial data
 		self.get(self.server() + path, function (err, data) {
-			collectionInstance.insert(data);
+			collectionInstance.upsert(data);
 		});
+	}, false);
+
+	source.addEventListener('error', function (e) {
+		if (source.readyState === 2) {
+			// The connection is dead, remove the connection
+			collectionInstance.unSync();
+		}
 	}, false);
 
 	source.addEventListener('insert', function(e) {
@@ -126,7 +133,9 @@ Collection.prototype.sync = new Overload({
 
 Collection.prototype.unSync = function () {
 	if (this.__apiConnection) {
-		this.__apiConnection.close();
+		if (this.__apiConnection.readyState !== 2) {
+			this.__apiConnection.close();
+		}
 
 		delete this.__apiConnection;
 
