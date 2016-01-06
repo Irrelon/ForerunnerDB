@@ -35,6 +35,10 @@ Collection.prototype.init = function (name, options) {
 		changeTimestamp: false
 	};
 
+	if (this._options.db) {
+		this.db(this._options.db);
+	}
+
 	// Create an object to store internal protected data
 	this._metaData = {};
 
