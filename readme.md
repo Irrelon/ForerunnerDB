@@ -4014,6 +4014,12 @@ db.api.listen('0.0.0.0', '9010', function () {
 });
 ```
 
+Execute the file under node.js via:
+
+```bash
+node <yourFileName>.js
+```
+
 You can now access your REST API via: http://0.0.0.0:9010
 
 ### Using the REST API
