@@ -16,7 +16,7 @@ Serialiser.prototype.init = function () {
 	this._encoder = [];
 	this._decoder = {};
 
-	// Register our handlers
+	// Handler for Date() objects
 	this.registerEncoder('$date', function (data) {
 		if (data instanceof Date) {
 			return data.toISOString();
@@ -25,6 +25,20 @@ Serialiser.prototype.init = function () {
 
 	this.registerDecoder('$date', function (data) {
 		return new Date(data);
+	});
+
+	// Handler for RegExp() objects
+	this.registerEncoder('$regexp', function (data) {
+		if (data instanceof RegExp) {
+			return {
+				source: data.source,
+				params: '' + (data.global ? 'g' : '') + (data.ignoreCase ? 'i' : '')
+			};
+		}
+	});
+
+	this.registerDecoder('$regexp', function (data) {
+		return new RegExp(data.source, data.params);
 	});
 };
 
