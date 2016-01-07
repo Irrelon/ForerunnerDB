@@ -74,114 +74,149 @@ KeyValueStore.prototype.get = function (key) {
 
 /**
  * Get / set the primary key.
- * @param {*} obj A lookup query, can be a string key, an array of string keys,
- * an object with further query clauses or a regular expression that should be
- * run against all keys.
+ * @param {*} val A lookup query.
+ * @param {Boolean=} negate If true will return only data that DOESN'T
+ * match the lookup query.
  * @returns {*}
  */
-KeyValueStore.prototype.lookup = function (obj) {
-	var pKeyVal = obj[this._primaryKey],
+KeyValueStore.prototype.lookup = function (val) {
+	var pk = this._primaryKey,
+		valType = typeof val,
 		arrIndex,
 		arrCount,
 		lookupItem,
-		result;
-
-	if (pKeyVal instanceof Array) {
-		// An array of primary keys, find all matches
-		arrCount = pKeyVal.length;
 		result = [];
 
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			lookupItem = this._data[pKeyVal[arrIndex]];
-
-			if (lookupItem) {
-				result.push(lookupItem);
-			}
-		}
-
-		return result;
-	} else if (pKeyVal instanceof RegExp) {
-		// Create new data
-		result = [];
-
-		for (arrIndex in this._data) {
-			if (this._data.hasOwnProperty(arrIndex)) {
-				if (pKeyVal.test(arrIndex)) {
-					result.push(this._data[arrIndex]);
-				}
-			}
-		}
-
-		return result;
-	} else if (typeof pKeyVal === 'object') {
-		// The primary key clause is an object, now we have to do some
-		// more extensive searching
-		if (pKeyVal.$ne) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (arrIndex !== pKeyVal.$ne) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$in && (pKeyVal.$in instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (pKeyVal.$in.indexOf(arrIndex) > -1) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$nin && (pKeyVal.$nin instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (pKeyVal.$nin.indexOf(arrIndex) === -1) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$or && (pKeyVal.$or instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex = 0; arrIndex < pKeyVal.$or.length; arrIndex++) {
-				result = result.concat(this.lookup(pKeyVal.$or[arrIndex]));
-			}
-
-			return result;
-		}
-	} else {
-		// Key is a basic lookup from string
-		lookupItem = this._data[pKeyVal];
-
+	// Check for early exit conditions
+	if (valType === 'string' || valType === 'number') {
+		lookupItem = this.get(val);
 		if (lookupItem !== undefined) {
 			return [lookupItem];
 		} else {
 			return [];
 		}
+	} else if (valType === 'object') {
+		if (val instanceof Array) {
+			// An array of primary keys, find all matches
+			arrCount = val.length;
+			result = [];
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				lookupItem = this.get(val[arrIndex]);
+
+				if (lookupItem) {
+					result.push(lookupItem);
+				}
+			}
+
+			return result;
+		} else if (val[pk]) {
+			return this.lookup(val[pk]);
+		}
 	}
+
+	// COMMENTED AS CODE WILL NEVER BE REACHED
+	// Complex lookup
+	/*lookupData = this._lookupKeys(val);
+	keys = lookupData.keys;
+	negate = lookupData.negate;
+
+	if (!negate) {
+		// Loop keys and return values
+		for (arrIndex = 0; arrIndex < keys.length; arrIndex++) {
+			result.push(this.get(keys[arrIndex]));
+		}
+	} else {
+		// Loop data and return non-matching keys
+		for (arrIndex in this._data) {
+			if (this._data.hasOwnProperty(arrIndex)) {
+				if (keys.indexOf(arrIndex) === -1) {
+					result.push(this.get(arrIndex));
+				}
+			}
+		}
+	}
+
+	return result;*/
 };
+
+// COMMENTED AS WE ARE NOT CURRENTLY PASSING COMPLEX QUERIES TO KEYVALUESTORE INDEXES
+/*KeyValueStore.prototype._lookupKeys = function (val) {
+	var pk = this._primaryKey,
+		valType = typeof val,
+		arrIndex,
+		arrCount,
+		lookupItem,
+		bool,
+		result;
+
+	if (valType === 'string' || valType === 'number') {
+		return {
+			keys: [val],
+			negate: false
+		};
+	} else if (valType === 'object') {
+		if (val instanceof RegExp) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (val.test(arrIndex)) {
+						result.push(arrIndex);
+					}
+				}
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val instanceof Array) {
+			// An array of primary keys, find all matches
+			arrCount = val.length;
+			result = [];
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				result = result.concat(this._lookupKeys(val[arrIndex]).keys);
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val.$in && (val.$in instanceof Array)) {
+			return {
+				keys: this._lookupKeys(val.$in).keys,
+				negate: false
+			};
+		} else if (val.$nin && (val.$nin instanceof Array)) {
+			return {
+				keys: this._lookupKeys(val.$nin).keys,
+				negate: true
+			};
+		} else if (val.$ne) {
+			return {
+				keys: this._lookupKeys(val.$ne, true).keys,
+				negate: true
+			};
+		} else if (val.$or && (val.$or instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex = 0; arrIndex < val.$or.length; arrIndex++) {
+				result = result.concat(this._lookupKeys(val.$or[arrIndex]).keys);
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val[pk]) {
+			return this._lookupKeys(val[pk]);
+		}
+	}
+};*/
 
 /**
  * Removes data for the given key from the store.
