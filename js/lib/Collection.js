@@ -2834,27 +2834,39 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		indexLookup,
 		pathSolver,
 		queryKeyCount,
+		pkQueryType,
+		lookupResult,
 		i;
 
 	// Check if the query is a primary key lookup
 	op.time('checkIndexes');
 	pathSolver = new Path();
-	queryKeyCount = pathSolver.countKeys(query);
+	queryKeyCount = pathSolver.parseArr(query, {
+		ignore:/\$/,
+		verbose: true
+	}).length;
 
 	if (queryKeyCount) {
 		if (query[this._primaryKey] !== undefined) {
-			// Return item via primary key possible
-			op.time('checkIndexMatch: Primary Key');
-			analysis.indexMatch.push({
-				lookup: this._primaryIndex.lookup(query, options),
-				keyData: {
-					matchedKeys: [this._primaryKey],
-					totalKeyCount: queryKeyCount,
-					score: 1
-				},
-				index: this._primaryIndex
-			});
-			op.time('checkIndexMatch: Primary Key');
+			// Check suitability of querying key value index
+			pkQueryType = typeof query[this._primaryKey];
+
+			if (pkQueryType === 'string' || pkQueryType === 'number' || query[this._primaryKey] instanceof Array) {
+				// Return item via primary key possible
+				op.time('checkIndexMatch: Primary Key');
+				lookupResult = this._primaryIndex.lookup(query, options);
+
+				analysis.indexMatch.push({
+					lookup: lookupResult,
+					keyData: {
+						matchedKeys: [this._primaryKey],
+						totalKeyCount: queryKeyCount,
+						score: 1
+					},
+					index: this._primaryIndex
+				});
+				op.time('checkIndexMatch: Primary Key');
+			}
 		}
 
 		// Check if an index can speed up the query
@@ -3164,12 +3176,12 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 	}
 
-	if (this._indexById[index.id()]) {
+	/*if (this._indexById[index.id()]) {
 		// Index already exists
 		return {
 			err: 'Index with those keys already exists'
 		};
-	}
+	}*/
 
 	// Create the index
 	index.rebuild();
@@ -3229,7 +3241,7 @@ Collection.prototype.diff = function (collection) {
 		remove: []
 	};
 
-	var pm = this.primaryKey(),
+	var pk = this.primaryKey(),
 		arr,
 		arrIndex,
 		arrItem,
