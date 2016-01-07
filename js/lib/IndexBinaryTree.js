@@ -1,24 +1,24 @@
 "use strict";
 
 /*
-name
-id
-rebuild
-state
-match
-lookup
+name(string)
+id(string)
+rebuild(null)
+state ?? needed?
+match(query, options)
+lookup(query, options)
+insert(doc)
+remove(doc)
+primaryKey(string)
+collection(collection)
 */
 
 var Shared = require('./Shared'),
 	Path = require('./Path'),
-	BinaryTree = require('./BinaryTree'),
-	treeInstance = new BinaryTree(),
-	btree = function () {};
-
-treeInstance.inOrder('hash');
+	BinaryTree = require('./BinaryTree');
 
 /**
- * The index class used to instantiate hash map indexes that the database can
+ * The index class used to instantiate btree indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
@@ -27,7 +27,7 @@ var IndexBinaryTree = function () {
 };
 
 IndexBinaryTree.prototype.init = function (keys, options, collection) {
-	this._btree = new (btree.create(2, this.sortAsc))();
+	this._btree = new BinaryTree();
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
 
@@ -91,7 +91,8 @@ IndexBinaryTree.prototype.rebuild = function () {
 			dataCount = collectionData.length;
 
 		// Clear the index data for the index
-		this._btree = new (btree.create(2, this.sortAsc))();
+		this._btree = new BinaryTree();
+		this._size = 0;
 
 		if (this._unique) {
 			this._uniqueLookup = {};
@@ -124,23 +125,7 @@ IndexBinaryTree.prototype.insert = function (dataItem, options) {
 		this._uniqueLookup[uniqueHash] = dataItem;
 	}
 
-	// We store multiple items that match a key inside an array
-	// that is then stored against that key in the tree...
 
-	// Check if item exists for this key already
-	keyArr = this._btree.get(dataItemHash);
-
-	// Check if the array exists
-	if (keyArr === undefined) {
-		// Generate an array for this key first
-		keyArr = [];
-
-		// Put the new array into the tree under the key
-		this._btree.put(dataItemHash, keyArr);
-	}
-
-	// Push the item into the array
-	keyArr.push(dataItem);
 
 	this._size++;
 };
@@ -157,26 +142,7 @@ IndexBinaryTree.prototype.remove = function (dataItem, options) {
 		delete this._uniqueLookup[uniqueHash];
 	}
 
-	// Try and get the array for the item hash key
-	keyArr = this._btree.get(dataItemHash);
 
-	if (keyArr !== undefined) {
-		// The key array exits, remove the item from the key array
-		itemIndex = keyArr.indexOf(dataItem);
-
-		if (itemIndex > -1) {
-			// Check the length of the array
-			if (keyArr.length === 1) {
-				// This item is the last in the array, just kill the tree entry
-				this._btree.del(dataItemHash);
-			} else {
-				// Remove the item
-				keyArr.splice(itemIndex, 1);
-			}
-
-			this._size--;
-		}
-	}
 };
 
 IndexBinaryTree.prototype.violation = function (dataItem) {
@@ -192,8 +158,8 @@ IndexBinaryTree.prototype.hashViolation = function (uniqueHash) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-IndexBinaryTree.prototype.lookup = function (query) {
-	return this._data[this._itemHash(query, this._keys)] || [];
+IndexBinaryTree.prototype.lookup = function (query, options) {
+	return this._btree.lookup(query, options);
 };
 
 IndexBinaryTree.prototype.match = function (query, options) {
