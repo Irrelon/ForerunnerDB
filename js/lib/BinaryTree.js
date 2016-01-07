@@ -35,6 +35,11 @@ Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
 	return this.$super.call(this, index);
 });
 
+/**
+ * Converts an object to an array of key names and values.
+ * @param obj
+ * @returns {Array}
+ */
 BinaryTree.prototype.extractKeys = function (obj) {
 	var i,
 		keys = [];
@@ -51,6 +56,15 @@ BinaryTree.prototype.extractKeys = function (obj) {
 	return keys;
 };
 
+/**
+ * Sets this node's data object. All further inserted documents that
+ * match this node's key and value will be pushed via the push()
+ * method into the this._store array. When deciding if a new data
+ * should be created left, right or middle (pushed) of this node the
+ * new data is checked against the data set via this method.
+ * @param val
+ * @returns {*}
+ */
 BinaryTree.prototype.data = function (val) {
 	if (val !== undefined) {
 		this._data = val;
@@ -146,6 +160,11 @@ BinaryTree.prototype._hashFunc = function (obj) {
 	return obj[this._keys[0].key];
 };
 
+/**
+ * Inserts a document into the binary tree.
+ * @param data
+ * @returns {*}
+ */
 BinaryTree.prototype.insert = function (data) {
 	var result,
 		inserted,
@@ -224,28 +243,43 @@ BinaryTree.prototype.insert = function (data) {
 	return false;
 };
 
-BinaryTree.prototype.lookup = function (data, resultArr) {
+/**
+ * Searches the binary tree for all matching documents based on the data
+ * passed (query).
+ * @param data
+ * @param options
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.lookup = function (data, options, resultArr) {
 	var result = this._compareFunc(this._data, data);
 
 	resultArr = resultArr || [];
 
 	if (result === 0) {
-		if (this._left) { this._left.lookup(data, resultArr); }
+		if (this._left) { this._left.lookup(data, options, resultArr); }
 		resultArr.push(this._data);
-		if (this._right) { this._right.lookup(data, resultArr); }
+		if (this._right) { this._right.lookup(data, options, resultArr); }
 	}
 
 	if (result === -1) {
-		if (this._right) { this._right.lookup(data, resultArr); }
+		if (this._right) { this._right.lookup(data, options, resultArr); }
 	}
 
 	if (result === 1) {
-		if (this._left) { this._left.lookup(data, resultArr); }
+		if (this._left) { this._left.lookup(data, options, resultArr); }
 	}
 
 	return resultArr;
 };
 
+/**
+ * Returns the entire binary tree ordered.
+ * @param {String} type
+ * @param resultArr
+ * @returns {*|Array}
+ */
 BinaryTree.prototype.inOrder = function (type, resultArr) {
 	resultArr = resultArr || [];
 
@@ -409,6 +443,15 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 	return resultArr;
 };*/
 
+/**
+ * Determines if the passed query and options object will be served
+ * by this index successfully or not and gives a score so that the
+ * DB search system can determine how useful this index is in comparison
+ * to other indexes on the same collection.
+ * @param query
+ * @param options
+ * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
+ */
 BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
