@@ -31,6 +31,7 @@ IndexBinaryTree.prototype.init = function (keys, options, collection) {
 	this._btree.index(keys);
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
+	this._debug = options && options.debug ? options.debug : false;
 
 	this.unique(options && options.unique ? options.unique : false);
 
@@ -40,9 +41,11 @@ IndexBinaryTree.prototype.init = function (keys, options, collection) {
 
 	if (collection !== undefined) {
 		this.collection(collection);
+		this._btree.primaryKey(collection.primaryKey());
 	}
 
 	this.name(options && options.name ? options.name : this._id);
+	this._btree.debug(this._debug);
 };
 
 Shared.addModule('IndexBinaryTree', IndexBinaryTree);
@@ -92,8 +95,7 @@ IndexBinaryTree.prototype.rebuild = function () {
 			dataCount = collectionData.length;
 
 		// Clear the index data for the index
-		this._btree = new BinaryTree();
-		this._btree.index(this.keys());
+		this._btree.clear();
 		this._size = 0;
 
 		if (this._unique) {
@@ -118,33 +120,38 @@ IndexBinaryTree.prototype.rebuild = function () {
 
 IndexBinaryTree.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		this._uniqueLookup[uniqueHash] = dataItem;
 	}
 
-	this._btree.insert(dataItem);
+	if (this._btree.insert(dataItem)) {
+		this._size++;
 
-	this._size++;
+		return true;
+	}
+
+	return false;
 };
 
 IndexBinaryTree.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr,
-		itemIndex;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		delete this._uniqueLookup[uniqueHash];
 	}
 
+	if (this._btree.remove(dataItem)) {
+		this._size--;
 
+		return true;
+	}
+
+	return false;
 };
 
 IndexBinaryTree.prototype.violation = function (dataItem) {
