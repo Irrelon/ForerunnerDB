@@ -3236,7 +3236,7 @@ Collection.prototype.diff = function (collection) {
 		arrCount;
 
 	// Check if the primary key index of each collection can be utilised
-	if (pm !== collection.primaryKey()) {
+	if (pk !== collection.primaryKey()) {
 		throw(this.logIdentifier() + ' Diffing requires that both collections have the same primary key!');
 	}
 
@@ -3257,9 +3257,9 @@ Collection.prototype.diff = function (collection) {
 		arrItem = arr[arrIndex];
 
 		// Check for a matching item in this collection
-		if (this._primaryIndex.get(arrItem[pm])) {
+		if (this._primaryIndex.get(arrItem[pk])) {
 			// Matching item exists, check if the data is the same
-			if (this._primaryCrc.get(arrItem[pm]) !== collection._primaryCrc.get(arrItem[pm])) {
+			if (this._primaryCrc.get(arrItem[pk]) !== collection._primaryCrc.get(arrItem[pk])) {
 				// The documents exist in both collections but data differs, update required
 				diff.update.push(arrItem);
 			}
@@ -3276,7 +3276,7 @@ Collection.prototype.diff = function (collection) {
 	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 		arrItem = arr[arrIndex];
 
-		if (!collection._primaryIndex.get(arrItem[pm])) {
+		if (!collection._primaryIndex.get(arrItem[pk])) {
 			// The document does not exist in the other collection, remove required
 			diff.remove.push(arrItem);
 		}
