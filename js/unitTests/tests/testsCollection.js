@@ -332,22 +332,9 @@ QUnit.test("Collection.find() :: $nin clause primary key object", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: $in clause primary key object", function () {
-	base.dbUp();
-	base.dataUp();
 
-	var result = user.find({
-		_id: {
-			$in: ["2", "3", "5"]
-		}
-	});
 
-	strictEqual(result.length, 3, "Check result count is as expected");
-
-	base.dbDown();
-});
-
-QUnit.test("Collection.find() :: $in clause primary key object", function () {
+QUnit.test("Collection.find() :: $in clause regex non-indexed", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -377,17 +364,52 @@ QUnit.test("Collection.find() :: $in clause primary key object", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: $nin with regex in array", function () {
+QUnit.test("Collection.find() :: $in clause strings primary key search", function () {
 	base.dbUp();
 	base.dataUp();
 
+	var result = user.find({
+		_id: {
+			$in: ["2", "3", "5"]
+		}
+	});
+
+	strictEqual(result.length, 3, "Check result count is as expected");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: $in with regex primary key search", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var result = user.find({
+		_id: {
+			$in: [/2/, /3/]
+		}
+	});
+
+	strictEqual(result.length, 2, "Check result count is as expected");
+	strictEqual(result[0]._id, '2', "Result 1 has correct id");
+	strictEqual(result[1]._id, '3', "Result 2 has correct id");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: $nin with regex primary key search", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var count = user.count();
 	var result = user.find({
 		_id: {
 			$nin: [/2/, /3/]
 		}
 	});
 
-	strictEqual(result.length, 2, "Check result count is as expected");
+	strictEqual(result.length, count - 2, "Check result count is as expected");
+	strictEqual(result[0]._id, '4', "Result 1 has correct id");
+	strictEqual(result[1]._id, '5', "Result 2 has correct id");
 
 	base.dbDown();
 });

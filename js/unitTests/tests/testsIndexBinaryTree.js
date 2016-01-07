@@ -1,4 +1,4 @@
-QUnit.module('Index');
+QUnit.module('IndexBinaryTree');
 QUnit.test("Collection.ensureIndex() :: Assign an index to a collection", function() {
 	base.dbUp();
 	base.dataUp();
@@ -10,18 +10,19 @@ QUnit.test("Collection.ensureIndex() :: Assign an index to a collection", functi
 		name: 1
 	}, {
 		unique: true,
-		name: 'testIndex'
+		name: 'testIndex1',
+		type: 'btree'
 	});
 
-	strictEqual(indexResult.err, undefined, "Initialise index: " + indexResult.err);
-	ok(indexResult.state !== undefined, "Check index state object: " + indexResult.state);
+	strictEqual(indexResult.err, undefined, "Initialise index error: " + indexResult.err);
+	ok(indexResult.state !== undefined, "Check index state object: " + JSON.stringify(indexResult.state));
 	strictEqual(indexResult.state.ok, true, "Check index state ok: " + indexResult.state.ok);
-	strictEqual(indexResult.state.name, 'testIndex', "Check index state name: " + indexResult.state.name);
+	strictEqual(indexResult.state.name, 'testIndex1', "Check index state name: " + indexResult.state.name);
 
 	base.dbDown();
 });
 
-ForerunnerDB.moduleLoaded('Persist', function () {
+/*ForerunnerDB.moduleLoaded('Persist', function () {
 	QUnit.asyncTest("Collection.ensureIndex() :: Ensure an index is maintained after persist.load()", function () {
 		expect(3);
 
@@ -47,7 +48,8 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				name: 1
 			}, {
 				unique: true,
-				name: 'testIndex'
+				name: 'testIndex',
+				type: 'btree'
 			});
 
 			// Now load the persisted data
@@ -65,7 +67,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			});
 		});
 	});
-});
+});*/
 
 QUnit.test("Collection.index() :: Test lookup of index from collection by name", function () {
 	base.dbUp();
@@ -78,13 +80,14 @@ QUnit.test("Collection.index() :: Test lookup of index from collection by name",
 		name: 1
 	}, {
 		unique: true,
-		name: 'testIndex'
+		name: 'testIndex2',
+		type: 'btree'
 	});
 
-	var index = user.index('testIndex');
+	var index = user.index('testIndex2');
 
 	ok(index !== undefined, "Check index is available: " + index);
-	ok(index.name !== 'testIndex', "Check index is correct name: " + index.name);
+	ok(index.name() === 'testIndex2', "Check index is correct name: " + index.name());
 
 	base.dbDown();
 });
@@ -97,7 +100,8 @@ QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 		name: 1
 	}, {
 		unique: true,
-		name: 'testName'
+		name: 'testName1',
+		type: 'btree'
 	});
 
 	user.ensureIndex({
@@ -106,14 +110,16 @@ QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 		}
 	}, {
 		unique: true,
-		name: 'testArrVal'
+		name: 'testArrVal1',
+		type: 'btree'
 	});
 
 	user.ensureIndex({
 		orgId: 1
 	}, {
 		unique: false,
-		name: 'testOrgId'
+		name: 'testOrgId1',
+		type: 'btree'
 	});
 
 	user.ensureIndex({
@@ -123,7 +129,8 @@ QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 		orgId: 1
 	}, {
 		unique: false,
-		name: 'testArrValAndOrgId'
+		name: 'testArrValAndOrgId1',
+		type: 'btree'
 	});
 
 	var a = user.explain({
@@ -133,8 +140,10 @@ QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 		orgId: "3"
 	});
 
+	debugger;
+
 	strictEqual(a && a.index.used && a.index.potential.length, 2, "Query analyser returned correct number of indexes to use");
-	strictEqual(a.index.used._name, 'testArrValAndOrgId', "Check index name: " + a.index.used._name);
+	strictEqual(a.index.used._name, 'testArrValAndOrgId1', "Check index name: " + a.index.used._name);
 
 	base.dbDown();
 });
@@ -150,10 +159,11 @@ QUnit.test("Index.lookup() :: Test lookup from index", function () {
 		name: 1
 	}, {
 		unique: true,
-		name: 'testIndex'
+		name: 'testIndex2',
+		type: 'btree'
 	});
 
-	var index = user.index('testIndex');
+	var index = user.index('testIndex2');
 	//console.log(index);
 	var lookup = index.lookup({
 		arr: {
@@ -182,7 +192,8 @@ QUnit.test("Collection.find() :: Test query that should use an index", function 
 		name: 1
 	}, {
 		unique: true,
-		name: 'testIndex'
+		name: 'testIndex3',
+		type: 'btree'
 	});
 
 	var result = user.find({
@@ -229,6 +240,8 @@ QUnit.test("Collection.find() :: Test index doesn't interfere with other queries
 	coll.ensureIndex({
 		age: 1,
 		name: 1
+	}, {
+		type: 'btree'
 	});
 
 	var result = coll.find({
@@ -270,7 +283,8 @@ QUnit.test("Collection.find() :: Random data inserted into collection and indexe
 		name: 1
 	}, {
 		unique: false,
-		name: 'index_name'
+		name: 'index_name',
+		type: 'btree'
 	});
 
 	// Run with index
@@ -297,7 +311,8 @@ QUnit.test("Collection.find() :: Test index created before inserting data", func
 	var result = coll.ensureIndex({
 		name: 1
 	}, {
-		unique: true
+		unique: true,
+		type: 'btree'
 	});
 
 	var insert1 = coll.insert({
@@ -329,7 +344,8 @@ QUnit.test("Index.remove() :: Test index is being kept up to date with CRUD", fu
 		name: 1
 	}, {
 		unique: true,
-		name: 'uniqueName'
+		name: 'uniqueName',
+		type: 'btree'
 	});
 
 	insert1 = coll.insert({
@@ -382,6 +398,8 @@ ForerunnerDB.version('1.4', function () {
 
 		collection.ensureIndex({
 			age: 1
+		}, {
+			type: 'btree'
 		});
 
 		var explain = collection.explain({
@@ -448,7 +466,8 @@ ForerunnerDB.version('1.4', function () {
 		}, {
 			unique: true, // Only allow unique values
 			scope: 'document', // Index against documents individually rather than the whole collection
-			name: 'uniqueAttendeeMooFoo'
+			name: 'uniqueAttendeeMooFoo',
+			type: 'btree'
 		});
 
 		allowedInsert = coll.updateById("139", {

@@ -520,4 +520,33 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 
 		base.dbDown();
 	});
+
+	QUnit.test("Binary Tree :: Insert", function () {
+		base.dbUp();
+
+		var tree = new ForerunnerDB.shared.modules.BinaryTree(),
+			matchResult;
+
+		tree.index({
+			name: 1
+		});
+
+		tree.insert({
+			name: "abcd"
+		});
+
+		tree.insert({
+			name: "abcd"
+		});
+
+		matchResult = tree.lookup({
+			name: "abcd"
+		});
+
+		strictEqual(matchResult.length, 2, 'Correct result length');
+		strictEqual(matchResult[0].name, 'abcd', 'Record 1 match');
+		strictEqual(matchResult[1].name, 'abcd', 'Record 2 match');
+
+		base.dbDown();
+	});
 });
