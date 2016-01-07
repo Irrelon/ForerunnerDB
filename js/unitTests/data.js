@@ -28,7 +28,8 @@ var db,
 		nested: {
 			name: 'Sam',
 			nested: {
-				age: 19
+				age: 19,
+				order: 1
 			}
 		}
 	},
@@ -57,7 +58,8 @@ var db,
 		nested: {
 			name: 'Jim',
 			nested: {
-				age: 15
+				age: 15,
+				order: 2
 			}
 		}
 	}, {
@@ -84,7 +86,8 @@ var db,
 		nested: {
 			name: 'Kat',
 			nested: {
-				age: 12
+				age: 12,
+				order: 2
 			}
 		}
 	}, {
@@ -111,7 +114,8 @@ var db,
 		nested: {
 			name: 'Dean',
 			nested: {
-				age: 5
+				age: 5,
+				order: 4
 			}
 		}
 	}, {
@@ -138,7 +142,8 @@ var db,
 		nested: {
 			name: 'Dean',
 			nested: {
-				age: 5
+				age: 5,
+				order: 3
 			}
 		}
 	}],
