@@ -140,8 +140,6 @@ QUnit.test("Index.lookup() :: Test optimal query index detection", function () {
 		orgId: "3"
 	});
 
-	debugger;
-
 	strictEqual(a && a.index.used && a.index.potential.length, 2, "Query analyser returned correct number of indexes to use");
 	strictEqual(a.index.used._name, 'testArrValAndOrgId1', "Check index name: " + a.index.used._name);
 
@@ -153,30 +151,35 @@ QUnit.test("Index.lookup() :: Test lookup from index", function () {
 	base.dataUp();
 
 	user.ensureIndex({
-		arr: {
-			val: 1
+		nested: {
+			nested: {
+				order: 1,
+				age: 1
+			}
 		},
 		name: 1
 	}, {
 		unique: true,
 		name: 'testIndex2',
-		type: 'btree'
+		type: 'btree',
+		debug: true
 	});
 
 	var index = user.index('testIndex2');
 	//console.log(index);
 	var lookup = index.lookup({
-		arr: {
-			val: 5
-		},
-		name: 'Dean'
+		nested: {
+			nested: {
+				age: 5
+			}
+		}
 	});
 
-	//console.log(lookup);
+	console.log(lookup);
 
 	strictEqual(lookup.length, 2, "Lookup returned correct number of results");
-	strictEqual(lookup[0]._id === '4' && lookup[0].arr[1].val, 5, "Lookup returned correct result 1");
-	strictEqual(lookup[1]._id === '5' && lookup[1].arr[1].val, 5, "Lookup returned correct result 2");
+	strictEqual(lookup[0]._id === '5' && lookup[0].arr[1].val, 5, "Lookup returned correct result 1");
+	strictEqual(lookup[1]._id === '4' && lookup[1].arr[1].val, 5, "Lookup returned correct result 2");
 
 	base.dbDown();
 });
@@ -186,8 +189,11 @@ QUnit.test("Collection.find() :: Test query that should use an index", function 
 	base.dataUp();
 
 	user.ensureIndex({
-		arr: {
-			val: 1
+		nested: {
+			nested: {
+				order: 1,
+				age: 1
+			}
 		},
 		name: 1
 	}, {
@@ -197,15 +203,17 @@ QUnit.test("Collection.find() :: Test query that should use an index", function 
 	});
 
 	var result = user.find({
-		arr: {
-			val: 5
+		nested: {
+			nested: {
+				age: 5
+			}
 		},
 		name: 'Dean'
 	});
 
 	strictEqual(result && result.length, 2, "Check correct number of results returned");
-	strictEqual(result[0]._id, "4", "Check returned data 1 id");
-	strictEqual(result[1]._id, "5", "Check returned data 2 id");
+	strictEqual(result[0]._id, "5", "Check returned data 1 id");
+	strictEqual(result[1]._id, "4", "Check returned data 2 id");
 
 	base.dbDown();
 });
@@ -249,8 +257,8 @@ QUnit.test("Collection.find() :: Test index doesn't interfere with other queries
 	});
 
 	strictEqual(result && result.length, 2, "Check correct number of results returned : " + result.length);
-	strictEqual(result[0]._id, "2", "Check returned data 1 id");
-	strictEqual(result[1]._id, "5", "Check returned data 2 id");
+	strictEqual(result[0]._id, "5", "Check returned data 1 id");
+	strictEqual(result[1]._id, "2", "Check returned data 2 id");
 
 	base.dbDown();
 });
@@ -266,7 +274,7 @@ QUnit.test("Collection.find() :: Random data inserted into collection and indexe
 		a, b, c,
 		i;
 
-	for (i = 0; i < 10000; i++) {
+	for (i = 0; i < 1000; i++) {
 		tempName = names[Math.ceil(Math.random() * names.length) - 1];
 		tempAge = Math.ceil(Math.random() * 100);
 
@@ -337,6 +345,81 @@ QUnit.test("Index.remove() :: Test index is being kept up to date with CRUD", fu
 		insert1,
 		insert2,
 		find,
+		index, anna, barry, jill, zebra, lewis;
+
+	coll = db.collection('temp').truncate();
+	result = coll.ensureIndex({
+		name: 1
+	}, {
+		unique: true,
+		name: 'uniqueName',
+		type: 'btree'
+	});
+
+	coll.insert({
+		name: 'Bob'
+	});
+
+	coll.insert({
+		name: 'Jill'
+	});
+
+	coll.insert({
+		name: 'Anna'
+	});
+
+	coll.insert({
+		name: 'Barry'
+	});
+
+	coll.insert({
+		name: 'Zebra'
+	});
+
+	coll.insert({
+		name: 'Lewis'
+	});
+
+	find = coll.find();
+	index = coll.index('uniqueName');
+
+	strictEqual(find.length, 6, "Check data length");
+	strictEqual(index.size(), 6, "Check index size");
+
+	// Now remove item and check that it cannot be found in the index
+	coll.remove({
+		name: 'Bob'
+	});
+
+	find = coll.find();
+	index = coll.index('uniqueName');
+
+	anna = index._btree;
+	barry = anna._right;
+	jill = barry._right
+	zebra = jill._right;
+	lewis = zebra._left;
+
+	strictEqual(anna._data.name, 'Anna', "Tree data correct");
+	strictEqual(barry._data.name, 'Barry', "Tree data correct");
+	strictEqual(jill._data.name, 'Jill', "Tree data correct");
+	strictEqual(zebra._data.name, 'Zebra', "Tree data correct");
+	strictEqual(lewis._data.name, 'Lewis', "Tree data correct");
+
+	strictEqual(index.size(), 5, "Check index size");
+
+	base.dbDown();
+});
+
+QUnit.test("Index.remove() :: Test index unique constraint violation denies insert", function () {
+	base.dbUp();
+
+	var coll,
+		result,
+		insert1,
+		insert2,
+		insert3,
+		find,
 		index;
 
 	coll = db.collection('temp').truncate();
@@ -362,16 +445,17 @@ QUnit.test("Index.remove() :: Test index is being kept up to date with CRUD", fu
 	strictEqual(find.length, 2, "Check data length");
 	strictEqual(index.size(), 2, "Check index size");
 
-	// Now remove item and check that it cannot be found in the index
-	coll.remove({
+	// Now try to violate the unique index constraint
+	insert3 = coll.insert({
 		name: 'Bob'
 	});
 
 	find = coll.find();
 	index = coll.index('uniqueName');
 
-	strictEqual(find.length, 1, "Check data length");
-	strictEqual(index.size(), 1, "Check index size");
+	strictEqual(find.length, 2, "Check data length");
+	strictEqual(index.size(), 2, "Check index size");
+	strictEqual(insert3.failed[0].reason, 'Index violation in index: uniqueName', 'Index violation was reason for failed insert');
 
 	base.dbDown();
 });
