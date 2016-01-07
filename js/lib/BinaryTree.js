@@ -1,16 +1,18 @@
 "use strict";
 
 var Shared = require('./Shared'),
-	Path = require('./Path');
+	Path = require('./Path'),
+	sharedPathSolver = new Path();
 
 var BinaryTree = function (data, compareFunc, hashFunc) {
 	this.init.apply(this, arguments);
 };
 
-BinaryTree.prototype.init = function (data, index, compareFunc, hashFunc) {
+BinaryTree.prototype.init = function (data, index, primaryKey, compareFunc, hashFunc) {
 	this._store = [];
 	this._keys = [];
 
+	if (primaryKey !== undefined) { this.primaryKey(primaryKey); }
 	if (index !== undefined) { this.index(index); }
 	if (compareFunc !== undefined) { this.compareFunc(compareFunc); }
 	if (hashFunc !== undefined) { this.hashFunc(hashFunc); }
@@ -25,35 +27,30 @@ Shared.mixin(BinaryTree.prototype, 'Mixin.Common');
 Shared.synthesize(BinaryTree.prototype, 'compareFunc');
 Shared.synthesize(BinaryTree.prototype, 'hashFunc');
 Shared.synthesize(BinaryTree.prototype, 'indexDir');
+Shared.synthesize(BinaryTree.prototype, 'primaryKey');
 Shared.synthesize(BinaryTree.prototype, 'keys');
 Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
 	if (index !== undefined) {
+		if (this.debug()) {
+			console.log('Setting index', index, sharedPathSolver.parse(index, true));
+		}
+
 		// Convert the index object to an array of key val objects
-		this.keys(this.extractKeys(index));
+		this.keys(sharedPathSolver.parse(index, true));
 	}
 
 	return this.$super.call(this, index);
 });
 
 /**
- * Converts an object to an array of key names and values.
- * @param obj
- * @returns {Array}
+ * Remove all data from the binary tree.
  */
-BinaryTree.prototype.extractKeys = function (obj) {
-	var i,
-		keys = [];
+BinaryTree.prototype.clear = function () {
+	delete this._data;
+	delete this._left;
+	delete this._right;
 
-	for (i in obj) {
-		if (obj.hasOwnProperty(i)) {
-			keys.push({
-				key: i,
-				val: obj[i]
-			});
-		}
-	}
-
-	return keys;
+	this._store = [];
 };
 
 /**
@@ -124,15 +121,26 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 	for (i = 0; i < this._keys.length; i++) {
 		indexData = this._keys[i];
 
-		if (indexData.val === 1) {
-			result = this.sortAsc(a[indexData.key], b[indexData.key]);
-		} else if (indexData.val === -1) {
-			result = this.sortDesc(a[indexData.key], b[indexData.key]);
+		if (indexData.value === 1) {
+			result = this.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+		} else if (indexData.value === -1) {
+			result = this.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+		}
+
+		if (this.debug()) {
+			console.log('Compared %s with %s order %d in path %s and result was %d', sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path), indexData.value, indexData.path, result);
 		}
 
 		if (result !== 0) {
+			if (this.debug()) {
+				console.log('Retuning result %d', result);
+			}
 			return result;
 		}
+	}
+
+	if (this.debug()) {
+		console.log('Retuning result %d', result);
 	}
 
 	return result;
@@ -152,12 +160,40 @@ BinaryTree.prototype._hashFunc = function (obj) {
 		indexData = this._keys[i];
 
 		if (hash) { hash += '_'; }
-		hash += obj[indexData.key];
+		hash += obj[indexData.path];
 	}
 
 	return hash;*/
 
-	return obj[this._keys[0].key];
+	return obj[this._keys[0].path];
+};
+
+/**
+ * Removes (deletes reference to) either left or right child if the passed
+ * node matches one of them.
+ * @param {BinaryTree} node The node to remove.
+ */
+BinaryTree.prototype.removeChildNode = function (node) {
+	if (this._left === node) {
+		// Remove left
+		delete this._left;
+	} else if (this._right === node) {
+		// Remove right
+		delete this._right;
+	}
+};
+
+/**
+ * Returns the branch this node matches (left or right).
+ * @param node
+ * @returns {String}
+ */
+BinaryTree.prototype.nodeBranch = function (node) {
+	if (this._left === node) {
+		return 'left';
+	} else if (this._right === node) {
+		return 'right';
+	}
 };
 
 /**
@@ -190,7 +226,14 @@ BinaryTree.prototype.insert = function (data) {
 		};
 	}
 
+	if (this.debug()) {
+		console.log('Inserting', data);
+	}
+
 	if (!this._data) {
+		if (this.debug()) {
+			console.log('Node has no data, setting data', data);
+		}
 		// Insert into this node (overwrite) as there is no data
 		this.data(data);
 		//this.push(data);
@@ -200,47 +243,156 @@ BinaryTree.prototype.insert = function (data) {
 	result = this._compareFunc(this._data, data);
 
 	if (result === 0) {
+		if (this.debug()) {
+			console.log('Data is equal (currrent, new)', this._data, data);
+		}
+
 		this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data);
+			this._left.insert(data, this);
 		} else {
 			// Assign to left branch
-			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._left._parent = this;
 		}
 
 		return true;
 	}
 
 	if (result === -1) {
+		if (this.debug()) {
+			console.log('Data is greater (currrent, new)', this._data, data);
+		}
+
 		// Greater than this node
 		if (this._right) {
 			// Propagate down the right branch
 			this._right.insert(data);
 		} else {
 			// Assign to right branch
-			this._right = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._right = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._right._parent = this;
 		}
 
 		return true;
 	}
 
 	if (result === 1) {
+		if (this.debug()) {
+			console.log('Data is less (currrent, new)', this._data, data);
+		}
+
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
 			this._left.insert(data);
 		} else {
 			// Assign to left branch
-			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._left._parent = this;
 		}
 
 		return true;
 	}
 
 	return false;
+};
+
+BinaryTree.prototype.remove = function (data) {
+	var pk = this.primaryKey(),
+		result,
+		removed,
+		i;
+
+	if (data instanceof Array) {
+		// Insert array of data
+		removed = [];
+
+		for (i = 0; i < data.length; i++) {
+			if (this.remove(data[i])) {
+				removed.push(data[i]);
+			}
+		}
+
+		return removed;
+	}
+
+	if (this.debug()) {
+		console.log('Removing', data);
+	}
+
+	if (this._data[pk] === data[pk]) {
+		// Remove this node
+		return this._remove(this);
+	}
+
+	// Compare the data to work out which branch to send the remove command down
+	result = this._compareFunc(this._data, data);
+
+	if (result === -1 && this._right) {
+		return this._right.remove(data);
+	}
+
+	if (result === 1 && this._left) {
+		return this._left.remove(data);
+	}
+
+	return false;
+};
+
+BinaryTree.prototype._remove = function (node) {
+	var leftNode,
+		rightNode;
+
+	if (this._left) {
+		// Backup branch data
+		leftNode = this._left;
+		rightNode = this._right;
+
+		// Copy data from left node
+		this._left = leftNode._left;
+		this._right = leftNode._right;
+		this._data = leftNode._data;
+		this._store = leftNode._store;
+
+		if (rightNode) {
+			// Attach the rightNode data to the right-most node
+			// of the leftNode
+			leftNode.rightMost()._right = rightNode;
+		}
+	} else if (this._right) {
+		// Backup branch data
+		rightNode = this._right;
+
+		// Copy data from right node
+		this._left = rightNode._left;
+		this._right = rightNode._right;
+		this._data = rightNode._data;
+		this._store = rightNode._store;
+	} else {
+		this.clear();
+	}
+
+	return true;
+};
+
+BinaryTree.prototype.leftMost = function () {
+	if (!this._left) {
+		return this;
+	} else {
+		return this._left.leftMost();
+	}
+};
+
+BinaryTree.prototype.rightMost = function () {
+	if (!this._right) {
+		return this;
+	} else {
+		return this._right.rightMost();
+	}
 };
 
 /**
@@ -455,18 +607,17 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
-	var pathSolver = new Path(),
-		indexKeyArr,
+	var indexKeyArr,
 		queryArr,
 		matchedKeys = [],
 		matchedKeyCount = 0,
 		i;
 
-	indexKeyArr = pathSolver.parseArr(this._index, {
+	indexKeyArr = sharedPathSolver.parseArr(this._index, {
 		verbose: true
 	});
 
-	queryArr = pathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, {
 		ignore:/\$/,
 		verbose: true
 	});
@@ -486,7 +637,7 @@ BinaryTree.prototype.match = function (query, options) {
 		score: matchedKeyCount
 	};
 
-	//return pathSolver.countObjectPaths(this._keys, query);
+	//return sharedPathSolver.countObjectPaths(this._keys, query);
 };
 
 Shared.finishModule('BinaryTree');
