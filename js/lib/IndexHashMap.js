@@ -78,6 +78,7 @@ IndexHashMap.prototype.rebuild = function () {
 
 		// Clear the index data for the index
 		this._data = {};
+		this._size = 0;
 
 		if (this._unique) {
 			this._uniqueLookup = {};
