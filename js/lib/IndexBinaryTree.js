@@ -28,6 +28,7 @@ var IndexBinaryTree = function () {
 
 IndexBinaryTree.prototype.init = function (keys, options, collection) {
 	this._btree = new BinaryTree();
+	this._btree.index(keys);
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
 
@@ -92,6 +93,7 @@ IndexBinaryTree.prototype.rebuild = function () {
 
 		// Clear the index data for the index
 		this._btree = new BinaryTree();
+		this._btree.index(this.keys());
 		this._size = 0;
 
 		if (this._unique) {
@@ -125,7 +127,7 @@ IndexBinaryTree.prototype.insert = function (dataItem, options) {
 		this._uniqueLookup[uniqueHash] = dataItem;
 	}
 
-
+	this._btree.insert(dataItem);
 
 	this._size++;
 };
@@ -163,38 +165,7 @@ IndexBinaryTree.prototype.lookup = function (query, options) {
 };
 
 IndexBinaryTree.prototype.match = function (query, options) {
-	// Check if the passed query has data in the keys our index
-	// operates on and if so, is the query sort matching our order
-	var pathSolver = new Path();
-	var indexKeyArr = pathSolver.parseArr(this._keys),
-		queryArr = pathSolver.parseArr(query),
-		matchedKeys = [],
-		matchedKeyCount = 0,
-		i;
-
-	// Loop the query array and check the order of keys against the
-	// index key array to see if this index can be used
-	for (i = 0; i < indexKeyArr.length; i++) {
-		if (queryArr[i] === indexKeyArr[i]) {
-			matchedKeyCount++;
-			matchedKeys.push(queryArr[i]);
-		} else {
-			// Query match failed - this is a hash map index so partial key match won't work
-			return {
-				matchedKeys: [],
-				totalKeyCount: queryArr.length,
-				score: 0
-			};
-		}
-	}
-
-	return {
-		matchedKeys: matchedKeys,
-		totalKeyCount: queryArr.length,
-		score: matchedKeyCount
-	};
-
-	//return pathSolver.countObjectPaths(this._keys, query);
+	return this._btree.match(query, options);
 };
 
 IndexBinaryTree.prototype._itemHash = function (item, keys) {
