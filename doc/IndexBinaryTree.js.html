@@ -29,24 +29,24 @@
             <pre class="prettyprint source linenums"><code>"use strict";
 
 /*
-name
-id
-rebuild
-state
-match
-lookup
+name(string)
+id(string)
+rebuild(null)
+state ?? needed?
+match(query, options)
+lookup(query, options)
+insert(doc)
+remove(doc)
+primaryKey(string)
+collection(collection)
 */
 
 var Shared = require('./Shared'),
 	Path = require('./Path'),
-	BinaryTree = require('./BinaryTree'),
-	treeInstance = new BinaryTree(),
-	btree = function () {};
-
-treeInstance.inOrder('hash');
+	BinaryTree = require('./BinaryTree');
 
 /**
- * The index class used to instantiate hash map indexes that the database can
+ * The index class used to instantiate btree indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
@@ -55,9 +55,11 @@ var IndexBinaryTree = function () {
 };
 
 IndexBinaryTree.prototype.init = function (keys, options, collection) {
-	this._btree = new (btree.create(2, this.sortAsc))();
+	this._btree = new BinaryTree();
+	this._btree.index(keys);
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
+	this._debug = options &amp;&amp; options.debug ? options.debug : false;
 
 	this.unique(options &amp;&amp; options.unique ? options.unique : false);
 
@@ -67,9 +69,11 @@ IndexBinaryTree.prototype.init = function (keys, options, collection) {
 
 	if (collection !== undefined) {
 		this.collection(collection);
+		this._btree.primaryKey(collection.primaryKey());
 	}
 
 	this.name(options &amp;&amp; options.name ? options.name : this._id);
+	this._btree.debug(this._debug);
 };
 
 Shared.addModule('IndexBinaryTree', IndexBinaryTree);
@@ -119,7 +123,8 @@ IndexBinaryTree.prototype.rebuild = function () {
 			dataCount = collectionData.length;
 
 		// Clear the index data for the index
-		this._btree = new (btree.create(2, this.sortAsc))();
+		this._btree.clear();
+		this._size = 0;
 
 		if (this._unique) {
 			this._uniqueLookup = {};
@@ -143,68 +148,38 @@ IndexBinaryTree.prototype.rebuild = function () {
 
 IndexBinaryTree.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		this._uniqueLookup[uniqueHash] = dataItem;
 	}
 
-	// We store multiple items that match a key inside an array
-	// that is then stored against that key in the tree...
+	if (this._btree.insert(dataItem)) {
+		this._size++;
 
-	// Check if item exists for this key already
-	keyArr = this._btree.get(dataItemHash);
-
-	// Check if the array exists
-	if (keyArr === undefined) {
-		// Generate an array for this key first
-		keyArr = [];
-
-		// Put the new array into the tree under the key
-		this._btree.put(dataItemHash, keyArr);
+		return true;
 	}
 
-	// Push the item into the array
-	keyArr.push(dataItem);
-
-	this._size++;
+	return false;
 };
 
 IndexBinaryTree.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr,
-		itemIndex;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		delete this._uniqueLookup[uniqueHash];
 	}
 
-	// Try and get the array for the item hash key
-	keyArr = this._btree.get(dataItemHash);
+	if (this._btree.remove(dataItem)) {
+		this._size--;
 
-	if (keyArr !== undefined) {
-		// The key array exits, remove the item from the key array
-		itemIndex = keyArr.indexOf(dataItem);
-
-		if (itemIndex > -1) {
-			// Check the length of the array
-			if (keyArr.length === 1) {
-				// This item is the last in the array, just kill the tree entry
-				this._btree.del(dataItemHash);
-			} else {
-				// Remove the item
-				keyArr.splice(itemIndex, 1);
-			}
-
-			this._size--;
-		}
+		return true;
 	}
+
+	return false;
 };
 
 IndexBinaryTree.prototype.violation = function (dataItem) {
@@ -220,43 +195,12 @@ IndexBinaryTree.prototype.hashViolation = function (uniqueHash) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-IndexBinaryTree.prototype.lookup = function (query) {
-	return this._data[this._itemHash(query, this._keys)] || [];
+IndexBinaryTree.prototype.lookup = function (query, options) {
+	return this._btree.lookup(query, options);
 };
 
 IndexBinaryTree.prototype.match = function (query, options) {
-	// Check if the passed query has data in the keys our index
-	// operates on and if so, is the query sort matching our order
-	var pathSolver = new Path();
-	var indexKeyArr = pathSolver.parseArr(this._keys),
-		queryArr = pathSolver.parseArr(query),
-		matchedKeys = [],
-		matchedKeyCount = 0,
-		i;
-
-	// Loop the query array and check the order of keys against the
-	// index key array to see if this index can be used
-	for (i = 0; i &lt; indexKeyArr.length; i++) {
-		if (queryArr[i] === indexKeyArr[i]) {
-			matchedKeyCount++;
-			matchedKeys.push(queryArr[i]);
-		} else {
-			// Query match failed - this is a hash map index so partial key match won't work
-			return {
-				matchedKeys: [],
-				totalKeyCount: queryArr.length,
-				score: 0
-			};
-		}
-	}
-
-	return {
-		matchedKeys: matchedKeys,
-		totalKeyCount: queryArr.length,
-		score: matchedKeyCount
-	};
-
-	//return pathSolver.countObjectPaths(this._keys, query);
+	return this._btree.match(query, options);
 };
 
 IndexBinaryTree.prototype._itemHash = function (item, keys) {
@@ -337,7 +281,7 @@ module.exports = IndexBinaryTree;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 06 2016 22:13:30 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 11:18:02 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

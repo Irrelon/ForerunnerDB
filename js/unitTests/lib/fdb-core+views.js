@@ -280,16 +280,18 @@ module.exports = ActiveBucket;
 "use strict";
 
 var Shared = _dereq_('./Shared'),
-	Path = _dereq_('./Path');
+	Path = _dereq_('./Path'),
+	sharedPathSolver = new Path();
 
 var BinaryTree = function (data, compareFunc, hashFunc) {
 	this.init.apply(this, arguments);
 };
 
-BinaryTree.prototype.init = function (data, index, compareFunc, hashFunc) {
+BinaryTree.prototype.init = function (data, index, primaryKey, compareFunc, hashFunc) {
 	this._store = [];
 	this._keys = [];
 
+	if (primaryKey !== undefined) { this.primaryKey(primaryKey); }
 	if (index !== undefined) { this.index(index); }
 	if (compareFunc !== undefined) { this.compareFunc(compareFunc); }
 	if (hashFunc !== undefined) { this.hashFunc(hashFunc); }
@@ -304,32 +306,41 @@ Shared.mixin(BinaryTree.prototype, 'Mixin.Common');
 Shared.synthesize(BinaryTree.prototype, 'compareFunc');
 Shared.synthesize(BinaryTree.prototype, 'hashFunc');
 Shared.synthesize(BinaryTree.prototype, 'indexDir');
+Shared.synthesize(BinaryTree.prototype, 'primaryKey');
 Shared.synthesize(BinaryTree.prototype, 'keys');
 Shared.synthesize(BinaryTree.prototype, 'index', function (index) {
 	if (index !== undefined) {
+		if (this.debug()) {
+			console.log('Setting index', index, sharedPathSolver.parse(index, true));
+		}
+
 		// Convert the index object to an array of key val objects
-		this.keys(this.extractKeys(index));
+		this.keys(sharedPathSolver.parse(index, true));
 	}
 
 	return this.$super.call(this, index);
 });
 
-BinaryTree.prototype.extractKeys = function (obj) {
-	var i,
-		keys = [];
+/**
+ * Remove all data from the binary tree.
+ */
+BinaryTree.prototype.clear = function () {
+	delete this._data;
+	delete this._left;
+	delete this._right;
 
-	for (i in obj) {
-		if (obj.hasOwnProperty(i)) {
-			keys.push({
-				key: i,
-				val: obj[i]
-			});
-		}
-	}
-
-	return keys;
+	this._store = [];
 };
 
+/**
+ * Sets this node's data object. All further inserted documents that
+ * match this node's key and value will be pushed via the push()
+ * method into the this._store array. When deciding if a new data
+ * should be created left, right or middle (pushed) of this node the
+ * new data is checked against the data set via this method.
+ * @param val
+ * @returns {*}
+ */
 BinaryTree.prototype.data = function (val) {
 	if (val !== undefined) {
 		this._data = val;
@@ -389,15 +400,26 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 	for (i = 0; i < this._keys.length; i++) {
 		indexData = this._keys[i];
 
-		if (indexData.val === 1) {
-			result = this.sortAsc(a[indexData.key], b[indexData.key]);
-		} else if (indexData.val === -1) {
-			result = this.sortDesc(a[indexData.key], b[indexData.key]);
+		if (indexData.value === 1) {
+			result = this.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+		} else if (indexData.value === -1) {
+			result = this.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+		}
+
+		if (this.debug()) {
+			console.log('Compared %s with %s order %d in path %s and result was %d', sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path), indexData.value, indexData.path, result);
 		}
 
 		if (result !== 0) {
+			if (this.debug()) {
+				console.log('Retuning result %d', result);
+			}
 			return result;
 		}
+	}
+
+	if (this.debug()) {
+		console.log('Retuning result %d', result);
 	}
 
 	return result;
@@ -417,14 +439,47 @@ BinaryTree.prototype._hashFunc = function (obj) {
 		indexData = this._keys[i];
 
 		if (hash) { hash += '_'; }
-		hash += obj[indexData.key];
+		hash += obj[indexData.path];
 	}
 
 	return hash;*/
 
-	return obj[this._keys[0].key];
+	return obj[this._keys[0].path];
 };
 
+/**
+ * Removes (deletes reference to) either left or right child if the passed
+ * node matches one of them.
+ * @param {BinaryTree} node The node to remove.
+ */
+BinaryTree.prototype.removeChildNode = function (node) {
+	if (this._left === node) {
+		// Remove left
+		delete this._left;
+	} else if (this._right === node) {
+		// Remove right
+		delete this._right;
+	}
+};
+
+/**
+ * Returns the branch this node matches (left or right).
+ * @param node
+ * @returns {String}
+ */
+BinaryTree.prototype.nodeBranch = function (node) {
+	if (this._left === node) {
+		return 'left';
+	} else if (this._right === node) {
+		return 'right';
+	}
+};
+
+/**
+ * Inserts a document into the binary tree.
+ * @param data
+ * @returns {*}
+ */
 BinaryTree.prototype.insert = function (data) {
 	var result,
 		inserted,
@@ -450,7 +505,14 @@ BinaryTree.prototype.insert = function (data) {
 		};
 	}
 
+	if (this.debug()) {
+		console.log('Inserting', data);
+	}
+
 	if (!this._data) {
+		if (this.debug()) {
+			console.log('Node has no data, setting data', data);
+		}
 		// Insert into this node (overwrite) as there is no data
 		this.data(data);
 		//this.push(data);
@@ -460,41 +522,56 @@ BinaryTree.prototype.insert = function (data) {
 	result = this._compareFunc(this._data, data);
 
 	if (result === 0) {
+		if (this.debug()) {
+			console.log('Data is equal (currrent, new)', this._data, data);
+		}
+
 		this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data);
+			this._left.insert(data, this);
 		} else {
 			// Assign to left branch
-			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._left._parent = this;
 		}
 
 		return true;
 	}
 
 	if (result === -1) {
+		if (this.debug()) {
+			console.log('Data is greater (currrent, new)', this._data, data);
+		}
+
 		// Greater than this node
 		if (this._right) {
 			// Propagate down the right branch
 			this._right.insert(data);
 		} else {
 			// Assign to right branch
-			this._right = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._right = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._right._parent = this;
 		}
 
 		return true;
 	}
 
 	if (result === 1) {
+		if (this.debug()) {
+			console.log('Data is less (currrent, new)', this._data, data);
+		}
+
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
 			this._left.insert(data);
 		} else {
 			// Assign to left branch
-			this._left = new BinaryTree(data, this._index, this._compareFunc, this._hashFunc);
+			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
+			this._left._parent = this;
 		}
 
 		return true;
@@ -503,28 +580,137 @@ BinaryTree.prototype.insert = function (data) {
 	return false;
 };
 
-BinaryTree.prototype.lookup = function (data, resultArr) {
+BinaryTree.prototype.remove = function (data) {
+	var pk = this.primaryKey(),
+		result,
+		removed,
+		i;
+
+	if (data instanceof Array) {
+		// Insert array of data
+		removed = [];
+
+		for (i = 0; i < data.length; i++) {
+			if (this.remove(data[i])) {
+				removed.push(data[i]);
+			}
+		}
+
+		return removed;
+	}
+
+	if (this.debug()) {
+		console.log('Removing', data);
+	}
+
+	if (this._data[pk] === data[pk]) {
+		// Remove this node
+		return this._remove(this);
+	}
+
+	// Compare the data to work out which branch to send the remove command down
+	result = this._compareFunc(this._data, data);
+
+	if (result === -1 && this._right) {
+		return this._right.remove(data);
+	}
+
+	if (result === 1 && this._left) {
+		return this._left.remove(data);
+	}
+
+	return false;
+};
+
+BinaryTree.prototype._remove = function (node) {
+	var leftNode,
+		rightNode;
+
+	if (this._left) {
+		// Backup branch data
+		leftNode = this._left;
+		rightNode = this._right;
+
+		// Copy data from left node
+		this._left = leftNode._left;
+		this._right = leftNode._right;
+		this._data = leftNode._data;
+		this._store = leftNode._store;
+
+		if (rightNode) {
+			// Attach the rightNode data to the right-most node
+			// of the leftNode
+			leftNode.rightMost()._right = rightNode;
+		}
+	} else if (this._right) {
+		// Backup branch data
+		rightNode = this._right;
+
+		// Copy data from right node
+		this._left = rightNode._left;
+		this._right = rightNode._right;
+		this._data = rightNode._data;
+		this._store = rightNode._store;
+	} else {
+		this.clear();
+	}
+
+	return true;
+};
+
+BinaryTree.prototype.leftMost = function () {
+	if (!this._left) {
+		return this;
+	} else {
+		return this._left.leftMost();
+	}
+};
+
+BinaryTree.prototype.rightMost = function () {
+	if (!this._right) {
+		return this;
+	} else {
+		return this._right.rightMost();
+	}
+};
+
+/**
+ * Searches the binary tree for all matching documents based on the data
+ * passed (query).
+ * @param data
+ * @param options
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.lookup = function (data, options, resultArr) {
 	var result = this._compareFunc(this._data, data);
 
 	resultArr = resultArr || [];
 
 	if (result === 0) {
-		if (this._left) { this._left.lookup(data, resultArr); }
+		if (this._left) { this._left.lookup(data, options, resultArr); }
 		resultArr.push(this._data);
-		if (this._right) { this._right.lookup(data, resultArr); }
+		if (this._right) { this._right.lookup(data, options, resultArr); }
 	}
 
 	if (result === -1) {
-		if (this._right) { this._right.lookup(data, resultArr); }
+		if (this._right) { this._right.lookup(data, options, resultArr); }
 	}
 
 	if (result === 1) {
-		if (this._left) { this._left.lookup(data, resultArr); }
+		if (this._left) { this._left.lookup(data, options, resultArr); }
 	}
 
 	return resultArr;
 };
 
+/**
+ * Returns the entire binary tree ordered.
+ * @param {String} type
+ * @param resultArr
+ * @returns {*|Array}
+ */
 BinaryTree.prototype.inOrder = function (type, resultArr) {
 	resultArr = resultArr || [];
 
@@ -688,21 +874,29 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 	return resultArr;
 };*/
 
+/**
+ * Determines if the passed query and options object will be served
+ * by this index successfully or not and gives a score so that the
+ * DB search system can determine how useful this index is in comparison
+ * to other indexes on the same collection.
+ * @param query
+ * @param options
+ * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
+ */
 BinaryTree.prototype.match = function (query, options) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
-	var pathSolver = new Path(),
-		indexKeyArr,
+	var indexKeyArr,
 		queryArr,
 		matchedKeys = [],
 		matchedKeyCount = 0,
 		i;
 
-	indexKeyArr = pathSolver.parseArr(this._index, {
+	indexKeyArr = sharedPathSolver.parseArr(this._index, {
 		verbose: true
 	});
 
-	queryArr = pathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, {
 		ignore:/\$/,
 		verbose: true
 	});
@@ -722,7 +916,7 @@ BinaryTree.prototype.match = function (query, options) {
 		score: matchedKeyCount
 	};
 
-	//return pathSolver.countObjectPaths(this._keys, query);
+	//return sharedPathSolver.countObjectPaths(this._keys, query);
 };
 
 Shared.finishModule('BinaryTree');
@@ -739,7 +933,8 @@ var Shared,
 	IndexBinaryTree,
 	Crc,
 	Overload,
-	ReactorIO;
+	ReactorIO,
+	sharedPathSolver;
 
 Shared = _dereq_('./Shared');
 
@@ -821,6 +1016,7 @@ Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
+sharedPathSolver = new Path();
 
 /**
  * Returns a checksum of a string.
@@ -3397,6 +3593,42 @@ Collection.prototype.transformOut = function (data) {
  * @returns {Array}
  */
 Collection.prototype.sort = function (sortObj, arr) {
+	// Convert the index object to an array of key val objects
+	var self = this,
+		keys = sharedPathSolver.parse(sortObj, true);
+
+	if (keys.length) {
+		// Execute sort
+		arr.sort(function (a, b) {
+			// Loop the index array
+			var i,
+				indexData,
+				result = 0;
+
+			for (i = 0; i < keys.length; i++) {
+				indexData = keys[i];
+
+				if (indexData.value === 1) {
+					result = self.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				} else if (indexData.value === -1) {
+					result = self.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				}
+
+				if (result !== 0) {
+					return result;
+				}
+			}
+
+			return result;
+		});
+	}
+
+	return arr;
+};
+
+// Commented as we have a new method that was originally implemented for binary trees.
+// This old method actually has problems with nested sort objects
+/*Collection.prototype.sortold = function (sortObj, arr) {
 	// Make sure we have an array object
 	arr = arr || [];
 
@@ -3419,7 +3651,7 @@ Collection.prototype.sort = function (sortObj, arr) {
 	} else {
 		return this._bucketSort(sortArr, arr);
 	}
-};
+};*/
 
 /**
  * Takes array of sort paths and sorts them into buckets before returning final
@@ -3429,7 +3661,7 @@ Collection.prototype.sort = function (sortObj, arr) {
  * @returns {*}
  * @private
  */
-Collection.prototype._bucketSort = function (keyArr, arr) {
+/*Collection.prototype._bucketSort = function (keyArr, arr) {
 	var keyObj = keyArr.shift(),
 		arrCopy,
 		bucketData,
@@ -3460,7 +3692,7 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
 	} else {
 		return this._sort(keyObj, arr);
 	}
-};
+};*/
 
 /**
  * Sorts array by individual sort path.
@@ -3564,27 +3796,39 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		indexLookup,
 		pathSolver,
 		queryKeyCount,
+		pkQueryType,
+		lookupResult,
 		i;
 
 	// Check if the query is a primary key lookup
 	op.time('checkIndexes');
 	pathSolver = new Path();
-	queryKeyCount = pathSolver.countKeys(query);
+	queryKeyCount = pathSolver.parseArr(query, {
+		ignore:/\$/,
+		verbose: true
+	}).length;
 
 	if (queryKeyCount) {
 		if (query[this._primaryKey] !== undefined) {
-			// Return item via primary key possible
-			op.time('checkIndexMatch: Primary Key');
-			analysis.indexMatch.push({
-				lookup: this._primaryIndex.lookup(query, options),
-				keyData: {
-					matchedKeys: [this._primaryKey],
-					totalKeyCount: queryKeyCount,
-					score: 1
-				},
-				index: this._primaryIndex
-			});
-			op.time('checkIndexMatch: Primary Key');
+			// Check suitability of querying key value index
+			pkQueryType = typeof query[this._primaryKey];
+
+			if (pkQueryType === 'string' || pkQueryType === 'number' || query[this._primaryKey] instanceof Array) {
+				// Return item via primary key possible
+				op.time('checkIndexMatch: Primary Key');
+				lookupResult = this._primaryIndex.lookup(query, options);
+
+				analysis.indexMatch.push({
+					lookup: lookupResult,
+					keyData: {
+						matchedKeys: [this._primaryKey],
+						totalKeyCount: queryKeyCount,
+						score: 1
+					},
+					index: this._primaryIndex
+				});
+				op.time('checkIndexMatch: Primary Key');
+			}
 		}
 
 		// Check if an index can speed up the query
@@ -3894,12 +4138,12 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 	}
 
-	if (this._indexById[index.id()]) {
+	/*if (this._indexById[index.id()]) {
 		// Index already exists
 		return {
 			err: 'Index with those keys already exists'
 		};
-	}
+	}*/
 
 	// Create the index
 	index.rebuild();
@@ -3959,14 +4203,14 @@ Collection.prototype.diff = function (collection) {
 		remove: []
 	};
 
-	var pm = this.primaryKey(),
+	var pk = this.primaryKey(),
 		arr,
 		arrIndex,
 		arrItem,
 		arrCount;
 
 	// Check if the primary key index of each collection can be utilised
-	if (pm !== collection.primaryKey()) {
+	if (pk !== collection.primaryKey()) {
 		throw(this.logIdentifier() + ' Diffing requires that both collections have the same primary key!');
 	}
 
@@ -3987,9 +4231,9 @@ Collection.prototype.diff = function (collection) {
 		arrItem = arr[arrIndex];
 
 		// Check for a matching item in this collection
-		if (this._primaryIndex.get(arrItem[pm])) {
+		if (this._primaryIndex.get(arrItem[pk])) {
 			// Matching item exists, check if the data is the same
-			if (this._primaryCrc.get(arrItem[pm]) !== collection._primaryCrc.get(arrItem[pm])) {
+			if (this._primaryCrc.get(arrItem[pk]) !== collection._primaryCrc.get(arrItem[pk])) {
 				// The documents exist in both collections but data differs, update required
 				diff.update.push(arrItem);
 			}
@@ -4006,7 +4250,7 @@ Collection.prototype.diff = function (collection) {
 	for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
 		arrItem = arr[arrIndex];
 
-		if (!collection._primaryIndex.get(arrItem[pm])) {
+		if (!collection._primaryIndex.get(arrItem[pk])) {
 			// The document does not exist in the other collection, remove required
 			diff.remove.push(arrItem);
 		}
@@ -5683,24 +5927,24 @@ module.exports = Db;
 "use strict";
 
 /*
-name
-id
-rebuild
-state
-match
-lookup
+name(string)
+id(string)
+rebuild(null)
+state ?? needed?
+match(query, options)
+lookup(query, options)
+insert(doc)
+remove(doc)
+primaryKey(string)
+collection(collection)
 */
 
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path'),
-	BinaryTree = _dereq_('./BinaryTree'),
-	treeInstance = new BinaryTree(),
-	btree = function () {};
-
-treeInstance.inOrder('hash');
+	BinaryTree = _dereq_('./BinaryTree');
 
 /**
- * The index class used to instantiate hash map indexes that the database can
+ * The index class used to instantiate btree indexes that the database can
  * use to speed up queries on collections and views.
  * @constructor
  */
@@ -5709,9 +5953,11 @@ var IndexBinaryTree = function () {
 };
 
 IndexBinaryTree.prototype.init = function (keys, options, collection) {
-	this._btree = new (btree.create(2, this.sortAsc))();
+	this._btree = new BinaryTree();
+	this._btree.index(keys);
 	this._size = 0;
 	this._id = this._itemKeyHash(keys, keys);
+	this._debug = options && options.debug ? options.debug : false;
 
 	this.unique(options && options.unique ? options.unique : false);
 
@@ -5721,9 +5967,11 @@ IndexBinaryTree.prototype.init = function (keys, options, collection) {
 
 	if (collection !== undefined) {
 		this.collection(collection);
+		this._btree.primaryKey(collection.primaryKey());
 	}
 
 	this.name(options && options.name ? options.name : this._id);
+	this._btree.debug(this._debug);
 };
 
 Shared.addModule('IndexBinaryTree', IndexBinaryTree);
@@ -5773,7 +6021,8 @@ IndexBinaryTree.prototype.rebuild = function () {
 			dataCount = collectionData.length;
 
 		// Clear the index data for the index
-		this._btree = new (btree.create(2, this.sortAsc))();
+		this._btree.clear();
+		this._size = 0;
 
 		if (this._unique) {
 			this._uniqueLookup = {};
@@ -5797,68 +6046,38 @@ IndexBinaryTree.prototype.rebuild = function () {
 
 IndexBinaryTree.prototype.insert = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		this._uniqueLookup[uniqueHash] = dataItem;
 	}
 
-	// We store multiple items that match a key inside an array
-	// that is then stored against that key in the tree...
+	if (this._btree.insert(dataItem)) {
+		this._size++;
 
-	// Check if item exists for this key already
-	keyArr = this._btree.get(dataItemHash);
-
-	// Check if the array exists
-	if (keyArr === undefined) {
-		// Generate an array for this key first
-		keyArr = [];
-
-		// Put the new array into the tree under the key
-		this._btree.put(dataItemHash, keyArr);
+		return true;
 	}
 
-	// Push the item into the array
-	keyArr.push(dataItem);
-
-	this._size++;
+	return false;
 };
 
 IndexBinaryTree.prototype.remove = function (dataItem, options) {
 	var uniqueFlag = this._unique,
-		uniqueHash,
-		dataItemHash = this._itemKeyHash(dataItem, this._keys),
-		keyArr,
-		itemIndex;
+		uniqueHash;
 
 	if (uniqueFlag) {
 		uniqueHash = this._itemHash(dataItem, this._keys);
 		delete this._uniqueLookup[uniqueHash];
 	}
 
-	// Try and get the array for the item hash key
-	keyArr = this._btree.get(dataItemHash);
+	if (this._btree.remove(dataItem)) {
+		this._size--;
 
-	if (keyArr !== undefined) {
-		// The key array exits, remove the item from the key array
-		itemIndex = keyArr.indexOf(dataItem);
-
-		if (itemIndex > -1) {
-			// Check the length of the array
-			if (keyArr.length === 1) {
-				// This item is the last in the array, just kill the tree entry
-				this._btree.del(dataItemHash);
-			} else {
-				// Remove the item
-				keyArr.splice(itemIndex, 1);
-			}
-
-			this._size--;
-		}
+		return true;
 	}
+
+	return false;
 };
 
 IndexBinaryTree.prototype.violation = function (dataItem) {
@@ -5874,43 +6093,12 @@ IndexBinaryTree.prototype.hashViolation = function (uniqueHash) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-IndexBinaryTree.prototype.lookup = function (query) {
-	return this._data[this._itemHash(query, this._keys)] || [];
+IndexBinaryTree.prototype.lookup = function (query, options) {
+	return this._btree.lookup(query, options);
 };
 
 IndexBinaryTree.prototype.match = function (query, options) {
-	// Check if the passed query has data in the keys our index
-	// operates on and if so, is the query sort matching our order
-	var pathSolver = new Path();
-	var indexKeyArr = pathSolver.parseArr(this._keys),
-		queryArr = pathSolver.parseArr(query),
-		matchedKeys = [],
-		matchedKeyCount = 0,
-		i;
-
-	// Loop the query array and check the order of keys against the
-	// index key array to see if this index can be used
-	for (i = 0; i < indexKeyArr.length; i++) {
-		if (queryArr[i] === indexKeyArr[i]) {
-			matchedKeyCount++;
-			matchedKeys.push(queryArr[i]);
-		} else {
-			// Query match failed - this is a hash map index so partial key match won't work
-			return {
-				matchedKeys: [],
-				totalKeyCount: queryArr.length,
-				score: 0
-			};
-		}
-	}
-
-	return {
-		matchedKeys: matchedKeys,
-		totalKeyCount: queryArr.length,
-		score: matchedKeyCount
-	};
-
-	//return pathSolver.countObjectPaths(this._keys, query);
+	return this._btree.match(query, options);
 };
 
 IndexBinaryTree.prototype._itemHash = function (item, keys) {
@@ -6057,6 +6245,7 @@ IndexHashMap.prototype.rebuild = function () {
 
 		// Clear the index data for the index
 		this._data = {};
+		this._size = 0;
 
 		if (this._unique) {
 			this._uniqueLookup = {};
@@ -6412,114 +6601,149 @@ KeyValueStore.prototype.get = function (key) {
 
 /**
  * Get / set the primary key.
- * @param {*} obj A lookup query, can be a string key, an array of string keys,
- * an object with further query clauses or a regular expression that should be
- * run against all keys.
+ * @param {*} val A lookup query.
+ * @param {Boolean=} negate If true will return only data that DOESN'T
+ * match the lookup query.
  * @returns {*}
  */
-KeyValueStore.prototype.lookup = function (obj) {
-	var pKeyVal = obj[this._primaryKey],
+KeyValueStore.prototype.lookup = function (val) {
+	var pk = this._primaryKey,
+		valType = typeof val,
 		arrIndex,
 		arrCount,
 		lookupItem,
-		result;
-
-	if (pKeyVal instanceof Array) {
-		// An array of primary keys, find all matches
-		arrCount = pKeyVal.length;
 		result = [];
 
-		for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-			lookupItem = this._data[pKeyVal[arrIndex]];
-
-			if (lookupItem) {
-				result.push(lookupItem);
-			}
-		}
-
-		return result;
-	} else if (pKeyVal instanceof RegExp) {
-		// Create new data
-		result = [];
-
-		for (arrIndex in this._data) {
-			if (this._data.hasOwnProperty(arrIndex)) {
-				if (pKeyVal.test(arrIndex)) {
-					result.push(this._data[arrIndex]);
-				}
-			}
-		}
-
-		return result;
-	} else if (typeof pKeyVal === 'object') {
-		// The primary key clause is an object, now we have to do some
-		// more extensive searching
-		if (pKeyVal.$ne) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (arrIndex !== pKeyVal.$ne) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$in && (pKeyVal.$in instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (pKeyVal.$in.indexOf(arrIndex) > -1) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$nin && (pKeyVal.$nin instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex in this._data) {
-				if (this._data.hasOwnProperty(arrIndex)) {
-					if (pKeyVal.$nin.indexOf(arrIndex) === -1) {
-						result.push(this._data[arrIndex]);
-					}
-				}
-			}
-
-			return result;
-		}
-
-		if (pKeyVal.$or && (pKeyVal.$or instanceof Array)) {
-			// Create new data
-			result = [];
-
-			for (arrIndex = 0; arrIndex < pKeyVal.$or.length; arrIndex++) {
-				result = result.concat(this.lookup(pKeyVal.$or[arrIndex]));
-			}
-
-			return result;
-		}
-	} else {
-		// Key is a basic lookup from string
-		lookupItem = this._data[pKeyVal];
-
+	// Check for early exit conditions
+	if (valType === 'string' || valType === 'number') {
+		lookupItem = this.get(val);
 		if (lookupItem !== undefined) {
 			return [lookupItem];
 		} else {
 			return [];
 		}
+	} else if (valType === 'object') {
+		if (val instanceof Array) {
+			// An array of primary keys, find all matches
+			arrCount = val.length;
+			result = [];
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				lookupItem = this.get(val[arrIndex]);
+
+				if (lookupItem) {
+					result.push(lookupItem);
+				}
+			}
+
+			return result;
+		} else if (val[pk]) {
+			return this.lookup(val[pk]);
+		}
 	}
+
+	// COMMENTED AS CODE WILL NEVER BE REACHED
+	// Complex lookup
+	/*lookupData = this._lookupKeys(val);
+	keys = lookupData.keys;
+	negate = lookupData.negate;
+
+	if (!negate) {
+		// Loop keys and return values
+		for (arrIndex = 0; arrIndex < keys.length; arrIndex++) {
+			result.push(this.get(keys[arrIndex]));
+		}
+	} else {
+		// Loop data and return non-matching keys
+		for (arrIndex in this._data) {
+			if (this._data.hasOwnProperty(arrIndex)) {
+				if (keys.indexOf(arrIndex) === -1) {
+					result.push(this.get(arrIndex));
+				}
+			}
+		}
+	}
+
+	return result;*/
 };
+
+// COMMENTED AS WE ARE NOT CURRENTLY PASSING COMPLEX QUERIES TO KEYVALUESTORE INDEXES
+/*KeyValueStore.prototype._lookupKeys = function (val) {
+	var pk = this._primaryKey,
+		valType = typeof val,
+		arrIndex,
+		arrCount,
+		lookupItem,
+		bool,
+		result;
+
+	if (valType === 'string' || valType === 'number') {
+		return {
+			keys: [val],
+			negate: false
+		};
+	} else if (valType === 'object') {
+		if (val instanceof RegExp) {
+			// Create new data
+			result = [];
+
+			for (arrIndex in this._data) {
+				if (this._data.hasOwnProperty(arrIndex)) {
+					if (val.test(arrIndex)) {
+						result.push(arrIndex);
+					}
+				}
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val instanceof Array) {
+			// An array of primary keys, find all matches
+			arrCount = val.length;
+			result = [];
+
+			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
+				result = result.concat(this._lookupKeys(val[arrIndex]).keys);
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val.$in && (val.$in instanceof Array)) {
+			return {
+				keys: this._lookupKeys(val.$in).keys,
+				negate: false
+			};
+		} else if (val.$nin && (val.$nin instanceof Array)) {
+			return {
+				keys: this._lookupKeys(val.$nin).keys,
+				negate: true
+			};
+		} else if (val.$ne) {
+			return {
+				keys: this._lookupKeys(val.$ne, true).keys,
+				negate: true
+			};
+		} else if (val.$or && (val.$or instanceof Array)) {
+			// Create new data
+			result = [];
+
+			for (arrIndex = 0; arrIndex < val.$or.length; arrIndex++) {
+				result = result.concat(this._lookupKeys(val.$or[arrIndex]).keys);
+			}
+
+			return {
+				keys: result,
+				negate: false
+			};
+		} else if (val[pk]) {
+			return this._lookupKeys(val[pk]);
+		}
+	}
+};*/
 
 /**
  * Removes data for the given key from the store.
@@ -9030,7 +9254,45 @@ Path.prototype._parseArr = function (obj, path, paths, options) {
 	return paths;
 };
 
-Path.prototype.valueOne = function (obj, path) {
+/**
+ * Sets a value on an object for the specified path.
+ * @param {Object} obj The object to update.
+ * @param {String} path The path to update.
+ * @param {*} val The value to set the object path to.
+ * @returns {*}
+ */
+Path.prototype.set = function (obj, path, val) {
+	if (obj !== undefined && path !== undefined) {
+		var pathParts,
+				part;
+
+		path = this.clean(path);
+		pathParts = path.split('.');
+
+		part = pathParts.shift();
+
+		if (pathParts.length) {
+			// Generate the path part in the object if it does not already exist
+			obj[part] = obj[part] || {};
+
+			// Recurse
+			this.set(obj[part], pathParts.join('.'), val);
+		} else {
+			// Set the value
+			obj[part] = val;
+		}
+	}
+
+	return obj;
+};
+
+/**
+ * Gets a single value from the passed object and given path.
+ * @param {Object} obj The object to inspect.
+ * @param {String} path The path to retrieve data from.
+ * @returns {*}
+ */
+Path.prototype.get = function (obj, path) {
 	return this.value(obj, path)[0];
 };
 
@@ -9060,7 +9322,7 @@ Path.prototype.value = function (obj, path, options) {
 				returnArr = [];
 
 				for (i = 0; i < obj.length; i++) {
-					returnArr.push(this.valueOne(obj[i], path));
+					returnArr.push(this.get(obj[i], path));
 				}
 
 				return returnArr;
@@ -9101,42 +9363,6 @@ Path.prototype.value = function (obj, path, options) {
 	} else {
 		return [];
 	}
-};
-
-/**
- * Sets a value on an object for the specified path.
- * @param {Object} obj The object to update.
- * @param {String} path The path to update.
- * @param {*} val The value to set the object path to.
- * @returns {*}
- */
-Path.prototype.set = function (obj, path, val) {
-	if (obj !== undefined && path !== undefined) {
-		var pathParts,
-			part;
-
-		path = this.clean(path);
-		pathParts = path.split('.');
-
-		part = pathParts.shift();
-
-		if (pathParts.length) {
-			// Generate the path part in the object if it does not already exist
-			obj[part] = obj[part] || {};
-
-			// Recurse
-			this.set(obj[part], pathParts.join('.'), val);
-		} else {
-			// Set the value
-			obj[part] = val;
-		}
-	}
-
-	return obj;
-};
-
-Path.prototype.get = function (obj, path) {
-	return this.value(obj, path)[0];
 };
 
 /**
@@ -9369,7 +9595,7 @@ Serialiser.prototype.init = function () {
 	this._encoder = [];
 	this._decoder = {};
 
-	// Register our handlers
+	// Handler for Date() objects
 	this.registerEncoder('$date', function (data) {
 		if (data instanceof Date) {
 			return data.toISOString();
@@ -9378,6 +9604,20 @@ Serialiser.prototype.init = function () {
 
 	this.registerDecoder('$date', function (data) {
 		return new Date(data);
+	});
+
+	// Handler for RegExp() objects
+	this.registerEncoder('$regexp', function (data) {
+		if (data instanceof RegExp) {
+			return {
+				source: data.source,
+				params: '' + (data.global ? 'g' : '') + (data.ignoreCase ? 'i' : '')
+			};
+		}
+	});
+
+	this.registerDecoder('$regexp', function (data) {
+		return new RegExp(data.source, data.params);
 	});
 };
 
@@ -9547,7 +9787,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.509',
+	version: '1.3.513',
 	modules: {},
 	plugins: {},
 

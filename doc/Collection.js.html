@@ -37,7 +37,8 @@ var Shared,
 	IndexBinaryTree,
 	Crc,
 	Overload,
-	ReactorIO;
+	ReactorIO,
+	sharedPathSolver;
 
 Shared = require('./Shared');
 
@@ -119,6 +120,7 @@ Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
+sharedPathSolver = new Path();
 
 /**
  * Returns a checksum of a string.
@@ -2695,6 +2697,42 @@ Collection.prototype.transformOut = function (data) {
  * @returns {Array}
  */
 Collection.prototype.sort = function (sortObj, arr) {
+	// Convert the index object to an array of key val objects
+	var self = this,
+		keys = sharedPathSolver.parse(sortObj, true);
+
+	if (keys.length) {
+		// Execute sort
+		arr.sort(function (a, b) {
+			// Loop the index array
+			var i,
+				indexData,
+				result = 0;
+
+			for (i = 0; i &lt; keys.length; i++) {
+				indexData = keys[i];
+
+				if (indexData.value === 1) {
+					result = self.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				} else if (indexData.value === -1) {
+					result = self.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				}
+
+				if (result !== 0) {
+					return result;
+				}
+			}
+
+			return result;
+		});
+	}
+
+	return arr;
+};
+
+// Commented as we have a new method that was originally implemented for binary trees.
+// This old method actually has problems with nested sort objects
+/*Collection.prototype.sortold = function (sortObj, arr) {
 	// Make sure we have an array object
 	arr = arr || [];
 
@@ -2717,7 +2755,7 @@ Collection.prototype.sort = function (sortObj, arr) {
 	} else {
 		return this._bucketSort(sortArr, arr);
 	}
-};
+};*/
 
 /**
  * Takes array of sort paths and sorts them into buckets before returning final
@@ -2727,7 +2765,7 @@ Collection.prototype.sort = function (sortObj, arr) {
  * @returns {*}
  * @private
  */
-Collection.prototype._bucketSort = function (keyArr, arr) {
+/*Collection.prototype._bucketSort = function (keyArr, arr) {
 	var keyObj = keyArr.shift(),
 		arrCopy,
 		bucketData,
@@ -2758,7 +2796,7 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
 	} else {
 		return this._sort(keyObj, arr);
 	}
-};
+};*/
 
 /**
  * Sorts array by individual sort path.
@@ -2862,27 +2900,39 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		indexLookup,
 		pathSolver,
 		queryKeyCount,
+		pkQueryType,
+		lookupResult,
 		i;
 
 	// Check if the query is a primary key lookup
 	op.time('checkIndexes');
 	pathSolver = new Path();
-	queryKeyCount = pathSolver.countKeys(query);
+	queryKeyCount = pathSolver.parseArr(query, {
+		ignore:/\$/,
+		verbose: true
+	}).length;
 
 	if (queryKeyCount) {
 		if (query[this._primaryKey] !== undefined) {
-			// Return item via primary key possible
-			op.time('checkIndexMatch: Primary Key');
-			analysis.indexMatch.push({
-				lookup: this._primaryIndex.lookup(query, options),
-				keyData: {
-					matchedKeys: [this._primaryKey],
-					totalKeyCount: queryKeyCount,
-					score: 1
-				},
-				index: this._primaryIndex
-			});
-			op.time('checkIndexMatch: Primary Key');
+			// Check suitability of querying key value index
+			pkQueryType = typeof query[this._primaryKey];
+
+			if (pkQueryType === 'string' || pkQueryType === 'number' || query[this._primaryKey] instanceof Array) {
+				// Return item via primary key possible
+				op.time('checkIndexMatch: Primary Key');
+				lookupResult = this._primaryIndex.lookup(query, options);
+
+				analysis.indexMatch.push({
+					lookup: lookupResult,
+					keyData: {
+						matchedKeys: [this._primaryKey],
+						totalKeyCount: queryKeyCount,
+						score: 1
+					},
+					index: this._primaryIndex
+				});
+				op.time('checkIndexMatch: Primary Key');
+			}
 		}
 
 		// Check if an index can speed up the query
@@ -3192,12 +3242,12 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 	}
 
-	if (this._indexById[index.id()]) {
+	/*if (this._indexById[index.id()]) {
 		// Index already exists
 		return {
 			err: 'Index with those keys already exists'
 		};
-	}
+	}*/
 
 	// Create the index
 	index.rebuild();
@@ -3257,14 +3307,14 @@ Collection.prototype.diff = function (collection) {
 		remove: []
 	};
 
-	var pm = this.primaryKey(),
+	var pk = this.primaryKey(),
 		arr,
 		arrIndex,
 		arrItem,
 		arrCount;
 
 	// Check if the primary key index of each collection can be utilised
-	if (pm !== collection.primaryKey()) {
+	if (pk !== collection.primaryKey()) {
 		throw(this.logIdentifier() + ' Diffing requires that both collections have the same primary key!');
 	}
 
@@ -3285,9 +3335,9 @@ Collection.prototype.diff = function (collection) {
 		arrItem = arr[arrIndex];
 
 		// Check for a matching item in this collection
-		if (this._primaryIndex.get(arrItem[pm])) {
+		if (this._primaryIndex.get(arrItem[pk])) {
 			// Matching item exists, check if the data is the same
-			if (this._primaryCrc.get(arrItem[pm]) !== collection._primaryCrc.get(arrItem[pm])) {
+			if (this._primaryCrc.get(arrItem[pk]) !== collection._primaryCrc.get(arrItem[pk])) {
 				// The documents exist in both collections but data differs, update required
 				diff.update.push(arrItem);
 			}
@@ -3304,7 +3354,7 @@ Collection.prototype.diff = function (collection) {
 	for (arrIndex = 0; arrIndex &lt; arrCount; arrIndex++) {
 		arrItem = arr[arrIndex];
 
-		if (!collection._primaryIndex.get(arrItem[pm])) {
+		if (!collection._primaryIndex.get(arrItem[pk])) {
 			// The document does not exist in the other collection, remove required
 			diff.remove.push(arrItem);
 		}
@@ -3671,7 +3721,7 @@ module.exports = Collection;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 06 2016 22:13:30 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 11:18:02 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
