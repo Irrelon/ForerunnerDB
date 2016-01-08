@@ -365,9 +365,6 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 			},
 			i, treeResultComp, collResultComp;
 
-		/////////////// THERE IS A BUG IN COLLECTION BUCKET SORTING!
-		/////////////// BINARY TREE RESULTS ARE CORRECT, COLLECTION IS WRONG!
-
 		for (i = 0; i < count; i++) {
 			data.push({
 				_id: db.objectId(),
@@ -380,9 +377,6 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 		}
 
 		tree.index(indexOrdering);
-
-		// This test passing relies on the fact that collection's sorting is
-		// already tested and bulletproof (which it is)
 
 		//console.time('Collection insert');
 		db.collection('sorted').setData(data);
