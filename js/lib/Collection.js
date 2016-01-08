@@ -9,7 +9,8 @@ var Shared,
 	IndexBinaryTree,
 	Crc,
 	Overload,
-	ReactorIO;
+	ReactorIO,
+	sharedPathSolver;
 
 Shared = require('./Shared');
 
@@ -91,6 +92,7 @@ Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
+sharedPathSolver = new Path();
 
 /**
  * Returns a checksum of a string.
@@ -2667,6 +2669,42 @@ Collection.prototype.transformOut = function (data) {
  * @returns {Array}
  */
 Collection.prototype.sort = function (sortObj, arr) {
+	// Convert the index object to an array of key val objects
+	var self = this,
+		keys = sharedPathSolver.parse(sortObj, true);
+
+	if (keys.length) {
+		// Execute sort
+		arr.sort(function (a, b) {
+			// Loop the index array
+			var i,
+				indexData,
+				result = 0;
+
+			for (i = 0; i < keys.length; i++) {
+				indexData = keys[i];
+
+				if (indexData.value === 1) {
+					result = self.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				} else if (indexData.value === -1) {
+					result = self.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+				}
+
+				if (result !== 0) {
+					return result;
+				}
+			}
+
+			return result;
+		});
+	}
+
+	return arr;
+};
+
+// Commented as we have a new method that was originally implemented for binary trees.
+// This old method actually has problems with nested sort objects
+/*Collection.prototype.sortold = function (sortObj, arr) {
 	// Make sure we have an array object
 	arr = arr || [];
 
@@ -2689,7 +2727,7 @@ Collection.prototype.sort = function (sortObj, arr) {
 	} else {
 		return this._bucketSort(sortArr, arr);
 	}
-};
+};*/
 
 /**
  * Takes array of sort paths and sorts them into buckets before returning final
@@ -2699,7 +2737,7 @@ Collection.prototype.sort = function (sortObj, arr) {
  * @returns {*}
  * @private
  */
-Collection.prototype._bucketSort = function (keyArr, arr) {
+/*Collection.prototype._bucketSort = function (keyArr, arr) {
 	var keyObj = keyArr.shift(),
 		arrCopy,
 		bucketData,
@@ -2730,7 +2768,7 @@ Collection.prototype._bucketSort = function (keyArr, arr) {
 	} else {
 		return this._sort(keyObj, arr);
 	}
-};
+};*/
 
 /**
  * Sorts array by individual sort path.
