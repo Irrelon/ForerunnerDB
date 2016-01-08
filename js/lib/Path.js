@@ -304,6 +304,11 @@ Path.prototype.value = function (obj, path, options) {
 		returnArr,
 		i, k;
 
+	// Detect early exit
+	if (path && path.indexOf('.') === -1) {
+		return [obj[path]];
+	}
+
 	if (obj !== undefined && typeof obj === 'object') {
 		if (!options || options && !options.skipArrCheck) {
 			// Check if we were passed an array of objects and if so,
