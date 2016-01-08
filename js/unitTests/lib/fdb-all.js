@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/BinaryLog":4,"../lib/CollectionGroup":7,"../lib/Document":11,"../lib/Grid":12,"../lib/Highchart":13,"../lib/NodeApiClient":28,"../lib/Overview":31,"../lib/Persist":33,"../lib/View":40,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/BinaryLog":4,"../lib/CollectionGroup":7,"../lib/Document":11,"../lib/Grid":13,"../lib/Highchart":14,"../lib/NodeApiClient":30,"../lib/Overview":33,"../lib/Persist":35,"../lib/View":42,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":8,"../lib/Shim.IE8":39}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":8,"../lib/Shim.IE8":41}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -285,7 +285,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":38}],4:[function(_dereq_,module,exports){
+},{"./Shared":40}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -393,7 +393,7 @@ Collection.prototype.init = function () {
 
 Shared.finishModule('BinaryLog');
 module.exports = BinaryLog;
-},{"./Shared":38}],5:[function(_dereq_,module,exports){
+},{"./Shared":40}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -643,12 +643,12 @@ BinaryTree.prototype.insert = function (data) {
 			console.log('Data is equal (currrent, new)', this._data, data);
 		}
 
-		this.push(data);
+		//this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data, this);
+			this._left.insert(data);
 		} else {
 			// Assign to left branch
 			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
@@ -859,6 +859,50 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
+/**
+ * Searches the binary tree for all matching documents based on the regular
+ * expression passed.
+ * @param path
+ * @param val
+ * @param regex
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
+	var reTest,
+		thisDataPathVal = sharedPathSolver.get(this._data, path),
+		thisDataPathValSubStr = thisDataPathVal.substr(0, val.length),
+		result;
+
+	regex = regex || new RegExp('^' + val);
+	resultArr = resultArr || [];
+
+	if (resultArr._visited === undefined) { resultArr._visited = 0; }
+	resultArr._visited++;
+
+	result = this.sortAsc(thisDataPathVal, val);
+	reTest = thisDataPathValSubStr === val;
+
+	if (result === 0) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === -1) {
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+	}
+
+	return resultArr;
+};
+
 /*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
@@ -997,10 +1041,11 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
  * DB search system can determine how useful this index is in comparison
  * to other indexes on the same collection.
  * @param query
- * @param options
+ * @param queryOptions
+ * @param matchOptions
  * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
  */
-BinaryTree.prototype.match = function (query, options) {
+BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var indexKeyArr,
@@ -1013,7 +1058,7 @@ BinaryTree.prototype.match = function (query, options) {
 		verbose: true
 	});
 
-	queryArr = sharedPathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, matchOptions && matchOptions.pathOptions ? matchOptions.pathOptions : {
 		ignore:/\$/,
 		verbose: true
 	});
@@ -1038,7 +1083,7 @@ BinaryTree.prototype.match = function (query, options) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":32,"./Shared":38}],6:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -1048,6 +1093,7 @@ var Shared,
 	Path,
 	IndexHashMap,
 	IndexBinaryTree,
+	Index2d,
 	Crc,
 	Overload,
 	ReactorIO,
@@ -1129,6 +1175,7 @@ KeyValueStore = _dereq_('./KeyValueStore');
 Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
+Index2d = _dereq_('./Index2d');
 Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
@@ -4237,6 +4284,10 @@ Collection.prototype.ensureIndex = function (keys, options) {
 				index = new IndexBinaryTree(keys, options, this);
 				break;
 
+			case '2d':
+				index = new Index2d(keys, options, this);
+				break;
+
 			default:
 				// Default
 				index = new IndexHashMap(keys, options, this);
@@ -4719,7 +4770,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":9,"./IndexBinaryTree":14,"./IndexHashMap":15,"./KeyValueStore":16,"./Metrics":17,"./Overload":30,"./Path":32,"./ReactorIO":36,"./Shared":38}],7:[function(_dereq_,module,exports){
+},{"./Crc":9,"./Index2d":15,"./IndexBinaryTree":16,"./IndexHashMap":17,"./KeyValueStore":18,"./Metrics":19,"./Overload":32,"./Path":34,"./ReactorIO":38,"./Shared":40}],7:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5061,7 +5112,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":6,"./Shared":38}],8:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Shared":40}],8:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5368,7 +5419,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":10,"./Metrics.js":17,"./Overload":30,"./Shared":38}],9:[function(_dereq_,module,exports){
+},{"./Db.js":10,"./Metrics.js":19,"./Overload":32,"./Shared":40}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -6040,7 +6091,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":6,"./Crc.js":9,"./Metrics.js":17,"./Overload":30,"./Shared":38}],11:[function(_dereq_,module,exports){
+},{"./Collection.js":6,"./Crc.js":9,"./Metrics.js":19,"./Overload":32,"./Shared":40}],11:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -6494,7 +6545,235 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":6,"./Shared":38}],12:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Shared":40}],12:[function(_dereq_,module,exports){
+// geohash.js
+// Geohash library for Javascript
+// (c) 2008 David Troy
+// Distributed under the MIT License
+// Original at: https://github.com/davetroy/geohash-js
+
+// Modified by Irrelon Software Limited (http://www.irrelon.com)
+// to clean up and modularise the code using Node.js-style exports
+// and add a few helper methods.
+// @by Rob Evans - rob@irrelon.com
+"use strict";
+
+/*
+Define some shared constants that will be used by all instances
+of the module.
+ */
+var bits,
+	base32,
+	neighbors,
+	borders;
+
+bits = [16, 8, 4, 2, 1];
+
+base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+neighbors = {
+	right: {even: "bc01fg45238967deuvhjyznpkmstqrwx"},
+	left: {even: "238967debc01fg45kmstqrwxuvhjyznp"},
+	top: {even: "p0r21436x8zb9dcf5h7kjnmqesgutwvy"},
+	bottom: {even: "14365h7k9dcfesgujnmqp0r2twvyx8zb"}
+};
+
+borders = {
+	right: {even: "bcfguvyz"},
+	left: {even: "0145hjnp"},
+	top: {even: "prxz"},
+	bottom: {even: "028b"}
+};
+
+neighbors.bottom.odd = neighbors.left.even;
+neighbors.top.odd = neighbors.right.even;
+neighbors.left.odd = neighbors.bottom.even;
+neighbors.right.odd = neighbors.top.even;
+
+borders.bottom.odd = borders.left.even;
+borders.top.odd = borders.right.even;
+borders.left.odd = borders.bottom.even;
+borders.right.odd = borders.top.even;
+
+var GeoHash = function () {};
+
+GeoHash.prototype.refineInterval = function (interval, cd, mask) {
+	if (cd & mask) { //jshint ignore: line
+		interval[0] = (interval[0] + interval[1]) / 2;
+	} else {
+		interval[1] = (interval[0] + interval[1]) / 2;
+	}
+};
+
+/**
+ * Calculates all surrounding neighbours of a hash and returns them.
+ * @param {String} centerHash The hash at the center of the grid.
+ * @param options
+ * @returns {*}
+ */
+GeoHash.prototype.calculateNeighbours = function (centerHash, options) {
+	var response;
+
+	if (!options || options.type === 'object') {
+		response = {
+			center: centerHash,
+			left: this.calculateAdjacent(centerHash, 'left'),
+			right: this.calculateAdjacent(centerHash, 'right'),
+			top: this.calculateAdjacent(centerHash, 'top'),
+			bottom: this.calculateAdjacent(centerHash, 'bottom')
+		};
+
+		response.topLeft = this.calculateAdjacent(response.left, 'top');
+		response.topRight = this.calculateAdjacent(response.right, 'top');
+		response.bottomLeft = this.calculateAdjacent(response.left, 'bottom');
+		response.bottomRight = this.calculateAdjacent(response.right, 'bottom');
+	} else {
+		response = [];
+
+		response[4] = centerHash;
+		response[3] = this.calculateAdjacent(centerHash, 'left');
+		response[5] = this.calculateAdjacent(centerHash, 'right');
+		response[1] = this.calculateAdjacent(centerHash, 'top');
+		response[7] = this.calculateAdjacent(centerHash, 'bottom');
+
+		response[0] = this.calculateAdjacent(response[3], 'top');
+		response[2] = this.calculateAdjacent(response[5], 'top');
+		response[6] = this.calculateAdjacent(response[3], 'bottom');
+		response[8] = this.calculateAdjacent(response[5], 'bottom');
+	}
+
+	return response;
+};
+
+/**
+ * Calculates an adjacent hash to the hash passed, in the direction
+ * specified.
+ * @param {String} srcHash The hash to calculate adjacent to.
+ * @param {String} dir Either "top", "left", "bottom" or "right".
+ * @returns {String} The resulting geohash.
+ */
+GeoHash.prototype.calculateAdjacent = function (srcHash, dir) {
+	srcHash = srcHash.toLowerCase();
+
+	var lastChr = srcHash.charAt(srcHash.length - 1),
+		type = (srcHash.length % 2) ? 'odd' : 'even',
+		base = srcHash.substring(0, srcHash.length - 1);
+
+	if (borders[dir][type].indexOf(lastChr) !== -1) {
+		base = this.calculateAdjacent(base, dir);
+	}
+
+	return base + base32[neighbors[dir][type].indexOf(lastChr)];
+};
+
+/**
+ * Decodes a string geohash back to longitude/latitude.
+ * @param {String} geohash The hash to decode.
+ * @returns {Object}
+ */
+GeoHash.prototype.decode = function (geohash) {
+	var isEven = 1,
+		lat = [],
+		lon = [],
+		i, c, cd, j, mask,
+		latErr,
+		lonErr;
+
+	lat[0] = -90.0;
+	lat[1] = 90.0;
+	lon[0] = -180.0;
+	lon[1] = 180.0;
+
+	latErr = 90.0;
+	lonErr = 180.0;
+
+	for (i = 0; i < geohash.length; i++) {
+		c = geohash[i];
+		cd = base32.indexOf(c);
+
+		for (j = 0; j < 5; j++) {
+			mask = bits[j];
+
+			if (isEven) {
+				lonErr /= 2;
+				this.refineInterval(lon, cd, mask);
+			} else {
+				latErr /= 2;
+				this.refineInterval(lat, cd, mask);
+			}
+
+			isEven = !isEven;
+		}
+	}
+
+	lat[2] = (lat[0] + lat[1]) / 2;
+	lon[2] = (lon[0] + lon[1]) / 2;
+
+	return {
+		latitude: lat,
+		longitude: lon
+	};
+};
+
+/**
+ * Encodes a longitude/latitude to geohash string.
+ * @param latitude
+ * @param longitude
+ * @param {Number=} precision Length of the geohash string. Defaults to 12.
+ * @returns {String}
+ */
+GeoHash.prototype.encode = function (latitude, longitude, precision) {
+	var isEven = 1,
+		mid,
+		lat = [],
+		lon = [],
+		bit = 0,
+		ch = 0,
+		geoHash = "";
+
+	if (!precision) { precision = 12; }
+
+	lat[0] = -90.0;
+	lat[1] = 90.0;
+	lon[0] = -180.0;
+	lon[1] = 180.0;
+
+	while (geoHash.length < precision) {
+		if (isEven) {
+			mid = (lon[0] + lon[1]) / 2;
+
+			if (longitude > mid) {
+				ch |= bits[bit]; //jshint ignore: line
+				lon[0] = mid;
+			} else {
+				lon[1] = mid;
+			}
+		} else {
+			mid = (lat[0] + lat[1]) / 2;
+
+			if (latitude > mid) {
+				ch |= bits[bit]; //jshint ignore: line
+				lat[0] = mid;
+			} else {
+				lat[1] = mid;
+			}
+		}
+
+		isEven = !isEven;
+
+		if (bit < 4) {
+			bit++;
+		} else {
+			geoHash += base32[ch];
+			bit = 0;
+			ch = 0;
+		}
+	}
+
+	return geoHash;
+};
+
+module.exports = GeoHash;
+},{}],13:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7190,7 +7469,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":6,"./CollectionGroup":7,"./ReactorIO":36,"./Shared":38,"./View":40}],13:[function(_dereq_,module,exports){
+},{"./Collection":6,"./CollectionGroup":7,"./ReactorIO":38,"./Shared":40,"./View":42}],14:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7856,7 +8135,440 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":30,"./Shared":38}],14:[function(_dereq_,module,exports){
+},{"./Overload":32,"./Shared":40}],15:[function(_dereq_,module,exports){
+"use strict";
+
+/*
+name(string)
+id(string)
+rebuild(null)
+state ?? needed?
+match(query, options)
+lookup(query, options)
+insert(doc)
+remove(doc)
+primaryKey(string)
+collection(collection)
+*/
+
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path'),
+	BinaryTree = _dereq_('./BinaryTree'),
+	GeoHash = _dereq_('./Geohash'),
+	sharedPathSolver = new Path(),
+	sharedGeoHashSolver = new GeoHash(),
+	// GeoHash Distances in Kilometers
+	geoHashDistance = [
+		5000,
+		1250,
+		156,
+		39.1,
+		4.89,
+		1.22,
+		0.153,
+		0.0382,
+		0.00477,
+		0.00119,
+		0.000149,
+		0.0000372
+	];
+
+/**
+ * The index class used to instantiate 2d indexes that the database can
+ * use to handle high-performance geospatial queries.
+ * @constructor
+ */
+var Index2d = function () {
+	this.init.apply(this, arguments);
+};
+
+Index2d.prototype.init = function (keys, options, collection) {
+	this._btree = new BinaryTree();
+	this._btree.index(keys);
+	this._size = 0;
+	this._id = this._itemKeyHash(keys, keys);
+	this._debug = options && options.debug ? options.debug : false;
+
+	this.unique(options && options.unique ? options.unique : false);
+
+	if (keys !== undefined) {
+		this.keys(keys);
+	}
+
+	if (collection !== undefined) {
+		this.collection(collection);
+		this._btree.primaryKey(collection.primaryKey());
+	}
+
+	this.name(options && options.name ? options.name : this._id);
+	this._btree.debug(this._debug);
+};
+
+Shared.addModule('Index2d', Index2d);
+Shared.mixin(Index2d.prototype, 'Mixin.Common');
+Shared.mixin(Index2d.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Index2d.prototype, 'Mixin.Sorting');
+
+Index2d.prototype.id = function () {
+	return this._id;
+};
+
+Index2d.prototype.state = function () {
+	return this._state;
+};
+
+Index2d.prototype.size = function () {
+	return this._size;
+};
+
+Shared.synthesize(Index2d.prototype, 'data');
+Shared.synthesize(Index2d.prototype, 'name');
+Shared.synthesize(Index2d.prototype, 'collection');
+Shared.synthesize(Index2d.prototype, 'type');
+Shared.synthesize(Index2d.prototype, 'unique');
+
+Index2d.prototype.keys = function (val) {
+	if (val !== undefined) {
+		this._keys = val;
+
+		// Count the keys
+		this._keyCount = sharedPathSolver.parse(this._keys).length;
+		return this;
+	}
+
+	return this._keys;
+};
+
+Index2d.prototype.rebuild = function () {
+	// Do we have a collection?
+	if (this._collection) {
+		// Get sorted data
+		var collection = this._collection.subset({}, {
+				$decouple: false,
+				$orderBy: this._keys
+			}),
+			collectionData = collection.find(),
+			dataIndex,
+			dataCount = collectionData.length;
+
+		// Clear the index data for the index
+		this._btree.clear();
+		this._size = 0;
+
+		if (this._unique) {
+			this._uniqueLookup = {};
+		}
+
+		// Loop the collection data
+		for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+			this.insert(collectionData[dataIndex]);
+		}
+	}
+
+	this._state = {
+		name: this._name,
+		keys: this._keys,
+		indexSize: this._size,
+		built: new Date(),
+		updated: new Date(),
+		ok: true
+	};
+};
+
+Index2d.prototype.insert = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash;
+
+	dataItem = this.decouple(dataItem);
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		this._uniqueLookup[uniqueHash] = dataItem;
+	}
+
+	// Convert 2d indexed values to geohashes
+	var keys = this._btree.keys(),
+		pathVal,
+		geoHash,
+		lng,
+		lat,
+		i;
+
+	for (i = 0; i < keys.length; i++) {
+		pathVal = sharedPathSolver.get(dataItem, keys[i].path);
+
+		if (pathVal instanceof Array) {
+			lng = pathVal[0];
+			lat = pathVal[1];
+
+			geoHash = sharedGeoHashSolver.encode(lng, lat);
+
+			sharedPathSolver.set(dataItem, keys[i].path, geoHash);
+		}
+	}
+
+	if (this._btree.insert(dataItem)) {
+		this._size++;
+
+		return true;
+	}
+
+	return false;
+};
+
+Index2d.prototype.remove = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		delete this._uniqueLookup[uniqueHash];
+	}
+
+	if (this._btree.remove(dataItem)) {
+		this._size--;
+
+		return true;
+	}
+
+	return false;
+};
+
+Index2d.prototype.violation = function (dataItem) {
+	// Generate item hash
+	var uniqueHash = this._itemHash(dataItem, this._keys);
+
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index2d.prototype.hashViolation = function (uniqueHash) {
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index2d.prototype.lookup = function (query, options) {
+	// Loop the indexed keys and determine if the query has any operators
+	// that we want to handle differently from a standard lookup
+	var keys = this._btree.keys(),
+		pathStr,
+		pathVal,
+		results,
+		i;
+
+	for (i = 0; i < keys.length; i++) {
+		pathStr = keys[i].path;
+		pathVal = sharedPathSolver.get(query, pathStr);
+
+		if (typeof pathVal === 'object') {
+			if (pathVal.$near) {
+				results = [];
+
+				// Do a near point lookup
+				results = results.concat(this.near(pathStr, pathVal.$near, options));
+			}
+
+			if (pathVal.$geoWithin) {
+				results = [];
+
+				// Do a geoWithin shape lookup
+				results = results.concat(this.geoWithin(pathStr, pathVal.$geoWithin, options));
+			}
+
+			return results;
+		}
+	}
+
+	return this._btree.lookup(query, options);
+};
+
+Index2d.prototype.near = function (pathStr, query, options) {
+	var self = this,
+		geoHash,
+		neighbours,
+		visited,
+		search,
+		results,
+		finalResults = [],
+		precision,
+		maxDistanceKm,
+		distance,
+		distCache,
+		latLng,
+		pk = this._collection.primaryKey(),
+		i;
+
+	// Calculate the required precision to encapsulate the distance
+	// TODO: Instead of opting for the "one size larger" than the distance boxes,
+	// TODO: we should calculate closest divisible box size as a multiple and then
+	// TODO: scan neighbours until we have covered the area otherwise we risk
+	// TODO: opening the results up to vastly more information as the box size
+	// TODO: increases dramatically between the geohash precisions
+	if (query.$distanceUnits === 'km') {
+		maxDistanceKm = query.$maxDistance;
+
+		for (i = 0; i < geoHashDistance.length; i++) {
+			if (maxDistanceKm > geoHashDistance[i]) {
+				precision = i;
+				break;
+			}
+		}
+
+		if (precision === 0) {
+			precision = 1;
+		}
+	} else if (query.$distanceUnits === 'miles') {
+		maxDistanceKm = query.$maxDistance * 1.60934;
+
+		for (i = 0; i < geoHashDistance.length; i++) {
+			if (maxDistanceKm > geoHashDistance[i]) {
+				precision = i;
+				break;
+			}
+		}
+
+		if (precision === 0) {
+			precision = 1;
+		}
+	}
+
+	// Get the lngLat geohash from the query
+	geoHash = sharedGeoHashSolver.encode(query.$point[0], query.$point[1], precision);
+
+	// Calculate 9 box geohashes
+	neighbours = sharedGeoHashSolver.calculateNeighbours(geoHash, {type: 'array'});
+
+	// Lookup all matching co-ordinates from the btree
+	results = [];
+	visited = 0;
+
+	for (i = 0; i < 9; i++) {
+		search = this._btree.startsWith(pathStr, neighbours[i]);
+		visited += search._visited;
+		results = results.concat(search);
+	}
+
+	// Work with original data
+	results = this._collection._primaryIndex.lookup(results);
+
+	if (results.length) {
+		distance = {};
+
+		// Loop the results and calculate distance
+		for (i = 0; i < results.length; i++) {
+			latLng = sharedPathSolver.get(results[i], pathStr);
+			distCache = distance[results[i][pk]] = this.distanceBetweenPoints(query.$point[0], query.$point[1], latLng[0], latLng[1]);
+
+			if (distCache <= maxDistanceKm) {
+				// Add item inside radius distance
+				finalResults.push(results[i]);
+			}
+		}
+
+		// Sort by distance from center
+		finalResults.sort(function (a, b) {
+			return self.sortAsc(distance[a[pk]], distance[b[pk]]);
+		});
+	}
+
+	// Return data
+	return finalResults;
+};
+
+Index2d.prototype.geoWithin = function (pathStr, query, options) {
+	return [];
+};
+
+Index2d.prototype.distanceBetweenPoints = function (lat1, lng1, lat2, lng2) {
+	var R = 6371; // kilometres
+	var φ1 = this.toRadians(lat1);
+	var φ2 = this.toRadians(lat2);
+	var Δφ = this.toRadians(lat2-lat1);
+	var Δλ = this.toRadians(lng2-lng1);
+
+	var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+			Math.cos(φ1) * Math.cos(φ2) *
+			Math.sin(Δλ/2) * Math.sin(Δλ/2);
+
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	return R * c;
+};
+
+Index2d.prototype.toRadians = function (degrees) {
+	return degrees * 0.01747722222222;
+};
+
+Index2d.prototype.match = function (query, options) {
+	// TODO: work out how to represent that this is a better match if the query has $near than
+	// TODO: a basic btree index which will not be able to resolve a $near operator
+	return this._btree.match(query, options);
+};
+
+Index2d.prototype._itemHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.value(item, pathData[k].path).join(':');
+	}
+
+	return hash;
+};
+
+Index2d.prototype._itemKeyHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.keyValue(item, pathData[k].path);
+	}
+
+	return hash;
+};
+
+Index2d.prototype._itemHashArr = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		//hash = '',
+		hashArr = [],
+		valArr,
+		i, k, j;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		valArr = path.value(item, pathData[k].path);
+
+		for (i = 0; i < valArr.length; i++) {
+			if (k === 0) {
+				// Setup the initial hash array
+				hashArr.push(valArr[i]);
+			} else {
+				// Loop the hash array and concat the value to it
+				for (j = 0; j < hashArr.length; j++) {
+					hashArr[j] = hashArr[j] + '_' + valArr[i];
+				}
+			}
+		}
+	}
+
+	return hashArr;
+};
+
+Shared.finishModule('Index2d');
+module.exports = Index2d;
+},{"./BinaryTree":5,"./Geohash":12,"./Path":34,"./Shared":40}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -8097,7 +8809,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":5,"./Path":32,"./Shared":38}],15:[function(_dereq_,module,exports){
+},{"./BinaryTree":5,"./Path":34,"./Shared":40}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8457,7 +9169,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":32,"./Shared":38}],16:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8535,8 +9247,6 @@ KeyValueStore.prototype.get = function (key) {
 /**
  * Get / set the primary key.
  * @param {*} val A lookup query.
- * @param {Boolean=} negate If true will return only data that DOESN'T
- * match the lookup query.
  * @returns {*}
  */
 KeyValueStore.prototype.lookup = function (val) {
@@ -8562,10 +9272,14 @@ KeyValueStore.prototype.lookup = function (val) {
 			result = [];
 
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				lookupItem = this.get(val[arrIndex]);
+				lookupItem = this.lookup(val[arrIndex]);
 
 				if (lookupItem) {
-					result.push(lookupItem);
+					if (lookupItem instanceof Array) {
+						result = result.concat(lookupItem);
+					} else {
+						result.push(lookupItem);
+					}
 				}
 			}
 
@@ -8707,7 +9421,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":38}],17:[function(_dereq_,module,exports){
+},{"./Shared":40}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8782,7 +9496,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":29,"./Shared":38}],18:[function(_dereq_,module,exports){
+},{"./Operation":31,"./Shared":40}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -8796,7 +9510,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],19:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8896,7 +9610,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],20:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -9162,7 +9876,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":30,"./Serialiser":37}],21:[function(_dereq_,module,exports){
+},{"./Overload":32,"./Serialiser":39}],23:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9179,7 +9893,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],22:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -9387,7 +10101,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":30}],23:[function(_dereq_,module,exports){
+},{"./Overload":32}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9874,7 +10588,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],24:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9924,7 +10638,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],25:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -10029,7 +10743,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],26:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10449,7 +11163,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":30}],27:[function(_dereq_,module,exports){
+},{"./Overload":32}],29:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10629,7 +11343,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],28:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 "use strict";
 
 // Tell JSHint about EventSource
@@ -10786,7 +11500,7 @@ Db.prototype.init = function () {
 Shared.finishModule('NodeApiClient');
 
 module.exports = NodeApiClient;
-},{"./Shared":38}],29:[function(_dereq_,module,exports){
+},{"./Shared":40}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10933,7 +11647,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":32,"./Shared":38}],30:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],32:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11096,7 +11810,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],31:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -11387,7 +12101,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":6,"./Document":11,"./Shared":38}],32:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Document":11,"./Shared":40}],34:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11694,6 +12408,11 @@ Path.prototype.value = function (obj, path, options) {
 		returnArr,
 		i, k;
 
+	// Detect early exit
+	if (path && path.indexOf('.') === -1) {
+		return [obj[path]];
+	}
+
 	if (obj !== undefined && typeof obj === 'object') {
 		if (!options || options && !options.skipArrCheck) {
 			// Check if we were passed an array of objects and if so,
@@ -11870,7 +12589,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":38}],33:[function(_dereq_,module,exports){
+},{"./Shared":40}],35:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -12613,7 +13332,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":34,"./PersistCrypto":35,"./Shared":38,"async":41,"localforage":77}],34:[function(_dereq_,module,exports){
+},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":43,"localforage":79}],36:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12694,7 +13413,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":38,"pako":78}],35:[function(_dereq_,module,exports){
+},{"./Shared":40,"pako":80}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12815,7 +13534,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":38,"crypto-js":50}],36:[function(_dereq_,module,exports){
+},{"./Shared":40,"crypto-js":52}],38:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -12902,7 +13621,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":38}],37:[function(_dereq_,module,exports){
+},{"./Shared":40}],39:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -13102,7 +13821,7 @@ Serialiser.prototype._stringify = function (data, target) {
 };
 
 module.exports = Serialiser;
-},{}],38:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -13113,7 +13832,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.515',
+	version: '1.3.517',
 	modules: {},
 	plugins: {},
 
@@ -13289,7 +14008,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":18,"./Mixin.ChainReactor":19,"./Mixin.Common":20,"./Mixin.Constants":21,"./Mixin.Events":22,"./Mixin.Matching":23,"./Mixin.Sorting":24,"./Mixin.Tags":25,"./Mixin.Triggers":26,"./Mixin.Updating":27,"./Overload":30}],39:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":20,"./Mixin.ChainReactor":21,"./Mixin.Common":22,"./Mixin.Constants":23,"./Mixin.Events":24,"./Mixin.Matching":25,"./Mixin.Sorting":26,"./Mixin.Tags":27,"./Mixin.Triggers":28,"./Mixin.Updating":29,"./Overload":32}],41:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -13409,7 +14128,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],40:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -14566,7 +15285,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":6,"./CollectionGroup":7,"./ReactorIO":36,"./Shared":38}],41:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":6,"./CollectionGroup":7,"./ReactorIO":38,"./Shared":40}],43:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
  * async
@@ -15830,7 +16549,7 @@ module.exports = View;
 }());
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":76}],42:[function(_dereq_,module,exports){
+},{"_process":78}],44:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16058,7 +16777,7 @@ module.exports = View;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],43:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46,"./enc-base64":47,"./evpkdf":49,"./md5":54}],45:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -16934,7 +17653,7 @@ module.exports = View;
 
 
 }));
-},{"./core":44}],44:[function(_dereq_,module,exports){
+},{"./core":46}],46:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17677,7 +18396,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{}],45:[function(_dereq_,module,exports){
+},{}],47:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17801,7 +18520,7 @@ module.exports = View;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":44}],46:[function(_dereq_,module,exports){
+},{"./core":46}],48:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -17951,7 +18670,7 @@ module.exports = View;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":44}],47:[function(_dereq_,module,exports){
+},{"./core":46}],49:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18084,7 +18803,7 @@ module.exports = View;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":44,"./hmac":49,"./sha1":68}],48:[function(_dereq_,module,exports){
+},{"./core":46,"./hmac":51,"./sha1":70}],50:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18151,7 +18870,7 @@ module.exports = View;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":43,"./core":44}],49:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],51:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18295,7 +19014,7 @@ module.exports = View;
 
 
 }));
-},{"./core":44}],50:[function(_dereq_,module,exports){
+},{"./core":46}],52:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18314,7 +19033,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./aes":42,"./cipher-core":43,"./core":44,"./enc-base64":45,"./enc-utf16":46,"./evpkdf":47,"./format-hex":48,"./hmac":49,"./lib-typedarrays":51,"./md5":52,"./mode-cfb":53,"./mode-ctr":55,"./mode-ctr-gladman":54,"./mode-ecb":56,"./mode-ofb":57,"./pad-ansix923":58,"./pad-iso10126":59,"./pad-iso97971":60,"./pad-nopadding":61,"./pad-zeropadding":62,"./pbkdf2":63,"./rabbit":65,"./rabbit-legacy":64,"./rc4":66,"./ripemd160":67,"./sha1":68,"./sha224":69,"./sha256":70,"./sha3":71,"./sha384":72,"./sha512":73,"./tripledes":74,"./x64-core":75}],51:[function(_dereq_,module,exports){
+},{"./aes":44,"./cipher-core":45,"./core":46,"./enc-base64":47,"./enc-utf16":48,"./evpkdf":49,"./format-hex":50,"./hmac":51,"./lib-typedarrays":53,"./md5":54,"./mode-cfb":55,"./mode-ctr":57,"./mode-ctr-gladman":56,"./mode-ecb":58,"./mode-ofb":59,"./pad-ansix923":60,"./pad-iso10126":61,"./pad-iso97971":62,"./pad-nopadding":63,"./pad-zeropadding":64,"./pbkdf2":65,"./rabbit":67,"./rabbit-legacy":66,"./rc4":68,"./ripemd160":69,"./sha1":70,"./sha224":71,"./sha256":72,"./sha3":73,"./sha384":74,"./sha512":75,"./tripledes":76,"./x64-core":77}],53:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18391,7 +19110,7 @@ module.exports = View;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":44}],52:[function(_dereq_,module,exports){
+},{"./core":46}],54:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18660,7 +19379,7 @@ module.exports = View;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":44}],53:[function(_dereq_,module,exports){
+},{"./core":46}],55:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18739,7 +19458,7 @@ module.exports = View;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":43,"./core":44}],54:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],56:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18856,7 +19575,7 @@ module.exports = View;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":43,"./core":44}],55:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18915,7 +19634,7 @@ module.exports = View;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":43,"./core":44}],56:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18956,7 +19675,7 @@ module.exports = View;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":43,"./core":44}],57:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19011,7 +19730,7 @@ module.exports = View;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":43,"./core":44}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19061,7 +19780,7 @@ module.exports = View;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":43,"./core":44}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19106,7 +19825,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":43,"./core":44}],60:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],62:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19147,7 +19866,7 @@ module.exports = View;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":43,"./core":44}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],63:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19178,7 +19897,7 @@ module.exports = View;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":43,"./core":44}],62:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19224,7 +19943,7 @@ module.exports = View;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":43,"./core":44}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46}],65:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19370,7 +20089,7 @@ module.exports = View;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":44,"./hmac":49,"./sha1":68}],64:[function(_dereq_,module,exports){
+},{"./core":46,"./hmac":51,"./sha1":70}],66:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19561,7 +20280,7 @@ module.exports = View;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],65:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46,"./enc-base64":47,"./evpkdf":49,"./md5":54}],67:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19754,7 +20473,7 @@ module.exports = View;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],66:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46,"./enc-base64":47,"./evpkdf":49,"./md5":54}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19894,7 +20613,7 @@ module.exports = View;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],67:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46,"./enc-base64":47,"./evpkdf":49,"./md5":54}],69:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20162,7 +20881,7 @@ module.exports = View;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":44}],68:[function(_dereq_,module,exports){
+},{"./core":46}],70:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20313,7 +21032,7 @@ module.exports = View;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":44}],69:[function(_dereq_,module,exports){
+},{"./core":46}],71:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20394,7 +21113,7 @@ module.exports = View;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":44,"./sha256":70}],70:[function(_dereq_,module,exports){
+},{"./core":46,"./sha256":72}],72:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20594,7 +21313,7 @@ module.exports = View;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":44}],71:[function(_dereq_,module,exports){
+},{"./core":46}],73:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20918,7 +21637,7 @@ module.exports = View;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":44,"./x64-core":75}],72:[function(_dereq_,module,exports){
+},{"./core":46,"./x64-core":77}],74:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21002,7 +21721,7 @@ module.exports = View;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":44,"./sha512":73,"./x64-core":75}],73:[function(_dereq_,module,exports){
+},{"./core":46,"./sha512":75,"./x64-core":77}],75:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21326,7 +22045,7 @@ module.exports = View;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":44,"./x64-core":75}],74:[function(_dereq_,module,exports){
+},{"./core":46,"./x64-core":77}],76:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22097,7 +22816,7 @@ module.exports = View;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":43,"./core":44,"./enc-base64":45,"./evpkdf":47,"./md5":52}],75:[function(_dereq_,module,exports){
+},{"./cipher-core":45,"./core":46,"./enc-base64":47,"./evpkdf":49,"./md5":54}],77:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22402,7 +23121,7 @@ module.exports = View;
 	return CryptoJS;
 
 }));
-},{"./core":44}],76:[function(_dereq_,module,exports){
+},{"./core":46}],78:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -22495,7 +23214,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],79:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
     localForage -- Offline Storage, Improved
@@ -25279,7 +25998,7 @@ return /******/ (function(modules) { // webpackBootstrap
 });
 ;
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":76}],78:[function(_dereq_,module,exports){
+},{"_process":78}],80:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -25295,7 +26014,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":79,"./lib/inflate":80,"./lib/utils/common":81,"./lib/zlib/constants":84}],79:[function(_dereq_,module,exports){
+},{"./lib/deflate":81,"./lib/inflate":82,"./lib/utils/common":83,"./lib/zlib/constants":86}],81:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -25673,7 +26392,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":81,"./utils/strings":82,"./zlib/deflate.js":86,"./zlib/messages":91,"./zlib/zstream":93}],80:[function(_dereq_,module,exports){
+},{"./utils/common":83,"./utils/strings":84,"./zlib/deflate.js":88,"./zlib/messages":93,"./zlib/zstream":95}],82:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -26075,7 +26794,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":81,"./utils/strings":82,"./zlib/constants":84,"./zlib/gzheader":87,"./zlib/inflate.js":89,"./zlib/messages":91,"./zlib/zstream":93}],81:[function(_dereq_,module,exports){
+},{"./utils/common":83,"./utils/strings":84,"./zlib/constants":86,"./zlib/gzheader":89,"./zlib/inflate.js":91,"./zlib/messages":93,"./zlib/zstream":95}],83:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -26179,7 +26898,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],82:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -26366,7 +27085,7 @@ exports.utf8border = function(buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":81}],83:[function(_dereq_,module,exports){
+},{"./common":83}],85:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -26400,7 +27119,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],84:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 module.exports = {
 
   /* Allowed flush values; see deflate() and inflate() below for details */
@@ -26449,7 +27168,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -26492,7 +27211,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],86:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -28259,7 +28978,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":81,"./adler32":83,"./crc32":85,"./messages":91,"./trees":92}],87:[function(_dereq_,module,exports){
+},{"../utils/common":83,"./adler32":85,"./crc32":87,"./messages":93,"./trees":94}],89:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -28301,7 +29020,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],88:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -28629,7 +29348,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -30134,7 +30853,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":81,"./adler32":83,"./crc32":85,"./inffast":88,"./inftrees":90}],90:[function(_dereq_,module,exports){
+},{"../utils/common":83,"./adler32":85,"./crc32":87,"./inffast":90,"./inftrees":92}],92:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -30463,7 +31182,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":81}],91:[function(_dereq_,module,exports){
+},{"../utils/common":83}],93:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -30478,7 +31197,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],92:[function(_dereq_,module,exports){
+},{}],94:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31679,7 +32398,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":81}],93:[function(_dereq_,module,exports){
+},{"../utils/common":83}],95:[function(_dereq_,module,exports){
 'use strict';
 
 

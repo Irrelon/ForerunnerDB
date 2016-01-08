@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":4,"../lib/Shim.IE8":27}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":4,"../lib/Shim.IE8":29}],2:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -256,12 +256,12 @@ BinaryTree.prototype.insert = function (data) {
 			console.log('Data is equal (currrent, new)', this._data, data);
 		}
 
-		this.push(data);
+		//this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data, this);
+			this._left.insert(data);
 		} else {
 			// Assign to left branch
 			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
@@ -472,6 +472,50 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
+/**
+ * Searches the binary tree for all matching documents based on the regular
+ * expression passed.
+ * @param path
+ * @param val
+ * @param regex
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
+	var reTest,
+		thisDataPathVal = sharedPathSolver.get(this._data, path),
+		thisDataPathValSubStr = thisDataPathVal.substr(0, val.length),
+		result;
+
+	regex = regex || new RegExp('^' + val);
+	resultArr = resultArr || [];
+
+	if (resultArr._visited === undefined) { resultArr._visited = 0; }
+	resultArr._visited++;
+
+	result = this.sortAsc(thisDataPathVal, val);
+	reTest = thisDataPathValSubStr === val;
+
+	if (result === 0) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === -1) {
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+	}
+
+	return resultArr;
+};
+
 /*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
@@ -610,10 +654,11 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
  * DB search system can determine how useful this index is in comparison
  * to other indexes on the same collection.
  * @param query
- * @param options
+ * @param queryOptions
+ * @param matchOptions
  * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
  */
-BinaryTree.prototype.match = function (query, options) {
+BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var indexKeyArr,
@@ -626,7 +671,7 @@ BinaryTree.prototype.match = function (query, options) {
 		verbose: true
 	});
 
-	queryArr = sharedPathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, matchOptions && matchOptions.pathOptions ? matchOptions.pathOptions : {
 		ignore:/\$/,
 		verbose: true
 	});
@@ -651,7 +696,7 @@ BinaryTree.prototype.match = function (query, options) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":23,"./Shared":26}],3:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -661,6 +706,7 @@ var Shared,
 	Path,
 	IndexHashMap,
 	IndexBinaryTree,
+	Index2d,
 	Crc,
 	Overload,
 	ReactorIO,
@@ -742,6 +788,7 @@ KeyValueStore = _dereq_('./KeyValueStore');
 Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
+Index2d = _dereq_('./Index2d');
 Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
@@ -3850,6 +3897,10 @@ Collection.prototype.ensureIndex = function (keys, options) {
 				index = new IndexBinaryTree(keys, options, this);
 				break;
 
+			case '2d':
+				index = new Index2d(keys, options, this);
+				break;
+
 			default:
 				// Default
 				index = new IndexHashMap(keys, options, this);
@@ -4332,7 +4383,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":5,"./IndexBinaryTree":7,"./IndexHashMap":8,"./KeyValueStore":9,"./Metrics":10,"./Overload":22,"./Path":23,"./ReactorIO":24,"./Shared":26}],4:[function(_dereq_,module,exports){
+},{"./Crc":5,"./Index2d":8,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":28}],4:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4639,7 +4690,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":6,"./Metrics.js":10,"./Overload":22,"./Shared":26}],5:[function(_dereq_,module,exports){
+},{"./Db.js":6,"./Metrics.js":12,"./Overload":24,"./Shared":28}],5:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -5311,7 +5362,668 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":3,"./Crc.js":5,"./Metrics.js":10,"./Overload":22,"./Shared":26}],7:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Crc.js":5,"./Metrics.js":12,"./Overload":24,"./Shared":28}],7:[function(_dereq_,module,exports){
+// geohash.js
+// Geohash library for Javascript
+// (c) 2008 David Troy
+// Distributed under the MIT License
+// Original at: https://github.com/davetroy/geohash-js
+
+// Modified by Irrelon Software Limited (http://www.irrelon.com)
+// to clean up and modularise the code using Node.js-style exports
+// and add a few helper methods.
+// @by Rob Evans - rob@irrelon.com
+"use strict";
+
+/*
+Define some shared constants that will be used by all instances
+of the module.
+ */
+var bits,
+	base32,
+	neighbors,
+	borders;
+
+bits = [16, 8, 4, 2, 1];
+
+base32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+neighbors = {
+	right: {even: "bc01fg45238967deuvhjyznpkmstqrwx"},
+	left: {even: "238967debc01fg45kmstqrwxuvhjyznp"},
+	top: {even: "p0r21436x8zb9dcf5h7kjnmqesgutwvy"},
+	bottom: {even: "14365h7k9dcfesgujnmqp0r2twvyx8zb"}
+};
+
+borders = {
+	right: {even: "bcfguvyz"},
+	left: {even: "0145hjnp"},
+	top: {even: "prxz"},
+	bottom: {even: "028b"}
+};
+
+neighbors.bottom.odd = neighbors.left.even;
+neighbors.top.odd = neighbors.right.even;
+neighbors.left.odd = neighbors.bottom.even;
+neighbors.right.odd = neighbors.top.even;
+
+borders.bottom.odd = borders.left.even;
+borders.top.odd = borders.right.even;
+borders.left.odd = borders.bottom.even;
+borders.right.odd = borders.top.even;
+
+var GeoHash = function () {};
+
+GeoHash.prototype.refineInterval = function (interval, cd, mask) {
+	if (cd & mask) { //jshint ignore: line
+		interval[0] = (interval[0] + interval[1]) / 2;
+	} else {
+		interval[1] = (interval[0] + interval[1]) / 2;
+	}
+};
+
+/**
+ * Calculates all surrounding neighbours of a hash and returns them.
+ * @param {String} centerHash The hash at the center of the grid.
+ * @param options
+ * @returns {*}
+ */
+GeoHash.prototype.calculateNeighbours = function (centerHash, options) {
+	var response;
+
+	if (!options || options.type === 'object') {
+		response = {
+			center: centerHash,
+			left: this.calculateAdjacent(centerHash, 'left'),
+			right: this.calculateAdjacent(centerHash, 'right'),
+			top: this.calculateAdjacent(centerHash, 'top'),
+			bottom: this.calculateAdjacent(centerHash, 'bottom')
+		};
+
+		response.topLeft = this.calculateAdjacent(response.left, 'top');
+		response.topRight = this.calculateAdjacent(response.right, 'top');
+		response.bottomLeft = this.calculateAdjacent(response.left, 'bottom');
+		response.bottomRight = this.calculateAdjacent(response.right, 'bottom');
+	} else {
+		response = [];
+
+		response[4] = centerHash;
+		response[3] = this.calculateAdjacent(centerHash, 'left');
+		response[5] = this.calculateAdjacent(centerHash, 'right');
+		response[1] = this.calculateAdjacent(centerHash, 'top');
+		response[7] = this.calculateAdjacent(centerHash, 'bottom');
+
+		response[0] = this.calculateAdjacent(response[3], 'top');
+		response[2] = this.calculateAdjacent(response[5], 'top');
+		response[6] = this.calculateAdjacent(response[3], 'bottom');
+		response[8] = this.calculateAdjacent(response[5], 'bottom');
+	}
+
+	return response;
+};
+
+/**
+ * Calculates an adjacent hash to the hash passed, in the direction
+ * specified.
+ * @param {String} srcHash The hash to calculate adjacent to.
+ * @param {String} dir Either "top", "left", "bottom" or "right".
+ * @returns {String} The resulting geohash.
+ */
+GeoHash.prototype.calculateAdjacent = function (srcHash, dir) {
+	srcHash = srcHash.toLowerCase();
+
+	var lastChr = srcHash.charAt(srcHash.length - 1),
+		type = (srcHash.length % 2) ? 'odd' : 'even',
+		base = srcHash.substring(0, srcHash.length - 1);
+
+	if (borders[dir][type].indexOf(lastChr) !== -1) {
+		base = this.calculateAdjacent(base, dir);
+	}
+
+	return base + base32[neighbors[dir][type].indexOf(lastChr)];
+};
+
+/**
+ * Decodes a string geohash back to longitude/latitude.
+ * @param {String} geohash The hash to decode.
+ * @returns {Object}
+ */
+GeoHash.prototype.decode = function (geohash) {
+	var isEven = 1,
+		lat = [],
+		lon = [],
+		i, c, cd, j, mask,
+		latErr,
+		lonErr;
+
+	lat[0] = -90.0;
+	lat[1] = 90.0;
+	lon[0] = -180.0;
+	lon[1] = 180.0;
+
+	latErr = 90.0;
+	lonErr = 180.0;
+
+	for (i = 0; i < geohash.length; i++) {
+		c = geohash[i];
+		cd = base32.indexOf(c);
+
+		for (j = 0; j < 5; j++) {
+			mask = bits[j];
+
+			if (isEven) {
+				lonErr /= 2;
+				this.refineInterval(lon, cd, mask);
+			} else {
+				latErr /= 2;
+				this.refineInterval(lat, cd, mask);
+			}
+
+			isEven = !isEven;
+		}
+	}
+
+	lat[2] = (lat[0] + lat[1]) / 2;
+	lon[2] = (lon[0] + lon[1]) / 2;
+
+	return {
+		latitude: lat,
+		longitude: lon
+	};
+};
+
+/**
+ * Encodes a longitude/latitude to geohash string.
+ * @param latitude
+ * @param longitude
+ * @param {Number=} precision Length of the geohash string. Defaults to 12.
+ * @returns {String}
+ */
+GeoHash.prototype.encode = function (latitude, longitude, precision) {
+	var isEven = 1,
+		mid,
+		lat = [],
+		lon = [],
+		bit = 0,
+		ch = 0,
+		geoHash = "";
+
+	if (!precision) { precision = 12; }
+
+	lat[0] = -90.0;
+	lat[1] = 90.0;
+	lon[0] = -180.0;
+	lon[1] = 180.0;
+
+	while (geoHash.length < precision) {
+		if (isEven) {
+			mid = (lon[0] + lon[1]) / 2;
+
+			if (longitude > mid) {
+				ch |= bits[bit]; //jshint ignore: line
+				lon[0] = mid;
+			} else {
+				lon[1] = mid;
+			}
+		} else {
+			mid = (lat[0] + lat[1]) / 2;
+
+			if (latitude > mid) {
+				ch |= bits[bit]; //jshint ignore: line
+				lat[0] = mid;
+			} else {
+				lat[1] = mid;
+			}
+		}
+
+		isEven = !isEven;
+
+		if (bit < 4) {
+			bit++;
+		} else {
+			geoHash += base32[ch];
+			bit = 0;
+			ch = 0;
+		}
+	}
+
+	return geoHash;
+};
+
+module.exports = GeoHash;
+},{}],8:[function(_dereq_,module,exports){
+"use strict";
+
+/*
+name(string)
+id(string)
+rebuild(null)
+state ?? needed?
+match(query, options)
+lookup(query, options)
+insert(doc)
+remove(doc)
+primaryKey(string)
+collection(collection)
+*/
+
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path'),
+	BinaryTree = _dereq_('./BinaryTree'),
+	GeoHash = _dereq_('./Geohash'),
+	sharedPathSolver = new Path(),
+	sharedGeoHashSolver = new GeoHash(),
+	// GeoHash Distances in Kilometers
+	geoHashDistance = [
+		5000,
+		1250,
+		156,
+		39.1,
+		4.89,
+		1.22,
+		0.153,
+		0.0382,
+		0.00477,
+		0.00119,
+		0.000149,
+		0.0000372
+	];
+
+/**
+ * The index class used to instantiate 2d indexes that the database can
+ * use to handle high-performance geospatial queries.
+ * @constructor
+ */
+var Index2d = function () {
+	this.init.apply(this, arguments);
+};
+
+Index2d.prototype.init = function (keys, options, collection) {
+	this._btree = new BinaryTree();
+	this._btree.index(keys);
+	this._size = 0;
+	this._id = this._itemKeyHash(keys, keys);
+	this._debug = options && options.debug ? options.debug : false;
+
+	this.unique(options && options.unique ? options.unique : false);
+
+	if (keys !== undefined) {
+		this.keys(keys);
+	}
+
+	if (collection !== undefined) {
+		this.collection(collection);
+		this._btree.primaryKey(collection.primaryKey());
+	}
+
+	this.name(options && options.name ? options.name : this._id);
+	this._btree.debug(this._debug);
+};
+
+Shared.addModule('Index2d', Index2d);
+Shared.mixin(Index2d.prototype, 'Mixin.Common');
+Shared.mixin(Index2d.prototype, 'Mixin.ChainReactor');
+Shared.mixin(Index2d.prototype, 'Mixin.Sorting');
+
+Index2d.prototype.id = function () {
+	return this._id;
+};
+
+Index2d.prototype.state = function () {
+	return this._state;
+};
+
+Index2d.prototype.size = function () {
+	return this._size;
+};
+
+Shared.synthesize(Index2d.prototype, 'data');
+Shared.synthesize(Index2d.prototype, 'name');
+Shared.synthesize(Index2d.prototype, 'collection');
+Shared.synthesize(Index2d.prototype, 'type');
+Shared.synthesize(Index2d.prototype, 'unique');
+
+Index2d.prototype.keys = function (val) {
+	if (val !== undefined) {
+		this._keys = val;
+
+		// Count the keys
+		this._keyCount = sharedPathSolver.parse(this._keys).length;
+		return this;
+	}
+
+	return this._keys;
+};
+
+Index2d.prototype.rebuild = function () {
+	// Do we have a collection?
+	if (this._collection) {
+		// Get sorted data
+		var collection = this._collection.subset({}, {
+				$decouple: false,
+				$orderBy: this._keys
+			}),
+			collectionData = collection.find(),
+			dataIndex,
+			dataCount = collectionData.length;
+
+		// Clear the index data for the index
+		this._btree.clear();
+		this._size = 0;
+
+		if (this._unique) {
+			this._uniqueLookup = {};
+		}
+
+		// Loop the collection data
+		for (dataIndex = 0; dataIndex < dataCount; dataIndex++) {
+			this.insert(collectionData[dataIndex]);
+		}
+	}
+
+	this._state = {
+		name: this._name,
+		keys: this._keys,
+		indexSize: this._size,
+		built: new Date(),
+		updated: new Date(),
+		ok: true
+	};
+};
+
+Index2d.prototype.insert = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash;
+
+	dataItem = this.decouple(dataItem);
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		this._uniqueLookup[uniqueHash] = dataItem;
+	}
+
+	// Convert 2d indexed values to geohashes
+	var keys = this._btree.keys(),
+		pathVal,
+		geoHash,
+		lng,
+		lat,
+		i;
+
+	for (i = 0; i < keys.length; i++) {
+		pathVal = sharedPathSolver.get(dataItem, keys[i].path);
+
+		if (pathVal instanceof Array) {
+			lng = pathVal[0];
+			lat = pathVal[1];
+
+			geoHash = sharedGeoHashSolver.encode(lng, lat);
+
+			sharedPathSolver.set(dataItem, keys[i].path, geoHash);
+		}
+	}
+
+	if (this._btree.insert(dataItem)) {
+		this._size++;
+
+		return true;
+	}
+
+	return false;
+};
+
+Index2d.prototype.remove = function (dataItem, options) {
+	var uniqueFlag = this._unique,
+		uniqueHash;
+
+	if (uniqueFlag) {
+		uniqueHash = this._itemHash(dataItem, this._keys);
+		delete this._uniqueLookup[uniqueHash];
+	}
+
+	if (this._btree.remove(dataItem)) {
+		this._size--;
+
+		return true;
+	}
+
+	return false;
+};
+
+Index2d.prototype.violation = function (dataItem) {
+	// Generate item hash
+	var uniqueHash = this._itemHash(dataItem, this._keys);
+
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index2d.prototype.hashViolation = function (uniqueHash) {
+	// Check if the item breaks the unique constraint
+	return Boolean(this._uniqueLookup[uniqueHash]);
+};
+
+Index2d.prototype.lookup = function (query, options) {
+	// Loop the indexed keys and determine if the query has any operators
+	// that we want to handle differently from a standard lookup
+	var keys = this._btree.keys(),
+		pathStr,
+		pathVal,
+		results,
+		i;
+
+	for (i = 0; i < keys.length; i++) {
+		pathStr = keys[i].path;
+		pathVal = sharedPathSolver.get(query, pathStr);
+
+		if (typeof pathVal === 'object') {
+			if (pathVal.$near) {
+				results = [];
+
+				// Do a near point lookup
+				results = results.concat(this.near(pathStr, pathVal.$near, options));
+			}
+
+			if (pathVal.$geoWithin) {
+				results = [];
+
+				// Do a geoWithin shape lookup
+				results = results.concat(this.geoWithin(pathStr, pathVal.$geoWithin, options));
+			}
+
+			return results;
+		}
+	}
+
+	return this._btree.lookup(query, options);
+};
+
+Index2d.prototype.near = function (pathStr, query, options) {
+	var self = this,
+		geoHash,
+		neighbours,
+		visited,
+		search,
+		results,
+		finalResults = [],
+		precision,
+		maxDistanceKm,
+		distance,
+		distCache,
+		latLng,
+		pk = this._collection.primaryKey(),
+		i;
+
+	// Calculate the required precision to encapsulate the distance
+	// TODO: Instead of opting for the "one size larger" than the distance boxes,
+	// TODO: we should calculate closest divisible box size as a multiple and then
+	// TODO: scan neighbours until we have covered the area otherwise we risk
+	// TODO: opening the results up to vastly more information as the box size
+	// TODO: increases dramatically between the geohash precisions
+	if (query.$distanceUnits === 'km') {
+		maxDistanceKm = query.$maxDistance;
+
+		for (i = 0; i < geoHashDistance.length; i++) {
+			if (maxDistanceKm > geoHashDistance[i]) {
+				precision = i;
+				break;
+			}
+		}
+
+		if (precision === 0) {
+			precision = 1;
+		}
+	} else if (query.$distanceUnits === 'miles') {
+		maxDistanceKm = query.$maxDistance * 1.60934;
+
+		for (i = 0; i < geoHashDistance.length; i++) {
+			if (maxDistanceKm > geoHashDistance[i]) {
+				precision = i;
+				break;
+			}
+		}
+
+		if (precision === 0) {
+			precision = 1;
+		}
+	}
+
+	// Get the lngLat geohash from the query
+	geoHash = sharedGeoHashSolver.encode(query.$point[0], query.$point[1], precision);
+
+	// Calculate 9 box geohashes
+	neighbours = sharedGeoHashSolver.calculateNeighbours(geoHash, {type: 'array'});
+
+	// Lookup all matching co-ordinates from the btree
+	results = [];
+	visited = 0;
+
+	for (i = 0; i < 9; i++) {
+		search = this._btree.startsWith(pathStr, neighbours[i]);
+		visited += search._visited;
+		results = results.concat(search);
+	}
+
+	// Work with original data
+	results = this._collection._primaryIndex.lookup(results);
+
+	if (results.length) {
+		distance = {};
+
+		// Loop the results and calculate distance
+		for (i = 0; i < results.length; i++) {
+			latLng = sharedPathSolver.get(results[i], pathStr);
+			distCache = distance[results[i][pk]] = this.distanceBetweenPoints(query.$point[0], query.$point[1], latLng[0], latLng[1]);
+
+			if (distCache <= maxDistanceKm) {
+				// Add item inside radius distance
+				finalResults.push(results[i]);
+			}
+		}
+
+		// Sort by distance from center
+		finalResults.sort(function (a, b) {
+			return self.sortAsc(distance[a[pk]], distance[b[pk]]);
+		});
+	}
+
+	// Return data
+	return finalResults;
+};
+
+Index2d.prototype.geoWithin = function (pathStr, query, options) {
+	return [];
+};
+
+Index2d.prototype.distanceBetweenPoints = function (lat1, lng1, lat2, lng2) {
+	var R = 6371; // kilometres
+	var φ1 = this.toRadians(lat1);
+	var φ2 = this.toRadians(lat2);
+	var Δφ = this.toRadians(lat2-lat1);
+	var Δλ = this.toRadians(lng2-lng1);
+
+	var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+			Math.cos(φ1) * Math.cos(φ2) *
+			Math.sin(Δλ/2) * Math.sin(Δλ/2);
+
+	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+	return R * c;
+};
+
+Index2d.prototype.toRadians = function (degrees) {
+	return degrees * 0.01747722222222;
+};
+
+Index2d.prototype.match = function (query, options) {
+	// TODO: work out how to represent that this is a better match if the query has $near than
+	// TODO: a basic btree index which will not be able to resolve a $near operator
+	return this._btree.match(query, options);
+};
+
+Index2d.prototype._itemHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.value(item, pathData[k].path).join(':');
+	}
+
+	return hash;
+};
+
+Index2d.prototype._itemKeyHash = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		hash = '',
+		k;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		if (hash) { hash += '_'; }
+		hash += path.keyValue(item, pathData[k].path);
+	}
+
+	return hash;
+};
+
+Index2d.prototype._itemHashArr = function (item, keys) {
+	var path = new Path(),
+		pathData,
+		//hash = '',
+		hashArr = [],
+		valArr,
+		i, k, j;
+
+	pathData = path.parse(keys);
+
+	for (k = 0; k < pathData.length; k++) {
+		valArr = path.value(item, pathData[k].path);
+
+		for (i = 0; i < valArr.length; i++) {
+			if (k === 0) {
+				// Setup the initial hash array
+				hashArr.push(valArr[i]);
+			} else {
+				// Loop the hash array and concat the value to it
+				for (j = 0; j < hashArr.length; j++) {
+					hashArr[j] = hashArr[j] + '_' + valArr[i];
+				}
+			}
+		}
+	}
+
+	return hashArr;
+};
+
+Shared.finishModule('Index2d');
+module.exports = Index2d;
+},{"./BinaryTree":2,"./Geohash":7,"./Path":25,"./Shared":28}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -5552,7 +6264,7 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":2,"./Path":23,"./Shared":26}],8:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./Path":25,"./Shared":28}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -5912,7 +6624,7 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":23,"./Shared":26}],9:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -5990,8 +6702,6 @@ KeyValueStore.prototype.get = function (key) {
 /**
  * Get / set the primary key.
  * @param {*} val A lookup query.
- * @param {Boolean=} negate If true will return only data that DOESN'T
- * match the lookup query.
  * @returns {*}
  */
 KeyValueStore.prototype.lookup = function (val) {
@@ -6017,10 +6727,14 @@ KeyValueStore.prototype.lookup = function (val) {
 			result = [];
 
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				lookupItem = this.get(val[arrIndex]);
+				lookupItem = this.lookup(val[arrIndex]);
 
 				if (lookupItem) {
-					result.push(lookupItem);
+					if (lookupItem instanceof Array) {
+						result = result.concat(lookupItem);
+					} else {
+						result.push(lookupItem);
+					}
 				}
 			}
 
@@ -6162,7 +6876,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":26}],10:[function(_dereq_,module,exports){
+},{"./Shared":28}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6237,7 +6951,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":21,"./Shared":26}],11:[function(_dereq_,module,exports){
+},{"./Operation":23,"./Shared":28}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -6251,7 +6965,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],12:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -6351,7 +7065,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],13:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -6617,7 +7331,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":22,"./Serialiser":25}],14:[function(_dereq_,module,exports){
+},{"./Overload":24,"./Serialiser":27}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -6634,7 +7348,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],15:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -6842,7 +7556,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":22}],16:[function(_dereq_,module,exports){
+},{"./Overload":24}],18:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7329,7 +8043,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],17:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7379,7 +8093,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],18:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -7484,7 +8198,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],19:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -7904,7 +8618,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":22}],20:[function(_dereq_,module,exports){
+},{"./Overload":24}],22:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8084,7 +8798,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],21:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8231,7 +8945,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":23,"./Shared":26}],22:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],24:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8394,7 +9108,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],23:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8701,6 +9415,11 @@ Path.prototype.value = function (obj, path, options) {
 		returnArr,
 		i, k;
 
+	// Detect early exit
+	if (path && path.indexOf('.') === -1) {
+		return [obj[path]];
+	}
+
 	if (obj !== undefined && typeof obj === 'object') {
 		if (!options || options && !options.skipArrCheck) {
 			// Check if we were passed an array of objects and if so,
@@ -8877,7 +9596,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":26}],24:[function(_dereq_,module,exports){
+},{"./Shared":28}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8964,7 +9683,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":26}],25:[function(_dereq_,module,exports){
+},{"./Shared":28}],27:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9164,7 +9883,7 @@ Serialiser.prototype._stringify = function (data, target) {
 };
 
 module.exports = Serialiser;
-},{}],26:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -9175,7 +9894,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.515',
+	version: '1.3.517',
 	modules: {},
 	plugins: {},
 
@@ -9351,7 +10070,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":11,"./Mixin.ChainReactor":12,"./Mixin.Common":13,"./Mixin.Constants":14,"./Mixin.Events":15,"./Mixin.Matching":16,"./Mixin.Sorting":17,"./Mixin.Tags":18,"./Mixin.Triggers":19,"./Mixin.Updating":20,"./Overload":22}],27:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Tags":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],29:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {

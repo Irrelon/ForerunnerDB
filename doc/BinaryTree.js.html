@@ -275,12 +275,12 @@ BinaryTree.prototype.insert = function (data) {
 			console.log('Data is equal (currrent, new)', this._data, data);
 		}
 
-		this.push(data);
+		//this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data, this);
+			this._left.insert(data);
 		} else {
 			// Assign to left branch
 			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
@@ -491,6 +491,50 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
+/**
+ * Searches the binary tree for all matching documents based on the regular
+ * expression passed.
+ * @param path
+ * @param val
+ * @param regex
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
+	var reTest,
+		thisDataPathVal = sharedPathSolver.get(this._data, path),
+		thisDataPathValSubStr = thisDataPathVal.substr(0, val.length),
+		result;
+
+	regex = regex || new RegExp('^' + val);
+	resultArr = resultArr || [];
+
+	if (resultArr._visited === undefined) { resultArr._visited = 0; }
+	resultArr._visited++;
+
+	result = this.sortAsc(thisDataPathVal, val);
+	reTest = thisDataPathValSubStr === val;
+
+	if (result === 0) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === -1) {
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+	}
+
+	return resultArr;
+};
+
 /*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
@@ -629,10 +673,11 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
  * DB search system can determine how useful this index is in comparison
  * to other indexes on the same collection.
  * @param query
- * @param options
+ * @param queryOptions
+ * @param matchOptions
  * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
  */
-BinaryTree.prototype.match = function (query, options) {
+BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var indexKeyArr,
@@ -645,7 +690,7 @@ BinaryTree.prototype.match = function (query, options) {
 		verbose: true
 	});
 
-	queryArr = sharedPathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, matchOptions &amp;&amp; matchOptions.pathOptions ? matchOptions.pathOptions : {
 		ignore:/\$/,
 		verbose: true
 	});
@@ -679,13 +724,13 @@ module.exports = BinaryTree;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 11:40:38 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 20:28:24 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

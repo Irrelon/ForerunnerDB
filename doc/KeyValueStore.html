@@ -352,7 +352,7 @@ primary key indexes and lookups.
 
     
 
-    <h4 class="name" id="lookup"><span class="type-signature"></span>lookup<span class="signature">(val, negate<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {*}</span></h4>
+    <h4 class="name" id="lookup"><span class="type-signature"></span>lookup<span class="signature">(val)</span><span class="type-signature"> &rarr; {*}</span></h4>
 
     
 
@@ -383,8 +383,6 @@ primary key indexes and lookups.
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -410,52 +408,10 @@ primary key indexes and lookups.
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
             <td class="description last">A lookup query.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>negate</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Boolean</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">If true will return only data that DOESN'T
-match the lookup query.</td>
         </tr>
 
     
@@ -496,7 +452,7 @@ match the lookup query.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line82">line 82</a>
+        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line80">line 80</a>
     </li></ul></dd>
     
 
@@ -1090,7 +1046,7 @@ does not already have a value in the store.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line239">line 239</a>
+        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line241">line 241</a>
     </li></ul></dd>
     
 
@@ -1244,7 +1200,7 @@ exists for the key.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line226">line 226</a>
+        <a href="KeyValueStore.js.html">KeyValueStore.js</a>, <a href="KeyValueStore.js.html#line228">line 228</a>
     </li></ul></dd>
     
 
@@ -1304,13 +1260,13 @@ exists for the key.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 11:40:38 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 08 2016 20:28:24 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
