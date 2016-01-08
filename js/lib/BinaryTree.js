@@ -247,12 +247,12 @@ BinaryTree.prototype.insert = function (data) {
 			console.log('Data is equal (currrent, new)', this._data, data);
 		}
 
-		this.push(data);
+		//this.push(data);
 
 		// Less than this node
 		if (this._left) {
 			// Propagate down the left branch
-			this._left.insert(data, this);
+			this._left.insert(data);
 		} else {
 			// Assign to left branch
 			this._left = new BinaryTree(data, this._index, this._binaryTree, this._compareFunc, this._hashFunc);
@@ -463,6 +463,50 @@ BinaryTree.prototype.inOrder = function (type, resultArr) {
 	return resultArr;
 };
 
+/**
+ * Searches the binary tree for all matching documents based on the regular
+ * expression passed.
+ * @param path
+ * @param val
+ * @param regex
+ * @param {Array=} resultArr The results passed between recursive calls.
+ * Do not pass anything into this argument when calling externally.
+ * @returns {*|Array}
+ */
+BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
+	var reTest,
+		thisDataPathVal = sharedPathSolver.get(this._data, path),
+		thisDataPathValSubStr = thisDataPathVal.substr(0, val.length),
+		result;
+
+	regex = regex || new RegExp('^' + val);
+	resultArr = resultArr || [];
+
+	if (resultArr._visited === undefined) { resultArr._visited = 0; }
+	resultArr._visited++;
+
+	result = this.sortAsc(thisDataPathVal, val);
+	reTest = thisDataPathValSubStr === val;
+
+	if (result === 0) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === -1) {
+		if (reTest) { resultArr.push(this._data); }
+		if (this._right) { this._right.startsWith(path, val, regex, resultArr); }
+	}
+
+	if (result === 1) {
+		if (this._left) { this._left.startsWith(path, val, regex, resultArr); }
+		if (reTest) { resultArr.push(this._data); }
+	}
+
+	return resultArr;
+};
+
 /*BinaryTree.prototype.find = function (type, search, resultArr) {
 	resultArr = resultArr || [];
 
@@ -601,10 +645,11 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
  * DB search system can determine how useful this index is in comparison
  * to other indexes on the same collection.
  * @param query
- * @param options
+ * @param queryOptions
+ * @param matchOptions
  * @returns {{matchedKeys: Array, totalKeyCount: Number, score: number}}
  */
-BinaryTree.prototype.match = function (query, options) {
+BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 	// Check if the passed query has data in the keys our index
 	// operates on and if so, is the query sort matching our order
 	var indexKeyArr,
@@ -617,7 +662,7 @@ BinaryTree.prototype.match = function (query, options) {
 		verbose: true
 	});
 
-	queryArr = sharedPathSolver.parseArr(query, {
+	queryArr = sharedPathSolver.parseArr(query, matchOptions && matchOptions.pathOptions ? matchOptions.pathOptions : {
 		ignore:/\$/,
 		verbose: true
 	});
