@@ -232,7 +232,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -277,7 +277,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -324,7 +324,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -365,7 +365,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -409,7 +409,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -453,7 +453,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: "2"
 }, {
@@ -495,7 +495,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -543,7 +543,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -587,7 +587,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -631,7 +631,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -673,7 +673,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -724,7 +724,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	arr: []
 }, {
@@ -766,7 +766,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	arr: []
 }, {
@@ -820,7 +820,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -871,7 +871,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -917,7 +917,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	val: 1
 }, {
@@ -963,7 +963,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData({
+coll.insert({
 	names: [{
 		_id: 1,
 		text: "Jim"
@@ -1021,7 +1021,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 	
-coll.setData({
+coll.insert({
 	names: [{
 		_id: 1,
 		text: "Jim"
@@ -1139,7 +1139,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	coll = db.collection("test");
 
-coll.setData([{
+coll.insert([{
 	_id: 1,
 	text: "Jim",
 	val: 2131232
@@ -1496,7 +1496,7 @@ db.collection("test").update({
 In the following example the existing document is outright replaced by a new one:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "445324",
 	name: "Jill",
 	age: 15
@@ -1550,7 +1550,7 @@ db.collection("test").update({
 In the following example the "arr" field (initially an array) is replaced by an object:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "445324",
 	arr: [{
 		foo: 1
@@ -1593,7 +1593,7 @@ Consider the following sequence of update calls that define a couple of nested a
 then push a value to the inner-nested array:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "445324",
 	count: 5
 });
@@ -1647,7 +1647,7 @@ documents before running the update against them. With $each you can pass a sequ
 update operations and they will be executed in order:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "445324",
 	count: 5
 });
@@ -1710,7 +1710,7 @@ In the following example, the "count" field is decremented by 1 in the document 
 matches the id "445324":
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "445324",
 	count: 5
 });
@@ -1753,7 +1753,7 @@ db.collection("test").update({
 The following example appends "Milk" to the "shoppingList" array in the document with the id "23231":
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "23231",
 	shoppingList: []
 });
@@ -1797,7 +1797,7 @@ db.collection("test").update({
 The following example inserts "Milk" to the "shoppingList" array at index 1 in the document with the id "23231":
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "23231",
 	shoppingList: [
 		"Sugar",
@@ -1846,7 +1846,7 @@ being added:
 
 ```js
 // Create a collection document
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "1",
 	arr: []
 });
@@ -1881,7 +1881,7 @@ Now in the example below we specify which key to test uniqueness against:
 
 ```js
 // Create a collection document
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "1",
 	arr: []
 });
@@ -1960,7 +1960,7 @@ db.collection("test").update({
 The following example pops the item from the beginning of the "shoppingList" array:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "23231",
 	shoppingList: [{
 		_id: 1,
@@ -2038,7 +2038,7 @@ object respectively.
 This example changes the type of the "val" property from a string to a number:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	val: "1.2"
 });
 
@@ -2064,7 +2064,7 @@ You can also use cast to ensure that an array or object exists on a property wit
 overwriting that property if one already exists:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "moo",
 	arr: [{
 		test: true
@@ -2098,7 +2098,7 @@ not currently of that type rather than initialising as a blank array / object, y
 specify the data to use by including a $data property in your $cast operator object:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "moo"
 });
 
@@ -2136,7 +2136,7 @@ The following example updates the sub-document in the array *"arr"* with the _id
 that the *"name"* property is set to *"John"*:
 
 ```js
-db.collection("test").setData({
+db.collection("test").insert({
 	_id: "2",
 	arr: [{
 		_id: "foo",
@@ -3250,7 +3250,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	myCollection = db.collection("myCollection");
 
-myCollection.setData([{
+myCollection.insert([{
 	name: "Bob",
 	age: 20
 }, {
@@ -3449,7 +3449,7 @@ an object with a *template* property:
 var fdb = new ForerunnerDB(),
 	db = fdb.db("test");
 	
-db.collection("test").setData([{
+db.collection("test").insert([{
 	name: "Jim"
 }, {
 	name: "Bob"
@@ -3472,7 +3472,7 @@ link method like so:
 var fdb = new ForerunnerDB(),
 	db = fdb.db("test");
 	
-db.collection("test").setData([{
+db.collection("test").insert([{
 	name: "Jim"
 }, {
 	name: "Bob"
@@ -3500,7 +3500,7 @@ var fdb = new ForerunnerDB(),
 	db = fdb.db("test"),
 	doc;
 	
-db.collection("test").setData([{
+db.collection("test").insert([{
 	name: "Jim"
 }, {
 	name: "Bob"
@@ -3553,7 +3553,7 @@ var fdb = new ForerunnerDB(),
 	coll = db.collection("chartData");
 
 // Set the collection data
-coll.setData([{
+coll.insert([{
 	name: "Jam",
 	val: 100
 }, {
@@ -3596,7 +3596,7 @@ var fdb = new ForerunnerDB(),
 	coll = db.collection("chartData");
 
 // Set the collection data
-coll.setData([{
+coll.insert([{
 	type: "Jam",
 	date: String(new Date("2014-09-13")).substr(0, 15),
 	val: 100
