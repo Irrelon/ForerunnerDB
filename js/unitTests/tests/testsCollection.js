@@ -2131,7 +2131,7 @@ QUnit.test('Collection.find() :: $orderBy with blank object', function () {
 		err = true;
 	}
 
-	strictEqual(err, true, 'The call produced no error');
+	strictEqual(err, false, 'The call produced no error');
 
 	base.dbDown();
 });
