@@ -179,7 +179,7 @@ QUnit.test("Collection.find() :: Test index doesn't interfere with other queries
 		name: 'moon',
 		age: 14
 	}]);
-
+// TODO: This appears to be returning the results in the incorrect order!
 	coll.ensureIndex({
 		age: 1,
 		name: 1

@@ -170,7 +170,7 @@ QUnit.test("Index.lookup() :: Test lookup from index", function () {
 	var lookup = index.lookup({
 		nested: {
 			nested: {
-				age: 5
+				order: 2
 			}
 		}
 	});
@@ -178,8 +178,8 @@ QUnit.test("Index.lookup() :: Test lookup from index", function () {
 	console.log(lookup);
 
 	strictEqual(lookup.length, 2, "Lookup returned correct number of results");
-	strictEqual(lookup[0]._id === '5' && lookup[0].arr[1].val, 5, "Lookup returned correct result 1");
-	strictEqual(lookup[1]._id === '4' && lookup[1].arr[1].val, 5, "Lookup returned correct result 2");
+	strictEqual(lookup[0]._id, '3', "Lookup returned correct result 1");
+	strictEqual(lookup[1]._id, '2', "Lookup returned correct result 2");
 
 	base.dbDown();
 });
@@ -191,8 +191,8 @@ QUnit.test("Collection.find() :: Test query that should use an index", function 
 	user.ensureIndex({
 		nested: {
 			nested: {
-				order: 1,
-				age: 1
+				age: 1,
+				order: 1
 			}
 		},
 		name: 1

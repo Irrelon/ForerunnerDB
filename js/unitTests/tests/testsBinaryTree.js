@@ -359,16 +359,18 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 			collectionTime,
 			indexTime,
 			indexOrdering = {
-				name: -1,
-				obj: {
-					age: -1
-				},
-				type: 1
+				"name": -1,
+				"obj.age": -1,
+				"type": -1
 			},
-			i;
+			i, treeResultComp, collResultComp;
+
+		/////////////// THERE IS A BUG IN COLLECTION BUCKET SORTING!
+		/////////////// BINARY TREE RESULTS ARE CORRECT, COLLECTION IS WRONG!
 
 		for (i = 0; i < count; i++) {
 			data.push({
+				_id: db.objectId(),
 				name: names[Math.floor(Math.random() * names.length)],
 				obj: {
 					age: Math.floor(Math.random() * 50)
@@ -400,8 +402,7 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 				}
 			}
 		}, {
-			$orderBy: indexOrdering,
-			_id: 0
+			$orderBy: indexOrdering
 		});
 		endTime = new Date().getTime();
 		//console.timeEnd('Collection search');
@@ -420,9 +421,14 @@ ForerunnerDB.moduleLoaded('BinaryTree', function () {
 		ok(indexTime < collectionTime, 'Index was faster than collection');
 
 		for (i = 0; i < collectionResult.length; i++) {
-			strictEqual(treeResult[i].name, collectionResult[i].name, 'Correct order of name for item ' + i);
-			strictEqual(treeResult[i].age, collectionResult[i].age, 'Correct order of age for item ' + i);
-			strictEqual(treeResult[i].type, collectionResult[i].type, 'Correct order of type for item ' + i);
+			treeResultComp = treeResult[i];
+			collResultComp = collectionResult[i];
+			//if (treeResultComp.name !== collResultComp.name) {debugger;}
+			//if (treeResultComp.age !== collResultComp.age) {debugger;}
+			//if (treeResultComp.type !== collResultComp.type) {debugger;}
+			strictEqual(treeResultComp.name, collResultComp.name, 'Correct order of name for item ' + i);
+			strictEqual(treeResultComp.age, collResultComp.age, 'Correct order of age for item ' + i);
+			strictEqual(treeResultComp.type, collResultComp.type, 'Correct order of type for item ' + i);
 		}
 
 		base.dbDown();
