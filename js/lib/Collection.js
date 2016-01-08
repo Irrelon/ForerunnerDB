@@ -7,6 +7,7 @@ var Shared,
 	Path,
 	IndexHashMap,
 	IndexBinaryTree,
+	Index2d,
 	Crc,
 	Overload,
 	ReactorIO,
@@ -88,6 +89,7 @@ KeyValueStore = require('./KeyValueStore');
 Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
 IndexBinaryTree = require('./IndexBinaryTree');
+Index2d = require('./Index2d');
 Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
@@ -3194,6 +3196,10 @@ Collection.prototype.ensureIndex = function (keys, options) {
 
 			case 'btree':
 				index = new IndexBinaryTree(keys, options, this);
+				break;
+
+			case '2d':
+				index = new Index2d(keys, options, this);
 				break;
 
 			default:
