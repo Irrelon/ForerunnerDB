@@ -75,8 +75,6 @@ KeyValueStore.prototype.get = function (key) {
 /**
  * Get / set the primary key.
  * @param {*} val A lookup query.
- * @param {Boolean=} negate If true will return only data that DOESN'T
- * match the lookup query.
  * @returns {*}
  */
 KeyValueStore.prototype.lookup = function (val) {
@@ -102,10 +100,14 @@ KeyValueStore.prototype.lookup = function (val) {
 			result = [];
 
 			for (arrIndex = 0; arrIndex < arrCount; arrIndex++) {
-				lookupItem = this.get(val[arrIndex]);
+				lookupItem = this.lookup(val[arrIndex]);
 
 				if (lookupItem) {
-					result.push(lookupItem);
+					if (lookupItem instanceof Array) {
+						result = result.concat(lookupItem);
+					} else {
+						result.push(lookupItem);
+					}
 				}
 			}
 
