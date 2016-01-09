@@ -186,6 +186,13 @@ View.prototype.from = function (source, callback) {
 			delete this._from;
 		}
 
+		// Check if we have an existing reactor io
+		if (this._io) {
+			// Drop the io and remove it
+			this._io.drop();
+			delete this._io;
+		}
+
 		if (typeof(source) === 'string') {
 			source = this._db.collection(source);
 		}
