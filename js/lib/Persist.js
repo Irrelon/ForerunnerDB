@@ -77,6 +77,80 @@ DbDrop = Db.prototype.drop;
 Overload = Shared.overload;
 
 /**
+ * Gets / sets the auto flag which determines if the persistence module
+ * will automatically load data for collections the first time they are
+ * accessed and save data whenever it changes. This is disabled by
+ * default.
+ * @param {Boolean} val Set to true to enable, false to disable
+ * @returns {*}
+ */
+Shared.synthesize(Persist.prototype, 'auto', function (val) {
+	var self = this;
+
+	if (val !== undefined) {
+		if (val) {
+			// Hook db events
+			this._db.on('create', function () { self._autoLoad.apply(self, arguments); });
+			this._db.on('change', function () { self._autoSave.apply(self, arguments); });
+
+			if (this._db.debug()) {
+				console.log(this._db.logIdentifier() + ' Automatic load/save enabled');
+			}
+		} else {
+			// Un-hook db events
+			this._db.off('create', this._autoLoad);
+			this._db.off('change', this._autoSave);
+
+			if (this._db.debug()) {
+				console.log(this._db.logIdentifier() + ' Automatic load/save disbled');
+			}
+		}
+	}
+
+	return this.$super.call(this, val);
+});
+
+Persist.prototype._autoLoad = function (obj, objType, name) {
+	var self = this;
+
+	if (typeof obj.load === 'function') {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-loading data for ' + objType + ':', name);
+		}
+
+		obj.load(function (err, data) {
+			if (err && self._db.debug()) {
+				console.log(self._db.logIdentifier() + ' Automatic load failed:', err);
+			}
+
+			self.emit('load', err, data);
+		});
+	} else {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-load for ' + objType + ':', name, 'no load method, skipping');
+		}
+	}
+};
+
+Persist.prototype._autoSave = function (obj, objType, name) {
+	var self = this;
+
+	if (typeof obj.save === 'function') {
+		if (self._db.debug()) {
+			console.log(self._db.logIdentifier() + ' Auto-saving data for ' + objType + ':', name);
+		}
+
+		obj.save(function (err, data) {
+			if (err && self._db.debug()) {
+				console.log(self._db.logIdentifier() + ' Automatic save failed:', err);
+			}
+
+			self.emit('save', err, data);
+		});
+	}
+};
+
+/**
  * Gets / sets the persistent storage mode (the library used
  * to persist data to the browser - defaults to localForage).
  * @param {String} type The library to use for storage. Defaults
