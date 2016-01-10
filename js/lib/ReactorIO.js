@@ -25,7 +25,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		this._reactorOut = reactorOut;
 		this._chainHandler = reactorProcess;
 
-		if (!reactorIn.chain || !reactorOut.chainReceive) {
+		if (!reactorIn.chain) {
 			throw('ForerunnerDB.ReactorIO: ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
 		}
 
