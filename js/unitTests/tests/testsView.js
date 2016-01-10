@@ -33,6 +33,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 			from;
 
 		view.from(coll);
+		view.from(coll);
 
 		coll.insert({
 			moo: true
@@ -41,7 +42,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		view.drop();
 
 		try {
-			coll.setData({
+			coll.remove({
 				moo: true
 			});
 		} catch (e) {
