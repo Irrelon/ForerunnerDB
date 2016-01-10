@@ -10236,7 +10236,7 @@ var ReactorIO = function (reactorIn, reactorOut, reactorProcess) {
 		this._reactorOut = reactorOut;
 		this._chainHandler = reactorProcess;
 
-		if (!reactorIn.chain || !reactorOut.chainReceive) {
+		if (!reactorIn.chain) {
 			throw('ForerunnerDB.ReactorIO: ReactorIO requires passed in and out objects to implement the ChainReactor mixin!');
 		}
 
@@ -10506,7 +10506,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.517',
+	version: '1.3.521',
 	modules: {},
 	plugins: {},
 
@@ -10989,6 +10989,13 @@ View.prototype.from = function (source, callback) {
 			// Remove the listener to the drop event
 			this._from.off('drop', this._collectionDroppedWrap);
 			delete this._from;
+		}
+
+		// Check if we have an existing reactor io
+		if (this._io) {
+			// Drop the io and remove it
+			this._io.drop();
+			delete this._io;
 		}
 
 		if (typeof(source) === 'string') {

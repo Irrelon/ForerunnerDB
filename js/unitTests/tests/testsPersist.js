@@ -1,6 +1,6 @@
 QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
-	QUnit.asyncTest('Collection.load() :: Load un-saved collection', function () {
+	QUnit.asyncTest('Persist.load() :: Load un-saved collection', function () {
 		expect(1);
 
 		base.dbUp();
@@ -17,7 +17,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		}
 	});
 
-	QUnit.asyncTest('Collection.save() :: Save data to storage and load it back', function () {
+	QUnit.asyncTest('Persist.save() :: Save data to storage and load it back', function () {
 		expect(7);
 
 		base.dbUp();
@@ -74,7 +74,68 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		});
 	});
 
-	QUnit.asyncTest('Collection.save() :: Save data to multiple database storage with same collection names', function () {
+	/*QUnit.asyncTest('Persist.auto(true) :: Save data to storage and load it back in auto-mode', function () {
+		expect(7);
+
+		base.dbUp();
+
+		ok(db.persist.driver(), 'Check that there is a persistent storage driver: ' + db.persist.driver());
+
+		var coll = db.collection('test', {
+				changeTimestamp: true
+			}),
+			result,
+			lastChange;
+
+		db.persist.auto(true);
+
+		coll.once('save', function (err) {
+			if (err) {
+				console.log(err);
+				ok(false, err);
+			} else {
+				ok(!err, 'Save did not produce an error');
+			}
+
+			base.dbDown(false);
+			base.dbUp();
+
+			db.persist.auto(true);
+
+			coll = db.collection('test');
+
+			// Make sure the item does not currently exist
+			result = coll.find();
+			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
+
+			coll.once('load', function (err) {
+				if (err) {
+					console.log(err);
+					ok(false, err);
+				} else {
+					ok(!err, 'Load did not produce an error');
+				}
+
+				result = coll.find();
+
+				strictEqual(result.length, 1, 'Check that items were loaded correctly');
+				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
+				strictEqual(coll.metaData().lastChange.toISOString(), lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
+
+				base.dbDown();
+
+				start();
+			});
+		});
+
+		coll.insert({
+			name: 'Test'
+		});
+
+		lastChange = coll.metaData().lastChange;
+	});*/
+
+	QUnit.asyncTest('Persist.save() :: Save data to multiple database storage with same collection names', function () {
 		expect(12);
 
 		var fdb = new ForerunnerDB(),
@@ -215,7 +276,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		});
 	});
 
-	QUnit.asyncTest('Collection.save() :: Select and use plugins', function () {
+	QUnit.asyncTest('Persist.save() :: Select and use plugins', function () {
 		expect(5);
 		base.dbUp();
 
