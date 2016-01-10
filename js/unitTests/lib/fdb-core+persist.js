@@ -5959,7 +5959,7 @@ collection(collection)
 var Shared = _dereq_('./Shared'),
 	Path = _dereq_('./Path'),
 	BinaryTree = _dereq_('./BinaryTree'),
-	GeoHash = _dereq_('./Geohash'),
+	GeoHash = _dereq_('./GeoHash'),
 	sharedPathSolver = new Path(),
 	sharedGeoHashSolver = new GeoHash(),
 	// GeoHash Distances in Kilometers
@@ -6373,7 +6373,7 @@ Index2d.prototype._itemHashArr = function (item, keys) {
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":3,"./Geohash":9,"./Path":27,"./Shared":33}],11:[function(_dereq_,module,exports){
+},{"./BinaryTree":3,"./GeoHash":9,"./Path":27,"./Shared":33}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -11263,7 +11263,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.522',
+	version: '1.3.523',
 	modules: {},
 	plugins: {},
 

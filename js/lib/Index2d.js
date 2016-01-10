@@ -16,7 +16,7 @@ collection(collection)
 var Shared = require('./Shared'),
 	Path = require('./Path'),
 	BinaryTree = require('./BinaryTree'),
-	GeoHash = require('./Geohash'),
+	GeoHash = require('./GeoHash'),
 	sharedPathSolver = new Path(),
 	sharedGeoHashSolver = new GeoHash(),
 	// GeoHash Distances in Kilometers
