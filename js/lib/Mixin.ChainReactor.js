@@ -65,7 +65,9 @@ var ChainReactor = {
 						}
 					}
 
-					arrItem.chainReceive(this, type, data, options);
+					if (arrItem.chainReceive) {
+						arrItem.chainReceive(this, type, data, options);
+					}
 				} else {
 					console.log('Reactor Data:', type, data, options);
 					console.log('Reactor Node:', arrItem);
