@@ -7033,7 +7033,9 @@ var ChainReactor = {
 						}
 					}
 
-					arrItem.chainReceive(this, type, data, options);
+					if (arrItem.chainReceive) {
+						arrItem.chainReceive(this, type, data, options);
+					}
 				} else {
 					console.log('Reactor Data:', type, data, options);
 					console.log('Reactor Node:', arrItem);
@@ -9894,7 +9896,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.524',
+	version: '1.3.525',
 	modules: {},
 	plugins: {},
 
