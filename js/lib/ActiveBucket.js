@@ -1,6 +1,8 @@
 "use strict";
 
-var Shared = require('./Shared');
+var Shared = require('./Shared'),
+	Path = require('./Path'),
+	sharedPathSolver;
 
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
@@ -18,18 +20,22 @@ var ActiveBucket = function (orderBy) {
 	this._objLookup = {};
 	this._count = 0;
 
-	for (sortKey in orderBy) {
+	this._keyArr = sharedPathSolver.parse(orderBy, true);
+
+	/*for (sortKey in orderBy) {
 		if (orderBy.hasOwnProperty(sortKey)) {
 			this._keyArr.push({
 				key: sortKey,
 				dir: orderBy[sortKey]
 			});
 		}
-	}
+	}*/
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.mixin(ActiveBucket.prototype, 'Mixin.Sorting');
+
+sharedPathSolver = new Path();
 
 /**
  * Gets / sets the primary key used by the active bucket.
@@ -122,7 +128,7 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
-		castType = typeof obj[sortType.key];
+		castType = typeof sharedPathSolver.get(obj, sortType.path);
 
 		if (castType === 'number') {
 			aVals[index] = Number(aVals[index]);
@@ -132,11 +138,11 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 		// Check for non-equal items
 		if (aVals[index] !== bVals[index]) {
 			// Return the sorted items
-			if (sortType.dir === 1) {
+			if (sortType.value === 1) {
 				return sorter.sortAsc(aVals[index], bVals[index]);
 			}
 
-			if (sortType.dir === -1) {
+			if (sortType.value === -1) {
 				return sorter.sortDesc(aVals[index], bVals[index]);
 			}
 		}
@@ -235,11 +241,12 @@ ActiveBucket.prototype.documentKey = function (obj) {
 
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
+
 		if (key) {
 			key += '.:.';
 		}
 
-		key += obj[sortType.key];
+		key += sharedPathSolver.get(obj, sortType.path);
 	}
 
 	// Add the unique identifier on the end of the key
