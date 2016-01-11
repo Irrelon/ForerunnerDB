@@ -855,6 +855,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 
 	QUnit.test("View() with query :: View order large number of items", function() {
 		base.dbUp();
+		var oldDebug = db.debug();
+		db.debug(false);
 		base.domUp();
 
 		var coll = db.collection('test'),
@@ -912,6 +914,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		strictEqual(elems.length, count, "Document count " + count + ": " + elems.length);
 
 		base.domDown();
+		db.debug(oldDebug);
 		base.dbDown();
 	});
 
