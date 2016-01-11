@@ -6,7 +6,6 @@
  * update angular when data in ForerunnerDB changes.
  * @class Angular
  */
-
 var Shared = window.ForerunnerDB.shared,
 	Angular = {};
 
@@ -97,12 +96,77 @@ Angular.extendCollection = function (Module) {
  * @private
  */
 Angular.extendView = function (Module) {
+	var superDrop = Module.prototype.drop;
+
+	/**
+	 * Creates a link to the DOM between the collection data and the elements
+	 * in the passed output selector. When new elements are needed or changes
+	 * occur the passed templateSelector is used to get the template that is
+	 * output to the DOM.
+	 * @func link
+	 * @memberof Collection
+	 * @param scope
+	 * @param varName
+	 * @param {Object=} options Optional extra options.
+	 * @see unlink
+	 */
 	Module.prototype.ng = function (scope, varName, options) {
-		var publicData = this.publicData();
+		var self = this,
+			link,
+			i;
 
-		publicData.ng(scope, varName, options);
+		if (scope && varName) {
+			self._ngLinks = self._ngLinks || [];
 
-		return this;
+			link = {
+				scope: scope,
+				varName: varName,
+				callback: function () {
+					if (options && options.$single) {
+						scope[varName] = self.publicData().findOne(self._querySettings.query, self._querySettings.options);
+					} else {
+						scope[varName] = self.publicData().find(self._querySettings.query, self._querySettings.options);
+					}
+
+					setTimeout(function () {
+						scope.$apply();
+					}, 0);
+				}
+			};
+
+			self._ngLinks.push(link);
+
+			// Hook the angular destroy event to remove this link
+			scope.$on("$destroy", function(){
+				if (self._ngLinks && self._ngLinks.length) {
+					for (i = self._ngLinks.length - 1; i >= 0; i--) {
+						if (self._ngLinks[i].scope === scope) {
+							self.publicData().off('change', link.callback);
+							self._ngLinks.splice(i, 1);
+						}
+					}
+				}
+			});
+
+			// Hook the ForerunnerDB change event to inform angular of a change
+			self.publicData().on('change', function () {
+				debugger;
+				link.callback();
+			} );
+
+			// Now update the view
+			if (link.callback) { link.callback(); }
+		} else {
+			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
+		}
+	};
+
+	Module.prototype.drop = function () {
+		if (this._ngLinks) {
+			delete this._ngLinks;
+		}
+
+		return superDrop.apply(this, arguments);
 	};
 };
 
