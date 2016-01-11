@@ -58,7 +58,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		"use strict";
 		base.dbUp();
 
-		var coll = db.collection('test'),
+		var coll = db.collection('test').truncate(),
 			view = db.view('test'),
 			result;
 
@@ -87,4 +87,47 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
+
+	/*QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test'),
+			view = db.view('test'),
+			result,
+				count = 0;
+
+		view
+			.queryData({}, {
+				$orderBy: {
+					createdTs: -1
+				}
+			})
+			.from(coll);
+
+		view.on('change', function () {
+			count++;
+		});
+
+		coll.insert({
+			_id: 1,
+			createdTs: 1
+		});
+
+		coll.insert({
+			_id: 2,
+			createdTs: 2
+		});
+
+		setTimeout(function () {
+			result = view.find();
+
+			strictEqual(result[0]._id, 2, 'OK');
+			strictEqual(result[1]._id, 1, 'OK');
+			strictEqual(count, 2, 'OK');
+
+			base.dbDown();
+			start();
+		}, 1000);
+	});*/
 });

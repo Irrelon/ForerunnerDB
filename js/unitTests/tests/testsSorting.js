@@ -347,8 +347,10 @@ QUnit.test("Sorting :: Nested key sorts", function () {
 });
 
 ForerunnerDB.moduleLoaded('View', function () {
-	QUnit.test("Sorting Views :: Nested key sorts", function () {
+	QUnit.asyncTest("Sorting Views :: Nested key sorts", function () {
 		base.dbUp();
+
+		expect(32);
 
 		var itemCollection = db.collection('item').truncate(),
 			result;
@@ -371,7 +373,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 					},
 					'name': 1
 				}
-			});
+			})
+			.ng($scope, 'data');
 
 		itemCollection.insert([{
 			_id: 9,
@@ -465,34 +468,70 @@ ForerunnerDB.moduleLoaded('View', function () {
 			}
 		}]);
 
-		db.view('myView').ng($scope, 'data');
+		setTimeout(function () {
+			result = $scope.data;
 
-		result = $scope.data;
+			strictEqual(result[0].name, 'Window 1', "Correct ordering");
+			strictEqual(result[0].location.title, 'Bathroom 1', "Correct ordering");
 
-		strictEqual(result[0].name, 'Window 1', "Correct ordering");
-		strictEqual(result[0].location.title, 'Bathroom 1', "Correct ordering");
+			strictEqual(result[1].name, 'Window 2', "Correct ordering");
+			strictEqual(result[1].location.title, 'Bathroom 1', "Correct ordering");
 
-		strictEqual(result[1].name, 'Window 2', "Correct ordering");
-		strictEqual(result[1].location.title, 'Bathroom 1', "Correct ordering");
+			strictEqual(result[2].name, 'Window 3', "Correct ordering");
+			strictEqual(result[2].location.title, 'Bathroom 1', "Correct ordering");
 
-		strictEqual(result[2].name, 'Window 3', "Correct ordering");
-		strictEqual(result[2].location.title, 'Bathroom 1', "Correct ordering");
+			strictEqual(result[3].name, 'Window 4', "Correct ordering");
+			strictEqual(result[3].location.title, 'Bathroom 1', "Correct ordering");
 
-		strictEqual(result[3].name, 'Window 4', "Correct ordering");
-		strictEqual(result[3].location.title, 'Bathroom 1', "Correct ordering");
+			strictEqual(result[4].name, 'Window 1', "Correct ordering");
+			strictEqual(result[4].location.title, 'Bathroom 2', "Correct ordering");
 
-		strictEqual(result[4].name, 'Window 1', "Correct ordering");
-		strictEqual(result[4].location.title, 'Bathroom 2', "Correct ordering");
+			strictEqual(result[5].name, 'Window 1', "Correct ordering");
+			strictEqual(result[5].location.title, 'Kitchen', "Correct ordering");
 
-		strictEqual(result[5].name, 'Window 1', "Correct ordering");
-		strictEqual(result[5].location.title, 'Kitchen', "Correct ordering");
+			strictEqual(result[6].name, 'Window 2', "Correct ordering");
+			strictEqual(result[6].location.title, 'Kitchen', "Correct ordering");
 
-		strictEqual(result[6].name, 'Window 2', "Correct ordering");
-		strictEqual(result[6].location.title, 'Kitchen', "Correct ordering");
+			strictEqual(result[7].name, 'Front Door Open', "Correct ordering");
+			strictEqual(result[7].location.title, 'Lobby', "Correct ordering");
 
-		strictEqual(result[7].name, 'Front Door Open', "Correct ordering");
-		strictEqual(result[7].location.title, 'Lobby', "Correct ordering");
+			// Now run an update and check order
+			itemCollection.update({
+				_id: 9
+			}, {
+				name: 'Door Lock1'
+			});
 
-		base.dbDown();
+			setTimeout(function () {
+				result = $scope.data;
+
+				strictEqual(result[0].name, 'Window 1', "Correct ordering");
+				strictEqual(result[0].location.title, 'Bathroom 1', "Correct ordering");
+
+				strictEqual(result[1].name, 'Window 2', "Correct ordering");
+				strictEqual(result[1].location.title, 'Bathroom 1', "Correct ordering");
+
+				strictEqual(result[2].name, 'Window 3', "Correct ordering");
+				strictEqual(result[2].location.title, 'Bathroom 1', "Correct ordering");
+
+				strictEqual(result[3].name, 'Window 4', "Correct ordering");
+				strictEqual(result[3].location.title, 'Bathroom 1', "Correct ordering");
+
+				strictEqual(result[4].name, 'Window 1', "Correct ordering");
+				strictEqual(result[4].location.title, 'Bathroom 2', "Correct ordering");
+
+				strictEqual(result[5].name, 'Window 1', "Correct ordering");
+				strictEqual(result[5].location.title, 'Kitchen', "Correct ordering");
+
+				strictEqual(result[6].name, 'Window 2', "Correct ordering");
+				strictEqual(result[6].location.title, 'Kitchen', "Correct ordering");
+
+				strictEqual(result[7].name, 'Front Door Open', "Correct ordering");
+				strictEqual(result[7].location.title, 'Lobby', "Correct ordering");
+				base.dbDown();
+
+				start();
+			}, 1000);
+		}, 1000);
 	});
 });

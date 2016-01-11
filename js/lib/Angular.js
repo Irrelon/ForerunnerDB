@@ -150,7 +150,6 @@ Angular.extendView = function (Module) {
 
 			// Hook the ForerunnerDB change event to inform angular of a change
 			self.publicData().on('change', function () {
-				debugger;
 				link.callback();
 			} );
 
