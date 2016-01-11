@@ -253,3 +253,246 @@ QUnit.test("Sorting :: Date objects descending", function () {
 
 	base.dbDown();
 });
+
+QUnit.test("Sorting :: Nested key sorts", function () {
+	base.dbUp();
+
+	var itemCollection = db.collection('item').truncate(),
+			result;
+
+	itemCollection.setData([{
+		_id: 1,
+		name: 'Window 1',
+		location: {
+			title: 'Kitchen'
+		}
+	}, {
+		_id: 2,
+		name: 'Window 2',
+		location: {
+			title: 'Kitchen'
+		}
+	}, {
+		_id: 3,
+		name: 'Window 1',
+		location: {
+			title: 'Bathroom 2'
+		}
+	}, {
+		_id: 4,
+		name: 'Window 1',
+		location: {
+			title: 'Bathroom 1'
+		}
+	}, {
+		_id: 5,
+		name: 'Window 4',
+		location: {
+			title: 'Bathroom 1'
+		}
+	}, {
+		_id: 6,
+		name: 'Window 2',
+		location: {
+			title: 'Bathroom 1'
+		}
+	}, {
+		_id: 7,
+		name: 'Window 3',
+		location: {
+			title: 'Bathroom 1'
+		}
+	}, {
+		_id: 8,
+		name: 'Front Door Open',
+		location: {
+			title: 'Lobby'
+		}
+	}]);
+
+	result = itemCollection.find({}, {
+		'$orderBy': {
+			'location': {
+				title: 1
+			},
+			'name': 1
+		}
+	});
+
+	strictEqual(result[0].name, 'Window 1', "Correct ordering");
+	strictEqual(result[0].location.title, 'Bathroom 1', "Correct ordering");
+
+	strictEqual(result[1].name, 'Window 2', "Correct ordering");
+	strictEqual(result[1].location.title, 'Bathroom 1', "Correct ordering");
+
+	strictEqual(result[2].name, 'Window 3', "Correct ordering");
+	strictEqual(result[2].location.title, 'Bathroom 1', "Correct ordering");
+
+	strictEqual(result[3].name, 'Window 4', "Correct ordering");
+	strictEqual(result[3].location.title, 'Bathroom 1', "Correct ordering");
+
+	strictEqual(result[4].name, 'Window 1', "Correct ordering");
+	strictEqual(result[4].location.title, 'Bathroom 2', "Correct ordering");
+
+	strictEqual(result[5].name, 'Window 1', "Correct ordering");
+	strictEqual(result[5].location.title, 'Kitchen', "Correct ordering");
+
+	strictEqual(result[6].name, 'Window 2', "Correct ordering");
+	strictEqual(result[6].location.title, 'Kitchen', "Correct ordering");
+
+	strictEqual(result[7].name, 'Front Door Open', "Correct ordering");
+	strictEqual(result[7].location.title, 'Lobby', "Correct ordering");
+
+	base.dbDown();
+});
+
+ForerunnerDB.moduleLoaded('View', function () {
+	QUnit.test("Sorting Views :: Nested key sorts", function () {
+		base.dbUp();
+
+		var itemCollection = db.collection('item').truncate(),
+			result;
+
+		$scope = {
+			$apply: function () {},
+			$on: function () {}
+		};
+
+		view = db.view('myView')
+			.from(itemCollection)
+			.queryData({
+				state: {
+					functionName: 'sensorBinary'
+				}
+			}, {
+				'$orderBy': {
+					'location': {
+						title: 1
+					},
+					'name': 1
+				}
+			});
+
+		itemCollection.insert([{
+			_id: 9,
+			state: {
+				functionName: 'switchBinary'
+			},
+			name: 'Door Lock',
+			location: {
+				title: 'Bathroom 2'
+			}
+		}, {
+			_id: 1,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 2',
+			location: {
+				title: 'Kitchen'
+			}
+		}, {
+			_id: 2,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 1',
+			location: {
+				title: 'Kitchen'
+			}
+		}, {
+			_id: 3,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 1',
+			location: {
+				title: 'Bathroom 2'
+			}
+		}, {
+			_id: 10,
+			state: {
+				functionName: 'switchBinary'
+			},
+			name: 'Door Lock',
+			location: {
+				title: 'Bathroom 1'
+			}
+		}, {
+			_id: 4,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 1',
+			location: {
+				title: 'Bathroom 1'
+			}
+		}, {
+			_id: 5,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 4',
+			location: {
+				title: 'Bathroom 1'
+			}
+		}, {
+			_id: 6,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 3',
+			location: {
+				title: 'Bathroom 1'
+			}
+		}, {
+			_id: 7,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Window 2',
+			location: {
+				title: 'Bathroom 1'
+			}
+		}, {
+			_id: 8,
+			state: {
+				functionName: 'sensorBinary'
+			},
+			name: 'Front Door Open',
+			location: {
+				title: 'Lobby'
+			}
+		}]);
+
+		db.view('myView').ng($scope, 'data');
+
+		result = $scope.data;
+
+		strictEqual(result[0].name, 'Window 1', "Correct ordering");
+		strictEqual(result[0].location.title, 'Bathroom 1', "Correct ordering");
+
+		strictEqual(result[1].name, 'Window 2', "Correct ordering");
+		strictEqual(result[1].location.title, 'Bathroom 1', "Correct ordering");
+
+		strictEqual(result[2].name, 'Window 3', "Correct ordering");
+		strictEqual(result[2].location.title, 'Bathroom 1', "Correct ordering");
+
+		strictEqual(result[3].name, 'Window 4', "Correct ordering");
+		strictEqual(result[3].location.title, 'Bathroom 1', "Correct ordering");
+
+		strictEqual(result[4].name, 'Window 1', "Correct ordering");
+		strictEqual(result[4].location.title, 'Bathroom 2', "Correct ordering");
+
+		strictEqual(result[5].name, 'Window 1', "Correct ordering");
+		strictEqual(result[5].location.title, 'Kitchen', "Correct ordering");
+
+		strictEqual(result[6].name, 'Window 2', "Correct ordering");
+		strictEqual(result[6].location.title, 'Kitchen', "Correct ordering");
+
+		strictEqual(result[7].name, 'Front Door Open', "Correct ordering");
+		strictEqual(result[7].location.title, 'Lobby', "Correct ordering");
+
+		base.dbDown();
+	});
+});
