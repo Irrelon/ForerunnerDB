@@ -17,7 +17,9 @@ module.exports = Core;
 },{"../lib/Core":7,"../lib/Shim.IE8":32}],3:[function(_dereq_,module,exports){
 "use strict";
 
-var Shared = _dereq_('./Shared');
+var Shared = _dereq_('./Shared'),
+	Path = _dereq_('./Path'),
+	sharedPathSolver;
 
 /**
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
@@ -27,26 +29,19 @@ var Shared = _dereq_('./Shared');
  * @constructor
  */
 var ActiveBucket = function (orderBy) {
-	var sortKey;
-
 	this._primaryKey = '_id';
 	this._keyArr = [];
 	this._data = [];
 	this._objLookup = {};
 	this._count = 0;
 
-	for (sortKey in orderBy) {
-		if (orderBy.hasOwnProperty(sortKey)) {
-			this._keyArr.push({
-				key: sortKey,
-				dir: orderBy[sortKey]
-			});
-		}
-	}
+	this._keyArr = sharedPathSolver.parse(orderBy, true);
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
 Shared.mixin(ActiveBucket.prototype, 'Mixin.Sorting');
+
+sharedPathSolver = new Path();
 
 /**
  * Gets / sets the primary key used by the active bucket.
@@ -139,7 +134,7 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
-		castType = typeof obj[sortType.key];
+		castType = typeof sharedPathSolver.get(obj, sortType.path);
 
 		if (castType === 'number') {
 			aVals[index] = Number(aVals[index]);
@@ -149,11 +144,11 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 		// Check for non-equal items
 		if (aVals[index] !== bVals[index]) {
 			// Return the sorted items
-			if (sortType.dir === 1) {
+			if (sortType.value === 1) {
 				return sorter.sortAsc(aVals[index], bVals[index]);
 			}
 
-			if (sortType.dir === -1) {
+			if (sortType.value === -1) {
 				return sorter.sortDesc(aVals[index], bVals[index]);
 			}
 		}
@@ -252,11 +247,12 @@ ActiveBucket.prototype.documentKey = function (obj) {
 
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
+
 		if (key) {
 			key += '.:.';
 		}
 
-		key += obj[sortType.key];
+		key += sharedPathSolver.get(obj, sortType.path);
 	}
 
 	// Add the unique identifier on the end of the key
@@ -276,7 +272,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Shared":31}],4:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10508,7 +10504,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.525',
+	version: '1.3.529',
 	modules: {},
 	plugins: {},
 
