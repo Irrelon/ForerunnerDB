@@ -12,8 +12,6 @@ var Shared = require('./Shared'),
  * @constructor
  */
 var ActiveBucket = function (orderBy) {
-	var sortKey;
-
 	this._primaryKey = '_id';
 	this._keyArr = [];
 	this._data = [];
@@ -21,15 +19,6 @@ var ActiveBucket = function (orderBy) {
 	this._count = 0;
 
 	this._keyArr = sharedPathSolver.parse(orderBy, true);
-
-	/*for (sortKey in orderBy) {
-		if (orderBy.hasOwnProperty(sortKey)) {
-			this._keyArr.push({
-				key: sortKey,
-				dir: orderBy[sortKey]
-			});
-		}
-	}*/
 };
 
 Shared.addModule('ActiveBucket', ActiveBucket);
