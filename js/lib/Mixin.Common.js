@@ -64,7 +64,7 @@ Common = {
 	 * @returns {*}
 	 */	
 	decouple: function (data, copies) {
-		if (data !== undefined) {
+		if (data !== undefined && data !== "") {
 			if (!copies) {
 				return this.jParse(this.jStringify(data));
 			} else {
