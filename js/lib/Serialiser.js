@@ -38,7 +38,13 @@ Serialiser.prototype.init = function () {
 	});
 
 	this.registerDecoder('$regexp', function (data) {
-		return new RegExp(data.source, data.params);
+		var type = typeof data;
+
+		if (type === 'object') {
+			return new RegExp(data.source, data.params);
+		} else if (type === 'string') {
+			return new RegExp(data);
+		}
 	});
 };
 
