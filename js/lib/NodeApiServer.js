@@ -175,7 +175,27 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.get('/' +  dbName + '/:collection', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
+			query = req.query && req.query.query ? req.query.query : "",
+			options = req.query && req.query.options ? req.query.options : "",
 			collection;
+
+		if (query) {
+			try {
+				query = JSON.parse(query);
+			} catch (e) {
+				res.status(500).send('Error parsing query parameter: ' + e.message);
+				return;
+			}
+		}
+
+		if (options) {
+			try {
+				options = JSON.parse(options);
+			} catch (e) {
+				res.status(500).send('Error parsing options parameter: ' + e.message);
+				return;
+			}
+		}
 
 		self.hasPermission(modelName, 'get', req, function (err, results) {
 			if (!err) {
@@ -191,10 +211,10 @@ NodeApiServer.prototype._defineRoutes = function () {
 						if (self._db.debug()) {
 							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
 						}
-						res.send(self._db.collection(req.params.collection).find());
+						res.send(self._db.collection(req.params.collection).find(query, options));
 					});
 				} else {
-					res.send(self._db.collection(req.params.collection).find());
+					res.send(self._db.collection(req.params.collection).find(query, options));
 				}
 			} else {
 				res.status(403).send(err);
@@ -240,7 +260,27 @@ NodeApiServer.prototype._defineRoutes = function () {
 		// Check permissions
 		var modelName = req.params.collection,
 			modelId = req.params.id,
+			query = req.query && req.query.query ? req.query.query : "",
+			options = req.query && req.query.options ? req.query.options : "",
 			collection;
+
+		if (query) {
+			try {
+				query = JSON.parse(query);
+			} catch (e) {
+				res.status(500).send('Error parsing query parameter: ' + e.message);
+				return;
+			}
+		}
+
+		if (options) {
+			try {
+				options = JSON.parse(options);
+			} catch (e) {
+				res.status(500).send('Error parsing options parameter: ' + e.message);
+				return;
+			}
+		}
 
 		self.hasPermission(modelName, 'get', req, function (err) {
 			if (!err) {
@@ -256,10 +296,10 @@ NodeApiServer.prototype._defineRoutes = function () {
 							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
 						}
 
-						res.send(self._db.collection(req.params.collection).findById(modelId));
+						res.send(self._db.collection(req.params.collection).findById(modelId, options));
 					});
 				} else {
-					res.send(self._db.collection(req.params.collection).findById(modelId));
+					res.send(self._db.collection(req.params.collection).findById(modelId, options));
 				}
 			} else {
 				res.status(403).send(err);
@@ -322,6 +362,56 @@ NodeApiServer.prototype._defineRoutes = function () {
 					});
 				} else {
 					res.send(self._db.collection(req.params.collection).updateById(modelId, req.body));
+				}
+			} else {
+				res.status(403).send(err);
+			}
+		});
+	});
+
+	app.delete('/' +  dbName + '/:collection', function (req, res) {
+		// Check permissions
+		var modelName = req.params.collection,
+			query = req.query && req.query.query ? req.query.query : "",
+			options = req.query && req.query.options ? req.query.options : "",
+			collection;
+
+		if (query) {
+			try {
+				query = JSON.parse(query);
+			} catch (e) {
+				res.status(500).send('Error parsing query parameter: ' + e.message);
+				return;
+			}
+		}
+
+		if (options) {
+			try {
+				options = JSON.parse(options);
+			} catch (e) {
+				res.status(500).send('Error parsing options parameter: ' + e.message);
+				return;
+			}
+		}
+
+		self.hasPermission(modelName, 'delete', req, function (err) {
+			if (!err) {
+				collection = self._db.collection(modelName);
+
+				if (collection.isProcessingQueue()) {
+					if (self._db.debug()) {
+						console.log(self._db.logIdentifier() + ' Waiting for async queue: ' + modelName);
+					}
+
+					collection.once('ready', function () {
+						if (self._db.debug()) {
+							console.log(self._db.logIdentifier() + ' Async queue complete: ' + modelName);
+						}
+
+						res.send(self._db.collection(req.params.collection).remove(query, options));
+					});
+				} else {
+					res.send(self._db.collection(req.params.collection).remove(query, options));
 				}
 			} else {
 				res.status(403).send(err);
