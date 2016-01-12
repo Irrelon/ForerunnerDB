@@ -175,13 +175,14 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.get('/' +  dbName + '/:collection', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
-			query = req.query && req.query.query ? req.query.query : "",
-			options = req.query && req.query.options ? req.query.options : "",
+			query = req.query && req.query.query ? req.query.query : undefined,
+			options = req.query && req.query.options ? req.query.options : undefined,
 			collection;
 
 		if (query) {
 			try {
 				query = JSON.parse(query);
+				query = self.decouple(query);
 			} catch (e) {
 				res.status(500).send('Error parsing query parameter: ' + e.message);
 				return;
@@ -191,6 +192,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		if (options) {
 			try {
 				options = JSON.parse(options);
+				options = self.decouple(options);
 			} catch (e) {
 				res.status(500).send('Error parsing options parameter: ' + e.message);
 				return;
@@ -260,13 +262,14 @@ NodeApiServer.prototype._defineRoutes = function () {
 		// Check permissions
 		var modelName = req.params.collection,
 			modelId = req.params.id,
-			query = req.query && req.query.query ? req.query.query : "",
-			options = req.query && req.query.options ? req.query.options : "",
+			query = req.query && req.query.query ? req.query.query : undefined,
+			options = req.query && req.query.options ? req.query.options : undefined,
 			collection;
 
 		if (query) {
 			try {
 				query = JSON.parse(query);
+				query = self.decouple(query);
 			} catch (e) {
 				res.status(500).send('Error parsing query parameter: ' + e.message);
 				return;
@@ -276,6 +279,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		if (options) {
 			try {
 				options = JSON.parse(options);
+				options = self.decouple(options);
 			} catch (e) {
 				res.status(500).send('Error parsing options parameter: ' + e.message);
 				return;
@@ -372,13 +376,14 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.delete('/' +  dbName + '/:collection', function (req, res) {
 		// Check permissions
 		var modelName = req.params.collection,
-			query = req.query && req.query.query ? req.query.query : "",
-			options = req.query && req.query.options ? req.query.options : "",
+			query = req.query && req.query.query ? req.query.query : undefined,
+			options = req.query && req.query.options ? req.query.options : undefined,
 			collection;
 
 		if (query) {
 			try {
 				query = JSON.parse(query);
+				query = self.decouple(query);
 			} catch (e) {
 				res.status(500).send('Error parsing query parameter: ' + e.message);
 				return;
@@ -388,6 +393,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 		if (options) {
 			try {
 				options = JSON.parse(options);
+				options = self.decouple(options);
 			} catch (e) {
 				res.status(500).send('Error parsing options parameter: ' + e.message);
 				return;
