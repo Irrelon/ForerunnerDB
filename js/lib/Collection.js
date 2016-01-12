@@ -1959,7 +1959,7 @@ Collection.prototype.find = function (query, options, callback) {
 		return [];
 	}
 
-	return this._find.apply(this, arguments);
+	return this._find.call(this, query, options, callback);
 };
 
 Collection.prototype._find = function (query, options) {
@@ -2772,6 +2772,38 @@ Collection.prototype.sort = function (sortObj, arr) {
 	}
 };*/
 
+ /**
+ * Takes an array of objects and returns a new object with the array items
+ * split into buckets by the passed key.
+ * @param {String} key The key to split the array into buckets by.
+ * @param {Array} arr An array of objects.
+ * @returns {Object}
+ */
+/*Collection.prototype.bucket = function (key, arr) {
+	var i,
+			oldField,
+			field,
+			fieldArr = [],
+			buckets = {};
+
+	for (i = 0; i < arr.length; i++) {
+		field = String(arr[i][key]);
+
+		if (oldField !== field) {
+			fieldArr.push(field);
+			oldField = field;
+		}
+
+		buckets[field] = buckets[field] || [];
+		buckets[field].push(arr[i]);
+	}
+
+	return {
+		buckets: buckets,
+		order: fieldArr
+	};
+};*/
+
 /**
  * Sorts array by individual sort path.
  * @param key
@@ -2808,38 +2840,6 @@ Collection.prototype._sort = function (key, arr) {
 	}
 
 	return arr.sort(sorterMethod);
-};
-
-/**
- * Takes an array of objects and returns a new object with the array items
- * split into buckets by the passed key.
- * @param {String} key The key to split the array into buckets by.
- * @param {Array} arr An array of objects.
- * @returns {Object}
- */
-Collection.prototype.bucket = function (key, arr) {
-	var i,
-		oldField,
-		field,
-		fieldArr = [],
-		buckets = {};
-
-	for (i = 0; i < arr.length; i++) {
-		field = String(arr[i][key]);
-
-		if (oldField !== field) {
-			fieldArr.push(field);
-			oldField = field;
-		}
-
-		buckets[field] = buckets[field] || [];
-		buckets[field].push(arr[i]);
-	}
-
-	return {
-		buckets: buckets,
-		order: fieldArr
-	};
 };
 
 /**
@@ -3103,18 +3103,16 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 	// Drop the sub-document collection
 	subDocCollection.drop();
 
+	if (!resultObj.pathFound) {
+		resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
+	}
+
 	// Check if the call should not return stats, if so return only subDocs array
 	if (subDocOptions.$stats) {
 		return resultObj;
 	} else {
 		return resultObj.subDocs;
 	}
-
-	if (!resultObj.pathFound) {
-		resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
-	}
-
-	return resultObj;
 };
 
 /**
@@ -3463,7 +3461,6 @@ Db.prototype.collection = new Overload({
 	 * name automatically.
 	 * @func collection
 	 * @memberof Db
-	 * @param {String} collectionName The name of the collection.
 	 * @returns {Collection}
 	 */
 	'': function () {
