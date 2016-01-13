@@ -4994,22 +4994,6 @@ Shared.synthesize(Core.prototype, 'mongoEmulation');
 Core.prototype._isServer = false;
 
 /**
- * Returns true if ForerunnerDB is running on a client browser.
- * @returns {boolean}
- */
-Core.prototype.isClient = function () {
-	return !this._isServer;
-};
-
-/**
- * Returns true if ForerunnerDB is running on a server.
- * @returns {boolean}
- */
-Core.prototype.isServer = function () {
-	return this._isServer;
-};
-
-/**
  * Checks if the database is running on a client (browser) or
  * a server (node.js).
  * @returns {Boolean} Returns true if running on a browser.
@@ -11268,7 +11252,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.535',
+	version: '1.3.537',
 	modules: {},
 	plugins: {},
 

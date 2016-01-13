@@ -434,8 +434,6 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
  * @returns {NodeApiServer}
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
-	var self = this;
-
 	// Start listener
 	if (!server) {
 		if (options && options.cors === true) {

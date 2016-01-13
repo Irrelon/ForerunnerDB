@@ -5369,22 +5369,6 @@ Shared.synthesize(Core.prototype, 'mongoEmulation');
 Core.prototype._isServer = false;
 
 /**
- * Returns true if ForerunnerDB is running on a client browser.
- * @returns {boolean}
- */
-Core.prototype.isClient = function () {
-	return !this._isServer;
-};
-
-/**
- * Returns true if ForerunnerDB is running on a server.
- * @returns {boolean}
- */
-Core.prototype.isServer = function () {
-	return this._isServer;
-};
-
-/**
  * Checks if the database is running on a client (browser) or
  * a server (node.js).
  * @returns {Boolean} Returns true if running on a browser.
@@ -11348,8 +11332,8 @@ module.exports = Updating;
 
 // Import external names locally
 var Shared = _dereq_('./Shared'),
-	Db,
-	DbInit,
+	Core,
+	CoreInit,
 	Collection,
 	NodeApiClient,
 	Overload;
@@ -11360,23 +11344,26 @@ NodeApiClient = function () {
 
 /**
  * The init method that can be overridden or extended.
- * @param {Db} db The ForerunnerDB database instance.
+ * @param {Core} core The ForerunnerDB core instance.
  */
-NodeApiClient.prototype.init = function (db) {
+NodeApiClient.prototype.init = function (core) {
 	var self = this;
-	self._db = db;
-	self._access = {};
+	self._core = core;
 };
 
 Shared.addModule('NodeApiClient', NodeApiClient);
 Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
 Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
-Db = Shared.modules.Db;
-DbInit = Db.prototype.init;
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
 Collection = Shared.modules.Collection;
 Overload = Shared.overload;
 
+/**
+ * Set the url of the server to use for API.
+ * @name server
+ */
 Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	if (val !== undefined) {
 		if (val.substr(val.length - 1, 1) === '/') {
@@ -11402,21 +11389,57 @@ NodeApiClient.prototype.get = function (theUrl, callback) {
 	xmlHttp.send(null);
 };
 
+/**
+ * Sets a global auth object that will be sent up with client connections
+ * to the API server.
+ * @name auth
+ */
+Shared.synthesize(NodeApiClient.prototype, 'auth');
+
+/**
+ * Initiates a client connection to the API server.
+ * @param collectionInstance
+ * @param path
+ * @param options
+ * @param callback
+ */
 NodeApiClient.prototype.sync = function (collectionInstance, path, options, callback) {
 	var self = this,
-		source = new EventSource(this.server() + path + '/_sync');
+		source,
+		finalPath;
 
-	if (this._db.debug()) {
-		console.log(this._db.logIdentifier() + ' Connecting to API server ' + this.server() + path);
+	if (this.debug()) {
+		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
 	}
 
+	finalPath = this.server() + path + '/_sync';
+
+	// Check for global auth
+	if (this._auth) {
+		finalPath += '?auth=' + JSON.stringify(this._auth);
+	}
+
+	if (options) {
+		if (options.initialData === undefined) {
+			options.initialData = true;
+		}
+
+		if (options.auth) {
+			// Add auth data to end of call
+			finalPath += '?auth=' + JSON.stringify(options.auth);
+		}
+	}
+
+	source = new EventSource(finalPath);
 	collectionInstance.__apiConnection = source;
 
 	source.addEventListener('open', function (e) {
-		// The connection is open, grab the initial data
-		self.get(self.server() + path, function (err, data) {
-			collectionInstance.upsert(data);
-		});
+		if (!options || (options && options.initialData)) {
+			// The connection is open, grab the initial data
+			self.get(self.server() + path, function (err, data) {
+				collectionInstance.upsert(data);
+			});
+		}
 	}, false);
 
 	source.addEventListener('error', function (e) {
@@ -11449,29 +11472,95 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, options, call
 };
 
 Collection.prototype.sync = new Overload({
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
 	'function': function (callback) {
-		this.$main.call(this, null, null, callback);
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'object, function': function (options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), options, callback);
+	},
+
+	/**
+	 * Sync with collection of a different name on the server-side.
+	 * @param {String} collectionName The name of the server-side
+	 * collection to sync data with.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, function': function (collectionName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, null, callback);
+	},
+
+	/**
+	 * Sync with collection of a different name on the server-side.
+	 * @param {String} collectionName The name of the server-side
+	 * collection to sync data with.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, object, function': function (collectionName, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, options, callback);
+	},
+
+	/**
+	 * Sync with an object on the server-side based on the type and
+	 * name provided.
+	 * @param {String} objType The type of the server-side object
+	 * to sync with e.g. "collection", "view" etc
+	 * @param {String} objName The name of the server-side object
+	 * to sync data with.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objType, objName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objType + '/' + objName, null, callback);
+	},
+
+	/**
+	 * Sync with an object on the server-side based on the type and
+	 * name provided.
+	 * @param {String} objType The type of the server-side object
+	 * to sync with e.g. "collection", "view" etc
+	 * @param {String} objName The name of the server-side object
+	 * to sync data with.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, function': function (objType, objName, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objType + '/' + objName, options, callback);
 	},
 
 	'$main': function (path, options, callback) {
-		if (this._db) {
-			if (!this.__apiConnection) {
-				if (!path) {
-					path = '/' + this._db.name() + '/' + this.name();
-				}
+		if (this._db && this._db._core) {
+			// Kill any existing sync connection
+			this.unSync();
 
-				this._db.api.sync(this, path, options, callback);
-			} else {
-				if (callback) {
-					callback(false);
-				}
-			}
+			// Create new sync connection
+			this._db._core.api.sync(this, path, options, callback);
 		} else {
 			throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 		}
 	}
 });
 
+/**
+ * Disconnects an existing connection to a sync server.
+ * @returns {boolean} True if a connection existed, false
+ * if no connection existed.
+ */
 Collection.prototype.unSync = function () {
 	if (this.__apiConnection) {
 		if (this.__apiConnection.readyState !== 2) {
@@ -11486,9 +11575,9 @@ Collection.prototype.unSync = function () {
 	return false;
 };
 
-// Override the DB init to instantiate the plugin
-Db.prototype.init = function () {
-	DbInit.apply(this, arguments);
+// Override the Core init to instantiate the plugin
+Core.prototype.init = function () {
+	CoreInit.apply(this, arguments);
 	this.api = new NodeApiClient(this);
 };
 
@@ -13907,7 +13996,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.535',
+	version: '1.3.537',
 	modules: {},
 	plugins: {},
 
