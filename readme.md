@@ -3971,6 +3971,8 @@ to search / replace your entire codebase for "join" to "$join" as this may break
 code in your project. Ensure that changes are limited to ForerunnerDB query sections.
 
 # ForerunnerDB Built-In JSON REST API Server
+> BETA STATUS SUBJECT TO CHANGE
+
 When running ForerunnerDB under Node.js you can activate a powerful REST API server
 that allows you to build a backend for your application in record speed, providing
 persistence, access control, replication etc without having to write complex code.
@@ -4002,14 +4004,32 @@ db.persist.dataDir('./data');
 db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on all collections
-// db.api.access(<collection name>, <http verb>, <your control method>);
-db.api.access('*', '*', function (modelName, methodName, req, callback) {
+// db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
+fdb.api.access('testApi', 'collection', '*', '*', function (modelName, methodName, req, callback) {
+	// You can customise this method to only callback false when you are happy
+	// that the client connecting is allowed to connect. Calling back with true
+	// or an error string as the first argument will cause the client connection
+	// to be rejected.
+
+	// The req.query object will contain the query parameters you include
+	// when making an API call. This allows you to check a client session
+	// etc to determine if they are allowed to access this collection based
+	// on the method (req.method - GET, POST, PUT, PATCH, DELETE, SYNC)
+	console.log(req.query);
+	
+	// Note the special case of req.method === 'SYNC' is where the client has
+	// requested to synchronise data with the server. This is effectively
+	// the same as a GET request except that changes to the server-side data
+	// are pushed automatically to the client. If you don't want this to be
+	// allowed, deny calls with the req.method of "SYNC".
+
+	// In this case here we are simply allowing all clients to connect
 	callback(false, modelName, methodName, req);
 });
 
 // Ask the API server to start listening on all IP addresses assigned to
-// this machine on port 9010
-db.api.listen('0.0.0.0', '9010', function () {
+// this machine on port 9010 and to allow cross-origin resource sharing (cors)
+fdb.api.start('0.0.0.0', '9010', {cors: true}, function () {
 	console.log('Server started!');
 });
 ```
@@ -4028,14 +4048,14 @@ an action.
 
 ##### Accessing all collection's documents:
 
-	GET http://0.0.0.0:9010/<database name>/<collection name>
+	GET http://0.0.0.0:9010/<database name>/collection/<collection name>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection",
+	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4045,14 +4065,14 @@ $.ajax({
 
 ##### Accessing an individual document in a collection by id:
 
-	GET http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	GET http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4062,7 +4082,7 @@ $.ajax({
 
 ##### Creating a new document:
 
-	POST http://0.0.0.0:9010/<database name>/<collection name>
+	POST http://0.0.0.0:9010/<database name>/collection/<collection name>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4070,7 +4090,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "post",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection",
+	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4084,7 +4104,7 @@ $.ajax({
 
 ##### Replacing a document by id:
 
-	PUT http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	PUT http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4092,7 +4112,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "put",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4106,7 +4126,7 @@ $.ajax({
 
 ##### Updating a document by id:
 
-	PATCH http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	PATCH http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4114,7 +4134,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "patch",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4128,7 +4148,7 @@ $.ajax({
 
 ##### Deleting a document by id:
 
-	DELETE http://0.0.0.0:9010/<database name>/<collection name>/<document id>
+	DELETE http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
