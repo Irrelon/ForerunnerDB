@@ -8,8 +8,6 @@ angular.module('app.controllers')
 
 			// Check if data was found... if not route to settings
 			if (!err) {
-				db.store('loaded', true);
-
 				if (data.foundData) {
 					// Check for required data
 					tmpSettings = db.collection('settings').findOne();

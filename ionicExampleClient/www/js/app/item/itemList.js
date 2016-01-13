@@ -6,10 +6,6 @@ angular.module('app.controllers')
 			db.collection('item').sync(function () {
 				$scope.$broadcast('scroll.refreshComplete');
 			});
-
-			db.collection('item').sync('view', 'itemView', function () {
-				$scope.$broadcast('scroll.refreshComplete');
-			});
 		};
 
 		$scope.addItem = function () {
