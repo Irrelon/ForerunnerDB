@@ -246,6 +246,11 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 		db,
 		obj;
 
+	// Parse the auth JSON
+	if (req.query && req.query.auth) {
+		req.query.auth = JSON.parse(req.query.auth);
+	}
+
 	// Check permissions
 	self.hasPermission(dbName, objType, objName, "SYNC", req, function (err, results) {
 		if (!err) {
@@ -398,7 +403,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 };
 
 NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, methodName, req, callback) {
-	var permissionMethods = this._core.db(dbName).apiAccess(objType, objName, methodName);
+	var permissionMethods = this._core.api.access(dbName, objType, objName, methodName);
 
 	if (!permissionMethods || !permissionMethods.length) {
 		// No permissions set, deny access by default
@@ -497,41 +502,39 @@ Core.prototype.init = function () {
  * processing.
  * @returns {*}
  */
-Db.prototype.apiAccess = function (objType, objName, methodName, checkFunction) {
-	var thisName = this.name();
-
+NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
 		if (checkFunction !== undefined) {
 			// Set new access permission with callback "checkFunction"
 			_access.db = _access.db || {};
-			_access.db[thisName] = _access.db[thisName] || {};
-			_access.db[thisName][objType] = _access.db[thisName][objType] || {};
-			_access.db[thisName][objType][objName] = _access.db[thisName][objType][objName] || {};
-			_access.db[thisName][objType][objName][methodName] = _access.db[thisName][objType][objName][methodName] || [];
-			_access.db[thisName][objType][objName][methodName].push(checkFunction);
+			_access.db[dbName] = _access.db[dbName] || {};
+			_access.db[dbName][objType] = _access.db[dbName][objType] || {};
+			_access.db[dbName][objType][objName] = _access.db[dbName][objType][objName] || {};
+			_access.db[dbName][objType][objName][methodName] = _access.db[dbName][objType][objName][methodName] || [];
+			_access.db[dbName][objType][objName][methodName].push(checkFunction);
 
 			return this;
 		}
 
 		// Get all checkFunctions for the specified access data
-		if (_access.db[thisName][objType] && _access.db[thisName][objType][objName] && _access.db[thisName][objType][objName][methodName]) {
-			return [].concat(_access.db[thisName][objType][objName][methodName]);
+		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName][methodName]) {
+			return [].concat(_access.db[dbName][objType][objName][methodName]);
 		}
 
-		if (_access.db[thisName][objType] && _access.db[thisName][objType][objName] && _access.db[thisName][objType][objName]['*']) {
-			return [].concat(_access.db[thisName][objType][objName]['*']);
+		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
+			return [].concat(_access.db[dbName][objType][objName]['*']);
 		}
 
-		if (_access.db[thisName][objType] && _access.db[thisName][objType]['*'] && _access.db[thisName][objType]['*'][methodName]) {
-			return [].concat(_access.db[thisName][objType]['*'][methodName]);
+		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
+			return [].concat(_access.db[dbName][objType]['*'][methodName]);
 		}
 
-		if (_access.db[thisName][objType] && _access.db[thisName][objType]['*'] && _access.db[thisName][objType]['*']['*']) {
-			return [].concat(_access.db[thisName][objType]['*']['*']);
+		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
+			return [].concat(_access.db[dbName][objType]['*']['*']);
 		}
 
-		if (_access.db[thisName]['*'] && _access.db[thisName]['*']['*'] && _access.db[thisName]['*']['*']['*']) {
-			return [].concat(_access.db[thisName]['*']['*']['*']);
+		if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
+			return [].concat(_access.db[dbName]['*']['*']['*']);
 		}
 	}
 
