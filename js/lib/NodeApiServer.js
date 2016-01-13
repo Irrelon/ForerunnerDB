@@ -379,6 +379,10 @@ NodeApiServer.prototype._defineRoutes = function () {
 		});
 	});
 
+	// Handle sync routes
+	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
+
+	// Handle all other routes
 	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
 	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
@@ -391,9 +395,6 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
 	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
-
-	// Handle sync routes
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
 };
 
 NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, methodName, req, callback) {

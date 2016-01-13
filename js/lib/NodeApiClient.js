@@ -7,6 +7,8 @@
 
 // Import external names locally
 var Shared = require('./Shared'),
+	Core,
+	CoreInit,
 	Db,
 	DbInit,
 	Collection,
@@ -19,18 +21,19 @@ NodeApiClient = function () {
 
 /**
  * The init method that can be overridden or extended.
- * @param {Db} db The ForerunnerDB database instance.
+ * @param {Core} core The ForerunnerDB core instance.
  */
-NodeApiClient.prototype.init = function (db) {
+NodeApiClient.prototype.init = function (core) {
 	var self = this;
-	self._db = db;
-	self._access = {};
+	self._core = core;
 };
 
 Shared.addModule('NodeApiClient', NodeApiClient);
 Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
 Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
+Core = Shared.modules.Core;
+CoreInit = Core.prototype.init;
 Db = Shared.modules.Db;
 DbInit = Db.prototype.init;
 Collection = Shared.modules.Collection;
@@ -65,8 +68,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, options, call
 	var self = this,
 		source = new EventSource(this.server() + path + '/_sync');
 
-	if (this._db.debug()) {
-		console.log(this._db.logIdentifier() + ' Connecting to API server ' + this.server() + path);
+	if (this.debug()) {
+		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
 	}
 
 	collectionInstance.__apiConnection = source;
@@ -108,18 +111,44 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, options, call
 };
 
 Collection.prototype.sync = new Overload({
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
 	'function': function (callback) {
-		this.$main.call(this, null, null, callback);
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), null, callback);
+	},
+
+	/**
+	 * Sync with collection of a different name on the server-side.
+	 * @param {String} collectionName The name of the server-side
+	 * collection to sync data with.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, function': function (collectionName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + objName, null, callback);
+	},
+
+	/**
+	 * Sync with an object on the server-side based on the type and
+	 * name provided.
+	 * @param {String} objType The type of the server-side object
+	 * to sync with e.g. "collection", "view" etc
+	 * @param {String} objName The name of the server-side object
+	 * to sync data with.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objType, objName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objType + '/' + objName, null, callback);
 	},
 
 	'$main': function (path, options, callback) {
-		if (this._db) {
+		if (this._db && this._db._core) {
 			if (!this.__apiConnection) {
-				if (!path) {
-					path = '/' + this._db.name() + '/' + this.name();
-				}
-
-				this._db.api.sync(this, path, options, callback);
+				this._db._core.api.sync(this, path, options, callback);
 			} else {
 				if (callback) {
 					callback(false);
@@ -146,8 +175,8 @@ Collection.prototype.unSync = function () {
 };
 
 // Override the DB init to instantiate the plugin
-Db.prototype.init = function () {
-	DbInit.apply(this, arguments);
+Core.prototype.init = function () {
+	CoreInit.apply(this, arguments);
 	this.api = new NodeApiClient(this);
 };
 

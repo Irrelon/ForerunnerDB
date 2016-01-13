@@ -4,7 +4,7 @@
 var fdb = new ForerunnerDB(),
 	db = fdb.db('ForerunnerDB_Ionic_App');
 
-db.api.server('http://0.0.0.0:9010');
+fdb.api.server('http://0.0.0.0:9010');
 db.store('loaded', false);
 
 // angular.module is a global place for creating, registering and retrieving Angular modules
@@ -13,7 +13,6 @@ db.store('loaded', false);
 // 'starter.services' is found in services.js
 // 'starter.controllers' is found in controllers.js
 angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.services', 'app.directives'])
-
 		.run(function ($ionicPlatform) {
 			$ionicPlatform.ready(function () {
 				// Hide the accessory bar by default (remove this to show the accessory bar above the keyboard

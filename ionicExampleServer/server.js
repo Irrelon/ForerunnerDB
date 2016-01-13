@@ -15,11 +15,13 @@ db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on the "item" collection
 // to all clients
-db.api.access('item', '*', function (modelName, methodName, req, callback) {
+db.apiAccess('collection', 'item', '*', function (modelName, methodName, req, callback) {
 	callback(false, modelName, methodName, req);
 });
 
 // Ask the API server to start listening
-db.api.listen('0.0.0.0', '9010', function () {
+fdb.api.start('0.0.0.0', '9010', {
+	cors: true
+}, function () {
 	console.log('Server started!');
 });

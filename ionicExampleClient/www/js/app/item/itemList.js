@@ -6,6 +6,10 @@ angular.module('app.controllers')
 			db.collection('item').sync(function () {
 				$scope.$broadcast('scroll.refreshComplete');
 			});
+
+			db.collection('item').sync('view', 'itemView', function () {
+				$scope.$broadcast('scroll.refreshComplete');
+			});
 		};
 
 		$scope.addItem = function () {
@@ -26,7 +30,7 @@ angular.module('app.controllers')
 						text: '<b>OK</b>',
 						type: 'button-positive',
 						onTap: function(e) {
-							$api.post('/ForerunnerDB_Ionic_App/item', {
+							$api.post('/ForerunnerDB_Ionic_App/collection/item', {
 								"name": inputVal
 							}, function (err, data) {
 								if (!err) {
@@ -58,7 +62,7 @@ angular.module('app.controllers')
 						text: '<b>OK</b>',
 						type: 'button-positive',
 						onTap: function(e) {
-							$api.put('/ForerunnerDB_Ionic_App/item/' + id, {
+							$api.put('/ForerunnerDB_Ionic_App/collection/item/' + id, {
 								"name": inputVal
 							}, function (err, data) {
 								if (!err) {
@@ -79,7 +83,7 @@ angular.module('app.controllers')
 
 			confirmPopup.then(function(res) {
 				if(res) {
-					$api.delete('/ForerunnerDB_Ionic_App/item/' + id, function (err, data) {
+					$api.delete('/ForerunnerDB_Ionic_App/collection/item/' + id, function (err, data) {
 						if (!err) {
 							// Delete successful
 						}

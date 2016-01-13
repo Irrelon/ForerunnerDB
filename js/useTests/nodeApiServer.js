@@ -13,12 +13,15 @@ db.persist.dataDir('./data');
 // Tell the database to load and save data for collections automatically
 db.persist.auto(true);
 
-// Set access control to allow all HTTP verbs on the "books" collection
-db.api.access('books', '*', function (modelName, methodName, req, callback) {
-	callback(false, modelName, methodName, req);
+// Set access control to allow all HTTP verbs (*) on the "books" collection
+db.apiAccess('collection', 'books', '*', function (collectionName, methodName, req, callback) {
+	callback(false, collectionName, methodName, req);
 });
 
 // Ask the API server to start listening
-db.api.listen('0.0.0.0', '9010', function () {
+fdb.api.start('0.0.0.0', '9010', function () {
 	console.log('Server started!');
 });
+
+// Stop API server with stop() call
+fdb.api.stop();
