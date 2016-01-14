@@ -45,7 +45,7 @@ Angular.extendCollection = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.findOne();
+						scope[varName] = self.findOne() || {};
 					} else {
 						scope[varName] = self.find();
 					}
@@ -123,7 +123,7 @@ Angular.extendView = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.publicData().findOne(self._querySettings.query, self._querySettings.options);
+						scope[varName] = self.publicData().findOne(self._querySettings.query, self._querySettings.options) || {};
 					} else {
 						scope[varName] = self.publicData().find(self._querySettings.query, self._querySettings.options);
 					}
