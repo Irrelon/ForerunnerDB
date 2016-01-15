@@ -464,13 +464,23 @@ var Matching = {
 					subPath = test.$path;
 					subQuery = test.$subQuery || {};
 					subOptions = test.$subOptions || {};
-					result = this.db()[fromType](test.$from).findSub(findQuery, subPath, subQuery, subOptions);
+
+					if (options.$parent && options.$parent.parent && options.$parent.parent.key) {
+						result = this.db()[fromType](test.$from).findSub(findQuery, subPath, subQuery, subOptions);
+					} else {
+						// This is a root $find* query
+						// Test the source against the main findQuery
+						if (this._match(source, findQuery, {}, 'and', options)) {
+							result = this._findSub([source], subPath, subQuery, subOptions);
+						}
+
+						return result && result.length > 0;
+					}
 				} else {
 					result = this.db()[fromType](test.$from)[key.substr(1)](findQuery, findOptions);
 				}
 
 				operation[options.$parent.parent.key] = result;
-
 				return this._match(source, operation, queryOptions, 'and', options);
 		}
 
