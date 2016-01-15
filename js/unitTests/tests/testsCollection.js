@@ -3210,6 +3210,124 @@ QUnit.test("Collection :: Create capped collection", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Waterfall queries", function () {
+	base.dbUp();
+
+	var coll = db.collection('waterfallTest').truncate(),
+		results;
+
+	coll.insert([{
+		_id: '1',
+		name: 'Waterfall 1',
+		listen: [{
+			deviceId: "1",
+			functionId: "2213",
+			arr: [{
+				type: 12,
+				name: 'John'
+			}, {
+				type: 11,
+				name: 'Jim'
+			}, {
+				type: 12,
+				name: 'Jane'
+			}]
+		}, {
+			deviceId: "3",
+			functionId: "534",
+			arr: [{
+				type: 13,
+				name: 'Kim'
+			}, {
+				type: 11,
+				name: 'Ralph'
+			}, {
+				type: 12,
+				name: 'Forrest'
+			}]
+		}]
+	}]);
+
+	results = coll.find({
+		$findSub: {
+			$query: {},
+			$path: 'listen',
+			$subQuery: {},
+			$subOptions: {}
+		}
+	});
+
+	strictEqual(results.length, 2, 'Correct number of sub-documents pulled');
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Waterfall queries", function () {
+	base.dbUp();
+
+	var coll = db.collection('waterfallTest').truncate(),
+		results;
+
+	coll.insert([{
+		_id: '1',
+		name: 'Waterfall 1',
+		listen: [{
+			deviceId: "1",
+			functionId: "2213",
+			arr: [{
+				type: 12,
+				name: 'John'
+			}, {
+				type: 11,
+				name: 'Jim'
+			}, {
+				type: 12,
+				name: 'Jane'
+			}]
+		}, {
+			deviceId: "3",
+			functionId: "534",
+			arr: [{
+				type: 13,
+				name: 'Kim'
+			}, {
+				type: 11,
+				name: 'Ralph'
+			}, {
+				type: 12,
+				name: 'Forrest'
+			}]
+		}]
+	}]);
+
+	results = coll.find([{
+		$findSub: {
+			$from: "waterfallTest",
+			$query: {},
+			$path: 'listen',
+			$subQuery: {},
+			$subOptions: {}
+		}
+	}, {
+		$findSub: {
+			$query: {},
+			$path: 'arr',
+			$subQuery: {
+				type: 12
+			},
+			$subOptions: {
+				$orderBy: {
+					name: 1
+				}
+			}
+		}
+	}]);
+console.log(results);
+	strictEqual(results.length, 3, 'Correct number of sub-documents pulled');
+
+	base.dbDown();
+});
+
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
 
