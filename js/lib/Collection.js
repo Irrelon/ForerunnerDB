@@ -3110,8 +3110,11 @@ Collection.prototype.count = function (query, options) {
  * @returns {*}
  */
 Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+	return this._findSub(this.find(match), path, subDocQuery, subDocOptions);
+};
+
+Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
 	var pathHandler = new Path(path),
-		docArr = this.find(match),
 		docCount = docArr.length,
 		docIndex,
 		subDocArr,
