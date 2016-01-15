@@ -438,11 +438,6 @@ var Matching = {
 					result,
 					operation = {};
 
-				// Check we have a database object to work from
-				if (!this.db()) {
-					throw('Cannot operate a ' + key + ' sub-query on an anonymous collection (one with no db set)!');
-				}
-
 				// Check all parts of the $find operation exist
 				if (!test.$from) {
 					throw(key + ' missing $from property!');
