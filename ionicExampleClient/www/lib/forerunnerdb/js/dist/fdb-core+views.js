@@ -2934,7 +2934,6 @@ Collection.prototype._find = function (query, options) {
 
 	// TODO: This method is quite long, break into smaller pieces
 	query = query || {};
-	options = this.options(options);
 
 	var op = this._metrics.create('find'),
 		pk = this.primaryKey(),
@@ -2974,14 +2973,62 @@ Collection.prototype._find = function (query, options) {
 		result,
 		cursor = {},
 		pathSolver,
-		//renameFieldMethod,
-		//renameFieldPath,
-		matcher = function (doc) {
-			return self._match(doc, query, options, 'and', matcherTmpOptions);
-		};
+		waterfallCollection,
+		matcher;
+
+	if (!(options instanceof Array)) {
+		options = this.options(options);
+	}
+
+	matcher = function (doc) {
+		return self._match(doc, query, options, 'and', matcherTmpOptions);
+	};
 
 	op.start();
 	if (query) {
+		// Check if the query is an array (multi-operation waterfall query)
+		if (query instanceof Array) {
+			waterfallCollection = this;
+
+			// Loop the query operations
+			for (i = 0; i < query.length; i++) {
+				// Execute each operation and pass the result into the next
+				// query operation
+				waterfallCollection = waterfallCollection.subset(query[i], options && options[i] ? options[i] : {});
+			}
+
+			return waterfallCollection.find();
+		}
+
+		// Pre-process any data-changing query operators first
+		if (query.$findSub) {
+			// Check we have all the parts we need
+			if (!query.$findSub.$path) {
+				throw('$findSub missing $path property!');
+			}
+
+			return this.findSub(
+				query.$findSub.$query,
+				query.$findSub.$path,
+				query.$findSub.$subQuery,
+				query.$findSub.$subOptions
+			);
+		}
+
+		if (query.$findSubOne) {
+			// Check we have all the parts we need
+			if (!query.$findSubOne.$path) {
+				throw('$findSubOne missing $path property!');
+			}
+
+			return this.findSubOne(
+				query.$findSubOne.$query,
+				query.$findSubOne.$path,
+				query.$findSubOne.$subQuery,
+				query.$findSubOne.$subOptions
+			);
+		}
+
 		// Get query analysis to execute best optimised code path
 		op.time('analyseQuery');
 		analysis = this._analyseQuery(self.decouple(query), options, op);
@@ -4033,7 +4080,7 @@ Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions
 		docCount = docArr.length,
 		docIndex,
 		subDocArr,
-		subDocCollection = this._db.collection('__FDB_temp_' + this.objectId()),
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()),
 		subDocResults,
 		resultObj = {
 			parents: docCount,
@@ -8588,11 +8635,6 @@ var Matching = {
 					result,
 					operation = {};
 
-				// Check we have a database object to work from
-				if (!this.db()) {
-					throw('Cannot operate a ' + key + ' sub-query on an anonymous collection (one with no db set)!');
-				}
-
 				// Check all parts of the $find operation exist
 				if (!test.$from) {
 					throw(key + ' missing $from property!');
@@ -10491,7 +10533,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.539',
+	version: '1.3.542',
 	modules: {},
 	plugins: {},
 
