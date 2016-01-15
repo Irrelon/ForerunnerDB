@@ -595,6 +595,14 @@ Shared.synthesize(View.prototype, 'db', function (db) {
 View.prototype.queryData = function (query, options, refresh) {
 	if (query !== undefined) {
 		this._querySettings.query = query;
+
+		if (query.$findSub && !query.$findSub.$from) {
+			query.$findSub.$from = this._privateData.name();
+		}
+
+		if (query.$findSubOne && !query.$findSubOne.$from) {
+			query.$findSubOne.$from = this._privateData.name();
+		}
 	}
 
 	if (options !== undefined) {
@@ -681,6 +689,14 @@ View.prototype.queryRemove = function (obj, refresh) {
 View.prototype.query = function (query, refresh) {
 	if (query !== undefined) {
 		this._querySettings.query = query;
+
+		if (query.$findSub && !query.$findSub.$from) {
+			query.$findSub.$from = this._privateData.name();
+		}
+
+		if (query.$findSubOne && !query.$findSubOne.$from) {
+			query.$findSubOne.$from = this._privateData.name();
+		}
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
