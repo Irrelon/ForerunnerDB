@@ -2050,6 +2050,20 @@ Collection.prototype._find = function (query, options) {
 			);
 		}
 
+		if (query.$findSubOne) {
+			// Check we have all the parts we need
+			if (!query.$findSubOne.$path) {
+				throw('$findSubOne missing $path property!');
+			}
+
+			return this.findSubOne(
+				query.$findSubOne.$query,
+				query.$findSubOne.$path,
+				query.$findSubOne.$subQuery,
+				query.$findSubOne.$subOptions
+			);
+		}
+
 		// Get query analysis to execute best optimised code path
 		op.time('analyseQuery');
 		analysis = this._analyseQuery(self.decouple(query), options, op);
