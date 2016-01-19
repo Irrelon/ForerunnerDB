@@ -36,6 +36,7 @@ var Shared = require('./Shared'),
 	express = require('express'),
 	bodyParser = require('body-parser'),
 	cors = require('cors'),
+	jsonq = require('express-jsonq'),
 	async = require('async'),
 	app = express(),
 	server,
@@ -76,6 +77,61 @@ Overload = Shared.overload;
 
 Shared.synthesize(NodeApiServer.prototype, 'name');
 
+/**
+ * Starts the rest server listening for requests against the ip and
+ * port number specified.
+ * @param {String} host The IP address to listen on, set to 0.0.0.0 to
+ * listen on all interfaces.
+ * @param {String} port The port to listen on.
+ * @param {Object} options An options object.
+ * @param {Function=} callback The method to call when the server has
+ * started (or failed to start).
+ * @returns {NodeApiServer}
+ */
+NodeApiServer.prototype.start = function (host, port, options, callback) {
+	// Start listener
+	if (!server) {
+		if (options &amp;&amp; options.cors === true) {
+			app.use(cors({origin: true}));
+
+			// Allow preflight CORS
+			app.options('*', cors({origin: true}));
+		}
+
+		// Parse JSON as a query parameter
+		app.use(jsonq());
+
+		// Parse body in requests
+		app.use(bodyParser.json());
+
+		// Activate routes
+		this._defineRoutes();
+
+		server = app.listen(port, host, function (err) {
+			if (!err) {
+				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+				if (callback) {
+					callback(false, server);
+				}
+			} else {
+				console.log('Listen error', err);
+				callback(err);
+			}
+		});
+	} else {
+		// Server already running
+		if (callback) {
+			callback(false, server);
+		}
+	}
+
+	return this;
+};
+
+NodeApiServer.prototype.stop = function () {
+	server.close();
+};
+
 NodeApiServer.prototype.handleRequest = function (req, res) {
 	var self = this,
 		method = req.method,
@@ -95,19 +151,8 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
 				// Get the query and option params
-				query = req.query &amp;&amp; req.query.query ? req.query.query : undefined;
-				options = req.query &amp;&amp; req.query.options ? req.query.options : undefined;
-
-				// Check they are valid
-				if (query) {
-					try {
-						query = JSON.parse(query);
-						query = self.decouple(query);
-					} catch (e) {
-						res.status(500).send('Error parsing query parameter: ' + e.message);
-						return;
-					}
-				}
+				query = req.jsonq &amp;&amp; req.jsonq.query ? req.jsonq.query : undefined;
+				options = req.jsonq &amp;&amp; req.jsonq.options ? req.jsonq.options : undefined;
 
 				if (options) {
 					try {
@@ -275,8 +320,8 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 		obj;
 
 	// Parse the auth JSON
-	if (req.query &amp;&amp; req.query.auth) {
-		req.query.auth = JSON.parse(req.query.auth);
+	if (req.jsonq &amp;&amp; req.jsonq.$auth) {
+		req.jsonq.$auth = req.jsonq.$auth;
 	}
 
 	// Check permissions
@@ -450,58 +495,6 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 	async.waterfall(permissionMethods, callback);
 };
 
-/**
- * Starts the rest server listening for requests against the ip and
- * port number specified.
- * @param {String} host The IP address to listen on, set to 0.0.0.0 to
- * listen on all interfaces.
- * @param {String} port The port to listen on.
- * @param {Object} options An options object.
- * @param {Function=} callback The method to call when the server has
- * started (or failed to start).
- * @returns {NodeApiServer}
- */
-NodeApiServer.prototype.start = function (host, port, options, callback) {
-	// Start listener
-	if (!server) {
-		if (options &amp;&amp; options.cors === true) {
-			app.use(cors({origin: true}));
-
-			// Allow preflight CORS
-			app.options('*', cors({origin: true}));
-		}
-
-		// Parse body in requests
-		app.use(bodyParser.json());
-
-		// Activate routes
-		this._defineRoutes();
-
-		server = app.listen(port, host, function (err) {
-			if (!err) {
-				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
-				if (callback) {
-					callback(false, server);
-				}
-			} else {
-				console.log('Listen error', err);
-				callback(err);
-			}
-		});
-	} else {
-		// Server already running
-		if (callback) {
-			callback(false, server);
-		}
-	}
-
-	return this;
-};
-
-NodeApiServer.prototype.stop = function () {
-	server.close();
-};
-
 // Override the Core init to instantiate the plugin
 Core.prototype.init = function () {
 	this.api = new NodeApiServer(this);
@@ -579,13 +572,13 @@ module.exports = NodeApiServer;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#auth">auth</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#auth">auth</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#server">server</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jan 15 2016 22:47:43 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Jan 19 2016 11:56:18 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

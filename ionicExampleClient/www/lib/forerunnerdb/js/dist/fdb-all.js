@@ -11455,13 +11455,15 @@ Shared.synthesize(NodeApiClient.prototype, 'auth');
  * Initiates a client connection to the API server.
  * @param collectionInstance
  * @param path
+ * @param query
  * @param options
  * @param callback
  */
-NodeApiClient.prototype.sync = function (collectionInstance, path, options, callback) {
+NodeApiClient.prototype.sync = function (collectionInstance, path, query, options, callback) {
 	var self = this,
 		source,
-		finalPath;
+		finalPath,
+		queryParams = {};
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
@@ -11471,19 +11473,22 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, options, call
 
 	// Check for global auth
 	if (this._auth) {
-		finalPath += '?auth=' + JSON.stringify(this._auth);
+		queryParams.$auth = this._auth;
+	}
+
+	if (query) {
+		queryParams.query = query;
 	}
 
 	if (options) {
-		if (options.initialData === undefined) {
-			options.initialData = true;
+		if (options.$initialData === undefined) {
+			options.$initialData = true;
 		}
 
-		if (options.auth) {
-			// Add auth data to end of call
-			finalPath += '?auth=' + JSON.stringify(options.auth);
-		}
+		queryParams.options = options;
 	}
+
+	finalPath += '?' + this.jStringify(queryParams);
 
 	source = new EventSource(finalPath);
 	collectionInstance.__apiConnection = source;
@@ -11533,78 +11538,37 @@ Collection.prototype.sync = new Overload({
 	 * the connection to the server has been established.
 	 */
 	'function': function (callback) {
-		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), null, callback);
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), null, null, callback);
 	},
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'object, function': function (query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {Object} query A query object.
 	 * @param {Object} options An options object.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
 	 */
-	'object, function': function (options, callback) {
-		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), options, callback);
+	'object, object, function': function (query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), query, options, callback);
 	},
 
-	/**
-	 * Sync with collection of a different name on the server-side.
-	 * @param {String} collectionName The name of the server-side
-	 * collection to sync data with.
-	 * @param {Function} callback The callback method to call once
-	 * the connection to the server has been established.
-	 */
-	'string, function': function (collectionName, callback) {
-		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, null, callback);
-	},
-
-	/**
-	 * Sync with collection of a different name on the server-side.
-	 * @param {String} collectionName The name of the server-side
-	 * collection to sync data with.
-	 * @param {Object} options An options object.
-	 * @param {Function} callback The callback method to call once
-	 * the connection to the server has been established.
-	 */
-	'string, object, function': function (collectionName, options, callback) {
-		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, options, callback);
-	},
-
-	/**
-	 * Sync with an object on the server-side based on the type and
-	 * name provided.
-	 * @param {String} objType The type of the server-side object
-	 * to sync with e.g. "collection", "view" etc
-	 * @param {String} objName The name of the server-side object
-	 * to sync data with.
-	 * @param {Function} callback The callback method to call once
-	 * the connection to the server has been established.
-	 */
-	'string, string, function': function (objType, objName, callback) {
-		this.$main.call(this, '/' + this._db.name() + '/' + objType + '/' + objName, null, callback);
-	},
-
-	/**
-	 * Sync with an object on the server-side based on the type and
-	 * name provided.
-	 * @param {String} objType The type of the server-side object
-	 * to sync with e.g. "collection", "view" etc
-	 * @param {String} objName The name of the server-side object
-	 * to sync data with.
-	 * @param {Object} options An options object.
-	 * @param {Function} callback The callback method to call once
-	 * the connection to the server has been established.
-	 */
-	'string, string, object, function': function (objType, objName, options, callback) {
-		this.$main.call(this, '/' + this._db.name() + '/' + objType + '/' + objName, options, callback);
-	},
-
-	'$main': function (path, options, callback) {
+	'$main': function (path, query, options, callback) {
 		if (this._db && this._db._core) {
 			// Kill any existing sync connection
 			this.unSync();
 
 			// Create new sync connection
-			this._db._core.api.sync(this, path, options, callback);
+			this._db._core.api.sync(this, path, query, options, callback);
 		} else {
 			throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 		}
@@ -14051,7 +14015,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.545',
+	version: '1.3.549',
 	modules: {},
 	plugins: {},
 
