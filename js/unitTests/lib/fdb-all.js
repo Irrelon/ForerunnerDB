@@ -11463,7 +11463,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	var self = this,
 		source,
 		finalPath,
-		queryParams = {};
+		queryParams = {},
+		queryString;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
@@ -11488,15 +11489,16 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		queryParams.options = options;
 	}
 
-	finalPath += '?' + this.jStringify(queryParams);
+	queryString = this.jStringify(queryParams);
+	finalPath += '?' + queryString;
 
 	source = new EventSource(finalPath);
 	collectionInstance.__apiConnection = source;
 
 	source.addEventListener('open', function (e) {
-		if (!options || (options && options.initialData)) {
+		if (!options || (options && options.$initialData)) {
 			// The connection is open, grab the initial data
-			self.get(self.server() + path, function (err, data) {
+			self.get(self.server() + path + '?' + queryString, function (err, data) {
 				collectionInstance.upsert(data);
 			});
 		}
@@ -11543,12 +11545,33 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {String} collectionName The collection to sync from.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, function': function (collectionName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, null, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
 	 */
 	'object, function': function (query, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} collectionName The collection to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, object, function': function (collectionName, query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, null, callback);
 	},
 
 	/**
@@ -11560,6 +11583,18 @@ Collection.prototype.sync = new Overload({
 	 */
 	'object, object, function': function (query, options, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + this.name(), query, options, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} collectionName The collection to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, object, object, function': function (collectionName, query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, options, callback);
 	},
 
 	'$main': function (path, query, options, callback) {
@@ -14015,7 +14050,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.551',
+	version: '1.3.552',
 	modules: {},
 	plugins: {},
 
