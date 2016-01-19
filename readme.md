@@ -118,6 +118,8 @@ var collection = db.collection("collectionName", {autoCreate: false});
 ```
 
 ### Specifying a Primary Key Up-Front
+> If no primary key is specified ForerunnerDB uses "_id" by default.
+
 On requesting a collection you can specify a primary key that the collection should be
 using. For instance to use a property called "name" as the primary key field:
 
