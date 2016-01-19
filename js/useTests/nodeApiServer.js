@@ -4,6 +4,12 @@ var ForerunnerDB = require('../builds/nodecore'),
 	fdb = new ForerunnerDB(),
 	db = fdb.db('testApi');
 
+db.view('booksView')
+	.queryData({
+		enabled: true
+	})
+	.from('books');
+
 // Enable database debug logging to the console
 db.debug(true);
 
@@ -17,6 +23,10 @@ db.persist.auto(true);
 // db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
 fdb.api.access('testApi', 'collection', 'books', '*', function (collectionName, methodName, req, callback) {
 	callback(false, collectionName, methodName, req);
+});
+
+fdb.api.access('testApi', 'view', '*', '*', function (viewName, methodName, req, callback) {
+	callback(false, viewName, methodName, req);
 });
 
 // Ask the API server to start listening
