@@ -8,6 +8,7 @@ var Shared = require('./Shared'),
 	express = require('express'),
 	bodyParser = require('body-parser'),
 	cors = require('cors'),
+	jsonq = require('express-jsonq'),
 	async = require('async'),
 	app = express(),
 	server,
@@ -48,6 +49,61 @@ Overload = Shared.overload;
 
 Shared.synthesize(NodeApiServer.prototype, 'name');
 
+/**
+ * Starts the rest server listening for requests against the ip and
+ * port number specified.
+ * @param {String} host The IP address to listen on, set to 0.0.0.0 to
+ * listen on all interfaces.
+ * @param {String} port The port to listen on.
+ * @param {Object} options An options object.
+ * @param {Function=} callback The method to call when the server has
+ * started (or failed to start).
+ * @returns {NodeApiServer}
+ */
+NodeApiServer.prototype.start = function (host, port, options, callback) {
+	// Start listener
+	if (!server) {
+		if (options && options.cors === true) {
+			app.use(cors({origin: true}));
+
+			// Allow preflight CORS
+			app.options('*', cors({origin: true}));
+		}
+
+		// Parse JSON as a query parameter
+		app.use(jsonq());
+
+		// Parse body in requests
+		app.use(bodyParser.json());
+
+		// Activate routes
+		this._defineRoutes();
+
+		server = app.listen(port, host, function (err) {
+			if (!err) {
+				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+				if (callback) {
+					callback(false, server);
+				}
+			} else {
+				console.log('Listen error', err);
+				callback(err);
+			}
+		});
+	} else {
+		// Server already running
+		if (callback) {
+			callback(false, server);
+		}
+	}
+
+	return this;
+};
+
+NodeApiServer.prototype.stop = function () {
+	server.close();
+};
+
 NodeApiServer.prototype.handleRequest = function (req, res) {
 	var self = this,
 		method = req.method,
@@ -67,19 +123,8 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
 				// Get the query and option params
-				query = req.query && req.query.query ? req.query.query : undefined;
-				options = req.query && req.query.options ? req.query.options : undefined;
-
-				// Check they are valid
-				if (query) {
-					try {
-						query = JSON.parse(query);
-						query = self.decouple(query);
-					} catch (e) {
-						res.status(500).send('Error parsing query parameter: ' + e.message);
-						return;
-					}
-				}
+				query = req.jsonq && req.jsonq.query ? req.jsonq.query : undefined;
+				options = req.jsonq && req.jsonq.options ? req.jsonq.options : undefined;
 
 				if (options) {
 					try {
@@ -247,8 +292,8 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 		obj;
 
 	// Parse the auth JSON
-	if (req.query && req.query.auth) {
-		req.query.auth = JSON.parse(req.query.auth);
+	if (req.jsonq && req.jsonq.$auth) {
+		req.jsonq.$auth = req.jsonq.$auth;
 	}
 
 	// Check permissions
@@ -420,58 +465,6 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 	// Loop the access methods and call each one in turn until a false
 	// response is found, then callback a failure
 	async.waterfall(permissionMethods, callback);
-};
-
-/**
- * Starts the rest server listening for requests against the ip and
- * port number specified.
- * @param {String} host The IP address to listen on, set to 0.0.0.0 to
- * listen on all interfaces.
- * @param {String} port The port to listen on.
- * @param {Object} options An options object.
- * @param {Function=} callback The method to call when the server has
- * started (or failed to start).
- * @returns {NodeApiServer}
- */
-NodeApiServer.prototype.start = function (host, port, options, callback) {
-	// Start listener
-	if (!server) {
-		if (options && options.cors === true) {
-			app.use(cors({origin: true}));
-
-			// Allow preflight CORS
-			app.options('*', cors({origin: true}));
-		}
-
-		// Parse body in requests
-		app.use(bodyParser.json());
-
-		// Activate routes
-		this._defineRoutes();
-
-		server = app.listen(port, host, function (err) {
-			if (!err) {
-				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
-				if (callback) {
-					callback(false, server);
-				}
-			} else {
-				console.log('Listen error', err);
-				callback(err);
-			}
-		});
-	} else {
-		// Server already running
-		if (callback) {
-			callback(false, server);
-		}
-	}
-
-	return this;
-};
-
-NodeApiServer.prototype.stop = function () {
-	server.close();
 };
 
 // Override the Core init to instantiate the plugin
