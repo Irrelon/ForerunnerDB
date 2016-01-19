@@ -126,16 +126,6 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				query = req.jsonq && req.jsonq.query ? req.jsonq.query : undefined;
 				options = req.jsonq && req.jsonq.options ? req.jsonq.options : undefined;
 
-				if (options) {
-					try {
-						options = JSON.parse(options);
-						options = self.decouple(options);
-					} catch (e) {
-						res.status(500).send('Error parsing options parameter: ' + e.message);
-						return;
-					}
-				}
-
 				db = self._core.db(dbName);
 				obj = db[objType](objName);
 
