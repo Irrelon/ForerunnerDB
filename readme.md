@@ -142,6 +142,10 @@ var collection = db.collection("collectionName", {capped: true, size: 5});
 ```
 
 ## Inserting Documents
+> If you do not specify a value for the primary key, one will be automatically
+generated for any documents inserted into a collection. Auto-generated primary
+keys are pseudo-random 16 character strings.
+
 You can either insert a single document object:
 
 ```js
