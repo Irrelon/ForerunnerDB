@@ -123,9 +123,9 @@ Angular.extendView = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.publicData().findOne(self._querySettings.query, self._querySettings.options) || {};
+						scope[varName] = self.publicData().findOne() || {};
 					} else {
-						scope[varName] = self.publicData().find(self._querySettings.query, self._querySettings.options);
+						scope[varName] = self.publicData().find();
 					}
 
 					setTimeout(function () {
