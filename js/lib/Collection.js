@@ -1994,6 +1994,7 @@ Collection.prototype._find = function (query, options) {
 		joinFindResult,
 		joinItem,
 		joinPrefix,
+		joinMatchData,
 		resultCollectionName,
 		resultIndex,
 		resultRemove = [],
@@ -2195,37 +2196,45 @@ Collection.prototype._find = function (query, options) {
 
 							for (joinMatchIndex in joinMatch) {
 								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
+									joinMatchData = joinMatch[joinMatchIndex];
+
 									// Check the join condition name for a special command operator
 									if (joinMatchIndex.substr(0, 1) === '$') {
 										// Special command
 										switch (joinMatchIndex) {
 											case '$where':
-												if (joinMatch[joinMatchIndex].query) {
-													// Commented old code here, new one does dynamic reverse lookups
-													//joinSearchQuery = joinMatch[joinMatchIndex].query;
-													joinSearchQuery = self._resolveDynamicQuery(joinMatch[joinMatchIndex].query, resultArr[resultIndex]);
+												if (joinMatchData.$query || joinMatchData.$options) {
+													if (joinMatchData.$query) {
+														// Commented old code here, new one does dynamic reverse lookups
+														//joinSearchQuery = joinMatchData.query;
+														joinSearchQuery = self._resolveDynamicQuery(joinMatchData.$query, resultArr[resultIndex]);
+													}
+													if (joinMatchData.$options) {
+														joinSearchOptions = joinMatchData.$options;
+													}
+												} else {
+													throw('$join $where clause requires "$query" and / or "$options" keys to work!');
 												}
-												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
 												break;
 
 											case '$as':
 												// Rename the collection when stored in the result document
-												resultCollectionName = joinMatch[joinMatchIndex];
+												resultCollectionName = joinMatchData;
 												break;
 
 											case '$multi':
 												// Return an array of documents instead of a single matching document
-												joinMulti = joinMatch[joinMatchIndex];
+												joinMulti = joinMatchData;
 												break;
 
 											case '$require':
 												// Remove the result item if no matching join data is found
-												joinRequire = joinMatch[joinMatchIndex];
+												joinRequire = joinMatchData;
 												break;
 
 											case '$prefix':
 												// Add a prefix to properties mixed in
-												joinPrefix = joinMatch[joinMatchIndex];
+												joinPrefix = joinMatchData;
 												break;
 
 											default:
@@ -2234,7 +2243,7 @@ Collection.prototype._find = function (query, options) {
 									} else {
 										// Get the data to match against and store in the search object
 										// Resolve complex referenced query
-										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatch[joinMatchIndex], resultArr[resultIndex]);
+										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatchData, resultArr[resultIndex]);
 									}
 								}
 							}

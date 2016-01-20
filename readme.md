@@ -2334,7 +2334,7 @@ itemCollection.find({}, {
 	"$join": [{
 		"purchase": {
 			"$where": {
-				"query": {
+				"$query": {
 					"itemId": "$$._id"
 				}
 			},
@@ -2373,10 +2373,10 @@ var result = a.find({}, {
 	"$join": [{
 		"b": {
 			"$where": {
-				"query": {
+				"$query": {
 					"_id": "$$._id"
 				},
-				"options": {
+				"$options": {
 					"_id": 0
 				}
 			},
