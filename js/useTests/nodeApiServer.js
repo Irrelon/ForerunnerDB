@@ -56,10 +56,43 @@ db.procedure('login', function (req, res) {
 	}
 });
 
+// Set access control on all objects to disallow access without a valid session
+fdb.api.access('testApi', '*', '*', '*', function checkSession (dbName, objType, objName, httpMethod, req, callback) {
+	var sid,
+		session;
+
+	if (objType === 'procedure' && objName === 'login') {
+		// Allow without a session
+		return callback(false, dbName, objType, objName, httpMethod, req);
+	}
+
+	// Check for a session
+	if (req.json && req.json.sid) {
+		sid = req.json.sid;
+	}
+
+	if (req.body && req.body.sid) {
+		sid = req.body.sid;
+	}
+
+	// Validate session id
+	if (sid) {
+		session = db.collection('session').findById(sid);
+
+		if (session) {
+			// Valid session found, allow access
+			return callback(false, dbName, objType, objName, httpMethod, req);
+		}
+	}
+
+	// Deny access
+	return callback('No valid session', dbName, objType, objName, httpMethod, req);
+});
+
 // Set access control to allow all HTTP verbs (*) on the "books" collection in the "testApi" database
 // db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
-fdb.api.access('testApi', 'collection', 'books', '*', function (collectionName, methodName, req, callback) {
-	callback(false, collectionName, methodName, req);
+fdb.api.access('testApi', 'collection', 'books', '*', function allowCollectionBooks (dbName, objType, objName, httpMethod, req, callback) {
+	callback(false, dbName, objType, objName, httpMethod, req);
 });
 
 // Instead of passing a control method, you can use the strings "allow" and "deny" instead.
