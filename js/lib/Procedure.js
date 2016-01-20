@@ -61,7 +61,9 @@ Db.prototype.procedure = function (name, method) {
 	var self = this;
 
 	if (name !== undefined) {
-		if (name !== undefined) {
+		self._procedure = self._procedure || {};
+
+		if (method !== undefined) {
 			if (self.debug()) {
 				console.log(self.logIdentifier() + ' Creating procedure ' + name);
 			}
