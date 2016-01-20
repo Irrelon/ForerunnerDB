@@ -3118,7 +3118,7 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		docCount = docArr.length,
 		docIndex,
 		subDocArr,
-		subDocCollection = new Collection('__FDB_temp_' + this.objectId()),
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()).db(this._db),
 		subDocResults,
 		resultObj = {
 			parents: docCount,
