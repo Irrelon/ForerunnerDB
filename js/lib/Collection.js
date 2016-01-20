@@ -2682,10 +2682,19 @@ Collection.prototype.transform = function (obj) {
 Collection.prototype.transformIn = function (data) {
 	if (this._transformEnabled && this._transformIn) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformIn(data[i]);
+				transformResult = this._transformIn(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
@@ -2705,10 +2714,19 @@ Collection.prototype.transformIn = function (data) {
 Collection.prototype.transformOut = function (data) {
 	if (this._transformEnabled && this._transformOut) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformOut(data[i]);
+				transformResult = this._transformOut(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
