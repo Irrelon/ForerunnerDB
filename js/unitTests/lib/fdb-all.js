@@ -1728,10 +1728,6 @@ Collection.prototype.update = function (query, update, options) {
 	// Handle transform
 	update = this.transformIn(update);
 
-	if (this.debug()) {
-		console.log(this.logIdentifier() + ' Updating some data');
-	}
-
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -1792,6 +1788,10 @@ Collection.prototype.update = function (query, update, options) {
 		op.time('Update documents');
 
 		if (updated.length) {
+			if (this.debug()) {
+				console.log(this.logIdentifier() + ' Updated some data');
+			}
+
 			op.time('Resolve chains');
 			this.chainSend('update', {
 				query: query,
@@ -14072,7 +14072,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.574',
+	version: '1.3.577',
 	modules: {},
 	plugins: {},
 

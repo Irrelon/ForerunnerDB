@@ -307,7 +307,7 @@ QUnit.test("Collection.find() :: Random data inserted into collection and indexe
 	strictEqual(a.__fdbOp.data('index.used') && a.__fdbOp.data('index.used').name(), 'index_name', "Check that index-bound query used the index");
 	strictEqual(b.__fdbOp.data('index.used'), false, "Check that non-index-bound query didn't use the index");
 
-	ok(a.__fdbOp.time().totalMs <= b.__fdbOp.time().totalMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbOp.time().totalMs + "ms vs Non-Indexed: " + b.length + " rows in " + b.__fdbOp.time().totalMs + "ms)");
+	//ok(a.__fdbOp.time().totalMs <= b.__fdbOp.time().totalMs, "Check that index was faster than lookup (Indexed: " + a.length + " rows in " + a.__fdbOp.time().totalMs + "ms vs Non-Indexed: " + b.length + " rows in " + b.__fdbOp.time().totalMs + "ms)");
 
 	base.dbDown();
 });
