@@ -5967,14 +5967,14 @@ Index2d.prototype.geoWithin = function (pathStr, query, options) {
 
 Index2d.prototype.distanceBetweenPoints = function (lat1, lng1, lat2, lng2) {
 	var R = 6371; // kilometres
-	var φ1 = this.toRadians(lat1);
-	var φ2 = this.toRadians(lat2);
-	var Δφ = this.toRadians(lat2-lat1);
-	var Δλ = this.toRadians(lng2-lng1);
+	var lat1Rad = this.toRadians(lat1);
+	var lat2Rad = this.toRadians(lat2);
+	var lat2MinusLat1Rad = this.toRadians(lat2-lat1);
+	var lng2MinusLng1Rad = this.toRadians(lng2-lng1);
 
-	var a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-			Math.cos(φ1) * Math.cos(φ2) *
-			Math.sin(Δλ/2) * Math.sin(Δλ/2);
+	var a = Math.sin(lat2MinusLat1Rad/2) * Math.sin(lat2MinusLat1Rad/2) +
+			Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+			Math.sin(lng2MinusLng1Rad/2) * Math.sin(lng2MinusLng1Rad/2);
 
 	var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
@@ -9938,7 +9938,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.562',
+	version: '1.3.563',
 	modules: {},
 	plugins: {},
 
