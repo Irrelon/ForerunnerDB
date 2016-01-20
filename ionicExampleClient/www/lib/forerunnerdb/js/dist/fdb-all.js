@@ -11481,7 +11481,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		source,
 		finalPath,
 		queryParams,
-		queryString;
+		queryString = '';
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
@@ -11509,8 +11509,10 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		queryParams.options = options;
 	}
 
-	queryString = this.jStringify(queryParams);
-	finalPath += '?' + queryString;
+	if (queryParams) {
+		queryString = this.jStringify(queryParams);
+		finalPath += '?' + queryString;
+	}
 
 	source = new EventSource(finalPath);
 	collectionInstance.__apiConnection = source;
@@ -11518,7 +11520,13 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	source.addEventListener('open', function (e) {
 		if (!options || (options && options.$initialData)) {
 			// The connection is open, grab the initial data
-			self.get(self.server() + path + '?' + queryString, function (err, data) {
+			var finalPath = self.server() + path;
+
+			if (queryString) {
+				finalPath += '?' + queryString;
+			}
+
+			self.get(finalPath, function (err, data) {
 				if (!err) {
 					collectionInstance.upsert(data);
 				}
@@ -14079,7 +14087,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.579',
+	version: '1.3.580',
 	modules: {},
 	plugins: {},
 
