@@ -17,8 +17,8 @@ ready and battle tested in real-world applications.
 <th>Dev</th>
 </tr>
 <tr>
-<td><img src="https://travis-ci.org/Irrelon/ForerunnerDB.svg?branch=master" title="Master Branch Build Status" /></td>
-<td><img src="https://travis-ci.org/Irrelon/ForerunnerDB.svg?branch=dev" title="Dev Branch Build Status" /></td>
+<td><a href="https://travis-ci.org/Irrelon/ForerunnerDB"><img src="https://travis-ci.org/Irrelon/ForerunnerDB.svg?branch=master" title="Master Branch Build Status" /></a></td>
+<td><a href="https://travis-ci.org/Irrelon/ForerunnerDB"><img src="https://travis-ci.org/Irrelon/ForerunnerDB.svg?branch=dev" title="Dev Branch Build Status" /></a></td>
 </tr>
 </table>
 
