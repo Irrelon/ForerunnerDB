@@ -56,6 +56,12 @@ NodeApiClient.prototype.http = function (method, url, data, callback) {
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
 
+	// Check for global auth
+	if (this._session) {
+		data = data !== undefined ? data : {};
+		data.$session = this._session;
+	}
+
 	method = method.toUpperCase();
 
 	xmlHttp.onreadystatechange = function () {
@@ -171,7 +177,7 @@ NodeApiClient.prototype.delete = new Overload({
  * to the API server.
  * @name auth
  */
-Shared.synthesize(NodeApiClient.prototype, 'auth');
+Shared.synthesize(NodeApiClient.prototype, 'session');
 
 /**
  * Initiates a client connection to the API server.
@@ -195,9 +201,9 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	finalPath = this.server() + path + '/_sync';
 
 	// Check for global auth
-	if (this._auth) {
+	if (this._session) {
 		queryParams = queryParams || {};
-		queryParams.$auth = this._auth;
+		queryParams.$session = this._session;
 	}
 
 	if (query) {
@@ -225,13 +231,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	source.addEventListener('open', function (e) {
 		if (!options || (options && options.$initialData)) {
 			// The connection is open, grab the initial data
-			var finalPath = self.server() + path;
-
-			if (queryString) {
-				finalPath += '?' + queryString;
-			}
-
-			self.get(finalPath, function (err, data) {
+			self.get(path, queryParams, function (err, data) {
 				if (!err) {
 					collectionInstance.upsert(data);
 				}
