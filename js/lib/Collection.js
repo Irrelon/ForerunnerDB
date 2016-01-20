@@ -20,7 +20,7 @@ Shared = require('./Shared');
  * handle CRUD against those documents.
  * @constructor
  */
-var Collection = function (name) {
+var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
