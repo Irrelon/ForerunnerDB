@@ -500,10 +500,10 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 	// that passes in the req object so all the access control
 	// methods can analyse the request for info they might need
 	permissionMethods.splice(0, 0, function (cb) {
-		cb(null, objName, methodName, req);
+		cb(null, dbName, objType, objName, methodName, req);
 	});
 
-	// Loop the access methods and call each one in turn until a false
+	// Loop the access methods and call each one in turn until an error
 	// response is found, then callback a failure
 	async.waterfall(permissionMethods, callback);
 };
@@ -530,6 +530,8 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
  * @returns {*}
  */
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
+	var methodArr;
+
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
 		if (checkFunction !== undefined) {
 			if (checkFunction === 'allow') {
@@ -555,37 +557,41 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 			return this;
 		}
 
+		methodArr = [];
+
 		// Get all checkFunctions for the specified access data
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName][methodName]) {
-			return [].concat(_access.db[dbName][objType][objName][methodName]);
+			methodArr = methodArr.concat(_access.db[dbName][objType][objName][methodName]);
 		}
 
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
-			return [].concat(_access.db[dbName][objType][objName]['*']);
+			methodArr = methodArr.concat(_access.db[dbName][objType][objName]['*']);
 		}
 
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
-			return [].concat(_access.db[dbName][objType]['*'][methodName]);
+			methodArr = methodArr.concat(_access.db[dbName][objType]['*'][methodName]);
 		}
 
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
-			return [].concat(_access.db[dbName][objType]['*']['*']);
+			methodArr = methodArr.concat(_access.db[dbName][objType]['*']['*']);
 		}
 
 		if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
-			return [].concat(_access.db[dbName]['*']['*']['*']);
+			methodArr = methodArr.concat(_access.db[dbName]['*']['*']['*']);
 		}
+
+		return methodArr;
 	}
 
 	return [];
 };
 
-NodeApiServer.prototype._allowMethod = function (name, methodName, req, callback) {
-	callback(false, name, methodName, req);
+NodeApiServer.prototype._allowMethod = function defaultAllowMethod (dbName, objType, objName, httpMethod, req, callback) {
+	callback(false, dbName, objType, objName, httpMethod, req);
 };
 
-NodeApiServer.prototype._denyMethod = function (name, methodName, req, callback) {
-	callback('Access forbidden', name, methodName, req);
+NodeApiServer.prototype._denyMethod = function defaultDenyMethod (dbName, objType, objName, httpMethod, req, callback) {
+	callback('Access forbidden', dbName, objType, objName, httpMethod, req);
 };
 
 /**
