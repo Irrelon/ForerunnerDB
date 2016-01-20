@@ -65,7 +65,8 @@ Shared.synthesize(NodeApiServer.prototype, 'name');
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
 	var ssl,
-		httpServer;
+		httpServer,
+		i;
 
 	// Start listener
 	if (!server) {
