@@ -727,7 +727,7 @@ Shared = _dereq_('./Shared');
  * handle CRUD against those documents.
  * @constructor
  */
-var Collection = function (name) {
+var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
@@ -11307,7 +11307,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.558',
+	version: '1.3.559',
 	modules: {},
 	plugins: {},
 
