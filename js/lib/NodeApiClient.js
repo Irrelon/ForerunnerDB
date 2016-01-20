@@ -50,19 +50,36 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.get = function (theUrl, callback) {
-	var self = this,
-		xmlHttp = new XMLHttpRequest();
+NodeApiClient.prototype.get = new Overload({
+	'string, function': function (theUrl, callback) {
+		this.$main.call(this, theUrl, {}, callback);
+	},
 
-	xmlHttp.onreadystatechange = function() {
-		if (xmlHttp.readyState === 4 && xmlHttp.status === 200) {
-			callback(false, self.jParse(xmlHttp.responseText));
-		}
-	};
+	'string, object, function': function (theUrl, data, callback) {
+		this.$main.call(this, theUrl, data, callback);
+	},
 
-	xmlHttp.open("GET", theUrl, true); // true for asynchronous
-	xmlHttp.send(null);
-};
+	'$main': function (theUrl, data, callback) {
+		var self = this,
+			finalUrl,
+			xmlHttp = new XMLHttpRequest();
+
+		xmlHttp.onreadystatechange = function () {
+			if (xmlHttp.readyState === 4) {
+				if (xmlHttp.status === 200) {
+					callback(false, self.jParse(xmlHttp.responseText));
+				} else {
+					callback(xmlHttp.status, xmlHttp.responseText);
+				}
+			}
+		};
+
+		finalUrl = theUrl + (data !== undefined ? '?' + self.jStringify(data) : '');
+
+		xmlHttp.open("GET", finalUrl, true);
+		xmlHttp.send(null);
+	}
+});
 
 /**
  * Sets a global auth object that will be sent up with client connections
