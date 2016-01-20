@@ -191,6 +191,12 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				db = self._core.db(dbName);
 				obj = db[objType](objName);
 
+				// Check the object type for special considerations
+				if (objType === 'procedure') {
+					// Handle procedure
+					return obj.exec(req, res);
+				}
+
 				switch (method) {
 					case 'GET':
 						if (!objId) {
