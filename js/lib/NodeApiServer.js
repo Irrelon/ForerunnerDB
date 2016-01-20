@@ -88,6 +88,7 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 			try {
 				query = url.parse(req.url).query;
+				query = decodeURIComponent(query);
 
 				if (query) {
 					req.json = JSON.parse(decodeURIComponent(query));
@@ -95,7 +96,7 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 				return next();
 			} catch (e) {
-				res.status(500).send(e);
+				res.status(500).send('Error parsing query string ' + query + ' '  + e);
 			}
 		});
 
