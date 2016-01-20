@@ -71,6 +71,11 @@ This will also work for browser-based development, however if you prefer a more 
 
 # How to Use
 ## Use ForerunnerDB in *Browser*
+> fdb-all.min.js is the entire ForerunnerDB with all the added extras. If you prefer
+only the core database functionality (just collections, no views etc) you can use
+fdb-core.min.js instead. A [list of the different builds](#distribution-files) is available for you to select
+the best build for your purposes.
+
 Include the fdb-all.min.js file in your HTML (change path to the location you put forerunner):
 
 ```html
