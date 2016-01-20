@@ -136,7 +136,9 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		if (!options || (options && options.$initialData)) {
 			// The connection is open, grab the initial data
 			self.get(self.server() + path + '?' + queryString, function (err, data) {
-				collectionInstance.upsert(data);
+				if (!err) {
+					collectionInstance.upsert(data);
+				}
 			});
 		}
 	}, false);
