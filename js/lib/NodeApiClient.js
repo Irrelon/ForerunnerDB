@@ -52,7 +52,7 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 
 NodeApiClient.prototype.get = new Overload({
 	'string, function': function (theUrl, callback) {
-		this.$main.call(this, theUrl, {}, callback);
+		this.$main.call(this, theUrl, undefined, callback);
 	},
 
 	'string, object, function': function (theUrl, data, callback) {
@@ -100,7 +100,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	var self = this,
 		source,
 		finalPath,
-		queryParams = {},
+		queryParams,
 		queryString;
 
 	if (this.debug()) {
@@ -111,14 +111,17 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	// Check for global auth
 	if (this._auth) {
+		queryParams = queryParams || {};
 		queryParams.$auth = this._auth;
 	}
 
 	if (query) {
+		queryParams = queryParams || {};
 		queryParams.query = query;
 	}
 
 	if (options) {
+		queryParams = queryParams || {};
 		if (options.$initialData === undefined) {
 			options.$initialData = true;
 		}
