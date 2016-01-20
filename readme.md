@@ -24,14 +24,14 @@ ready and battle tested in real-world applications.
 
 ### Standout Features
 
-* Views - Virtual collections that are built from existing collections and limited by live queries.
-* Joins - Query with joins across multiple collections and views.
-* Sub-Queries - ForerunnerDB supports sub-queries across collections and views.
-* Collection Groups - Add collections to a group and operate CRUD on them as a single entity.
-* Data Binding (*Browser Only*) - Bind data to your DOM and have it update your page in realtime as data changes.
-* Persistent Storage (*Browser & Node.js*) - Save your data and load it back at a later time, great for multi-page apps.
-* Compression & Encryption - Support for compressing and encrypting your persisted data.
-* Built-In REST Server (*Node.js*) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
+* [Views](#views) - Virtual collections that are built from existing collections and limited by live queries.
+* [Joins](#joins) - Query with joins across multiple collections and views.
+* [Sub-Queries](#subqueries-and-subquery-syntax) - ForerunnerDB supports sub-queries across collections and views.
+* [Collection Groups](#collection-groups) - Add collections to a group and operate CRUD on them as a single entity.
+* [Data Binding (*Browser Only*)](#data-binding) - Bind data to your DOM and have it update your page in realtime as data changes.
+* [Persistent Storage (*Browser & Node.js*)](#data-persistence-save-and-load-between-pages) - Save your data and load it back at a later time, great for multi-page apps.
+* [Compression & Encryption](#data-compression-and-encryption) - Support for compressing and encrypting your persisted data.
+* [Built-In REST Server (*Node.js*)](#forerunnerdb-built-in-json-rest-api-server) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
@@ -4012,7 +4012,7 @@ db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on all collections
 // db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
-fdb.api.access('testApi', 'collection', '*', '*', function (modelName, methodName, req, callback) {
+fdb.api.access('testApi', 'collection', '*', '*', function (dbName, objName, modelName, methodName, req, callback) {
 	// You can customise this method to only callback false when you are happy
 	// that the client connecting is allowed to connect. Calling back with true
 	// or an error string as the first argument will cause the client connection
@@ -4031,7 +4031,7 @@ fdb.api.access('testApi', 'collection', '*', '*', function (modelName, methodNam
 	// allowed, deny calls with the req.method of "SYNC".
 
 	// In this case here we are simply allowing all clients to connect
-	callback(false, modelName, methodName, req);
+	callback(false, dbName, objName, modelName, methodName, req);
 });
 
 // Ask the API server to start listening on all IP addresses assigned to
@@ -4088,6 +4088,9 @@ $.ajax({
 ```
 
 ##### Creating a new document:
+> If you post an array of documents instead of a single document ForerunnerDB will
+insert multiple documents by iterating through the array you send. This allows you
+to insert multiple records with a single API call.
 
 	POST http://0.0.0.0:9010/<database name>/collection/<collection name>
 	BODY <document contents>
