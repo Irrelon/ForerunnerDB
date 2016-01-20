@@ -3914,27 +3914,27 @@ ForerunnerDB's project road-map:
 * $ array positional in sub arrays of objects inside arrays e.g. arr.$.idArr
 
 #### Scheduled Features - Version 1.3
-* Data-bound grid (table) output of collection / view data - COMPLETE
-* $elemMatch (projection) - COMPLETE
-* Return limited fields on query - COMPLETE
+* COMPLETE - Data-bound grid (table) output of collection / view data
+* COMPLETE - $elemMatch (projection)
+* COMPLETE - Return limited fields on query
 
 #### Scheduled Features - Version 1.4
-* Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6) - COMPLETE
-* Data persistence added to documentation - COMPLETE
-* Remove iOS from this repo, add to its own - COMPLETE
-* Remove server from this repo, add to its own - COMPLETE
-* Trigger support - COMPLETE
-* Support localforage for storage instead of relying on localStorage (https://github.com/irrelon/ForerunnerDB/issues/5) - COMPLETE
-* Collection / query paging-- e.g. select next 10, select previous 10 - COMPLETE
+* COMPLETE - Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6)
+* COMPLETE - Data persistence added to documentation
+* COMPLETE - Remove iOS from this repo, add to its own
+* COMPLETE - Remove server from this repo, add to its own
+* COMPLETE - Trigger support
+* COMPLETE - Support localforage for storage instead of relying on localStorage (https://github.com/irrelon/ForerunnerDB/issues/5)
+* COMPLETE - Collection / query paging-- e.g. select next 10, select previous 10
 * Highcharts support from views instead of only collections
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
 
 #### Scheduled Features - Version 1.5
-* Support client sync with server-sent events
+* COMPLETE - Support client sync with server-sent events
 * Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
 
 #### Scheduled Features - Version 1.6
-* Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4) - PARTIALLY COMPLETE
+* PARTIALLY COMPLETE - Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4)
 
 #### Version 2.0
 * Re-write with ES6 using Babel
@@ -3955,7 +3955,7 @@ instantiated via:
 var db = new ForerunnerDB();
 ```
 
-Now you have access to multiple databases via from the main forerunner instance but this
+Now you have access to multiple databases via the main forerunner instance but this
 requires that you change your instantiation code to:
 
 ```js
