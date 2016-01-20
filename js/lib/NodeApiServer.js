@@ -532,6 +532,18 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
 		if (checkFunction !== undefined) {
+			if (checkFunction === 'allow') {
+				// Provide default allow method
+				checkFunction = this._allowMethod;
+			} else if (checkFunction === 'deny') {
+				// Provide default deny method
+				checkFunction = this._denyMethod;
+			}
+
+			if (typeof checkFunction !== 'function') {
+				throw('Cannot create an access rule with a checkFunction argument of a type other than function!');
+			}
+
 			// Set new access permission with callback "checkFunction"
 			_access.db = _access.db || {};
 			_access.db[dbName] = _access.db[dbName] || {};
@@ -566,6 +578,14 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 	}
 
 	return [];
+};
+
+NodeApiServer.prototype._allowMethod = function (name, methodName, req, callback) {
+	callback(false, name, methodName, req);
+};
+
+NodeApiServer.prototype._denyMethod = function (name, methodName, req, callback) {
+	callback('Access forbidden', name, methodName, req);
 };
 
 /**
