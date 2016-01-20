@@ -28,9 +28,10 @@ ready and battle tested in real-world applications.
 * Joins - Query with joins across multiple collections and views.
 * Sub-Queries - ForerunnerDB supports sub-queries across collections and views.
 * Collection Groups - Add collections to a group and operate CRUD on them as a single entity.
-* Data Binding - (Browser Only) Bind data to your DOM and have it update your page in realtime as data changes.
-* Persistent Storage - (Browser & Node.js) Save your data and load it back at a later time, great for multi-page apps.
+* Data Binding (*Browser Only*) - Bind data to your DOM and have it update your page in realtime as data changes.
+* Persistent Storage (*Browser & Node.js*) - Save your data and load it back at a later time, great for multi-page apps.
 * Compression & Encryption - Support for compressing and encrypting your persisted data.
+* Built-In REST Server (*Node.js*) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
