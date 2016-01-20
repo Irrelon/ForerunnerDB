@@ -11620,12 +11620,19 @@ Collection.prototype.sync = new Overload({
 	},
 
 	'$main': function (path, query, options, callback) {
+		var self = this;
+
 		if (this._db && this._db._core) {
 			// Kill any existing sync connection
 			this.unSync();
 
 			// Create new sync connection
 			this._db._core.api.sync(this, path, query, options, callback);
+
+			// Hook on drop to call unsync
+			this.on('drop', function () {
+				self.unSync();
+			});
 		} else {
 			throw(this.logIdentifier() + ' Cannot sync for an anonymous collection! (Collection must be attached to a database)');
 		}
@@ -14072,7 +14079,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.577',
+	version: '1.3.578',
 	modules: {},
 	plugins: {},
 
