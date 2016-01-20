@@ -1,21 +1,22 @@
 "use strict";
 
-/**
- * This class handles remote procedure call generation. It is an
- * extension of the NodeApiServer class and is primarily used there.
- * It allows procedures to be created that are exposed to remote
- * clients via the REST interface. Procedures handle their own server
- * code including responding to clients directly.
- * @name Procedure
- * @class
- */
 var Shared,
 	Db,
 	Procedure;
 
 Shared = require('./Shared');
 
-Procedure = function () {
+/**
+ * This class handles remote procedure call generation. It is an
+ * extension of the NodeApiServer class and is primarily used there.
+ * It allows procedures to be created that are exposed to remote
+ * clients via the REST interface. Procedures handle their own server
+ * code including responding to clients directly.
+ * @param {String} name The name of the procedure.
+ * @param {Function} method The handler method.
+ * @constructor
+ */
+Procedure = function (name, method) {
 	this.init.apply(this, arguments);
 };
 
