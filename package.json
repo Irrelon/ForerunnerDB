@@ -75,5 +75,6 @@
   "bugs": {
     "url": "http://github.com/irrelon/ForerunnerDB/issues"
   },
+  "tonicExampleFilename": "./js/tonic/example.js",
   "license": "MIT"
 }
