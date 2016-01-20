@@ -74,7 +74,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 	}
 };
 
-// Register this plugin with the persistent storage class
+// Register this plugin with ForerunnerDB
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
