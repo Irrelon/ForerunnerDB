@@ -14072,7 +14072,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.571',
+	version: '1.3.573',
 	modules: {},
 	plugins: {},
 
@@ -14962,6 +14962,9 @@ Shared.synthesize(View.prototype, 'db', function (db) {
  * @param {Boolean=} refresh Whether to refresh the view data after
  * this operation. Defaults to true.
  * @returns {*}
+ * @deprecated Use query(<query>, <options>, <refresh>) instead. Query
+ * now supports being presented with multiple different variations of
+ * arguments.
  */
 View.prototype.queryData = function (query, options, refresh) {
 	if (query !== undefined) {
