@@ -8,8 +8,11 @@ var Shared = require('./Shared'),
 	express = require('express'),
 	bodyParser = require('body-parser'),
 	cors = require('cors'),
-	jsonq = require('express-jsonq'),
 	async = require('async'),
+	fs = require('fs'),
+	http = require('http'),
+	https = require('https'),
+	url = require('url'),
 	app = express(),
 	server,
 	Core,
@@ -61,6 +64,9 @@ Shared.synthesize(NodeApiServer.prototype, 'name');
  * @returns {NodeApiServer}
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
+	var ssl,
+		httpServer;
+
 	// Start listener
 	if (!server) {
 		if (options && options.cors === true) {
@@ -71,7 +77,26 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 		}
 
 		// Parse JSON as a query parameter
-		app.use(jsonq());
+		app.use(function (req, res, next) {
+			var query,
+				urlObj = url.parse(req.url);
+
+			if (req.json || !urlObj.query) {
+				return next();
+			}
+
+			try {
+				query = url.parse(req.url).query;
+
+				if (query) {
+					req.json = JSON.parse(decodeURIComponent(query));
+				}
+
+				return next();
+			} catch (e) {
+				res.status(500).send(e);
+			}
+		});
 
 		// Parse body in requests
 		app.use(bodyParser.json());
@@ -79,9 +104,32 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 		// Activate routes
 		this._defineRoutes();
 
-		server = app.listen(port, host, function (err) {
+		if (options && options.ssl && options.ssl.enable) {
+			ssl = {
+				key: fs.readFileSync(options.ssl.key),
+				cert: fs.readFileSync(options.ssl.cert)
+			};
+
+			if (options.ssl.ca) {
+				ssl.ca = [];
+				for (i = 0; i < options.ssl.ca.length; i++) {
+					ssl.ca.push(fs.readFileSync(options.ssl.ca[i]));
+				}
+			}
+
+			httpServer = https.createServer(ssl, app);
+		} else {
+			httpServer = http.createServer(app);
+		}
+
+		server = httpServer.listen(port, host, function (err) {
 			if (!err) {
-				console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+				if (options && options.ssl && options.ssl.enable) {
+					console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+				} else {
+					console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+				}
+
 				if (callback) {
 					callback(false, server);
 				}
@@ -100,10 +148,23 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 	return this;
 };
 
+/**
+ * Stops the server listener.
+ */
 NodeApiServer.prototype.stop = function () {
-	server.close();
+	if (server) {
+		server.close();
+		return true;
+	}
+
+	return false;
 };
 
+/**
+ * Handles requests from clients to the endpoints the database exposes.
+ * @param req
+ * @param res
+ */
 NodeApiServer.prototype.handleRequest = function (req, res) {
 	var self = this,
 		method = req.method,
@@ -123,8 +184,8 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
 				// Get the query and option params
-				query = req.jsonq && req.jsonq.query ? req.jsonq.query : undefined;
-				options = req.jsonq && req.jsonq.options ? req.jsonq.options : undefined;
+				query = req.json && req.json.query ? req.json.query : undefined;
+				options = req.json && req.json.options ? req.json.options : undefined;
 
 				db = self._core.db(dbName);
 				obj = db[objType](objName);
@@ -273,6 +334,12 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 	});
 };
 
+/**
+ * Handles client requests to open an EventSource connection to our
+ * server-sent events server.
+ * @param req
+ * @param res
+ */
 NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 	var self = this,
 		dbName = req.params.dbName,
@@ -280,11 +347,6 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 		objName = req.params.objName,
 		db,
 		obj;
-
-	// Parse the auth JSON
-	if (req.jsonq && req.jsonq.$auth) {
-		req.jsonq.$auth = req.jsonq.$auth;
-	}
 
 	// Check permissions
 	self.hasPermission(dbName, objType, objName, "SYNC", req, function (err, results) {
@@ -301,9 +363,9 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 				// Ensure we have basic IO objects set up
 				_io[objType] = _io[objType] || {};
 				_io[objType][objName] = _io[objType][objName] || {
-					messageId: 0,
-					clients: []
-				};
+						messageId: 0,
+						clients: []
+					};
 
 				// Add this resource object the io clients array
 				_io[objType][objName].clients.push({req: req, res: res});
@@ -409,34 +471,16 @@ NodeApiServer.prototype.sendToClient = function (res, messageId, eventName, stri
 	res.write("data: " + stringifiedData + '\n\n');
 };
 
-NodeApiServer.prototype._defineRoutes = function () {
-	var self = this;
-
-	app.get('/', function (req, res) {
-		res.send({
-			server: 'ForerunnerDB',
-			version: self._core.version()
-		});
-	});
-
-	// Handle sync routes
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
-
-	// Handle all other routes
-	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-
-	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.put('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-	app.patch('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-
-	app.delete('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.delete('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
-};
-
+/**
+ * Checks for permission to access the specified object.
+ * @param {String} dbName
+ * @param {String} objType
+ * @param {String} objName
+ * @param {String} methodName
+ * @param {Object} req
+ * @param {Function} callback
+ * @returns {*}
+ */
 NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, methodName, req, callback) {
 	var permissionMethods = this._core.api.access(dbName, objType, objName, methodName);
 
@@ -457,12 +501,6 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 	async.waterfall(permissionMethods, callback);
 };
 
-// Override the Core init to instantiate the plugin
-Core.prototype.init = function () {
-	this.api = new NodeApiServer(this);
-	return CoreInit.apply(this, arguments);
-};
-
 /**
  * Defines an access rule for a model and method combination. When
  * access is requested via a REST call, the function provided will be
@@ -471,6 +509,7 @@ Core.prototype.init = function () {
  * be provided for a single model and method allowing authentication
  * checks to be stacked.
  * @name access
+ * @param {String} dbName The name of the database to set access rules for.
  * @param {String} objType The type of object that the name refers to
  * e.g. collection, view etc.
  * @param {String} objName The model name (collection) to apply the
@@ -522,6 +561,46 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 	return [];
 };
 
-Shared.finishModule('NodeApiServer');
+/**
+ * Creates the routes that express will expose to clients.
+ * @private
+ */
+NodeApiServer.prototype._defineRoutes = function () {
+	var self = this;
 
+	app.get('/', function (req, res) {
+		res.send({
+			server: 'ForerunnerDB',
+			version: self._core.version()
+		});
+	});
+
+	// Handle sync routes
+	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
+
+	// Handle all other routes
+	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+
+	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.put('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.patch('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+
+	app.delete('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.delete('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+
+	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
+	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
+};
+
+/**
+ * Override the Core init to instantiate the plugin.
+ * @returns {*}
+ */
+Core.prototype.init = function () {
+	this.api = new NodeApiServer(this);
+	return CoreInit.apply(this, arguments);
+};
+
+Shared.finishModule('NodeApiServer');
 module.exports = NodeApiServer;
