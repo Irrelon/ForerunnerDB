@@ -22,8 +22,7 @@ angular.module('app.services', [])
 			getCall: null,
 			postCall: null,
 			putCall: null,
-			deleteCall: null,
-			sid: null
+			deleteCall: null
 		};
 
 	_dedup = function (callId, timeout, callData) {
@@ -101,21 +100,11 @@ angular.module('app.services', [])
 		}
 	};
 
-	_api.sid = function (val) {
-		if (val !== undefined) {
-			self._sid = val;
-		}
-
-		return self._sid;
-	};
-
 	_api.getIntoCall = function (url, collectionName, callback) {
 		_addToQueue(url, function () {
-			var paramChar = url.indexOf('?') > -1 ? '&' : '?';
-
 			//console.log('Getting: ' + url);
 
-			$http.get(settings.host + ':' + settings.port + url + paramChar + 'sid=' + self._sid).then(function (resp) {
+			$http.get(settings.host + ':' + settings.port + url).then(function (resp) {
 				$ionicLoading.hide();
 
 				if (resp.data && !resp.data.err) {
@@ -142,11 +131,7 @@ angular.module('app.services', [])
 			});
 		} else {
 			_addToQueue(url, function () {
-				var paramChar = url.indexOf('?') > -1 ? '&' : '?';
-
-				//console.log('Getting: ' + url);
-
-				$http.get(settings.host + ':' + settings.port + url + paramChar + 'sid=' + self._sid).then(function (resp) {
+				$http.get(settings.host + ':' + settings.port + url).then(function (resp) {
 					$ionicLoading.hide();
 
 					if (callback) {
@@ -228,11 +213,7 @@ angular.module('app.services', [])
 			});
 		} else {
 			_addToQueue(url, function () {
-				var paramChar = url.indexOf('?') > -1 ? '&' : '?';
-
-				//console.log('Deleting: ' + url);
-
-				$http.delete(settings.host + ':' + settings.port + url + paramChar + 'sid=' + self._sid).then(function (resp) {
+				$http.delete(settings.host + ':' + settings.port + url).then(function (resp) {
 					$ionicLoading.hide();
 
 					if (callback) {
@@ -254,8 +235,7 @@ angular.module('app.services', [])
 		'get': _api.getCall,
 		'post': _api.postCall,
 		'put': _api.putCall,
-		'delete': _api.deleteCall,
-		'sid': _api.sid
+		'delete': _api.deleteCall
 	};
 }]);
 

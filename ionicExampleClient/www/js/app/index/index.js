@@ -1,7 +1,6 @@
 angular.module('app.controllers')
 	.controller('indexCtrl', function ($scope, $location, $api) {
 		//console.log('indexCtrl');
-		$api.sid('moo');
 
 		db.collection('settings').load(function (err, data) {
 			var tmpSettings;
