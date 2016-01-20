@@ -50,34 +50,119 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.get = new Overload({
-	'string, function': function (theUrl, callback) {
-		this.$main.call(this, theUrl, undefined, callback);
-	},
+NodeApiClient.prototype.http = function (method, url, data, callback) {
+	var self = this,
+		finalUrl,
+		bodyData,
+		xmlHttp = new XMLHttpRequest();
 
-	'string, object, function': function (theUrl, data, callback) {
-		this.$main.call(this, theUrl, data, callback);
-	},
+	method = method.toUpperCase();
 
-	'$main': function (theUrl, data, callback) {
-		var self = this,
-			finalUrl,
-			xmlHttp = new XMLHttpRequest();
-
-		xmlHttp.onreadystatechange = function () {
-			if (xmlHttp.readyState === 4) {
-				if (xmlHttp.status === 200) {
-					callback(false, self.jParse(xmlHttp.responseText));
-				} else {
-					callback(xmlHttp.status, xmlHttp.responseText);
-				}
+	xmlHttp.onreadystatechange = function () {
+		if (xmlHttp.readyState === 4) {
+			if (xmlHttp.status === 200) {
+				callback(false, self.jParse(xmlHttp.responseText));
+			} else {
+				callback(xmlHttp.status, xmlHttp.responseText);
 			}
-		};
+		}
+	};
 
-		finalUrl = theUrl + (data !== undefined ? '?' + self.jStringify(data) : '');
+	switch (method) {
+		case 'GET':
+		case 'DELETE':
+			finalUrl = url + (data !== undefined ? '?' + self.jStringify(data) : '');
+			bodyData = null;
+			break;
 
-		xmlHttp.open("GET", finalUrl, true);
-		xmlHttp.send(null);
+		case 'POST':
+		case 'PUT':
+		case 'PATCH':
+			finalUrl = url;
+			bodyData = (data !== undefined ? '?' + self.jStringify(data) : null);
+			break;
+
+		default:
+			return false;
+			break;
+	}
+
+
+	xmlHttp.open(method, finalUrl, true);
+	xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	xmlHttp.send(bodyData);
+
+	return this;
+};
+
+// Define HTTP helper methods
+NodeApiClient.prototype.get = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, callback);
+	},
+
+	'$main': function (path, data, callback) {
+		return this.http('GET', this.server() + path, data, callback);
+	}
+});
+
+NodeApiClient.prototype.put = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, callback);
+	},
+
+	'$main': function (path, data, callback) {
+		return this.http('PUT', this.server() + path, data, callback);
+	}
+});
+
+NodeApiClient.prototype.post = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, callback);
+	},
+
+	'$main': function (path, data, callback) {
+		return this.http('POST', this.server() + path, data, callback);
+	}
+});
+
+NodeApiClient.prototype.patch = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, callback);
+	},
+
+	'$main': function (path, data, callback) {
+		return this.http('PATCH', this.server() + path, data, callback);
+	}
+});
+
+NodeApiClient.prototype.delete = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, callback);
+	},
+
+	'$main': function (path, data, callback) {
+		return this.http('DELETE', this.server() + path, data, callback);
 	}
 });
 
