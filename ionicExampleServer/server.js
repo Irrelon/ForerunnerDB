@@ -15,7 +15,7 @@ db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on the "item" collection
 // in the "ForerunnerDB_Ionic_App" database to all clients
-fdb.api.access('ForerunnerDB_Ionic_App', 'collection', 'item', '*', function (modelName, methodName, req, callback) {
+fdb.api.access('ForerunnerDB_Ionic_App', 'collection', 'item', '*', function (dbName, objType, modelName, methodName, req, callback) {
 	// You can customise this method to only callback false when you are happy
 	// that the client connecting is allowed to connect. Calling back with true
 	// or an error string as the first argument will cause the client connection
@@ -28,7 +28,7 @@ fdb.api.access('ForerunnerDB_Ionic_App', 'collection', 'item', '*', function (mo
 	//console.log(req.query.auth);
 
 	// In this case here we are simply allowing all clients to connect
-	callback(false, modelName, methodName, req);
+	callback(false, dbName, objType, modelName, methodName, req);
 });
 
 // Ask the API server to start listening
