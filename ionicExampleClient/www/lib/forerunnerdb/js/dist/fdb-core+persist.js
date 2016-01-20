@@ -9437,7 +9437,7 @@ var Overload = function (def) {
 
 			name = typeof this.name === 'function' ? this.name() : 'Unknown';
 			console.log('Overload: ', def);
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + this.jStringify(arr));
+			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
@@ -11307,7 +11307,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.566',
+	version: '1.3.571',
 	modules: {},
 	plugins: {},
 

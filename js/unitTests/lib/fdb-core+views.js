@@ -9695,7 +9695,7 @@ var Overload = function (def) {
 
 			name = typeof this.name === 'function' ? this.name() : 'Unknown';
 			console.log('Overload: ', def);
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature for the passed arguments: ' + this.jStringify(arr));
+			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
@@ -10546,7 +10546,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.566',
+	version: '1.3.571',
 	modules: {},
 	plugins: {},
 
@@ -10853,7 +10853,8 @@ var Shared,
 	CollectionInit,
 	DbInit,
 	ReactorIO,
-	ActiveBucket;
+	ActiveBucket,
+	Overload = _dereq_('./Overload');
 
 Shared = _dereq_('./Shared');
 
@@ -10876,8 +10877,7 @@ View.prototype.init = function (name, query, options) {
 	this._querySettings = {};
 	this._debug = {};
 
-	this.query(query, false);
-	this.queryOptions(options, false);
+	this.query(query, options, false);
 
 	this._collectionDroppedWrap = function () {
 		self._collectionDropped.apply(self, arguments);
@@ -11531,27 +11531,55 @@ View.prototype.queryRemove = function (obj, refresh) {
  * this operation. Defaults to true.
  * @returns {*}
  */
-View.prototype.query = function (query, refresh) {
-	if (query !== undefined) {
-		this._querySettings.query = query;
+View.prototype.query = new Overload({
+	'': function () {
+		return this._querySettings.query;
+	},
 
-		if (query.$findSub && !query.$findSub.$from) {
-			query.$findSub.$from = this._privateData.name();
+	'object': function (query) {
+		return this.$main.call(this, query, undefined, true);
+	},
+
+	'*, boolean': function (query, refresh) {
+		return this.$main.call(this, query, undefined, refresh);
+	},
+
+	'object, object': function (query, options) {
+		return this.$main.call(this, query, options, true);
+	},
+
+	'*, *, boolean': function (query, options, refresh) {
+		return this.$main.call(this, query, options, refresh);
+	},
+
+	'$main': function (query, options, refresh) {
+		if (query !== undefined) {
+			this._querySettings.query = query;
+
+			if (query.$findSub && !query.$findSub.$from) {
+				query.$findSub.$from = this._privateData.name();
+			}
+
+			if (query.$findSubOne && !query.$findSubOne.$from) {
+				query.$findSubOne.$from = this._privateData.name();
+			}
 		}
 
-		if (query.$findSubOne && !query.$findSubOne.$from) {
-			query.$findSubOne.$from = this._privateData.name();
+		if (options !== undefined) {
+			this._querySettings.options = options;
 		}
 
-		if (refresh === undefined || refresh === true) {
-			this.refresh();
+		if (query !== undefined || options !== undefined) {
+			if (refresh === undefined || refresh === true) {
+				this.refresh();
+			}
+
+			return this;
 		}
 
-		return this;
+		return this._querySettings;
 	}
-
-	return this._querySettings.query;
-};
+});
 
 /**
  * Gets / sets the orderBy clause in the query options for the view.
@@ -12022,4 +12050,4 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./ReactorIO":29,"./Shared":31}]},{},[1]);
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./Overload":27,"./ReactorIO":29,"./Shared":31}]},{},[1]);
