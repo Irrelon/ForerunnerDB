@@ -76,36 +76,43 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 			app.options('*', cors({origin: true}));
 		}
 
+		// Parse body in requests
+		app.use(bodyParser.json());
+
 		// Parse JSON as a query parameter
 		app.use(function (req, res, next) {
 			var query,
+				jsonData,
 				urlObj = url.parse(req.url);
 
-			if (req.json || !urlObj.query) {
-				return next();
+			req.json = req.json || {};
+
+			if (req.body && Object.keys(req.body).length > 0) {
+				Shared.mixin(req.json, req.body);
 			}
 
-			try {
-				query = url.parse(req.url).query;
-				query = decodeURIComponent(query);
+			if (urlObj.query) {
+				try {
+					query = urlObj.query;
+					query = decodeURIComponent(query);
 
-				if (query) {
-					req.json = JSON.parse(decodeURIComponent(query));
-				}
+					if (query) {
+						jsonData = JSON.parse(decodeURIComponent(query));
+						Shared.mixin(req.json, jsonData);
+					}
+				} catch (e) {
+					if (req.query && Object.keys(req.query).length > 0) {
+						Shared.mixin(req.json, req.query);
+						return next();
+					}
 
-				return next();
-			} catch (e) {
-				// Check if the request has basic query params
-				if (req.query && Object.keys(req.query).length > 0) {
-					req.json = req.query;
-					return next();
+					res.status(500).send('Error parsing query string ' + query + ' ' + e);
+					return;
 				}
-				res.status(500).send('Error parsing query string ' + query + ' '  + e);
 			}
+
+			return next();
 		});
-
-		// Parse body in requests
-		app.use(bodyParser.json());
 
 		// Activate routes
 		this._defineRoutes();
