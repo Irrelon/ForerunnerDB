@@ -227,11 +227,11 @@ NodeApiClient.prototype.session = new Overload({
 	 * requests to the API or REST server.
 	 * @name session
 	 * @param {String} key The key to send the session object up inside.
-	 * @param {Object=} obj The object to send up with all requests. If
+	 * @param {*} obj The object / value to send up with all requests. If
 	 * a request has its own data to send up, this session data will be
 	 * mixed in to the request data under the specified key.
 	 */
-	'string, object': function (key, obj) {
+	'string, *': function (key, obj) {
 		this.$main.call(this, key, obj);
 	},
 
