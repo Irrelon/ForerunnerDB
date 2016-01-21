@@ -53,21 +53,9 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
+		sessionData,
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
-
-	// Check for global auth
-	if (this._sessionData) {
-		data = data !== undefined ? data : {};
-
-		if (this._sessionData.key) {
-			// Add the session data to the key specified
-			data[this._sessionData.key] = this._sessionData.obj;
-		} else {
-			// Add the session data to the root query object
-			Shared.mixin(data, this._sessionData.obj);
-		}
-	}
 
 	method = method.toUpperCase();
 
@@ -84,6 +72,14 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	switch (method) {
 		case 'GET':
 		case 'DELETE':
+			// Check for global auth
+			if (this._sessionData) {
+				data = data !== undefined ? data : {};
+
+				// Add the session data to the key specified
+				data[this._sessionData.key] = this._sessionData.obj;
+			}
+
 			finalUrl = url + (data !== undefined ? '?' + self.jStringify(data) : '');
 			bodyData = null;
 			break;
@@ -91,7 +87,15 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		case 'POST':
 		case 'PUT':
 		case 'PATCH':
-			finalUrl = url;
+			// Check for global auth
+			if (this._sessionData) {
+				sessionData = {};
+
+				// Add the session data to the key specified
+				sessionData[this._sessionData.key] = this._sessionData.obj;
+			}
+
+			finalUrl = url + (sessionData !== undefined ? '?' + self.jStringify(sessionData) : '');
 			bodyData = (data !== undefined ? self.jStringify(data) : null);
 			break;
 
