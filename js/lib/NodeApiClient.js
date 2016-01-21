@@ -371,6 +371,18 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objectType, objectName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, null, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -378,6 +390,19 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, function': function (collectionName, query, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, function': function (objectType, objectName, query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, null, callback);
 	},
 
 	/**
@@ -401,6 +426,20 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, object, function': function (collectionName, query, options, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, options, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, object, function': function (objectType, objectName, query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, options, callback);
 	},
 
 	'$main': function (path, query, options, callback) {
