@@ -57,9 +57,16 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		xmlHttp = new XMLHttpRequest();
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		data = data !== undefined ? data : {};
-		data.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			data[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(data, this._sessionData.obj);
+		}
 	}
 
 	method = method.toUpperCase();
@@ -191,12 +198,50 @@ NodeApiClient.prototype.delete = new Overload({
 	}
 });
 
-/**
- * Sets a global auth object that will be sent up with client connections
- * to the API server.
- * @name auth
- */
-Shared.synthesize(NodeApiClient.prototype, 'session');
+NodeApiClient.prototype.session = new Overload({
+	/**
+	 * Gets the global object that is sent up with client requests to
+	 * the API or REST server.
+	 * @name session
+	 */
+	'': function () {
+		return this._sessionData;
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {Object=} obj The object to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data. This means you cannot have clashing
+	 * keys in your global object and local call data as they will
+	 * overwrite each other.
+	 */
+	'object': function (obj) {
+		this.$main.call(this, '', obj);
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {String} key The key to send the session object up inside.
+	 * @param {Object=} obj The object to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data under the specified key.
+	 */
+	'string, object': function (key, obj) {
+		this.$main.call(this, key, obj);
+	},
+
+	'$main': function (key, obj) {
+		this._sessionData = {
+			key: key,
+			obj: obj
+		};
+	}
+});
 
 /**
  * Initiates a client connection to the API server.
@@ -220,9 +265,16 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	finalPath = this.server() + path + '/_sync';
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		queryParams = queryParams || {};
-		queryParams.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			queryParams[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(queryParams, this._sessionData.obj);
+		}
 	}
 
 	if (query) {
