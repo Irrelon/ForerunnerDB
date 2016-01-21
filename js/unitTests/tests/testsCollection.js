@@ -1222,7 +1222,7 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 					$in: "$$.friends"
 				},
 				"$where": {
-					options: {
+					$options: {
 						$orderBy: {
 							_id: 1
 						}
@@ -1251,12 +1251,12 @@ QUnit.test("Collection.find() :: Options :: Join with query and right-side back-
 		"$join": [{
 			"user": {
 				"$where": {
-					"query": {
+					"$query": {
 						"_id": {
 							"$in": "$$.friends"
 						}
 					},
-					"options": {
+					"$options": {
 						"$orderBy": {
 							"_id": 1
 						}
@@ -1311,7 +1311,7 @@ QUnit.test("Collection.find() :: Options :: Join with query with both a right-si
 		"$join": [{
 			"b": {
 				"$where": {
-					"query": {
+					"$query": {
 						"id": "$$._id",
 						"name": 'test1'
 					}
