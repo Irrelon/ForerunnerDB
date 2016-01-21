@@ -95,6 +95,11 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 				return next();
 			} catch (e) {
+				// Check if the request has basic query params
+				if (req.query && Object().keys(req.query).length > 0) {
+					req.json = req.query;
+					return next();
+				}
 				res.status(500).send('Error parsing query string ' + query + ' '  + e);
 			}
 		});
@@ -136,7 +141,8 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 };
 
 NodeApiServer.prototype._createHttpServer = function (options, callback) {
-	var ssl,
+	var self = this,
+		ssl,
 		httpServer,
 		i;
 
@@ -159,22 +165,25 @@ NodeApiServer.prototype._createHttpServer = function (options, callback) {
 
 			callback(false, httpServer);
 		} else {
-			// Generate our own self-signed cert for easy use of https prototyping
-			pem.createCertificate({
-				days: 1,
-				selfSigned: true
-			}, function(err, keys) {
+			// Check for existing certs we have already generated
+			fs.stat('./forerunnerdbTempCert/privkey.pem', function (err, stat) {
 				if (!err) {
-					ssl = {
-						key: keys.serviceKey,
-						cert: keys.certificate
-					};
+					fs.stat('./forerunnerdbTempCert/fullchain.pem', function (err, stat) {
+						if (!err) {
+							ssl = {
+								key: fs.readFileSync('./forerunnerdbTempCert/key.pem'),
+								cert: fs.readFileSync('./forerunnerdbTempCert/cert.pem')
+							};
 
-					httpServer = https.createServer(ssl, app);
+							httpServer = https.createServer(ssl, app);
 
-					callback(false, httpServer);
+							callback(false, httpServer);
+						} else {
+							self._generateSelfCertHttpsServer(callback);
+						}
+					});
 				} else {
-					throw('Cannot enable SSL, generating a self-signed certificate failed: ' +  err);
+					self._generateSelfCertHttpsServer(callback);
 				}
 			});
 		}
@@ -182,6 +191,41 @@ NodeApiServer.prototype._createHttpServer = function (options, callback) {
 		httpServer = http.createServer(app);
 		callback(false, httpServer);
 	}
+};
+
+/**
+ * Uses PEM module to generate a self-signed SSL certificate and creates
+ * an https server from it, returning it in the callback.
+ * @param callback
+ * @private
+ */
+NodeApiServer.prototype._generateSelfCertHttpsServer = function (callback) {
+	var ssl,
+		httpServer;
+
+	// Generate our own self-signed cert for easy use of https prototyping
+	pem.createCertificate({
+		days: 1,
+		selfSigned: true
+	}, function(err, keys) {
+		if (!err) {
+			// Write self-signed cert data so we can re-use it
+			fs.writeFile('./forerunnerdbTempCert/key.pem', keys.serviceKey, function () {});
+			fs.writeFile('./forerunnerdbTempCert/cert.pem', keys.certificate, function () {});
+
+			// Assign data to the ssl object
+			ssl = {
+				key: keys.serviceKey,
+				cert: keys.certificate
+			};
+
+			httpServer = https.createServer(ssl, app);
+
+			callback(false, httpServer);
+		} else {
+			throw('Cannot enable SSL, generating a self-signed certificate failed: ' +  err);
+		}
+	});
 };
 
 /**
