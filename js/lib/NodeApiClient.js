@@ -139,7 +139,7 @@ NodeApiClient.prototype.put = new Overload({
 		return this.$main.call(this, path, data, options, callback);
 	},
 
-	'$main': function (path, data, callback) {
+	'$main': function (path, data, options, callback) {
 		return this.http('PUT', this.server() + path, data, options, callback);
 	}
 });
@@ -157,7 +157,7 @@ NodeApiClient.prototype.post = new Overload({
 		return this.$main.call(this, path, data, options, callback);
 	},
 
-	'$main': function (path, data, callback) {
+	'$main': function (path, data, options, callback) {
 		return this.http('POST', this.server() + path, data, options, callback);
 	}
 });
@@ -175,7 +175,7 @@ NodeApiClient.prototype.patch = new Overload({
 		return this.$main.call(this, path, data, options, callback);
 	},
 
-	'$main': function (path, data, callback) {
+	'$main': function (path, data, options, callback) {
 		return this.http('PATCH', this.server() + path, data, options, callback);
 	}
 });
@@ -193,7 +193,7 @@ NodeApiClient.prototype.delete = new Overload({
 		return this.$main.call(this, path, data, options, callback);
 	},
 
-	'$main': function (path, data, callback) {
+	'$main': function (path, data, options, callback) {
 		return this.http('DELETE', this.server() + path, data, options, callback);
 	}
 });

@@ -11462,16 +11462,23 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.http = function (method, url, data, callback) {
+NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		data = data !== undefined ? data : {};
-		data.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			data[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(data, this._sessionData.obj);
+		}
 	}
 
 	method = method.toUpperCase();
@@ -11515,80 +11522,138 @@ NodeApiClient.prototype.http = function (method, url, data, callback) {
 // Define HTTP helper methods
 NodeApiClient.prototype.get = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('GET', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('GET', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.put = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('PUT', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PUT', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.post = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('POST', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('POST', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.patch = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('PATCH', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PATCH', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.delete = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('DELETE', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('DELETE', this.server() + path, data, options, callback);
 	}
 });
 
-/**
- * Sets a global auth object that will be sent up with client connections
- * to the API server.
- * @name auth
- */
-Shared.synthesize(NodeApiClient.prototype, 'session');
+NodeApiClient.prototype.session = new Overload({
+	/**
+	 * Gets the global object that is sent up with client requests to
+	 * the API or REST server.
+	 * @name session
+	 */
+	'': function () {
+		return this._sessionData;
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {Object=} obj The object to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data. This means you cannot have clashing
+	 * keys in your global object and local call data as they will
+	 * overwrite each other.
+	 */
+	'object': function (obj) {
+		this.$main.call(this, '', obj);
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {String} key The key to send the session object up inside.
+	 * @param {*} obj The object / value to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data under the specified key.
+	 */
+	'string, *': function (key, obj) {
+		this.$main.call(this, key, obj);
+	},
+
+	'$main': function (key, obj) {
+		this._sessionData = {
+			key: key,
+			obj: obj
+		};
+	}
+});
 
 /**
  * Initiates a client connection to the API server.
@@ -11612,9 +11677,16 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	finalPath = this.server() + path + '/_sync';
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		queryParams = queryParams || {};
-		queryParams.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			queryParams[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(queryParams, this._sessionData.obj);
+		}
 	}
 
 	if (query) {
@@ -14203,7 +14275,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.585',
+	version: '1.3.587',
 	modules: {},
 	plugins: {},
 
@@ -14273,13 +14345,15 @@ var Shared = {
 		return Boolean(this.modules[name]);
 	},
 
-	/**
-	 * Adds the properties and methods defined in the mixin to the passed object.
-	 * @memberof Shared
-	 * @param {Object} obj The target object to add mixin key/values to.
-	 * @param {String} mixinName The name of the mixin to add to the object.
-	 */
 	mixin: new Overload({
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {String} mixinName The name of the mixin to add to the object.
+		 */
 		'object, string': function (obj, mixinName) {
 			var mixinObj;
 
@@ -14294,6 +14368,15 @@ var Shared = {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {Object} mixinObj The object containing the keys to mix into
+		 * the target object.
+		 */
 		'object, *': function (obj, mixinObj) {
 			return this.$main.call(this, obj, mixinObj);
 		},

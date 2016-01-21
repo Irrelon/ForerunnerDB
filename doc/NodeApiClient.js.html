@@ -78,16 +78,23 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.http = function (method, url, data, callback) {
+NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		data = data !== undefined ? data : {};
-		data.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			data[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(data, this._sessionData.obj);
+		}
 	}
 
 	method = method.toUpperCase();
@@ -131,80 +138,138 @@ NodeApiClient.prototype.http = function (method, url, data, callback) {
 // Define HTTP helper methods
 NodeApiClient.prototype.get = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('GET', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('GET', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.put = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('PUT', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PUT', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.post = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('POST', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('POST', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.patch = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('PATCH', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PATCH', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.delete = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('DELETE', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('DELETE', this.server() + path, data, options, callback);
 	}
 });
 
-/**
- * Sets a global auth object that will be sent up with client connections
- * to the API server.
- * @name auth
- */
-Shared.synthesize(NodeApiClient.prototype, 'session');
+NodeApiClient.prototype.session = new Overload({
+	/**
+	 * Gets the global object that is sent up with client requests to
+	 * the API or REST server.
+	 * @name session
+	 */
+	'': function () {
+		return this._sessionData;
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {Object=} obj The object to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data. This means you cannot have clashing
+	 * keys in your global object and local call data as they will
+	 * overwrite each other.
+	 */
+	'object': function (obj) {
+		this.$main.call(this, '', obj);
+	},
+
+	/**
+	 * Sets a global object that will be sent up with client
+	 * requests to the API or REST server.
+	 * @name session
+	 * @param {String} key The key to send the session object up inside.
+	 * @param {*} obj The object / value to send up with all requests. If
+	 * a request has its own data to send up, this session data will be
+	 * mixed in to the request data under the specified key.
+	 */
+	'string, *': function (key, obj) {
+		this.$main.call(this, key, obj);
+	},
+
+	'$main': function (key, obj) {
+		this._sessionData = {
+			key: key,
+			obj: obj
+		};
+	}
+});
 
 /**
  * Initiates a client connection to the API server.
@@ -228,9 +293,16 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	finalPath = this.server() + path + '/_sync';
 
 	// Check for global auth
-	if (this._session) {
+	if (this._sessionData) {
 		queryParams = queryParams || {};
-		queryParams.$session = this._session;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			queryParams[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(queryParams, this._sessionData.obj);
+		}
 	}
 
 	if (query) {
@@ -416,13 +488,13 @@ module.exports = NodeApiClient;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#auth">auth</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#session">session</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 00:06:08 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 16:31:24 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

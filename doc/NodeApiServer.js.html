@@ -41,6 +41,7 @@ var Shared = require('./Shared'),
 	http = require('http'),
 	https = require('https'),
 	url = require('url'),
+	pem = require('pem'),
 	app = express(),
 	server,
 	Core,
@@ -92,9 +93,7 @@ Shared.synthesize(NodeApiServer.prototype, 'name');
  * @returns {NodeApiServer}
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
-	var ssl,
-		httpServer,
-		i;
+	var self = this;
 
 	// Start listener
 	if (!server) {
@@ -134,7 +133,44 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 		// Activate routes
 		this._defineRoutes();
 
-		if (options &amp;&amp; options.ssl &amp;&amp; options.ssl.enable) {
+		self._createHttpServer(options, function (err, httpServer) {
+			if (!err) {
+				server = httpServer.listen(port, host, function (err) {
+					if (!err) {
+						if (options &amp;&amp; options.ssl &amp;&amp; options.ssl.enable) {
+							console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+						} else {
+							console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+						}
+
+						if (callback) {
+							callback(false, server);
+						}
+					} else {
+						console.log('Listen error', err);
+						callback(err);
+					}
+				});
+			}
+		});
+	} else {
+		// Server already running
+		if (callback) {
+			callback(false, server);
+		}
+	}
+
+	return this;
+};
+
+NodeApiServer.prototype._createHttpServer = function (options, callback) {
+	var ssl,
+		httpServer,
+		i;
+
+	if (options &amp;&amp; options.ssl &amp;&amp; options.ssl.enable) {
+		// Check if we were provided certificate data
+		if (options.ssl.key &amp;&amp; options.ssl.cert) {
 			ssl = {
 				key: fs.readFileSync(options.ssl.key),
 				cert: fs.readFileSync(options.ssl.cert)
@@ -148,34 +184,32 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 			}
 
 			httpServer = https.createServer(ssl, app);
+
+			callback(false, httpServer);
 		} else {
-			httpServer = http.createServer(app);
-		}
+			// Generate our own self-signed cert for easy use of https prototyping
+			pem.createCertificate({
+				days: 1,
+				selfSigned: true
+			}, function(err, keys) {
+				if (!err) {
+					ssl = {
+						key: keys.serviceKey,
+						cert: keys.certificate
+					};
 
-		server = httpServer.listen(port, host, function (err) {
-			if (!err) {
-				if (options &amp;&amp; options.ssl &amp;&amp; options.ssl.enable) {
-					console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+					httpServer = https.createServer(ssl, app);
+
+					callback(false, httpServer);
 				} else {
-					console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+					throw('Cannot enable SSL, generating a self-signed certificate failed: ' +  err);
 				}
-
-				if (callback) {
-					callback(false, server);
-				}
-			} else {
-				console.log('Listen error', err);
-				callback(err);
-			}
-		});
-	} else {
-		// Server already running
-		if (callback) {
-			callback(false, server);
+			});
 		}
+	} else {
+		httpServer = http.createServer(app);
+		callback(false, httpServer);
 	}
-
-	return this;
 };
 
 /**
@@ -655,6 +689,15 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
 };
 
+NodeApiServer.prototype._generateCert = function () {
+	pem.createCertificate({
+		days: 365,
+		selfSigned: true
+	}, function(err, keys) {
+
+	});
+};
+
 /**
  * Override the Core init to instantiate the plugin.
  * @returns {*}
@@ -675,13 +718,13 @@ module.exports = NodeApiServer;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#auth">auth</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#session">session</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 00:06:08 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 16:31:24 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
