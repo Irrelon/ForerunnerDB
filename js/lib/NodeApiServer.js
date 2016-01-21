@@ -13,6 +13,7 @@ var Shared = require('./Shared'),
 	http = require('http'),
 	https = require('https'),
 	url = require('url'),
+	pem = require('pem'),
 	app = express(),
 	server,
 	Core,
@@ -64,9 +65,7 @@ Shared.synthesize(NodeApiServer.prototype, 'name');
  * @returns {NodeApiServer}
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
-	var ssl,
-		httpServer,
-		i;
+	var self = this;
 
 	// Start listener
 	if (!server) {
@@ -106,7 +105,44 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 		// Activate routes
 		this._defineRoutes();
 
-		if (options && options.ssl && options.ssl.enable) {
+		self._createHttpServer(options, function (err, httpServer) {
+			if (!err) {
+				server = httpServer.listen(port, host, function (err) {
+					if (!err) {
+						if (options && options.ssl && options.ssl.enable) {
+							console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+						} else {
+							console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+						}
+
+						if (callback) {
+							callback(false, server);
+						}
+					} else {
+						console.log('Listen error', err);
+						callback(err);
+					}
+				});
+			}
+		});
+	} else {
+		// Server already running
+		if (callback) {
+			callback(false, server);
+		}
+	}
+
+	return this;
+};
+
+NodeApiServer.prototype._createHttpServer = function (options, callback) {
+	var ssl,
+		httpServer,
+		i;
+
+	if (options && options.ssl && options.ssl.enable) {
+		// Check if we were provided certificate data
+		if (options.ssl.key && options.ssl.cert) {
 			ssl = {
 				key: fs.readFileSync(options.ssl.key),
 				cert: fs.readFileSync(options.ssl.cert)
@@ -120,34 +156,32 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 			}
 
 			httpServer = https.createServer(ssl, app);
+
+			callback(false, httpServer);
 		} else {
-			httpServer = http.createServer(app);
-		}
+			// Generate our own self-signed cert for easy use of https prototyping
+			pem.createCertificate({
+				days: 1,
+				selfSigned: true
+			}, function(err, keys) {
+				if (!err) {
+					ssl = {
+						key: keys.serviceKey,
+						cert: keys.certificate
+					};
 
-		server = httpServer.listen(port, host, function (err) {
-			if (!err) {
-				if (options && options.ssl && options.ssl.enable) {
-					console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+					httpServer = https.createServer(ssl, app);
+
+					callback(false, httpServer);
 				} else {
-					console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+					throw('Cannot enable SSL, generating a self-signed certificate failed: ' +  err);
 				}
-
-				if (callback) {
-					callback(false, server);
-				}
-			} else {
-				console.log('Listen error', err);
-				callback(err);
-			}
-		});
-	} else {
-		// Server already running
-		if (callback) {
-			callback(false, server);
+			});
 		}
+	} else {
+		httpServer = http.createServer(app);
+		callback(false, httpServer);
 	}
-
-	return this;
 };
 
 /**
@@ -625,6 +659,15 @@ NodeApiServer.prototype._defineRoutes = function () {
 
 	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
 	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
+};
+
+NodeApiServer.prototype._generateCert = function () {
+	pem.createCertificate({
+		days: 365,
+		selfSigned: true
+	}, function(err, keys) {
+
+	});
 };
 
 /**
