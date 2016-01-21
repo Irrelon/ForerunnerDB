@@ -78,13 +78,15 @@ var Shared = {
 		return Boolean(this.modules[name]);
 	},
 
-	/**
-	 * Adds the properties and methods defined in the mixin to the passed object.
-	 * @memberof Shared
-	 * @param {Object} obj The target object to add mixin key/values to.
-	 * @param {String} mixinName The name of the mixin to add to the object.
-	 */
 	mixin: new Overload({
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {String} mixinName The name of the mixin to add to the object.
+		 */
 		'object, string': function (obj, mixinName) {
 			var mixinObj;
 
@@ -99,6 +101,15 @@ var Shared = {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {Object} mixinObj The object containing the keys to mix into
+		 * the target object.
+		 */
 		'object, *': function (obj, mixinObj) {
 			return this.$main.call(this, obj, mixinObj);
 		},
