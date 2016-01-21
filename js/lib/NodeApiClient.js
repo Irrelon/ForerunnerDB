@@ -92,7 +92,7 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		case 'PUT':
 		case 'PATCH':
 			finalUrl = url;
-			bodyData = (data !== undefined ? '?' + self.jStringify(data) : null);
+			bodyData = (data !== undefined ? self.jStringify(data) : null);
 			break;
 
 		default:
