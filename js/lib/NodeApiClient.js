@@ -90,7 +90,6 @@ NodeApiClient.prototype.http = function (method, url, data, callback) {
 
 		default:
 			return false;
-			break;
 	}
 
 
