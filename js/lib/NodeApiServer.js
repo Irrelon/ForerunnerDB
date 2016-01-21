@@ -87,10 +87,6 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 			req.json = req.json || {};
 
-			if (req.body && Object.keys(req.body).length > 0) {
-				Shared.mixin(req.json, req.body);
-			}
-
 			if (urlObj.query) {
 				try {
 					query = urlObj.query;
@@ -101,11 +97,6 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 						Shared.mixin(req.json, jsonData);
 					}
 				} catch (e) {
-					if (req.query && Object.keys(req.query).length > 0) {
-						Shared.mixin(req.json, req.query);
-						return next();
-					}
-
 					res.status(500).send('Error parsing query string ' + query + ' ' + e);
 					return;
 				}
