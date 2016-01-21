@@ -81,21 +81,9 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
+		sessionData,
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
-
-	// Check for global auth
-	if (this._sessionData) {
-		data = data !== undefined ? data : {};
-
-		if (this._sessionData.key) {
-			// Add the session data to the key specified
-			data[this._sessionData.key] = this._sessionData.obj;
-		} else {
-			// Add the session data to the root query object
-			Shared.mixin(data, this._sessionData.obj);
-		}
-	}
 
 	method = method.toUpperCase();
 
@@ -112,6 +100,14 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	switch (method) {
 		case 'GET':
 		case 'DELETE':
+			// Check for global auth
+			if (this._sessionData) {
+				data = data !== undefined ? data : {};
+
+				// Add the session data to the key specified
+				data[this._sessionData.key] = this._sessionData.obj;
+			}
+
 			finalUrl = url + (data !== undefined ? '?' + self.jStringify(data) : '');
 			bodyData = null;
 			break;
@@ -119,8 +115,16 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		case 'POST':
 		case 'PUT':
 		case 'PATCH':
-			finalUrl = url;
-			bodyData = (data !== undefined ? '?' + self.jStringify(data) : null);
+			// Check for global auth
+			if (this._sessionData) {
+				sessionData = {};
+
+				// Add the session data to the key specified
+				sessionData[this._sessionData.key] = this._sessionData.obj;
+			}
+
+			finalUrl = url + (sessionData !== undefined ? '?' + self.jStringify(sessionData) : '');
+			bodyData = (data !== undefined ? self.jStringify(data) : null);
 			break;
 
 		default:
@@ -399,6 +403,18 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objectType, objectName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, null, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -406,6 +422,19 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, function': function (collectionName, query, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, function': function (objectType, objectName, query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, null, callback);
 	},
 
 	/**
@@ -429,6 +458,20 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, object, function': function (collectionName, query, options, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, options, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, object, function': function (objectType, objectName, query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, options, callback);
 	},
 
 	'$main': function (path, query, options, callback) {
@@ -488,13 +531,13 @@ module.exports = NodeApiClient;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#session">session</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#session">session</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 22:18:04 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 21 2016 23:38:16 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

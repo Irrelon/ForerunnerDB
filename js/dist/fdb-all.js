@@ -11465,21 +11465,9 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
+		sessionData,
 		bodyData,
 		xmlHttp = new XMLHttpRequest();
-
-	// Check for global auth
-	if (this._sessionData) {
-		data = data !== undefined ? data : {};
-
-		if (this._sessionData.key) {
-			// Add the session data to the key specified
-			data[this._sessionData.key] = this._sessionData.obj;
-		} else {
-			// Add the session data to the root query object
-			Shared.mixin(data, this._sessionData.obj);
-		}
-	}
 
 	method = method.toUpperCase();
 
@@ -11496,6 +11484,14 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	switch (method) {
 		case 'GET':
 		case 'DELETE':
+			// Check for global auth
+			if (this._sessionData) {
+				data = data !== undefined ? data : {};
+
+				// Add the session data to the key specified
+				data[this._sessionData.key] = this._sessionData.obj;
+			}
+
 			finalUrl = url + (data !== undefined ? '?' + self.jStringify(data) : '');
 			bodyData = null;
 			break;
@@ -11503,8 +11499,16 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		case 'POST':
 		case 'PUT':
 		case 'PATCH':
-			finalUrl = url;
-			bodyData = (data !== undefined ? '?' + self.jStringify(data) : null);
+			// Check for global auth
+			if (this._sessionData) {
+				sessionData = {};
+
+				// Add the session data to the key specified
+				sessionData[this._sessionData.key] = this._sessionData.obj;
+			}
+
+			finalUrl = url + (sessionData !== undefined ? '?' + self.jStringify(sessionData) : '');
+			bodyData = (data !== undefined ? self.jStringify(data) : null);
 			break;
 
 		default:
@@ -11783,6 +11787,18 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objectType, objectName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, null, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -11790,6 +11806,19 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, function': function (collectionName, query, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, function': function (objectType, objectName, query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, null, callback);
 	},
 
 	/**
@@ -11813,6 +11842,20 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, object, function': function (collectionName, query, options, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, options, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, object, function': function (objectType, objectName, query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, options, callback);
 	},
 
 	'$main': function (path, query, options, callback) {
@@ -14275,7 +14318,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.590',
+	version: '1.3.591',
 	modules: {},
 	plugins: {},
 
