@@ -1797,12 +1797,17 @@ Collection.prototype._rebuildIndexes = function () {
  * @returns {*}
  */
 Collection.prototype.subset = function (query, options) {
-	var result = this.find(query, options);
+	var result = this.find(query, options),
+		coll;
 
-	return new Collection()
-		.subsetOf(this)
+	coll = new Collection();
+	coll.db(this._db);
+
+	coll.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
+
+	return coll;
 };
 
 /**
