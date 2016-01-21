@@ -50,7 +50,7 @@ Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
 	return this.$super.call(this, val);
 });
 
-NodeApiClient.prototype.http = function (method, url, data, callback) {
+NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
 		finalUrl,
 		bodyData,
@@ -103,71 +103,91 @@ NodeApiClient.prototype.http = function (method, url, data, callback) {
 // Define HTTP helper methods
 NodeApiClient.prototype.get = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (path, data, callback) {
-		return this.http('GET', this.server() + path, data, callback);
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('GET', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.put = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
 	},
 
 	'$main': function (path, data, callback) {
-		return this.http('PUT', this.server() + path, data, callback);
+		return this.http('PUT', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.post = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
 	},
 
 	'$main': function (path, data, callback) {
-		return this.http('POST', this.server() + path, data, callback);
+		return this.http('POST', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.patch = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
 	},
 
 	'$main': function (path, data, callback) {
-		return this.http('PATCH', this.server() + path, data, callback);
+		return this.http('PATCH', this.server() + path, data, options, callback);
 	}
 });
 
 NodeApiClient.prototype.delete = new Overload({
 	'string, function': function (path, callback) {
-		return this.$main.call(this, path, undefined, callback);
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
 	'string, object, function': function (path, data, callback) {
-		return this.$main.call(this, path, data, callback);
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
 	},
 
 	'$main': function (path, data, callback) {
-		return this.http('DELETE', this.server() + path, data, callback);
+		return this.http('DELETE', this.server() + path, data, options, callback);
 	}
 });
 
