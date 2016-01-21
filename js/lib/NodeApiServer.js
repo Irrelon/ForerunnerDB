@@ -96,7 +96,7 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 				return next();
 			} catch (e) {
 				// Check if the request has basic query params
-				if (req.query && Object().keys(req.query).length > 0) {
+				if (req.query && Object.keys(req.query).length > 0) {
 					req.json = req.query;
 					return next();
 				}
