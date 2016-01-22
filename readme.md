@@ -67,6 +67,14 @@ If you are using Node.js (or have it installed) you can use NPM to download Fore
 npm install forerunnerdb
 ```
 
+You can also install the development version which usually includes new features that
+are considered either unstable or untested. To install the development version you can
+ask NPM for the dev tag:
+
+```bash
+npm install forerunnerdb --tag dev
+```
+
 This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 # How to Use
