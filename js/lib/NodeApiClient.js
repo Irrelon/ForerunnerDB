@@ -72,6 +72,7 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	switch (method) {
 		case 'GET':
 		case 'DELETE':
+		case 'HEAD':
 			// Check for global auth
 			if (this._sessionData) {
 				data = data !== undefined ? data : {};
@@ -112,6 +113,24 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 };
 
 // Define HTTP helper methods
+NodeApiClient.prototype.head = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
+
+	'string, object, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, object, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('HEAD', this.server() + path, data, options, callback);
+	}
+});
+
 NodeApiClient.prototype.get = new Overload({
 	'string, function': function (path, callback) {
 		return this.$main.call(this, path, undefined, {}, callback);
@@ -183,6 +202,23 @@ NodeApiClient.prototype.patch = new Overload({
 		return this.http('PATCH', this.server() + path, data, options, callback);
 	}
 });
+
+NodeApiClient.prototype.postPatch = function (path, id, data, options, callback) {
+	// Determine if the item exists or not
+	this.head(path + '/' + id, undefined, {}, function (err, data) {
+		if (err) {
+			if (err === '404') {
+				// Item does not exist, run post
+				return this.http('POST', this.server() + path, data, options, callback);
+			} else {
+				callback(err, data);
+			}
+		} else {
+			// Item already exists, run patch
+			return this.http('PATCH', this.server() + path + '/' + id, data, options, callback);
+		}
+	});
+};
 
 NodeApiClient.prototype.delete = new Overload({
 	'string, function': function (path, callback) {

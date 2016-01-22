@@ -275,6 +275,33 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				}
 
 				switch (method) {
+					case 'HEAD':
+						// Get one
+						if (obj.isProcessingQueue && obj.isProcessingQueue()) {
+							if (db.debug()) {
+								console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
+							}
+
+							obj.once('ready', function () {
+								if (db.debug()) {
+									console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
+								}
+
+								if (obj.findById(objId, options)) {
+									res.sendStatus(200);
+								} else {
+									res.sendStatus(404);
+								}
+							});
+						} else {
+							if (obj.findById(objId, options)) {
+								res.sendStatus(200);
+							} else {
+								res.sendStatus(404);
+							}
+						}
+						break;
+
 					case 'GET':
 						if (!objId) {
 							// Get all
@@ -691,6 +718,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 	// Handle all other routes
 	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
 	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.head('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
 	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
 	app.put('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
