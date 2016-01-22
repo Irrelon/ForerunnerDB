@@ -253,7 +253,9 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 		query,
 		options,
 		db,
-		obj;
+		obj,
+		urlPath,
+		pathSections;
 
 	// Check permissions
 	self.hasPermission(dbName, objType, objName, method, req, function (err, results) {
@@ -274,6 +276,15 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 					return obj.exec(req, res);
 				}
 
+				// Get url path
+				urlPath = url.parse(req.url).pathname;
+
+				// Split path into sections
+				pathSections = urlPath.split('/');
+
+				// Remove the first four sections as we already used these (dbName, objType, objName, itemId)
+				pathSections.splice(0, 4);
+
 				switch (method) {
 					case 'HEAD':
 						// Get one
@@ -287,54 +298,27 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 									console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
 								}
 
-								if (obj.findById(objId, options)) {
-									res.sendStatus(200);
-								} else {
-									res.sendStatus(404);
-								}
+								self._handleResponse(req, res, pathSections, obj.findById(objId, options));
 							});
 						} else {
-							if (obj.findById(objId, options)) {
-								res.sendStatus(200);
-							} else {
-								res.sendStatus(404);
-							}
+							self._handleResponse(req, res, pathSections, obj.findById(objId, options));
 						}
 						break;
 
 					case 'GET':
-						if (!objId) {
-							// Get all
-							if (obj.isProcessingQueue && obj.isProcessingQueue()) {
-								if (db.debug()) {
-									console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
-								}
-
-								obj.once('ready', function () {
-									if (db.debug()) {
-										console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
-									}
-									res.send(obj.find(query, options));
-								});
-							} else {
-								res.send(obj.find(query, options));
+						if (obj.isProcessingQueue && obj.isProcessingQueue()) {
+							if (db.debug()) {
+								console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
 							}
+
+							obj.once('ready', function () {
+								if (db.debug()) {
+									console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
+								}
+								self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, obj.find(query, options));
+							});
 						} else {
-							// Get one
-							if (obj.isProcessingQueue && obj.isProcessingQueue()) {
-								if (db.debug()) {
-									console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
-								}
-
-								obj.once('ready', function () {
-									if (db.debug()) {
-										console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
-									}
-									res.send(obj.findById(objId, options));
-								});
-							} else {
-								res.send(obj.findById(objId, options));
-							}
+							self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, obj.find(query, options));
 						}
 						break;
 
@@ -443,6 +427,68 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 			res.status(403).send(err);
 		}
 	});
+};
+
+NodeApiServer.prototype._handleResponse = function (req, res, dbName, objType, objName, obj, pathSections, responseData) {
+	var self = this,
+		pathSection,
+		tmpParts,
+		pathIdField = obj._primaryKey !== undefined ? obj._primaryKey : '_id',
+		i;
+
+	// Check if we need to generate a sub-document query
+	if (pathSections.length) {
+		// Get the next path section
+		pathSection = pathSections.shift();
+
+		if (responseData instanceof Array) {
+			// Set the id field to default
+			pathIdField = '_id';
+
+			// Check if the patch section has a colon in it, denoting a search field and value
+			if (pathSection.indexOf(':') > -1) {
+				// Split the path section
+				tmpParts = pathSection.split(':');
+				pathIdField = tmpParts[0];
+				pathSection = tmpParts[1];
+			}
+
+			// The path section must correspond to an id in the array of items
+			for (i = 0; i < responseData.length; i++) {
+				if (responseData[i][pathIdField] === pathSection) {
+					return self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, responseData[i]);
+				}
+			}
+
+			// Could not find a matching document, send nothing back
+			return self._sendResponse(req, res);
+		}
+
+		// Grab the document sub-data
+		return self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, responseData[pathSection]);
+	} else {
+		return self._sendResponse(req, res, responseData);
+	}
+};
+
+NodeApiServer.prototype._sendResponse = function (req, res, data) {
+	var statusCode = data !== undefined ? 200 : 404;
+
+	switch (req.method) {
+		case 'HEAD':
+			// Only send status codes
+			res.sendStatus(statusCode);
+			break;
+
+		case 'GET':
+			// Send status code and data
+			res.status(statusCode).send(data);
+			break;
+
+		default:
+			res.send(data);
+			break;
+	}
 };
 
 /**
@@ -718,6 +764,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 	// Handle all other routes
 	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
 	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.get('/:dbName/:objType/:objName/:objId/*', function () { self.handleRequest.apply(self, arguments); });
 	app.head('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
 	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
