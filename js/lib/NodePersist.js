@@ -76,7 +76,7 @@ NodePersist.prototype.auto = function (val, objNames) {
 
 	if (val !== undefined) {
 		if (val) {
-			if (objNamesArr) {
+			if (objNames) {
 				this._autoNames = objNames;
 			}
 
