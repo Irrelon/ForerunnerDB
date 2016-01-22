@@ -11548,11 +11548,11 @@ NodeApiClient.prototype.get = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -11566,11 +11566,11 @@ NodeApiClient.prototype.put = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -11584,11 +11584,11 @@ NodeApiClient.prototype.post = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -11602,11 +11602,11 @@ NodeApiClient.prototype.patch = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -11637,11 +11637,11 @@ NodeApiClient.prototype.delete = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -14354,7 +14354,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.601',
+	version: '1.3.602',
 	modules: {},
 	plugins: {},
 
