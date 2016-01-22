@@ -91,7 +91,7 @@ NodePersist.prototype.auto = function (val, objNames) {
 					arr = self._autoNames[objType];
 
 					// Check if this object is in the list of objects to auto-persist
-					if (name in arr) {
+					if (arr && name in arr) {
 						self._autoLoad.call(self, obj, objType, name);
 					}
 				}
@@ -107,7 +107,7 @@ NodePersist.prototype.auto = function (val, objNames) {
 					arr = self._autoNames[objType];
 
 					// Check if this object is in the list of objects to auto-persist
-					if (name in arr) {
+					if (arr && name in arr) {
 						self._autoSave.call(self, obj, objType, name);
 					}
 				}
