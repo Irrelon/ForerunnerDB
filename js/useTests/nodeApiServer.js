@@ -24,6 +24,8 @@ db.view('booksView')
 	})
 	.from('books');
 
+db.collection('session');
+
 // Create a remote procedure called "login" that checks for a user
 // and then if found, creates a new session and returns the session
 // details to the client.
@@ -107,7 +109,7 @@ fdb.api.access('testApi', 'view', '*', '*', 'allow');
 fdb.api.access('testApi', 'procedure', 'login', 'GET', 'allow');
 
 // Ask the API server to start listening
-fdb.api.start('0.0.0.0', '9010', {cors: true});
+fdb.api.start('0.0.0.0', '9011', {cors: true});
 
 // Stop API server with stop() call
 //fdb.api.stop();
