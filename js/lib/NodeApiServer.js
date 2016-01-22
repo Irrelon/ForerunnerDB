@@ -97,8 +97,13 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 						Shared.mixin(req.json, jsonData);
 					}
 				} catch (e) {
-					res.status(500).send('Error parsing query string ' + query + ' ' + e);
-					return;
+					// Check for normal query params
+					if (req.query && Object.keys(req.query).length > 0) {
+						return next();
+					} else {
+						res.status(500).send('Error parsing query string ' + query + ' ' + e);
+						return;
+					}
 				}
 			}
 
