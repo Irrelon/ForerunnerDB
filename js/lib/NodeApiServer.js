@@ -287,24 +287,6 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 
 				switch (method) {
 					case 'HEAD':
-						// Get one
-						if (obj.isProcessingQueue && obj.isProcessingQueue()) {
-							if (db.debug()) {
-								console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
-							}
-
-							obj.once('ready', function () {
-								if (db.debug()) {
-									console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
-								}
-
-								self._handleResponse(req, res, pathSections, obj.findById(objId, options));
-							});
-						} else {
-							self._handleResponse(req, res, pathSections, obj.findById(objId, options));
-						}
-						break;
-
 					case 'GET':
 						if (obj.isProcessingQueue && obj.isProcessingQueue()) {
 							if (db.debug()) {
