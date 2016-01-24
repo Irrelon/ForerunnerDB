@@ -14844,7 +14844,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.606',
+	version: '1.3.607',
 	modules: {},
 	plugins: {},
 
@@ -15932,7 +15932,7 @@ View.prototype.refresh = function () {
 
 	if (this._from) {
 		pubData = this.publicData();
-		
+
 		self.__joinChange = self.__joinChange || function () {
 			self._joinChange();
 		};

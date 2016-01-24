@@ -898,7 +898,7 @@ View.prototype.refresh = function () {
 
 	if (this._from) {
 		pubData = this.publicData();
-		
+
 		self.__joinChange = self.__joinChange || function () {
 			self._joinChange();
 		};
