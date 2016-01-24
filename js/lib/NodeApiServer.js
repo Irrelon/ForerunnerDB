@@ -277,8 +277,12 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 
 				// Check the object type for special considerations
 				if (objType === 'procedure') {
-					// Handle procedure
-					return obj.exec(req, res);
+					if (obj && obj.exec && obj.exec === 'function') {
+						// Handle procedure
+						return obj.exec(req, res);
+					} else {
+						return res.status(404).send('Procedure "' + objName + '" not found!');
+					}
 				}
 
 				// Get url path
