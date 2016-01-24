@@ -277,7 +277,7 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 
 				// Check the object type for special considerations
 				if (objType === 'procedure') {
-					if (obj && obj.exec && obj.exec === 'function') {
+					if (obj && obj.exec && typeof obj.exec === 'function') {
 						// Handle procedure
 						return obj.exec(req, res);
 					} else {
