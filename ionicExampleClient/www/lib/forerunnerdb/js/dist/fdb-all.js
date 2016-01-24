@@ -1549,6 +1549,7 @@ Collection.prototype.truncate = function () {
 	this._crcLookup = new KeyValueStore('crcLookup');
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'truncate'});
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -1802,6 +1803,7 @@ Collection.prototype.update = function (query, update, options) {
 
 			this._onUpdate(updated);
 			this._onChange();
+			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -2477,6 +2479,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 
 				this._onChange();
+				this.emit('immediateChange', {type: 'remove', data: returnArr});
 				this.deferEmit('change', {type: 'remove', data: returnArr});
 			}
 		}
@@ -2667,6 +2670,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	if (callback) { callback(resultObj); }
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'insert', data: inserted});
 	this.deferEmit('change', {type: 'insert', data: inserted});
 
 	return resultObj;
@@ -11910,12 +11914,81 @@ Collection.prototype.unSync = function () {
 
 Collection.prototype.http = new Overload({
 	'string, function': function (method, callback) {
-		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, callback);
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, {}, callback);
 	},
 
-	'$main': function (method, path, queryObj, queryOptions, callback) {
+	'$main': function (method, path, queryObj, queryOptions, options, callback) {
 		if (this._db && this._db._core) {
-			return this._db._core.api.http('GET', path, {"$query": queryObj, "$options": queryOptions}, {}, callback);
+			return this._db._core.api.http('GET', this._db._core.api.server() + path, {"$query": queryObj, "$options": queryOptions}, options, callback);
+		} else {
+			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
+		}
+	}
+});
+
+Collection.prototype.autoHttp = new Overload({
+	'string, function': function (method, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, {}, callback);
+	},
+
+	'string, string, function': function (method, collectionName, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + collectionName, undefined, undefined, {}, callback);
+	},
+
+	'string, string, string, function': function (method, objType, objName, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, undefined, undefined, {}, callback);
+	},
+
+	'$main': function (method, path, queryObj, queryOptions, options, callback) {
+		var self = this;
+
+		if (this._db && this._db._core) {
+			return this._db._core.api.http('GET', this._db._core.api.server() + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
+				var i;
+
+				if (!err && data) {
+					// Check the type of method we used and operate on the collection accordingly
+					switch (method) {
+						// Find insert
+						case 'GET':
+							self.insert(data);
+							break;
+
+						// Insert
+						case 'POST':
+							if (data.inserted && data.inserted.length) {
+								self.insert(data.inserted);
+							}
+							break;
+
+						// Update overwrite
+						case 'PUT':
+						case 'PATCH':
+							if (data instanceof Array) {
+								// Update each document
+								for (i = 0; i < data.length; i++) {
+									self.updateById(data[i]._id, {$overwrite: data[i]});
+								}
+							} else {
+								// Update single document
+								self.updateById(data._id, {$overwrite: data});
+							}
+							break;
+
+						// Remove
+						case 'DELETE':
+							self.remove(data);
+							break;
+
+						default:
+							// Nothing to do with this method
+							break;
+					}
+				}
+
+				// Send the data back to the callback
+				callback(err, data);
+			});
 		} else {
 			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
 		}
@@ -14343,7 +14416,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.603',
+	version: '1.3.606',
 	modules: {},
 	plugins: {},
 
@@ -14692,6 +14765,11 @@ View.prototype.init = function (name, query, options) {
 	};
 
 	this._privateData = new Collection(this.name() + '_internalPrivate');
+
+	// Hook our own join change event and refresh after change
+	this.on('joinChange', function () {
+		self.refresh();
+	});
 };
 
 Shared.addModule('View', View);
@@ -15121,7 +15199,8 @@ View.prototype._chainHandler = function (chainPacket) {
  * @see Mixin.Events::on()
  */
 View.prototype.on = function () {
-	return this._privateData.on.apply(this._privateData, arguments);
+	var val = this._privateData.on.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -15129,7 +15208,8 @@ View.prototype.on = function () {
  * @see Mixin.Events::off()
  */
 View.prototype.off = function () {
-	return this._privateData.off.apply(this._privateData, arguments);
+	var val = this._privateData.off.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -15137,7 +15217,17 @@ View.prototype.off = function () {
  * @see Mixin.Events::emit()
  */
 View.prototype.emit = function () {
-	return this._privateData.emit.apply(this._privateData, arguments);
+	var val = this._privateData.emit.apply(this._privateData, arguments);
+	return val;
+};
+
+/**
+ * Emits an event.
+ * @see Mixin.Events::deferEmit()
+ */
+View.prototype.deferEmit = function () {
+	var val = this._privateData.deferEmit.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -15392,6 +15482,10 @@ View.prototype.query = new Overload({
 	}
 });
 
+View.prototype._joinChange = function (objName, objType) {
+	this.emit('joinChange');
+};
+
 /**
  * Gets / sets the orderBy clause in the query options for the view.
  * @param {Object=} val The order object.
@@ -15522,9 +15616,18 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  * Refreshes the view data such as ordering etc.
  */
 View.prototype.refresh = function () {
+	var self = this,
+		pubData,
+		refreshResults,
+		joinArr,
+		i, k;
+
 	if (this._from) {
-		var pubData = this.publicData(),
-			refreshResults;
+		pubData = this.publicData();
+		
+		self.__joinChange = self.__joinChange || function () {
+			self._joinChange();
+		};
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
@@ -15547,6 +15650,37 @@ View.prototype.refresh = function () {
 			// TODO: Might be worth setting up a test to check transforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}*/
+	}
+
+	if (this._querySettings && this._querySettings.options && this._querySettings.options.$join && this._querySettings.options.$join.length) {
+		// Check for existing join collections
+		if (this._joinCollections && this._joinCollections.length) {
+			// Loop the join collections and remove change listeners
+			// Loop the collections and hook change events
+			for (i = 0; i < this._joinCollections.length; i++) {
+				this._db.collection(this._joinCollections[i]).off('immediateChange', self.__joinChange);
+			}
+		}
+
+		// Now start hooking any new / existing joins
+		joinArr = this._querySettings.options.$join;
+		this._joinCollections = [];
+
+		// Loop the joined collections and hook change events
+		for (i = 0; i < joinArr.length; i++) {
+			for (k in joinArr[i]) {
+				if (joinArr[i].hasOwnProperty(k)) {
+					this._joinCollections.push(k);
+				}
+			}
+		}
+
+		if (this._joinCollections.length) {
+			// Loop the collections and hook change events
+			for (i = 0; i < this._joinCollections.length; i++) {
+				this._db.collection(this._joinCollections[i]).on('immediateChange', self.__joinChange);
+			}
+		}
 	}
 
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {

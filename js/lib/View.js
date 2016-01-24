@@ -890,13 +890,15 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  * Refreshes the view data such as ordering etc.
  */
 View.prototype.refresh = function () {
-	if (this._from) {
-		var self = this,
-			pubData = this.publicData(),
-			refreshResults,
-			joinArr,
-			i, k;
+	var self = this,
+		pubData,
+		refreshResults,
+		joinArr,
+		i, k;
 
+	if (this._from) {
+		pubData = this.publicData();
+		
 		self.__joinChange = self.__joinChange || function () {
 			self._joinChange();
 		};
@@ -924,7 +926,7 @@ View.prototype.refresh = function () {
 		}*/
 	}
 
-	if (this._querySettings.options.$join && this._querySettings.options.$join.length) {
+	if (this._querySettings && this._querySettings.options && this._querySettings.options.$join && this._querySettings.options.$join.length) {
 		// Check for existing join collections
 		if (this._joinCollections && this._joinCollections.length) {
 			// Loop the join collections and remove change listeners
