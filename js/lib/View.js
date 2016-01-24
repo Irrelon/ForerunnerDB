@@ -39,6 +39,11 @@ View.prototype.init = function (name, query, options) {
 	};
 
 	this._privateData = new Collection(this.name() + '_internalPrivate');
+
+	// Hook our own join change event and refresh after change
+	this.on('joinChange', function () {
+		self.refresh();
+	});
 };
 
 Shared.addModule('View', View);
@@ -468,7 +473,8 @@ View.prototype._chainHandler = function (chainPacket) {
  * @see Mixin.Events::on()
  */
 View.prototype.on = function () {
-	return this._privateData.on.apply(this._privateData, arguments);
+	var val = this._privateData.on.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -476,7 +482,8 @@ View.prototype.on = function () {
  * @see Mixin.Events::off()
  */
 View.prototype.off = function () {
-	return this._privateData.off.apply(this._privateData, arguments);
+	var val = this._privateData.off.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -484,7 +491,17 @@ View.prototype.off = function () {
  * @see Mixin.Events::emit()
  */
 View.prototype.emit = function () {
-	return this._privateData.emit.apply(this._privateData, arguments);
+	var val = this._privateData.emit.apply(this._privateData, arguments);
+	return val;
+};
+
+/**
+ * Emits an event.
+ * @see Mixin.Events::deferEmit()
+ */
+View.prototype.deferEmit = function () {
+	var val = this._privateData.deferEmit.apply(this._privateData, arguments);
+	return val;
 };
 
 /**
@@ -739,6 +756,10 @@ View.prototype.query = new Overload({
 	}
 });
 
+View.prototype._joinChange = function (objName, objType) {
+	this.emit('joinChange');
+};
+
 /**
  * Gets / sets the orderBy clause in the query options for the view.
  * @param {Object=} val The order object.
@@ -870,8 +891,11 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	if (this._from) {
-		var pubData = this.publicData(),
-			refreshResults;
+		var self = this,
+			pubData = this.publicData(),
+			refreshResults,
+			joinArr,
+			i, k;
 
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
@@ -894,6 +918,37 @@ View.prototype.refresh = function () {
 			// TODO: Might be worth setting up a test to check transforms and linking then remove this if working?
 			//jQuery.observable(pubData._data).refresh(transformedData);
 		}*/
+	}
+
+	if (this._querySettings.options.$join && this._querySettings.options.$join.length) {
+		// Check for existing join collections
+		if (this._joinCollections && this._joinCollections.length) {
+			// Loop the join collections and remove change listeners
+			// Loop the collections and hook change events
+			for (i = 0; i < this._joinCollections.length; i++) {
+				this._db.collection(this._joinCollections[i]).off('immediateChange', function () { self._joinChange(); });
+			}
+		}
+
+		// Now start hooking any new / existing joins
+		joinArr = this._querySettings.options.$join;
+		this._joinCollections = [];
+
+		// Loop the joined collections and hook change events
+		for (i = 0; i < joinArr.length; i++) {
+			for (k in joinArr[i]) {
+				if (joinArr[i].hasOwnProperty(k)) {
+					this._joinCollections.push(k);
+				}
+			}
+		}
+
+		if (this._joinCollections.length) {
+			// Loop the collections and hook change events
+			for (i = 0; i < this._joinCollections.length; i++) {
+				this._db.collection(this._joinCollections[i]).on('immediateChange', function () { self._joinChange(); });
+			}
+		}
 	}
 
 	if (this._querySettings.options && this._querySettings.options.$orderBy) {
