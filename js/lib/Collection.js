@@ -467,6 +467,7 @@ Collection.prototype.truncate = function () {
 	this._crcLookup = new KeyValueStore('crcLookup');
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'truncate'});
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -720,6 +721,7 @@ Collection.prototype.update = function (query, update, options) {
 
 			this._onUpdate(updated);
 			this._onChange();
+			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -1395,6 +1397,7 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 
 				this._onChange();
+				this.emit('immediateChange', {type: 'remove', data: returnArr});
 				this.deferEmit('change', {type: 'remove', data: returnArr});
 			}
 		}
@@ -1585,6 +1588,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	if (callback) { callback(resultObj); }
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'insert', data: inserted});
 	this.deferEmit('change', {type: 'insert', data: inserted});
 
 	return resultObj;
