@@ -118,11 +118,11 @@ NodeApiClient.prototype.head = new Overload({
 		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (path, data, callback) {
+	'string, *, function': function (path, data, callback) {
 		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'string, object, object, function': function (path, data, options, callback) {
+	'string, *, object, function': function (path, data, options, callback) {
 		return this.$main.call(this, path, data, options, callback);
 	},
 
@@ -238,50 +238,25 @@ NodeApiClient.prototype.delete = new Overload({
 	}
 });
 
-NodeApiClient.prototype.session = new Overload({
-	/**
-	 * Gets the global object that is sent up with client requests to
-	 * the API or REST server.
-	 * @name session
-	 */
-	'': function () {
-		return this._sessionData;
-	},
-
-	/**
-	 * Sets a global object that will be sent up with client
-	 * requests to the API or REST server.
-	 * @name session
-	 * @param {Object=} obj The object to send up with all requests. If
-	 * a request has its own data to send up, this session data will be
-	 * mixed in to the request data. This means you cannot have clashing
-	 * keys in your global object and local call data as they will
-	 * overwrite each other.
-	 */
-	'object': function (obj) {
-		this.$main.call(this, '', obj);
-	},
-
-	/**
-	 * Sets a global object that will be sent up with client
-	 * requests to the API or REST server.
-	 * @name session
-	 * @param {String} key The key to send the session object up inside.
-	 * @param {*} obj The object / value to send up with all requests. If
-	 * a request has its own data to send up, this session data will be
-	 * mixed in to the request data under the specified key.
-	 */
-	'string, *': function (key, obj) {
-		this.$main.call(this, key, obj);
-	},
-
-	'$main': function (key, obj) {
+/**
+ * Gets/ sets a global object that will be sent up with client
+ * requests to the API or REST server.
+ * @param {String} key The key to send the session object up inside.
+ * @param {*} obj The object / value to send up with all requests. If
+ * a request has its own data to send up, this session data will be
+ * mixed in to the request data under the specified key.
+ */
+NodeApiClient.prototype.session = function (key, obj) {
+	if (key !== undefined && obj !== undefined) {
 		this._sessionData = {
 			key: key,
 			obj: obj
 		};
+		return this;
 	}
-});
+
+	return this._sessionData;
+};
 
 /**
  * Initiates a client connection to the API server.
@@ -520,6 +495,22 @@ Collection.prototype.unSync = function () {
 
 	return false;
 };
+
+Collection.prototype.http = new Overload({
+	'method, function': function (method, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, callback);
+	},
+
+	'$main': function (method, path, query, options, callback) {
+		var self = this;
+
+		if (this._db && this._db._core) {
+			return this._db._core.api.http('GET', path, data, options, callback);
+		} else {
+			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
+		}
+	}
+});
 
 // Override the Core init to instantiate the plugin
 Core.prototype.init = function () {
