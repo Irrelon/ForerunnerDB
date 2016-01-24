@@ -88,6 +88,44 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
+	QUnit.test("View $join :: Update joined collection and ensure view is properly updated", function () {
+		base.dbUp();
+		base.dataUp();
+
+		var userView = db.view('userView')
+			.from('user')
+			.query({}, {
+				"$join": [{
+					"organisation": {
+						"_id": "orgId",
+						"$as": "org",
+						"$require": true,
+						"$multi": false
+					}
+				}]
+			});
+
+		var result = userView.find();
+
+		strictEqual(result[0].orgId, result[0].org._id, "Complete");
+		strictEqual(result[1].orgId, result[1].org._id, "Complete");
+		strictEqual(result[2].orgId, result[2].org._id, "Complete");
+
+		// Now update organisation collection and check that view has new updated data
+		db.collection('organisation').update({}, {
+			newDataInOrg: true
+		});
+
+		// Check view data (should have newDataInOrg in the org data)
+		result = userView.find();
+
+		strictEqual(result[0].org.newDataInOrg, true, "Complete");
+		strictEqual(result[1].org.newDataInOrg, true, "Complete");
+		strictEqual(result[2].org.newDataInOrg, true, "Complete");
+
+		base.dbDown();
+	});
+
 	/*QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
 		"use strict";
 		base.dbUp();
