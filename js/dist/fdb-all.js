@@ -9937,6 +9937,43 @@ Common = {
 	 */
 	isDropped: function () {
 		return this._state === 'dropped';
+	},
+
+	/**
+	 * Registers a timed callback that will overwrite itself if
+	 * the same id is used within the timeout period. Useful
+	 * for de-bouncing fast-calls.
+	 * @param {String} id An ID for the call (use the same one
+	 * to debounce the same calls).
+	 * @param {Function} callback The callback method to call on
+	 * timeout.
+	 * @param {Number} timeout The timeout in milliseconds before
+	 * the callback is called.
+	 */
+	debounce: function (id, callback, timeout) {
+		var self = this,
+			newData;
+
+		self._debounce = self._debounce || {};
+
+		if (self._debounce[id]) {
+			// Clear timeout for this item
+			clearTimeout(self._debounce[id].timeout);
+		}
+
+		newData = {
+			callback: callback,
+			timeout: setTimeout(function () {
+				// Delete existing reference
+				delete self._debounce[id];
+
+				// Call the callback
+				callback();
+			}, timeout)
+		};
+
+		// Save current data
+		self._debounce[id] = newData;
 	}
 };
 
@@ -14416,7 +14453,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.607',
+	version: '1.3.608',
 	modules: {},
 	plugins: {},
 
