@@ -269,8 +269,8 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
 				// Get the query and option params
-				query = req.json && req.json.query ? req.json.query : undefined;
-				options = req.json && req.json.options ? req.json.options : undefined;
+				query = req.json && req.json.$query ? req.json.$query : undefined;
+				options = req.json && req.json.$options ? req.json.$options : undefined;
 
 				db = self._core.db(dbName);
 				obj = db[objType](objName);

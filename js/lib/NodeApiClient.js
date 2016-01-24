@@ -294,7 +294,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	if (query) {
 		queryParams = queryParams || {};
-		queryParams.query = query;
+		queryParams.$query = query;
 	}
 
 	if (options) {
@@ -303,7 +303,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 			options.$initialData = true;
 		}
 
-		queryParams.options = options;
+		queryParams.$options = options;
 	}
 
 	if (queryParams) {
@@ -497,15 +497,13 @@ Collection.prototype.unSync = function () {
 };
 
 Collection.prototype.http = new Overload({
-	'method, function': function (method, callback) {
+	'string, function': function (method, callback) {
 		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, callback);
 	},
 
-	'$main': function (method, path, query, options, callback) {
-		var self = this;
-
+	'$main': function (method, path, queryObj, queryOptions, callback) {
 		if (this._db && this._db._core) {
-			return this._db._core.api.http('GET', path, data, options, callback);
+			return this._db._core.api.http('GET', path, {"$query": queryObj, "$options": queryOptions}, {}, callback);
 		} else {
 			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
 		}
