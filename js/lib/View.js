@@ -897,6 +897,10 @@ View.prototype.refresh = function () {
 			joinArr,
 			i, k;
 
+		self.__joinChange = self.__joinChange || function () {
+			self._joinChange();
+		};
+
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
 		//pubData.remove();
@@ -926,7 +930,7 @@ View.prototype.refresh = function () {
 			// Loop the join collections and remove change listeners
 			// Loop the collections and hook change events
 			for (i = 0; i < this._joinCollections.length; i++) {
-				this._db.collection(this._joinCollections[i]).off('immediateChange', function () { self._joinChange(); });
+				this._db.collection(this._joinCollections[i]).off('immediateChange', self.__joinChange);
 			}
 		}
 
@@ -946,7 +950,7 @@ View.prototype.refresh = function () {
 		if (this._joinCollections.length) {
 			// Loop the collections and hook change events
 			for (i = 0; i < this._joinCollections.length; i++) {
-				this._db.collection(this._joinCollections[i]).on('immediateChange', function () { self._joinChange(); });
+				this._db.collection(this._joinCollections[i]).on('immediateChange', self.__joinChange);
 			}
 		}
 	}
