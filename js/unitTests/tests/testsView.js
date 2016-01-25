@@ -4,7 +4,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		"use strict";
 		base.dbUp();
 
-		var coll = db.collection('test'),
+		var coll = db.collection('test').truncate(),
 			view = db.view('test'),
 			from;
 
@@ -14,12 +14,15 @@ ForerunnerDB.moduleLoaded('View', function () {
 			moo: true
 		});
 
+		from = view.from();
+
+		strictEqual(from, coll, 'From is correct before drop');
+
 		coll.drop();
 
 		from = view.from();
 
-		// TODO this test is currently useless as it is not written yet
-		strictEqual(from, from, 'OK');
+		strictEqual(from, undefined, 'From is now undefined after drop');
 
 		base.dbDown();
 	});
@@ -28,7 +31,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		"use strict";
 		base.dbUp();
 
-		var coll = db.collection('test'),
+		var coll = db.collection('test').truncate(),
 			view = db.view('test'),
 			from;
 
@@ -84,6 +87,97 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		strictEqual(result[0]._id, 2, 'OK');
 		strictEqual(result[1]._id, 1, 'OK');
+
+		base.dbDown();
+	});
+
+	QUnit.test('View.find() :: Insert into an underlying collection and check view has record', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			result;
+
+		view.from(coll);
+
+		result = view.find({});
+
+		strictEqual(result.length, 0, 'Result count before insert correct');
+
+		coll.insert({
+			moo: true
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after insert correct');
+
+		base.dbDown();
+	});
+
+	QUnit.test('View.find() :: Update an underlying collection and check view is updated', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			result;
+
+		view.from(coll);
+
+		result = view.find({});
+
+		strictEqual(result.length, 0, 'Result count before insert correct');
+
+		coll.insert({
+			moo: true,
+			moduleData: {
+				listenList: [{
+					_id: "1345",
+					name: 'Old'
+				}]
+			}
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after insert correct');
+		strictEqual(result[0].moo, true, 'Result data before update correct');
+		strictEqual(result[0].moduleData.listenList[0].name, "Old", 'Result nested data before update correct');
+
+		coll.update({
+			_id: result[0]._id
+		}, {
+			moo: false
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after update correct');
+		strictEqual(result[0].moo, false, 'Result data after update correct');
+
+		// Try an advanced update (into a sub-document)
+		coll.update({
+			_id: result[0]._id,
+			moduleData: {
+				listenList: {
+					_id: "1345"
+				}
+			}
+		}, {
+			moduleData: {
+				'listenList.$': {
+					name: "New"
+				}
+			}
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after update correct');
+		strictEqual(result[0].moo, false, 'Result data after update correct');
+		strictEqual(result[0].moduleData.listenList[0].name, "New", 'Result nested data after update correct');
 
 		base.dbDown();
 	});
