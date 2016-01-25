@@ -19,6 +19,9 @@ db.persist.dataDir('./data');
 db.persist.auto(true);
 
 db.view('booksView')
+	.from('books');
+
+db.view('booksEnabledView')
 	.queryData({
 		enabled: true
 	})
