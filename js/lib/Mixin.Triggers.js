@@ -21,9 +21,9 @@ var Triggers = {
 	 * @param {String} id The id of the trigger. This must be unique to the type and
 	 * phase of the trigger. Only one trigger may be added with this id per type and
 	 * phase.
-	 * @param {Number} type The type of operation to apply the trigger to. See
+	 * @param {Constants} type The type of operation to apply the trigger to. See
 	 * Mixin.Constants for constants to use.
-	 * @param {Number} phase The phase of an operation to fire the trigger on. See
+	 * @param {Constants} phase The phase of an operation to fire the trigger on. See
 	 * Mixin.Constants for constants to use.
 	 * @param {addTriggerCallback} method The method to call when the trigger is fired.
 	 * @returns {boolean} True if the trigger was added successfully, false if not.
