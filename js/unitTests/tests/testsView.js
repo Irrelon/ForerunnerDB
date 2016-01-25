@@ -116,6 +116,77 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
+	QUnit.test('View.find() :: Insert into an underlying collection with data changed in a before trigger and check view has same record', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			result;
+
+		view.from(coll);
+
+		result = view.find({});
+
+		strictEqual(result.length, 0, 'Result count before insert correct');
+
+		coll.addTrigger('beforeInsert', db.TYPE_INSERT, db.PHASE_BEFORE, function (operation, oldDoc, newDoc) {
+			// Modify the object
+			newDoc.foo = true;
+		});
+
+		coll.insert({
+			moo: true
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after insert correct');
+		strictEqual(result[0].moo, true, 'Result data after insert correct');
+		strictEqual(result[0].foo, true, 'Result trigger data after insert correct');
+
+		base.dbDown();
+	});
+
+	// TODO: This will currently fail, fix this bug!
+	/*QUnit.test('View.find() :: Update an underlying collection with data changed in a before trigger and check view has same record', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			result;
+
+		view.from(coll);
+
+		result = view.find({});
+
+		strictEqual(result.length, 0, 'Result count before insert correct');
+
+		coll.insert({
+			moo: true
+		});
+
+		coll.addTrigger('beforeUpdate', db.TYPE_UPDATE, db.PHASE_BEFORE, function (operation, oldDoc, newDoc) {
+			// Modify the object
+			newDoc.foo = true;
+		});
+
+		coll.update({
+			moo: true
+		}, {
+			moo: false
+		});
+
+		result = view.find({});
+
+		strictEqual(result.length, 1, 'Result count after update correct');
+		strictEqual(result[0].moo, false, 'Result data after update correct');
+		strictEqual(result[0].foo, true, 'Result trigger data after update correct');
+
+		base.dbDown();
+	});*/
+
 	QUnit.test('View.find() :: Update an underlying collection and check view is updated', function () {
 		"use strict";
 		base.dbUp();
