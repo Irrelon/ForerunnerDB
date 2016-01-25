@@ -8,6 +8,15 @@ var Overload = require('./Overload');
  */
 var Triggers = {
 	/**
+	 * When called in a before phase the newDoc object can be directly altered
+	 * to modify the data in it before the operation is carried out.
+	 * @callback addTriggerCallback
+	 * @param {Object} operation The details about the operation.
+	 * @param {Object} oldDoc The document before the operation.
+	 * @param {Object} newDoc The document after the operation.
+	 */
+
+	/**
 	 * Add a trigger by id.
 	 * @param {String} id The id of the trigger. This must be unique to the type and
 	 * phase of the trigger. Only one trigger may be added with this id per type and
@@ -16,7 +25,7 @@ var Triggers = {
 	 * Mixin.Constants for constants to use.
 	 * @param {Number} phase The phase of an operation to fire the trigger on. See
 	 * Mixin.Constants for constants to use.
-	 * @param {Function} method The method to call when the trigger is fired.
+	 * @param {addTriggerCallback} method The method to call when the trigger is fired.
 	 * @returns {boolean} True if the trigger was added successfully, false if not.
 	 */
 	addTrigger: function (id, type, phase, method) {
