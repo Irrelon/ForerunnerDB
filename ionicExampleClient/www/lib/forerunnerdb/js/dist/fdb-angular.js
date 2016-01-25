@@ -69,7 +69,7 @@ Angular.extendCollection = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							self.off('change', link.callback);
+							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
@@ -77,7 +77,7 @@ Angular.extendCollection = function (Module) {
 			});
 
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', link.callback);
+			self.on('immediateChange', link.callback);
 
 			// Now update the view
 			if (link.callback) { link.callback(); }
@@ -147,15 +147,15 @@ Angular.extendView = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							self.publicData().off('change', link.callback);
+							self.publicData().off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
 				}
 			});
 
-			// Hook the ForerunnerDB change event to inform angular of a change
-			self.publicData().on('change', function () {
+			// Hook the ForerunnerDB immediateChange event to inform angular of a change
+			self.publicData().on('immediateChange', function () {
 				link.callback();
 			} );
 
@@ -206,6 +206,7 @@ Angular.extendDocument = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
+							//TODO: Implement immediateChange in Document class and hook that instead of change event
 							self.off('change', link.callback);
 							self._ngLinks.splice(i, 1);
 						}

@@ -14881,7 +14881,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.609',
+	version: '1.3.610',
 	modules: {},
 	plugins: {},
 
@@ -15544,8 +15544,7 @@ View.prototype._chainHandler = function (chainPacket) {
  * @see Mixin.Events::on()
  */
 View.prototype.on = function () {
-	var val = this._privateData.on.apply(this._privateData, arguments);
-	return val;
+	return this._privateData.on.apply(this._privateData, arguments);
 };
 
 /**
@@ -15553,8 +15552,7 @@ View.prototype.on = function () {
  * @see Mixin.Events::off()
  */
 View.prototype.off = function () {
-	var val = this._privateData.off.apply(this._privateData, arguments);
-	return val;
+	return this._privateData.off.apply(this._privateData, arguments);
 };
 
 /**
@@ -15562,8 +15560,7 @@ View.prototype.off = function () {
  * @see Mixin.Events::emit()
  */
 View.prototype.emit = function () {
-	var val = this._privateData.emit.apply(this._privateData, arguments);
-	return val;
+	return this._privateData.emit.apply(this._privateData, arguments);
 };
 
 /**
@@ -15571,8 +15568,7 @@ View.prototype.emit = function () {
  * @see Mixin.Events::deferEmit()
  */
 View.prototype.deferEmit = function () {
-	var val = this._privateData.deferEmit.apply(this._privateData, arguments);
-	return val;
+	return this._privateData.deferEmit.apply(this._privateData, arguments);
 };
 
 /**
