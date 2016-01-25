@@ -9,6 +9,12 @@
  *
  * This module requires that the AutoBind module is loaded before it
  * will work.
+ *
+ * Infinilists work from views and those views cannot have an $orderBy
+ * clause in them because that would slow down rendering. Instead if you
+ * wish to have your data ordered you have to create a temporary collection
+ * from which your view feeds from and pre-order the data before inserting
+ * it into the temporary collection.
  * @class Infinilist
  * @requires AutoBind
  */
