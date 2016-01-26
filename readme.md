@@ -4042,28 +4042,9 @@ db.persist.dataDir('./data');
 db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on all collections
-// db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
-fdb.api.access('testApi', 'collection', '*', '*', function (dbName, objName, modelName, methodName, req, callback) {
-	// You can customise this method to only callback false when you are happy
-	// that the client connecting is allowed to connect. Calling back with true
-	// or an error string as the first argument will cause the client connection
-	// to be rejected.
-
-	// The req.query object will contain the query parameters you include
-	// when making an API call. This allows you to check a client session
-	// etc to determine if they are allowed to access this collection based
-	// on the method (req.method - GET, POST, PUT, PATCH, DELETE, SYNC)
-	console.log(req.query);
-	
-	// Note the special case of req.method === 'SYNC' is where the client has
-	// requested to synchronise data with the server. This is effectively
-	// the same as a GET request except that changes to the server-side data
-	// are pushed automatically to the client. If you don't want this to be
-	// allowed, deny calls with the req.method of "SYNC".
-
-	// In this case here we are simply allowing all clients to connect
-	callback(false, dbName, objName, modelName, methodName, req);
-});
+// Note that you can also pass a callback method instead of 'allow' to
+// handle custom access control with logic
+fdb.api.access('testApi', 'collection', '*', '*', 'allow');
 
 // Ask the API server to start listening on all IP addresses assigned to
 // this machine on port 9010 and to allow cross-origin resource sharing (cors)
