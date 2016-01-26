@@ -28,6 +28,7 @@ NodeApiClient.prototype.init = function (core) {
 
 Shared.addModule('NodeApiClient', NodeApiClient);
 Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiClient.prototype, 'Mixin.Events');
 Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
