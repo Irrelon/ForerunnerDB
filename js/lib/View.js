@@ -1203,39 +1203,39 @@ Db.prototype.init = function () {
 
 /**
  * Gets a view by it's name.
- * @param {String} viewName The name of the view to retrieve.
+ * @param {String} name The name of the view to retrieve.
  * @returns {*}
  */
-Db.prototype.view = function (viewName) {
+Db.prototype.view = function (name) {
 	var self = this;
 
 	// Handle being passed an instance
-	if (viewName instanceof View) {
-		return viewName;
+	if (name instanceof View) {
+		return name;
 	}
 
-	if (this._view[viewName]) {
-		return this._view[viewName];
-	} else {
-		if (this.debug() || (this._db && this._db.debug())) {
-			console.log(this.logIdentifier() + ' Creating view ' + viewName);
-		}
+	if (this._view[name]) {
+		return this._view[name];
 	}
 
-	this._view[viewName] = this._view[viewName] || new View(viewName).db(this);
+	if (this.debug() || (this._db && this._db.debug())) {
+		console.log(this.logIdentifier() + ' Creating view ' + name);
+	}
 
-	self.emit('create', [self._view[viewName], 'view', viewName]);
+	this._view[name] = new View(name).db(this);
 
-	return this._view[viewName];
+	self.emit('create', self._view[name], 'view', name);
+
+	return this._view[name];
 };
 
 /**
  * Determine if a view with the passed name already exists.
- * @param {String} viewName The name of the view to check for.
+ * @param {String} name The name of the view to check for.
  * @returns {boolean}
  */
-Db.prototype.viewExists = function (viewName) {
-	return Boolean(this._view[viewName]);
+Db.prototype.viewExists = function (name) {
+	return Boolean(this._view[name]);
 };
 
 /**

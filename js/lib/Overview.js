@@ -245,16 +245,25 @@ Overview.prototype.drop = function (callback) {
 	return true;
 };
 
-Db.prototype.overview = function (overviewName) {
-	if (overviewName) {
+Db.prototype.overview = function (name) {
+	var self = this;
+
+	if (name) {
 		// Handle being passed an instance
-		if (overviewName instanceof Overview) {
-			return overviewName;
+		if (name instanceof Overview) {
+			return name;
+		}
+
+		if (this._overview && this._overview[name]) {
+			return this._overview[name];
 		}
 
 		this._overview = this._overview || {};
-		this._overview[overviewName] = this._overview[overviewName] || new Overview(overviewName).db(this);
-		return this._overview[overviewName];
+		this._overview[name] = new Overview(name).db(this);
+
+		self.emit('create', self._overview[name], 'overview', name);
+
+		return this._overview[name];
 	} else {
 		// Return an object of collection data
 		return this._overview || {};

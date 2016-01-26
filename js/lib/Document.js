@@ -397,26 +397,36 @@ FdbDocument.prototype.drop = function (callback) {
 };
 
 /**
- * Creates a new document instance.
+ * Creates a new document instance or returns an existing
+ * instance if one already exists with the passed name.
  * @func document
- * @memberof Db
- * @param {String} documentName The name of the document to create.
+ * @memberOf Db
+ * @param {String} name The name of the instance.
  * @returns {*}
  */
-Db.prototype.document = function (documentName) {
-	if (documentName) {
+Db.prototype.document = function (name) {
+	var self = this;
+
+	if (name) {
 		// Handle being passed an instance
-		if (documentName instanceof FdbDocument) {
-			if (documentName.state() !== 'droppped') {
-				return documentName;
+		if (name instanceof FdbDocument) {
+			if (name.state() !== 'droppped') {
+				return name;
 			} else {
-				documentName = documentName.name();
+				name = name.name();
 			}
 		}
 
+		if (this._document && this._document[name]) {
+			return this._document[name];
+		}
+
 		this._document = this._document || {};
-		this._document[documentName] = this._document[documentName] || new FdbDocument(documentName).db(this);
-		return this._document[documentName];
+		this._document[name] = new FdbDocument(name).db(this);
+
+		self.emit('create', self._document[name], 'document', name);
+
+		return this._document[name];
 	} else {
 		// Return an object of document data
 		return this._document;

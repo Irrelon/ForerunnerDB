@@ -303,15 +303,32 @@ Db.prototype.init = function () {
 	DbInit.apply(this, arguments);
 };
 
-Db.prototype.collectionGroup = function (collectionGroupName) {
-	if (collectionGroupName) {
+/**
+ * Creates a new collectionGroup instance or returns an existing
+ * instance if one already exists with the passed name.
+ * @func collectionGroup
+ * @memberOf Db
+ * @param {String} name The name of the instance.
+ * @returns {*}
+ */
+Db.prototype.collectionGroup = function (name) {
+	var self = this;
+
+	if (name) {
 		// Handle being passed an instance
-		if (collectionGroupName instanceof CollectionGroup) {
-			return collectionGroupName;
+		if (name instanceof CollectionGroup) {
+			return name;
 		}
 
-		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
-		return this._collectionGroup[collectionGroupName];
+		if (this._collectionGroup && this._collectionGroup[name]) {
+			return this._collectionGroup[name];
+		}
+
+		this._collectionGroup[name] = new CollectionGroup(name).db(this);
+
+		self.emit('create', self._collectionGroup[name], 'collectionGroup', name);
+
+		return this._collectionGroup[name];
 	} else {
 		// Return an object of collection data
 		return this._collectionGroup;
