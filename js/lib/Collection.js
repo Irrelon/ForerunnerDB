@@ -455,7 +455,8 @@ Collection.prototype.truncate = function () {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
-
+	// TODO: This should use remove so that chain reactor events are properly
+	// TODO: handled, but ensure that chunking is switched off
 	this.emit('truncate', this._data);
 
 	// Clear all the data from the collection
