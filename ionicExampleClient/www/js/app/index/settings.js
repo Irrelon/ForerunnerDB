@@ -1,7 +1,7 @@
 angular.module('app.controllers')
 	.controller('settingsCtrl', function ($scope, $http, $ionicLoading) {
 		//console.log('settingsCtrl');
-		$scope.settings = db.collection('settings').findOne();
+		$scope.settings = db.collection('settings').findOne() || {};
 
 		$scope.testConnection = function () {
 			if ($scope.settings) {
@@ -10,7 +10,7 @@ angular.module('app.controllers')
 						template: 'Loading...'
 					});
 
-					$http.get($scope.settings.host + ':' + $scope.settings.port + '/ForerunnerDB_Ionic_App/item').then(function (resp) {
+					$http.get($scope.settings.host + ':' + $scope.settings.port + '/ForerunnerDB_Ionic_App/collection/item').then(function (resp) {
 						$ionicLoading.hide();
 
 						if (resp.data && !resp.data.err) {
