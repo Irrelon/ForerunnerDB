@@ -62,9 +62,14 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	xmlHttp.onreadystatechange = function () {
 		if (xmlHttp.readyState === 4) {
 			if (xmlHttp.status === 200) {
+				// Tell the callback about success
 				callback(false, self.jParse(xmlHttp.responseText));
 			} else {
+				// Tell the callback about the error
 				callback(xmlHttp.status, xmlHttp.responseText);
+
+				// Emit the error code
+				self.emit('httpError', xmlHttp.status, xmlHttp.responseText);
 			}
 		}
 	};
