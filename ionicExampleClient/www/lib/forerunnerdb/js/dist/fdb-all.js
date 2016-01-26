@@ -11552,9 +11552,14 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	xmlHttp.onreadystatechange = function () {
 		if (xmlHttp.readyState === 4) {
 			if (xmlHttp.status === 200) {
+				// Tell the callback about success
 				callback(false, self.jParse(xmlHttp.responseText));
 			} else {
+				// Tell the callback about the error
 				callback(xmlHttp.status, xmlHttp.responseText);
+
+				// Emit the error code
+				self.emit('httpError', xmlHttp.status, xmlHttp.responseText);
 			}
 		}
 	};
@@ -11761,7 +11766,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		source,
 		finalPath,
 		queryParams,
-		queryString = '';
+		queryString = '',
+		connecting = true;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
@@ -11820,6 +11826,11 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 			// The connection is dead, remove the connection
 			collectionInstance.unSync();
 		}
+
+		if (connecting) {
+			connecting = false;
+			callback(e);
+		}
 	}, false);
 
 	source.addEventListener('insert', function(e) {
@@ -11839,7 +11850,10 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	if (callback) {
 		source.addEventListener('connected', function (e) {
-			callback(false);
+			if (connecting) {
+				connecting = false;
+				callback(false);
+			}
 		}, false);
 	}
 };
@@ -14499,7 +14513,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.614',
+	version: '1.3.615',
 	modules: {},
 	plugins: {},
 
