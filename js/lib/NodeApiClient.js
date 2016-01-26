@@ -271,7 +271,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		source,
 		finalPath,
 		queryParams,
-		queryString = '';
+		queryString = '',
+		connecting = true;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
@@ -330,6 +331,11 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 			// The connection is dead, remove the connection
 			collectionInstance.unSync();
 		}
+
+		if (connecting) {
+			connecting = false;
+			callback(e);
+		}
 	}, false);
 
 	source.addEventListener('insert', function(e) {
@@ -349,7 +355,10 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	if (callback) {
 		source.addEventListener('connected', function (e) {
-			callback(false);
+			if (connecting) {
+				connecting = false;
+				callback(false);
+			}
 		}, false);
 	}
 };
