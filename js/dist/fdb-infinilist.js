@@ -62,13 +62,15 @@ var Infinilist = function (selector, template, options, view) {
 	self.total = self.view.from().count(self.options.countQuery);
 	self.itemHeight(self.options.itemHeight);
 
-	self.view.from().on('change', function () {
+	self.___fromChangeFunc = function () {
 		// View data changed, recalculate total items count and check
 		// that the currently displayed view data is correct by forcing
 		// a scroll event after a height recalculation
 		self.recalcHeight();
 		self.scroll(true);
-	});
+	};
+
+	self.view.from().on('change', self.___fromChangeFunc);
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -242,6 +244,9 @@ Infinilist.prototype.drop = function (callback) {
 	// Unlink the view from the dom
 	self.view.unlink(self.itemContainer, self.template);
 
+	// Stop listening for changes
+	self.view.from().off('change', self.___fromChangeFunc);
+
 	// Set state to dropped
 	self._state = 'dropped';
 
@@ -259,6 +264,7 @@ Infinilist.prototype.drop = function (callback) {
 	delete self.itemTopMargin;
 	delete self.itemContainer;
 	delete self.itemBottomMargin;
+	delete self.___fromChangeFunc;
 
 	this.emit('drop', this);
 
