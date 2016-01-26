@@ -62,6 +62,14 @@ var Infinilist = function (selector, template, options, view) {
 	self.total = self.view.from().count(self.options.countQuery);
 	self.itemHeight(self.options.itemHeight);
 
+	self.view.from().on('change', function () {
+		// View data changed, recalculate total items count and check
+		// that the currently displayed view data is correct by forcing
+		// a scroll event after a height recalculation
+		self.recalcHeight();
+		self.scroll(true);
+	});
+
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
 	selector.append(self.itemBottomMargin);
@@ -99,13 +107,22 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 	var self = this;
 
 	if (val !== undefined) {
-		self.virtualHeight = self.total * val;
 		self._itemHeight = val;
+		self.virtualHeight = self.total * self._itemHeight;
 		self.resize();
 	}
 
 	return this.$super.apply(this, arguments);
 });
+
+Infinilist.prototype.recalcHeight = function () {
+	var self = this;
+
+	self.total = self.view.from().count(self.options.countQuery);
+	self.virtualHeight = self.total * self._itemHeight;
+
+	self.resize();
+};
 
 /**
  * Handle screen resizing.
@@ -126,6 +143,8 @@ Infinilist.prototype.resize = function () {
 		self.skip = skipCount;
 		self.limit = self.maxItemCount + 1;
 
+		// Check if current range is different from existing range
+
 		self.view.queryOptions(self.currentRange());
 
 		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
@@ -139,7 +158,7 @@ Infinilist.prototype.currentRange = function () {
 	};
 };
 
-Infinilist.prototype.scroll = function () {
+Infinilist.prototype.scroll = function (force) {
 	var self = this,
 		delta,
 		skipCount,
@@ -150,7 +169,7 @@ Infinilist.prototype.scroll = function () {
 	self.previousScrollTop = scrollTop;
 
 	// Check if a scroll change occurred
-	if (delta !== 0) {
+	if (force || delta !== 0) {
 		// Determine the new item range
 		skipCount = Math.floor(scrollTop / self._itemHeight);
 

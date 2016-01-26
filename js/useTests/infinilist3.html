@@ -77,13 +77,9 @@
 	<div id="testContainer"></div>
 
 	<script type="text/x-jsrender" id="listItem">
-		<div class="item" data-link="id{:_id}"><input type="checkbox" /> <span class="glyphicon glyphicon-user"></span> <span class="tx">{^{:name}}</span></div>
+		<div class="item" data-link="id{:_id}"><input type="checkbox" data-link="checked{:checked}" /> <span class="glyphicon glyphicon-user"></span> <span class="tx">{^{:name}}</span></div>
 	</script>
 
-	<!--
-	<div tabindex="-1">{{if icon}}<span class="glyphicons glyphicons-{{:icon}}" data-link="style{:iconColor ? 'color: ' + iconColor + ';' : ''}"></span>{{/if}} <span class="tx">{{:label}}</span>{^{if badge}} <span class="badge">{^{:badge}}</span>{{/if}}</div>
-	-->
-
-	<script src="infinilist.js"></script>
+	<script src="infinilist3.js"></script>
 </body>
 </html>
