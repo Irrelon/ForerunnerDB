@@ -11518,6 +11518,7 @@ NodeApiClient.prototype.init = function (core) {
 
 Shared.addModule('NodeApiClient', NodeApiClient);
 Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiClient.prototype, 'Mixin.Events');
 Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
@@ -14513,7 +14514,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.615',
+	version: '1.3.616',
 	modules: {},
 	plugins: {},
 
@@ -15955,6 +15956,14 @@ View.prototype.publicData = function () {
 	} else {
 		return this._privateData;
 	}
+};
+
+/**
+ * @see Collection.indexOf
+ * @returns {*}
+ */
+View.prototype.indexOf = function () {
+	return this.publicData().indexOf.apply(this.publicData(), arguments);
 };
 
 // Extend collection with view init

@@ -10646,7 +10646,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.615',
+	version: '1.3.616',
 	modules: {},
 	plugins: {},
 
@@ -12088,6 +12088,14 @@ View.prototype.publicData = function () {
 	} else {
 		return this._privateData;
 	}
+};
+
+/**
+ * @see Collection.indexOf
+ * @returns {*}
+ */
+View.prototype.indexOf = function () {
+	return this.publicData().indexOf.apply(this.publicData(), arguments);
 };
 
 // Extend collection with view init
