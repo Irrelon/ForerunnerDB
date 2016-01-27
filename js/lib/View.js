@@ -1134,6 +1134,14 @@ View.prototype.publicData = function () {
 	}
 };
 
+/**
+ * @see Collection.indexOf
+ * @returns {*}
+ */
+View.prototype.indexOf = function () {
+	return this.publicData().indexOf.apply(this.publicData(), arguments);
+};
+
 // Extend collection with view init
 Collection.prototype.init = function () {
 	this._view = [];
