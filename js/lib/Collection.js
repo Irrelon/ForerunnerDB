@@ -2001,6 +2001,7 @@ Collection.prototype._find = function (query, options) {
 		joinSourceType,
 		joinSourceIdentifier,
 		joinSourceInstance,
+		joinSourceData,
 		joinMatch,
 		joinMatchIndex,
 		joinSearchQuery,
@@ -2093,16 +2094,16 @@ Collection.prototype._find = function (query, options) {
 			// Get an instance reference to the join collections
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
-				joinSourceKey = analysis.joinsOn[joinIndex];
+				joinSourceData = analysis.joinsOn[joinIndex];
+				joinSourceKey = joinSourceData.key;
 
-				// TODO: Going to investigate joinsOn from analysis to see if we can
-				// provide details about the join source type instead of just a name
-				joinSourceType = joinMatch.$sourceType || 'collection';
-				joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+				joinSourceType = joinSourceData.type;
+				joinSourceIdentifier = joinSourceData.id;
 
 				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinSource[joinSourceKey] = this._db.collection(joinSourceKey).subset(joinQuery);
+
+				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
 				delete query[analysis.joinQueries[joinSourceKey]];
@@ -2209,11 +2210,11 @@ Collection.prototype._find = function (query, options) {
 						resultKeyName = joinSourceKey;
 
 						// Get the join collection instance from the DB
-						if (joinSource[joinSourceKey]) { // TODO: should be joinSourceIdentifier but need support from analysis data
+						if (joinSource[joinSourceIdentifier]) {
 							// We have a joinSource for this identifier already (given to us by
 							// an index when we analysed the query earlier on) and we can use
 							// that source instead.
-							joinSourceInstance = joinSource[joinSourceKey];
+							joinSourceInstance = joinSource[joinSourceIdentifier];
 						} else {
 							// We do not already have a joinSource so grab the instance from the db
 							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
@@ -2963,7 +2964,7 @@ Collection.prototype._sort = function (key, arr) {
  */
 Collection.prototype._analyseQuery = function (query, options, op) {
 	var analysis = {
-			queriesOn: [this._name],
+			queriesOn: [{id: '$collection.' + this._name, type: 'colletion', key: this._name}],
 			indexMatch: [],
 			hasJoin: false,
 			queriesJoin: false,
@@ -3105,18 +3106,18 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			}
 		}
 
-		// Loop the join collection references and determine if the query references
-		// any of the collections that are used in the join. If there no queries against
-		// joined collections the find method can use a code path optimised for this.
+		// Loop the join source references and determine if the query references
+		// any of the sources that are used in the join. If there no queries against
+		// joined sources the find method can use a code path optimised for this.
 
-		// Queries against joined collections requires the joined collections to be filtered
+		// Queries against joined sources requires the joined sources to be filtered
 		// first and then joined so requires a little more work.
 		for (index = 0; index < joinSourceReferences.length; index++) {
-			// Check if the query references any collection data that the join will create
+			// Check if the query references any source data that the join will create
 			queryPath = this._queryReferencesSource(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
-				analysis.joinQueries[joinSources[index]] = queryPath;
+				analysis.joinQueries[joinSources[index].key] = queryPath;
 				analysis.queriesJoin = true;
 			}
 		}
