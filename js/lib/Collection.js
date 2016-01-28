@@ -3078,7 +3078,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 					joinSources.push(joinSourceKey);
 
 					// Check if the join uses an $as operator
-					if (options.$join[joinSourceIndex][joinSourceKey]['$as'] !== undefined) {
+					if (options.$join[joinSourceIndex][joinSourceKey].$as !== undefined) {
 						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceKey].$as);
 					} else {
 						joinSourceReferences.push(joinSourceKey);
