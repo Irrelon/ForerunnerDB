@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.616
+## Version 1.3.618
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -3921,7 +3921,7 @@ ForerunnerDB's project road-map:
 ### Future Updates
 * Data persistence on server-side - COMPLETED
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
-* Push to clients - allow server-side to push changes to client-side data automatically and instantly
+* Push to clients - allow server-side to push changes to client-side data automatically and instantly - COMPLETED
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
 * Native iOS version
