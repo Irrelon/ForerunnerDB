@@ -143,6 +143,14 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 	return this;
 };
 
+/**
+ * Gets the express app and returns it to the caller.
+ * @returns {*}
+ */
+NodeApiServer.prototype.serverApp = function () {
+	return app;
+};
+
 NodeApiServer.prototype._createHttpServer = function (options, callback) {
 	var self = this,
 		ssl,
