@@ -1992,13 +1992,16 @@ Collection.prototype._find = function (query, options) {
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
-		joinCollectionIndex,
+		joinSourceIndex,
 		joinIndex,
-		joinCollection = {},
+		joinSource = {},
 		joinQuery,
 		joinPath,
-		joinCollectionName,
-		joinCollectionInstance,
+		joinSourceKey,
+		joinSourceName,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinSourceInstance,
 		joinMatch,
 		joinMatchIndex,
 		joinSearchQuery,
@@ -2010,7 +2013,7 @@ Collection.prototype._find = function (query, options) {
 		joinItem,
 		joinPrefix,
 		joinMatchData,
-		resultCollectionName,
+		resultKeyName,
 		resultIndex,
 		resultRemove = [],
 		index,
@@ -2091,13 +2094,13 @@ Collection.prototype._find = function (query, options) {
 			// Get an instance reference to the join collections
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
-				joinCollectionName = analysis.joinsOn[joinIndex];
-				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
+				joinSourceKey = analysis.joinsOn[joinIndex];
+				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+				joinSource[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
 
 				// Remove join clause from main query
-				delete query[analysis.joinQueries[joinCollectionName]];
+				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
 		}
@@ -2185,21 +2188,34 @@ Collection.prototype._find = function (query, options) {
 
 		// Now process any joins on the final data
 		if (options.$join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.$join[joinCollectionIndex]) {
-					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
+			for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
+				for (joinSourceKey in options.$join[joinSourceIndex]) {
+					if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
+						// Check if the join is to a collection (default) or a specified object type
+						joinSourceType = 'collection';
+
+						if (joinSourceKey.indexOf('$view.') === 0) {
+							// The join wants to target a view not a collection
+							joinSourceType = 'view';
+							joinSourceName = joinSourceKey.substr(5, joinSourceKey.length - 5);
+						}
+
+						joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceName;
+
 						// Set the key to store the join result in to the collection name by default
-						resultCollectionName = joinCollectionName;
+						resultKeyName = joinSourceName;
 
 						// Get the join collection instance from the DB
-						if (joinCollection[joinCollectionName]) {
-							joinCollectionInstance = joinCollection[joinCollectionName];
+						if (joinSource[joinSourceIdentifier]) {
+							joinSourceInstance = joinSource[joinSourceIdentifier];
 						} else {
-							joinCollectionInstance = this._db.collection(joinCollectionName);
+							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
+								joinSourceInstance = this._db[joinSourceType](joinSourceName);
+							}
 						}
 
 						// Get the match data for the join
-						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
+						joinMatch = options.$join[joinSourceIndex][joinSourceKey];
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2234,7 +2250,7 @@ Collection.prototype._find = function (query, options) {
 
 											case '$as':
 												// Rename the collection when stored in the result document
-												resultCollectionName = joinMatchData;
+												resultKeyName = joinMatchData;
 												break;
 
 											case '$multi':
@@ -2264,12 +2280,12 @@ Collection.prototype._find = function (query, options) {
 							}
 
 							// Do a find on the target collection against the match data
-							joinFindResults = joinCollectionInstance.find(joinSearchQuery, joinSearchOptions);
+							joinFindResults = joinSourceInstance.find(joinSearchQuery, joinSearchOptions);
 
 							// Check if we require a joined row to allow the result item
 							if (!joinRequire || (joinRequire && joinFindResults[0])) {
 								// Join is not required or condition is met
-								if (resultCollectionName === '$root') {
+								if (resultKeyName === '$root') {
 									// The property name to store the join results in is $root
 									// which means we need to mixin the results but this only
 									// works if joinMulti is disabled
@@ -2291,7 +2307,7 @@ Collection.prototype._find = function (query, options) {
 										}
 									}
 								} else {
-									resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+									resultArr[resultIndex][resultKeyName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
 								}
 							} else {
 								// Join required but condition not met, add item to removal queue
@@ -2951,10 +2967,10 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			query: query,
 			options: options
 		},
-		joinCollectionIndex,
-		joinCollectionName,
-		joinCollections = [],
-		joinCollectionReferences = [],
+		joinSourceIndex,
+		joinSourceName,
+		joinSources = [],
+		joinSourceReferences = [],
 		queryPath,
 		index,
 		indexMatchData,
@@ -3057,17 +3073,17 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
+		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.$join[joinCollectionIndex]) {
-				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
-					joinCollections.push(joinCollectionName);
+			for (joinSourceName in options.$join[joinSourceIndex]) {
+				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceName)) {
+					joinSources.push(joinSourceName);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
+					if ('$as' in options.$join[joinSourceIndex][joinSourceName]) {
+						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceName].$as);
 					} else {
-						joinCollectionReferences.push(joinCollectionName);
+						joinSourceReferences.push(joinSourceName);
 					}
 				}
 			}
@@ -3078,18 +3094,18 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		// joined collections the find method can use a code path optimised for this.
 		// Queries against joined collections requires the joined collections to be filtered
 		// first and then joined so requires a little more work.
-		for (index = 0; index < joinCollectionReferences.length; index++) {
+		for (index = 0; index < joinSourceReferences.length; index++) {
 			// Check if the query references any collection data that the join will create
-			queryPath = this._queryReferencesCollection(query, joinCollectionReferences[index], '');
+			queryPath = this._queryReferencesCollection(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
-				analysis.joinQueries[joinCollections[index]] = queryPath;
+				analysis.joinQueries[joinSources[index]] = queryPath;
 				analysis.queriesJoin = true;
 			}
 		}
 
-		analysis.joinsOn = joinCollections;
-		analysis.queriesOn = analysis.queriesOn.concat(joinCollections);
+		analysis.joinsOn = joinSources;
+		analysis.queriesOn = analysis.queriesOn.concat(joinSources);
 	}
 
 	return analysis;
