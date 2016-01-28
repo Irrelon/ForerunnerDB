@@ -895,10 +895,6 @@ View.prototype.refresh = function () {
 	if (this._from) {
 		pubData = this.publicData();
 
-		self.__joinChange = self.__joinChange || function () {
-			self._joinChange();
-		};
-
 		// Re-grab all the data for the view from the collection
 		this._privateData.remove();
 		//pubData.remove();
@@ -923,6 +919,11 @@ View.prototype.refresh = function () {
 	}
 
 	if (this._querySettings && this._querySettings.options && this._querySettings.options.$join && this._querySettings.options.$join.length) {
+		// Define the change handler method
+		self.__joinChange = self.__joinChange || function () {
+			self._joinChange();
+		};
+
 		// Check for existing join collections
 		if (this._joinCollections && this._joinCollections.length) {
 			// Loop the join collections and remove change listeners
