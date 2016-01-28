@@ -1019,7 +1019,7 @@ QUnit.test("Collection.find() :: Value in array of strings", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Single join", function () {
+QUnit.test("Collection.find() :: Options :: Single join against collection", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1037,6 +1037,45 @@ QUnit.test("Collection.find() :: Options :: Single join", function () {
 	strictEqual(result[0].orgId, result[0].org._id, "Complete");
 	strictEqual(result[1].orgId, result[1].org._id, "Complete");
 	strictEqual(result[2].orgId, result[2].org._id, "Complete");
+
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Options :: Single join against a view", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var orgView = db.view('organisationView')
+		.from('organisation')
+		.query({
+			profit: 135
+		});
+
+	var result = user.find({}, {
+		"$join": [{
+			"organisationView": {
+				"_id": "orgId",
+				"$sourceType": 'view',
+				"$as": "orgView",
+				"$require": true,
+				"$multi": false
+			}
+		}]
+	});
+
+	strictEqual(result.length, 3, "Correct number of results after join");
+
+	strictEqual(result[0].orgId, result[0].orgView._id, "Org id matches original data for 1");
+	strictEqual(result[1].orgId, result[1].orgView._id, "Org id matches original data for 2");
+	strictEqual(result[2].orgId, result[2].orgView._id, "Org id matches original data for 3");
+
+	strictEqual(result[0].orgView._id, "2", "Correct organisation from view in 1");
+	strictEqual(result[1].orgView._id, "3", "Correct organisation from view in 2");
+	strictEqual(result[2].orgView._id, "3", "Correct organisation from view in 3");
+
+	strictEqual(result[0]._id, "3", "Correct user in result for 1");
+	strictEqual(result[1]._id, "4", "Correct user in result for 2");
+	strictEqual(result[2]._id, "5", "Correct user in result for 3");
 
 	base.dbDown();
 });
@@ -1161,7 +1200,7 @@ QUnit.test("Collection.find() :: Options :: Multi join with path to ids in an ar
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Queries joined data", function () {
+QUnit.test("Collection.find() :: Options :: Queries joined data from a joined collection", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1187,7 +1226,34 @@ QUnit.test("Collection.find() :: Options :: Queries joined data", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Join with mixin", function () {
+// TODO : Write this test, it should now be possible
+/*QUnit.test("Collection.find() :: Options :: Queries joined data from a joined view", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var result = user.find({
+		org: {
+			type: 'beta'
+		}
+	}, {
+		"$join": [{
+			"organisation": {
+				"_id": "orgId",
+				"$as": "org",
+				"$require": true,
+				"$multi": false
+			}
+		}]
+	});
+
+	strictEqual(result[0].orgId, result[0].org._id, "Joined org id matches rerturned data");
+	strictEqual(result[0].org.type, "beta", "Joined org type matches queried type");
+	strictEqual(result.length, 1, "Number of returned records is correct");
+
+	base.dbDown();
+});*/
+
+QUnit.test("Collection.find() :: Options :: Join with prefix", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1203,10 +1269,10 @@ QUnit.test("Collection.find() :: Options :: Join with mixin", function () {
 		}]
 	});
 
-	strictEqual(result[0].orgname, 'Organisation 1', "Correct data mixed in 1");
-	strictEqual(result[1].orgname, 'Organisation 2', "Correct data mixed in 2");
-	strictEqual(result[2].orgname, 'Organisation 3', "Correct data mixed in 3");
-	strictEqual(result[3].orgname, 'Organisation 3', "Correct data mixed in 4");
+	strictEqual(result[0].orgname, 'Organisation 1', "Correct data prefixed in 1");
+	strictEqual(result[1].orgname, 'Organisation 2', "Correct data prefixed in 2");
+	strictEqual(result[2].orgname, 'Organisation 3', "Correct data prefixed in 3");
+	strictEqual(result[3].orgname, 'Organisation 3', "Correct data prefixed in 4");
 
 	base.dbDown();
 });
