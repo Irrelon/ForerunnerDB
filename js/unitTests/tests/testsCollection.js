@@ -2093,6 +2093,30 @@ QUnit.test("Collection.find() :: $distinct clause", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $distinct clause strings", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.setData([{'test': "Hello"}, {'test': "hello"}, {'test': "Hello"}]);
+
+	strictEqual(coll.find().length, 3, 'Check data inserted correctly');
+
+	// Run distinct query
+	result = coll.find({
+		$distinct: {
+			test: 1
+		}
+	});
+
+	strictEqual(result.length, 2, 'Check correct $distinct query result number');
+	strictEqual(result[0].test, "Hello", 'Check correct result 1');
+	strictEqual(result[1].test, "hello", 'Check correct result 2');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: // Comment properties", function () {
 	base.dbUp();
 
