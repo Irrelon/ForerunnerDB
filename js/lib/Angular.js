@@ -269,5 +269,14 @@ for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
 	Shared.moduleFinished(modules[moduleIndex], moduleFinished);
 }
 
+// Expose ForerunnerDB as a service for AngularJS
+if (angular && angular.module) {
+	angular.module('forerunnerdb', [])
+		.factory('$fdb', function() {
+			// Return the global ForerunnerDB class
+			return new ForerunnerDB();
+		});
+}
+
 Shared.finishModule('Angular');
 module.exports = Angular;
