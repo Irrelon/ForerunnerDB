@@ -1,6 +1,7 @@
-/*global {
-	angular
-}*/
+/*global
+	angular,
+	ForerunnerDB
+*/
 
 "use strict";
 
@@ -274,7 +275,7 @@ for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
 }
 
 // Expose ForerunnerDB as a service for AngularJS
-if (angular && angular.module) {
+if (typeof angular !== 'undefined' && angular.module) {
 	angular.module('forerunnerdb', [])
 		.factory('$fdb', function() {
 			// Return the global ForerunnerDB class
