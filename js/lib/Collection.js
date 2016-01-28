@@ -1998,7 +1998,6 @@ Collection.prototype._find = function (query, options) {
 		joinQuery,
 		joinPath,
 		joinSourceKey,
-		joinSourceName,
 		joinSourceType,
 		joinSourceIdentifier,
 		joinSourceInstance,
@@ -2191,31 +2190,30 @@ Collection.prototype._find = function (query, options) {
 			for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
 				for (joinSourceKey in options.$join[joinSourceIndex]) {
 					if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
-						// Check if the join is to a collection (default) or a specified object type
-						joinSourceType = 'collection';
-
-						if (joinSourceKey.indexOf('$view.') === 0) {
-							// The join wants to target a view not a collection
-							joinSourceType = 'view';
-							joinSourceName = joinSourceKey.substr(5, joinSourceKey.length - 5);
-						}
-
-						joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceName;
-
-						// Set the key to store the join result in to the collection name by default
-						resultKeyName = joinSourceName;
-
-						// Get the join collection instance from the DB
-						if (joinSource[joinSourceIdentifier]) {
-							joinSourceInstance = joinSource[joinSourceIdentifier];
-						} else {
-							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
-								joinSourceInstance = this._db[joinSourceType](joinSourceName);
-							}
-						}
-
 						// Get the match data for the join
 						joinMatch = options.$join[joinSourceIndex][joinSourceKey];
+
+						// Check if the join is to a collection (default) or a specified source type
+						// e.g 'view' or 'collection'
+						joinSourceType = joinMatch.$sourceType || 'collection';
+						joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+						// Set the key to store the join result in to the collection name by default
+						// can be overridden by the '$as' clause in the join object
+						resultKeyName = joinSourceKey;
+
+						// Get the join collection instance from the DB
+						if (joinSource[joinSourceKey]) { // TODO: should be joinSourceIdentifier but need support from analysis data
+							// We have a joinSource for this identifier already (given to us by
+							// an index when we analysed the query earlier on) and we can use
+							// that source instead.
+							joinSourceInstance = joinSource[joinSourceKey];
+						} else {
+							// We do not already have a joinSource so grab the instance from the db
+							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
+								joinSourceInstance = this._db[joinSourceType](joinSourceKey);
+							}
+						}
 
 						// Loop our result data array
 						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
@@ -2968,7 +2966,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			options: options
 		},
 		joinSourceIndex,
-		joinSourceName,
+		joinSourceKey,
 		joinSources = [],
 		joinSourceReferences = [],
 		queryPath,
@@ -3075,15 +3073,15 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		// Loop all join operations
 		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
 			// Loop the join collections and keep a reference to them
-			for (joinSourceName in options.$join[joinSourceIndex]) {
-				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceName)) {
-					joinSources.push(joinSourceName);
+			for (joinSourceKey in options.$join[joinSourceIndex]) {
+				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
+					joinSources.push(joinSourceKey);
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.$join[joinSourceIndex][joinSourceName]) {
-						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceName].$as);
+					if (options.$join[joinSourceIndex][joinSourceKey]['$as'] !== undefined) {
+						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceKey].$as);
 					} else {
-						joinSourceReferences.push(joinSourceName);
+						joinSourceReferences.push(joinSourceKey);
 					}
 				}
 			}
@@ -3092,6 +3090,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		// Loop the join collection references and determine if the query references
 		// any of the collections that are used in the join. If there no queries against
 		// joined collections the find method can use a code path optimised for this.
+
 		// Queries against joined collections requires the joined collections to be filtered
 		// first and then joined so requires a little more work.
 		for (index = 0; index < joinSourceReferences.length; index++) {
