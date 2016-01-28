@@ -32,6 +32,7 @@ ready and battle tested in real-world applications.
 * [Persistent Storage (*Browser & Node.js*)](#data-persistence-save-and-load-between-pages) - Save your data and load it back at a later time, great for multi-page apps.
 * [Compression & Encryption](#data-compression-and-encryption) - Support for compressing and encrypting your persisted data.
 * [Built-In REST Server (*Node.js*)](#forerunnerdb-built-in-json-rest-api-server) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
+* [AngularJS and Ionic Support](#angularjs-and-ionic-support) - Optional AngularJS module provides ForerunnerDB as an angular service.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
@@ -4184,6 +4185,52 @@ $.ajax({
 		console.log(data);
 	}
 });
+```
+
+# AngularJS and Ionic Support
+ForerunnerDB includes an AngularJS module that allows you to require ForerunnerDB as
+a dependency in your AngularJS (or Ionic) application. In order to use ForerunnerDB
+in AngularJS or Ionic you must include forerunner's library and the AngularJS module
+after the angular (or Ionic) library script tag:
+
+```html
+...
+<!-- Include ionic (or angularjs) library -->
+<script src="lib/ionic/js/ionic.bundle.js"></script>
+...
+<!-- Include ForerunnerDB -->
+<script src="lib/forerunnerdb/js/dist/fdb-all.min.js"></script>
+<script src="lib/forerunnerdb/js/dist/fdb-angular.min.js"></script>
+```
+
+Once you have included the library files you can require ForerunnerDB as a dependency
+in the normal angular way:
+
+```js
+// Define our app and require forerunnerdb
+angular.module('app', ['ionic', 'forerunnerdb', 'app.controllers', 'app.routes', 'app.services', 'app.directives'])
+	// Run the app and tell angular we need the $fdb service
+	.run(function ($ionicPlatform, $rootScope, $fdb) {
+		// Define a ForerunnerDB database on the root scope
+		$rootScope.$db = $fdb.db('myDatabase');
+		
+		...
+```
+
+You can then access your database from either $rootScope.$db or $fdb.db('myDatabase').
+
+Since $fdb.db() will either create a database if one does not exist by that name, 
+or return the existing instance of the database, you can use it whenever you like
+to get a reference to your database from any controller just by requiring *$fdb*
+as a dependency e.g:
+
+```js
+angular.module('app.controllers')
+	.controller('itemListCtrl', function ($scope, $fdb) {
+		var allItemsInMyCollection = $fdb
+			.db('myDatabase')
+			.collection('myCollection')
+			.find();
 ```
 
 # Ionic Example App
