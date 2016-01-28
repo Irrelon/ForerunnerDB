@@ -2966,6 +2966,7 @@ Collection.prototype._find = function (query, options) {
 		joinSourceType,
 		joinSourceIdentifier,
 		joinSourceInstance,
+		joinSourceData,
 		joinMatch,
 		joinMatchIndex,
 		joinSearchQuery,
@@ -3058,10 +3059,16 @@ Collection.prototype._find = function (query, options) {
 			// Get an instance reference to the join collections
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
-				joinSourceKey = analysis.joinsOn[joinIndex];
+				joinSourceData = analysis.joinsOn[joinIndex];
+				joinSourceKey = joinSourceData.key;
+
+				joinSourceType = joinSourceData.type;
+				joinSourceIdentifier = joinSourceData.id;
+
 				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinSource[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+
+				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
 				delete query[analysis.joinQueries[joinSourceKey]];
@@ -3168,11 +3175,11 @@ Collection.prototype._find = function (query, options) {
 						resultKeyName = joinSourceKey;
 
 						// Get the join collection instance from the DB
-						if (joinSource[joinSourceKey]) { // TODO: should be joinSourceIdentifier but need support from analysis data
+						if (joinSource[joinSourceIdentifier]) {
 							// We have a joinSource for this identifier already (given to us by
 							// an index when we analysed the query earlier on) and we can use
 							// that source instead.
-							joinSourceInstance = joinSource[joinSourceKey];
+							joinSourceInstance = joinSource[joinSourceIdentifier];
 						} else {
 							// We do not already have a joinSource so grab the instance from the db
 							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
@@ -3922,7 +3929,7 @@ Collection.prototype._sort = function (key, arr) {
  */
 Collection.prototype._analyseQuery = function (query, options, op) {
 	var analysis = {
-			queriesOn: [this._name],
+			queriesOn: [{id: '$collection.' + this._name, type: 'colletion', key: this._name}],
 			indexMatch: [],
 			hasJoin: false,
 			queriesJoin: false,
@@ -3932,6 +3939,9 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		},
 		joinSourceIndex,
 		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinMatch,
 		joinSources = [],
 		joinSourceReferences = [],
 		queryPath,
@@ -4037,10 +4047,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 		// Loop all join operations
 		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
-			// Loop the join collections and keep a reference to them
+			// Loop the join sources and keep a reference to them
 			for (joinSourceKey in options.$join[joinSourceIndex]) {
 				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
-					joinSources.push(joinSourceKey);
+					joinMatch = options.$join[joinSourceIndex][joinSourceKey];
+
+					joinSourceType = joinMatch.$sourceType || 'collection';
+					joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+					joinSources.push({
+						id: joinSourceIdentifier,
+						type: joinSourceType,
+						key: joinSourceKey
+					});
 
 					// Check if the join uses an $as operator
 					if (options.$join[joinSourceIndex][joinSourceKey].$as !== undefined) {
@@ -4052,18 +4071,18 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			}
 		}
 
-		// Loop the join collection references and determine if the query references
-		// any of the collections that are used in the join. If there no queries against
-		// joined collections the find method can use a code path optimised for this.
+		// Loop the join source references and determine if the query references
+		// any of the sources that are used in the join. If there no queries against
+		// joined sources the find method can use a code path optimised for this.
 
-		// Queries against joined collections requires the joined collections to be filtered
+		// Queries against joined sources requires the joined sources to be filtered
 		// first and then joined so requires a little more work.
 		for (index = 0; index < joinSourceReferences.length; index++) {
-			// Check if the query references any collection data that the join will create
-			queryPath = this._queryReferencesCollection(query, joinSourceReferences[index], '');
+			// Check if the query references any source data that the join will create
+			queryPath = this._queryReferencesSource(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
-				analysis.joinQueries[joinSources[index]] = queryPath;
+				analysis.joinQueries[joinSources[index].key] = queryPath;
 				analysis.queriesJoin = true;
 			}
 		}
@@ -4076,20 +4095,21 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 };
 
 /**
- * Checks if the passed query references this collection.
- * @param query
- * @param collection
- * @param path
+ * Checks if the passed query references a source object (such
+ * as a collection) by name.
+ * @param {Object} query The query object to scan.
+ * @param {String} sourceName The source name to scan for in the query.
+ * @param {String=} path The path to scan from.
  * @returns {*}
  * @private
  */
-Collection.prototype._queryReferencesCollection = function (query, collection, path) {
+Collection.prototype._queryReferencesSource = function (query, sourceName, path) {
 	var i;
 
 	for (i in query) {
 		if (query.hasOwnProperty(i)) {
 			// Check if this key is a reference match
-			if (i === collection) {
+			if (i === sourceName) {
 				if (path) { path += '.'; }
 				return path + i;
 			} else {
@@ -4097,7 +4117,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
 					// Recurse
 					if (path) { path += '.'; }
 					path += i;
-					return this._queryReferencesCollection(query[i], collection, path);
+					return this._queryReferencesSource(query[i], sourceName, path);
 				}
 			}
 		}
@@ -10666,7 +10686,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.626',
+	version: '1.3.628',
 	modules: {},
 	plugins: {},
 

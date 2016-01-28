@@ -1186,7 +1186,7 @@ collation).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3515">line 3515</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3535">line 3535</a>
     </li></ul></dd>
     
 
@@ -1363,7 +1363,7 @@ data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3450">line 3450</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3470">line 3470</a>
     </li></ul></dd>
     
 
@@ -2987,7 +2987,7 @@ containing details about the query which can be used to optimise the search.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2958">line 2958</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2965">line 2965</a>
     </li></ul></dd>
     
 
@@ -4652,14 +4652,15 @@ of its name).
 
     
 
-    <h4 class="name" id="_queryReferencesCollection"><span class="type-signature">(private) </span>_queryReferencesCollection<span class="signature">(query, collection, path)</span><span class="type-signature"> &rarr; {*}</span></h4>
+    <h4 class="name" id="_queryReferencesSource"><span class="type-signature">(private) </span>_queryReferencesSource<span class="signature">(query, sourceName, path<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {*}</span></h4>
 
     
 
 
 
 <div class="description">
-    Checks if the passed query references this collection.
+    Checks if the passed query references a source object (such
+as a collection) by name.
 </div>
 
 
@@ -4683,6 +4684,8 @@ of its name).
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -4700,31 +4703,57 @@ of its name).
 
             <td class="type">
             
+                
+<span class="param-type">Object</span>
+
+
+            
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"></td>
+            <td class="description last">The query object to scan.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>collection</code></td>
+                <td class="name"><code>sourceName</code></td>
             
 
             <td class="type">
             
+                
+<span class="param-type">String</span>
+
+
+            
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"></td>
+            <td class="description last">The source name to scan for in the query.</td>
         </tr>
 
     
@@ -4736,13 +4765,28 @@ of its name).
 
             <td class="type">
             
+                
+<span class="param-type">String</span>
+
+
+            
             </td>
 
             
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last"></td>
+            <td class="description last">The path to scan from.</td>
         </tr>
 
     
@@ -4783,7 +4827,7 @@ of its name).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3121">line 3121</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3141">line 3141</a>
     </li></ul></dd>
     
 
@@ -5484,7 +5528,7 @@ breaking data references.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2917">line 2917</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2924">line 2924</a>
     </li></ul></dd>
     
 
@@ -5741,7 +5785,7 @@ breaking data references.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3148">line 3148</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3168">line 3168</a>
     </li></ul></dd>
     
 
@@ -5995,7 +6039,7 @@ data as the one passed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3386">line 3386</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3406">line 3406</a>
     </li></ul></dd>
     
 
@@ -6628,7 +6672,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3283">line 3283</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3303">line 3303</a>
     </li></ul></dd>
     
 
@@ -7941,7 +7985,7 @@ the query.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2586">line 2586</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2593">line 2593</a>
     </li></ul></dd>
     
 
@@ -8201,7 +8245,7 @@ sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3169">line 3169</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3189">line 3189</a>
     </li></ul></dd>
     
 
@@ -8462,7 +8506,7 @@ sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3238">line 3238</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3258">line 3258</a>
     </li></ul></dd>
     
 
@@ -8611,7 +8655,7 @@ sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3365">line 3365</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3385">line 3385</a>
     </li></ul></dd>
     
 
@@ -8804,7 +8848,7 @@ the passed query object.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2597">line 2597</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2604">line 2604</a>
     </li></ul></dd>
     
 
@@ -8997,7 +9041,7 @@ or the id to lookup.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2624">line 2624</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2631">line 2631</a>
     </li></ul></dd>
     
 
@@ -9362,7 +9406,7 @@ inserted into the collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3249">line 3249</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3269">line 3269</a>
     </li></ul></dd>
     
 
@@ -9727,7 +9771,7 @@ the current collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3375">line 3375</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3395">line 3395</a>
     </li></ul></dd>
     
 
@@ -11649,7 +11693,7 @@ data array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2657">line 2657</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2664">line 2664</a>
     </li></ul></dd>
     
 
@@ -12420,7 +12464,7 @@ that will be set as the collections data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2776">line 2776</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2783">line 2783</a>
     </li></ul></dd>
     
 
@@ -12762,7 +12806,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2678">line 2678</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2685">line 2685</a>
     </li></ul></dd>
     
 
@@ -12911,7 +12955,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2711">line 2711</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2718">line 2718</a>
     </li></ul></dd>
     
 
@@ -13060,7 +13104,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2743">line 2743</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2750">line 2750</a>
     </li></ul></dd>
     
 
@@ -14450,7 +14494,7 @@ contains the return data from the operation used.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 28 2016 15:24:45 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jan 28 2016 16:19:52 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
