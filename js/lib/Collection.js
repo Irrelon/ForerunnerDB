@@ -2094,9 +2094,15 @@ Collection.prototype._find = function (query, options) {
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
 				joinSourceKey = analysis.joinsOn[joinIndex];
+
+				// TODO: Going to investigate joinsOn from analysis to see if we can
+				// provide details about the join source type instead of just a name
+				joinSourceType = joinMatch.$sourceType || 'collection';
+				joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
 				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinSource[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+				joinSource[joinSourceKey] = this._db.collection(joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
 				delete query[analysis.joinQueries[joinSourceKey]];
@@ -2967,6 +2973,9 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		},
 		joinSourceIndex,
 		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinMatch,
 		joinSources = [],
 		joinSourceReferences = [],
 		queryPath,
@@ -3072,10 +3081,19 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 		// Loop all join operations
 		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
-			// Loop the join collections and keep a reference to them
+			// Loop the join sources and keep a reference to them
 			for (joinSourceKey in options.$join[joinSourceIndex]) {
 				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
-					joinSources.push(joinSourceKey);
+					joinMatch = options.$join[joinSourceIndex][joinSourceKey];
+
+					joinSourceType = joinMatch.$sourceType || 'collection';
+					joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+					joinSources.push({
+						id: joinSourceIdentifier,
+						type: joinSourceType,
+						key: joinSourceKey
+					});
 
 					// Check if the join uses an $as operator
 					if (options.$join[joinSourceIndex][joinSourceKey].$as !== undefined) {
@@ -3095,7 +3113,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		// first and then joined so requires a little more work.
 		for (index = 0; index < joinSourceReferences.length; index++) {
 			// Check if the query references any collection data that the join will create
-			queryPath = this._queryReferencesCollection(query, joinSourceReferences[index], '');
+			queryPath = this._queryReferencesSource(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
 				analysis.joinQueries[joinSources[index]] = queryPath;
@@ -3111,20 +3129,21 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 };
 
 /**
- * Checks if the passed query references this collection.
- * @param query
- * @param collection
- * @param path
+ * Checks if the passed query references a source object (such
+ * as a collection) by name.
+ * @param {Object} query The query object to scan.
+ * @param {String} sourceName The source name to scan for in the query.
+ * @param {String=} path The path to scan from.
  * @returns {*}
  * @private
  */
-Collection.prototype._queryReferencesCollection = function (query, collection, path) {
+Collection.prototype._queryReferencesSource = function (query, sourceName, path) {
 	var i;
 
 	for (i in query) {
 		if (query.hasOwnProperty(i)) {
 			// Check if this key is a reference match
-			if (i === collection) {
+			if (i === sourceName) {
 				if (path) { path += '.'; }
 				return path + i;
 			} else {
@@ -3132,7 +3151,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
 					// Recurse
 					if (path) { path += '.'; }
 					path += i;
-					return this._queryReferencesCollection(query[i], collection, path);
+					return this._queryReferencesSource(query[i], sourceName, path);
 				}
 			}
 		}
