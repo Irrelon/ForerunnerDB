@@ -1518,11 +1518,11 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		switch (returnData.op) {
 			case 'insert':
-				returnData.result = this.insert(obj);
+				returnData.result = this.insert(obj, callback);
 				break;
 
 			case 'update':
-				returnData.result = this.update(query, obj);
+				returnData.result = this.update(query, obj, {}, callback);
 				break;
 
 			default:
@@ -1594,9 +1594,11 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * match keys on the existing document will be overwritten with this data. Any
  * keys that do not currently exist on the document will be added to the document.
  * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when the update is
+ * complete.
  * @returns {Array} The items that were updated.
  */
-Collection.prototype.update = function (query, update, options) {
+Collection.prototype.update = function (query, update, options, callback) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
@@ -1687,6 +1689,9 @@ Collection.prototype.update = function (query, update, options) {
 
 			this._onUpdate(updated);
 			this._onChange();
+
+			if (callback) { callback(); }
+
 			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
@@ -14927,7 +14932,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.616',
+	version: '1.3.618',
 	modules: {},
 	plugins: {},
 
