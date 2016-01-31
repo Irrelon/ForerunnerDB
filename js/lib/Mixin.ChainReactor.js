@@ -87,7 +87,7 @@ var ChainReactor = {
 		};
 
 		if (this.debug && this.debug()) {
-			console.log(this.logIdentifier() + 'Received data from parent reactor node');
+			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
 		// Fire our internal handler

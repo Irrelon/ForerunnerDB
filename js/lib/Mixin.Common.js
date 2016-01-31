@@ -211,7 +211,7 @@ Common = {
 	 * @returns {string} The log identifier.
 	 */
 	logIdentifier: function () {
-		return this.classIdentifier() + ': ' + this.instanceIdentifier();
+		return 'ForerunnerDB ' + this.instanceIdentifier();
 	},
 
 	/**

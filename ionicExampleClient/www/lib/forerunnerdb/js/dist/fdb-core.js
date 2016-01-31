@@ -7163,7 +7163,7 @@ var ChainReactor = {
 		};
 
 		if (this.debug && this.debug()) {
-			console.log(this.logIdentifier() + 'Received data from parent reactor node');
+			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
 		// Fire our internal handler
@@ -7389,7 +7389,7 @@ Common = {
 	 * @returns {string} The log identifier.
 	 */
 	logIdentifier: function () {
-		return this.classIdentifier() + ': ' + this.instanceIdentifier();
+		return 'ForerunnerDB ' + this.instanceIdentifier();
 	},
 
 	/**
@@ -10063,7 +10063,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.631',
+	version: '1.3.632',
 	modules: {},
 	plugins: {},
 
