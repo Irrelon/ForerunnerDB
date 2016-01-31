@@ -110,7 +110,9 @@ Serialiser.prototype._encode = function (data) {
  * @returns {Object} The reconstituted object.
  */
 Serialiser.prototype.parse = function (data) {
-	return this._parse(JSON.parse(data));
+	if (data) {
+		return this._parse(JSON.parse(data));
+	}
 };
 
 /**
