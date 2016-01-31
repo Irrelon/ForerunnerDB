@@ -270,9 +270,17 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 		urlPath,
 		pathSections;
 
+	if (self.debug && self.debug()) {
+		console.log(self.logIdentifier() + ' Received REST: ' + method + ' ' + req.url);
+	}
+
 	// Check permissions
 	self.hasPermission(dbName, objType, objName, method, req, function (err, results) {
 		if (!err) {
+			if (self.debug && self.debug()) {
+				console.log(self.logIdentifier() + ' REST call is allowed: ' + method + ' ' + req.url);
+			}
+
 			// Check if the database has this type of object
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
@@ -287,8 +295,16 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				if (objType === 'procedure') {
 					if (obj && obj.exec && typeof obj.exec === 'function') {
 						// Handle procedure
+						if (self.debug && self.debug()) {
+							console.log(self.logIdentifier() + ' REST executing procedure: ' + method + ' ' + req.url);
+						}
+
 						return obj.exec(req, res);
 					} else {
+						if (self.debug && self.debug()) {
+							console.log(self.logIdentifier() + ' REST procedure not found: ' + method + ' ' + req.url);
+						}
+
 						return res.status(404).send('Procedure "' + objName + '" not found!');
 					}
 				}
@@ -419,10 +435,22 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 						res.status(403).send('Unknown method');
 						break;
 				}
+
+				if (self.debug && self.debug()) {
+					console.log(self.logIdentifier() + ' REST call finised: ' + method + ' ' + req.url);
+				}
 			} else {
+				if (self.debug && self.debug()) {
+					console.log(self.logIdentifier() + ' REST call object type unknown: ' + method + ' ' + req.url);
+				}
+
 				res.status(500).send('Unknown object type: ' + objType);
 			}
 		} else {
+			if (self.debug && self.debug()) {
+				console.log(self.logIdentifier() + ' REST call permission denied: ' + method + ' ' + req.url);
+			}
+
 			res.status(403).send(err);
 		}
 	});
