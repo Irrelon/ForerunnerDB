@@ -8425,7 +8425,8 @@ var Matching = {
 				} else if (typeof test === 'object') {
 					return this._match(source, test, queryOptions, 'and', options);
 				} else {
-					throw(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
+					console.log(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
+					return false;
 				}
 				break;
 
@@ -8446,7 +8447,8 @@ var Matching = {
 				} else if (typeof test === 'object') {
 					return this._match(source, test, queryOptions, 'and', options);
 				} else {
-					throw(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
+					console.log(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
+					return false;
 				}
 				break;
 
@@ -11447,7 +11449,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.629',
+	version: '1.3.630',
 	modules: {},
 	plugins: {},
 
