@@ -538,6 +538,14 @@ Collection.prototype.autoHttp = new Overload({
 		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, undefined, undefined, {}, callback);
 	},
 
+	'string, string, string, object, function': function (method, objType, objName, queryObj, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, queryObj, undefined, {}, callback);
+	},
+
+	'string, string, string, object, object, function': function (method, objType, objName, queryObj, queryOptions, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, queryObj, queryOptions, {}, callback);
+	},
+
 	'$main': function (method, path, queryObj, queryOptions, options, callback) {
 		var self = this;
 
