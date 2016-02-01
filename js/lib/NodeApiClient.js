@@ -210,18 +210,20 @@ NodeApiClient.prototype.patch = new Overload({
 });
 
 NodeApiClient.prototype.postPatch = function (path, id, data, options, callback) {
+	var self = this;
+
 	// Determine if the item exists or not
-	this.head(path + '/' + id, undefined, {}, function (err, data) {
+	this.head(path + '/' + id, undefined, {}, function (err, headData) {
 		if (err) {
-			if (err === '404') {
+			if (err === 404) {
 				// Item does not exist, run post
-				return this.http('POST', this.server() + path, data, options, callback);
+				return self.http('POST', self.server() + path, data, options, callback);
 			} else {
 				callback(err, data);
 			}
 		} else {
 			// Item already exists, run patch
-			return this.http('PATCH', this.server() + path + '/' + id, data, options, callback);
+			return self.http('PATCH', self.server() + path + '/' + id, data, options, callback);
 		}
 	});
 };
