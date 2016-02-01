@@ -25,6 +25,7 @@ var Collection = function (name, options) {
 };
 
 Collection.prototype.init = function (name, options) {
+	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
 	this._primaryIndex = new KeyValueStore('primary');
 	this._primaryCrc = new KeyValueStore('primaryCrc');
@@ -2089,9 +2090,11 @@ Collection.prototype._find = function (query, options) {
 		op.time('analyseQuery');
 		op.data('analysis', analysis);
 
+		// Check if the query tries to limit by data that would only exist after
+		// the join operation has been completed
 		if (analysis.hasJoin && analysis.queriesJoin) {
 			// The query has a join and tries to limit by it's joined data
-			// Get an instance reference to the join collections
+			// Get references to the join sources
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
 				joinSourceData = analysis.joinsOn[joinIndex];
@@ -2106,6 +2109,7 @@ Collection.prototype._find = function (query, options) {
 				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
+				debugger;
 				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
@@ -2142,7 +2146,6 @@ Collection.prototype._find = function (query, options) {
 				op.time('tableScan: ' + scanLength);
 				resultArr = this._data.filter(matcher);
 			}
-
 
 			op.time('tableScan: ' + scanLength);
 		}
@@ -2194,135 +2197,7 @@ Collection.prototype._find = function (query, options) {
 
 		// Now process any joins on the final data
 		if (options.$join) {
-			for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
-				for (joinSourceKey in options.$join[joinSourceIndex]) {
-					if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
-						// Get the match data for the join
-						joinMatch = options.$join[joinSourceIndex][joinSourceKey];
-
-						// Check if the join is to a collection (default) or a specified source type
-						// e.g 'view' or 'collection'
-						joinSourceType = joinMatch.$sourceType || 'collection';
-						joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
-
-						// Set the key to store the join result in to the collection name by default
-						// can be overridden by the '$as' clause in the join object
-						resultKeyName = joinSourceKey;
-
-						// Get the join collection instance from the DB
-						if (joinSource[joinSourceIdentifier]) {
-							// We have a joinSource for this identifier already (given to us by
-							// an index when we analysed the query earlier on) and we can use
-							// that source instead.
-							joinSourceInstance = joinSource[joinSourceIdentifier];
-						} else {
-							// We do not already have a joinSource so grab the instance from the db
-							if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
-								joinSourceInstance = this._db[joinSourceType](joinSourceKey);
-							}
-						}
-
-						// Loop our result data array
-						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
-							// Loop the join conditions and build a search object from them
-							joinSearchQuery = {};
-							joinMulti = false;
-							joinRequire = false;
-							joinPrefix = '';
-
-							for (joinMatchIndex in joinMatch) {
-								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
-									joinMatchData = joinMatch[joinMatchIndex];
-
-									// Check the join condition name for a special command operator
-									if (joinMatchIndex.substr(0, 1) === '$') {
-										// Special command
-										switch (joinMatchIndex) {
-											case '$where':
-												if (joinMatchData.$query || joinMatchData.$options) {
-													if (joinMatchData.$query) {
-														// Commented old code here, new one does dynamic reverse lookups
-														//joinSearchQuery = joinMatchData.query;
-														joinSearchQuery = self._resolveDynamicQuery(joinMatchData.$query, resultArr[resultIndex]);
-													}
-													if (joinMatchData.$options) {
-														joinSearchOptions = joinMatchData.$options;
-													}
-												} else {
-													throw('$join $where clause requires "$query" and / or "$options" keys to work!');
-												}
-												break;
-
-											case '$as':
-												// Rename the collection when stored in the result document
-												resultKeyName = joinMatchData;
-												break;
-
-											case '$multi':
-												// Return an array of documents instead of a single matching document
-												joinMulti = joinMatchData;
-												break;
-
-											case '$require':
-												// Remove the result item if no matching join data is found
-												joinRequire = joinMatchData;
-												break;
-
-											case '$prefix':
-												// Add a prefix to properties mixed in
-												joinPrefix = joinMatchData;
-												break;
-
-											default:
- 												break;
-										}
-									} else {
-										// Get the data to match against and store in the search object
-										// Resolve complex referenced query
-										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatchData, resultArr[resultIndex]);
-									}
-								}
-							}
-
-							// Do a find on the target collection against the match data
-							joinFindResults = joinSourceInstance.find(joinSearchQuery, joinSearchOptions);
-
-							// Check if we require a joined row to allow the result item
-							if (!joinRequire || (joinRequire && joinFindResults[0])) {
-								// Join is not required or condition is met
-								if (resultKeyName === '$root') {
-									// The property name to store the join results in is $root
-									// which means we need to mixin the results but this only
-									// works if joinMulti is disabled
-									if (joinMulti !== false) {
-										// Throw an exception here as this join is not physically possible!
-										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
-									}
-
-									// Mixin the result
-									joinFindResult = joinFindResults[0];
-									joinItem = resultArr[resultIndex];
-
-									for (l in joinFindResult) {
-										if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
-											// Properties are only mixed in if they do not already exist
-											// in the target item (are undefined). Using a prefix denoted via
-											// $prefix is a good way to prevent property name conflicts
-											joinItem[joinPrefix + l] = joinFindResult[l];
-										}
-									}
-								} else {
-									resultArr[resultIndex][resultKeyName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
-								}
-							} else {
-								// Join required but condition not met, add item to removal queue
-								resultRemove.push(resultArr[resultIndex]);
-							}
-						}
-					}
-				}
-			}
-
+			resultRemove = resultRemove.concat(this._applyJoin(resultArr, options.$join, joinSource));
 			op.data('flag.join', true);
 		}
 
@@ -2526,62 +2401,6 @@ Collection.prototype._find = function (query, options) {
 	resultArr.__fdbOp = op;
 	resultArr.$cursor = cursor;
 	return resultArr;
-};
-
-Collection.prototype._resolveDynamicQuery = function (query, item) {
-	var self = this,
-		newQuery,
-		propType,
-		propVal,
-		pathResult,
-		i;
-
-	if (typeof query === 'string') {
-		// Check if the property name starts with a back-reference
-		if (query.substr(0, 3) === '$$.') {
-			// Fill the query with a back-referenced value
-			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
-		} else {
-			pathResult = new Path(query).value(item);
-		}
-
-		if (pathResult.length > 1) {
-			return {$in: pathResult};
-		} else {
-			return pathResult[0];
-		}
-	}
-
-	newQuery = {};
-
-	for (i in query) {
-		if (query.hasOwnProperty(i)) {
-			propType = typeof query[i];
-			propVal = query[i];
-
-			switch (propType) {
-				case 'string':
-					// Check if the property name starts with a back-reference
-					if (propVal.substr(0, 3) === '$$.') {
-						// Fill the query with a back-referenced value
-						newQuery[i] = new Path(propVal.substr(3, propVal.length - 3)).value(item)[0];
-					} else {
-						newQuery[i] = propVal;
-					}
-					break;
-
-				case 'object':
-					newQuery[i] = self._resolveDynamicQuery(propVal, item);
-					break;
-
-				default:
-					newQuery[i] = propVal;
-					break;
-			}
-		}
-	}
-
-	return newQuery;
 };
 
 /**
