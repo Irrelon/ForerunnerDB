@@ -218,3 +218,5 @@ templates_c
 cache
 
 node_modules*
+
+data/
