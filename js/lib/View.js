@@ -24,6 +24,21 @@ var View = function (name, query, options) {
 	this.init.apply(this, arguments);
 };
 
+Shared.addModule('View', View);
+Shared.mixin(View.prototype, 'Mixin.Common');
+Shared.mixin(View.prototype, 'Mixin.ChainReactor');
+Shared.mixin(View.prototype, 'Mixin.Constants');
+Shared.mixin(View.prototype, 'Mixin.Triggers');
+Shared.mixin(View.prototype, 'Mixin.Tags');
+
+Collection = require('./Collection');
+CollectionGroup = require('./CollectionGroup');
+ActiveBucket = require('./ActiveBucket');
+ReactorIO = require('./ReactorIO');
+CollectionInit = Collection.prototype.init;
+Db = Shared.modules.Db;
+DbInit = Db.prototype.init;
+
 View.prototype.init = function (name, query, options) {
 	var self = this;
 
@@ -45,48 +60,6 @@ View.prototype.init = function (name, query, options) {
 		self.refresh();
 	});
 };
-
-Shared.addModule('View', View);
-Shared.mixin(View.prototype, 'Mixin.Common');
-Shared.mixin(View.prototype, 'Mixin.ChainReactor');
-Shared.mixin(View.prototype, 'Mixin.Constants');
-Shared.mixin(View.prototype, 'Mixin.Triggers');
-Shared.mixin(View.prototype, 'Mixin.Tags');
-
-Collection = require('./Collection');
-CollectionGroup = require('./CollectionGroup');
-ActiveBucket = require('./ActiveBucket');
-ReactorIO = require('./ReactorIO');
-CollectionInit = Collection.prototype.init;
-Db = Shared.modules.Db;
-DbInit = Db.prototype.init;
-
-/**
- * Gets / sets the current state.
- * @param {String=} val The name of the state to set.
- * @returns {*}
- */
-Shared.synthesize(View.prototype, 'state');
-
-/**
- * Gets / sets the current name.
- * @param {String=} val The new name to set.
- * @returns {*}
- */
-Shared.synthesize(View.prototype, 'name');
-
-/**
- * Gets / sets the current cursor.
- * @param {String=} val The new cursor to set.
- * @returns {*}
- */
-Shared.synthesize(View.prototype, 'cursor', function (val) {
-	if (val === undefined) {
-		return this._cursor || {};
-	}
-
-	this.$super.apply(this, arguments);
-});
 
 /**
  * Executes an insert against the view's underlying data-source.
@@ -574,26 +547,6 @@ View.prototype.drop = function (callback) {
 
 	return false;
 };
-
-/**
- * Gets / sets the db instance this class instance belongs to.
- * @param {Db=} db The db instance.
- * @memberof View
- * @returns {*}
- */
-Shared.synthesize(View.prototype, 'db', function (db) {
-	if (db) {
-		this.privateData().db(db);
-		this.publicData().db(db);
-
-		// Apply the same debug settings
-		this.debug(db.debug());
-		this.privateData().debug(db.debug());
-		this.publicData().debug(db.debug());
-	}
-
-	return this.$super.apply(this, arguments);
-});
 
 /**
  * Gets / sets the query object and query options that the view uses
@@ -1142,6 +1095,53 @@ View.prototype.publicData = function () {
 View.prototype.indexOf = function () {
 	return this.publicData().indexOf.apply(this.publicData(), arguments);
 };
+
+/**
+ * Gets / sets the db instance this class instance belongs to.
+ * @param {Db=} db The db instance.
+ * @memberof View
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'db', function (db) {
+	if (db) {
+		this.privateData().db(db);
+		this.publicData().db(db);
+
+		// Apply the same debug settings
+		this.debug(db.debug());
+		this.privateData().debug(db.debug());
+		this.publicData().debug(db.debug());
+	}
+
+	return this.$super.apply(this, arguments);
+});
+
+/**
+ * Gets / sets the current state.
+ * @param {String=} val The name of the state to set.
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'state');
+
+/**
+ * Gets / sets the current name.
+ * @param {String=} val The new name to set.
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'name');
+
+/**
+ * Gets / sets the current cursor.
+ * @param {String=} val The new cursor to set.
+ * @returns {*}
+ */
+Shared.synthesize(View.prototype, 'cursor', function (val) {
+	if (val === undefined) {
+		return this._cursor || {};
+	}
+
+	this.$super.apply(this, arguments);
+});
 
 // Extend collection with view init
 Collection.prototype.init = function () {
