@@ -1993,7 +1993,6 @@ Collection.prototype._find = function (query, options) {
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
-		joinSourceIndex,
 		joinIndex,
 		joinSource = {},
 		joinQuery,
@@ -2001,24 +2000,10 @@ Collection.prototype._find = function (query, options) {
 		joinSourceKey,
 		joinSourceType,
 		joinSourceIdentifier,
-		joinSourceInstance,
 		joinSourceData,
-		joinMatch,
-		joinMatchIndex,
-		joinSearchQuery,
-		joinSearchOptions,
-		joinMulti,
-		joinRequire,
-		joinFindResults,
-		joinFindResult,
-		joinItem,
-		joinPrefix,
-		joinMatchData,
-		resultKeyName,
-		resultIndex,
 		resultRemove = [],
 		index,
-		i, j, k, l,
+		i, j, k,
 		fieldListOn = [],
 		fieldListOff = [],
 		elemMatchPathSolver,
@@ -2197,7 +2182,7 @@ Collection.prototype._find = function (query, options) {
 
 		// Now process any joins on the final data
 		if (options.$join) {
-			resultRemove = resultRemove.concat(this._applyJoin(resultArr, options.$join, joinSource));
+			resultRemove = resultRemove.concat(this.applyJoin(resultArr, options.$join, joinSource));
 			op.data('flag.join', true);
 		}
 
