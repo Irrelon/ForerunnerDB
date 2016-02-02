@@ -40,16 +40,35 @@ Overload = Shared.overload;
  * Set the url of the server to use for API.
  * @name server
  */
-Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
-	if (val !== undefined) {
-		if (val.substr(val.length - 1, 1) === '/') {
+NodeApiClient.prototype.server = function (host, port) {
+	if (host !== undefined) {
+		if (host.substr(host.length - 1, 1) === '/') {
 			// Strip trailing /
-			val = val.substr(0, val.length - 1);
+			host = host.substr(0, host.length - 1);
+
+			if (port !== undefined) {
+				this._server = host + ":" + port;
+			} else {
+				this._server = host;
+			}
+
+			this._host = host;
+			this._port = port;
+
+			return this;
 		}
 	}
 
-	return this.$super.call(this, val);
-});
+	if (this._port !== undefined) {
+		return {
+			host: this._host,
+			port: this._port,
+			url: this._server
+		};
+	} else {
+		return this._server;
+	}
+};
 
 NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 	var self = this,
