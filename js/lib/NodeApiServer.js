@@ -23,6 +23,7 @@ var Shared = require('./Shared'),
 	ReactorIO,
 	Overload,
 	_access = {},
+	_accessOrder = [],
 	_io = {};
 
 NodeApiServer = function () {
@@ -707,7 +708,9 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
  * @returns {*}
  */
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
-	var methodArr;
+	var methodArr,
+		accessOrderItem,
+		i;
 
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
 		if (checkFunction !== undefined) {
@@ -728,33 +731,53 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 			_access.db[dbName] = _access.db[dbName] || {};
 			_access.db[dbName][objType] = _access.db[dbName][objType] || {};
 			_access.db[dbName][objType][objName] = _access.db[dbName][objType][objName] || {};
-			_access.db[dbName][objType][objName][methodName] = _access.db[dbName][objType][objName][methodName] || [];
-			_access.db[dbName][objType][objName][methodName].push(checkFunction);
+			_access.db[dbName][objType][objName][methodName] = true;
+
+			_accessOrder.push({
+				dbName: dbName,
+				objType: objType,
+				objName: objName,
+				methodName: methodName,
+				checkFunction: checkFunction
+			});
 
 			return this;
 		}
 
 		methodArr = [];
 
-		// Get all checkFunctions for the specified access data
+		// Do quick lookup check
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName][methodName]);
+
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
+
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
+
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
+
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
+
+		} else {
+			// None of the matching patterns exist, exit without permissions
+			return methodArr;
 		}
 
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName]['*']);
-		}
+		// Now we know that at least one of the permission rules matches the passed pattern
+		// so we loop through the permissions in order they are registered and add matching
+		// ones to the methodArr array.
+		for (i = 0; i < _accessOrder.length; i++) {
+			accessOrderItem = _accessOrder[i];
 
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*'][methodName]);
-		}
-
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*']['*']);
-		}
-
-		if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName]['*']['*']['*']);
+			// Determine if the access data fits the query
+			if (accessOrderItem.dbName === '*' || accessOrderItem.dbName === dbName) {
+				if (accessOrderItem.objType === '*' || accessOrderItem.objType === objType) {
+					if (accessOrderItem.objName === '*' || accessOrderItem.objName === objName) {
+						if (accessOrderItem.methodName === '*' || accessOrderItem.methodName === methodName) {
+							methodArr.push(accessOrderItem.checkFunction);
+						}
+					}
+				}
+			}
 		}
 
 		return methodArr;
