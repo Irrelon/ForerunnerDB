@@ -1,4 +1,4 @@
-QUnit.module('Views');
+QUnit.module('Views General');
 ForerunnerDB.moduleLoaded('View', function () {
 	QUnit.test('View.from() :: Drop a view\'s underlying collection', function () {
 		"use strict";
@@ -57,7 +57,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	QUnit.test('View.queryData() :: Set query and data and check that returned data matches expected result', function () {
+	QUnit.test('View.query() :: Query options on view has $orderBy, test order is correct', function () {
 		"use strict";
 		base.dbUp();
 
@@ -66,7 +66,9 @@ ForerunnerDB.moduleLoaded('View', function () {
 			result;
 
 		view
-			.queryData({}, {
+			.query({
+
+			}, {
 				$orderBy: {
 					createdTs: -1
 				}
@@ -291,7 +293,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	/*QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
+	QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
 		"use strict";
 		base.dbUp();
 
@@ -332,5 +334,5 @@ ForerunnerDB.moduleLoaded('View', function () {
 			base.dbDown();
 			start();
 		}, 1000);
-	});*/
+	});
 });
