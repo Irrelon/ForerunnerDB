@@ -10,7 +10,7 @@ angular.module('app.controllers')
 						template: 'Loading...'
 					});
 
-					$http.get($scope.settings.host + ':' + $scope.settings.port + '/ForerunnerDB_Ionic_App/collection/item').then(function (resp) {
+					$http.get($scope.settings.host + ':' + $scope.settings.port + '/fdb/ForerunnerDB_Ionic_App/collection/item').then(function (resp) {
 						$ionicLoading.hide();
 
 						if (resp.data && !resp.data.err) {
