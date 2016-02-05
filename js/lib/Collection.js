@@ -2189,13 +2189,7 @@ Collection.prototype._find = function (query, options) {
 		// Process removal queue
 		if (resultRemove.length) {
 			op.time('removalQueue');
-			for (i = 0; i < resultRemove.length; i++) {
-				index = resultArr.indexOf(resultRemove[i]);
-
-				if (index > -1) {
-					resultArr.splice(index, 1);
-				}
-			}
+			this.spliceArrayByIndexList(resultArr, resultRemove);
 			op.time('removalQueue');
 		}
 
