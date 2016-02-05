@@ -11622,21 +11622,21 @@ NodeApiClient.prototype.server = function (host, port) {
 		if (host.substr(host.length - 1, 1) === '/') {
 			// Strip trailing /
 			host = host.substr(0, host.length - 1);
-
-			if (port !== undefined) {
-				this._server = host + ":" + port;
-			} else {
-				this._server = host;
-			}
-
-			this._host = host;
-			this._port = port;
-
-			return this;
 		}
+
+		if (port !== undefined) {
+			this._server = host + ":" + port;
+		} else {
+			this._server = host;
+		}
+
+		this._host = host;
+		this._port = port;
+
+		return this;
 	}
 
-	if (this._port !== undefined) {
+	if (port !== undefined) {
 		return {
 			host: this._host,
 			port: this._port,
@@ -14632,7 +14632,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.643',
+	version: '1.3.644',
 	modules: {},
 	plugins: {},
 
