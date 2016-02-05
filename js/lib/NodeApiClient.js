@@ -24,6 +24,8 @@ NodeApiClient = function () {
 NodeApiClient.prototype.init = function (core) {
 	var self = this;
 	self._core = core;
+
+	self.rootPath('/fdb');
 };
 
 Shared.addModule('NodeApiClient', NodeApiClient);
@@ -35,6 +37,8 @@ Core = Shared.modules.Core;
 CoreInit = Core.prototype.init;
 Collection = Shared.modules.Collection;
 Overload = Shared.overload;
+
+Shared.synthesize(NodeApiClient.prototype, 'rootPath');
 
 /**
  * Set the url of the server to use for API.
@@ -152,7 +156,7 @@ NodeApiClient.prototype.head = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('HEAD', this.server() + path, data, options, callback);
+		return this.http('HEAD', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -170,7 +174,7 @@ NodeApiClient.prototype.get = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('GET', this.server() + path, data, options, callback);
+		return this.http('GET', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -188,7 +192,7 @@ NodeApiClient.prototype.put = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('PUT', this.server() + path, data, options, callback);
+		return this.http('PUT', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -206,7 +210,7 @@ NodeApiClient.prototype.post = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('POST', this.server() + path, data, options, callback);
+		return this.http('POST', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -224,7 +228,7 @@ NodeApiClient.prototype.patch = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('PATCH', this.server() + path, data, options, callback);
+		return this.http('PATCH', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -261,7 +265,7 @@ NodeApiClient.prototype.delete = new Overload({
 	},
 
 	'$main': function (path, data, options, callback) {
-		return this.http('DELETE', this.server() + path, data, options, callback);
+		return this.http('DELETE', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
@@ -302,10 +306,10 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		connecting = true;
 
 	if (this.debug()) {
-		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
+		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + this._rootPath + path);
 	}
 
-	finalPath = this.server() + path + '/_sync';
+	finalPath = this.server() + this._rootPath + path + '/_sync';
 
 	// Check for global auth
 	if (this._sessionData) {
