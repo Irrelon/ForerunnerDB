@@ -40,6 +40,7 @@ NodeApiServer.prototype.init = function (core) {
 	self._app = app;
 
 	this.name('ApiServer');
+	this.rootPath('fdb');
 };
 
 Shared.addModule('NodeApiServer', NodeApiServer);
@@ -53,6 +54,13 @@ ReactorIO = Shared.modules.ReactorIO;
 Overload = Shared.overload;
 
 Shared.synthesize(NodeApiServer.prototype, 'name');
+Shared.synthesize(NodeApiServer.prototype, 'rootPath', function (val) {
+	if (val !== undefined && server) {
+		throw('Cannot set rootPath of server after start() has been called!');
+	}
+
+	return this.$super.call(this, val);
+});
 
 /**
  * Starts the rest server listening for requests against the ip and
@@ -70,6 +78,13 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 	// Start listener
 	if (!server) {
+		this._startData = {
+			host: host,
+			port: port,
+			options: options,
+			callback: callback
+		};
+
 		if (options && options.cors === true) {
 			app.use(cors({origin: true}));
 
@@ -158,6 +173,10 @@ NodeApiServer.prototype.serverApp = function () {
  */
 NodeApiServer.prototype.express = function () {
 	return express;
+};
+
+NodeApiServer.static = function (urlPath, folderPath) {
+	return app.use(urlPath, express.static(folderPath));
 };
 
 /**
@@ -260,6 +279,7 @@ NodeApiServer.prototype._generateSelfCertHttpsServer = function (callback) {
 NodeApiServer.prototype.stop = function () {
 	if (server) {
 		server.close();
+		server = undefined;
 		return true;
 	}
 
@@ -814,9 +834,10 @@ NodeApiServer.prototype._denyMethod = function defaultDenyMethod (dbName, objTyp
  * @private
  */
 NodeApiServer.prototype._defineRoutes = function () {
-	var self = this;
+	var self = this,
+		root = this._rootPath;
 
-	app.get('/', function (req, res) {
+	app.get(root + '/', function (req, res) {
 		res.send({
 			server: 'ForerunnerDB',
 			version: self._core.version()
@@ -824,23 +845,23 @@ NodeApiServer.prototype._defineRoutes = function () {
 	});
 
 	// Handle sync routes
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
 
 	// Handle all other routes
-	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId/*', function () { self.handleRequest.apply(self, arguments); });
-	app.head('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId/*', function () { self.handleRequest.apply(self, arguments); });
+	app.head(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.put('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-	app.patch('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.post(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.put(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.patch(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.delete('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.delete('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.delete(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.delete(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
 };
 
 NodeApiServer.prototype._generateCert = function () {
