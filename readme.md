@@ -4187,6 +4187,73 @@ $.ajax({
 });
 ```
 
+### Creating Your Own Routes
+ForerunnerDB's API utilises ExpressJS and exposes the express app should you wish
+to register your own routes under the same host and port.
+
+You can retrieve the express app via:
+
+```js
+var app = fdb.api.serverApp();
+```
+
+The response from serverApp() is the express instance like doing: app = express();
+
+You can then register routes in the normal express way:
+
+```js
+app.get('/myRoute', function (req, res) { ... }
+```
+
+#### Serving Static Content
+> You don't have to use this helper, you can define static routes via the express
+app in the normal way if you prefer, this just makes it a tiny bit easier.
+
+If you would like to serve static files we have exposed a helper method for you:
+
+```js
+/**
+ * @param {String} urlPath The route to serve static files from.
+ * @param {String} folderPath The actual filesystem path where the static
+ * files should be read from.
+ */
+fdb.api.static('/mystaticroute', './www');
+```
+
+#### Customising Further
+
+You can get hold of the express library directly (to use things like express.static)
+via the express method:
+
+```js
+var express = fdb.api.express();
+```
+
+#### Routes That ForerunnerDB Uses
+
+ForerunnerDB's routes all start with **/fdb** by default so you can register any
+ other routes that don't start with /fdb and they will not interfere with
+ Forerunner's routes.
+
+#### Default Middleware
+
+ForerunnerDB enables various middleware packages by default. These are:
+
+1. bodyParser.json()
+2. A system to turn JSON sent as the query string into an accessible object. This
+should not interfere with normal query parameters.
+
+If you start the server with {cors: true} we will also enable the cors middleware
+via:
+
+```js
+// Enable cors middleware
+app.use(cors({origin: true}));
+
+// Allow preflight CORS
+app.options('*', cors({origin: true}));
+```
+
 # AngularJS and Ionic Support
 ForerunnerDB includes an AngularJS module that allows you to require ForerunnerDB as
 a dependency in your AngularJS (or Ionic) application. In order to use ForerunnerDB
