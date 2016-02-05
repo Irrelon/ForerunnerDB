@@ -724,6 +724,7 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
 	var methodArr,
 		accessOrderItem,
+		foundEntry = false,
 		i;
 
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
@@ -762,15 +763,15 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 
 		// Do quick lookup check
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName][methodName]) {
-
+			foundEntry = true;
 		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
-
+			foundEntry = true;
 		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
-
+			foundEntry = true;
 		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
-
+			foundEntry = true;
 		} else if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
-
+			foundEntry = true;
 		} else {
 			// None of the matching patterns exist, exit without permissions
 			return methodArr;

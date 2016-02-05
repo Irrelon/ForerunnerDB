@@ -51,6 +51,7 @@ var Shared = require('./Shared'),
 	ReactorIO,
 	Overload,
 	_access = {},
+	_accessOrder = [],
 	_io = {};
 
 NodeApiServer = function () {
@@ -172,13 +173,27 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 };
 
 /**
- * Gets the express app and returns it to the caller.
+ * Gets the express app (router).
  * @returns {*}
  */
 NodeApiServer.prototype.serverApp = function () {
 	return app;
 };
 
+/**
+ * Gets the express library.
+ * @returns {*|exports|module.exports}
+ */
+NodeApiServer.prototype.express = function () {
+	return express;
+};
+
+/**
+ * Creates the http(s) server instance.
+ * @param options
+ * @param callback
+ * @private
+ */
 NodeApiServer.prototype._createHttpServer = function (options, callback) {
 	var self = this,
 		ssl,
@@ -735,7 +750,10 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
  * @returns {*}
  */
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
-	var methodArr;
+	var methodArr,
+		accessOrderItem,
+		foundEntry = false,
+		i;
 
 	if (objType !== undefined &amp;&amp; objName !== undefined &amp;&amp; methodName !== undefined) {
 		if (checkFunction !== undefined) {
@@ -756,33 +774,53 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 			_access.db[dbName] = _access.db[dbName] || {};
 			_access.db[dbName][objType] = _access.db[dbName][objType] || {};
 			_access.db[dbName][objType][objName] = _access.db[dbName][objType][objName] || {};
-			_access.db[dbName][objType][objName][methodName] = _access.db[dbName][objType][objName][methodName] || [];
-			_access.db[dbName][objType][objName][methodName].push(checkFunction);
+			_access.db[dbName][objType][objName][methodName] = true;
+
+			_accessOrder.push({
+				dbName: dbName,
+				objType: objType,
+				objName: objName,
+				methodName: methodName,
+				checkFunction: checkFunction
+			});
 
 			return this;
 		}
 
 		methodArr = [];
 
-		// Get all checkFunctions for the specified access data
+		// Do quick lookup check
 		if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType][objName] &amp;&amp; _access.db[dbName][objType][objName][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName][methodName]);
+			foundEntry = true;
+		} else if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType][objName] &amp;&amp; _access.db[dbName][objType][objName]['*']) {
+			foundEntry = true;
+		} else if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType]['*'] &amp;&amp; _access.db[dbName][objType]['*'][methodName]) {
+			foundEntry = true;
+		} else if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType]['*'] &amp;&amp; _access.db[dbName][objType]['*']['*']) {
+			foundEntry = true;
+		} else if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName]['*'] &amp;&amp; _access.db[dbName]['*']['*'] &amp;&amp; _access.db[dbName]['*']['*']['*']) {
+			foundEntry = true;
+		} else {
+			// None of the matching patterns exist, exit without permissions
+			return methodArr;
 		}
 
-		if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType][objName] &amp;&amp; _access.db[dbName][objType][objName]['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName]['*']);
-		}
+		// Now we know that at least one of the permission rules matches the passed pattern
+		// so we loop through the permissions in order they are registered and add matching
+		// ones to the methodArr array.
+		for (i = 0; i &lt; _accessOrder.length; i++) {
+			accessOrderItem = _accessOrder[i];
 
-		if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType]['*'] &amp;&amp; _access.db[dbName][objType]['*'][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*'][methodName]);
-		}
-
-		if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName][objType] &amp;&amp; _access.db[dbName][objType]['*'] &amp;&amp; _access.db[dbName][objType]['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*']['*']);
-		}
-
-		if (_access.db &amp;&amp; _access.db[dbName] &amp;&amp; _access.db[dbName]['*'] &amp;&amp; _access.db[dbName]['*']['*'] &amp;&amp; _access.db[dbName]['*']['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName]['*']['*']['*']);
+			// Determine if the access data fits the query
+			if (accessOrderItem.dbName === '*' || accessOrderItem.dbName === dbName) {
+				if (accessOrderItem.objType === '*' || accessOrderItem.objType === objType) {
+					if (accessOrderItem.objName === '*' || accessOrderItem.objName === objName) {
+						if (accessOrderItem.methodName === '*' || accessOrderItem.methodName === methodName) {
+							methodArr.push(accessOrderItem.checkFunction);
+						}
+					}
+				}
+			}
 		}
 
 		return methodArr;
@@ -868,7 +906,7 @@ module.exports = NodeApiServer;</code></pre>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sun Jan 31 2016 17:07:20 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Feb 05 2016 10:35:08 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

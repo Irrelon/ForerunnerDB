@@ -522,7 +522,7 @@ var Matching = {
 			joinFindResult,
 			joinItem,
 			resultRemove = [],
-			i, k, l;
+			l;
 
 		if (!(docArr instanceof Array)) {
 			// Turn the document into an array
@@ -727,6 +727,8 @@ var Matching = {
 	},
 
 	spliceArrayByIndexList: function (arr, list) {
+		var i;
+
 		for (i = list.length - 1; i >= 0; i--) {
 			arr.splice(list[i], 1);
 		}

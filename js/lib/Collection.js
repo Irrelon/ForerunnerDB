@@ -2002,7 +2002,6 @@ Collection.prototype._find = function (query, options) {
 		joinSourceIdentifier,
 		joinSourceData,
 		resultRemove = [],
-		index,
 		i, j, k,
 		fieldListOn = [],
 		fieldListOff = [],
@@ -2094,7 +2093,6 @@ Collection.prototype._find = function (query, options) {
 				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
-				debugger;
 				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');

@@ -75,7 +75,7 @@ module.exports = function(grunt) {
 		},
 
 		"node-qunit": {
-			"ForerunnerDB": {
+			"Core": {
 				// logging options
 				log: {
 					// log assertions overview
@@ -115,12 +115,13 @@ module.exports = function(grunt) {
 				// max amount of ms child can be blocked, after that we assume running an infinite loop
 				maxBlockDuration: 2000,
 
-				code: "js/unitTests/tests/testsNodeIntegration.js",
-				tests: "js/unitTests/tests/testsNodeIntegration.js",
+				code: "js/unitTests/tests/nodeTestsCore.js",
+				tests: "js/unitTests/tests/nodeTestsCore.js",
 				done: function (err, res) {
 
 				}
-			}/*,
+			}
+			/*,
 
 			"RemoteApi": {
 				// logging options
