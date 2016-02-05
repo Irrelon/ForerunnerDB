@@ -491,16 +491,17 @@ var Matching = {
 
 	/**
 	 *
-	 * @param {Array} docArr An array of objects to run the join operation
-	 * against.
+	 * @param {Array | Object} docArr An array of objects to run the join
+	 * operation against or a single object.
 	 * @param {Array} joinClause The join clause object array (the array in
 	 * the $join key of a normal join options object).
-	 * @param joinSource An object containing join source reference
+	 * @param {Object} joinSource An object containing join source reference
 	 * data or a blank object if you are doing a bespoke join operation.
+	 * @param {Object} options An options object or blank object if no options.
 	 * @returns {Array}
 	 * @private
 	 */
-	applyJoin: function (docArr, joinClause, joinSource) {
+	applyJoin: function (docArr, joinClause, joinSource, options) {
 		var self = this,
 			joinSourceIndex,
 			joinSourceKey,
@@ -522,6 +523,11 @@ var Matching = {
 			joinItem,
 			resultRemove = [],
 			i, k, l;
+
+		if (!(docArr instanceof Array)) {
+			// Turn the document into an array
+			docArr = [docArr];
+		}
 
 		for (joinSourceIndex = 0; joinSourceIndex < joinClause.length; joinSourceIndex++) {
 			for (joinSourceKey in joinClause[joinSourceIndex]) {
@@ -645,7 +651,7 @@ var Matching = {
 							}
 						} else {
 							// Join required but condition not met, add item to removal queue
-							resultRemove.push(docArr[resultIndex]);
+							resultRemove.push(resultIndex);
 						}
 					}
 				}
@@ -718,6 +724,12 @@ var Matching = {
 		}
 
 		return newQuery;
+	},
+
+	spliceArrayByIndexList: function (arr, list) {
+		for (i = list.length - 1; i >= 0; i--) {
+			arr.splice(list[i], 1);
+		}
 	}
 };
 
