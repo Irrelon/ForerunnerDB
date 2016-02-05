@@ -59,6 +59,13 @@ Shared.synthesize(NodeApiServer.prototype, 'rootPath', function (val) {
 		throw('Cannot set rootPath of server after start() has been called!');
 	}
 
+	if (val !== undefined && !server) {
+		this._rootSectionCount = (val.split('/').length - 1);
+		if (this._rootSectionCount < 0) {
+			this._rootSectionCount =  0;
+		}
+	}
+
 	return this.$super.call(this, val);
 });
 
@@ -350,8 +357,13 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				// Split path into sections
 				pathSections = urlPath.split('/');
 
-				// Remove the first four sections as we already used these (dbName, objType, objName, itemId)
-				pathSections.splice(0, 4);
+				if (this._rootPath) {
+					// Remove the first 5 sections as we already used these (rootPath, dbName, objType, objName, itemId)
+					pathSections.splice(0, 4 + this._rootSectionCount);
+				} else {
+					// Remove the first 4 sections as we already used these (dbName, objType, objName, itemId)
+					pathSections.splice(0, 4);
+				}
 
 				switch (method) {
 					case 'HEAD':
