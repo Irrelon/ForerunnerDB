@@ -93,6 +93,7 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 		};
 
 		if (options && options.cors === true) {
+			// Enable cors middleware
 			app.use(cors({origin: true}));
 
 			// Allow preflight CORS
