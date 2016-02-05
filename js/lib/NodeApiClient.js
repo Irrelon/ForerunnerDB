@@ -63,7 +63,7 @@ NodeApiClient.prototype.server = function (host, port) {
 		return this;
 	}
 
-	if (this._port !== undefined) {
+	if (port !== undefined) {
 		return {
 			host: this._host,
 			port: this._port,
