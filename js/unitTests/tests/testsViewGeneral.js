@@ -293,7 +293,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	/*QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
+	QUnit.asyncTest('View.on("change") :: Change event fired when underlying data source updates view content', function () {
 		"use strict";
 		base.dbUp();
 
@@ -334,5 +334,5 @@ ForerunnerDB.moduleLoaded('View', function () {
 			base.dbDown();
 			start();
 		}, 1000);
-	});*/
+	});
 });
