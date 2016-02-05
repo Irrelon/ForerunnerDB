@@ -4068,14 +4068,14 @@ an action.
 
 ##### Accessing all collection's documents:
 
-	GET http://0.0.0.0:9010/<database name>/collection/<collection name>
+	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4085,14 +4085,14 @@ $.ajax({
 
 ##### Accessing an individual document in a collection by id:
 
-	GET http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4105,7 +4105,7 @@ $.ajax({
 insert multiple documents by iterating through the array you send. This allows you
 to insert multiple records with a single API call.
 
-	POST http://0.0.0.0:9010/<database name>/collection/<collection name>
+	POST http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4113,7 +4113,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "post",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4127,7 +4127,7 @@ $.ajax({
 
 ##### Replacing a document by id:
 
-	PUT http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	PUT http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4135,7 +4135,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "put",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4149,7 +4149,7 @@ $.ajax({
 
 ##### Updating a document by id:
 
-	PATCH http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	PATCH http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4157,7 +4157,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "patch",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4171,14 +4171,14 @@ $.ajax({
 
 ##### Deleting a document by id:
 
-	DELETE http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	DELETE http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "delete",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/myCollection/myDocId",
 	"dataType": "json",
 	"contentType": "application/json; charset=utf-8",
 	"success": function (data) {
