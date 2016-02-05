@@ -40,7 +40,7 @@ NodeApiServer.prototype.init = function (core) {
 	self._app = app;
 
 	this.name('ApiServer');
-	this.rootPath('fdb');
+	this.rootPath('/fdb');
 };
 
 Shared.addModule('NodeApiServer', NodeApiServer);
