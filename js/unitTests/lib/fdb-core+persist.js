@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -707,6 +707,46 @@ module.exports = BinaryTree;
 },{"./Path":27,"./Shared":33}],4:[function(_dereq_,module,exports){
 "use strict";
 
+var crcTable,
+	checksum;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+
+	for (n = 0; n < 256; n++) {
+		c = n;
+
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}());
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} str The string to checksum.
+ * @return {Number} The checksum generated.
+ */
+checksum = function(str) {
+	var crc = 0 ^ (-1), // jshint ignore:line
+		i;
+
+	for (i = 0; i < str.length; i++) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+	}
+
+	return (crc ^ (-1)) >>> 0; // jshint ignore:line
+};
+
+module.exports = checksum;
+},{}],5:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared,
 	Db,
 	Metrics,
@@ -715,7 +755,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -798,18 +837,10 @@ Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Index2d = _dereq_('./Index2d');
-Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -1134,8 +1165,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -2439,13 +2470,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
-	this._primaryCrc.uniqueSet(doc[pk], crc);
-	this._crcLookup.uniqueSet(crc, doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2465,13 +2496,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Remove from primary key index
 	this._primaryIndex.unSet(doc[pk]);
 	this._primaryCrc.unSet(doc[pk]);
-	this._crcLookup.unSet(crc);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -4314,7 +4345,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],5:[function(_dereq_,module,exports){
+},{"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4673,7 +4704,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":33}],6:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":33}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4964,47 +4995,14 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],7:[function(_dereq_,module,exports){
-"use strict";
-
-/**
- * @mixin
- */
-var crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-module.exports = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-},{}],8:[function(_dereq_,module,exports){
+},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Crc,
+	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5147,7 +5145,7 @@ Shared.mixin(Db.prototype, 'Mixin.Tags');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5205,7 +5203,7 @@ Db.prototype.isServer = function () {
  * @param {String} string The string to checksum.
  * @return {String} The checksum generated.
  */
-Db.prototype.crc = Crc;
+Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -5636,7 +5634,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
+},{"./Checksum.js":4,"./Collection.js":5,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -7491,11 +7489,11 @@ Common = {
 	},
 
 	/**
-	 * Generates a CRC for the passed object.
-	 * @param {Object} obj The object to generate a CRC for.
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
 	 * @returns {String}
 	 */
-	crc: function (obj) {
+	hash: function (obj) {
 		return this.jStringify(obj);
 	},
 
@@ -11003,7 +11001,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),

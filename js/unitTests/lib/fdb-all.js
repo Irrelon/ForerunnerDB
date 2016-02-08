@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/BinaryLog":4,"../lib/CollectionGroup":7,"../lib/Document":11,"../lib/Grid":13,"../lib/Highchart":14,"../lib/NodeApiClient":30,"../lib/Overview":33,"../lib/Persist":35,"../lib/View":42,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/BinaryLog":4,"../lib/CollectionGroup":8,"../lib/Document":11,"../lib/Grid":13,"../lib/Highchart":14,"../lib/NodeApiClient":30,"../lib/Overview":33,"../lib/Persist":35,"../lib/View":42,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":8,"../lib/Shim.IE8":41}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":9,"../lib/Shim.IE8":41}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -1082,6 +1082,46 @@ module.exports = BinaryTree;
 },{"./Path":34,"./Shared":40}],6:[function(_dereq_,module,exports){
 "use strict";
 
+var crcTable,
+	checksum;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+
+	for (n = 0; n < 256; n++) {
+		c = n;
+
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}());
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} str The string to checksum.
+ * @return {Number} The checksum generated.
+ */
+checksum = function(str) {
+	var crc = 0 ^ (-1), // jshint ignore:line
+		i;
+
+	for (i = 0; i < str.length; i++) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+	}
+
+	return (crc ^ (-1)) >>> 0; // jshint ignore:line
+};
+
+module.exports = checksum;
+},{}],7:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared,
 	Db,
 	Metrics,
@@ -1090,7 +1130,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -1173,18 +1212,10 @@ Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Index2d = _dereq_('./Index2d');
-Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -1509,8 +1540,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -2814,13 +2845,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
-	this._primaryCrc.uniqueSet(doc[pk], crc);
-	this._crcLookup.uniqueSet(crc, doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2840,13 +2871,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Remove from primary key index
 	this._primaryIndex.unSet(doc[pk]);
 	this._primaryCrc.unSet(doc[pk]);
-	this._crcLookup.unSet(crc);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -4689,7 +4720,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":9,"./Index2d":15,"./IndexBinaryTree":16,"./IndexHashMap":17,"./KeyValueStore":18,"./Metrics":19,"./Overload":32,"./Path":34,"./ReactorIO":38,"./Shared":40}],7:[function(_dereq_,module,exports){
+},{"./Index2d":15,"./IndexBinaryTree":16,"./IndexHashMap":17,"./KeyValueStore":18,"./Metrics":19,"./Overload":32,"./Path":34,"./ReactorIO":38,"./Shared":40}],8:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5048,7 +5079,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":6,"./Shared":40}],8:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Shared":40}],9:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5339,47 +5370,14 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":10,"./Metrics.js":19,"./Overload":32,"./Shared":40}],9:[function(_dereq_,module,exports){
-"use strict";
-
-/**
- * @mixin
- */
-var crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-module.exports = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-},{}],10:[function(_dereq_,module,exports){
+},{"./Db.js":10,"./Metrics.js":19,"./Overload":32,"./Shared":40}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Crc,
+	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5522,7 +5520,7 @@ Shared.mixin(Db.prototype, 'Mixin.Tags');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5580,7 +5578,7 @@ Db.prototype.isServer = function () {
  * @param {String} string The string to checksum.
  * @return {String} The checksum generated.
  */
-Db.prototype.crc = Crc;
+Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -6011,7 +6009,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":6,"./Crc.js":9,"./Metrics.js":19,"./Overload":32,"./Shared":40}],11:[function(_dereq_,module,exports){
+},{"./Checksum.js":6,"./Collection.js":7,"./Metrics.js":19,"./Overload":32,"./Shared":40}],11:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -6475,7 +6473,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":6,"./Shared":40}],12:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Shared":40}],12:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -7399,7 +7397,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":6,"./CollectionGroup":7,"./ReactorIO":38,"./Shared":40,"./View":42}],14:[function(_dereq_,module,exports){
+},{"./Collection":7,"./CollectionGroup":8,"./ReactorIO":38,"./Shared":40,"./View":42}],14:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -9692,11 +9690,11 @@ Common = {
 	},
 
 	/**
-	 * Generates a CRC for the passed object.
-	 * @param {Object} obj The object to generate a CRC for.
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
 	 * @returns {String}
 	 */
-	crc: function (obj) {
+	hash: function (obj) {
 		return this.jStringify(obj);
 	},
 
@@ -12834,7 +12832,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":6,"./Document":11,"./Shared":40}],34:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Document":11,"./Shared":40}],34:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -14139,7 +14137,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":43,"localforage":79}],36:[function(_dereq_,module,exports){
+},{"./Collection":7,"./CollectionGroup":8,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":43,"localforage":79}],36:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -15178,11 +15176,11 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// We still have data left, let's work out how to handle it
 	// first let's loop through the removals as these are easy
 	if (sharedData.removeArr.length) {
-		self._handleChainIO_RemovePackets(chainPacket, sharedData);
+		self._handleChainIO_RemovePackets(this, chainPacket, sharedData);
 	}
 
 	if (sharedData.dataArr.length) {
-		self._handleChainIO_UpsertPackets(chainPacket, sharedData);
+		self._handleChainIO_UpsertPackets(this, chainPacket, sharedData);
 	}
 
 	// Now return true to tell the chain reactor not to propagate
@@ -15257,7 +15255,7 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	}
 };
 
-View.prototype._handleChainIO_RemovePackets = function (chainPacket, sharedData) {
+View.prototype._handleChainIO_RemovePackets = function (ioObj, chainPacket, sharedData) {
 	var $or = [],
 		pk = sharedData.pk,
 		removeArr = sharedData.removeArr,
@@ -15276,10 +15274,10 @@ View.prototype._handleChainIO_RemovePackets = function (chainPacket, sharedData)
 		$or.push(orObj);
 	}
 
-	this.chainSend('remove', removeQuery);
+	ioObj.chainSend('remove', removeQuery);
 };
 
-View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData) {
+View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, sharedData) {
 	var data = this._data,
 		primaryIndex = data._primaryIndex,
 		primaryCrc = data._primaryCrc,
@@ -15299,7 +15297,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 		// Check if the data already exists in the data
 		if (primaryIndex.get(arrItem[pk])) {
 			// Matching item exists, check if the data is the same
-			if (primaryCrc.get(arrItem[pk]) !== this.crc(arrItem[pk])) {
+			if (primaryCrc.get(arrItem[pk]) !== this.hash(arrItem[pk])) {
 				// The document exists in the data collection but data differs, update required
 				updateArr.push(arrItem);
 			}
@@ -15310,7 +15308,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 	}
 
 	if (insertArr.length) {
-		this.chainSend('insert', insertArr);
+		ioObj.chainSend('insert', insertArr);
 	}
 
 	if (updateArr.length) {
@@ -15320,7 +15318,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 			query = {};
 			query[pk] = arrItem[pk];
 
-			this.chainSend('update', {
+			ioObj.chainSend('update', {
 				query: query,
 				update: arrItem[i],
 				dataSet: [arrItem[i]]
@@ -15364,7 +15362,7 @@ var _notUsing = function (chainPacket) {
 				}
 
 				if (doSend) {
-					this.chainSend('insert', filteredData);
+					ioObj.chainSend('insert', filteredData);
 				}
 
 				return true;
@@ -15378,7 +15376,7 @@ var _notUsing = function (chainPacket) {
 				if (diff.insert.length || diff.remove.length) {
 					// Now send out new chain packets for each operation
 					if (diff.insert.length) {
-						this.chainSend('insert', diff.insert);
+						ioObj.chainSend('insert', diff.insert);
 					}
 
 					if (diff.update.length) {
@@ -15387,7 +15385,7 @@ var _notUsing = function (chainPacket) {
 							query = {};
 							query[pk] = diff.update[i][pk];
 
-							this.chainSend('update', {
+							ioObj.chainSend('update', {
 								query: query,
 								update: diff.update[i]
 							});
@@ -15407,7 +15405,7 @@ var _notUsing = function (chainPacket) {
 							$or.push({_id: diff.remove[i][pk]});
 						}
 
-						this.chainSend('remove', removeQuery);
+						ioObj.chainSend('remove', removeQuery);
 					}
 
 					// Return true to stop further propagation of the chain packet
@@ -15575,7 +15573,7 @@ View.prototype.from = function (source, callback) {
 		// view's _from source and determines how they should be interpreted by
 		// this view. See the _handleChainIO() method which does all the chain packet
 		// processing for the view.
-		this._io = new ReactorIO(this._from, this, function (chainPacket) { self._handleChainIO.call(self, chainPacket, self); });
+		this._io = new ReactorIO(this._from, this, function (chainPacket) { return self._handleChainIO.call(this, chainPacket, self); });
 
 		// Set the view's internal data primary key to the same as the
 		// current active _from data source
@@ -16464,7 +16462,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":6,"./CollectionGroup":7,"./Overload":32,"./ReactorIO":38,"./Shared":40}],43:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":7,"./CollectionGroup":8,"./Overload":32,"./ReactorIO":38,"./Shared":40}],43:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
  * async
