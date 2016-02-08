@@ -2814,12 +2814,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		crc = this.crc(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], crc);
+	this._crcLookup.uniqueSet(crc, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2839,12 +2840,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		crc = this.crc(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(crc);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -3175,6 +3177,7 @@ Collection.prototype._find = function (query, options) {
 				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
+				debugger;
 				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
@@ -9682,6 +9685,15 @@ Common = {
 	},
 
 	/**
+	 * Generates a CRC for the passed object.
+	 * @param {Object} obj The object to generate a CRC for.
+	 * @returns {String}
+	 */
+	crc: function (obj) {
+		return this.jStringify(obj);
+	},
+
+	/**
 	 * Gets / sets debug flag that can enable debug message output to the
 	 * console if required.
 	 * @param {Boolean} val The value to set debug flag to.
@@ -14964,6 +14976,7 @@ var View = function (name, query, options) {
 
 Shared.addModule('View', View);
 Shared.mixin(View.prototype, 'Mixin.Common');
+Shared.mixin(View.prototype, 'Mixin.Matching');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 Shared.mixin(View.prototype, 'Mixin.Constants');
 Shared.mixin(View.prototype, 'Mixin.Triggers');
@@ -14991,12 +15004,419 @@ View.prototype.init = function (name, query, options) {
 		self._collectionDropped.apply(self, arguments);
 	};
 
-	this._privateData = new Collection(this.name() + '_internalPrivate');
+	this._data = new Collection(this.name() + '_public');
+};
 
-	// Hook our own join change event and refresh after change
-	this.on('joinChange', function () {
-		self.refresh();
-	});
+/**
+ * This reactor IO node is given data changes from source data and
+ * then acts as a firewall process between the source and view data.
+ * Data needs to meet the requirements this IO node imposes before
+ * the data is passed down the reactor chain (to the view). This
+ * allows us to intercept data changes from the data source and act
+ * on them such as applying transforms, checking the data matches
+ * the view's query, applying joins to the data etc before sending it
+ * down the reactor chain via the this.chainSend() calls.
+ *
+ * Update packets are especially complex to handle because an update
+ * on the underlying source data could translate into an insert,
+ * update or remove call on the view. Take a scenario where the view's
+ * query limits the data see from the source. If the source data is
+ * updated and the data now falls inside the view's query limitations
+ * the data is technically now an insert on the view, not an update.
+ * The same is true in reverse where the update becomes a remove. If
+ * the updated data already exists in the view and will still exist
+ * after the update operation then the update can remain an update.
+ * @param {Object} chainPacket The chain reactor packet representing the
+ * data operation that has just been processed on the source data.
+ * @param {View} self The reference to the view we are operating for.
+ * @private
+ */
+View.prototype._handleChainIO = function (chainPacket, self) {
+	var type = chainPacket.type,
+		data = chainPacket.data,
+		hasActiveJoin,
+		hasActiveQuery,
+		hasTransformIn,
+		sharedData;
+
+	// NOTE: "self" in this context is the view instance.
+
+	// NOTE: "this" in this context is the ReactorIO node sitting in
+	// between the source (sender) and the destination (listener) and
+	// in this case the source is the view's "from" data source and the
+	// destination is the view's _data collection. This means
+	// that "this.chainSend()" is asking the ReactorIO node to send the
+	// packet on to the destination listener.
+
+	// EARLY EXIT: Check that the packet is not a CRUD operation
+	if (type !== 'setData' && type !== 'insert' && type !== 'update' && type !== 'remove') {
+		// This packet is NOT a CRUD operation packet so exit early!
+
+		// Returning false informs the chain reactor to continue propagation
+		// of the chain packet down the graph tree
+		return false;
+	}
+
+	// We only need to check packets under three conditions
+
+	// 1) We have a limiting query on the view "active query",
+	// 2) We have a query options with a $join clause on the view "active join"
+	// 3) We have a transformIn operation registered on the view.
+
+	// If none of these conditions exist we can just allow the chain
+	// packet to proceed as normal
+	hasActiveJoin = Boolean(self._querySettings.options && self._querySettings.options.$join);
+	hasActiveQuery = Boolean(self._querySettings.query);
+	hasTransformIn = self._transformIn !== undefined;
+
+	// EARLY EXIT: Check for any complex operation flags and if none
+	// exist, send the packet on and exit early
+	if (!hasActiveJoin && !hasActiveQuery && !hasTransformIn) {
+		// We don't have any complex operation flags so exit early!
+
+		// Returning false informs the chain reactor to continue propagation
+		// of the chain packet down the graph tree
+		return false;
+	}
+
+	// We have either an active query, active join or a transformIn
+	// function registered on the view
+
+	// We create a shared data object here so that the disparate method
+	// calls can share data with each other via this object whilst
+	// still remaining separate methods to keep code relatively clean.
+	sharedData = {
+		removeArr: []
+	};
+
+	// Check the packet type to get the data arrays to work on
+	if (chainPacket.type === 'insert') {
+		// Check if the insert data is an array
+		if (chainPacket.data instanceof Array) {
+			// Use the insert data array
+			sharedData.dataArr = chainPacket.data;
+		} else {
+			// Generate an array from the single insert object
+			sharedData.dataArr = [chainPacket.data];
+		}
+	} else if (chainPacket.type === 'update') {
+		// Use the dataSet array
+		sharedData.dataArr = chainPacket.data.dataSet;
+	} else if (chainPacket.type === 'remove') {
+		if (chainPacket.data instanceof Array) {
+			// Use the remove data array
+			sharedData.removeArr = chainPacket.data;
+		} else {
+			// Generate an array from the single remove object
+			sharedData.removeArr = [chainPacket.data];
+		}
+	}
+
+	// Safety check
+	if (!(sharedData.dataArr instanceof Array)) {
+		// This shouldn't happen, let's log it
+		console.warn('WARNING: dataArr being processed by chain reactor in View class is inconsistent!');
+		sharedData.dataArr = [];
+	}
+
+	if (!(sharedData.removeArr instanceof Array)) {
+		// This shouldn't happen, let's log it
+		console.warn('WARNING: removeArr being processed by chain reactor in View class is inconsistent!');
+		sharedData.removeArr = [];
+	}
+
+	// We need to operate in this order:
+
+	// 1) Check if there is an active join - active joins are operated
+	// against the SOURCE data. The joined data can potentially be
+	// utilised by any active query or transformIn so we do this step first.
+
+	// 2) Check if there is an active query - this is a query that is run
+	// against the SOURCE data after any active joins have been resolved
+	// on the source data. This allows an active query to operate on data
+	// that would only exist after an active join has been executed.
+	// If the source data does not fall inside the limiting factors of the
+	// active query then we add it to a removal array. If it does fall
+	// inside the limiting factors when we add it to an upsert array. This
+	// is because data that falls inside the query could end up being
+	// either new data or updated data after a transformIn operation.
+
+	// 3) Check if there is a transformIn function. If a transformIn function
+	// exist we run it against the data after doing any active join and
+	// active query.
+	if (hasActiveJoin) {
+		self._handleChainIO_ActiveJoin(chainPacket, sharedData);
+	}
+
+	if (hasActiveQuery) {
+		self._handleChainIO_ActiveQuery(chainPacket, sharedData);
+	}
+
+	if (hasTransformIn) {
+		self._handleChainIO_TransformIn(chainPacket, sharedData);
+	}
+
+	// Check if we still have data to operate on and exit
+	// if there is none left
+	if (!sharedData.dataArr.length && !sharedData.removeArr.length) {
+		// There is no more data to operate on, exit without
+		// sending any data down the chain reactor (return true
+		// will tell reactor to exit without continuing)!
+		return true;
+	}
+
+	// Grab the public data collection's primary key
+	sharedData.pk = self._data.primaryKey();
+
+	// We still have data left, let's work out how to handle it
+	// first let's loop through the removals as these are easy
+	if (sharedData.removeArr.length) {
+		self._handleChainIO_RemovePackets(chainPacket, sharedData);
+	}
+
+	if (sharedData.dataArr.length) {
+		self._handleChainIO_UpsertPackets(chainPacket, sharedData);
+	}
+
+	// Now return true to tell the chain reactor not to propagate
+	// the data itself as we have done all that work here
+	return true;
+};
+
+View.prototype._handleChainIO_ActiveJoin = function (chainPacket, sharedData) {
+	var dataArr = sharedData.dataArr,
+		removeArr;
+
+	// Since we have an active join, all we need to do is operate
+	// the join clause on each item in the packet's data array.
+	removeArr = this.applyJoin(dataArr, this._querySettings.options.$join, {}, {});
+
+	// Now that we've run our join keep in mind that joins can exclude data
+	// if there is no matching joined data and the require: true clause in
+	// the join options is enabled. This means we have to store a removal
+	// array that tells us which items from the original data we sent to
+	// join did not match the join data and were set with a require flag.
+	// Now that we have our array of items to remove, let's run through the
+	// original data and remove them from there.
+	this.spliceArrayByIndexList(dataArr, removeArr);
+
+	// Make sure we add any items we removed to the shared removeArr
+	sharedData.removeArr = sharedData.removeArr.concat(removeArr);
+};
+
+View.prototype._handleChainIO_ActiveQuery = function (chainPacket, sharedData) {
+	var self = this,
+		dataArr = sharedData.dataArr,
+		i;
+
+	// Now we need to run the data against the active query to
+	// see if the data should be in the final data list or not,
+	// so we use the _match method.
+
+	// Loop backwards so we can safely splice from the array
+	// while we are looping
+	for (i = dataArr.length - 1; i >= 0; i--) {
+		if (!self._match(dataArr[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
+			// The data didn't match the active query, add it
+			// to the shared removeArr
+			sharedData.removeArr.push(dataArr[i]);
+
+			// Now remove it from the shared dataArr
+			dataArr.splice(i, 1);
+		}
+	}
+};
+
+View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
+	var self = this,
+		dataArr = sharedData.dataArr,
+		removeArr = sharedData.removeArr,
+		i;
+
+	// At this stage we take the remaining items still left in the data
+	// array and run our transformIn method on each one, modifying it
+	// from what it was to what it should be on the view. We also have
+	// to run this on items we want to remove too because transforms can
+	// affect primary keys and therefore stop us from identifying the
+	// correct items to run removal operations on.
+	for (i = 0; i < dataArr.length; i++) {
+		// Assign the new value
+		dataArr[i] = self._transformIn(dataArr[i]);
+	}
+
+	for (i = 0; i < removeArr.length; i++) {
+		// Assign the new value
+		removeArr[i] = self._transformIn(removeArr[i]);
+	}
+};
+
+View.prototype._handleChainIO_RemovePackets = function (chainPacket, sharedData) {
+	var $or = [],
+		pk = sharedData.pk,
+		removeArr = sharedData.removeArr,
+		removeQuery = {
+			query: {
+				$or: $or
+			}
+		},
+		orObj,
+		i;
+
+	for (i = 0; i < removeArr.length; i++) {
+		orObj = {};
+		orObj[pk] = removeArr[i][pk];
+
+		$or.push(orObj);
+	}
+
+	this.chainSend('remove', removeQuery);
+};
+
+View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData) {
+	var data = this._data,
+		primaryIndex = data._primaryIndex,
+		primaryCrc = data._primaryCrc,
+		pk = sharedData.pk,
+		dataArr = sharedData.dataArr,
+		arrItem,
+		insertArr = [],
+		updateArr = [],
+		query,
+		i;
+
+	// Let's work out what type of operation this data should
+	// generate between an insert or an update.
+	for (i = 0; i < dataArr.length; i++) {
+		arrItem = dataArr[i];
+
+		// Check if the data already exists in the data
+		if (primaryIndex.get(arrItem[pk])) {
+			// Matching item exists, check if the data is the same
+			if (primaryCrc.get(arrItem[pk]) !== this.crc(arrItem[pk])) {
+				// The document exists in the data collection but data differs, update required
+				updateArr.push(arrItem);
+			}
+		} else {
+			// The document is missing from this collection, insert required
+			insertArr.push(arrItem);
+		}
+	}
+
+	if (insertArr.length) {
+		this.chainSend('insert', insertArr);
+	}
+
+	if (updateArr.length) {
+		for (i = 0; i < updateArr.length; i++) {
+			arrItem = updateArr[i];
+
+			query = {};
+			query[pk] = arrItem[pk];
+
+			this.chainSend('update', {
+				query: query,
+				update: arrItem[i],
+				dataSet: [arrItem[i]]
+			});
+		}
+	}
+};
+
+var _notUsing = function (chainPacket) {
+	var self = this,
+		data,
+		diff,
+		query,
+		filteredData,
+		doSend,
+		pk,
+		i;
+
+	// Check that the state of the "self" object is not dropped
+	if (self && !self.isDropped()) {
+		// Check if we have a constraining query
+		if (self._querySettings.query) {
+			if (chainPacket.type === 'insert') {
+				data = chainPacket.data;
+
+				// Check if the data matches our query
+				if (data instanceof Array) {
+					filteredData = [];
+
+					for (i = 0; i < data.length; i++) {
+						if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
+							filteredData.push(data[i]);
+							doSend = true;
+						}
+					}
+				} else {
+					if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
+						filteredData = data;
+						doSend = true;
+					}
+				}
+
+				if (doSend) {
+					this.chainSend('insert', filteredData);
+				}
+
+				return true;
+			}
+
+			if (chainPacket.type === 'update') {
+				// Do a DB diff between this view's data and the underlying collection it reads from
+				// to see if something has changed
+				diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
+
+				if (diff.insert.length || diff.remove.length) {
+					// Now send out new chain packets for each operation
+					if (diff.insert.length) {
+						this.chainSend('insert', diff.insert);
+					}
+
+					if (diff.update.length) {
+						pk = self._privateData.primaryKey();
+						for (i = 0; i < diff.update.length; i++) {
+							query = {};
+							query[pk] = diff.update[i][pk];
+
+							this.chainSend('update', {
+								query: query,
+								update: diff.update[i]
+							});
+						}
+					}
+
+					if (diff.remove.length) {
+						pk = self._privateData.primaryKey();
+						var $or = [],
+							removeQuery = {
+								query: {
+									$or: $or
+								}
+							};
+
+						for (i = 0; i < diff.remove.length; i++) {
+							$or.push({_id: diff.remove[i][pk]});
+						}
+
+						this.chainSend('remove', removeQuery);
+					}
+
+					// Return true to stop further propagation of the chain packet
+					return true;
+				} else {
+					// Returning false informs the chain reactor to continue propagation
+					// of the chain packet down the graph tree
+					return false;
+				}
+			}
+		}
+	}
+
+	// Returning false informs the chain reactor to continue propagation
+	// of the chain packet down the graph tree
+	return false;
 };
 
 /**
@@ -15037,7 +15457,7 @@ View.prototype.remove = function () {
  * @returns {Array} The result of the find query.
  */
 View.prototype.find = function (query, options) {
-	return this.publicData().find(query, options);
+	return this._data.find(query, options);
 };
 
 /**
@@ -15046,7 +15466,7 @@ View.prototype.find = function (query, options) {
  * @returns {Object} The result of the find query.
  */
 View.prototype.findOne = function (query, options) {
-	return this.publicData().findOne(query, options);
+	return this._data.findOne(query, options);
 };
 
 /**
@@ -15055,7 +15475,7 @@ View.prototype.findOne = function (query, options) {
  * @returns {Array} The result of the find query.
  */
 View.prototype.findById = function (id, options) {
-	return this.publicData().findById(id, options);
+	return this._data.findById(id, options);
 };
 
 /**
@@ -15064,7 +15484,7 @@ View.prototype.findById = function (id, options) {
  * @returns {Array} The result of the find query.
  */
 View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
-	return this.publicData().findSub(match, path, subDocQuery, subDocOptions);
+	return this._data.findSub(match, path, subDocQuery, subDocOptions);
 };
 
 /**
@@ -15073,7 +15493,7 @@ View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
  * @returns {Object} The result of the find query.
  */
 View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
-	return this.publicData().findSubOne(match, path, subDocQuery, subDocOptions);
+	return this._data.findSubOne(match, path, subDocQuery, subDocOptions);
 };
 
 /**
@@ -15081,7 +15501,7 @@ View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
  * @returns {Collection}
  */
 View.prototype.data = function () {
-	return this._privateData;
+	return this._data;
 };
 
 /**
@@ -15099,137 +15519,75 @@ View.prototype.from = function (source, callback) {
 		if (this._from) {
 			// Remove the listener to the drop event
 			this._from.off('drop', this._collectionDroppedWrap);
+
+			// Remove the current reference to the _from since we
+			// are about to replace it with a new one
 			delete this._from;
 		}
 
-		// Check if we have an existing reactor io
+		// Check if we have an existing reactor io that links the
+		// previous _from source to the view's internal data
 		if (this._io) {
 			// Drop the io and remove it
 			this._io.drop();
 			delete this._io;
 		}
 
+		// Check if we were passed a source name rather than a
+		// reference to a source object
 		if (typeof(source) === 'string') {
+			// We were passed a name, assume it is a collection and
+			// get the reference to the collection of that name
 			source = this._db.collection(source);
 		}
 
+		// Check if we were passed a reference to a view rather than
+		// a collection. Views need to be handled slightly differently
+		// since their data is stored in an internal data collection
+		// rather than actually being a direct data source themselves.
 		if (source.className === 'View') {
 			// The source is a view so IO to the internal data collection
 			// instead of the view proper
-			source = source.privateData();
+			source = source._data;
+
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
+				console.log(this.logIdentifier() + ' Using internal data "' + source.instanceIdentifier() + '" for IO graph linking');
 			}
 		}
 
+		// Assign the new data source as the view's _from
 		this._from = source;
+
+		// Hook the new data source's drop event so we can unhook
+		// it as a data source if it gets dropped. This is important
+		// so that we don't run into problems using a dropped source
+		// for active data.
 		this._from.on('drop', this._collectionDroppedWrap);
 
 		// Create a new reactor IO graph node that intercepts chain packets from the
-		// view's "from" source and determines how they should be interpreted by
-		// this view. If the view does not have a query then this reactor IO will
-		// simply pass along the chain packet without modifying it.
-		this._io = new ReactorIO(source, this, function (chainPacket) {
-			var data,
-				diff,
-				query,
-				filteredData,
-				doSend,
-				pk,
-				i;
+		// view's _from source and determines how they should be interpreted by
+		// this view. See the _handleChainIO() method which does all the chain packet
+		// processing for the view.
+		this._io = new ReactorIO(this._from, this._data, function (chainPacket) { self._handleChainIO.call(this, chainPacket, self); });
 
-			// Check that the state of the "self" object is not dropped
-			if (self && !self.isDropped()) {
-				// Check if we have a constraining query
-				if (self._querySettings.query) {
-					if (chainPacket.type === 'insert') {
-						data = chainPacket.data;
+		// Set the view's internal data primary key to the same as the
+		// current active _from data source
+		this._data.primaryKey(source.primaryKey());
 
-						// Check if the data matches our query
-						if (data instanceof Array) {
-							filteredData = [];
-
-							for (i = 0; i < data.length; i++) {
-								if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
-									filteredData.push(data[i]);
-									doSend = true;
-								}
-							}
-						} else {
-							if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
-								filteredData = data;
-								doSend = true;
-							}
-						}
-
-						if (doSend) {
-							this.chainSend('insert', filteredData);
-						}
-
-						return true;
-					}
-
-					if (chainPacket.type === 'update') {
-						// Do a DB diff between this view's data and the underlying collection it reads from
-						// to see if something has changed
-						diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
-
-						if (diff.insert.length || diff.remove.length) {
-							// Now send out new chain packets for each operation
-							if (diff.insert.length) {
-								this.chainSend('insert', diff.insert);
-							}
-
-							if (diff.update.length) {
-								pk = self._privateData.primaryKey();
-								for (i = 0; i < diff.update.length; i++) {
-									query = {};
-									query[pk] = diff.update[i][pk];
-
-									this.chainSend('update', {
-										query: query,
-										update: diff.update[i]
-									});
-								}
-							}
-
-							if (diff.remove.length) {
-								pk = self._privateData.primaryKey();
-								var $or = [],
-									removeQuery = {
-										query: {
-											$or: $or
-										}
-									};
-
-								for (i = 0; i < diff.remove.length; i++) {
-									$or.push({_id: diff.remove[i][pk]});
-								}
-
-								this.chainSend('remove', removeQuery);
-							}
-
-							// Return true to stop further propagation of the chain packet
-							return true;
-						} else {
-							// Returning false informs the chain reactor to continue propagation
-							// of the chain packet down the graph tree
-							return false;
-						}
-					}
-				}
-			}
-
-			// Returning false informs the chain reactor to continue propagation
-			// of the chain packet down the graph tree
-			return false;
-		});
-
+		// Do the initial data lookup and populate the view's internal data
+		// since at this point we don't actually have any data in the view
+		// yet.
 		var collData = source.find(this._querySettings.query, this._querySettings.options);
+		this._data.setData(collData, {}, callback);
 
-		this._privateData.primaryKey(source.primaryKey());
-		this._privateData.setData(collData, {}, callback);
-
+		// If we have an active query and that query has an $orderBy clause,
+		// update our active bucket which allows us to keep track of where
+		// data should be placed in our internal data array. This is about
+		// ordering of data and making sure that we maintain an ordered array
+		// so that if we have data-binding we can place an item in the data-
+		// bound view at the correct location. Active buckets use quick-sort
+		// algorithms to quickly determine the position of an item inside an
+		// existing array based on a sort protocol.
 		if (this._querySettings.options && this._querySettings.options.$orderBy) {
 			this.rebuildActiveBucket(this._querySettings.options.$orderBy);
 		} else {
@@ -15240,28 +15598,6 @@ View.prototype.from = function (source, callback) {
 	}
 
 	return this._from;
-};
-
-/**
- * Handles when an underlying collection the view is using as a data
- * source is dropped.
- * @param {Collection} collection The collection that has been dropped.
- * @private
- */
-View.prototype._collectionDropped = function (collection) {
-	if (collection) {
-		// Collection was dropped, remove from view
-		delete this._from;
-	}
-};
-
-/**
- * Creates an index on the view.
- * @see Collection::ensureIndex()
- * @returns {*}
- */
-View.prototype.ensureIndex = function () {
-	return this._privateData.ensureIndex.apply(this._privateData, arguments);
 };
 
 /**
@@ -15278,7 +15614,8 @@ View.prototype._chainHandler = function (chainPacket) {
 		updates,
 		primaryKey,
 		item,
-		currentIndex;
+		currentIndex,
+		joinExclude;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Received chain reactor data');
@@ -15287,40 +15624,48 @@ View.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Setting data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Setting data in underlying (internal) view collection "' + this._data.name() + '"');
 			}
 
 			// Get the new data from our underlying data source sorted as we want
 			var collData = this._from.find(this._querySettings.query, this._querySettings.options);
-			this._privateData.setData(collData);
+			this._data.setData(collData);
 			break;
 
 		case 'insert':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._data.name() + '"');
 			}
 
 			// Decouple the data to ensure we are working with our own copy
 			chainPacket.data = this.decouple(chainPacket.data);
 
-			// Make sure we are working with an array
-			if (!(chainPacket.data instanceof Array)) {
-				chainPacket.data = [chainPacket.data];
+			if (this._querySettings.options && this._querySettings.options.$join) {
+				//chainPacket.data = this._from.findById(chainPacket.data[this._from.primaryKey()], this._querySettings.options);
+				// Run the join operation on this item
+				joinExclude = this._privateData.applyJoin([chainPacket.data], this._querySettings.options.$join, {});
 			}
 
-			if (this._querySettings.options && this._querySettings.options.$orderBy) {
-				// Loop the insert data and find each item's index
-				arr = chainPacket.data;
-				count = arr.length;
+			if (!joinExclude || !joinExclude.length) {
+				// Make sure we are working with an array
+				if (!(chainPacket.data instanceof Array)) {
+					chainPacket.data = [chainPacket.data];
+				}
 
-				for (index = 0; index < count; index++) {
-					insertIndex = this._activeBucket.insert(arr[index]);
+				if (this._querySettings.options && this._querySettings.options.$orderBy) {
+					// Loop the insert data and find each item's index
+					arr = chainPacket.data;
+					count = arr.length;
+
+					for (index = 0; index < count; index++) {
+						insertIndex = this._activeBucket.insert(arr[index]);
+						this._privateData._insertHandle(chainPacket.data, insertIndex);
+					}
+				} else {
+					// Set the insert index to the passed index, or if none, the end of the view data array
+					insertIndex = this._privateData._data.length;
 					this._privateData._insertHandle(chainPacket.data, insertIndex);
 				}
-			} else {
-				// Set the insert index to the passed index, or if none, the end of the view data array
-				insertIndex = this._privateData._data.length;
-				this._privateData._insertHandle(chainPacket.data, insertIndex);
 			}
 			break;
 
@@ -15380,11 +15725,35 @@ View.prototype._chainHandler = function (chainPacket) {
 };
 
 /**
+ * Handles when an underlying collection the view is using as a data
+ * source is dropped.
+ * @param {Collection} collection The collection that has been dropped.
+ * @private
+ */
+View.prototype._collectionDropped = function (collection) {
+	if (collection) {
+		// Collection was dropped, remove from view
+		delete this._from;
+	}
+};
+
+/**
+ * Creates an index on the view.
+ * @see Collection::ensureIndex()
+ * @returns {*}
+ */
+View.prototype.ensureIndex = function () {
+	return this._data.ensureIndex.apply(this._data, arguments);
+};
+
+/**
+
+/**
  * Listens for an event.
  * @see Mixin.Events::on()
  */
 View.prototype.on = function () {
-	return this._privateData.on.apply(this._privateData, arguments);
+	return this._data.on.apply(this._data, arguments);
 };
 
 /**
@@ -15392,7 +15761,7 @@ View.prototype.on = function () {
  * @see Mixin.Events::off()
  */
 View.prototype.off = function () {
-	return this._privateData.off.apply(this._privateData, arguments);
+	return this._data.off.apply(this._data, arguments);
 };
 
 /**
@@ -15400,7 +15769,7 @@ View.prototype.off = function () {
  * @see Mixin.Events::emit()
  */
 View.prototype.emit = function () {
-	return this._privateData.emit.apply(this._privateData, arguments);
+	return this._data.emit.apply(this._data, arguments);
 };
 
 /**
@@ -15408,7 +15777,7 @@ View.prototype.emit = function () {
  * @see Mixin.Events::deferEmit()
  */
 View.prototype.deferEmit = function () {
-	return this._privateData.deferEmit.apply(this._privateData, arguments);
+	return this._data.deferEmit.apply(this._data, arguments);
 };
 
 /**
@@ -15420,8 +15789,7 @@ View.prototype.deferEmit = function () {
  * @returns {Array}
  */
 View.prototype.distinct = function (key, query, options) {
-	var coll = this.publicData();
-	return coll.distinct.apply(coll, arguments);
+	return this._data.distinct.apply(coll, arguments);
 };
 
 /**
@@ -15430,7 +15798,7 @@ View.prototype.distinct = function (key, query, options) {
  * @returns {String}
  */
 View.prototype.primaryKey = function () {
-	return this.publicData().primaryKey();
+	return this._data.primaryKey();
 };
 
 /**
@@ -15456,12 +15824,8 @@ View.prototype.drop = function (callback) {
 		}
 
 		// Drop the view's internal collection
-		if (this._privateData) {
-			this._privateData.drop();
-		}
-
-		if (this._publicData && this._publicData !== this._privateData) {
-			this._publicData.drop();
+		if (this._data) {
+			this._data.drop();
 		}
 
 		if (this._db && this._name) {
@@ -15474,7 +15838,7 @@ View.prototype.drop = function (callback) {
 
 		delete this._chain;
 		delete this._from;
-		delete this._privateData;
+		delete this._data;
 		delete this._io;
 		delete this._listeners;
 		delete this._querySettings;
@@ -15504,11 +15868,11 @@ View.prototype.queryData = function (query, options, refresh) {
 		this._querySettings.query = query;
 
 		if (query.$findSub && !query.$findSub.$from) {
-			query.$findSub.$from = this._privateData.name();
+			query.$findSub.$from = this._data.name();
 		}
 
 		if (query.$findSubOne && !query.$findSubOne.$from) {
-			query.$findSubOne.$from = this._privateData.name();
+			query.$findSubOne.$from = this._data.name();
 		}
 	}
 
@@ -15619,11 +15983,11 @@ View.prototype.query = new Overload({
 			this._querySettings.query = query;
 
 			if (query.$findSub && !query.$findSub.$from) {
-				query.$findSub.$from = this._privateData.name();
+				query.$findSub.$from = this._data.name();
 			}
 
 			if (query.$findSubOne && !query.$findSubOne.$from) {
-				query.$findSubOne.$from = this._privateData.name();
+				query.$findSubOne.$from = this._data.name();
 			}
 		}
 
@@ -15642,10 +16006,6 @@ View.prototype.query = new Overload({
 		return this._querySettings;
 	}
 });
-
-View.prototype._joinChange = function (objName, objType) {
-	this.emit('joinChange');
-};
 
 /**
  * Gets / sets the orderBy clause in the query options for the view.
@@ -15754,14 +16114,20 @@ View.prototype.queryOptions = function (options, refresh) {
 	return this._querySettings.options;
 };
 
+/**
+ * Clears the existing active bucket and builds a new one based
+ * on the passed orderBy object (if one is passed).
+ * @param {Object=} orderBy The orderBy object describing how to
+ * order any data.
+ */
 View.prototype.rebuildActiveBucket = function (orderBy) {
 	if (orderBy) {
-		var arr = this._privateData._data,
+		var arr = this._data._data,
 			arrCount = arr.length;
 
 		// Build a new active bucket
 		this._activeBucket = new ActiveBucket(orderBy);
-		this._activeBucket.primaryKey(this._privateData.primaryKey());
+		this._activeBucket.primaryKey(this._data.primaryKey());
 
 		// Loop the current view data and add each item
 		for (var i = 0; i < arrCount; i++) {
@@ -15778,35 +16144,25 @@ View.prototype.rebuildActiveBucket = function (orderBy) {
  */
 View.prototype.refresh = function () {
 	var self = this,
-		pubData,
 		refreshResults,
 		joinArr,
 		i, k;
 
 	if (this._from) {
-		pubData = this.publicData();
+		// Clear the private data collection which will propagate to the public data
+		// collection automatically via the chain reactor node between them
+		this._data.remove();
 
-		// Re-grab all the data for the view from the collection
-		this._privateData.remove();
-		//pubData.remove();
-
+		// Grab all the data from the underlying data source
 		refreshResults = this._from.find(this._querySettings.query, this._querySettings.options);
 		this.cursor(refreshResults.$cursor);
 
-		this._privateData.insert(refreshResults);
+		// Insert the underlying data into the private data collection
+		this._data.insert(refreshResults);
 
-		this._privateData._data.$cursor = refreshResults.$cursor;
-		pubData._data.$cursor = refreshResults.$cursor;
-
-		/*if (pubData._linked) {
-			// Update data and observers
-			//var transformedData = this._privateData.find();
-			// TODO: Shouldn't this data get passed into a transformIn first?
-			// TODO: This breaks linking because its passing decoupled data and overwriting non-decoupled data
-			// TODO: Is this even required anymore? After commenting it all seems to work
-			// TODO: Might be worth setting up a test to check transforms and linking then remove this if working?
-			//jQuery.observable(pubData._data).refresh(transformedData);
-		}*/
+		// Store the current cursor data
+		this._data._data.$cursor = refreshResults.$cursor;
+		this._data._data.$cursor = refreshResults.$cursor;
 	}
 
 	if (this._querySettings && this._querySettings.options && this._querySettings.options.$join && this._querySettings.options.$join.length) {
@@ -15855,26 +16211,40 @@ View.prototype.refresh = function () {
 };
 
 /**
+ * Handles when a change has occurred on a collection that is joined
+ * by query to this view.
+ * @param objName
+ * @param objType
+ * @private
+ */
+View.prototype._joinChange = function (objName, objType) {
+	this.emit('joinChange');
+
+	// TODO: This is a really dirty solution because it will require a complete
+	// TODO: rebuild of the view data. We need to implement an IO handler to
+	// TODO: selectively update the data of the view based on the joined
+	// TODO: collection data operation.
+	this.refresh();
+};
+
+/**
  * Returns the number of documents currently in the view.
  * @returns {Number}
  */
 View.prototype.count = function () {
-	if (this.publicData()) {
-		return this.publicData().count.apply(this.publicData(), arguments);
-	}
-
-	return 0;
+	return this._data.count.apply(this._data, arguments);
 };
 
 // Call underlying
 View.prototype.subset = function () {
-	return this.publicData().subset.apply(this._privateData, arguments);
+	return this._data.subset.apply(this._data, arguments);
 };
 
 /**
  * Takes the passed data and uses it to set transform methods and globally
  * enable or disable the transform system for the view.
- * @param {Object} obj The new transform system settings "enabled", "dataIn" and "dataOut":
+ * @param {Object} obj The new transform system settings "enabled", "dataIn"
+ * and "dataOut":
  * {
  * 	"enabled": true,
  * 	"dataIn": function (data) { return data; },
@@ -15883,104 +16253,7 @@ View.prototype.subset = function () {
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
-	var self = this;
-
-	if (obj !== undefined) {
-		if (typeof obj === "object") {
-			if (obj.enabled !== undefined) {
-				this._transformEnabled = obj.enabled;
-			}
-
-			if (obj.dataIn !== undefined) {
-				this._transformIn = obj.dataIn;
-			}
-
-			if (obj.dataOut !== undefined) {
-				this._transformOut = obj.dataOut;
-			}
-		} else {
-			this._transformEnabled = obj !== false;
-		}
-
-		if (this._transformEnabled) {
-			// Check for / create the public data collection
-			if (!this._publicData) {
-				// Create the public data collection
-				this._publicData = new Collection('__FDB__view_publicData_' + this._name);
-				this._publicData.db(this._privateData._db);
-				this._publicData.transform({
-					enabled: true,
-					dataIn: this._transformIn,
-					dataOut: this._transformOut
-				});
-
-				// Create a chain reaction IO node to keep the private and
-				// public data collections in sync
-				this._transformIo = new ReactorIO(this._privateData, this._publicData, function (chainPacket) {
-					var data = chainPacket.data;
-
-					switch (chainPacket.type) {
-						case 'primaryKey':
-							self._publicData.primaryKey(data);
-							this.chainSend('primaryKey', data);
-							break;
-
-						case 'setData':
-							self._publicData.setData(data);
-							this.chainSend('setData', data);
-							break;
-
-						case 'insert':
-							self._publicData.insert(data);
-							this.chainSend('insert', data);
-							break;
-
-						case 'update':
-							// Do the update
-							self._publicData.update(
-								data.query,
-								data.update,
-								data.options
-							);
-
-							this.chainSend('update', data);
-							break;
-
-						case 'remove':
-							self._publicData.remove(data.query, chainPacket.options);
-							this.chainSend('remove', data);
-							break;
-
-						default:
-							break;
-					}
-				});
-			}
-
-			// Set initial data and settings
-			this._publicData.primaryKey(this.privateData().primaryKey());
-			this._publicData.setData(this.privateData().find());
-		} else {
-			// Remove the public data collection
-			if (this._publicData) {
-				this._publicData.drop();
-				delete this._publicData;
-
-				if (this._transformIo) {
-					this._transformIo.drop();
-					delete this._transformIo;
-				}
-			}
-		}
-
-		return this;
-	}
-
-	return {
-		enabled: this._transformEnabled,
-		dataIn: this._transformIn,
-		dataOut: this._transformOut
-	};
+	return this._data.transform.call(this._data, obj);
 };
 
 /**
@@ -15993,7 +16266,7 @@ View.prototype.transform = function (obj) {
  * @returns {Array}
  */
 View.prototype.filter = function (query, func, options) {
-	return (this.publicData()).filter(query, func, options);
+	return this._data.filter(query, func, options);
 };
 
 /**
@@ -16001,29 +16274,8 @@ View.prototype.filter = function (query, func, options) {
  * reference.
  * @return {Collection} The non-transformed collection reference.
  */
-View.prototype.privateData = function () {
-	return this._privateData;
-};
-
-/**
- * Returns a data object representing the public data this view
- * contains. This can change depending on if transforms are being
- * applied to the view or not.
- *
- * If no transforms are applied then the public data will be the
- * same as the private data the view holds. If transforms are
- * applied then the public data will contain the transformed version
- * of the private data.
- *
- * The public data collection is also used by data binding to only
- * changes to the publicData will show in a data-bound element.
- */
-View.prototype.publicData = function () {
-	if (this._transformEnabled) {
-		return this._publicData;
-	} else {
-		return this._privateData;
-	}
+View.prototype.data = function () {
+	return this._data;
 };
 
 /**
@@ -16031,7 +16283,7 @@ View.prototype.publicData = function () {
  * @returns {*}
  */
 View.prototype.indexOf = function () {
-	return this.publicData().indexOf.apply(this.publicData(), arguments);
+	return this._data.indexOf.apply(this._data, arguments);
 };
 
 /**
@@ -16042,13 +16294,11 @@ View.prototype.indexOf = function () {
  */
 Shared.synthesize(View.prototype, 'db', function (db) {
 	if (db) {
-		this.privateData().db(db);
-		this.publicData().db(db);
+		this._data.db(db);
 
 		// Apply the same debug settings
 		this.debug(db.debug());
-		this.privateData().debug(db.debug());
-		this.publicData().debug(db.debug());
+		this._data.debug(db.debug());
 	}
 
 	return this.$super.apply(this, arguments);

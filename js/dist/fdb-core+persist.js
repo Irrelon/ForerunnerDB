@@ -2439,12 +2439,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		crc = this.crc(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], crc);
+	this._crcLookup.uniqueSet(crc, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2464,12 +2465,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		crc = this.crc(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(crc);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -2800,6 +2802,7 @@ Collection.prototype._find = function (query, options) {
 				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
+				debugger;
 				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
@@ -7478,6 +7481,15 @@ Common = {
 		}
 
 		return id;
+	},
+
+	/**
+	 * Generates a CRC for the passed object.
+	 * @param {Object} obj The object to generate a CRC for.
+	 * @returns {String}
+	 */
+	crc: function (obj) {
+		return this.jStringify(obj);
 	},
 
 	/**
