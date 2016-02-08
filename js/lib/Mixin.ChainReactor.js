@@ -80,18 +80,25 @@ var ChainReactor = {
 
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
-			sender: sender,
-			type: type,
-			data: data,
-			options: options
-		};
+				sender: sender,
+				type: type,
+				data: data,
+				options: options
+			},
+			cancelPropagate = false;
 
 		if (this.debug && this.debug()) {
 			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
-		// Fire our internal handler
-		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+		// Check if we have a chain handler method
+		if (this._chainHandler) {
+			// Fire our internal handler
+			cancelPropagate = this._chainHandler(chainPacket);
+		}
+
+		// Check if we were told to cancel further propagation
+		if (!cancelPropagate) {
 			// Propagate the message down the chain
 			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
 		}
