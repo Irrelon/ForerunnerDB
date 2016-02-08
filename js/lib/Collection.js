@@ -8,7 +8,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -419,8 +418,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -1724,13 +1723,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Insert to primary key index
 	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
-	this._primaryCrc.uniqueSet(doc[pk], crc);
-	this._crcLookup.uniqueSet(crc, doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -1750,13 +1749,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		crc = this.crc(doc),
+		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Remove from primary key index
 	this._primaryIndex.unSet(doc[pk]);
 	this._primaryCrc.unSet(doc[pk]);
-	this._crcLookup.unSet(crc);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {

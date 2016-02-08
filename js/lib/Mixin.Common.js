@@ -140,11 +140,11 @@ Common = {
 	},
 
 	/**
-	 * Generates a CRC for the passed object.
-	 * @param {Object} obj The object to generate a CRC for.
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
 	 * @returns {String}
 	 */
-	crc: function (obj) {
+	hash: function (obj) {
 		return this.jStringify(obj);
 	},
 
