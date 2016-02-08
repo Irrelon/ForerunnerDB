@@ -300,7 +300,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 		var coll = db.collection('test'),
 			view = db.view('test'),
 			result,
-				count = 0;
+			changeCount = 0,
+			immediateChangeCount = 0;
 
 		view
 			.queryData({}, {
@@ -310,8 +311,12 @@ ForerunnerDB.moduleLoaded('View', function () {
 			})
 			.from(coll);
 
+		view.on('immediateChange', function () {
+			immediateChangeCount++;
+		});
+
 		view.on('change', function () {
-			count++;
+			changeCount++;
 		});
 
 		coll.insert({
@@ -330,13 +335,14 @@ ForerunnerDB.moduleLoaded('View', function () {
 			ok(result.length, 'Results were found');
 
 			if (result.length) {
-				strictEqual(result[0]._id, 2, 'OK');
-				strictEqual(result[1]._id, 1, 'OK');
-				strictEqual(count, 2, 'OK');
+				strictEqual(result[0]._id, 2, 'Result 0 id is correct');
+				strictEqual(result[1]._id, 1, 'Result 1 id is correct');
+				strictEqual(changeCount, 1, 'The change count is correct (only one event should be fired)');
+				strictEqual(immediateChangeCount, 2, 'The immediate change count is correct (two events should be fired)');
 			}
 
 			base.dbDown();
 			start();
-		}, 1000);
+		}, 1);
 	});
 });
