@@ -9523,18 +9523,25 @@ var ChainReactor = {
 
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
-			sender: sender,
-			type: type,
-			data: data,
-			options: options
-		};
+				sender: sender,
+				type: type,
+				data: data,
+				options: options
+			},
+			cancelPropagate = false;
 
 		if (this.debug && this.debug()) {
 			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
-		// Fire our internal handler
-		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+		// Check if we have a chain handler method
+		if (this._chainHandler) {
+			// Fire our internal handler
+			cancelPropagate = this._chainHandler(chainPacket);
+		}
+
+		// Check if we were told to cancel further propagation
+		if (!cancelPropagate) {
 			// Propagate the message down the chain
 			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
 		}
@@ -15568,7 +15575,7 @@ View.prototype.from = function (source, callback) {
 		// view's _from source and determines how they should be interpreted by
 		// this view. See the _handleChainIO() method which does all the chain packet
 		// processing for the view.
-		this._io = new ReactorIO(this._from, this._data, function (chainPacket) { self._handleChainIO.call(this, chainPacket, self); });
+		this._io = new ReactorIO(this._from, this, function (chainPacket) { self._handleChainIO.call(self, chainPacket, self); });
 
 		// Set the view's internal data primary key to the same as the
 		// current active _from data source
@@ -15614,8 +15621,7 @@ View.prototype._chainHandler = function (chainPacket) {
 		updates,
 		primaryKey,
 		item,
-		currentIndex,
-		joinExclude;
+		currentIndex;
 
 	if (this.debug()) {
 		console.log(this.logIdentifier() + ' Received chain reactor data');
@@ -15630,6 +15636,9 @@ View.prototype._chainHandler = function (chainPacket) {
 			// Get the new data from our underlying data source sorted as we want
 			var collData = this._from.find(this._querySettings.query, this._querySettings.options);
 			this._data.setData(collData);
+
+			// Rebuild active bucket as well
+			this.rebuildActiveBucket(this._querySettings.options);
 			break;
 
 		case 'insert':
@@ -15640,44 +15649,37 @@ View.prototype._chainHandler = function (chainPacket) {
 			// Decouple the data to ensure we are working with our own copy
 			chainPacket.data = this.decouple(chainPacket.data);
 
-			if (this._querySettings.options && this._querySettings.options.$join) {
-				//chainPacket.data = this._from.findById(chainPacket.data[this._from.primaryKey()], this._querySettings.options);
-				// Run the join operation on this item
-				joinExclude = this._privateData.applyJoin([chainPacket.data], this._querySettings.options.$join, {});
+
+			// Make sure we are working with an array
+			if (!(chainPacket.data instanceof Array)) {
+				chainPacket.data = [chainPacket.data];
 			}
 
-			if (!joinExclude || !joinExclude.length) {
-				// Make sure we are working with an array
-				if (!(chainPacket.data instanceof Array)) {
-					chainPacket.data = [chainPacket.data];
-				}
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Loop the insert data and find each item's index
+				arr = chainPacket.data;
+				count = arr.length;
 
-				if (this._querySettings.options && this._querySettings.options.$orderBy) {
-					// Loop the insert data and find each item's index
-					arr = chainPacket.data;
-					count = arr.length;
-
-					for (index = 0; index < count; index++) {
-						insertIndex = this._activeBucket.insert(arr[index]);
-						this._privateData._insertHandle(chainPacket.data, insertIndex);
-					}
-				} else {
-					// Set the insert index to the passed index, or if none, the end of the view data array
-					insertIndex = this._privateData._data.length;
-					this._privateData._insertHandle(chainPacket.data, insertIndex);
+				for (index = 0; index < count; index++) {
+					insertIndex = this._activeBucket.insert(arr[index]);
+					this._data._insertHandle(chainPacket.data, insertIndex);
 				}
+			} else {
+				// Set the insert index to the passed index, or if none, the end of the view data array
+				insertIndex = this._data._data.length;
+				this._data._insertHandle(chainPacket.data, insertIndex);
 			}
 			break;
 
 		case 'update':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Updating some data in underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Updating some data in underlying (internal) view collection "' + this._data.name() + '"');
 			}
 
-			primaryKey = this._privateData.primaryKey();
+			primaryKey = this._data.primaryKey();
 
 			// Do the update
-			updates = this._privateData.update(
+			updates = this._data.update(
 				chainPacket.data.query,
 				chainPacket.data.update,
 				chainPacket.data.options
@@ -15698,14 +15700,14 @@ View.prototype._chainHandler = function (chainPacket) {
 					this._activeBucket.remove(item);
 
 					// Get the current location of the item
-					currentIndex = this._privateData._data.indexOf(item);
+					currentIndex = this._data._data.indexOf(item);
 
 					// Add the item back in to the active bucket
 					insertIndex = this._activeBucket.insert(item);
 
 					if (currentIndex !== insertIndex) {
 						// Move the updated item to the new index
-						this._privateData._updateSpliceMove(this._privateData._data, currentIndex, insertIndex);
+						this._data._updateSpliceMove(this._data._data, currentIndex, insertIndex);
 					}
 				}
 			}
@@ -15713,10 +15715,10 @@ View.prototype._chainHandler = function (chainPacket) {
 
 		case 'remove':
 			if (this.debug()) {
-				console.log(this.logIdentifier() + ' Removing some data from underlying (internal) view collection "' + this._privateData.name() + '"');
+				console.log(this.logIdentifier() + ' Removing some data from underlying (internal) view collection "' + this._data.name() + '"');
 			}
 
-			this._privateData.remove(chainPacket.data.query, chainPacket.options);
+			this._data.remove(chainPacket.data.query, chainPacket.options);
 			break;
 
 		default:
