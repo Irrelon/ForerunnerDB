@@ -91,18 +91,10 @@ Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
 IndexBinaryTree = require('./IndexBinaryTree');
 Index2d = require('./Index2d');
-Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
