@@ -630,18 +630,22 @@ Collection.prototype.update = function (query, update, options, callback) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
-	// Decouple the update data
-	update = this.decouple(update);
-
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, option, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
