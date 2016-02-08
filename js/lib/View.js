@@ -221,11 +221,11 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// We still have data left, let's work out how to handle it
 	// first let's loop through the removals as these are easy
 	if (sharedData.removeArr.length) {
-		self._handleChainIO_RemovePackets(chainPacket, sharedData);
+		self._handleChainIO_RemovePackets(this, chainPacket, sharedData);
 	}
 
 	if (sharedData.dataArr.length) {
-		self._handleChainIO_UpsertPackets(chainPacket, sharedData);
+		self._handleChainIO_UpsertPackets(this, chainPacket, sharedData);
 	}
 
 	// Now return true to tell the chain reactor not to propagate
@@ -300,7 +300,7 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	}
 };
 
-View.prototype._handleChainIO_RemovePackets = function (chainPacket, sharedData) {
+View.prototype._handleChainIO_RemovePackets = function (ioObj, chainPacket, sharedData) {
 	var $or = [],
 		pk = sharedData.pk,
 		removeArr = sharedData.removeArr,
@@ -319,10 +319,10 @@ View.prototype._handleChainIO_RemovePackets = function (chainPacket, sharedData)
 		$or.push(orObj);
 	}
 
-	this.chainSend('remove', removeQuery);
+	ioObj.chainSend('remove', removeQuery);
 };
 
-View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData) {
+View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, sharedData) {
 	var data = this._data,
 		primaryIndex = data._primaryIndex,
 		primaryCrc = data._primaryCrc,
@@ -342,7 +342,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 		// Check if the data already exists in the data
 		if (primaryIndex.get(arrItem[pk])) {
 			// Matching item exists, check if the data is the same
-			if (primaryCrc.get(arrItem[pk]) !== this.crc(arrItem[pk])) {
+			if (primaryCrc.get(arrItem[pk]) !== this.hash(arrItem[pk])) {
 				// The document exists in the data collection but data differs, update required
 				updateArr.push(arrItem);
 			}
@@ -353,7 +353,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 	}
 
 	if (insertArr.length) {
-		this.chainSend('insert', insertArr);
+		ioObj.chainSend('insert', insertArr);
 	}
 
 	if (updateArr.length) {
@@ -363,7 +363,7 @@ View.prototype._handleChainIO_UpsertPackets = function (chainPacket, sharedData)
 			query = {};
 			query[pk] = arrItem[pk];
 
-			this.chainSend('update', {
+			ioObj.chainSend('update', {
 				query: query,
 				update: arrItem[i],
 				dataSet: [arrItem[i]]
@@ -407,7 +407,7 @@ var _notUsing = function (chainPacket) {
 				}
 
 				if (doSend) {
-					this.chainSend('insert', filteredData);
+					ioObj.chainSend('insert', filteredData);
 				}
 
 				return true;
@@ -421,7 +421,7 @@ var _notUsing = function (chainPacket) {
 				if (diff.insert.length || diff.remove.length) {
 					// Now send out new chain packets for each operation
 					if (diff.insert.length) {
-						this.chainSend('insert', diff.insert);
+						ioObj.chainSend('insert', diff.insert);
 					}
 
 					if (diff.update.length) {
@@ -430,7 +430,7 @@ var _notUsing = function (chainPacket) {
 							query = {};
 							query[pk] = diff.update[i][pk];
 
-							this.chainSend('update', {
+							ioObj.chainSend('update', {
 								query: query,
 								update: diff.update[i]
 							});
@@ -450,7 +450,7 @@ var _notUsing = function (chainPacket) {
 							$or.push({_id: diff.remove[i][pk]});
 						}
 
-						this.chainSend('remove', removeQuery);
+						ioObj.chainSend('remove', removeQuery);
 					}
 
 					// Return true to stop further propagation of the chain packet
@@ -618,7 +618,7 @@ View.prototype.from = function (source, callback) {
 		// view's _from source and determines how they should be interpreted by
 		// this view. See the _handleChainIO() method which does all the chain packet
 		// processing for the view.
-		this._io = new ReactorIO(this._from, this, function (chainPacket) { self._handleChainIO.call(self, chainPacket, self); });
+		this._io = new ReactorIO(this._from, this, function (chainPacket) { return self._handleChainIO.call(this, chainPacket, self); });
 
 		// Set the view's internal data primary key to the same as the
 		// current active _from data source
