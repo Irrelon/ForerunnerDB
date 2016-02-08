@@ -327,9 +327,13 @@ ForerunnerDB.moduleLoaded('View', function () {
 		setTimeout(function () {
 			result = view.find();
 
-			strictEqual(result[0]._id, 2, 'OK');
-			strictEqual(result[1]._id, 1, 'OK');
-			strictEqual(count, 2, 'OK');
+			ok(result.length, 'Results were found');
+
+			if (result.length) {
+				strictEqual(result[0]._id, 2, 'OK');
+				strictEqual(result[1]._id, 1, 'OK');
+				strictEqual(count, 2, 'OK');
+			}
 
 			base.dbDown();
 			start();
