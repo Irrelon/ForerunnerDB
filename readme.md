@@ -161,6 +161,13 @@ var collection = db.collection("collectionName", {capped: true, size: 5});
 generated for any documents inserted into a collection. Auto-generated primary
 keys are pseudo-random 16 character strings.
 
+> **PLEASE NOTE**: When doing an insert into a collection, ForerunnerDB will
+automatically split the insert up into smaller chunks (usually of 100 documents)
+at a time to ensure the main processing thread remains unblocked. If you wish
+to be informed when the insert operation is complete you can pass a callback
+method to the insert call. Alternatively you can turn off this behaviour by
+calling yourCollection.deferredCalls(false);
+
 You can either insert a single document object:
 
 ```js
