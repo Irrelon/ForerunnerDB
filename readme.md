@@ -192,6 +192,39 @@ itemCollection.insert([{
 }]);
 ```
 
+When inserting large amounts of documents ForerunnerDB may break your insert
+operation into multiple smaller operations (usually of 100 documents at a time)
+in order to avoid blocking the main processing thread of your browser. You can
+find out when an insert has completed either by passing a callback to the insert
+call or by switching off async behaviour.
+
+Passing a callback:
+
+```js
+itemCollection.insert([{
+	_id: 4,
+	price: 267,
+	name:"Scooby Snacks"
+}, {
+	_id: 5,
+	price: 234,
+	name: "Chicken Yum Yum"
+}], function (result) {
+	// The result object will contain two arrays (inserted and failed)
+	// which represent the documents that did get inserted and those
+	// that didn't for some reason (usually index violation). Failed
+	// items also contain a reason. Inspect the failed array for further
+	// information.
+});
+```
+
+If you wish to switch off async behaviour you can do so on a per-collection basis
+via:
+
+```js
+db.collection('myCollectionName').deferredCalls(false);
+```
+
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
  as possible, small differences are present in the query matching logic. The main
