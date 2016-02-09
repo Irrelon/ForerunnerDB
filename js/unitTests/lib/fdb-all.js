@@ -14538,7 +14538,20 @@ Serialiser.prototype._encode = function (data) {
  */
 Serialiser.prototype.parse = function (data) {
 	if (data) {
-		return this._parse(JSON.parse(data));
+		var jsonObject = JSON.parse(data),
+			handler;
+
+		// Check the string for special parse indicators
+		for (handler in this._decoder) {
+			if (this._decoder.hasOwnProperty(handler)) {
+				if (data.indexOf(handler) > -1) {
+					// Found special indicator, do full parse
+					return this._parse(jsonObject);
+				}
+			}
+		}
+
+		return jsonObject;
 	}
 };
 
@@ -14643,7 +14656,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.657',
+	version: '1.3.658',
 	modules: {},
 	plugins: {},
 
@@ -15153,15 +15166,33 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// exist we run it against the data after doing any active join and
 	// active query.
 	if (hasActiveJoin) {
+		if (this.debug()) {
+			console.time(this.logIdentifier() + ' :: _handleChainIO_ActiveJoin');
+		}
 		self._handleChainIO_ActiveJoin(chainPacket, sharedData);
+		if (this.debug()) {
+			console.timeEnd(this.logIdentifier() + ' :: _handleChainIO_ActiveJoin');
+		}
 	}
 
 	if (hasActiveQuery) {
+		if (this.debug()) {
+			console.time(this.logIdentifier() + ' :: _handleChainIO_ActiveQuery');
+		}
 		self._handleChainIO_ActiveQuery(chainPacket, sharedData);
+		if (this.debug()) {
+			console.timeEnd(this.logIdentifier() + ' :: _handleChainIO_ActiveQuery');
+		}
 	}
 
 	if (hasTransformIn) {
+		if (this.debug()) {
+			console.time(this.logIdentifier() + ' :: _handleChainIO_TransformIn');
+		}
 		self._handleChainIO_TransformIn(chainPacket, sharedData);
+		if (this.debug()) {
+			console.timeEnd(this.logIdentifier() + ' :: _handleChainIO_TransformIn');
+		}
 	}
 
 	// Check if we still have data to operate on and exit
@@ -15179,11 +15210,23 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// We still have data left, let's work out how to handle it
 	// first let's loop through the removals as these are easy
 	if (sharedData.removeArr.length) {
+		if (this.debug()) {
+			console.time(this.logIdentifier() + ' :: _handleChainIO_RemovePackets');
+		}
 		self._handleChainIO_RemovePackets(this, chainPacket, sharedData);
+		if (this.debug()) {
+			console.timeEnd(this.logIdentifier() + ' :: _handleChainIO_RemovePackets');
+		}
 	}
 
 	if (sharedData.dataArr.length) {
+		if (this.debug()) {
+			console.time(this.logIdentifier() + ' :: _handleChainIO_UpsertPackets');
+		}
 		self._handleChainIO_UpsertPackets(this, chainPacket, sharedData);
+		if (this.debug()) {
+			console.timeEnd(this.logIdentifier() + ' :: _handleChainIO_UpsertPackets');
+		}
 	}
 
 	// Now return true to tell the chain reactor not to propagate
@@ -15204,6 +15247,7 @@ View.prototype._handleChainIO_ActiveJoin = function (chainPacket, sharedData) {
 	// the join options is enabled. This means we have to store a removal
 	// array that tells us which items from the original data we sent to
 	// join did not match the join data and were set with a require flag.
+
 	// Now that we have our array of items to remove, let's run through the
 	// original data and remove them from there.
 	this.spliceArrayByIndexList(dataArr, removeArr);
@@ -15538,7 +15582,7 @@ View.prototype._chainHandler = function (chainPacket) {
 		currentIndex;
 
 	if (this.debug()) {
-		console.log(this.logIdentifier() + ' Received chain reactor data');
+		console.log(this.logIdentifier() + ' Received chain reactor data: ' + chainPacket.type);
 	}
 
 	switch (chainPacket.type) {
@@ -15562,7 +15606,6 @@ View.prototype._chainHandler = function (chainPacket) {
 
 			// Decouple the data to ensure we are working with our own copy
 			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
-
 
 			// Make sure we are working with an array
 			if (!(chainPacket.data.dataSet instanceof Array)) {
@@ -15664,7 +15707,7 @@ View.prototype.ensureIndex = function () {
 
 /**
 
-/**
+ /**
  * Listens for an event.
  * @see Mixin.Events::on()
  */
