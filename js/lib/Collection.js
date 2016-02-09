@@ -3327,7 +3327,7 @@ Collection.prototype.collateAdd = new Overload({
 
 						self.update({}, obj1);
 					} else {
-						self.remove(packet.data);
+						self.remove(packet.data.dataSet);
 					}
 					break;
 
