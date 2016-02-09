@@ -1648,7 +1648,7 @@ Collection.prototype._insert = function (doc, index) {
 
 			//op.time('Resolve chains');
 			self.chainSend('insert', {
-				dataSet: this.decouple([doc])
+				dataSet: self.decouple([doc])
 			}, {
 				index: index
 			});
