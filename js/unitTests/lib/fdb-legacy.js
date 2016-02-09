@@ -9591,7 +9591,7 @@ Common = {
 	 * @returns {String}
 	 */
 	hash: function (obj) {
-		return this.jStringify(obj);
+		return JSON.stringify(obj);
 	},
 
 	/**
@@ -15042,7 +15042,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.654',
+	version: '1.3.656',
 	modules: {},
 	plugins: {},
 
@@ -16419,7 +16419,8 @@ View.prototype._joinChange = function (objName, objType) {
 	// TODO: rebuild of the view data. We need to implement an IO handler to
 	// TODO: selectively update the data of the view based on the joined
 	// TODO: collection data operation.
-	this.refresh();
+	// FIXME: This isnt working, major performance killer, invest in some IO from chain reactor to make this a targeted call
+	//this.refresh();
 };
 
 /**

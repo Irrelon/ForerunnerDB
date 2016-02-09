@@ -545,6 +545,35 @@ module.exports = function(grunt) {
 		child = execSync('git push --tags');
 	});
 
+	grunt.registerTask('gitPushAndTagEdge', 'Git Push and Tag Edge Build', function () {
+		"use strict";
+
+		var execSync = require('child_process').execSync,
+			fs = require('fs-extra'),
+			child,
+			packageJson,
+			versionString,
+			fileData;
+
+		fileData = fs.readFileSync('./package.json', {encoding: 'utf8'});
+		packageJson = JSON.parse(fileData);
+
+		versionString = packageJson.version;
+
+		child = execSync('git push');
+		child = execSync('git tag ' + versionString + '-edge');
+		child = execSync('git push --tags');
+	});
+
+	grunt.registerTask('gitMergeEdgeIntoDev', 'Git Merge Edge Into Dev', function () {
+		"use strict";
+		var execSync = require('child_process').execSync,
+			child;
+
+		child = execSync('git checkout dev');
+		child = execSync('git merge edge');
+	});
+
 	grunt.registerTask('gitMergeDevIntoMaster', 'Git Merge Dev Into Master', function () {
 		"use strict";
 		var execSync = require('child_process').execSync,
@@ -590,6 +619,14 @@ module.exports = function(grunt) {
 		execSync('npm publish --tag dev');
 	});
 
+	grunt.registerTask('npmPublishEdge', 'NPM Publish New Edge Version', function () {
+		"use strict";
+
+		var execSync = require('child_process').execSync;
+
+		execSync('npm publish --tag edge');
+	});
+
 	grunt.registerTask('checkoutMaster', 'Git Checkout Master Branch', function () {
 		"use strict";
 
@@ -606,6 +643,14 @@ module.exports = function(grunt) {
 		execSync('git checkout dev');
 	});
 
+	grunt.registerTask('checkoutEdge', 'Git Checkout Edge Branch', function () {
+		"use strict";
+
+		var execSync = require('child_process').execSync;
+
+		execSync('git checkout edge');
+	});
+
 	grunt.registerTask('generateTOC', 'Generate Table of Contents', function () {
 		/*"use strict";
 
@@ -614,12 +659,13 @@ module.exports = function(grunt) {
 		execSync('doctoc readme.md');*/
 	});
 
+	grunt.registerTask("0: Build, Commit, Tag and Push Edge Branch", ["checkoutEdge", "version", "generateTOC", "browserify", "postfix", "uglify", "jsdoc", "gitCommit", "gitPushAndTagEdge", "npmPublishEdge"]);
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
 	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit", "node-qunit"]);
 	grunt.registerTask("3: Build and Test", ["version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("4: JSHint, Build and Test", ["jshint", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("5: Build and Test Dev Branch", ["checkoutDev", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
-	grunt.registerTask("6: Build, Test, Tag and Push Dev Branch", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
+	grunt.registerTask("6: Build, Commit, Test, Tag and Push Dev Branch", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
 	grunt.registerTask("7: Release and Publish Master Build From Dev", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
 	grunt.registerTask("default", ["qunit"]);

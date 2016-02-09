@@ -7507,7 +7507,7 @@ Common = {
 	 * @returns {String}
 	 */
 	hash: function (obj) {
-		return this.jStringify(obj);
+		return JSON.stringify(obj);
 	},
 
 	/**
@@ -11522,7 +11522,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.654',
+	version: '1.3.656',
 	modules: {},
 	plugins: {},
 
