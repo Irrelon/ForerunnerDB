@@ -8,7 +8,7 @@ angular.module('app', ['ionic', 'app.controllers', 'app.routes', 'app.services',
 		$rootScope.$db = window.db = $fdb.db('ForerunnerDB_Ionic_App');
 
 		// Tell forerunner about our API server
-		$fdb.api.server('http://0.0.0.0:9010');
+		$fdb.api.server('http://0.0.0.0', '9010');
 
 		// Tell forerunner to send up our session data when connecting
 		$fdb.api.session('sessionId', 'mySessionId');
