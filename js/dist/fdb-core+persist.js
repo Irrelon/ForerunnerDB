@@ -1106,7 +1106,7 @@ Collection.prototype.setData = function (data, options, callback) {
 
 		op.time('Resolve chains');
 		this.chainSend('setData', {
-			dataSet: data,
+			dataSet: this.decouple(data),
 			oldData: oldData
 		});
 		op.time('Resolve chains');
@@ -1467,7 +1467,7 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			this.chainSend('update', {
 				query: query,
 				update: update,
-				dataSet: updated
+				dataSet: this.decouple(updated)
 			}, options);
 			op.time('Resolve chains');
 
@@ -2395,7 +2395,7 @@ Collection.prototype._insert = function (doc, index) {
 
 			//op.time('Resolve chains');
 			self.chainSend('insert', {
-				dataSet: [doc]
+				dataSet: this.decouple([doc])
 			}, {
 				index: index
 			});
@@ -11535,7 +11535,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.658',
+	version: '1.3.659',
 	modules: {},
 	plugins: {},
 
