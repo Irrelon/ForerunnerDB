@@ -639,7 +639,7 @@ View.prototype._chainHandler = function (chainPacket) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
+			//chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Make sure we are working with an array
 			if (!(chainPacket.data.dataSet instanceof Array)) {
@@ -1218,7 +1218,7 @@ View.prototype._joinChange = function (objName, objType) {
 	// TODO: selectively update the data of the view based on the joined
 	// TODO: collection data operation.
 	// FIXME: This isnt working, major performance killer, invest in some IO from chain reactor to make this a targeted call
-	//this.refresh();
+	this.refresh();
 };
 
 /**
