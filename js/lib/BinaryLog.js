@@ -52,32 +52,10 @@ BinaryLog.prototype.attachIO = function () {
 		};
 
 		self._io = new ReactorIO(self._parent, self, function (chainPacket) {
-			switch (chainPacket.type) {
-				case 'insert':
-					self._log.insert({
-						type: chainPacket.type,
-						data: chainPacket.data
-					});
-					break;
-
-				case 'remove':
-					self._log.insert({
-						type: chainPacket.type,
-						data: {query: chainPacket.data.query}
-					});
-					break;
-
-				case 'update':
-					self._log.insert({
-						type: chainPacket.type,
-						data: {query: chainPacket.data.query, update: chainPacket.data.update}
-					});
-					break;
-
-				default:
-					break;
-			}
-
+			self._log.insert({
+				type: chainPacket.type,
+				data: chainPacket.data
+			});
 
 			// Returning false informs the chain reactor to continue propagation
 			// of the chain packet down the graph tree

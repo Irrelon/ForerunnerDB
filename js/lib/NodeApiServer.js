@@ -575,25 +575,7 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 					// coming from the object (collection, view etc), and then
 					// pass them to the clients
 					_io[objType][objName].io = new ReactorIO(obj, self, function (chainPacket) {
-						switch (chainPacket.type) {
-							case 'insert':
-								self.sendToAll(_io[objType][objName], chainPacket.type, chainPacket.data);
-								break;
-
-							case 'remove':
-								self.sendToAll(_io[objType][objName], chainPacket.type, {query: chainPacket.data.query});
-								break;
-
-							case 'update':
-								self.sendToAll(_io[objType][objName], chainPacket.type, {
-									query: chainPacket.data.query,
-									update: chainPacket.data.update
-								});
-								break;
-
-							default:
-								break;
-						}
+						self.sendToAll(_io[objType][objName], chainPacket.type, chainPacket.data);
 
 						// Returning false informs the chain reactor to continue propagation
 						// of the chain packet down the graph tree
