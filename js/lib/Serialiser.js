@@ -111,7 +111,20 @@ Serialiser.prototype._encode = function (data) {
  */
 Serialiser.prototype.parse = function (data) {
 	if (data) {
-		return this._parse(JSON.parse(data));
+		var jsonObject = JSON.parse(data),
+			handler;
+
+		// Check the string for special parse indicators
+		for (handler in this._decoder) {
+			if (this._decoder.hasOwnProperty(handler)) {
+				if (data.indexOf(handler) > -1) {
+					// Found special indicator, do full parse
+					return this._parse(jsonObject);
+				}
+			}
+		}
+
+		return jsonObject;
 	}
 };
 
