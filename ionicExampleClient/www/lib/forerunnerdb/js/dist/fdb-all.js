@@ -11824,13 +11824,13 @@ NodeApiClient.prototype.postPatch = function (path, id, data, options, callback)
 		if (err) {
 			if (err === 404) {
 				// Item does not exist, run post
-				return self.http('POST', self.server() + this._rootPath + path, data, options, callback);
+				return self.http('POST', self.server() + self._rootPath + path, data, options, callback);
 			} else {
 				callback(err, data);
 			}
 		} else {
 			// Item already exists, run patch
-			return self.http('PATCH', self.server() + this._rootPath + path + '/' + id, data, options, callback);
+			return self.http('PATCH', self.server() + self._rootPath + path + '/' + id, data, options, callback);
 		}
 	});
 };
@@ -12159,7 +12159,7 @@ Collection.prototype.autoHttp = new Overload({
 		var self = this;
 
 		if (this._db && this._db._core) {
-			return this._db._core.api.http('GET', this._db._core.api.server() + this._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
+			return this._db._core.api.http('GET', this._db._core.api.server() + this._db._core.api._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
 				var i;
 
 				if (!err && data) {
@@ -14643,7 +14643,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.653',
+	version: '1.3.654',
 	modules: {},
 	plugins: {},
 
