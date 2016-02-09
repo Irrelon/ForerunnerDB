@@ -292,7 +292,7 @@ NodeApiServer.prototype.stop = function () {
 		server.close();
 		server = undefined;
 
-		self.emit('stopped');
+		this.emit('stopped');
 		return true;
 	}
 
