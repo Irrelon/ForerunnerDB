@@ -145,7 +145,7 @@ Common = {
 	 * @returns {String}
 	 */
 	hash: function (obj) {
-		return this.jStringify(obj);
+		return JSON.stringify(obj);
 	},
 
 	/**
