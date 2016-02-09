@@ -45,6 +45,7 @@ NodeApiServer.prototype.init = function (core) {
 
 Shared.addModule('NodeApiServer', NodeApiServer);
 Shared.mixin(NodeApiServer.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiServer.prototype, 'Mixin.Events');
 Shared.mixin(NodeApiServer.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
@@ -150,6 +151,8 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 						if (callback) {
 							callback(false, server);
 						}
+
+						self.emit('started');
 					} else {
 						console.log('Listen error', err);
 						callback(err);
@@ -288,6 +291,8 @@ NodeApiServer.prototype.stop = function () {
 	if (server) {
 		server.close();
 		server = undefined;
+
+		self.emit('stopped');
 		return true;
 	}
 
