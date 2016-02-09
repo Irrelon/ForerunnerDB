@@ -243,13 +243,13 @@ NodeApiClient.prototype.postPatch = function (path, id, data, options, callback)
 		if (err) {
 			if (err === 404) {
 				// Item does not exist, run post
-				return self.http('POST', self.server() + path, data, options, callback);
+				return self.http('POST', self.server() + this._rootPath + path, data, options, callback);
 			} else {
 				callback(err, data);
 			}
 		} else {
 			// Item already exists, run patch
-			return self.http('PATCH', self.server() + path + '/' + id, data, options, callback);
+			return self.http('PATCH', self.server() + this._rootPath + path + '/' + id, data, options, callback);
 		}
 	});
 };
@@ -546,7 +546,7 @@ Collection.prototype.http = new Overload({
 
 	'$main': function (method, path, queryObj, queryOptions, options, callback) {
 		if (this._db && this._db._core) {
-			return this._db._core.api.http('GET', this._db._core.api.server() + path, {"$query": queryObj, "$options": queryOptions}, options, callback);
+			return this._db._core.api.http('GET', this._db._core.api.server() + this._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, callback);
 		} else {
 			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
 		}
@@ -578,7 +578,7 @@ Collection.prototype.autoHttp = new Overload({
 		var self = this;
 
 		if (this._db && this._db._core) {
-			return this._db._core.api.http('GET', this._db._core.api.server() + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
+			return this._db._core.api.http('GET', this._db._core.api.server() + this._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
 				var i;
 
 				if (!err && data) {
