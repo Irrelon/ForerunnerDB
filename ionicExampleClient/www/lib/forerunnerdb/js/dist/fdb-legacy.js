@@ -15242,7 +15242,9 @@ var Shared,
 	DbInit,
 	ReactorIO,
 	ActiveBucket,
-	Overload = _dereq_('./Overload');
+	Overload = _dereq_('./Overload'),
+	Path,
+	sharedPathSolver;
 
 Shared = _dereq_('./Shared');
 
@@ -15272,10 +15274,13 @@ ReactorIO = _dereq_('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Db = Shared.modules.Db;
 DbInit = Db.prototype.init;
+Path = Shared.modules.Path;
+sharedPathSolver = new Path();
 
 View.prototype.init = function (name, query, options) {
 	var self = this;
 
+	this.sharedPathSolver = sharedPathSolver;
 	this._name = name;
 	this._listeners = {};
 	this._querySettings = {};
