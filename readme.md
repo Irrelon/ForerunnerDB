@@ -3295,6 +3295,9 @@ underlying collection is altered. Views are accessed in the same way as a collec
 contain all the main CRUD functionality that a collection does. Inserting or updating on
 a view will alter the underlying collection.
 
+For a detailed insight into how data propagates from an underlying data source to a view
+see the section on (View Data Propagation and Synchronisation)[#notes_on_view_data_propagation_and_synchronisation].
+
 #### Instantiating a View
 Views are instantiated the same way collections are:
 
@@ -3926,6 +3929,58 @@ git push
 8. Your pull request will be evaluated and may elicit questions or further discussion
 9. If your pull request is accepted it will be merged into the main repository
 10. Pat yourself on the back for being a true open-source warrior! :)
+
+### Notes on View Data Propagation and Synchronisation
+Views are essentially collections whose data has been pre-processed usually by a limiting
+query (called an active query) and sometimes by a data transform method. Data from the
+View's *data source* (collection, view etc) that is assigned via the from() method is
+passed through ForerunnerDB's chain reactor system before it reaches the View itself.
+
+ForerunnerDB's chain reactor system allows class instances to be linked together to receive
+CRUD and other events from other instances, apply processing to them and then pass them on
+down the chain reactor graph.
+
+You can think of the chain reactor as a series of connected nodes that each as an input,
+process and output. The input and outputs of a node are usually collection and view instances
+although they can be any instance that implements the chain reactor mixin methods available
+in the Mixin.ChainReactor.js file. The process is a custom method that determines how the
+chain reactor "packet" data is handled. In the case of a View instance, a chain reactor node
+is set up between the *data source* and the view itself.
+
+When a change occurs on the view's source data, the chain reactor node receives the data
+packet from the source which describes the type of operation that has occurred and contains
+information about what documents were operated on and what queries were run on those documents.
+
+The view's reactor node process checks over this data and determines how to handle it.
+
+The process follows these high-level steps:
+
+1. Check if the view has an *active join* in the view's query options. *Active joins* are
+designated as any $join operator in the view's *active query*. They are operated against
+the data being sent from the view's *data source*. We do this first because joined data can
+be utilised by any *active query* or *active transform* which means the data must be present
+before resolving queries and transforms in the next steps.
+
+2. Check if there is an *active query*. Queries are run against the source data after any
+*active joins* have been executed against the data. This allows an *active query* to operate
+on data that would only exist after an *active join* has been executed. If the data coming
+from the *data source* does not match the *active query* parameters then it added to a
+*removal array* to be processed in a following step. If the data *does* match the *active query*
+parameters then it is added to an *upsert array*.
+
+3. Check if there is an *active transform*. An *active transform* is a transform operation
+registered against the view where the operation includes a *dataIn method*. If a transform
+exists we execute it against the data after it has been run through the *active join* and
+*active query* steps.
+
+4. Process the *removal array*. We loop the *removal array* and ask the view to remove any
+items that match the items in this array.
+
+5. Process the *upsert array*. We loop the *upsert array*, determine if each item is either
+an insert operation (the item does not currently exist in the view data) or an update operation
+(the item DOES currently exist in the view and the data is different from the current entry).
+
+6. Finish the process by inserting and updating data depending on the result of step 5.
 
 ## Contributing to This Project
 Contributions through pull requests are welcome. Please ensure that if your pull request includes
