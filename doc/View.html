@@ -216,7 +216,7 @@
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line23">line 23</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line25">line 25</a>
     </li></ul></dd>
     
 
@@ -305,7 +305,7 @@ does not change or modify the view's query options.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line658">line 658</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line923">line 923</a>
     </li></ul></dd>
     
 
@@ -954,7 +954,7 @@ containing a string that represents the HTML template such as:
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line334">line 334</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line576">line 576</a>
     </li></ul></dd>
     
 
@@ -1086,7 +1086,324 @@ source is dropped.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line313">line 313</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line696">line 696</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_handleChainIO"><span class="type-signature">(private) </span>_handleChainIO<span class="signature">(chainPacket, self)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    This reactor IO node is given data changes from source data and
+then acts as a firewall process between the source and view data.
+Data needs to meet the requirements this IO node imposes before
+the data is passed down the reactor chain (to the view). This
+allows us to intercept data changes from the data source and act
+on them such as applying transforms, checking the data matches
+the view's query, applying joins to the data etc before sending it
+down the reactor chain via the this.chainSend() calls.
+
+Update packets are especially complex to handle because an update
+on the underlying source data could translate into an insert,
+update or remove call on the view. Take a scenario where the view's
+query limits the data see from the source. If the source data is
+updated and the data now falls inside the view's query limitations
+the data is technically now an insert on the view, not an update.
+The same is true in reverse where the update becomes a remove. If
+the updated data already exists in the view and will still exist
+after the update operation then the update can remain an update.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>chainPacket</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The chain reactor packet representing the
+data operation that has just been processed on the source data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>self</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="View.html">View</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The reference to the view we are operating for.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line89">line 89</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="_joinChange"><span class="type-signature">(private) </span>_joinChange<span class="signature">(objName, objType)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Handles when a change has occurred on a collection that is joined
+by query to this view.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>objName</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>objType</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1183">line 1183</a>
     </li></ul></dd>
     
 
@@ -1168,7 +1485,7 @@ source is dropped.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line923">line 923</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1197">line 1197</a>
     </li></ul></dd>
     
 
@@ -1268,7 +1585,7 @@ source is dropped.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line145">line 145</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line471">line 471</a>
     </li></ul></dd>
     
 
@@ -1294,6 +1611,111 @@ source is dropped.
 <h5>Returns:</h5>
 
         
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Collection.html">Collection</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="data"><span class="type-signature"></span>data<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns the non-transformed data the view holds as a collection
+reference.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1254">line 1254</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    The non-transformed collection reference.
+</div>
+
 
 
 <dl>
@@ -1368,7 +1790,7 @@ source is dropped.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line472">line 472</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line742">line 742</a>
     </li></ul></dd>
     
 
@@ -1583,7 +2005,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line484">line 484</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line754">line 754</a>
     </li></ul></dd>
     
 
@@ -1683,7 +2105,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line502">line 502</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line771">line 771</a>
     </li></ul></dd>
     
 
@@ -1787,7 +2209,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line464">line 464</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line734">line 734</a>
     </li></ul></dd>
     
 
@@ -1876,7 +2298,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line325">line 325</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line708">line 708</a>
     </li></ul></dd>
     
 
@@ -2108,7 +2530,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1057">line 1057</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1245">line 1245</a>
     </li></ul></dd>
     
 
@@ -2208,7 +2630,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line101">line 101</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line427">line 427</a>
     </li></ul></dd>
     
 
@@ -2319,7 +2741,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line119">line 119</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line445">line 445</a>
     </li></ul></dd>
     
 
@@ -2430,7 +2852,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line110">line 110</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line436">line 436</a>
     </li></ul></dd>
     
 
@@ -2541,7 +2963,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line128">line 128</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line454">line 454</a>
     </li></ul></dd>
     
 
@@ -2652,7 +3074,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line137">line 137</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line463">line 463</a>
     </li></ul></dd>
     
 
@@ -2858,7 +3280,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line156">line 156</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line482">line 482</a>
     </li></ul></dd>
     
 
@@ -2959,7 +3381,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1095">line 1095</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1262">line 1262</a>
     </li></ul></dd>
     
 
@@ -3066,7 +3488,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line68">line 68</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line394">line 394</a>
     </li></ul></dd>
     
 
@@ -3155,7 +3577,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line456">line 456</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line726">line 726</a>
     </li></ul></dd>
     
 
@@ -3200,7 +3622,8 @@ otherwise returns itself for chaining.
 
 
 <div class="description">
-    Listens for an event.
+    /**
+Listens for an event.
 </div>
 
 
@@ -3244,7 +3667,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line448">line 448</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line718">line 718</a>
     </li></ul></dd>
     
 
@@ -3394,7 +3817,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line717">line 717</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line978">line 978</a>
     </li></ul></dd>
     
 
@@ -3555,7 +3978,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line734">line 734</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line995">line 995</a>
     </li></ul></dd>
     
 
@@ -3655,7 +4078,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line754">line 754</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1015">line 1015</a>
     </li></ul></dd>
     
 
@@ -3755,7 +4178,7 @@ otherwise returns itself for chaining.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line762">line 762</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1023">line 1023</a>
     </li></ul></dd>
     
 
@@ -3905,7 +4328,7 @@ or negative integer of the number of pages to move.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line775">line 775</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1036">line 1036</a>
     </li></ul></dd>
     
 
@@ -4005,7 +4428,7 @@ or negative integer of the number of pages to move.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line494">line 494</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line763">line 763</a>
     </li></ul></dd>
     
 
@@ -4053,203 +4476,6 @@ or negative integer of the number of pages to move.
 </dl>
 
     
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="privateData"><span class="type-signature"></span>privateData<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Returns the non-transformed data the view holds as a collection
-reference.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1066">line 1066</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    The non-transformed collection reference.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="publicData"><span class="type-signature"></span>publicData<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Returns a data object representing the public data this view
-contains. This can change depending on if transforms are being
-applied to the view or not.
-
-If no transforms are applied then the public data will be the
-same as the private data the view holds. If transforms are
-applied then the public data will contain the transformed version
-of the private data.
-
-The public data collection is also used by data binding to only
-changes to the publicData will show in a data-bound element.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1083">line 1083</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -4435,7 +4661,7 @@ once the operation is complete. Defaults to true.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line601">line 601</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line866">line 866</a>
     </li></ul></dd>
     
 
@@ -4651,7 +4877,7 @@ arguments.</li></ul></dd>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line564">line 564</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line829">line 829</a>
     </li></ul></dd>
     
 
@@ -4847,7 +5073,7 @@ this operation. Defaults to true.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line803">line 803</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1064">line 1064</a>
     </li></ul></dd>
     
 
@@ -5041,7 +5267,152 @@ once the operation is complete. Defaults to true.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line630">line 630</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line895">line 895</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="rebuildActiveBucket"><span class="type-signature"></span>rebuildActiveBucket<span class="signature">(orderBy<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Clears the existing active bucket and builds a new one based
+on the passed orderBy object (if one is passed).
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>orderBy</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The orderBy object describing how to
+order any data.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1086">line 1086</a>
     </li></ul></dd>
     
 
@@ -5123,7 +5494,7 @@ once the operation is complete. Defaults to true.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line841">line 841</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1108">line 1108</a>
     </li></ul></dd>
     
 
@@ -5205,7 +5576,7 @@ once the operation is complete. Defaults to true.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line92">line 92</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line418">line 418</a>
     </li></ul></dd>
     
 
@@ -5303,7 +5674,8 @@ enable or disable the transform system for the view.
 
             
 
-            <td class="description last">The new transform system settings "enabled", "dataIn" and "dataOut":
+            <td class="description last">The new transform system settings "enabled", "dataIn"
+and "dataOut":
 {
 	"enabled": true,
 	"dataIn": function (data) { return data; },
@@ -5349,7 +5721,7 @@ enable or disable the transform system for the view.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line947">line 947</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line1218">line 1218</a>
     </li></ul></dd>
     
 
@@ -5449,7 +5821,7 @@ enable or disable the transform system for the view.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line76">line 76</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line402">line 402</a>
     </li></ul></dd>
     
 
@@ -5538,7 +5910,7 @@ enable or disable the transform system for the view.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="View.js.html">View.js</a>, <a href="View.js.html#line84">line 84</a>
+        <a href="View.js.html">View.js</a>, <a href="View.js.html#line410">line 410</a>
     </li></ul></dd>
     
 
@@ -5587,13 +5959,13 @@ enable or disable the transform system for the view.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Feb 05 2016 14:32:44 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 09 2016 12:18:39 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
