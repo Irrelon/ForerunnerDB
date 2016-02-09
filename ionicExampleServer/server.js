@@ -6,6 +6,7 @@ var ForerunnerDB = require('../js/builds/nodecore'),
 
 // Enable database debug logging to the console
 db.debug(true);
+fdb.api.debug(true);
 
 // Set the persist plugin's data folder
 db.persist.dataDir('./data');
