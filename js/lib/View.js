@@ -752,7 +752,7 @@ View.prototype.deferEmit = function () {
  * @returns {Array}
  */
 View.prototype.distinct = function (key, query, options) {
-	return this._data.distinct.apply(coll, arguments);
+	return this._data.distinct(key, query, options);
 };
 
 /**
