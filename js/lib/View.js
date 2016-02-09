@@ -1187,7 +1187,8 @@ View.prototype._joinChange = function (objName, objType) {
 	// TODO: rebuild of the view data. We need to implement an IO handler to
 	// TODO: selectively update the data of the view based on the joined
 	// TODO: collection data operation.
-	this.refresh();
+	// FIXME: This isnt working, major performance killer, invest in some IO from chain reactor to make this a targeted call
+	//this.refresh();
 };
 
 /**
