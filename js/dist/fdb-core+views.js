@@ -2653,7 +2653,7 @@ Collection.prototype._insert = function (doc, index) {
 
 			//op.time('Resolve chains');
 			self.chainSend('insert', {
-				dataSet: this.decouple([doc])
+				dataSet: self.decouple([doc])
 			}, {
 				index: index
 			});
@@ -10774,7 +10774,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.659',
+	version: '1.3.660',
 	modules: {},
 	plugins: {},
 
