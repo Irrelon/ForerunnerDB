@@ -43,6 +43,9 @@ Shared.synthesize(NodeApiClient.prototype, 'rootPath');
 /**
  * Set the url of the server to use for API.
  * @name server
+ * @param {String} host The server host name including protocol. E.g.
+ * "https://0.0.0.0".
+ * @param {String} port The server port number e.g. "8080".
  */
 NodeApiClient.prototype.server = function (host, port) {
 	if (host !== undefined) {
@@ -371,7 +374,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	source.addEventListener('insert', function(e) {
 		var data = self.jParse(e.data);
-		collectionInstance.insert(data);
+		collectionInstance.insert(data.dataSet);
 	}, false);
 
 	source.addEventListener('update', function(e) {

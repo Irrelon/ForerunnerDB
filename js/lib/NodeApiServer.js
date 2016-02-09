@@ -358,9 +358,9 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				// Split path into sections
 				pathSections = urlPath.split('/');
 
-				if (this._rootPath) {
+				if (self._rootPath) {
 					// Remove the first 5 sections as we already used these (rootPath, dbName, objType, objName, itemId)
-					pathSections.splice(0, 4 + this._rootSectionCount);
+					pathSections.splice(0, 4 + self._rootSectionCount);
 				} else {
 					// Remove the first 4 sections as we already used these (dbName, objType, objName, itemId)
 					pathSections.splice(0, 4);
@@ -485,7 +485,7 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 				}
 
 				if (self.debug && self.debug()) {
-					console.log(self.logIdentifier() + ' REST call finised: ' + method + ' ' + req.url);
+					console.log(self.logIdentifier() + ' REST call finished: ' + method + ' ' + req.url);
 				}
 			} else {
 				if (self.debug && self.debug()) {
