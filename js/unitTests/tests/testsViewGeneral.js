@@ -290,6 +290,17 @@ ForerunnerDB.moduleLoaded('View', function () {
 		strictEqual(result[1].org.newDataInOrg, true, "Complete");
 		strictEqual(result[2].org.newDataInOrg, true, "Complete");
 
+		db.collection('user').update({
+			_id: '2'
+		}, {
+			moo: '52'
+		});
+
+		result = db.collection('user').find({_id: '2'});
+
+		// Check we haven't contaminated the collection data with view data
+		strictEqual(result[0].org, undefined, "Check view data hasn't contaminated collection data");
+
 		base.dbDown();
 	});
 
