@@ -3105,7 +3105,6 @@ Collection.prototype._find = function (query, options) {
 				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
-				debugger;
 				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
@@ -15043,7 +15042,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.640',
+	version: '1.3.641',
 	modules: {},
 	plugins: {},
 
@@ -15985,7 +15984,7 @@ View.prototype.deferEmit = function () {
  * @returns {Array}
  */
 View.prototype.distinct = function (key, query, options) {
-	return this._data.distinct.apply(coll, arguments);
+	return this._data.distinct(key, query, options);
 };
 
 /**
