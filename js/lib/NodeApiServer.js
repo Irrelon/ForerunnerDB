@@ -142,9 +142,9 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 				server = httpServer.listen(port, host, function (err) {
 					if (!err) {
 						if (options && options.ssl && options.ssl.enable) {
-							console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
+							console.log('ForerunnerDB REST API listening at https://%s:%s/fdb', host, port);
 						} else {
-							console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
+							console.log('ForerunnerDB REST API listening at http://%s:%s/fdb', host, port);
 						}
 
 						if (callback) {
