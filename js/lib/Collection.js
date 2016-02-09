@@ -8,7 +8,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -91,18 +90,10 @@ Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
 IndexBinaryTree = require('./IndexBinaryTree');
 Index2d = require('./Index2d');
-Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -243,7 +234,10 @@ Collection.prototype.primaryKey = function (keyName) {
 			this.rebuildPrimaryKeyIndex();
 
 			// Propagate change down the chain
-			this.chainSend('primaryKey', keyName, {oldData: oldKey});
+			this.chainSend('primaryKey', {
+				keyName: keyName,
+				oldData: oldKey
+			});
 		}
 		return this;
 	}
@@ -364,7 +358,10 @@ Collection.prototype.setData = function (data, options, callback) {
 		op.time('Rebuild All Other Indexes');
 
 		op.time('Resolve chains');
-		this.chainSend('setData', data, {oldData: oldData});
+		this.chainSend('setData', {
+			dataSet: data,
+			oldData: oldData
+		});
 		op.time('Resolve chains');
 
 		op.stop();
@@ -427,8 +424,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -639,18 +636,22 @@ Collection.prototype.update = function (query, update, options, callback) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
-	// Decouple the update data
-	update = this.decouple(update);
-
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -1646,7 +1647,11 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', doc, {index: index});
+			self.chainSend('insert', {
+				dataSet: [doc]
+			}, {
+				index: index
+			});
 			//op.time('Resolve chains');
 		};
 
@@ -1732,12 +1737,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -1757,12 +1763,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -3287,10 +3294,10 @@ Collection.prototype.collateAdd = new Overload({
 							$push: {}
 						};
 
-						obj1.$push[keyName] = self.decouple(packet.data);
+						obj1.$push[keyName] = self.decouple(packet.data.dataSet);
 						self.update({}, obj1);
 					} else {
-						self.insert(packet.data);
+						self.insert(packet.data.dataSet);
 					}
 					break;
 
@@ -3319,7 +3326,7 @@ Collection.prototype.collateAdd = new Overload({
 
 						self.update({}, obj1);
 					} else {
-						self.remove(packet.data);
+						self.remove(packet.data.dataSet);
 					}
 					break;
 

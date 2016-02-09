@@ -576,7 +576,7 @@ AutoBind.extendView = function (Module) {
 	 * @returns {Boolean} True if linked, false if not.
 	 */
 	Module.prototype.isLinked = function () {
-		return this.publicData().isLinked();
+		return this.data().isLinked();
 	};
 
 	/**
@@ -596,9 +596,9 @@ AutoBind.extendView = function (Module) {
 	 * @see unlink
 	 */
 	Module.prototype.link = function (outputTargetSelector, templateSelector, options) {
-		var publicData = this.publicData();
+		var data = this.data();
 
-		publicData.link(outputTargetSelector, templateSelector, options);
+		data.link(outputTargetSelector, templateSelector, options);
 
 		return this;
 	};
@@ -613,9 +613,9 @@ AutoBind.extendView = function (Module) {
 	 * @returns {View}
 	 */
 	Module.prototype.unlink = function (outputTargetSelector, templateSelector) {
-		var publicData = this.publicData();
+		var data = this.data();
 
-		publicData.unlink(outputTargetSelector, templateSelector);
+		data.unlink(outputTargetSelector, templateSelector);
 
 		return this;
 	};
@@ -625,7 +625,7 @@ AutoBind.extendView = function (Module) {
 	 * @returns {*}
 	 */
 	Module.prototype.links = function () {
-		return this.publicData().links();
+		return this.data().links();
 	};
 };
 

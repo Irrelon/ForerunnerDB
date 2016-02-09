@@ -140,6 +140,15 @@ Common = {
 	},
 
 	/**
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
+	 * @returns {String}
+	 */
+	hash: function (obj) {
+		return this.jStringify(obj);
+	},
+
+	/**
 	 * Gets / sets debug flag that can enable debug message output to the
 	 * console if required.
 	 * @param {Boolean} val The value to set debug flag to.

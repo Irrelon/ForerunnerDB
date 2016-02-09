@@ -1,9 +1,9 @@
 "use strict";
 
-/**
- * @mixin
- */
-var crcTable = (function () {
+var crcTable,
+	checksum;
+
+crcTable = (function () {
 	var crcTable = [],
 		c, n, k;
 
@@ -20,7 +20,12 @@ var crcTable = (function () {
 	return crcTable;
 }());
 
-module.exports = function(str) {
+/**
+ * Returns a checksum of a string.
+ * @param {String} str The string to checksum.
+ * @return {Number} The checksum generated.
+ */
+checksum = function(str) {
 	var crc = 0 ^ (-1), // jshint ignore:line
 		i;
 
@@ -30,3 +35,5 @@ module.exports = function(str) {
 
 	return (crc ^ (-1)) >>> 0; // jshint ignore:line
 };
+
+module.exports = checksum;

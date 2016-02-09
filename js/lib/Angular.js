@@ -128,9 +128,9 @@ Angular.extendView = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.publicData().findOne() || {};
+						scope[varName] = self.data().findOne() || {};
 					} else {
-						scope[varName] = self.publicData().find();
+						scope[varName] = self.data().find();
 					}
 
 					setTimeout(function () {
@@ -146,7 +146,7 @@ Angular.extendView = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							self.publicData().off('immediateChange', link.callback);
+							self.data().off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
@@ -154,7 +154,7 @@ Angular.extendView = function (Module) {
 			});
 
 			// Hook the ForerunnerDB immediateChange event to inform angular of a change
-			self.publicData().on('immediateChange', function () {
+			self.data().on('immediateChange', function () {
 				link.callback();
 			} );
 

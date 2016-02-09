@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -707,6 +707,46 @@ module.exports = BinaryTree;
 },{"./Path":27,"./Shared":33}],4:[function(_dereq_,module,exports){
 "use strict";
 
+var crcTable,
+	checksum;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+
+	for (n = 0; n < 256; n++) {
+		c = n;
+
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}());
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} str The string to checksum.
+ * @return {Number} The checksum generated.
+ */
+checksum = function(str) {
+	var crc = 0 ^ (-1), // jshint ignore:line
+		i;
+
+	for (i = 0; i < str.length; i++) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+	}
+
+	return (crc ^ (-1)) >>> 0; // jshint ignore:line
+};
+
+module.exports = checksum;
+},{}],5:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared,
 	Db,
 	Metrics,
@@ -715,7 +755,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -798,18 +837,10 @@ Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Index2d = _dereq_('./Index2d');
-Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -950,7 +981,10 @@ Collection.prototype.primaryKey = function (keyName) {
 			this.rebuildPrimaryKeyIndex();
 
 			// Propagate change down the chain
-			this.chainSend('primaryKey', keyName, {oldData: oldKey});
+			this.chainSend('primaryKey', {
+				keyName: keyName,
+				oldData: oldKey
+			});
 		}
 		return this;
 	}
@@ -1071,7 +1105,10 @@ Collection.prototype.setData = function (data, options, callback) {
 		op.time('Rebuild All Other Indexes');
 
 		op.time('Resolve chains');
-		this.chainSend('setData', data, {oldData: oldData});
+		this.chainSend('setData', {
+			dataSet: data,
+			oldData: oldData
+		});
 		op.time('Resolve chains');
 
 		op.stop();
@@ -1134,8 +1171,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -1346,18 +1383,22 @@ Collection.prototype.update = function (query, update, options, callback) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
-	// Decouple the update data
-	update = this.decouple(update);
-
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -2353,7 +2394,11 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', doc, {index: index});
+			self.chainSend('insert', {
+				dataSet: [doc]
+			}, {
+				index: index
+			});
 			//op.time('Resolve chains');
 		};
 
@@ -2439,12 +2484,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2464,12 +2510,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -3994,10 +4041,10 @@ Collection.prototype.collateAdd = new Overload({
 							$push: {}
 						};
 
-						obj1.$push[keyName] = self.decouple(packet.data);
+						obj1.$push[keyName] = self.decouple(packet.data.dataSet);
 						self.update({}, obj1);
 					} else {
-						self.insert(packet.data);
+						self.insert(packet.data.dataSet);
 					}
 					break;
 
@@ -4026,7 +4073,7 @@ Collection.prototype.collateAdd = new Overload({
 
 						self.update({}, obj1);
 					} else {
-						self.remove(packet.data);
+						self.remove(packet.data.dataSet);
 					}
 					break;
 
@@ -4311,7 +4358,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],5:[function(_dereq_,module,exports){
+},{"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4484,21 +4531,21 @@ CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Remove old data
-			this._data.remove(chainPacket.options.oldData);
+			this._data.remove(chainPacket.data.oldData);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'update':
@@ -4670,7 +4717,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":33}],6:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":33}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4961,47 +5008,14 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],7:[function(_dereq_,module,exports){
-"use strict";
-
-/**
- * @mixin
- */
-var crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-module.exports = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-},{}],8:[function(_dereq_,module,exports){
+},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Crc,
+	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5144,7 +5158,7 @@ Shared.mixin(Db.prototype, 'Mixin.Tags');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5202,7 +5216,7 @@ Db.prototype.isServer = function () {
  * @param {String} string The string to checksum.
  * @return {String} The checksum generated.
  */
-Db.prototype.crc = Crc;
+Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -5633,7 +5647,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
+},{"./Checksum.js":4,"./Collection.js":5,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -7319,18 +7333,25 @@ var ChainReactor = {
 
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
-			sender: sender,
-			type: type,
-			data: data,
-			options: options
-		};
+				sender: sender,
+				type: type,
+				data: data,
+				options: options
+			},
+			cancelPropagate = false;
 
 		if (this.debug && this.debug()) {
 			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
-		// Fire our internal handler
-		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+		// Check if we have a chain handler method
+		if (this._chainHandler) {
+			// Fire our internal handler
+			cancelPropagate = this._chainHandler(chainPacket);
+		}
+
+		// Check if we were told to cancel further propagation
+		if (!cancelPropagate) {
 			// Propagate the message down the chain
 			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
 		}
@@ -7478,6 +7499,15 @@ Common = {
 		}
 
 		return id;
+	},
+
+	/**
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
+	 * @returns {String}
+	 */
+	hash: function (obj) {
+		return this.jStringify(obj);
 	},
 
 	/**
@@ -10984,7 +11014,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -11492,7 +11522,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.645',
+	version: '1.3.641',
 	modules: {},
 	plugins: {},
 

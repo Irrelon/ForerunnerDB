@@ -170,21 +170,21 @@ CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Remove old data
-			this._data.remove(chainPacket.options.oldData);
+			this._data.remove(chainPacket.data.oldData);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'update':

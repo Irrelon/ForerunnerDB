@@ -1,9 +1,9 @@
 QUnit.module('Views Complex CRUD');
 ForerunnerDB.moduleLoaded('View', function () {
-	/*QUnit.asyncTest('Highly complex chaining scenario: View chain reactor updates from the source data', function () {
+	QUnit.asyncTest('Highly complex chaining scenario: View chain reactor updates from the source data', function () {
 		base.dbUp();
-		expect(0);
-		start();
+		expect(12);
+
 		var alarm,
 			alarmView,
 			zone,
@@ -1154,9 +1154,6 @@ ForerunnerDB.moduleLoaded('View', function () {
 		ok(results.activeDevice && results.activeDevice.length === 0, 'Zone activeDevice array correct length');
 		ok(results.availableDevice && results.availableDevice.length === 42, 'Zone availableDevice array correct length');
 
-		//debugger;
-
-		/!*
 		zone.insert({
 			"name": "Test Sensors",
 			"alarm": 0,
@@ -1165,7 +1162,12 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"ZWayVDev_zway_26"
 			]
 		});
-		*!/
+
+		results = zoneView.findById("5555");
+
+		ok(results !== undefined, 'Zone exists');
+		ok(results.activeDevice && results.activeDevice.length === 1, 'Zone activeDevice array correct length');
+		ok(results.availableDevice && results.availableDevice.length === 41, 'Zone availableDevice array correct length');
 
 		zone.update({
 			"_id": "4444"
@@ -1180,5 +1182,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		ok(results !== undefined, 'Zone exists');
 		ok(results.activeDevice && results.activeDevice.length === 1, 'Zone activeDevice array correct length');
 		ok(results.availableDevice && results.availableDevice.length === 41, 'Zone availableDevice array correct length');
-	});*/
+
+		start();
+	});
 });

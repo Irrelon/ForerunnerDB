@@ -84,7 +84,7 @@ QUnit.test("Collection.find() $transform :: Query data with a $transform operato
 });
 
 ForerunnerDB.moduleLoaded('View', function () {
-	QUnit.test("View.transform() :: Assign a transform-in method to a view from a standard collection", function () {
+	QUnit.test("View.transform() :: Assign a transform-in method to a View and them call from(), passing a collection", function () {
 		base.dbUp();
 
 		var coll = db.collection('transformColl').truncate();
@@ -102,6 +102,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		var view = db.view('transformView').from(coll);
 
+		// Set a transform on the view
 		view.transform({
 			enabled: true,
 			dataIn: function (data) {
@@ -113,6 +114,10 @@ ForerunnerDB.moduleLoaded('View', function () {
 			}
 		});
 
+		// This tests that a view's data is correctly refreshed after a transform has been
+		// enabled with a dataIn method. If this fails then the view's transform() method
+		// should be inspected to see why the data was not refreshed after the transform
+		// was modified to include an enabled flag and a dataIn method.
 		result = view.find();
 		strictEqual(result[0].moo === 1 && result[0].goo, 2, "View insert 1 transformed");
 
@@ -122,6 +127,9 @@ ForerunnerDB.moduleLoaded('View', function () {
 			foo: 4
 		});
 
+		// This tests that a view's internal data collection is correctly transforming inserted
+		// data. If it is not, follow the flow of data through the chain reactor until the data
+		// is inserted and see why the data did not get correctly modified.
 		result = view.find();
 		strictEqual(result[1] && result[1].moo === 4 && result[1].goo, 5, "View insert 2 transformed");
 
@@ -132,6 +140,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 			foo: 2
 		});
 
+		// This checks that a view's data is correctly transformed when an update operation is
+		// executed against it.
 		result = view.find();
 		strictEqual(result[1] && result[1].moo === 2 && result[1].goo, 3, "View update 2 transformed");
 
