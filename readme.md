@@ -76,7 +76,8 @@ ask NPM for the dev tag:
 npm install forerunnerdb --tag dev
 ```
 
-This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
+Installing via NPM will also work for browser-based development, however if you prefer
+a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 # How to Use
 ## Use ForerunnerDB in *Browser*
