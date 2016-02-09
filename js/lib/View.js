@@ -9,7 +9,9 @@ var Shared,
 	DbInit,
 	ReactorIO,
 	ActiveBucket,
-	Overload = require('./Overload');
+	Overload = require('./Overload'),
+	Path,
+	sharedPathSolver;
 
 Shared = require('./Shared');
 
@@ -39,10 +41,13 @@ ReactorIO = require('./ReactorIO');
 CollectionInit = Collection.prototype.init;
 Db = Shared.modules.Db;
 DbInit = Db.prototype.init;
+Path = Shared.modules.Path;
+sharedPathSolver = new Path();
 
 View.prototype.init = function (name, query, options) {
 	var self = this;
 
+	this.sharedPathSolver = sharedPathSolver;
 	this._name = name;
 	this._listeners = {};
 	this._querySettings = {};
