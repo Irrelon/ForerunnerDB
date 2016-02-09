@@ -54,7 +54,7 @@ View.prototype.init = function (name, query, options) {
 		self._collectionDropped.apply(self, arguments);
 	};
 
-	this._data = new Collection(this.name() + '_public');
+	this._data = new Collection(this.name() + '_internal');
 };
 
 /**
@@ -83,7 +83,6 @@ View.prototype.init = function (name, query, options) {
  */
 View.prototype._handleChainIO = function (chainPacket, self) {
 	var type = chainPacket.type,
-		data = chainPacket.data,
 		hasActiveJoin,
 		hasActiveQuery,
 		hasTransformIn,
@@ -117,7 +116,7 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// packet to proceed as normal
 	hasActiveJoin = Boolean(self._querySettings.options && self._querySettings.options.$join);
 	hasActiveQuery = Boolean(self._querySettings.query);
-	hasTransformIn = self._transformIn !== undefined;
+	hasTransformIn = self._data._transformIn !== undefined;
 
 	// EARLY EXIT: Check for any complex operation flags and if none
 	// exist, send the packet on and exit early
@@ -136,29 +135,30 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// calls can share data with each other via this object whilst
 	// still remaining separate methods to keep code relatively clean.
 	sharedData = {
+		dataArr: [],
 		removeArr: []
 	};
 
 	// Check the packet type to get the data arrays to work on
 	if (chainPacket.type === 'insert') {
 		// Check if the insert data is an array
-		if (chainPacket.data instanceof Array) {
+		if (chainPacket.data.dataSet instanceof Array) {
 			// Use the insert data array
-			sharedData.dataArr = chainPacket.data;
+			sharedData.dataArr = chainPacket.data.dataSet;
 		} else {
 			// Generate an array from the single insert object
-			sharedData.dataArr = [chainPacket.data];
+			sharedData.dataArr = [chainPacket.data.dataSet];
 		}
 	} else if (chainPacket.type === 'update') {
 		// Use the dataSet array
 		sharedData.dataArr = chainPacket.data.dataSet;
 	} else if (chainPacket.type === 'remove') {
-		if (chainPacket.data instanceof Array) {
+		if (chainPacket.data.dataSet instanceof Array) {
 			// Use the remove data array
-			sharedData.removeArr = chainPacket.data;
+			sharedData.removeArr = chainPacket.data.dataSet;
 		} else {
 			// Generate an array from the single remove object
-			sharedData.removeArr = [chainPacket.data];
+			sharedData.removeArr = [chainPacket.data.dataSet];
 		}
 	}
 
@@ -281,6 +281,7 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	var self = this,
 		dataArr = sharedData.dataArr,
 		removeArr = sharedData.removeArr,
+		dataIn = self._data._transformIn,
 		i;
 
 	// At this stage we take the remaining items still left in the data
@@ -289,14 +290,20 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	// to run this on items we want to remove too because transforms can
 	// affect primary keys and therefore stop us from identifying the
 	// correct items to run removal operations on.
+
+	// It is important that these are transformed BEFORE they are passed
+	// to the CRUD methods because we use the CU data to check the position
+	// of the item in the array and that can only happen if it is already
+	// pre-transformed. The removal stuff also needs pre-transformed
+	// because ids can be modified by a transform.
 	for (i = 0; i < dataArr.length; i++) {
 		// Assign the new value
-		dataArr[i] = self._transformIn(dataArr[i]);
+		dataArr[i] = dataIn(dataArr[i]);
 	}
 
 	for (i = 0; i < removeArr.length; i++) {
 		// Assign the new value
-		removeArr[i] = self._transformIn(removeArr[i]);
+		removeArr[i] = dataIn(removeArr[i]);
 	}
 };
 
@@ -304,7 +311,8 @@ View.prototype._handleChainIO_RemovePackets = function (ioObj, chainPacket, shar
 	var $or = [],
 		pk = sharedData.pk,
 		removeArr = sharedData.removeArr,
-		removeQuery = {
+		packet = {
+			dataSet: removeArr,
 			query: {
 				$or: $or
 			}
@@ -319,7 +327,7 @@ View.prototype._handleChainIO_RemovePackets = function (ioObj, chainPacket, shar
 		$or.push(orObj);
 	}
 
-	ioObj.chainSend('remove', removeQuery);
+	ioObj.chainSend('remove', packet);
 };
 
 View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, sharedData) {
@@ -353,7 +361,9 @@ View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, shar
 	}
 
 	if (insertArr.length) {
-		ioObj.chainSend('insert', insertArr);
+		ioObj.chainSend('insert', {
+			dataSet: insertArr
+		});
 	}
 
 	if (updateArr.length) {
@@ -365,108 +375,11 @@ View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, shar
 
 			ioObj.chainSend('update', {
 				query: query,
-				update: arrItem[i],
-				dataSet: [arrItem[i]]
+				update: arrItem,
+				dataSet: [arrItem]
 			});
 		}
 	}
-};
-
-var _notUsing = function (chainPacket) {
-	var self = this,
-		data,
-		diff,
-		query,
-		filteredData,
-		doSend,
-		pk,
-		i;
-
-	// Check that the state of the "self" object is not dropped
-	if (self && !self.isDropped()) {
-		// Check if we have a constraining query
-		if (self._querySettings.query) {
-			if (chainPacket.type === 'insert') {
-				data = chainPacket.data;
-
-				// Check if the data matches our query
-				if (data instanceof Array) {
-					filteredData = [];
-
-					for (i = 0; i < data.length; i++) {
-						if (self._privateData._match(data[i], self._querySettings.query, self._querySettings.options, 'and', {})) {
-							filteredData.push(data[i]);
-							doSend = true;
-						}
-					}
-				} else {
-					if (self._privateData._match(data, self._querySettings.query, self._querySettings.options, 'and', {})) {
-						filteredData = data;
-						doSend = true;
-					}
-				}
-
-				if (doSend) {
-					ioObj.chainSend('insert', filteredData);
-				}
-
-				return true;
-			}
-
-			if (chainPacket.type === 'update') {
-				// Do a DB diff between this view's data and the underlying collection it reads from
-				// to see if something has changed
-				diff = self._privateData.diff(self._from.subset(self._querySettings.query, self._querySettings.options));
-
-				if (diff.insert.length || diff.remove.length) {
-					// Now send out new chain packets for each operation
-					if (diff.insert.length) {
-						ioObj.chainSend('insert', diff.insert);
-					}
-
-					if (diff.update.length) {
-						pk = self._privateData.primaryKey();
-						for (i = 0; i < diff.update.length; i++) {
-							query = {};
-							query[pk] = diff.update[i][pk];
-
-							ioObj.chainSend('update', {
-								query: query,
-								update: diff.update[i]
-							});
-						}
-					}
-
-					if (diff.remove.length) {
-						pk = self._privateData.primaryKey();
-						var $or = [],
-							removeQuery = {
-								query: {
-									$or: $or
-								}
-							};
-
-						for (i = 0; i < diff.remove.length; i++) {
-							$or.push({_id: diff.remove[i][pk]});
-						}
-
-						ioObj.chainSend('remove', removeQuery);
-					}
-
-					// Return true to stop further propagation of the chain packet
-					return true;
-				} else {
-					// Returning false informs the chain reactor to continue propagation
-					// of the chain packet down the graph tree
-					return false;
-				}
-			}
-		}
-	}
-
-	// Returning false informs the chain reactor to continue propagation
-	// of the chain packet down the graph tree
-	return false;
 };
 
 /**
@@ -690,27 +603,27 @@ View.prototype._chainHandler = function (chainPacket) {
 			}
 
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 
 			// Make sure we are working with an array
-			if (!(chainPacket.data instanceof Array)) {
-				chainPacket.data = [chainPacket.data];
+			if (!(chainPacket.data.dataSet instanceof Array)) {
+				chainPacket.data.dataSet = [chainPacket.data.dataSet];
 			}
 
 			if (this._querySettings.options && this._querySettings.options.$orderBy) {
 				// Loop the insert data and find each item's index
-				arr = chainPacket.data;
+				arr = chainPacket.data.dataSet;
 				count = arr.length;
 
 				for (index = 0; index < count; index++) {
 					insertIndex = this._activeBucket.insert(arr[index]);
-					this._data._insertHandle(chainPacket.data, insertIndex);
+					this._data._insertHandle(arr[index], insertIndex);
 				}
 			} else {
 				// Set the insert index to the passed index, or if none, the end of the view data array
 				insertIndex = this._data._data.length;
-				this._data._insertHandle(chainPacket.data, insertIndex);
+				this._data._insertHandle(chainPacket.data.dataSet, insertIndex);
 			}
 			break;
 
@@ -722,7 +635,7 @@ View.prototype._chainHandler = function (chainPacket) {
 			primaryKey = this._data.primaryKey();
 
 			// Do the update
-			updates = this._data.update(
+			updates = this._data._handleUpdate(
 				chainPacket.data.query,
 				chainPacket.data.update,
 				chainPacket.data.options
@@ -1298,7 +1211,21 @@ View.prototype.subset = function () {
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
-	return this._data.transform.call(this._data, obj);
+	var currentSettings,
+		newSettings;
+
+	currentSettings = this._data.transform();
+	this._data.transform(obj);
+	newSettings = this._data.transform();
+
+	// Check if transforms are enabled, a dataIn method is set and these
+	// settings did not match the previous transform settings
+	if (newSettings.enabled && newSettings.dataIn && (currentSettings.enabled !== newSettings.enabled || currentSettings.dataIn !== newSettings.dataIn)) {
+		// The data in the view is now stale, refresh it
+		this.refresh();
+	}
+
+	return newSettings;
 };
 
 /**
