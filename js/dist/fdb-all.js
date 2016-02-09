@@ -6211,7 +6211,7 @@ FdbDocument.prototype._updateProperty = function (doc, prop, val) {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '" to val "' + val + '"');
 		}
 	}
 };
@@ -11417,7 +11417,7 @@ var Updating = {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '" to val "' + val + '"');
 		}
 	},
 
@@ -14643,7 +14643,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.656',
+	version: '1.3.657',
 	modules: {},
 	plugins: {},
 
