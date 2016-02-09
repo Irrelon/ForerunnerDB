@@ -1752,18 +1752,22 @@ Collection.prototype.update = function (query, update, options, callback) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
-	// Decouple the update data
-	update = this.decouple(update);
-
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -15009,7 +15013,7 @@ View.prototype.init = function (name, query, options) {
 		self._collectionDropped.apply(self, arguments);
 	};
 
-	this._data = new Collection(this.name() + '_public');
+	this._data = new Collection(this.name() + '_internal');
 };
 
 /**
@@ -15038,7 +15042,6 @@ View.prototype.init = function (name, query, options) {
  */
 View.prototype._handleChainIO = function (chainPacket, self) {
 	var type = chainPacket.type,
-		data = chainPacket.data,
 		hasActiveJoin,
 		hasActiveQuery,
 		hasTransformIn,
@@ -15072,7 +15075,7 @@ View.prototype._handleChainIO = function (chainPacket, self) {
 	// packet to proceed as normal
 	hasActiveJoin = Boolean(self._querySettings.options && self._querySettings.options.$join);
 	hasActiveQuery = Boolean(self._querySettings.query);
-	hasTransformIn = self._transformIn !== undefined;
+	hasTransformIn = self._data._transformIn !== undefined;
 
 	// EARLY EXIT: Check for any complex operation flags and if none
 	// exist, send the packet on and exit early
@@ -15236,6 +15239,7 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	var self = this,
 		dataArr = sharedData.dataArr,
 		removeArr = sharedData.removeArr,
+		dataIn = self._data._transformIn,
 		i;
 
 	// At this stage we take the remaining items still left in the data
@@ -15244,14 +15248,20 @@ View.prototype._handleChainIO_TransformIn = function (chainPacket, sharedData) {
 	// to run this on items we want to remove too because transforms can
 	// affect primary keys and therefore stop us from identifying the
 	// correct items to run removal operations on.
+
+	// It is important that these are transformed BEFORE they are passed
+	// to the CRUD methods because we use the CU data to check the position
+	// of the item in the array and that can only happen if it is already
+	// pre-transformed. The removal stuff also needs pre-transformed
+	// because ids can be modified by a transform.
 	for (i = 0; i < dataArr.length; i++) {
 		// Assign the new value
-		dataArr[i] = self._transformIn(dataArr[i]);
+		dataArr[i] = dataIn(dataArr[i]);
 	}
 
 	for (i = 0; i < removeArr.length; i++) {
 		// Assign the new value
-		removeArr[i] = self._transformIn(removeArr[i]);
+		removeArr[i] = dataIn(removeArr[i]);
 	}
 };
 
@@ -15320,8 +15330,8 @@ View.prototype._handleChainIO_UpsertPackets = function (ioObj, chainPacket, shar
 
 			ioObj.chainSend('update', {
 				query: query,
-				update: arrItem[i],
-				dataSet: [arrItem[i]]
+				update: arrItem,
+				dataSet: [arrItem]
 			});
 		}
 	}
@@ -15677,7 +15687,7 @@ View.prototype._chainHandler = function (chainPacket) {
 			primaryKey = this._data.primaryKey();
 
 			// Do the update
-			updates = this._data.update(
+			updates = this._data._handleUpdate(
 				chainPacket.data.query,
 				chainPacket.data.update,
 				chainPacket.data.options
@@ -16253,7 +16263,21 @@ View.prototype.subset = function () {
  * @returns {*}
  */
 View.prototype.transform = function (obj) {
-	return this._data.transform.call(this._data, obj);
+	var currentSettings,
+		newSettings;
+
+	currentSettings = this._data.transform();
+	this._data.transform(obj);
+	newSettings = this._data.transform();
+
+	// Check if transforms are enabled, a dataIn method is set and these
+	// settings did not match the previous transform settings
+	if (newSettings.enabled && newSettings.dataIn && (currentSettings.enabled !== newSettings.enabled || currentSettings.dataIn !== newSettings.dataIn)) {
+		// The data in the view is now stale, refresh it
+		this.refresh();
+	}
+
+	return newSettings;
 };
 
 /**
