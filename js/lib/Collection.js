@@ -645,7 +645,7 @@ Collection.prototype.update = function (query, update, options, callback) {
 	return this._handleUpdate(query, update, options, callback);
 };
 
-Collection.prototype._handleUpdate = function (query, update, option, callback) {
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
