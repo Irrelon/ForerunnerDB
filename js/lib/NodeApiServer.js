@@ -721,24 +721,36 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 };
 
 /**
- * Defines an access rule for a model and method combination. When
+ * Defines an access rule for an object and HTTP method combination. When
  * access is requested via a REST call, the function provided will be
  * executed and the callback from that method will determine if the
  * access will be allowed or denied. Multiple access functions can
  * be provided for a single model and method allowing authentication
  * checks to be stacked.
+ *
+ * This call also allows you to pass a wildcard "*" instead of the objType,
+ * objName and methodName parameters which will match all items. This
+ * allows you to set permissions globally.
+ *
+ * If no access permissions are present ForerunnerDB will automatically
+ * deny any request to the resource by default.
  * @name access
  * @param {String} dbName The name of the database to set access rules for.
  * @param {String} objType The type of object that the name refers to
- * e.g. collection, view etc.
- * @param {String} objName The model name (collection) to apply the
- * access function to.
- * @param {String} methodName The name of the method to apply the access
- * function to e.g. "insert".
- * @param {Function} checkFunction The function to call when an access attempt
- * is made against the collection. A callback method is passed to this
+ * e.g. "collection", "view" etc. This effectively maps to a method name on
+ * the Db class instance. If you can do db.collection() then you can use the
+ * string "collection" since it maps to the db.collection() method. This means
+ * you can also use this to map to custom classes as long as you register
+ * an accessor method on the Db class.
+ * @param {String} objName The object name to apply the access rule to.
+ * @param {String} methodName The name of the HTTP method to apply the access
+ * function to e.g. "GET", "POST", "PUT", "PATCH" etc.
+ * @param {Function|String} checkFunction The function to call when an access
+ * attempt is made against the collection. A callback method is passed to this
  * function which should be called after the function has finished
- * processing.
+ * processing. If you do not need custom logic to allow or deny access you
+ * can simply pass the string "allow" or "deny" instead of a function and
+ * ForerunnerDB will handle the logic automatically.
  * @returns {*}
  */
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
