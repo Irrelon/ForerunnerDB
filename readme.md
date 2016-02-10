@@ -3931,6 +3931,33 @@ git push
 9. If your pull request is accepted it will be merged into the main repository
 10. Pat yourself on the back for being a true open-source warrior! :)
 
+### Notes on the Chain Reactor System
+ForerunnerDB's chain reactor system is a graph of interconnected nodes that send
+and receive data. Each node is essentially an input, process and output. A node
+is defined as any instance that has utilised the Mixin.ChainReactor mixin methods.
+
+The chain reactor system exists to allow data synchronisation between disparate
+class instances that need to share data for example a view that uses a collection
+as a data-source. When data is modified via CRUD on the collection, chain reactor
+packets are sent down the reactor graph and one of the receiver nodes is the view.
+
+The view receives chain reactor packets from the collection and then runs its own
+custom logic during the node's process phase which can completely control packets
+sent further down the graph from the view to other nodes. Packets can be created,
+modified or destroyed during a node's process phase.
+
+In order for a node to apply custom logic to the chain reactor process phase, it
+only needs to implement a *chainHandler* method which takes a single argument
+representing the packet being sent to the node.
+
+The chain handler method can control the further propagation of the current packet
+by returning true or false from itself. If the chain handler returns true the
+packet propagation will stop and no proceed further down the graph.
+
+The chain handler method can also utilise the chainSend() method to create new
+chain reactor packets that emit from the current node down the graph. Packets
+never travel up the graph, only down.
+
 ### Notes on View Data Propagation and Synchronisation
 Views are essentially collections whose data has been pre-processed usually by a limiting
 query (called an active query) and sometimes by a data transform method. Data from the
