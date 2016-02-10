@@ -1162,7 +1162,7 @@ result = coll.find({}, {
 	$aggregate: "val"
 });
 ```
-	
+
 Result is:
 
 ```json
