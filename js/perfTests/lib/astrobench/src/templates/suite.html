@@ -1,0 +1,16 @@
+<div class="suite" id="<%= suite.id %>">
+	<div class="suite-title fn-show-setup">
+		<h1 class="suite-title-text"><%= suite.suite.name %></h1>
+		<span class="suite-controls">
+			<a href="#" class="fn-run-suite"><%= dictionary.runSuite %></a>
+		</span>
+	</div>
+	<div class="suite-setup hidden">
+		<% if(suite.setupFn) { %>
+		<pre><code><%= hilite('// Preparation code\n') + hilite(fnstrip(suite.setupFn)) %></code></pre>
+		<% } else { %>
+		<pre><code><%= hilite('// No preparation code') %></code></pre>
+		<% } %>
+	</div>
+	<div class="fn-benchs suite-bench-list"></div>
+</div>
