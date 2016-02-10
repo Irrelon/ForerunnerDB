@@ -415,12 +415,17 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./js/unitTests/lib/' + file);
 			}
 
+			if (fs.existsSync('./js/perfTests/lib/' + file)) {
+				fs.unlinkSync('./js/perfTests/lib/' + file);
+			}
+
 			if (fs.existsSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file)) {
 				fs.unlinkSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 			}
 
 			fs.copySync('./js/dist/' + file, './ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
+			fs.copySync('./js/dist/' + file, './js/perfTests/lib/' + file);
 		};
 
 		fixFile('fdb-all.js');
@@ -438,6 +443,10 @@ module.exports = function(grunt) {
 
 		var copyFile = function (file) {
 			// Copy the build file to the tests folder
+			if (fs.existsSync('./js/perfTests/lib/' + file)) {
+				fs.unlinkSync('./js/perfTests/lib/' + file);
+			}
+
 			if (fs.existsSync('./js/unitTests/lib/' + file)) {
 				fs.unlinkSync('./js/unitTests/lib/' + file);
 			}
@@ -450,6 +459,7 @@ module.exports = function(grunt) {
 				fs.unlinkSync('./ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
 			}
 
+			fs.copySync('./js/dist/' + file, './js/perfTests/lib/' + file);
 			fs.copySync('./js/dist/' + file, './js/unitTests/lib/' + file);
 			fs.copySync('./js/dist/' + file, './chrome-extension/js/' + file);
 			fs.copySync('./js/dist/' + file, './ionicExampleClient/www/lib/forerunnerdb/js/dist/' + file);
