@@ -15,6 +15,65 @@ Common = {
 	serialiser: serialiser,
 
 	/**
+	 * The ForerunnerDB Date object that allows data serialisation in an
+	 * automated fashion. Using this object provides ForerunnerDB with over
+	 * 5 times the performance serialising and 2 times the performance
+	 * de-serialising over walking an object tree as jStringify and jParse
+	 * used to have to do.
+	 * @param year
+	 * @param month
+	 * @param day
+	 * @param hour
+	 * @param minutes
+	 * @param seconds
+	 * @param milliseconds
+	 * @returns {*}
+	 * @constructor
+	 */
+	FDBDate: function (year, month, day, hour, minutes, seconds, milliseconds) {
+		var newDate,
+			argLength = arguments.length;
+
+		if (argLength === 0) {
+			newDate = new Date();
+		}
+
+		if (argLength === 1) {
+			newDate = new Date(year);
+		}
+
+		if (argLength === 2) {
+			newDate = new Date(year, month);
+		}
+
+		if (argLength === 3) {
+			newDate = new Date(year, month, day);
+		}
+
+		if (argLength === 4) {
+			newDate = new Date(year, month, day, hour);
+		}
+
+		if (argLength === 5) {
+			newDate = new Date(year, month, day, hour, minutes);
+		}
+
+		if (argLength === 6) {
+			newDate = new Date(year, month, day, hour, minutes, seconds);
+		}
+
+		if (argLength === 7) {
+			newDate = new Date(year, month, day, hour, minutes, seconds, milliseconds);
+		}
+
+		newDate.toJSON = function () {
+			return {"$date": this.toISOString()};
+		};
+
+		return newDate;
+	},
+
+	/**
 	 * Gets / sets data in the item store. The store can be used to set and
 	 * retrieve data against a key. Useful for adding arbitrary key/value data
 	 * to a collection / view etc and retrieving it later.
