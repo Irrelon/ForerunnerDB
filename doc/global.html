@@ -102,12 +102,19 @@
 
 
 <div class="description">
-    Defines an access rule for a model and method combination. When
+    Defines an access rule for an object and HTTP method combination. When
 access is requested via a REST call, the function provided will be
 executed and the callback from that method will determine if the
 access will be allowed or denied. Multiple access functions can
 be provided for a single model and method allowing authentication
 checks to be stacked.
+
+This call also allows you to pass a wildcard "*" instead of the objType,
+objName and methodName parameters which will match all items. This
+allows you to set permissions globally.
+
+If no access permissions are present ForerunnerDB will automatically
+deny any request to the resource by default.
 </div>
 
 
@@ -485,7 +492,7 @@ method to be overridden by other modules.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line490">line 490</a>
+        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line520">line 520</a>
     </li></ul></dd>
     
 
@@ -639,7 +646,7 @@ method to be overridden by other modules.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line520">line 520</a>
+        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line490">line 490</a>
     </li></ul></dd>
     
 
@@ -2890,138 +2897,6 @@ the connection to the server has been established.</td>
 
     
 
-    <h4 class="name" id="function"><span class="type-signature"></span>function<span class="signature">(callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sync with this collection on the server-side.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call once
-the connection to the server has been established.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line406">line 406</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id="function"><span class="type-signature"></span>function<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
@@ -3398,6 +3273,138 @@ has completed.</td>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line455">line 455</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="function"><span class="type-signature"></span>function<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sync with this collection on the server-side.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call once
+the connection to the server has been established.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line406">line 406</a>
     </li></ul></dd>
     
 
@@ -3931,13 +3938,13 @@ to modify the data in it before the operation is carried out.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Common.FDBDate.html">FDBDate</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Feb 09 2016 22:11:13 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Feb 10 2016 18:14:23 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

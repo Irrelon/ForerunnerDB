@@ -9503,6 +9503,22 @@ Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,
 
+	/**
+	 * The ForerunnerDB Date object that allows data serialisation in an
+	 * automated fashion. Using this object provides ForerunnerDB with over
+	 * 5 times the performance serialising and 2 times the performance
+	 * de-serialising over walking an object tree as jStringify and jParse
+	 * used to have to do.
+	 * @param year
+	 * @param month
+	 * @param day
+	 * @param hour
+	 * @param minutes
+	 * @param seconds
+	 * @param milliseconds
+	 * @returns {*}
+	 * @constructor
+	 */
 	FDBDate: function (year, month, day, hour, minutes, seconds, milliseconds) {
 		var newDate,
 			argLength = arguments.length;
@@ -15141,7 +15157,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.660',
+	version: '1.3.661',
 	modules: {},
 	plugins: {},
 
