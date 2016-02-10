@@ -3962,7 +3962,9 @@ Data sent to the chain reactor system is expected to be safe to modify or operat
 on by the receiver. If data sent is an array or object and you have references to
 that data somewhere else it is expected that the sender will decouple the data
 first before passing it down the graph by using the decouple() method available
-in the Mixin.Common mixin.
+in the Mixin.Common mixin. Since decoupling large arrays of data can incur a CPU
+cost you can check if it is required before decoupling by running chainWillSend()
+to see if you have any listeners that will need the data.
 
 ### Notes on View Data Propagation and Synchronisation
 Views are essentially collections whose data has been pre-processed usually by a limiting
