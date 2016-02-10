@@ -3958,6 +3958,12 @@ The chain handler method can also utilise the chainSend() method to create new
 chain reactor packets that emit from the current node down the graph. Packets
 never travel up the graph, only down.
 
+Data sent to the chain reactor system is expected to be safe to modify or operate
+on by the receiver. If data sent is an array or object and you have references to
+that data somewhere else it is expected that the sender will decouple the data
+first before passing it down the graph by using the decouple() method available
+in the Mixin.Common mixin.
+
 ### Notes on View Data Propagation and Synchronisation
 Views are essentially collections whose data has been pre-processed usually by a limiting
 query (called an active query) and sometimes by a data transform method. Data from the
