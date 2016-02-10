@@ -162,7 +162,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 5,
 					"title": "First Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "LightScene_24",
@@ -171,12 +172,14 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 5,
 					"title": "First Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_Remote_8",
 				"pureId": "8",
-				"name": "Patio Door Open Sensor"
+				"name": "Patio Door Open Sensor",
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_Remote_11",
@@ -231,17 +234,20 @@ ForerunnerDB.moduleLoaded('View', function () {
 			{
 				"_id": "ZWayVDev_zway_Remote_28",
 				"pureId": "28",
-				"name": "Garage Power Switch 1"
+				"name": "Garage Power Switch 1",
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_Remote_46",
 				"pureId": "46",
-				"name": "First Floor Hallway Light 1"
+				"name": "First Floor Hallway Light 1",
+				"createdTs": new Date()
 			},
 			{
 				"_id": "BatteryPolling_8",
 				"pureId": "8",
-				"name": "Patio Door Open Sensor"
+				"name": "Patio Door Open Sensor",
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_4",
@@ -250,7 +256,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 3,
 					"title": "Kitchen"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_8",
@@ -259,7 +266,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 3,
 					"title": "Kitchen"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_10",
@@ -268,7 +276,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 3,
 					"title": "Kitchen"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_11",
@@ -277,7 +286,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 1,
 					"title": "Lobby"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_16",
@@ -286,7 +296,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_18",
@@ -295,7 +306,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 4,
 					"title": "Garage"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_20",
@@ -304,7 +316,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_23",
@@ -313,7 +326,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_24",
@@ -322,7 +336,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 5,
 					"title": "First Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_25",
@@ -331,7 +346,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 13,
 					"title": "Second Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_26",
@@ -340,7 +356,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 4,
 					"title": "Garage"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_27",
@@ -349,7 +366,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 7,
 					"title": "Bedroom 201"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_28",
@@ -358,7 +376,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 4,
 					"title": "Garage"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_29",
@@ -367,7 +386,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 4,
 					"title": "Garage"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_33",
@@ -376,7 +396,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_34",
@@ -385,7 +406,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_37",
@@ -394,7 +416,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 1,
 					"title": "Lobby"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_39",
@@ -403,7 +426,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 1,
 					"title": "Lobby"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_40",
@@ -412,7 +436,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 1,
 					"title": "Lobby"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_42",
@@ -421,7 +446,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 6,
 					"title": "Pantry"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_43",
@@ -430,7 +456,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 1,
 					"title": "Lobby"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_44",
@@ -439,7 +466,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_45",
@@ -448,7 +476,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 2,
 					"title": "Front Room"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_46",
@@ -457,7 +486,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 5,
 					"title": "First Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			},
 			{
 				"_id": "ZWayVDev_zway_47",
@@ -466,7 +496,8 @@ ForerunnerDB.moduleLoaded('View', function () {
 				"location": {
 					"_id": 5,
 					"title": "First Floor Hallway"
-				}
+				},
+				"createdTs": new Date()
 			}
 		]);
 
