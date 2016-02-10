@@ -358,10 +358,12 @@ Collection.prototype.setData = function (data, options, callback) {
 		op.time('Rebuild All Other Indexes');
 
 		op.time('Resolve chains');
-		this.chainSend('setData', {
-			dataSet: this.decouple(data),
-			oldData: oldData
-		});
+		if (this.chainWillSend()) {
+			this.chainSend('setData', {
+				dataSet: this.decouple(data),
+				oldData: oldData
+			});
+		}
 		op.time('Resolve chains');
 
 		op.stop();
@@ -717,11 +719,13 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			}
 
 			op.time('Resolve chains');
-			this.chainSend('update', {
-				query: query,
-				update: update,
-				dataSet: this.decouple(updated)
-			}, options);
+			if (this.chainWillSend()) {
+				this.chainSend('update', {
+					query: query,
+					update: update,
+					dataSet: this.decouple(updated)
+				}, options);
+			}
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
@@ -1647,11 +1651,13 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', {
-				dataSet: self.decouple([doc])
-			}, {
-				index: index
-			});
+			if (self.chainWillSend()) {
+				self.chainSend('insert', {
+					dataSet: self.decouple([doc])
+				}, {
+					index: index
+				});
+			}
 			//op.time('Resolve chains');
 		};
 
