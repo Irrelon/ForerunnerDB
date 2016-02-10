@@ -1363,10 +1363,12 @@ Collection.prototype.setData = function (data, options, callback) {
 		op.time('Rebuild All Other Indexes');
 
 		op.time('Resolve chains');
-		this.chainSend('setData', {
-			dataSet: this.decouple(data),
-			oldData: oldData
-		});
+		if (this.chainWillSend()) {
+			this.chainSend('setData', {
+				dataSet: this.decouple(data),
+				oldData: oldData
+			});
+		}
 		op.time('Resolve chains');
 
 		op.stop();
@@ -1722,11 +1724,13 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			}
 
 			op.time('Resolve chains');
-			this.chainSend('update', {
-				query: query,
-				update: update,
-				dataSet: this.decouple(updated)
-			}, options);
+			if (this.chainWillSend()) {
+				this.chainSend('update', {
+					query: query,
+					update: update,
+					dataSet: this.decouple(updated)
+				}, options);
+			}
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
@@ -2652,11 +2656,13 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', {
-				dataSet: self.decouple([doc])
-			}, {
-				index: index
-			});
+			if (self.chainWillSend()) {
+				self.chainSend('insert', {
+					dataSet: self.decouple([doc])
+				}, {
+					index: index
+				});
+			}
 			//op.time('Resolve chains');
 		};
 
@@ -9345,8 +9351,10 @@ module.exports = CRUD;
  */
 var ChainReactor = {
 	/**
-	 *
-	 * @param obj
+	 * Creates a chain link between the current reactor node and the passed
+	 * reactor node. Chain packets that are send by this reactor node will
+	 * then be propagated to the passed node for subsequent packets.
+	 * @param {*} obj The chain reactor node to link to.
 	 */
 	chain: function (obj) {
 		if (this.debug && this.debug()) {
@@ -9365,6 +9373,12 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Removes a chain link between the current reactor node and the passed
+	 * reactor node. Chain packets sent from this reactor node will no longer
+	 * be received by the passed node.
+	 * @param {*} obj The chain reactor node to unlink from.
+	 */
 	unChain: function (obj) {
 		if (this.debug && this.debug()) {
 			if (obj._reactorIn && obj._reactorOut) {
@@ -9383,6 +9397,27 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Determines if this chain reactor node has any listeners downstream.
+	 * @returns {Boolean} True if there are nodes downstream of this node.
+	 */
+	chainWillSend: function () {
+		return Boolean(this._chain);
+	},
+
+	/**
+	 * Sends a chain reactor packet downstream from this node to any of its
+	 * chained targets that were linked to this node via a call to chain().
+	 * @param {String} type The type of chain reactor packet to send. This
+	 * can be any string but the receiving reactor nodes will not react to
+	 * it unless they recognise the string. Built-in strings include: "insert",
+	 * "update", "remove", "setData" and "debug".
+	 * @param {Object} data A data object that usually contains a key called
+	 * "dataSet" which is an array of items to work on, and can contain other
+	 * custom keys that help describe the operation.
+	 * @param {Object=} options An options object. Can also contain custom
+	 * key/value pairs that your custom chain reactor code can operate on.
+	 */
 	chainSend: function (type, data, options) {
 		if (this._chain) {
 			var arr = this._chain,
@@ -9415,6 +9450,14 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Handles receiving a chain reactor message that was sent via the chainSend()
+	 * method. Creates the chain packet object and then allows it to be processed.
+	 * @param {Object} sender The node that is sending the packet.
+	 * @param {String} type The type of packet.
+	 * @param {Object} data The data related to the packet.
+	 * @param {Object=} options An options object.
+	 */
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
 				sender: sender,
@@ -9459,6 +9502,49 @@ var idCounter = 0,
 Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,
+
+	FDBDate: function (year, month, day, hour, minutes, seconds, milliseconds) {
+		var newDate,
+			argLength = arguments.length;
+
+		if (argLength === 0) {
+			newDate = new Date();
+		}
+
+		if (argLength === 1) {
+			newDate = new Date(year);
+		}
+
+		if (argLength === 2) {
+			newDate = new Date(year, month);
+		}
+
+		if (argLength === 3) {
+			newDate = new Date(year, month, day);
+		}
+
+		if (argLength === 4) {
+			newDate = new Date(year, month, day, hour);
+		}
+
+		if (argLength === 5) {
+			newDate = new Date(year, month, day, hour, minutes);
+		}
+
+		if (argLength === 6) {
+			newDate = new Date(year, month, day, hour, minutes, seconds);
+		}
+
+		if (argLength === 7) {
+			newDate = new Date(year, month, day, hour, minutes, seconds, milliseconds);
+		}
+
+		newDate.toJSON = function () {
+			return {"$date": this.toISOString()};
+		};
+
+		return newDate;
+	},
 
 	/**
 	 * Gets / sets data in the item store. The store can be used to set and
@@ -15882,9 +15968,6 @@ View.prototype._chainHandler = function (chainPacket) {
 			if (this.debug()) {
 				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._data.name() + '"');
 			}
-
-			// Decouple the data to ensure we are working with our own copy
-			//chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Make sure we are working with an array
 			if (!(chainPacket.data.dataSet instanceof Array)) {
