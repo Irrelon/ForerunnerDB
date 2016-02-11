@@ -15,6 +15,19 @@ Common = {
 	serialiser: serialiser,
 
 	/**
+	 * Generates a JSON serialisation-compatible object instance. After the
+	 * instance has been passed through this method, it will be able to survive
+	 * a JSON.stringify() and JSON.parse() cycle and still end up as an
+	 * instance at the end. Further information about this process can be found
+	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-Performance-Benchmarks
+	 * @param {*} val The object instance such as "new Date()" or "new RegExp()".
+	 */
+	make: function (val) {
+		// This is a conversion request, hand over to serialiser
+		serialiser.convert(val);
+	},
+
+	/**
 	 * Gets / sets data in the item store. The store can be used to set and
 	 * retrieve data against a key. Useful for adding arbitrary key/value data
 	 * to a collection / view etc and retrieving it later.
