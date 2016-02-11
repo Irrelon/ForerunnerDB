@@ -24,7 +24,7 @@ Common = {
 	 */
 	make: function (val) {
 		// This is a conversion request, hand over to serialiser
-		serialiser.convert(val);
+		return serialiser.convert(val);
 	},
 
 	/**
