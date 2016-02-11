@@ -24,16 +24,21 @@ Overload = require('./Overload');
  * multiple database instances.
  * @constructor
  */
-var Core = function (name) {
+var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function (name) {
+Core.prototype.init = function (val) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
 
 	_instances.push(this);
+};
+
+Core.prototype.make = function (val) {
+	// This is a conversion request, hand over to serialiser
+	return this.serialiser.convert(val);
 };
 
 /**

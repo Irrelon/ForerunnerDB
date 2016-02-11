@@ -280,7 +280,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._metaData.lastChange = new Date();
+		this._metaData.lastChange = this.serialiser.convert(new Date());
 	}
 };
 
