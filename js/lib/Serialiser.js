@@ -40,7 +40,6 @@ Serialiser.prototype.init = function () {
 		return undefined;
 	});
 
-
 	// Handler for RegExp() objects
 	this.registerHandler('$regexp', function (objInstance) {
 		if (objInstance instanceof RegExp) {
