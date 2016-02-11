@@ -1380,7 +1380,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._metaData.lastChange = new Date();
+		this._metaData.lastChange = this.serialiser.convert(new Date());
 	}
 };
 
@@ -5103,16 +5103,21 @@ Overload = _dereq_('./Overload');
  * multiple database instances.
  * @constructor
  */
-var Core = function (name) {
+var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function (name) {
+Core.prototype.init = function (val) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
 
 	_instances.push(this);
+};
+
+Core.prototype.make = function (val) {
+	// This is a conversion request, hand over to serialiser
+	return this.serialiser.convert(val);
 };
 
 /**
@@ -9599,65 +9604,6 @@ Common = {
 	serialiser: serialiser,
 
 	/**
-	 * The ForerunnerDB Date object that allows data serialisation in an
-	 * automated fashion. Using this object provides ForerunnerDB with over
-	 * 5 times the performance serialising and 2 times the performance
-	 * de-serialising over walking an object tree as jStringify and jParse
-	 * used to have to do.
-	 * @param year
-	 * @param month
-	 * @param day
-	 * @param hour
-	 * @param minutes
-	 * @param seconds
-	 * @param milliseconds
-	 * @returns {*}
-	 * @constructor
-	 */
-	FDBDate: function (year, month, day, hour, minutes, seconds, milliseconds) {
-		var newDate,
-			argLength = arguments.length;
-
-		if (argLength === 0) {
-			newDate = new Date();
-		}
-
-		if (argLength === 1) {
-			newDate = new Date(year);
-		}
-
-		if (argLength === 2) {
-			newDate = new Date(year, month);
-		}
-
-		if (argLength === 3) {
-			newDate = new Date(year, month, day);
-		}
-
-		if (argLength === 4) {
-			newDate = new Date(year, month, day, hour);
-		}
-
-		if (argLength === 5) {
-			newDate = new Date(year, month, day, hour, minutes);
-		}
-
-		if (argLength === 6) {
-			newDate = new Date(year, month, day, hour, minutes, seconds);
-		}
-
-		if (argLength === 7) {
-			newDate = new Date(year, month, day, hour, minutes, seconds, milliseconds);
-		}
-
-		newDate.toJSON = function () {
-			return {"$date": this.toISOString()};
-		};
-
-		return newDate;
-	},
-
-	/**
 	 * Gets / sets data in the item store. The store can be used to set and
 	 * retrieve data against a key. Useful for adding arbitrary key/value data
 	 * to a collection / view etc and retrieving it later.
@@ -9732,8 +9678,7 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return serialiser.parse(data);
-		//return JSON.parse(data);
+		return JSON.parse(data, serialiser.reviver());
 	},
 
 	/**
@@ -9742,8 +9687,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return serialiser.stringify(data);
-		//return JSON.stringify(data);
+		//return serialiser.stringify(data);
+		return JSON.stringify(data);
 	},
 	
 	/**
@@ -14542,208 +14487,114 @@ var Serialiser = function () {
 };
 
 Serialiser.prototype.init = function () {
+	var self = this;
+
 	this._encoder = [];
-	this._decoder = {};
+	this._decoder = [];
 
 	// Handler for Date() objects
-	this.registerEncoder('$date', function (data) {
-		if (data instanceof Date) {
-			return data.toISOString();
+	this.registerHandler('$date', function (objInstance) {
+		if (objInstance instanceof Date) {
+			// Augment this date object with a new toJSON method
+			objInstance.toJSON = function () {
+				return "$date:" + this.toISOString();
+			};
+
+			// Tell the converter we have matched this object
+			return true;
 		}
+
+		// Tell converter to keep looking, we didn't match this object
+		return false;
+	}, function (data) {
+		if (typeof data === 'string' && data.indexOf('$date:') === 0) {
+			return self.convert(new Date(data.substr(6)));
+		}
+
+		return undefined;
 	});
 
-	this.registerDecoder('$date', function (data) {
-		return new Date(data);
-	});
 
 	// Handler for RegExp() objects
-	this.registerEncoder('$regexp', function (data) {
-		if (data instanceof RegExp) {
-			return {
-				source: data.source,
-				params: '' + (data.global ? 'g' : '') + (data.ignoreCase ? 'i' : '')
+	this.registerHandler('$regexp', function (objInstance) {
+		if (objInstance instanceof RegExp) {
+			objInstance.toJSON = function () {
+				return "$regexp:" + this.source.length + ":" + this.source + ":" + (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '');
+				/*return {
+					source: this.source,
+					params: '' + (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '')
+				};*/
 			};
-		}
-	});
 
-	this.registerDecoder('$regexp', function (data) {
-		var type = typeof data;
-
-		if (type === 'object') {
-			return new RegExp(data.source, data.params);
-		} else if (type === 'string') {
-			return new RegExp(data);
-		}
-	});
-};
-
-/**
- * Register an encoder that can handle encoding for a particular
- * object type.
- * @param {String} handles The name of the handler e.g. $date.
- * @param {Function} method The encoder method.
- */
-Serialiser.prototype.registerEncoder = function (handles, method) {
-	this._encoder.push(function (data) {
-		var methodVal = method(data),
-				returnObj;
-
-		if (methodVal !== undefined) {
-			returnObj = {};
-			returnObj[handles] = methodVal;
+			// Tell the converter we have matched this object
+			return true;
 		}
 
-		return returnObj;
+		// Tell converter to keep looking, we didn't match this object
+		return false;
+	}, function (data) {
+		if (typeof data === 'string' && data.indexOf('$regexp:') === 0) {
+			var dataStr = data.substr(8),//±
+				lengthEnd = dataStr.indexOf(':'),
+				sourceLength = Number(dataStr.substr(0, lengthEnd)),
+				source = dataStr.substr(lengthEnd + 1, sourceLength),
+				params = dataStr.substr(lengthEnd + sourceLength + 2);
+
+			return self.convert(new RegExp(source, params));
+		}
+
+		return undefined;
 	});
 };
 
-/**
- * Register a decoder that can handle decoding for a particular
- * object type.
- * @param {String} handles The name of the handler e.g. $date. When an object
- * has a field matching this handler name then this decode will be invoked
- * to provide a decoded version of the data that was previously encoded by
- * it's counterpart encoder method.
- * @param {Function} method The decoder method.
- */
-Serialiser.prototype.registerDecoder = function (handles, method) {
-	this._decoder[handles] = method;
-};
+Serialiser.prototype.registerHandler = function (handles, encoder, decoder) {
+	if (handles !== undefined) {
+		// Register encoder
+		this._encoder.push(encoder);
 
-/**
- * Loops the encoders and asks each one if it wants to handle encoding for
- * the passed data object. If no value is returned (undefined) then the data
- * will be passed to the next encoder and so on. If a value is returned the
- * loop will break and the encoded data will be used.
- * @param {Object} data The data object to handle.
- * @returns {*} The encoded data.
- * @private
- */
-Serialiser.prototype._encode = function (data) {
-	// Loop the encoders and if a return value is given by an encoder
-	// the loop will exit and return that value.
-	var count = this._encoder.length,
-		retVal;
-
-	while (count-- && !retVal) {
-		retVal = this._encoder[count](data);
-	}
-
-	return retVal;
-};
-
-
-/**
- * Converts a previously encoded string back into an object.
- * @param {String} data The string to convert to an object.
- * @returns {Object} The reconstituted object.
- */
-Serialiser.prototype.parse = function (data) {
-	if (data) {
-		var jsonObject = JSON.parse(data),
-			handler;
-
-		// Check the string for special parse indicators
-		for (handler in this._decoder) {
-			if (this._decoder.hasOwnProperty(handler)) {
-				if (data.indexOf(handler) > -1) {
-					// Found special indicator, do full parse
-					return this._parse(jsonObject);
-				}
-			}
-		}
-
-		return jsonObject;
+		// Register decoder
+		this._decoder.push(decoder);
 	}
 };
 
-/**
- * Handles restoring an object with special data markers back into
- * it's original format.
- * @param {Object} data The object to recurse.
- * @param {Object=} target The target object to restore data to.
- * @returns {Object} The final restored object.
- * @private
- */
-Serialiser.prototype._parse = function (data, target) {
-	var i;
-
-	if (typeof data === 'object' && data !== null) {
-		if (data instanceof Array) {
-			target = target || [];
-		} else {
-			target = target || {};
-		}
-
-		// Iterate through the object's keys and handle
-		// special object types and restore them
-		for (i in data) {
-			if (data.hasOwnProperty(i)) {
-				if (i.substr(0, 1) === '$' && this._decoder[i]) {
-					// This is a special object type and a handler
-					// exists, restore it
-					return this._decoder[i](data[i]);
-				}
-
-				// Not a special object or no handler, recurse as normal
-				target[i] = this._parse(data[i], target[i]);
-			}
-		}
-	} else {
-		target = data;
-	}
-
-	// The data is a basic type
-	return target;
-};
-
-/**
- * Converts an object to a encoded string representation.
- * @param {Object} data The object to encode.
- */
-Serialiser.prototype.stringify = function (data) {
-	return JSON.stringify(this._stringify(data));
-};
-
-/**
- * Recurse down an object and encode special objects so they can be
- * stringified and later restored.
- * @param {Object} data The object to parse.
- * @param {Object=} target The target object to store converted data to.
- * @returns {Object} The converted object.
- * @private
- */
-Serialiser.prototype._stringify = function (data, target) {
-	var handledData,
+Serialiser.prototype.convert = function (data) {
+	// Run through converters and check for match
+	var arr = this._encoder,
 		i;
 
-	if (typeof data === 'object' && data !== null) {
-		// Handle special object types so they can be encoded with
-		// a special marker and later restored by a decoder counterpart
-		handledData = this._encode(data);
-		if (handledData) {
-			// An encoder handled this object type so return it now
-			return handledData;
+	for (i = 0; i < arr.length; i++) {
+		if (arr[i](data)) {
+			// The converter we called matched the object and converted it
+			// so let's return it now.
+			return data;
 		}
-
-		if (data instanceof Array) {
-			target = target || [];
-		} else {
-			target = target || {};
-		}
-
-		// Iterate through the object's keys and serialise
-		for (i in data) {
-			if (data.hasOwnProperty(i)) {
-				target[i] = this._stringify(data[i], target[i]);
-			}
-		}
-	} else {
-		target = data;
 	}
 
-	// The data is a basic type
-	return target;
+	// No converter matched the object, return the unaltered one
+	return data;
+};
+
+Serialiser.prototype.reviver = function () {
+	var arr = this._decoder;
+
+	return function (key, value) {
+		// Check if we have a decoder method for this key
+		var decodedData,
+			i;
+
+		for (i = 0; i < arr.length; i++) {
+			decodedData = arr[i](value);
+
+			if (decodedData !== undefined) {
+				// The decoder we called matched the object and decoded it
+				// so let's return it now.
+				return decodedData;
+			}
+		}
+
+		// No decoder, return basic value
+		return value;
+	};
 };
 
 module.exports = Serialiser;
