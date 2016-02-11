@@ -265,7 +265,7 @@ By wrapping the new Date() in fdb.make() we allow ForerunnerDB to provide the Da
 object with a custom .toJSON() method that serialises it differently to the native
 implementation.
 
-For convienience the make() method is also available on all ForerunnerDB class
+For convenience the make() method is also available on all ForerunnerDB class
 instances e.g. db, collection, view etc. For instance you can access make via:
 
 ```js
@@ -311,7 +311,7 @@ ForerunnerDB's serialisation system allows for custom type handling so that you
 can expand JSON serialisation to your own custom class instances.
 
 This can be a complex topic so it has been broken out into the Wiki section for
-further reading (here)[https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Types-to-the-Serialiser].
+further reading [here](https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Types-to-the-Serialiser).
 
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
@@ -3700,7 +3700,7 @@ and automatically keep the charts in sync with changes to the collection.
 
 ### Prerequisites
 The Highcharts JavaScript library is required to use the ForerunnerDB Highcharts module. You can
-get Highcharts from http://www.highcharts.com
+get Highcharts from (http://www.highcharts.com)
 
 ### Usage
 To use the chart module you call one of the chart methods on a collection object. Charts are an optional
@@ -4190,6 +4190,37 @@ ForerunnerDB's project road-map:
 Please check below for details of any changes that break previous operation or
 behaviour of ForerunnerDB. Changes that break functionality are not taken lightly
 and we do not allow them to be merged in to the master branch without good cause!
+
+## Since Version 1.3.669
+To provide a massive performance boost (5 times the performance) the data
+serialisation system has undergone a rewrite that requires some changes to your
+code if you query data with JavaScript Date() objects or use RegExp objects.
+ 
+Before this version you could do:
+
+```js
+db.insert({
+	dt: new Date(),
+	reg: /*./i
+});
+```
+
+After this version if you want Date objects to remain as objects and not be
+converted into strings you must use:
+
+```js
+db.insert({
+	dt: db.make(new Date())
+	reg: db.make(/*./i)
+});
+```
+
+Wrapping the Date and RegExp instances in make() provides ForerunnerDB with a way
+to optimise JSON serialisation and achieve five times the stringification speed
+of previous versions. Parsing this data is also 1/3 faster than the previous version.
+
+You can read more about the benchmarking and performance optimisations made during
+this change [on the wiki here](https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks).
 
 ## Since Version 1.3.36
 In order to support multiple named databases Forerunner's instantiation has changed
