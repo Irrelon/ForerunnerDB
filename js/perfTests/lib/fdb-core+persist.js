@@ -4762,11 +4762,6 @@ Core.prototype.init = function (val) {
 	_instances.push(this);
 };
 
-Core.prototype.make = function (val) {
-	// This is a conversion request, hand over to serialiser
-	return this.serialiser.convert(val);
-};
-
 /**
  * Returns the number of instantiated ForerunnerDB objects.
  * @returns {Number} The number of instantiated instances.
@@ -7423,6 +7418,19 @@ var idCounter = 0,
 Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,
+
+	/**
+	 * Generates a JSON serialisation-compatible object instance. After the
+	 * instance has been passed through this method, it will be able to survive
+	 * a JSON.stringify() and JSON.parse() cycle and still end up as an
+	 * instance at the end. Further information about this process can be found
+	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks
+	 * @param {*} val The object instance such as "new Date()" or "new RegExp()".
+	 */
+	make: function (val) {
+		// This is a conversion request, hand over to serialiser
+		serialiser.convert(val);
+	},
 
 	/**
 	 * Gets / sets data in the item store. The store can be used to set and
@@ -11393,7 +11401,6 @@ Serialiser.prototype.init = function () {
 		return undefined;
 	});
 
-
 	// Handler for RegExp() objects
 	this.registerHandler('$regexp', function (objInstance) {
 		if (objInstance instanceof RegExp) {
@@ -11488,7 +11495,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.662',
+	version: '1.3.663',
 	modules: {},
 	plugins: {},
 

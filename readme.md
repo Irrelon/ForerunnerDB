@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.662
+## Version 1.3.663
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -257,20 +257,61 @@ use this format instead:
 
 ```js
 var a = {
-	dt: fdb(new Date())
+	dt: fdb.make(new Date())
 };
 ```
 
-By wrapping the new Date() in fdb() we allow ForerunnerDB to provide the Date()
+By wrapping the new Date() in fdb.make() we allow ForerunnerDB to provide the Date()
 object with a custom .toJSON() method that serialises it differently to the native
 implementation.
 
+For convienience the make() method is also available on all ForerunnerDB class
+instances e.g. db, collection, view etc. For instance you can access make via:
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('testCollection'),
+	date = new Date();
+
+// All of these calls will do the same thing:
+date = fdb.make(date);
+date = db.make(date);
+date = coll.make(date);
+```
+
+You can read more about how ForerunnerDB's serialiser works (here)[https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks].
+
 #### Supported Instance Types and Usage
 
+##### Date
+```js
+var a = {
+	dt: fdb.make(new Date())
+};
+```
 
+##### RegExp
+```js
+var a = {
+	re: fdb.make(new RegExp(".*", "i"))
+};
+```
 
+or
 
+```js
+var a = {
+	re: fdb.make(/.*/i))
+};
+```
 
+#### Adding Custom Types to the Serialiser
+ForerunnerDB's serialisation system allows for custom type handling so that you
+can expand JSON serialisation to your own custom class instances.
+
+This can be a complex topic so it has been broken out into the Wiki section for
+further reading (here)[https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Types-to-the-Serialiser].
 
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
