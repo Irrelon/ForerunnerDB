@@ -28,7 +28,7 @@ var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function (val) {
+Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
