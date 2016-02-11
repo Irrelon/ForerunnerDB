@@ -19,7 +19,7 @@ Common = {
 	 * instance has been passed through this method, it will be able to survive
 	 * a JSON.stringify() and JSON.parse() cycle and still end up as an
 	 * instance at the end. Further information about this process can be found
-	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-Performance-Benchmarks
+	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks
 	 * @param {*} val The object instance such as "new Date()" or "new RegExp()".
 	 */
 	make: function (val) {

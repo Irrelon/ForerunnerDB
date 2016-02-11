@@ -36,11 +36,6 @@ Core.prototype.init = function (val) {
 	_instances.push(this);
 };
 
-Core.prototype.make = function (val) {
-	// This is a conversion request, hand over to serialiser
-	return this.serialiser.convert(val);
-};
-
 /**
  * Returns the number of instantiated ForerunnerDB objects.
  * @returns {Number} The number of instantiated instances.
