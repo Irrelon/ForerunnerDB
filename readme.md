@@ -226,6 +226,52 @@ via:
 db.collection('myCollectionName').deferredCalls(false);
 ```
 
+### Inserting Special Objects
+JSON has limitations on the types of objects it will serialise and de-serialise back to
+an object. Two very good examples of this are the Date() and RegExp() objects. Both can
+be serialised via JSON.stringify() but when calling JSON.parse() on the serialised
+version neither type will be "re-materialised" back to their object representations.
+
+For example:
+
+```js
+var a = {
+	dt: new Date()
+};
+
+a.dt instanceof Date; // true
+
+var b = JSON.stringify(a); // "{"dt":"2016-02-11T09:52:49.170Z"}"
+
+var c = JSON.parse(b); // {dt: "2016-02-11T09:52:49.170Z"}
+
+c.dt instanceof Date; // false
+```
+
+As you can see, parsing the JSON string works but the dt key no longer contains a Date
+instance and only holds the string representation of the date. This is a fundamental drawback
+of using JSON.stringify() and JSON.parse() in their native form.
+
+If you want ForerunnerDB to serialise / de-serialise your object instances you must
+use this format instead:
+
+```js
+var a = {
+	dt: fdb(new Date())
+};
+```
+
+By wrapping the new Date() in fdb() we allow ForerunnerDB to provide the Date()
+object with a custom .toJSON() method that serialises it differently to the native
+implementation.
+
+#### Supported Instance Types and Usage
+
+
+
+
+
+
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
  as possible, small differences are present in the query matching logic. The main
