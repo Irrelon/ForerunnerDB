@@ -2792,33 +2792,33 @@ suite('Serialiser', function (suite) {
 		console.log('JSON.stringify with fdb.FDBDate modifier output validated:', sharedObj.jsextStringData === sharedObj.JSONDATESTR);
 	});
 
-	bench('JSON.stringify() Baseline - No Extended Object Support', function () {
+	bench('Baseline - JSON.stringify() No Extended Object Support', function () {
 		sharedObj.JSONNOEXTSTR = JSON.stringify(sharedObj.data);
 	});
 
-	bench('jStringify Traverse Object Tree', function () {
+	bench('Current Implementation - jStringify Traverse Object Tree', function () {
 		sharedObj.JSTRSTR = sharedObj.jStringify(sharedObj.data);
 	});
 
-	bench('JSON.stringify() with Replacer Method', function () {
+	bench('Potential Implementation - JSON.stringify() with Replacer Method', function () {
 		sharedObj.JSONSTR = JSON.stringify(sharedObj.data, sharedObj.replacer);
 	});
 
-	bench('JSON.stringify() with Custom toJSON Method', function () {
+	bench('New Implementation - JSON.stringify() with Custom toJSON Method', function () {
 		sharedObj.JSONDATESTR = JSON.stringify(sharedObj.data);
 	});
 });
 
 suite('Parser', function (suite) {
-	bench('JSON.parse() Baseline - No Extended Object Support', function () {
+	bench('Baseline - JSON.parse() No Extended Object Support', function () {
 		JSON.parse(sharedObj.JSONDATESTR);
 	});
 
-	bench('jStringify Traverse Object Tree', function () {
+	bench('Current Implementation - jStringify Traverse Object Tree', function () {
 		sharedObj.jParse(sharedObj.jsextStringData);
 	});
 
-	bench('JSON.parse() with Reviver Method', function () {
+	bench('New Implementation - JSON.parse() with Reviver Method', function () {
 		JSON.parse(sharedObj.JSONDATESTR, function (key, value) {
 			if (key === '$date') {
 				return new fdb.FDBDate(value);
