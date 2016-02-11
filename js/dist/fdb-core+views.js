@@ -5012,7 +5012,7 @@ var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 
-Core.prototype.init = function (val) {
+Core.prototype.init = function (name) {
 	this._db = {};
 	this._debug = {};
 	this._name = name || 'ForerunnerDB';
@@ -7687,7 +7687,7 @@ Common = {
 	 */
 	make: function (val) {
 		// This is a conversion request, hand over to serialiser
-		serialiser.convert(val);
+		return serialiser.convert(val);
 	},
 
 	/**
@@ -10734,7 +10734,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.663',
+	version: '1.3.668',
 	modules: {},
 	plugins: {},
 
