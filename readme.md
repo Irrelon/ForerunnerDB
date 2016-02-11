@@ -57,7 +57,7 @@ a very easy setup (simple installation via NPM and no requirements except
 Node.js) you will also find ForerunnerDB very useful.
 
 > An example hybrid application that runs on iOS, Android and Windows Mobile
-via Ionic (AngluarJS + Cordova with some nice extensions) is available in
+via Ionic (AngularJS + Cordova with some nice extensions) is available in
 this repository under the ionicExampleClient folder.
 [See here for more details](#ionic-example-app). 
 
@@ -3659,7 +3659,7 @@ Setting the $wrap option to 'items' passes the entire collection's data array in
 template inside the *items* property which can then be accessed and iterated through like
 a normal array of data.
 
-You can also wrap inside a ForeunnerDB Document instance which will allow you to control
+You can also wrap inside a ForerunnerDB Document instance which will allow you to control
 other properties on the wrapper and have them update in realtime if you are using the
 data-binding module.
 
@@ -3893,9 +3893,11 @@ of calling a MongoDB update without the MongoDB $set operator.
 Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
 
 # Browser Compatibility
-ForerunnerDB works in all modern browsers (IE8+)
+ForerunnerDB works in all modern browsers (IE8+) and mobile hybrid frameworks
 
 * Android Browser 4
+* AngularJS
+* Apache Cordova / PhoneGap 1.2.0
 * Blackberry 7
 * Chrome 23
 * Chrome for Android 32
@@ -3904,9 +3906,9 @@ ForerunnerDB works in all modern browsers (IE8+)
 * Firefox OS 1.0
 * IE 8
 * IE Mobile 10
+* Ionic
 * Opera 15
 * Opera Mobile 11
-* Phonegap/Apache Cordova 1.2.0
 * Safari 4 (includes Mobile Safari)
 
 # Distribution Files
@@ -4511,7 +4513,7 @@ after the angular (or Ionic) library script tag:
 
 ```html
 ...
-<!-- Include ionic (or angularjs) library -->
+<!-- Include ionic (or AngularJS) library -->
 <script src="lib/ionic/js/ionic.bundle.js"></script>
 ...
 <!-- Include ForerunnerDB -->
@@ -4557,7 +4559,7 @@ usage in an Ionic app (AngularJS + Apache Cordova).
 > You must have node.js installed to run the example because it uses ForerunnerDB's
 built-in REST API server for a quick and easy way to simulate a back-end.
 
-> The example app requires that you have already installed ionic on your sytem
+> The example app requires that you have already installed ionic on your system
 via *npm install -g ionic*
 
 1. Start the app's server
