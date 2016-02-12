@@ -224,36 +224,4 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
-
-	QUnit.test("View.transform() :: Check that a transformed object does not pollute the original object", function () {
-		base.dbUp();
-
-		var coll = db.collection('transformColl').truncate();
-
-		coll.insert({
-			_id: 'test1',
-			foo: 1
-		});
-
-		var result = coll.find();
-
-		strictEqual(result.length, 1, "Collection insert");
-		strictEqual(result[0].foo, 1, "Collection insert not transformed");
-
-		var view = db.view('transformView').from(coll);
-
-		// Set a transform on the view
-		view.transform({
-			enabled: true,
-			dataIn: function (data) {
-				data._id = data._id + "_viewId";
-				return data;
-			}
-		});
-
-
-		strictEqual(result[0]._id, 'test2_viewId', "Collection remove 'test1' replicate to transformed view");
-
-		base.dbDown();
-	});
 });
