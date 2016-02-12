@@ -3,11 +3,19 @@
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
- * @param {Object} def
+ * @param {String=} name A name to provide this overload to help identify
+ * it if any errors occur during the resolving phase of the overload. This
+ * is purely for debug purposes and serves no functional purpose.
+ * @param {Object} def The overload definition.
  * @returns {Function}
  * @constructor
  */
-var Overload = function (def) {
+var Overload = function (name, def) {
+	if (!def) {
+		def = name;
+		name = undefined;
+	}
+
 	if (def) {
 		var self = this,
 			index,
@@ -50,7 +58,7 @@ var Overload = function (def) {
 			var arr = [],
 				lookup,
 				type,
-				name;
+				overloadName;
 
 			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
@@ -99,9 +107,10 @@ var Overload = function (def) {
 				}
 			}
 
-			name = typeof this.name === 'function' ? this.name() : 'Unknown';
-			console.log('Overload: ', def);
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
+			overloadName = name !== undefined ? name : typeof this.name === 'function' ? this.name() : 'Unknown';
+
+			console.log('Overload Definition:', def);
+			throw('ForerunnerDB.Overload "' + overloadName + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
