@@ -133,7 +133,7 @@ var Overload = function (name, def) {
 Overload.prototype.generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
-		types = ['string', 'object', 'number', 'function', 'undefined'],
+		types = ['array', 'string', 'object', 'number', 'function', 'undefined'],
 		index;
 
 	if (str.indexOf('*') > -1) {
