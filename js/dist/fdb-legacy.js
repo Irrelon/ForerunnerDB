@@ -1324,63 +1324,69 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param options Optional options object.
  * @param callback Optional callback function.
  */
-Collection.prototype.setData = function (data, options, callback) {
-	if (this.isDropped()) {
-		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
+Collection.prototype.setData = new Overload('Collection.prototype.setData', {
+	'*': function (data) {
+		return this.$main.call(this, data, {});
+	},
+
+	'*, object': function (data, options) {
+		return this.$main.call(this, data, options);
+	},
+
+	'*, function': function (data, callback) {
+		return this.$main.call(this, data, {}, callback);
+	},
+
+	'*, *, function': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+	'*, *, *': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+
+	'$main': function (data, options, callback) {
+		if (this.isDropped()) {
+			throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
+		}
+
+		if (data) {
+			var deferredSetting = this.deferredCalls(),
+				oldData = [].concat(this._data);
+
+			// Switch off deferred calls since setData should be
+			// a synchronous call
+			this.deferredCalls(false);
+
+			options = this.options(options);
+
+			if (options.$decouple) {
+				data = this.decouple(data);
+			}
+
+			if (!(data instanceof Array)) {
+				data = [data];
+			}
+
+			// Remove all items from the collection
+			this.remove({});
+
+			// Insert the new data
+			this.insert(data);
+
+			// Switch deferred calls back to previous settings
+			this.deferredCalls(deferredSetting);
+
+			this._onChange();
+			this.emit('setData', this._data, oldData);
+		}
+
+		if (callback) { callback(); }
+
+		return this;
 	}
-
-	if (data) {
-		var op = this._metrics.create('setData');
-		op.start();
-
-		options = this.options(options);
-		this.preSetData(data, options, callback);
-
-		if (options.$decouple) {
-			data = this.decouple(data);
-		}
-
-		if (!(data instanceof Array)) {
-			data = [data];
-		}
-
-		op.time('transformIn');
-		data = this.transformIn(data);
-		op.time('transformIn');
-
-		var oldData = [].concat(this._data);
-
-		this._dataReplace(data);
-
-		// Update the primary key index
-		op.time('Rebuild Primary Key Index');
-		this.rebuildPrimaryKeyIndex(options);
-		op.time('Rebuild Primary Key Index');
-
-		// Rebuild all other indexes
-		op.time('Rebuild All Other Indexes');
-		this._rebuildIndexes();
-		op.time('Rebuild All Other Indexes');
-
-		op.time('Resolve chains');
-		if (this.chainWillSend()) {
-			this.chainSend('setData', {
-				dataSet: this.decouple(data),
-				oldData: oldData
-			});
-		}
-		op.time('Resolve chains');
-
-		op.stop();
-
-		this._onChange();
-		this.emit('setData', this._data, oldData);
-	}
-
-	if (callback) { callback(false); }
-
-	return this;
-};
+});
 
 /**
  * Drops and rebuilds the primary key index for all documents in the collection.
@@ -4280,7 +4286,7 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.collateAdd = new Overload({
+Collection.prototype.collateAdd = new Overload('Collection.prototype.collateAdd', {
 	/**
 	 * Adds a data source to collate data from and specifies the
 	 * key name to collate data to.
@@ -4395,7 +4401,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Db.prototype.collection = new Overload({
+Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that
@@ -12827,11 +12833,19 @@ module.exports = Operation;
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
- * @param {Object} def
+ * @param {String=} name A name to provide this overload to help identify
+ * it if any errors occur during the resolving phase of the overload. This
+ * is purely for debug purposes and serves no functional purpose.
+ * @param {Object} def The overload definition.
  * @returns {Function}
  * @constructor
  */
-var Overload = function (def) {
+var Overload = function (name, def) {
+	if (!def) {
+		def = name;
+		name = undefined;
+	}
+
 	if (def) {
 		var self = this,
 			index,
@@ -12874,7 +12888,7 @@ var Overload = function (def) {
 			var arr = [],
 				lookup,
 				type,
-				name;
+				overloadName;
 
 			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
@@ -12923,9 +12937,10 @@ var Overload = function (def) {
 				}
 			}
 
-			name = typeof this.name === 'function' ? this.name() : 'Unknown';
-			console.log('Overload: ', def);
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
+			overloadName = name !== undefined ? name : typeof this.name === 'function' ? this.name() : 'Unknown';
+
+			console.log('Overload Definition:', def);
+			throw('ForerunnerDB.Overload "' + overloadName + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
@@ -12948,7 +12963,7 @@ var Overload = function (def) {
 Overload.prototype.generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
-		types = ['string', 'object', 'number', 'function', 'undefined'],
+		types = ['array', 'string', 'object', 'number', 'function', 'undefined'],
 		index;
 
 	if (str.indexOf('*') > -1) {
@@ -15912,6 +15927,16 @@ View.prototype._chainHandler = function (chainPacket) {
 			}
 
 			this._data.remove(chainPacket.data.query, chainPacket.options);
+
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Loop the dataSet and remove the objects from the ActiveBucket
+				arr = chainPacket.data.dataSet;
+				count = arr.length;
+
+				for (index = 0; index < count; index++) {
+					this._activeBucket.remove(arr[index]);
+				}
+			}
 			break;
 
 		default:
@@ -16301,6 +16326,7 @@ View.prototype.queryOptions = function (options, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		} else {
+			// TODO: This could be wasteful if the previous options $orderBy was identical, do a hash and check first!
 			this.rebuildActiveBucket(options.$orderBy);
 		}
 		return this;
