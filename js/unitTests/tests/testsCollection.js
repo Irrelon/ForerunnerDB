@@ -2771,6 +2771,33 @@ QUnit.asyncTest("Collection.insert() :: Process insert with many defferred docum
 	});
 });
 
+QUnit.test("Collection.insert() :: Process insert with deferred turned off - should instantly be available in find()", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 150,
+		result,
+		i;
+
+	// Turn off deferred calls
+	coll.deferredCalls(false);
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.find();
+
+	strictEqual(result.length, 150, 'Operation was not deferred - this is a correct result');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.indexOf() :: Get a document's current array index by the document", function () {
 	base.dbUp();
 
