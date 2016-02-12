@@ -707,6 +707,16 @@ View.prototype._chainHandler = function (chainPacket) {
 			}
 
 			this._data.remove(chainPacket.data.query, chainPacket.options);
+
+			if (this._querySettings.options && this._querySettings.options.$orderBy) {
+				// Loop the dataSet and remove the objects from the ActiveBucket
+				arr = chainPacket.data.dataSet;
+				count = arr.length;
+
+				for (index = 0; index < count; index++) {
+					this._activeBucket.remove(arr[index]);
+				}
+			}
 			break;
 
 		default:
@@ -1096,6 +1106,7 @@ View.prototype.queryOptions = function (options, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		} else {
+			// TODO: This could be wasteful if the previous options $orderBy was identical, do a hash and check first!
 			this.rebuildActiveBucket(options.$orderBy);
 		}
 		return this;
