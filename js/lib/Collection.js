@@ -319,63 +319,69 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param options Optional options object.
  * @param callback Optional callback function.
  */
-Collection.prototype.setData = function (data, options, callback) {
-	if (this.isDropped()) {
-		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
+Collection.prototype.setData = new Overload('Collection.prototype.setData', {
+	'*': function (data) {
+		return this.$main.call(this, data, {});
+	},
+
+	'*, object': function (data, options) {
+		return this.$main.call(this, data, options);
+	},
+
+	'*, function': function (data, callback) {
+		return this.$main.call(this, data, {}, callback);
+	},
+
+	'*, *, function': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+	'*, *, *': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+
+	'$main': function (data, options, callback) {
+		if (this.isDropped()) {
+			throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
+		}
+
+		if (data) {
+			var deferredSetting = this.deferredCalls(),
+				oldData = [].concat(this._data);
+
+			// Switch off deferred calls since setData should be
+			// a synchronous call
+			this.deferredCalls(false);
+
+			options = this.options(options);
+
+			if (options.$decouple) {
+				data = this.decouple(data);
+			}
+
+			if (!(data instanceof Array)) {
+				data = [data];
+			}
+
+			// Remove all items from the collection
+			this.remove({});
+
+			// Insert the new data
+			this.insert(data);
+
+			// Switch deferred calls back to previous settings
+			this.deferredCalls(deferredSetting);
+
+			this._onChange();
+			this.emit('setData', this._data, oldData);
+		}
+
+		if (callback) { callback(); }
+
+		return this;
 	}
-
-	if (data) {
-		var op = this._metrics.create('setData');
-		op.start();
-
-		options = this.options(options);
-		this.preSetData(data, options, callback);
-
-		if (options.$decouple) {
-			data = this.decouple(data);
-		}
-
-		if (!(data instanceof Array)) {
-			data = [data];
-		}
-
-		op.time('transformIn');
-		data = this.transformIn(data);
-		op.time('transformIn');
-
-		var oldData = [].concat(this._data);
-
-		this._dataReplace(data);
-
-		// Update the primary key index
-		op.time('Rebuild Primary Key Index');
-		this.rebuildPrimaryKeyIndex(options);
-		op.time('Rebuild Primary Key Index');
-
-		// Rebuild all other indexes
-		op.time('Rebuild All Other Indexes');
-		this._rebuildIndexes();
-		op.time('Rebuild All Other Indexes');
-
-		op.time('Resolve chains');
-		if (this.chainWillSend()) {
-			this.chainSend('setData', {
-				dataSet: this.decouple(data),
-				oldData: oldData
-			});
-		}
-		op.time('Resolve chains');
-
-		op.stop();
-
-		this._onChange();
-		this.emit('setData', this._data, oldData);
-	}
-
-	if (callback) { callback(false); }
-
-	return this;
-};
+});
 
 /**
  * Drops and rebuilds the primary key index for all documents in the collection.
@@ -3275,7 +3281,7 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.collateAdd = new Overload({
+Collection.prototype.collateAdd = new Overload('Collection.prototype.collateAdd', {
 	/**
 	 * Adds a data source to collate data from and specifies the
 	 * key name to collate data to.
@@ -3390,7 +3396,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Db.prototype.collection = new Overload({
+Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that
