@@ -638,6 +638,9 @@ View.prototype._chainHandler = function (chainPacket) {
 				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._data.name() + '"');
 			}
 
+			// Decouple the data to ensure we are working with our own copy
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
+
 			// Make sure we are working with an array
 			if (!(chainPacket.data.dataSet instanceof Array)) {
 				chainPacket.data.dataSet = [chainPacket.data.dataSet];
