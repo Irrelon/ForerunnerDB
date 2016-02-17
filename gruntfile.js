@@ -670,7 +670,7 @@ module.exports = function(grunt) {
 		 execSync('doctoc readme.md');*/
 	});
 
-	grunt.registerTask('testBear', 'Run testBear tests', function () {
+	grunt.registerTask('testbear', 'Run testBear tests', function () {
 		var self = this,
 			spawn = require('child_process').spawn,
 			spawnedProcess,
@@ -698,7 +698,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask("0: Build, Commit, Tag and Push Edge Branch", ["checkoutEdge", "version", "generateTOC", "browserify", "postfix", "uglify", "jsdoc", "gitCommit", "gitPushAndTagEdge", "npmPublishEdge"]);
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
-	grunt.registerTask("2: Run Unit Tests", ["copy",  "testBear", "qunit"]);
+	grunt.registerTask("2: Run Unit Tests", ["copy",  "testbear", "qunit"]);
 	grunt.registerTask("3: Build and Test", ["version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("4: JSHint, Build and Test", ["jshint", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("5: Build and Test Dev Branch", ["checkoutDev", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
