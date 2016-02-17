@@ -113,10 +113,11 @@ module.exports = function(grunt) {
 				namespace: null,
 
 				// max amount of ms child can be blocked, after that we assume running an infinite loop
-				maxBlockDuration: 2000,
+				maxBlockDuration: 60000,
 
 				code: "js/unitTests/tests/nodeTestsCore.js",
 				tests: "js/unitTests/tests/nodeTestsCore.js",
+
 				done: function (err, res) {
 
 				}
@@ -664,14 +665,40 @@ module.exports = function(grunt) {
 	grunt.registerTask('generateTOC', 'Generate Table of Contents', function () {
 		/*"use strict";
 
-		var execSync = require('child_process').execSync;
+		 var execSync = require('child_process').execSync;
 
-		execSync('doctoc readme.md');*/
+		 execSync('doctoc readme.md');*/
+	});
+
+	grunt.registerTask('testBear', 'Run testBear tests', function () {
+		var self = this,
+			spawn = require('child_process').spawn,
+			spawnedProcess,
+			done;
+
+		done = self.async();
+		spawnedProcess = spawn('node', ['js/unitTests/tests/nodeTests.js'], { stdio: 'inherit' });
+
+		spawnedProcess.on('close', function (code, signal) {
+			if (code !== 0) {
+				done(new Error('Test Bear reported errors in tests!'));
+			} else {
+				done();
+			}
+		});
+
+		spawnedProcess.on('error', function (err) {
+			done(err);
+		});
+
+		spawnedProcess.on('disconnect', function () {
+			done();
+		});
 	});
 
 	grunt.registerTask("0: Build, Commit, Tag and Push Edge Branch", ["checkoutEdge", "version", "generateTOC", "browserify", "postfix", "uglify", "jsdoc", "gitCommit", "gitPushAndTagEdge", "npmPublishEdge"]);
 	grunt.registerTask("1: Build Source File", ["browserify", "postfix", "copy"]);
-	grunt.registerTask("2: Run Unit Tests", ["copy", "qunit", "node-qunit"]);
+	grunt.registerTask("2: Run Unit Tests", ["copy",  "testBear", "qunit"]);
 	grunt.registerTask("3: Build and Test", ["version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("4: JSHint, Build and Test", ["jshint", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
 	grunt.registerTask("5: Build and Test Dev Branch", ["checkoutDev", "version", "generateTOC", "browserify", "postfix", "uglify", "2: Run Unit Tests"]);
