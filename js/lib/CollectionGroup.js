@@ -81,7 +81,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 
 /**
  * Gets / sets the instance name.
- * @param {Name=} name The new name to set.
+ * @param {String=} name The new name to set.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'name');
