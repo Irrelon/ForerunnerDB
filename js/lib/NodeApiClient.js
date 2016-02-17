@@ -90,7 +90,11 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 		if (xmlHttp.readyState === 4) {
 			if (xmlHttp.status === 200) {
 				// Tell the callback about success
-				callback(false, self.jParse(xmlHttp.responseText));
+				if (xmlHttp.responseText) {
+					callback(false, self.jParse(xmlHttp.responseText));
+				} else {
+					callback(false, {});
+				}
 			} else {
 				// Tell the callback about the error
 				callback(xmlHttp.status, xmlHttp.responseText);
