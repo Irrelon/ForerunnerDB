@@ -1121,7 +1121,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		}, 1);
 	});
 
-	QUnit.asyncTest('View chain propagation to document :: Collection -> View -> Document', function () {
+	QUnit.asyncTest('View chain propagation to document :: Collection -> View -> View -> Document', function () {
 		"use strict";
 
 		expect(2);
