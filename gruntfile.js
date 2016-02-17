@@ -705,5 +705,5 @@ module.exports = function(grunt) {
 	grunt.registerTask("6: Build, Commit, Test, Tag and Push Dev Branch", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "npmPublishDev"]);
 	grunt.registerTask("7: Release and Publish Master Build From Dev", ["checkoutDev", "version", "generateTOC", "jshint", "browserify", "postfix", "uglify", "2: Run Unit Tests", "jsdoc", "gitCommit", "gitPushAndTagDev", "gitMergeDevIntoMaster", "gitPushAndTagMaster", "npmPublish", "checkoutDev"]);
 
-	grunt.registerTask("default", ["qunit"]);
+	grunt.registerTask("default", ["testbear", "qunit"]);
 };
