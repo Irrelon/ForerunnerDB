@@ -38,6 +38,7 @@ NodePersist.prototype.init = function (db) {
 	];
 
 	this._db = db;
+	this._opQueue = {};
 };
 
 Shared.addModule('NodePersist', NodePersist);
@@ -603,9 +604,9 @@ Collection.prototype.load = function (callback) {
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
-						self.remove({});
-						self.insert(data);
-						//self.setData(data);
+						//self.remove({});
+						//self.insert(data);
+						self.setData(data);
 					}
 
 					// Now load the collection's metadata
