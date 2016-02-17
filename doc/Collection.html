@@ -1063,162 +1063,6 @@ new data is set.
 
     
 
-    <h4 class="name" id=".collateAdd"><span class="type-signature">(static) </span>collateAdd<span class="signature">(collection, process)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Adds a data source to collate data from and specifies a process
-method that will handle the collation functionality (for custom
-collation).
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collection</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The collection to collate data from.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>process</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The process method.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3350">line 3350</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".collateAdd"><span class="type-signature">(static) </span>collateAdd<span class="signature">(collection, keyName<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
@@ -1366,6 +1210,162 @@ data.</td>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3285">line 3285</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".collateAdd"><span class="type-signature">(static) </span>collateAdd<span class="signature">(collection, process)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Adds a data source to collate data from and specifies a process
+method that will handle the collation functionality (for custom
+collation).
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collection</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="Collection.html">Collection</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The collection to collate data from.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>process</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The process method.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3350">line 3350</a>
     </li></ul></dd>
     
 
@@ -1723,211 +1723,6 @@ data.</td>
 
     
 
-    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(scope, varName, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Creates a link to the DOM between the collection data and the elements
-in the passed output selector. When new elements are needed or changes
-occur the passed templateSelector is used to get the template that is
-output to the DOM.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>scope</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>varName</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Optional extra options.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Angular.js.html">Angular.js</a>, <a href="Angular.js.html#line28">line 28</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-    <dt class="tag-see">See:</dt>
-    <dd class="tag-see">
-        <ul>
-            <li>unlink</li>
-        </ul>
-    </dd>
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(outputTargetSelector, templateSelector, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
@@ -2096,6 +1891,211 @@ output to the DOM.
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line55">line 55</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>unlink</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(scope, varName, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates a link to the DOM between the collection data and the elements
+in the passed output selector. When new elements are needed or changes
+occur the passed templateSelector is used to get the template that is
+output to the DOM.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>scope</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>varName</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Optional extra options.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Angular.js.html">Angular.js</a>, <a href="Angular.js.html#line28">line 28</a>
     </li></ul></dd>
     
 
@@ -10079,7 +10079,7 @@ has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line596">line 596</a>
+        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line597">line 597</a>
     </li></ul></dd>
     
 
@@ -11862,7 +11862,7 @@ has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line551">line 551</a>
+        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line552">line 552</a>
     </li></ul></dd>
     
 
@@ -14317,13 +14317,13 @@ contains the return data from the operation used.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#NodeRAS">NodeRAS</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Feb 12 2016 16:20:21 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Feb 17 2016 14:40:54 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
