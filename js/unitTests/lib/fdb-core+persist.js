@@ -4454,7 +4454,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 
 /**
  * Gets / sets the instance name.
- * @param {Name=} name The new name to set.
+ * @param {String=} name The new name to set.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'name');
@@ -11510,7 +11510,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.682',
+	version: '1.3.687',
 	modules: {},
 	plugins: {},
 

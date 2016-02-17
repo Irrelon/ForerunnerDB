@@ -4712,7 +4712,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 
 /**
  * Gets / sets the instance name.
- * @param {Name=} name The new name to set.
+ * @param {String=} name The new name to set.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'name');
@@ -15030,7 +15030,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.682',
+	version: '1.3.687',
 	modules: {},
 	plugins: {},
 
@@ -15857,6 +15857,9 @@ View.prototype._chainHandler = function (chainPacket) {
 			if (this.debug()) {
 				console.log(this.logIdentifier() + ' Inserting some data into underlying (internal) view collection "' + this._data.name() + '"');
 			}
+
+			// Decouple the data to ensure we are working with our own copy
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Make sure we are working with an array
 			if (!(chainPacket.data.dataSet instanceof Array)) {
