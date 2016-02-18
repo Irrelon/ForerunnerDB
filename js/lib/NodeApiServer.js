@@ -556,8 +556,14 @@ NodeApiServer.prototype._sendResponse = function (req, res, data) {
 
 	switch (req.method) {
 		case 'HEAD':
-			// Only send status codes
-			res.sendStatus(statusCode);
+			// Only send status codes - head is a unique case in that a
+			// blank data string means we should send 204 (no content)
+			// not 200, and if undefined we can still send 404
+			if (data !== undefined) {
+				res.sendStatus(204);
+			} else {
+				res.sendStatus(404);
+			}
 			break;
 
 		case 'GET':
