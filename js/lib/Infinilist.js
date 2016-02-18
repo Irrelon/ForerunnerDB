@@ -18,7 +18,6 @@
  * @class Infinilist
  * @requires AutoBind
  */
-
 var Shared = window.ForerunnerDB.shared,
 	View = Shared.modules.View;
 
