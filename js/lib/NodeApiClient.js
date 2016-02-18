@@ -95,6 +95,8 @@ NodeApiClient.prototype.http = function (method, url, data, options, callback) {
 				} else {
 					callback(false, {});
 				}
+			} if (xmlHttp.status === 204) {
+				callback(false, {});
 			} else {
 				// Tell the callback about the error
 				callback(xmlHttp.status, xmlHttp.responseText);
