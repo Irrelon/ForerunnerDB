@@ -42,7 +42,9 @@ coll.setData([{
 }]);
 
 view.from(coll);
-view.queryData({}, {
+view.queryData({
+	firstName: /A./
+}, {
 	$page: 0,
 	$limit: 3
 });
