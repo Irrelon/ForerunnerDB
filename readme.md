@@ -1,11 +1,11 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
+ForerunnerDB is developed with love by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.687
+## Version 1.3.688
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
