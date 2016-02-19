@@ -616,7 +616,17 @@ View.prototype.queryData = function (query, options, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		}
+	}
 
+	if (query !== undefined) {
+		this.emit('queryChange', query);
+	}
+
+	if (options !== undefined) {
+		this.emit('queryOptionsChange', options);
+	}
+
+	if (query !== undefined || options !== undefined) {
 		return this;
 	}
 
@@ -652,6 +662,10 @@ View.prototype.queryAdd = function (obj, overwrite, refresh) {
 	if (refresh === undefined || refresh === true) {
 		this.refresh();
 	}
+
+	if (query !== undefined) {
+		this.emit('queryChange', query);
+	}
 };
 
 /**
@@ -677,6 +691,10 @@ View.prototype.queryRemove = function (obj, refresh) {
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
+		}
+
+		if (query !== undefined) {
+			this.emit('queryChange', query);
 		}
 	}
 };
@@ -731,7 +749,17 @@ View.prototype.query = new Overload({
 			if (refresh === undefined || refresh === true) {
 				this.refresh();
 			}
+		}
 
+		if (query !== undefined) {
+			this.emit('queryChange', query);
+		}
+
+		if (options !== undefined) {
+			this.emit('queryOptionsChange', options);
+		}
+
+		if (query !== undefined || options !== undefined) {
 			return this;
 		}
 
@@ -840,6 +868,11 @@ View.prototype.queryOptions = function (options, refresh) {
 		} else {
 			this.rebuildActiveBucket(options.$orderBy);
 		}
+
+		if (options !== undefined) {
+			this.emit('queryOptionsChange', options);
+		}
+
 		return this;
 	}
 
