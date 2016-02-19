@@ -34,6 +34,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Events');
 
 Collection = require('./Collection');
 Db = Shared.modules.Db;
