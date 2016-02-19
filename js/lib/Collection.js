@@ -197,7 +197,6 @@ Collection.prototype.drop = function (callback) {
 			delete this._primaryIndex;
 			delete this._primaryCrc;
 			delete this._crcLookup;
-			delete this._name;
 			delete this._data;
 			delete this._metrics;
 			delete this._listeners;
