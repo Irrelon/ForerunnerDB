@@ -936,7 +936,6 @@ Collection.prototype.drop = function (callback) {
 			delete this._primaryIndex;
 			delete this._primaryCrc;
 			delete this._crcLookup;
-			delete this._name;
 			delete this._data;
 			delete this._metrics;
 			delete this._listeners;
@@ -10124,7 +10123,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.688',
+	version: '1.3.690',
 	modules: {},
 	plugins: {},
 

@@ -1297,7 +1297,6 @@ Collection.prototype.drop = function (callback) {
 			delete this._primaryIndex;
 			delete this._primaryCrc;
 			delete this._crcLookup;
-			delete this._name;
 			delete this._data;
 			delete this._metrics;
 			delete this._listeners;
@@ -4760,6 +4759,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Events');
 
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
@@ -6979,7 +6979,7 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.query) {
 				// Remove listeners
-				elem.off('click', '[data-grid-filter]', sortClickListener );
+				elem.off('click', '[data-grid-filter]', sortClickListener);
 			}
 
 			// Set wrap name if none is provided
@@ -12842,8 +12842,6 @@ Overview.prototype.drop = function (callback) {
 			delete this._db._overview[this._name];
 		}
 
-		delete this._name;
-
 		this.emit('drop', this);
 
 		if (callback) { callback(false, true); }
@@ -14637,7 +14635,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.688',
+	version: '1.3.690',
 	modules: {},
 	plugins: {},
 
@@ -15834,7 +15832,17 @@ View.prototype.queryData = function (query, options, refresh) {
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
 		}
+	}
 
+	if (query !== undefined) {
+		this.emit('queryChange', query);
+	}
+
+	if (options !== undefined) {
+		this.emit('queryOptionsChange', options);
+	}
+
+	if (query !== undefined || options !== undefined) {
 		return this;
 	}
 
@@ -15870,6 +15878,10 @@ View.prototype.queryAdd = function (obj, overwrite, refresh) {
 	if (refresh === undefined || refresh === true) {
 		this.refresh();
 	}
+
+	if (query !== undefined) {
+		this.emit('queryChange', query);
+	}
 };
 
 /**
@@ -15895,6 +15907,10 @@ View.prototype.queryRemove = function (obj, refresh) {
 
 		if (refresh === undefined || refresh === true) {
 			this.refresh();
+		}
+
+		if (query !== undefined) {
+			this.emit('queryChange', query);
 		}
 	}
 };
@@ -15949,7 +15965,17 @@ View.prototype.query = new Overload({
 			if (refresh === undefined || refresh === true) {
 				this.refresh();
 			}
+		}
 
+		if (query !== undefined) {
+			this.emit('queryChange', query);
+		}
+
+		if (options !== undefined) {
+			this.emit('queryOptionsChange', options);
+		}
+
+		if (query !== undefined || options !== undefined) {
 			return this;
 		}
 
@@ -16059,6 +16085,11 @@ View.prototype.queryOptions = function (options, refresh) {
 			// TODO: This could be wasteful if the previous options $orderBy was identical, do a hash and check first!
 			this.rebuildActiveBucket(options.$orderBy);
 		}
+
+		if (options !== undefined) {
+			this.emit('queryOptionsChange', options);
+		}
+
 		return this;
 	}
 
