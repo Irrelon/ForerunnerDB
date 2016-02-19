@@ -233,8 +233,6 @@ Overview.prototype.drop = function (callback) {
 			delete this._db._overview[this._name];
 		}
 
-		delete this._name;
-
 		this.emit('drop', this);
 
 		if (callback) { callback(false, true); }
