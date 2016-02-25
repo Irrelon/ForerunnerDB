@@ -350,6 +350,29 @@ Searches support regular expressions for advanced text-based queries. Simply pas
 regular expression object as the value for the key you wish to search, just like when
 using regular expressions with MongoDB.
 
+Insert a document:
+```js
+collection.insert([{
+	"foo": "hello"
+}]);
+```
+
+Search by regular expression:
+```js
+collection.find({
+	"foo": /el/
+});
+```
+
+You can also use the RegExp object instead:
+```js
+var myRegExp = new RegExp("el");
+
+collection.find({
+	"foo": myRegExp
+});
+```
+
 ### Query Operators
 ForerunnerDB supports many of the same query operators that MongoDB does, and adds some
 that are not available in MongoDB but which can help in browser-centric applications.
