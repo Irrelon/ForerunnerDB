@@ -1292,7 +1292,7 @@ Result is:
 ```
 
 #### $near
-> **PLEASE NOTE**: BETA STATUS - MAY BE UNSTABLE - PASSES UNIT TESTING
+> **PLEASE NOTE**: BETA STATUS - PASSES UNIT TESTING BUT MAY BE UNSTABLE
 
 Finds other documents whose co-ordinates based on a 2d index are within the specified
 distance from the specified centre point. Co-ordinates must be presented in
@@ -3157,7 +3157,7 @@ collection.ensureIndex({
 ## Geo-Spatial (2d) Queries
 > Version >= 1.3.691
 
-> **PLEASE NOTE**: BETA STATUS - MAY BE UNSTABLE - PASSES UNIT TESTING
+> **PLEASE NOTE**: BETA STATUS - PASSES UNIT TESTING BUT MAY BE UNSTABLE
 
 > Geo-spatial indices and queries are currently considered beta and although
 unit tests for geo-spatial queries are passing we would recommend you use them
