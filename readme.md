@@ -400,6 +400,7 @@ that are not available in MongoDB but which can help in browser-centric applicat
 * [$elemMatch](#elemMatch) Limit sub-array documents by query
 * [$elemsMatch](#elemsMatch) Multiple document version of $elemMatch
 * [$aggregate](#aggregate) Converts an array of documents into an array of values base on a path / key
+* [$near](#near) Geo-spatial operation finds outward from a central point
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -1288,6 +1289,80 @@ Result is:
 
 ```json
 [1, 2, 3]
+```
+
+#### $near
+> **PLEASE NOTE**: BETA STATUS - MAY BE UNSTABLE - PASSES UNIT TESTING
+
+Finds other documents whose co-ordinates based on a 2d index are within the specified
+distance from the specified centre point. Co-ordinates must be presented in
+longitude / latitude for $near to work.
+
+```js
+{
+	field: {
+		$near: {
+			$point: [<longitude number>, <latitude number>],
+			$maxDistance: <number>,
+			$distanceUnits: <units string>
+		}
+	}
+}
+```
+
+##### Usage
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db("test"),
+	coll = db.collection("test");
+
+coll.insert([{
+	lngLat: [51.50722, -0.12750],
+	name: 'Central London'
+}, {
+	lngLat: [51.525745, -0.167550], // 2.18 miles
+	name: 'Marylebone, London'
+}, {
+	lngLat: [51.576981, -0.335091], // 10.54 miles
+	name: 'Harrow, London'
+}, {
+	lngLat: [51.769451, 0.086509], // 20.33 miles
+	name: 'Harlow, Essex'
+}]);
+
+// Create a 2d index on the lngLat field
+coll.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+
+// Query index by distance
+// $near queries are sorted by distance from centre point by default
+result = coll.find({
+	lngLat: {
+		$near: {
+			$point: [51.50722, -0.12750],
+			$maxDistance: 3,
+			$distanceUnits: 'miles'
+		}
+	}
+});
+```
+
+Result is:
+
+```json
+[{
+	"lngLat": [51.50722, -0.1275],
+	"name": "Central London",
+	"_id": "1f56c0b5885de40"
+}, {
+	"lngLat": [51.525745, -0.16755],
+	"name": "Marylebone, London",
+	"_id": "372a34d9f17fbe0"
+}]
 ```
 
 ### Ordering / Sorting Results
@@ -3082,7 +3157,7 @@ collection.ensureIndex({
 ## Geo-Spatial (2d) Queries
 > Version >= 1.3.691
 
-> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
+> **PLEASE NOTE**: BETA STATUS - MAY BE UNSTABLE - PASSES UNIT TESTING
 
 > Geo-spatial indices and queries are currently considered beta and although
 unit tests for geo-spatial queries are passing we would recommend you use them
