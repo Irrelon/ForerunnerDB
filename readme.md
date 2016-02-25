@@ -79,6 +79,12 @@ npm install forerunnerdb --tag dev
 Installing via NPM will also work for browser-based development, however if you prefer
 a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
+You can also install ForerunnerDB via the bower package manager:
+
+```bash
+bower install forerunnerdb
+```
+
 # How to Use
 ## Use ForerunnerDB in *Browser*
 > fdb-all.min.js is the entire ForerunnerDB with all the added extras. If you prefer
