@@ -3128,23 +3128,17 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 
 	if (options) {
-		switch (options.type) {
-			case 'hashed':
-				index = new IndexHashMap(keys, options, this);
-				break;
-
-			case 'btree':
-				index = new IndexBinaryTree(keys, options, this);
-				break;
-
-			case '2d':
-				index = new Index2d(keys, options, this);
-				break;
-
-			default:
-				// Default
-				index = new IndexHashMap(keys, options, this);
-				break;
+		if (options.type) {
+			// Check if the specified type is available
+			if (Shared.index[options.type]) {
+				// We found the type, generate it
+				index = new Shared.index[options.type](keys, options, this);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create index of type "' + options.type + '", type not found in the index type register (Shared.index)');
+			}
+		} else {
+			// Create default index type
+			index = new IndexHashMap(keys, options, this);
 		}
 	} else {
 		// Default

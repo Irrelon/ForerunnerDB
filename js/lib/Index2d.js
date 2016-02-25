@@ -428,5 +428,8 @@ Index2d.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index['2d'] = Index2d;
+
 Shared.finishModule('Index2d');
 module.exports = Index2d;
