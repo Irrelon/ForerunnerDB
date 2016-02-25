@@ -1041,43 +1041,45 @@ QUnit.test("Collection.find() :: Options :: Single join against collection", fun
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Single join against a view", function () {
-	base.dbUp();
-	base.dataUp();
+ForerunnerDB.moduleLoaded('View', function () {
+	QUnit.test("Collection.find() :: Options :: Single join against a view", function () {
+		base.dbUp();
+		base.dataUp();
 
-	var orgView = db.view('organisationView')
-		.from('organisation')
-		.query({
-			profit: 135
+		var orgView = db.view('organisationView')
+			.from('organisation')
+			.query({
+				profit: 135
+			});
+
+		var result = user.find({}, {
+			"$join": [{
+				"organisationView": {
+					"_id": "orgId",
+					"$sourceType": 'view',
+					"$as": "orgView",
+					"$require": true,
+					"$multi": false
+				}
+			}]
 		});
 
-	var result = user.find({}, {
-		"$join": [{
-			"organisationView": {
-				"_id": "orgId",
-				"$sourceType": 'view',
-				"$as": "orgView",
-				"$require": true,
-				"$multi": false
-			}
-		}]
+		strictEqual(result.length, 3, "Correct number of results after join");
+
+		strictEqual(result[0].orgId, result[0].orgView._id, "Org id matches original data for 1");
+		strictEqual(result[1].orgId, result[1].orgView._id, "Org id matches original data for 2");
+		strictEqual(result[2].orgId, result[2].orgView._id, "Org id matches original data for 3");
+
+		strictEqual(result[0].orgView._id, "2", "Correct organisation from view in 1");
+		strictEqual(result[1].orgView._id, "3", "Correct organisation from view in 2");
+		strictEqual(result[2].orgView._id, "3", "Correct organisation from view in 3");
+
+		strictEqual(result[0]._id, "3", "Correct user in result for 1");
+		strictEqual(result[1]._id, "4", "Correct user in result for 2");
+		strictEqual(result[2]._id, "5", "Correct user in result for 3");
+
+		base.dbDown();
 	});
-
-	strictEqual(result.length, 3, "Correct number of results after join");
-
-	strictEqual(result[0].orgId, result[0].orgView._id, "Org id matches original data for 1");
-	strictEqual(result[1].orgId, result[1].orgView._id, "Org id matches original data for 2");
-	strictEqual(result[2].orgId, result[2].orgView._id, "Org id matches original data for 3");
-
-	strictEqual(result[0].orgView._id, "2", "Correct organisation from view in 1");
-	strictEqual(result[1].orgView._id, "3", "Correct organisation from view in 2");
-	strictEqual(result[2].orgView._id, "3", "Correct organisation from view in 3");
-
-	strictEqual(result[0]._id, "3", "Correct user in result for 1");
-	strictEqual(result[1]._id, "4", "Correct user in result for 2");
-	strictEqual(result[2]._id, "5", "Correct user in result for 3");
-
-	base.dbDown();
 });
 
 QUnit.test("Collection.find() :: Options :: Single join, array of ids", function () {
