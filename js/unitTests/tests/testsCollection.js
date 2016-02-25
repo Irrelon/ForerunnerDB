@@ -3287,10 +3287,12 @@ QUnit.test("Collection :: Create collection and specify primary key", function (
 	base.dbDown();
 });
 
-QUnit.test("Collection :: Create capped collection", function () {
+QUnit.asyncTest("Collection :: Create capped collection", function () {
 	base.dbUp();
-
-	var coll;
+	expect(17);
+	var coll,
+		data = [],
+		i;
 
 	coll = db.collection('testCapped', {
 		capped: true,
@@ -3324,7 +3326,29 @@ QUnit.test("Collection :: Create capped collection", function () {
 	strictEqual(coll.count(), 5, 'Count is correct');
 	strictEqual(coll.find()[0]._id, 4, 'Id for first record is correct');
 
-	base.dbDown();
+	// Now throw a load of documents at the collection all at once and check that
+	// capped collections still work
+	for (i = 0; i < 200; i++) {
+		data.push({
+			_id: i + 9,
+			test: "test"
+		});
+	}
+
+	coll.insert(data, function () {
+		var result = db.collection('testCapped').find();
+
+		strictEqual(result.length, 5, 'After bulk insert the capped collection is still registering 5 documents');
+		strictEqual(result[0]._id, 204, 'Bulk insert 1 document id correct');
+		strictEqual(result[1]._id, 205, 'Bulk insert 2 document id correct');
+		strictEqual(result[2]._id, 206, 'Bulk insert 3 document id correct');
+		strictEqual(result[3]._id, 207, 'Bulk insert 4 document id correct');
+		strictEqual(result[4]._id, 208, 'Bulk insert 5 document id correct');
+
+		start();
+
+		base.dbDown();
+	});
 });
 
 QUnit.test("Collection.find() :: Waterfall queries", function () {
