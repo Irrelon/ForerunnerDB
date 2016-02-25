@@ -2078,4 +2078,41 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.domDown();
 		base.dbDown();
 	});
+
+	QUnit.test("View.on() :: Bind to an object without the property the template wants, then upsert with the property", function () {
+		base.dbUp();
+
+		$('<div id="inboxTotalBadge"></div>').appendTo('body');
+
+		// Create the unreadCounts collection
+		var elem,
+			coll = db.collection('unreadCounts');
+
+		coll.upsert({
+			"_id": "total"
+		});
+
+		db
+			.view('unreadTotalCounts')
+			.query({ _id: "total" })
+			.from('unreadCounts')
+			.link('#inboxTotalBadge', {
+				template: '<div class="count" data-link="id{:_id}">{^{:count}}</div>'
+			});
+
+		elem = $('#inboxTotalBadge').find('#total');
+		strictEqual(elem.text(), "", "Text output is blank");
+
+		coll.upsert({
+			"_id": "total",
+			"count": 20
+		});
+
+		elem = $('#inboxTotalBadge').find('#total');
+		strictEqual(elem.text(), "20", "Text output is 20");
+
+		$('#inboxTotalBadge').remove();
+
+		base.dbDown();
+	});
 });
