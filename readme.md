@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.695
+## Version 1.3.696
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -3027,7 +3027,7 @@ was executed and if a table scan was involved or not, helping you to plan your i
 Keep in mind that indices require memory to maintain and there is always a trade-off between
 speed and memory usage.
 
-### Types of Index
+### Index Types (Choosing the Type of Index to Use)
 > B-Tree and Geospatial indexes are currently considered beta level and although
 they are passing unit tests, are provided for testing and development purposes.
 We cannot guarantee their functionality or performance at this time as more
@@ -3035,6 +3035,10 @@ stringent tests and real-world usage must be done before they are considered
 production-ready. Please DO test them and report any bugs or issues. It is only
 with the help of the community that new features can get put through their paces!
 
+> **CUSTOM INDEX** If you are interested in developing your own custom index
+class for ForerunnerDB please see the wiki page on creating and registering your
+index class / type: [Adding Custom Index to ForerunnerDB](https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Index-to-ForerunnerDB)
+ 
 ForerunnerDB currently defaults to a hash table index when you call ensureIndex().
 There is also support for both b-tree and geospatial indexing and you can specify
 the type of index you wish to use via the ensureIndex() call:
