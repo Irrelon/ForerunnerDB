@@ -135,4 +135,46 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
+
+	QUnit.test('View Queried :: CRUD :: Upsert with a view query', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			results;
+
+		view.from(coll);
+
+		view.query({
+			moo: true
+		});
+
+		results = view.find();
+
+		strictEqual(results.length, 0, 'Results count before insert is correct');
+
+		coll.upsert({
+			_id: 1,
+			moo: true
+		});
+
+		results = view.find();
+
+		strictEqual(results.length, 1, 'Results count after insert is correct');
+		strictEqual(results[0].moo, true, 'Results data is correct');
+
+		// Now update the collection and see if the view is similarly updated
+		coll.upsert({
+			_id: 1,
+			moo: false
+		});
+
+		results = view.find();
+
+		strictEqual(results.length, 0, 'Results count after insert is correct');
+		strictEqual(results[0], undefined, 'Results data is correct');
+
+		base.dbDown();
+	});
 });
