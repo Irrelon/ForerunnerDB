@@ -62,12 +62,15 @@ this repository under the ionicExampleClient folder.
 [See here for more details](#ionic-example-app). 
 
 ## Download
+
+### NPM
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
 ```bash
 npm install forerunnerdb
 ```
 
+### NPM Dev Builds
 You can also install the development version which usually includes new features that
 are considered either unstable or untested. To install the development version you can
 ask NPM for the dev tag:
@@ -76,14 +79,16 @@ ask NPM for the dev tag:
 npm install forerunnerdb --tag dev
 ```
 
-Installing via NPM will also work for browser-based development, however if you prefer
-a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
-
+### Bower
 You can also install ForerunnerDB via the bower package manager:
 
 ```bash
 bower install forerunnerdb
 ```
+
+
+### No Package Manager
+If you are still a package manager hold-out or you would prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 # How to Use
 ## Use ForerunnerDB in *Browser*
