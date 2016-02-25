@@ -3875,23 +3875,17 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 
 	if (options) {
-		switch (options.type) {
-			case 'hashed':
-				index = new IndexHashMap(keys, options, this);
-				break;
-
-			case 'btree':
-				index = new IndexBinaryTree(keys, options, this);
-				break;
-
-			case '2d':
-				index = new Index2d(keys, options, this);
-				break;
-
-			default:
-				// Default
-				index = new IndexHashMap(keys, options, this);
-				break;
+		if (options.type) {
+			// Check if the specified type is available
+			if (Shared.index[options.type]) {
+				// We found the type, generate it
+				index = new Shared.index[options.type](keys, options, this);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create index of type "' + options.type + '", type not found in the index type register (Shared.index)');
+			}
+		} else {
+			// Create default index type
+			index = new IndexHashMap(keys, options, this);
 		}
 	} else {
 		// Default
@@ -5934,6 +5928,14 @@ var Index2d = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Create the index.
+ * @param {Object} keys The object with the keys that the user wishes the index
+ * to operate on.
+ * @param {Object} options Can be undefined, if passed is an object with arbitrary
+ * options keys and values.
+ * @param {Collection} collection The collection the index should be created for.
+ */
 Index2d.prototype.init = function (keys, options, collection) {
 	this._btree = new BinaryTree();
 	this._btree.index(keys);
@@ -6318,6 +6320,9 @@ Index2d.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index['2d'] = Index2d;
+
 Shared.finishModule('Index2d');
 module.exports = Index2d;
 },{"./BinaryTree":3,"./GeoHash":9,"./Path":27,"./Shared":33}],11:[function(_dereq_,module,exports){
@@ -6558,6 +6563,9 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 	return hashArr;
 };
+
+// Register this index on the shared object
+Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
@@ -6918,6 +6926,9 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 
 	return hashArr;
 };
+
+// Register this index on the shared object
+Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
@@ -11510,9 +11521,10 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.695',
+	version: '1.3.697',
 	modules: {},
 	plugins: {},
+	index: {},
 
 	_synth: {},
 
