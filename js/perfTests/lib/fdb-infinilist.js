@@ -119,10 +119,12 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 Infinilist.prototype.recalcHeight = function () {
 	var self = this;
 
-	self.total = self.view.from().count(self.options.countQuery);
-	self.virtualHeight = self.total * self._itemHeight;
+	if (self._state !== 'dropped') {
+		self.total = self.view.from().count(self.options.countQuery);
+		self.virtualHeight = self.total * self._itemHeight;
 
-	self.resize();
+		self.resize();
+	}
 };
 
 /**
