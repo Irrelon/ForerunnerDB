@@ -3004,6 +3004,122 @@ was executed and if a table scan was involved or not, helping you to plan your i
 Keep in mind that indices require memory to maintain and there is always a trade-off between
 speed and memory usage.
 
+### Types of Index
+> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
+
+> B-Tree and Geospatial indexes are currently considered beta level and although
+they are passing unit tests, are provided for testing and development purposes.
+We cannot guarantee their functionality or performance at this time as more
+stringent tests and real-world usage must be done before they are considered
+production-ready. Please DO test them and report any bugs or issues. It is only
+with the help of the community that new features can get put through their paces!
+
+ForerunnerDB currently defaults to a hash table index when you call ensureIndex().
+There is also support for both b-tree and geospatial indexing and you can specify
+the type of index you wish to use via the ensureIndex() call:
+
+#### Example of Creating a B-Tree Index 
+```js
+collection.ensureIndex({
+	name: 1
+}, {
+	type: 'btree'
+});
+```
+
+#### Example of Creating a Geo-Spatial 2d Index 
+
+```js
+collection.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+```
+
+#### Example of Creating a Hash Table Index 
+```js
+collection.ensureIndex({
+	name: 1
+}, {
+	type: 'hashed'
+});
+```
+
+## Geo-Spatial (2d) Queries
+> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
+
+> Geo-spatial indices and queries are currently considered beta and although
+unit tests for geo-spatial queries are passing we would recommend you use them
+with caution. Please report any bugs or inconsistencies you might find when using
+geo-spatial queries in ForerunnerDB on our GitHub issues page. 
+
+We can insert some documents with longitude / latitude co-ordinates:
+
+```js
+var coll = db.collection('houses');
+
+coll.insert([{
+	lngLat: [51.50722, -0.12750],
+	name: 'Central London'
+}, {
+	lngLat: [51.525745, -0.167550], // 2.18 miles
+	name: 'Marylebone, London'
+}, {
+	lngLat: [51.576981, -0.335091], // 10.54 miles
+	name: 'Harrow, London'
+}, {
+	lngLat: [51.769451, 0.086509], // 20.33 miles
+	name: 'Harlow, Essex'
+}]);
+```
+
+To query this data using a geo-spatial operator we need to set up a 2d index against
+it:
+
+```js
+coll.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+```
+
+Now we can run a query with the geo-spatial operator "$near" to return results
+ordered by the distance from the centre point we provide:
+
+```js
+// Query index by distance
+// $near queries are sorted by distance from centre point by default
+result = coll.find({
+	lngLat: {
+		$near: {
+			$point: [51.50722, -0.12750],
+			$maxDistance: 3,
+			$distanceUnits: 'miles'
+		}
+	}
+});
+```
+
+The result is:
+
+```json
+[{
+	"lngLat": [51.50722, -0.1275],
+	"name": "Central London",
+	"_id": "1f56c0b5885de40"
+}, {
+	"lngLat": [51.525745, -0.16755],
+	"name": "Marylebone, London",
+	"_id": "372a34d9f17fbe0"
+}]
+```
+
+These documents have lngLat co-ordinates that are within 3 miles from the $point
+co-ordinate 51.50722, -0.12750 (Central London, UK). The results are ordered by
+distance from the centre point ascending.
+
 ## Data Persistence (Save and Load Between Pages)
 
 ### Data Persistence In Browser
@@ -4267,7 +4383,7 @@ to search / replace your entire codebase for "join" to "$join" as this may break
 code in your project. Ensure that changes are limited to ForerunnerDB query sections.
 
 # ForerunnerDB Built-In JSON REST API Server
-> BETA STATUS SUBJECT TO CHANGE
+> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
 
 When running ForerunnerDB under Node.js you can activate a powerful REST API server
 that allows you to build a backend for your application in record speed, providing
