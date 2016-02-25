@@ -44,6 +44,14 @@ var Index2d = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Create the index.
+ * @param {Object} keys The object with the keys that the user wishes the index
+ * to operate on.
+ * @param {Object} options Can be undefined, if passed is an object with arbitrary
+ * options keys and values.
+ * @param {Collection} collection The collection the index should be created for.
+ */
 Index2d.prototype.init = function (keys, options, collection) {
 	this._btree = new BinaryTree();
 	this._btree.index(keys);
