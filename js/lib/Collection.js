@@ -201,17 +201,17 @@ Collection.prototype.drop = function (callback) {
 			delete this._metrics;
 			delete this._listeners;
 
-			if (callback) { callback(false, true); }
+			if (callback) { callback.call(this, false, true); }
 
 			return true;
 		}
 	} else {
-		if (callback) { callback(false, true); }
+		if (callback) { callback.call(this, false, true); }
 
 		return true;
 	}
 
-	if (callback) { callback(false, true); }
+	if (callback) { callback.call(this, false, true); }
 	return false;
 };
 
@@ -376,7 +376,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 			this.emit('setData', this._data, oldData);
 		}
 
-		if (callback) { callback(); }
+		if (callback) { callback.call(this); }
 
 		return this;
 	}
@@ -532,7 +532,7 @@ Collection.prototype.upsert = function (obj, callback) {
 					returnData.push(this.upsert(obj[i]));
 				}
 
-				if (callback) { callback(); }
+				if (callback) { callback.call(this); }
 
 				return returnData;
 			}
@@ -571,7 +571,7 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		return returnData;
 	} else {
-		if (callback) { callback(); }
+		if (callback) { callback.call(this); }
 	}
 
 	return {};
@@ -736,7 +736,7 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			this._onUpdate(updated);
 			this._onChange();
 
-			if (callback) { callback(); }
+			if (callback) { callback.call(this); }
 
 			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
@@ -1360,7 +1360,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	} else {
 		returnArr = [];
@@ -1419,7 +1419,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			}
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	}
 };
@@ -1481,7 +1481,7 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 			self.processQueue.call(self, type, callback, resultObj);
 		}, deferTime);
 	} else {
-		if (callback) { callback(resultObj); }
+		if (callback) { callback.call(this, resultObj); }
 
 		this._asyncComplete(type);
 	}
@@ -1602,7 +1602,7 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	};
 
 	this._onInsert(inserted, failed);
-	if (callback) { callback(resultObj); }
+	if (callback) { callback.call(this, resultObj); }
 
 	this._onChange();
 	this.emit('immediateChange', {type: 'insert', data: inserted});
@@ -1989,7 +1989,7 @@ Collection.prototype.find = function (query, options, callback) {
 		// Check the size of the collection's data array
 
 		// Split operation into smaller tasks and callback when complete
-		callback('Callbacks for the find() operation are not yet implemented!', []);
+		callback.call(this, 'Callbacks for the find() operation are not yet implemented!', []);
 		return [];
 	}
 
