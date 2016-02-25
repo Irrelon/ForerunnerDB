@@ -3005,8 +3005,6 @@ Keep in mind that indices require memory to maintain and there is always a trade
 speed and memory usage.
 
 ### Types of Index
-> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
-
 > B-Tree and Geospatial indexes are currently considered beta level and although
 they are passing unit tests, are provided for testing and development purposes.
 We cannot guarantee their functionality or performance at this time as more
@@ -3019,6 +3017,8 @@ There is also support for both b-tree and geospatial indexing and you can specif
 the type of index you wish to use via the ensureIndex() call:
 
 #### Example of Creating a B-Tree Index 
+> Version >= 1.3.691
+
 ```js
 collection.ensureIndex({
 	name: 1
@@ -3028,6 +3028,7 @@ collection.ensureIndex({
 ```
 
 #### Example of Creating a Geo-Spatial 2d Index 
+> Version >= 1.3.691
 
 ```js
 collection.ensureIndex({
@@ -3047,6 +3048,8 @@ collection.ensureIndex({
 ```
 
 ## Geo-Spatial (2d) Queries
+> Version >= 1.3.691
+
 > **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
 
 > Geo-spatial indices and queries are currently considered beta and although
