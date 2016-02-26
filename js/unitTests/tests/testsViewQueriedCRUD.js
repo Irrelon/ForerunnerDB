@@ -177,4 +177,63 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
+
+	QUnit.test('View Queried :: CRUD :: Collection with multiple views each with different query, check chain packets are not polluted on multiple chain targets', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view1 = db.view('test1'),
+			view2 = db.view('test2'),
+			results1,
+			results2;
+
+		view1.from(coll);
+		view2.from(coll);
+
+		view1.query({
+			moo: true
+		});
+
+		view2.query({
+			moo: false
+		});
+
+		results1 = view1.find();
+		results2 = view2.find();
+
+		strictEqual(results1.length, 0, 'Results1 count before upsert is correct');
+		strictEqual(results2.length, 0, 'Results1 count before upsert is correct');
+
+		coll.upsert({
+			_id: 1,
+			moo: true
+		});
+
+		results1 = view1.find();
+		results2 = view2.find();
+
+		strictEqual(results1.length, 1, 'Results1 count after upsert is correct');
+		strictEqual(results1[0].moo, true, 'Results1 data is correct');
+
+		strictEqual(results2.length, 0, 'Results2 count after upsert is correct');
+		strictEqual(results2[0], undefined, 'Results2 data is correct');
+
+		// Now update the collection and see if the view is similarly updated
+		coll.upsert({
+			_id: 1,
+			moo: false
+		});
+
+		results1 = view1.find();
+		results2 = view2.find();
+
+		strictEqual(results1.length, 0, 'Results1 count after upsert is correct');
+		strictEqual(results1[0], undefined, 'Results1 data is correct');
+
+		strictEqual(results2.length, 1, 'Results2 count after upsert is correct');
+		strictEqual(results2[0].moo, false, 'Results2 data is correct');
+
+		base.dbDown();
+	});
 });
