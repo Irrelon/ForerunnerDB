@@ -9440,7 +9440,8 @@ var ChainReactor = {
 			var arr = this._chain,
 				arrItem,
 				count = arr.length,
-				index;
+				index,
+				dataCopy = this.decouple(data, count);
 
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
@@ -9455,7 +9456,7 @@ var ChainReactor = {
 					}
 
 					if (arrItem.chainReceive) {
-						arrItem.chainReceive(this, type, data, options);
+						arrItem.chainReceive(this, type, dataCopy[index], options);
 					}
 				} else {
 					console.log('Reactor Data:', type, data, options);
@@ -15039,7 +15040,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.699',
+	version: '1.3.703',
 	modules: {},
 	plugins: {},
 	index: {},
