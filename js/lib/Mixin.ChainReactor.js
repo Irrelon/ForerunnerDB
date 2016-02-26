@@ -80,7 +80,8 @@ var ChainReactor = {
 			var arr = this._chain,
 				arrItem,
 				count = arr.length,
-				index;
+				index,
+				dataCopy;
 
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
@@ -95,7 +96,12 @@ var ChainReactor = {
 					}
 
 					if (arrItem.chainReceive) {
-						arrItem.chainReceive(this, type, data, options);
+						if (count > 0) {
+							// Copy the data since we are in a loop and
+							dataCopy = this.decouple(data);
+						}
+
+						arrItem.chainReceive(this, type, dataCopy, options);
 					}
 				} else {
 					console.log('Reactor Data:', type, data, options);
