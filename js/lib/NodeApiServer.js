@@ -627,6 +627,8 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 					});
 				}
 
+				req.socket.setNoDelay(true);
+
 				// Send headers for event-stream connection
 				res.writeHead(200, {
 					'Content-Type': 'text/event-stream',
@@ -634,7 +636,7 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 					'Connection': 'keep-alive'
 				});
 
-				res.write('\n');
+				res.write(':ok\n\n');
 
 				// Send connected message to the client with messageId zero
 				self.sendToClient(res, 0, 'connected', "{}");
@@ -694,6 +696,8 @@ NodeApiServer.prototype.sendToClient = function (res, messageId, eventName, stri
 	res.write('event: ' + eventName + '\n');
 	res.write('id: ' + messageId + '\n');
 	res.write("data: " + stringifiedData + '\n\n');
+
+	//console.log('EventStream: "' + eventName + '" ' + stringifiedData);
 };
 
 /**
