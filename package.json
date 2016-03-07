@@ -48,7 +48,8 @@
   "scripts": {
     "start": "forever start server/server.js",
     "stop": "forever stop server/server.js",
-    "test": "grunt --verbose"
+    "test": "grunt --verbose",
+    "postinstall": "postinstall.js"
   },
   "repository": {
     "type": "git",
