@@ -2,7 +2,7 @@
   "author": "Rob Evans - Irrelon Software Limited",
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
-  "version": "1.3.715",
+  "version": "1.3.716",
   "keywords": [
     "forerunnerdb",
     "forerunner",
@@ -49,7 +49,7 @@
     "start": "forever start server/server.js",
     "stop": "forever stop server/server.js",
     "test": "grunt --verbose",
-    "postinstall": "./postinstall.js"
+    "postinstall": "node ./postinstall.js"
   },
   "repository": {
     "type": "git",
