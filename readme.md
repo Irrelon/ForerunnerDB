@@ -3253,18 +3253,44 @@ collection.save(function (err) {
 You can then load the collection's data back again via:
 
 ```js
-collection.load(function (err) {
+collection.load(function (err, tableStats, metaStats) {
 	if (!err) {
 		// Load was successful
 	}
 });
 ```
 
-If you call collection.load() when your application starts and collection.save() when you make changes
-to your collection you can ensure that your application always has up-to-date data.
+If you call collection.load() when your application starts and collection.save() when
+you make changes to your collection you can ensure that your application always has
+up-to-date data.
 
 > An eager-saving mode is currently being worked on to automatically save changes to
 collections, please see #41 for more information.
+
+In the _load()_ method callback the tableStats and metaStats objects contain
+information about what (if anything) was loaded for the collection and the
+collection's meta-data. You can inspect these objects to determine if the collection
+actually loaded any data or if the persistent storage for the collection was empty.
+
+Here is an example stats object (tableStats and metaStats contain the same keys with
+different data for the collection's data and the collection's meta-data):
+
+```json
+{
+	"foundData": true,
+	"rowCount": 1
+}
+```
+
+Keep in mind that the _foundData_ key can be true at the same time as _rowCount_ is
+zero. This is because _foundData_ is true if any previously persisted data exists,
+even if there are no rows in the data file. Therefore if you wish to check if 
+previous data exists and contains rows, you should do:
+
+```js
+...
+if (tableStats.foundData && tableStats.rowCount > 0) { ... }
+```
 
 #### Manually Specifying Storage Engine
 If you would like to manually specify the storage engine that ForerunnerDB will use you can call the
