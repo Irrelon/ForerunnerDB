@@ -594,6 +594,15 @@ module.exports = function(grunt) {
 		child = execSync('git merge dev');
 	});
 
+	grunt.registerTask('gitMergeDevIntoEdge', 'Git Merge Dev Into Edge', function () {
+		"use strict";
+		var execSync = require('child_process').execSync,
+			child;
+
+		child = execSync('git checkout edge');
+		child = execSync('git merge dev');
+	});
+
 	grunt.registerTask('gitPushAndTagMaster', 'Git Push and Tag Master Build', function () {
 		"use strict";
 
