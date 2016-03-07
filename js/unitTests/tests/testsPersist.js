@@ -6,8 +6,8 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		base.dbUp();
 
 		try {
-			db.collection('random112354234').load(function (err, data) {
-				ok(true, 'Didn\'t cause an error');
+			db.collection('random112354234').load(function (err, tableStats, metaStats) {
+				equal(err, false, 'Didn\'t cause an error');
 				base.dbDown();
 				start();
 			});
@@ -18,7 +18,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 	});
 
 	QUnit.asyncTest('Persist.save() :: Save data to storage and load it back', function () {
-		expect(7);
+		expect(13);
 
 		base.dbUp();
 
@@ -53,7 +53,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			result = coll.find();
 			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 
-			coll.load(function (err) {
+			coll.load(function (err, tableStats, metaStats) {
 				if (err) {
 					console.log(err);
 					ok(false, err);
@@ -66,6 +66,14 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				strictEqual(result.length, 1, 'Check that items were loaded correctly');
 				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
 				strictEqual(coll.metaData().lastChange.toISOString(), lastChange.toISOString(), 'Collection lastChange flag in metadata is the same as when saved');
+
+				// Check the stats objects are correct
+				strictEqual(typeof tableStats, 'object', 'Table stats is an object');
+				strictEqual(typeof metaStats, 'object', 'Meta stats is an object');
+				strictEqual(tableStats.foundData, true, 'Table stats found data');
+				strictEqual(metaStats.foundData, true, 'Meta stats found data');
+				strictEqual(tableStats.rowCount, 1, 'Table stats row count correct');
+				strictEqual(metaStats.rowCount, 0, 'Meta stats row count correct');
 
 				base.dbDown();
 
@@ -189,7 +197,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				result = coll2.find();
 				strictEqual(result.length, 0, 'Check that there are currently no items in the test collection for db2');
 
-				coll1.load(function (err) {
+				coll1.load(function (err, tableStats, metaStats) {
 					if (err) {
 						console.log(err);
 						ok(false, err);
@@ -197,7 +205,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 						ok(!err, 'Load did not produce an error');
 					}
 
-					coll2.load(function (err) {
+					coll2.load(function (err, tableStats, metaStats) {
 						if (err) {
 							console.log(err);
 							ok(false, err);
@@ -240,7 +248,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 								coll2 = db2.collection('test');
 
 								// Now load data again and check that it has dropped correctly
-								coll1.load(function (err) {
+								coll1.load(function (err, tableStats, metaStats) {
 									if (err) {
 										console.log(err);
 										ok(false, err);
@@ -248,7 +256,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 										ok(!err, 'Load did not produce an error');
 									}
 
-									coll2.load(function (err) {
+									coll2.load(function (err, tableStats, metaStats) {
 										if (err) {
 											console.log(err);
 											ok(false, err);
@@ -316,7 +324,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			result = coll.find();
 			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 
-			coll.load(function (err) {
+			coll.load(function (err, tableStats, metaStats) {
 				if (err) {
 					console.log(err);
 					ok(false, err);
