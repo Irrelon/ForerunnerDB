@@ -13722,10 +13722,9 @@ Persist.prototype._decode = function (val, meta, finished) {
 
 		if (data) {
 			meta.foundData = true;
-			meta.rowCount = data.length || 0;
+			meta.rowCount = data.length;
 		} else {
 			meta.foundData = false;
-			meta.rowCount = 0;
 		}
 
 		if (finished) {
@@ -13761,10 +13760,9 @@ Persist.prototype._encode = function (val, meta, finished) {
 
 	if (data) {
 		meta.foundData = true;
-		meta.rowCount = data.length || 0;
+		meta.rowCount = data.length;
 	} else {
 		meta.foundData = false;
-		meta.rowCount = 0;
 	}
 
 	if (finished) {
@@ -14649,7 +14647,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.705',
+	version: '1.3.709',
 	modules: {},
 	plugins: {},
 	index: {},
