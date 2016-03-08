@@ -4002,10 +4002,10 @@ coll.pieChart("#demo-chart", "name", "val", "Food", {
 });
 ```
 
-> Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
- key is passed to Highcharts directly so any options that are described in the Highcharts documentation
- should be added inside the chartOptions object. You'll notice that we set the chart title in the call
- above using this object.
+> Note that the options object passed as the 5th parameter in the call above has a
+chartOptions key. This key is passed to Highcharts directly so any options that are
+described in the Highcharts documentation should be added inside the chartOptions
+object. You'll notice that we set the chart title in the call above using this object.
 
 #### collection.lineChart()
 
@@ -4025,21 +4025,21 @@ var fdb = new ForerunnerDB(),
 
 // Set the collection data
 coll.insert([{
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-13")).substr(0, 15),
 	val: 100
 }, {
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-14")).substr(0, 15),
 	val: 33
 }, {
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-15")).substr(0, 15),
 	val: 24
 }]);
 
 // Create a pie chart on the element with the id "demo-chart"
-coll.lineChart("#demo-chart", "type", "date", "val", {
+coll.lineChart("#demo-chart", "series", "date", "val", {
 	chartOptions: {
 		title: {
 			text: "Jam Stores Over Time"
@@ -4055,8 +4055,8 @@ object. You'll notice that we set the chart title in the call above using this o
 
 #### Other Chart Types
 
-The lineChart() function uses the same parameters as the rest of the chart types currently supported by
-ForerunnerDB:
+The lineChart() function uses the same parameters as the rest of the chart types
+currently supported by ForerunnerDB:
 
 * collection.barChart()
 * collection.columnChart()
@@ -4064,7 +4064,8 @@ ForerunnerDB:
 
 ### Removing a Chart
 
-You can drop a chart using the dropChart() method on the collection the chart is assigned to:
+You can drop a chart using the dropChart() method on the collection the chart is
+assigned to:
 
 Function definition:
 
@@ -4123,9 +4124,9 @@ db.collection("test").find({
 ```
 
 # Differences Between ForerunnerDB and MongoDB
-Developers familiar with the MongoDB query language will find ForerunnerDB quite similar
-however there are some differences that you should be aware of when writing queries for
-ForerunnerDB.
+Developers familiar with the MongoDB query language will find ForerunnerDB quite
+similar however there are some differences that you should be aware of when writing
+queries for ForerunnerDB.
 
 > An update is being worked on that will allow a MongoDB emulation mode flag to be set
 to force ForerunnerDB to behave exactly like MongoDB when running find and update
