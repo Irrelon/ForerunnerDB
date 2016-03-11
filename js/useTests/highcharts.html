@@ -14,6 +14,45 @@
 	<div id="qunit"></div>
 	<div id="qunit-fixture"></div>
 
+	<div id="chart1"></div>
+
 	<script src="./js/highchart.js"></script>
+
+	<script type="application/javascript">
+		var fdb = new ForerunnerDB(),
+			db = fdb.db('test');
+
+		db.collection('data').insert({
+			series: 'My Series1',
+			val: 20,
+			day: '2016-03-01'
+		});
+
+		db.collection('data').insert({
+			series: 'My Series1',
+			val: 35,
+			day: '2016-03-02'
+		});
+
+		db.collection('data').insert({
+			series: 'My Series2',
+			val: 15,
+			day: '2016-03-01'
+		});
+
+		db.collection('data').insert({
+			series: 'My Series2',
+			val: 19,
+			day: '2016-03-02'
+		});
+
+		db.collection('data').lineChart('#chart1', 'series', 'day', 'val', {
+			chartOptions: {
+				title: {
+					text: 'Pet Purchases This Month'
+				}
+			}
+		});
+	</script>
 </body>
 </html>
