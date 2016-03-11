@@ -1041,6 +1041,44 @@ QUnit.test("Collection.find() :: Options :: Single join against collection", fun
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Test $nin:[null] #81", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.insert([{
+		_id: '1',
+		value: 'a'
+	}, {
+		_id: '2',
+		value: null
+	}]);
+
+	result = coll.find({
+		value: {
+			$exists: true,
+			$nin: [null]
+		}
+	});
+
+	strictEqual(result.length, 1, "Find with not matching null returned correct number of results");
+	strictEqual(result[0]._id, '1', "Find with not matching null works");
+
+	result = coll.find({
+		value: {
+			$exists: true,
+			$in: [null]
+		}
+	});
+
+	strictEqual(result.length, 1, "Find with matching null returned correct number of results");
+	strictEqual(result[0]._id, '2', "Find with matching null works");
+
+	base.dbDown();
+});
+
 ForerunnerDB.moduleLoaded('View', function () {
 	QUnit.test("Collection.find() :: Options :: Single join against a view", function () {
 		base.dbUp();
