@@ -1,0 +1,17 @@
+{
+  "name": "astrobench",
+  "version": "0.1.2",
+  "homepage": "https://github.com/kupriyanenko/astrobench",
+  "authors": [
+    "kupriyanenko <a.kupriyanenko@gmail.com>"
+  ],
+  "description": "Library for JavaScript benchmarks based on Benchmark.js",
+  "main": "dist/astrobench.js",
+  "keywords": [
+    "benchmark",
+    "benchmark.js",
+    "speed",
+    "performance"
+  ],
+  "license": "MIT"
+}

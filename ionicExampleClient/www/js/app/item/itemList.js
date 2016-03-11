@@ -26,7 +26,7 @@ angular.module('app.controllers')
 						text: '<b>OK</b>',
 						type: 'button-positive',
 						onTap: function(e) {
-							$api.post('/ForerunnerDB_Ionic_App/collection/item', {
+							$api.post('/fdb/ForerunnerDB_Ionic_App/collection/item', {
 								"name": inputVal
 							}, function (err, data) {
 								if (!err) {
@@ -58,7 +58,7 @@ angular.module('app.controllers')
 						text: '<b>OK</b>',
 						type: 'button-positive',
 						onTap: function(e) {
-							$api.put('/ForerunnerDB_Ionic_App/collection/item/' + id, {
+							$api.put('/fdb/ForerunnerDB_Ionic_App/collection/item/' + id, {
 								"name": inputVal
 							}, function (err, data) {
 								if (!err) {
@@ -79,7 +79,7 @@ angular.module('app.controllers')
 
 			confirmPopup.then(function(res) {
 				if(res) {
-					$api.delete('/ForerunnerDB_Ionic_App/collection/item/' + id, function (err, data) {
+					$api.delete('/fdb/ForerunnerDB_Ionic_App/collection/item/' + id, function (err, data) {
 						if (!err) {
 							// Delete successful
 						}

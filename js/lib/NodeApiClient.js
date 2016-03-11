@@ -24,10 +24,13 @@ NodeApiClient = function () {
 NodeApiClient.prototype.init = function (core) {
 	var self = this;
 	self._core = core;
+
+	self.rootPath('/fdb');
 };
 
 Shared.addModule('NodeApiClient', NodeApiClient);
 Shared.mixin(NodeApiClient.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiClient.prototype, 'Mixin.Events');
 Shared.mixin(NodeApiClient.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
@@ -35,58 +38,265 @@ CoreInit = Core.prototype.init;
 Collection = Shared.modules.Collection;
 Overload = Shared.overload;
 
+Shared.synthesize(NodeApiClient.prototype, 'rootPath');
+
 /**
  * Set the url of the server to use for API.
  * @name server
+ * @param {String} host The server host name including protocol. E.g.
+ * "https://0.0.0.0".
+ * @param {String} port The server port number e.g. "8080".
  */
-Shared.synthesize(NodeApiClient.prototype, 'server', function (val) {
-	if (val !== undefined) {
-		if (val.substr(val.length - 1, 1) === '/') {
+NodeApiClient.prototype.server = function (host, port) {
+	if (host !== undefined) {
+		if (host.substr(host.length - 1, 1) === '/') {
 			// Strip trailing /
-			val = val.substr(0, val.length - 1);
+			host = host.substr(0, host.length - 1);
 		}
+
+		if (port !== undefined) {
+			this._server = host + ":" + port;
+		} else {
+			this._server = host;
+		}
+
+		this._host = host;
+		this._port = port;
+
+		return this;
 	}
 
-	return this.$super.call(this, val);
+	if (port !== undefined) {
+		return {
+			host: this._host,
+			port: this._port,
+			url: this._server
+		};
+	} else {
+		return this._server;
+	}
+};
+
+NodeApiClient.prototype.http = function (method, url, data, options, callback) {
+	var self = this,
+		finalUrl,
+		sessionData,
+		bodyData,
+		xmlHttp = new XMLHttpRequest();
+
+	method = method.toUpperCase();
+
+	xmlHttp.onreadystatechange = function () {
+		if (xmlHttp.readyState === 4) {
+			if (xmlHttp.status === 200) {
+				// Tell the callback about success
+				if (xmlHttp.responseText) {
+					callback(false, self.jParse(xmlHttp.responseText));
+				} else {
+					callback(false, {});
+				}
+			} else if (xmlHttp.status === 204) {
+				callback(false, {});
+			} else {
+				// Tell the callback about the error
+				callback(xmlHttp.status, xmlHttp.responseText);
+
+				// Emit the error code
+				self.emit('httpError', xmlHttp.status, xmlHttp.responseText);
+			}
+		}
+	};
+
+	switch (method) {
+		case 'GET':
+		case 'DELETE':
+		case 'HEAD':
+			// Check for global auth
+			if (this._sessionData) {
+				data = data !== undefined ? data : {};
+
+				// Add the session data to the key specified
+				data[this._sessionData.key] = this._sessionData.obj;
+			}
+
+			finalUrl = url + (data !== undefined ? '?' + self.jStringify(data) : '');
+			bodyData = null;
+			break;
+
+		case 'POST':
+		case 'PUT':
+		case 'PATCH':
+			// Check for global auth
+			if (this._sessionData) {
+				sessionData = {};
+
+				// Add the session data to the key specified
+				sessionData[this._sessionData.key] = this._sessionData.obj;
+			}
+
+			finalUrl = url + (sessionData !== undefined ? '?' + self.jStringify(sessionData) : '');
+			bodyData = (data !== undefined ? self.jStringify(data) : null);
+			break;
+
+		default:
+			return false;
+	}
+
+
+	xmlHttp.open(method, finalUrl, true);
+	xmlHttp.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+	xmlHttp.send(bodyData);
+
+	return this;
+};
+
+// Define HTTP helper methods
+NodeApiClient.prototype.head = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
+
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('HEAD', this.server() + this._rootPath + path, data, options, callback);
+	}
 });
 
 NodeApiClient.prototype.get = new Overload({
-	'string, function': function (theUrl, callback) {
-		this.$main.call(this, theUrl, undefined, callback);
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
 	},
 
-	'string, object, function': function (theUrl, data, callback) {
-		this.$main.call(this, theUrl, data, callback);
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
 	},
 
-	'$main': function (theUrl, data, callback) {
-		var self = this,
-			finalUrl,
-			xmlHttp = new XMLHttpRequest();
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
 
-		xmlHttp.onreadystatechange = function () {
-			if (xmlHttp.readyState === 4) {
-				if (xmlHttp.status === 200) {
-					callback(false, self.jParse(xmlHttp.responseText));
-				} else {
-					callback(xmlHttp.status, xmlHttp.responseText);
-				}
+	'$main': function (path, data, options, callback) {
+		return this.http('GET', this.server() + this._rootPath + path, data, options, callback);
+	}
+});
+
+NodeApiClient.prototype.put = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
+
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PUT', this.server() + this._rootPath + path, data, options, callback);
+	}
+});
+
+NodeApiClient.prototype.post = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
+
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('POST', this.server() + this._rootPath + path, data, options, callback);
+	}
+});
+
+NodeApiClient.prototype.patch = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
+
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('PATCH', this.server() + this._rootPath + path, data, options, callback);
+	}
+});
+
+NodeApiClient.prototype.postPatch = function (path, id, data, options, callback) {
+	var self = this;
+
+	// Determine if the item exists or not
+	this.head(path + '/' + id, undefined, {}, function (err, headData) {
+		if (err) {
+			if (err === 404) {
+				// Item does not exist, run post
+				return self.http('POST', self.server() + self._rootPath + path, data, options, callback);
+			} else {
+				callback(err, data);
 			}
-		};
+		} else {
+			// Item already exists, run patch
+			return self.http('PATCH', self.server() + self._rootPath + path + '/' + id, data, options, callback);
+		}
+	});
+};
 
-		finalUrl = theUrl + (data !== undefined ? '?' + self.jStringify(data) : '');
+NodeApiClient.prototype.delete = new Overload({
+	'string, function': function (path, callback) {
+		return this.$main.call(this, path, undefined, {}, callback);
+	},
 
-		xmlHttp.open("GET", finalUrl, true);
-		xmlHttp.send(null);
+	'string, *, function': function (path, data, callback) {
+		return this.$main.call(this, path, data, {}, callback);
+	},
+
+	'string, *, object, function': function (path, data, options, callback) {
+		return this.$main.call(this, path, data, options, callback);
+	},
+
+	'$main': function (path, data, options, callback) {
+		return this.http('DELETE', this.server() + this._rootPath + path, data, options, callback);
 	}
 });
 
 /**
- * Sets a global auth object that will be sent up with client connections
- * to the API server.
- * @name auth
+ * Gets/ sets a global object that will be sent up with client
+ * requests to the API or REST server.
+ * @param {String} key The key to send the session object up inside.
+ * @param {*} obj The object / value to send up with all requests. If
+ * a request has its own data to send up, this session data will be
+ * mixed in to the request data under the specified key.
  */
-Shared.synthesize(NodeApiClient.prototype, 'auth');
+NodeApiClient.prototype.session = function (key, obj) {
+	if (key !== undefined && obj !== undefined) {
+		this._sessionData = {
+			key: key,
+			obj: obj
+		};
+		return this;
+	}
+
+	return this._sessionData;
+};
 
 /**
  * Initiates a client connection to the API server.
@@ -101,23 +311,31 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 		source,
 		finalPath,
 		queryParams,
-		queryString = '';
+		queryString = '',
+		connecting = true;
 
 	if (this.debug()) {
-		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + path);
+		console.log(this.logIdentifier() + ' Connecting to API server ' + this.server() + this._rootPath + path);
 	}
 
-	finalPath = this.server() + path + '/_sync';
+	finalPath = this.server() + this._rootPath + path + '/_sync';
 
 	// Check for global auth
-	if (this._auth) {
+	if (this._sessionData) {
 		queryParams = queryParams || {};
-		queryParams.$auth = this._auth;
+
+		if (this._sessionData.key) {
+			// Add the session data to the key specified
+			queryParams[this._sessionData.key] = this._sessionData.obj;
+		} else {
+			// Add the session data to the root query object
+			Shared.mixin(queryParams, this._sessionData.obj);
+		}
 	}
 
 	if (query) {
 		queryParams = queryParams || {};
-		queryParams.query = query;
+		queryParams.$query = query;
 	}
 
 	if (options) {
@@ -126,7 +344,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 			options.$initialData = true;
 		}
 
-		queryParams.options = options;
+		queryParams.$options = options;
 	}
 
 	if (queryParams) {
@@ -140,13 +358,7 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 	source.addEventListener('open', function (e) {
 		if (!options || (options && options.$initialData)) {
 			// The connection is open, grab the initial data
-			var finalPath = self.server() + path;
-
-			if (queryString) {
-				finalPath += '?' + queryString;
-			}
-
-			self.get(finalPath, function (err, data) {
+			self.get(path, queryParams, function (err, data) {
 				if (!err) {
 					collectionInstance.upsert(data);
 				}
@@ -159,11 +371,16 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 			// The connection is dead, remove the connection
 			collectionInstance.unSync();
 		}
+
+		if (connecting) {
+			connecting = false;
+			callback(e);
+		}
 	}, false);
 
 	source.addEventListener('insert', function(e) {
 		var data = self.jParse(e.data);
-		collectionInstance.insert(data);
+		collectionInstance.insert(data.dataSet);
 	}, false);
 
 	source.addEventListener('update', function(e) {
@@ -178,7 +395,10 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 
 	if (callback) {
 		source.addEventListener('connected', function (e) {
-			callback(false);
+			if (connecting) {
+				connecting = false;
+				callback(false);
+			}
 		}, false);
 	}
 };
@@ -215,6 +435,18 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, function': function (objectType, objectName, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, null, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -222,6 +454,19 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, function': function (collectionName, query, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, null, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, function': function (objectType, objectName, query, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, null, callback);
 	},
 
 	/**
@@ -245,6 +490,20 @@ Collection.prototype.sync = new Overload({
 	 */
 	'string, object, object, function': function (collectionName, query, options, callback) {
 		this.$main.call(this, '/' + this._db.name() + '/collection/' + collectionName, query, options, callback);
+	},
+
+	/**
+	 * Sync with this collection on the server-side.
+	 * @param {String} objectType The type of object to sync to e.g.
+	 * "collection" or "view".
+	 * @param {String} objectName The name of the object to sync from.
+	 * @param {Object} query A query object.
+	 * @param {Object} options An options object.
+	 * @param {Function} callback The callback method to call once
+	 * the connection to the server has been established.
+	 */
+	'string, string, object, object, function': function (objectType, objectName, query, options, callback) {
+		this.$main.call(this, '/' + this._db.name() + '/' + objectType + '/' + objectName, query, options, callback);
 	},
 
 	'$main': function (path, query, options, callback) {
@@ -285,6 +544,97 @@ Collection.prototype.unSync = function () {
 
 	return false;
 };
+
+Collection.prototype.http = new Overload({
+	'string, function': function (method, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, {}, callback);
+	},
+
+	'$main': function (method, path, queryObj, queryOptions, options, callback) {
+		if (this._db && this._db._core) {
+			return this._db._core.api.http('GET', this._db._core.api.server() + this._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, callback);
+		} else {
+			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
+		}
+	}
+});
+
+Collection.prototype.autoHttp = new Overload({
+	'string, function': function (method, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + this.name(), undefined, undefined, {}, callback);
+	},
+
+	'string, string, function': function (method, collectionName, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/collection/' + collectionName, undefined, undefined, {}, callback);
+	},
+
+	'string, string, string, function': function (method, objType, objName, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, undefined, undefined, {}, callback);
+	},
+
+	'string, string, string, object, function': function (method, objType, objName, queryObj, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, queryObj, undefined, {}, callback);
+	},
+
+	'string, string, string, object, object, function': function (method, objType, objName, queryObj, queryOptions, callback) {
+		this.$main.call(this, method, '/' + this._db.name() + '/' + objType + '/' + objName, queryObj, queryOptions, {}, callback);
+	},
+
+	'$main': function (method, path, queryObj, queryOptions, options, callback) {
+		var self = this;
+
+		if (this._db && this._db._core) {
+			return this._db._core.api.http('GET', this._db._core.api.server() + this._db._core.api._rootPath + path, {"$query": queryObj, "$options": queryOptions}, options, function (err, data) {
+				var i;
+
+				if (!err && data) {
+					// Check the type of method we used and operate on the collection accordingly
+					switch (method) {
+						// Find insert
+						case 'GET':
+							self.insert(data);
+							break;
+
+						// Insert
+						case 'POST':
+							if (data.inserted && data.inserted.length) {
+								self.insert(data.inserted);
+							}
+							break;
+
+						// Update overwrite
+						case 'PUT':
+						case 'PATCH':
+							if (data instanceof Array) {
+								// Update each document
+								for (i = 0; i < data.length; i++) {
+									self.updateById(data[i]._id, {$overwrite: data[i]});
+								}
+							} else {
+								// Update single document
+								self.updateById(data._id, {$overwrite: data});
+							}
+							break;
+
+						// Remove
+						case 'DELETE':
+							self.remove(data);
+							break;
+
+						default:
+							// Nothing to do with this method
+							break;
+					}
+				}
+
+				// Send the data back to the callback
+				callback(err, data);
+			});
+		} else {
+			throw(this.logIdentifier() + ' Cannot do HTTP for an anonymous collection! (Collection must be attached to a database)');
+		}
+	}
+});
 
 // Override the Core init to instantiate the plugin
 Core.prototype.init = function () {

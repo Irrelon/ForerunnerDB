@@ -16,7 +16,7 @@ var Updating = {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '" to val "' + val + '"');
 		}
 	},
 

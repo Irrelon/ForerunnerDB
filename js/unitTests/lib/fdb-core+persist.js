@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -707,6 +707,46 @@ module.exports = BinaryTree;
 },{"./Path":27,"./Shared":33}],4:[function(_dereq_,module,exports){
 "use strict";
 
+var crcTable,
+	checksum;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+
+	for (n = 0; n < 256; n++) {
+		c = n;
+
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+
+		crcTable[n] = c;
+	}
+
+	return crcTable;
+}());
+
+/**
+ * Returns a checksum of a string.
+ * @param {String} str The string to checksum.
+ * @return {Number} The checksum generated.
+ */
+checksum = function(str) {
+	var crc = 0 ^ (-1), // jshint ignore:line
+		i;
+
+	for (i = 0; i < str.length; i++) {
+		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+	}
+
+	return (crc ^ (-1)) >>> 0; // jshint ignore:line
+};
+
+module.exports = checksum;
+},{}],5:[function(_dereq_,module,exports){
+"use strict";
+
 var Shared,
 	Db,
 	Metrics,
@@ -715,7 +755,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -732,6 +771,7 @@ var Collection = function (name, options) {
 };
 
 Collection.prototype.init = function (name, options) {
+	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
 	this._primaryIndex = new KeyValueStore('primary');
 	this._primaryCrc = new KeyValueStore('primaryCrc');
@@ -797,18 +837,10 @@ Path = _dereq_('./Path');
 IndexHashMap = _dereq_('./IndexHashMap');
 IndexBinaryTree = _dereq_('./IndexBinaryTree');
 Index2d = _dereq_('./Index2d');
-Crc = _dereq_('./Crc');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -912,22 +944,21 @@ Collection.prototype.drop = function (callback) {
 			delete this._primaryIndex;
 			delete this._primaryCrc;
 			delete this._crcLookup;
-			delete this._name;
 			delete this._data;
 			delete this._metrics;
 			delete this._listeners;
 
-			if (callback) { callback(false, true); }
+			if (callback) { callback.call(this, false, true); }
 
 			return true;
 		}
 	} else {
-		if (callback) { callback(false, true); }
+		if (callback) { callback.call(this, false, true); }
 
 		return true;
 	}
 
-	if (callback) { callback(false, true); }
+	if (callback) { callback.call(this, false, true); }
 	return false;
 };
 
@@ -949,7 +980,10 @@ Collection.prototype.primaryKey = function (keyName) {
 			this.rebuildPrimaryKeyIndex();
 
 			// Propagate change down the chain
-			this.chainSend('primaryKey', keyName, {oldData: oldKey});
+			this.chainSend('primaryKey', {
+				keyName: keyName,
+				oldData: oldKey
+			});
 		}
 		return this;
 	}
@@ -992,7 +1026,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._metaData.lastChange = new Date();
+		this._metaData.lastChange = this.serialiser.convert(new Date());
 	}
 };
 
@@ -1031,58 +1065,69 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param options Optional options object.
  * @param callback Optional callback function.
  */
-Collection.prototype.setData = function (data, options, callback) {
-	if (this.isDropped()) {
-		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
-	}
+Collection.prototype.setData = new Overload('Collection.prototype.setData', {
+	'*': function (data) {
+		return this.$main.call(this, data, {});
+	},
 
-	if (data) {
-		var op = this._metrics.create('setData');
-		op.start();
+	'*, object': function (data, options) {
+		return this.$main.call(this, data, options);
+	},
 
-		options = this.options(options);
-		this.preSetData(data, options, callback);
+	'*, function': function (data, callback) {
+		return this.$main.call(this, data, {}, callback);
+	},
 
-		if (options.$decouple) {
-			data = this.decouple(data);
+	'*, *, function': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+	'*, *, *': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+
+	'$main': function (data, options, callback) {
+		if (this.isDropped()) {
+			throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 		}
 
-		if (!(data instanceof Array)) {
-			data = [data];
+		if (data) {
+			var deferredSetting = this.deferredCalls(),
+				oldData = [].concat(this._data);
+
+			// Switch off deferred calls since setData should be
+			// a synchronous call
+			this.deferredCalls(false);
+
+			options = this.options(options);
+
+			if (options.$decouple) {
+				data = this.decouple(data);
+			}
+
+			if (!(data instanceof Array)) {
+				data = [data];
+			}
+
+			// Remove all items from the collection
+			this.remove({});
+
+			// Insert the new data
+			this.insert(data);
+
+			// Switch deferred calls back to previous settings
+			this.deferredCalls(deferredSetting);
+
+			this._onChange();
+			this.emit('setData', this._data, oldData);
 		}
 
-		op.time('transformIn');
-		data = this.transformIn(data);
-		op.time('transformIn');
+		if (callback) { callback.call(this); }
 
-		var oldData = [].concat(this._data);
-
-		this._dataReplace(data);
-
-		// Update the primary key index
-		op.time('Rebuild Primary Key Index');
-		this.rebuildPrimaryKeyIndex(options);
-		op.time('Rebuild Primary Key Index');
-
-		// Rebuild all other indexes
-		op.time('Rebuild All Other Indexes');
-		this._rebuildIndexes();
-		op.time('Rebuild All Other Indexes');
-
-		op.time('Resolve chains');
-		this.chainSend('setData', data, {oldData: oldData});
-		op.time('Resolve chains');
-
-		op.stop();
-
-		this._onChange();
-		this.emit('setData', this._data, oldData);
+		return this;
 	}
-
-	if (callback) { callback(false); }
-
-	return this;
-};
+});
 
 /**
  * Drops and rebuilds the primary key index for all documents in the collection.
@@ -1133,8 +1178,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -1162,7 +1207,8 @@ Collection.prototype.truncate = function () {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
-
+	// TODO: This should use remove so that chain reactor events are properly
+	// TODO: handled, but ensure that chunking is switched off
 	this.emit('truncate', this._data);
 
 	// Clear all the data from the collection
@@ -1174,6 +1220,7 @@ Collection.prototype.truncate = function () {
 	this._crcLookup = new KeyValueStore('crcLookup');
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'truncate'});
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -1232,7 +1279,7 @@ Collection.prototype.upsert = function (obj, callback) {
 					returnData.push(this.upsert(obj[i]));
 				}
 
-				if (callback) { callback(); }
+				if (callback) { callback.call(this); }
 
 				return returnData;
 			}
@@ -1258,11 +1305,11 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		switch (returnData.op) {
 			case 'insert':
-				returnData.result = this.insert(obj);
+				returnData.result = this.insert(obj, callback);
 				break;
 
 			case 'update':
-				returnData.result = this.update(query, obj);
+				returnData.result = this.update(query, obj, {}, callback);
 				break;
 
 			default:
@@ -1271,7 +1318,7 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		return returnData;
 	} else {
-		if (callback) { callback(); }
+		if (callback) { callback.call(this); }
 	}
 
 	return {};
@@ -1334,25 +1381,31 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * match keys on the existing document will be overwritten with this data. Any
  * keys that do not currently exist on the document will be added to the document.
  * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when the update is
+ * complete.
  * @returns {Array} The items that were updated.
  */
-Collection.prototype.update = function (query, update, options) {
+Collection.prototype.update = function (query, update, options, callback) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
-
-	// Decouple the update data
-	update = this.decouple(update);
 
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -1418,15 +1471,21 @@ Collection.prototype.update = function (query, update, options) {
 			}
 
 			op.time('Resolve chains');
-			this.chainSend('update', {
-				query: query,
-				update: update,
-				dataSet: updated
-			}, options);
+			if (this.chainWillSend()) {
+				this.chainSend('update', {
+					query: query,
+					update: update,
+					dataSet: this.decouple(updated)
+				}, options);
+			}
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
 			this._onChange();
+
+			if (callback) { callback.call(this); }
+
+			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -2048,7 +2107,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	} else {
 		returnArr = [];
@@ -2102,11 +2161,12 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 
 				this._onChange();
+				this.emit('immediateChange', {type: 'remove', data: returnArr});
 				this.deferEmit('change', {type: 'remove', data: returnArr});
 			}
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	}
 };
@@ -2168,7 +2228,7 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 			self.processQueue.call(self, type, callback, resultObj);
 		}, deferTime);
 	} else {
-		if (callback) { callback(resultObj); }
+		if (callback) { callback.call(this, resultObj); }
 
 		this._asyncComplete(type);
 	}
@@ -2289,9 +2349,10 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	};
 
 	this._onInsert(inserted, failed);
-	if (callback) { callback(resultObj); }
+	if (callback) { callback.call(this, resultObj); }
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'insert', data: inserted});
 	this.deferEmit('change', {type: 'insert', data: inserted});
 
 	return resultObj;
@@ -2342,7 +2403,13 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', doc, {index: index});
+			if (self.chainWillSend()) {
+				self.chainSend('insert', {
+					dataSet: self.decouple([doc])
+				}, {
+					index: index
+				});
+			}
 			//op.time('Resolve chains');
 		};
 
@@ -2428,12 +2495,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -2453,12 +2521,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -2504,12 +2573,17 @@ Collection.prototype._rebuildIndexes = function () {
  * @returns {*}
  */
 Collection.prototype.subset = function (query, options) {
-	var result = this.find(query, options);
+	var result = this.find(query, options),
+		coll;
 
-	return new Collection()
-		.subsetOf(this)
+	coll = new Collection();
+	coll.db(this._db);
+
+	coll.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
+
+	return coll;
 };
 
 /**
@@ -2662,7 +2736,7 @@ Collection.prototype.find = function (query, options, callback) {
 		// Check the size of the collection's data array
 
 		// Split operation into smaller tasks and callback when complete
-		callback('Callbacks for the find() operation are not yet implemented!', []);
+		callback.call(this, 'Callbacks for the find() operation are not yet implemented!', []);
 		return [];
 	}
 
@@ -2684,28 +2758,16 @@ Collection.prototype._find = function (query, options) {
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
-		joinCollectionIndex,
 		joinIndex,
-		joinCollection = {},
+		joinSource = {},
 		joinQuery,
 		joinPath,
-		joinCollectionName,
-		joinCollectionInstance,
-		joinMatch,
-		joinMatchIndex,
-		joinSearchQuery,
-		joinSearchOptions,
-		joinMulti,
-		joinRequire,
-		joinFindResults,
-		joinFindResult,
-		joinItem,
-		joinPrefix,
-		resultCollectionName,
-		resultIndex,
+		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinSourceData,
 		resultRemove = [],
-		index,
-		i, j, k, l,
+		i, j, k,
 		fieldListOn = [],
 		fieldListOff = [],
 		elemMatchPathSolver,
@@ -2777,18 +2839,26 @@ Collection.prototype._find = function (query, options) {
 		op.time('analyseQuery');
 		op.data('analysis', analysis);
 
+		// Check if the query tries to limit by data that would only exist after
+		// the join operation has been completed
 		if (analysis.hasJoin && analysis.queriesJoin) {
 			// The query has a join and tries to limit by it's joined data
-			// Get an instance reference to the join collections
+			// Get references to the join sources
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
-				joinCollectionName = analysis.joinsOn[joinIndex];
-				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
+				joinSourceData = analysis.joinsOn[joinIndex];
+				joinSourceKey = joinSourceData.key;
+
+				joinSourceType = joinSourceData.type;
+				joinSourceIdentifier = joinSourceData.id;
+
+				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+
+				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
-				delete query[analysis.joinQueries[joinCollectionName]];
+				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
 		}
@@ -2824,7 +2894,6 @@ Collection.prototype._find = function (query, options) {
 				op.time('tableScan: ' + scanLength);
 				resultArr = this._data.filter(matcher);
 			}
-
 
 			op.time('tableScan: ' + scanLength);
 		}
@@ -2876,128 +2945,14 @@ Collection.prototype._find = function (query, options) {
 
 		// Now process any joins on the final data
 		if (options.$join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.$join[joinCollectionIndex]) {
-					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
-						// Set the key to store the join result in to the collection name by default
-						resultCollectionName = joinCollectionName;
-
-						// Get the join collection instance from the DB
-						if (joinCollection[joinCollectionName]) {
-							joinCollectionInstance = joinCollection[joinCollectionName];
-						} else {
-							joinCollectionInstance = this._db.collection(joinCollectionName);
-						}
-
-						// Get the match data for the join
-						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
-
-						// Loop our result data array
-						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
-							// Loop the join conditions and build a search object from them
-							joinSearchQuery = {};
-							joinMulti = false;
-							joinRequire = false;
-							joinPrefix = '';
-
-							for (joinMatchIndex in joinMatch) {
-								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
-									// Check the join condition name for a special command operator
-									if (joinMatchIndex.substr(0, 1) === '$') {
-										// Special command
-										switch (joinMatchIndex) {
-											case '$where':
-												if (joinMatch[joinMatchIndex].query) {
-													// Commented old code here, new one does dynamic reverse lookups
-													//joinSearchQuery = joinMatch[joinMatchIndex].query;
-													joinSearchQuery = self._resolveDynamicQuery(joinMatch[joinMatchIndex].query, resultArr[resultIndex]);
-												}
-												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
-												break;
-
-											case '$as':
-												// Rename the collection when stored in the result document
-												resultCollectionName = joinMatch[joinMatchIndex];
-												break;
-
-											case '$multi':
-												// Return an array of documents instead of a single matching document
-												joinMulti = joinMatch[joinMatchIndex];
-												break;
-
-											case '$require':
-												// Remove the result item if no matching join data is found
-												joinRequire = joinMatch[joinMatchIndex];
-												break;
-
-											case '$prefix':
-												// Add a prefix to properties mixed in
-												joinPrefix = joinMatch[joinMatchIndex];
-												break;
-
-											default:
- 												break;
-										}
-									} else {
-										// Get the data to match against and store in the search object
-										// Resolve complex referenced query
-										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatch[joinMatchIndex], resultArr[resultIndex]);
-									}
-								}
-							}
-
-							// Do a find on the target collection against the match data
-							joinFindResults = joinCollectionInstance.find(joinSearchQuery, joinSearchOptions);
-
-							// Check if we require a joined row to allow the result item
-							if (!joinRequire || (joinRequire && joinFindResults[0])) {
-								// Join is not required or condition is met
-								if (resultCollectionName === '$root') {
-									// The property name to store the join results in is $root
-									// which means we need to mixin the results but this only
-									// works if joinMulti is disabled
-									if (joinMulti !== false) {
-										// Throw an exception here as this join is not physically possible!
-										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
-									}
-
-									// Mixin the result
-									joinFindResult = joinFindResults[0];
-									joinItem = resultArr[resultIndex];
-
-									for (l in joinFindResult) {
-										if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
-											// Properties are only mixed in if they do not already exist
-											// in the target item (are undefined). Using a prefix denoted via
-											// $prefix is a good way to prevent property name conflicts
-											joinItem[joinPrefix + l] = joinFindResult[l];
-										}
-									}
-								} else {
-									resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
-								}
-							} else {
-								// Join required but condition not met, add item to removal queue
-								resultRemove.push(resultArr[resultIndex]);
-							}
-						}
-					}
-				}
-			}
-
+			resultRemove = resultRemove.concat(this.applyJoin(resultArr, options.$join, joinSource));
 			op.data('flag.join', true);
 		}
 
 		// Process removal queue
 		if (resultRemove.length) {
 			op.time('removalQueue');
-			for (i = 0; i < resultRemove.length; i++) {
-				index = resultArr.indexOf(resultRemove[i]);
-
-				if (index > -1) {
-					resultArr.splice(index, 1);
-				}
-			}
+			this.spliceArrayByIndexList(resultArr, resultRemove);
 			op.time('removalQueue');
 		}
 
@@ -3190,62 +3145,6 @@ Collection.prototype._find = function (query, options) {
 	return resultArr;
 };
 
-Collection.prototype._resolveDynamicQuery = function (query, item) {
-	var self = this,
-		newQuery,
-		propType,
-		propVal,
-		pathResult,
-		i;
-
-	if (typeof query === 'string') {
-		// Check if the property name starts with a back-reference
-		if (query.substr(0, 3) === '$$.') {
-			// Fill the query with a back-referenced value
-			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
-		} else {
-			pathResult = new Path(query).value(item);
-		}
-
-		if (pathResult.length > 1) {
-			return {$in: pathResult};
-		} else {
-			return pathResult[0];
-		}
-	}
-
-	newQuery = {};
-
-	for (i in query) {
-		if (query.hasOwnProperty(i)) {
-			propType = typeof query[i];
-			propVal = query[i];
-
-			switch (propType) {
-				case 'string':
-					// Check if the property name starts with a back-reference
-					if (propVal.substr(0, 3) === '$$.') {
-						// Fill the query with a back-referenced value
-						newQuery[i] = new Path(propVal.substr(3, propVal.length - 3)).value(item)[0];
-					} else {
-						newQuery[i] = propVal;
-					}
-					break;
-
-				case 'object':
-					newQuery[i] = self._resolveDynamicQuery(propVal, item);
-					break;
-
-				default:
-					newQuery[i] = propVal;
-					break;
-			}
-		}
-	}
-
-	return newQuery;
-};
-
 /**
  * Returns one document that satisfies the specified query criteria. If multiple
  * documents satisfy the query, this method returns the first document to match
@@ -3380,10 +3279,19 @@ Collection.prototype.transform = function (obj) {
 Collection.prototype.transformIn = function (data) {
 	if (this._transformEnabled && this._transformIn) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformIn(data[i]);
+				transformResult = this._transformIn(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
@@ -3403,10 +3311,19 @@ Collection.prototype.transformIn = function (data) {
 Collection.prototype.transformOut = function (data) {
 	if (this._transformEnabled && this._transformOut) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformOut(data[i]);
+				transformResult = this._transformOut(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
@@ -3608,7 +3525,7 @@ Collection.prototype._sort = function (key, arr) {
  */
 Collection.prototype._analyseQuery = function (query, options, op) {
 	var analysis = {
-			queriesOn: [this._name],
+			queriesOn: [{id: '$collection.' + this._name, type: 'colletion', key: this._name}],
 			indexMatch: [],
 			hasJoin: false,
 			queriesJoin: false,
@@ -3616,10 +3533,13 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			query: query,
 			options: options
 		},
-		joinCollectionIndex,
-		joinCollectionName,
-		joinCollections = [],
-		joinCollectionReferences = [],
+		joinSourceIndex,
+		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinMatch,
+		joinSources = [],
+		joinSourceReferences = [],
 		queryPath,
 		index,
 		indexMatchData,
@@ -3722,59 +3642,70 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
-			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.$join[joinCollectionIndex]) {
-				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
-					joinCollections.push(joinCollectionName);
+		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
+			// Loop the join sources and keep a reference to them
+			for (joinSourceKey in options.$join[joinSourceIndex]) {
+				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
+					joinMatch = options.$join[joinSourceIndex][joinSourceKey];
+
+					joinSourceType = joinMatch.$sourceType || 'collection';
+					joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+					joinSources.push({
+						id: joinSourceIdentifier,
+						type: joinSourceType,
+						key: joinSourceKey
+					});
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
+					if (options.$join[joinSourceIndex][joinSourceKey].$as !== undefined) {
+						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceKey].$as);
 					} else {
-						joinCollectionReferences.push(joinCollectionName);
+						joinSourceReferences.push(joinSourceKey);
 					}
 				}
 			}
 		}
 
-		// Loop the join collection references and determine if the query references
-		// any of the collections that are used in the join. If there no queries against
-		// joined collections the find method can use a code path optimised for this.
-		// Queries against joined collections requires the joined collections to be filtered
+		// Loop the join source references and determine if the query references
+		// any of the sources that are used in the join. If there no queries against
+		// joined sources the find method can use a code path optimised for this.
+
+		// Queries against joined sources requires the joined sources to be filtered
 		// first and then joined so requires a little more work.
-		for (index = 0; index < joinCollectionReferences.length; index++) {
-			// Check if the query references any collection data that the join will create
-			queryPath = this._queryReferencesCollection(query, joinCollectionReferences[index], '');
+		for (index = 0; index < joinSourceReferences.length; index++) {
+			// Check if the query references any source data that the join will create
+			queryPath = this._queryReferencesSource(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
-				analysis.joinQueries[joinCollections[index]] = queryPath;
+				analysis.joinQueries[joinSources[index].key] = queryPath;
 				analysis.queriesJoin = true;
 			}
 		}
 
-		analysis.joinsOn = joinCollections;
-		analysis.queriesOn = analysis.queriesOn.concat(joinCollections);
+		analysis.joinsOn = joinSources;
+		analysis.queriesOn = analysis.queriesOn.concat(joinSources);
 	}
 
 	return analysis;
 };
 
 /**
- * Checks if the passed query references this collection.
- * @param query
- * @param collection
- * @param path
+ * Checks if the passed query references a source object (such
+ * as a collection) by name.
+ * @param {Object} query The query object to scan.
+ * @param {String} sourceName The source name to scan for in the query.
+ * @param {String=} path The path to scan from.
  * @returns {*}
  * @private
  */
-Collection.prototype._queryReferencesCollection = function (query, collection, path) {
+Collection.prototype._queryReferencesSource = function (query, sourceName, path) {
 	var i;
 
 	for (i in query) {
 		if (query.hasOwnProperty(i)) {
 			// Check if this key is a reference match
-			if (i === collection) {
+			if (i === sourceName) {
 				if (path) { path += '.'; }
 				return path + i;
 			} else {
@@ -3782,7 +3713,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
 					// Recurse
 					if (path) { path += '.'; }
 					path += i;
-					return this._queryReferencesCollection(query[i], collection, path);
+					return this._queryReferencesSource(query[i], sourceName, path);
 				}
 			}
 		}
@@ -3825,7 +3756,7 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		docCount = docArr.length,
 		docIndex,
 		subDocArr,
-		subDocCollection = new Collection('__FDB_temp_' + this.objectId()),
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()).db(this._db),
 		subDocResults,
 		resultObj = {
 			parents: docCount,
@@ -3944,23 +3875,17 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 
 	if (options) {
-		switch (options.type) {
-			case 'hashed':
-				index = new IndexHashMap(keys, options, this);
-				break;
-
-			case 'btree':
-				index = new IndexBinaryTree(keys, options, this);
-				break;
-
-			case '2d':
-				index = new Index2d(keys, options, this);
-				break;
-
-			default:
-				// Default
-				index = new IndexHashMap(keys, options, this);
-				break;
+		if (options.type) {
+			// Check if the specified type is available
+			if (Shared.index[options.type]) {
+				// We found the type, generate it
+				index = new Shared.index[options.type](keys, options, this);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create index of type "' + options.type + '", type not found in the index type register (Shared.index)');
+			}
+		} else {
+			// Create default index type
+			index = new IndexHashMap(keys, options, this);
 		}
 	} else {
 		// Default
@@ -4096,7 +4021,7 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.collateAdd = new Overload({
+Collection.prototype.collateAdd = new Overload('Collection.prototype.collateAdd', {
 	/**
 	 * Adds a data source to collate data from and specifies the
 	 * key name to collate data to.
@@ -4121,10 +4046,10 @@ Collection.prototype.collateAdd = new Overload({
 							$push: {}
 						};
 
-						obj1.$push[keyName] = self.decouple(packet.data);
+						obj1.$push[keyName] = self.decouple(packet.data.dataSet);
 						self.update({}, obj1);
 					} else {
-						self.insert(packet.data);
+						self.insert(packet.data.dataSet);
 					}
 					break;
 
@@ -4153,7 +4078,7 @@ Collection.prototype.collateAdd = new Overload({
 
 						self.update({}, obj1);
 					} else {
-						self.remove(packet.data);
+						self.remove(packet.data.dataSet);
 					}
 					break;
 
@@ -4211,7 +4136,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Db.prototype.collection = new Overload({
+Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that
@@ -4438,7 +4363,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Crc":7,"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],5:[function(_dereq_,module,exports){
+},{"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4475,6 +4400,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Events');
 
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
@@ -4522,7 +4448,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 
 /**
  * Gets / sets the instance name.
- * @param {Name=} name The new name to set.
+ * @param {String=} name The new name to set.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'name');
@@ -4611,21 +4537,21 @@ CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Remove old data
-			this._data.remove(chainPacket.options.oldData);
+			this._data.remove(chainPacket.data.oldData);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'update':
@@ -4744,15 +4670,32 @@ Db.prototype.init = function () {
 	DbInit.apply(this, arguments);
 };
 
-Db.prototype.collectionGroup = function (collectionGroupName) {
-	if (collectionGroupName) {
+/**
+ * Creates a new collectionGroup instance or returns an existing
+ * instance if one already exists with the passed name.
+ * @func collectionGroup
+ * @memberOf Db
+ * @param {String} name The name of the instance.
+ * @returns {*}
+ */
+Db.prototype.collectionGroup = function (name) {
+	var self = this;
+
+	if (name) {
 		// Handle being passed an instance
-		if (collectionGroupName instanceof CollectionGroup) {
-			return collectionGroupName;
+		if (name instanceof CollectionGroup) {
+			return name;
 		}
 
-		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
-		return this._collectionGroup[collectionGroupName];
+		if (this._collectionGroup && this._collectionGroup[name]) {
+			return this._collectionGroup[name];
+		}
+
+		this._collectionGroup[name] = new CollectionGroup(name).db(this);
+
+		self.emit('create', self._collectionGroup[name], 'collectionGroup', name);
+
+		return this._collectionGroup[name];
 	} else {
 		// Return an object of collection data
 		return this._collectionGroup;
@@ -4780,7 +4723,7 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":4,"./Shared":33}],6:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":33}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4807,7 +4750,7 @@ Overload = _dereq_('./Overload');
  * multiple database instances.
  * @constructor
  */
-var Core = function (name) {
+var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 
@@ -5071,47 +5014,14 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],7:[function(_dereq_,module,exports){
-"use strict";
-
-/**
- * @mixin
- */
-var crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-module.exports = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-},{}],8:[function(_dereq_,module,exports){
+},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Crc,
+	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5254,7 +5164,7 @@ Shared.mixin(Db.prototype, 'Mixin.Tags');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Crc = _dereq_('./Crc.js');
+Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5312,7 +5222,7 @@ Db.prototype.isServer = function () {
  * @param {String} string The string to checksum.
  * @return {String} The checksum generated.
  */
-Db.prototype.crc = Crc;
+Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -5743,7 +5653,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Collection.js":4,"./Crc.js":7,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
+},{"./Checksum.js":4,"./Collection.js":5,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -6018,6 +5928,14 @@ var Index2d = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Create the index.
+ * @param {Object} keys The object with the keys that the user wishes the index
+ * to operate on.
+ * @param {Object} options Can be undefined, if passed is an object with arbitrary
+ * options keys and values.
+ * @param {Collection} collection The collection the index should be created for.
+ */
 Index2d.prototype.init = function (keys, options, collection) {
 	this._btree = new BinaryTree();
 	this._btree.index(keys);
@@ -6402,6 +6320,9 @@ Index2d.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index['2d'] = Index2d;
+
 Shared.finishModule('Index2d');
 module.exports = Index2d;
 },{"./BinaryTree":3,"./GeoHash":9,"./Path":27,"./Shared":33}],11:[function(_dereq_,module,exports){
@@ -6642,6 +6563,9 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 
 	return hashArr;
 };
+
+// Register this index on the shared object
+Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
@@ -7003,6 +6927,9 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index.hashed = IndexHashMap;
+
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
 },{"./Path":27,"./Shared":33}],13:[function(_dereq_,module,exports){
@@ -7357,8 +7284,10 @@ module.exports = CRUD;
  */
 var ChainReactor = {
 	/**
-	 *
-	 * @param obj
+	 * Creates a chain link between the current reactor node and the passed
+	 * reactor node. Chain packets that are send by this reactor node will
+	 * then be propagated to the passed node for subsequent packets.
+	 * @param {*} obj The chain reactor node to link to.
 	 */
 	chain: function (obj) {
 		if (this.debug && this.debug()) {
@@ -7377,6 +7306,12 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Removes a chain link between the current reactor node and the passed
+	 * reactor node. Chain packets sent from this reactor node will no longer
+	 * be received by the passed node.
+	 * @param {*} obj The chain reactor node to unlink from.
+	 */
 	unChain: function (obj) {
 		if (this.debug && this.debug()) {
 			if (obj._reactorIn && obj._reactorOut) {
@@ -7395,12 +7330,34 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Determines if this chain reactor node has any listeners downstream.
+	 * @returns {Boolean} True if there are nodes downstream of this node.
+	 */
+	chainWillSend: function () {
+		return Boolean(this._chain);
+	},
+
+	/**
+	 * Sends a chain reactor packet downstream from this node to any of its
+	 * chained targets that were linked to this node via a call to chain().
+	 * @param {String} type The type of chain reactor packet to send. This
+	 * can be any string but the receiving reactor nodes will not react to
+	 * it unless they recognise the string. Built-in strings include: "insert",
+	 * "update", "remove", "setData" and "debug".
+	 * @param {Object} data A data object that usually contains a key called
+	 * "dataSet" which is an array of items to work on, and can contain other
+	 * custom keys that help describe the operation.
+	 * @param {Object=} options An options object. Can also contain custom
+	 * key/value pairs that your custom chain reactor code can operate on.
+	 */
 	chainSend: function (type, data, options) {
 		if (this._chain) {
 			var arr = this._chain,
 				arrItem,
 				count = arr.length,
-				index;
+				index,
+				dataCopy = this.decouple(data, count);
 
 			for (index = 0; index < count; index++) {
 				arrItem = arr[index];
@@ -7415,7 +7372,7 @@ var ChainReactor = {
 					}
 
 					if (arrItem.chainReceive) {
-						arrItem.chainReceive(this, type, data, options);
+						arrItem.chainReceive(this, type, dataCopy[index], options);
 					}
 				} else {
 					console.log('Reactor Data:', type, data, options);
@@ -7427,20 +7384,35 @@ var ChainReactor = {
 		}
 	},
 
+	/**
+	 * Handles receiving a chain reactor message that was sent via the chainSend()
+	 * method. Creates the chain packet object and then allows it to be processed.
+	 * @param {Object} sender The node that is sending the packet.
+	 * @param {String} type The type of packet.
+	 * @param {Object} data The data related to the packet.
+	 * @param {Object=} options An options object.
+	 */
 	chainReceive: function (sender, type, data, options) {
 		var chainPacket = {
-			sender: sender,
-			type: type,
-			data: data,
-			options: options
-		};
+				sender: sender,
+				type: type,
+				data: data,
+				options: options
+			},
+			cancelPropagate = false;
 
 		if (this.debug && this.debug()) {
-			console.log(this.logIdentifier() + 'Received data from parent reactor node');
+			console.log(this.logIdentifier() + ' Received data from parent reactor node');
 		}
 
-		// Fire our internal handler
-		if (!this._chainHandler || (this._chainHandler && !this._chainHandler(chainPacket))) {
+		// Check if we have a chain handler method
+		if (this._chainHandler) {
+			// Fire our internal handler
+			cancelPropagate = this._chainHandler(chainPacket);
+		}
+
+		// Check if we were told to cancel further propagation
+		if (!cancelPropagate) {
 			// Propagate the message down the chain
 			this.chainSend(chainPacket.type, chainPacket.data, chainPacket.options);
 		}
@@ -7464,6 +7436,19 @@ var idCounter = 0,
 Common = {
 	// Expose the serialiser object so it can be extended with new data handlers.
 	serialiser: serialiser,
+
+	/**
+	 * Generates a JSON serialisation-compatible object instance. After the
+	 * instance has been passed through this method, it will be able to survive
+	 * a JSON.stringify() and JSON.parse() cycle and still end up as an
+	 * instance at the end. Further information about this process can be found
+	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks
+	 * @param {*} val The object instance such as "new Date()" or "new RegExp()".
+	 */
+	make: function (val) {
+		// This is a conversion request, hand over to serialiser
+		return serialiser.convert(val);
+	},
 
 	/**
 	 * Gets / sets data in the item store. The store can be used to set and
@@ -7540,8 +7525,7 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return serialiser.parse(data);
-		//return JSON.parse(data);
+		return JSON.parse(data, serialiser.reviver());
 	},
 
 	/**
@@ -7550,8 +7534,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return serialiser.stringify(data);
-		//return JSON.stringify(data);
+		//return serialiser.stringify(data);
+		return JSON.stringify(data);
 	},
 	
 	/**
@@ -7588,6 +7572,15 @@ Common = {
 		}
 
 		return id;
+	},
+
+	/**
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
+	 * @returns {String}
+	 */
+	hash: function (obj) {
+		return JSON.stringify(obj);
 	},
 
 	/**
@@ -7662,7 +7655,7 @@ Common = {
 	 * @returns {string} The log identifier.
 	 */
 	logIdentifier: function () {
-		return this.classIdentifier() + ': ' + this.instanceIdentifier();
+		return 'ForerunnerDB ' + this.instanceIdentifier();
 	},
 
 	/**
@@ -7710,6 +7703,43 @@ Common = {
 	 */
 	isDropped: function () {
 		return this._state === 'dropped';
+	},
+
+	/**
+	 * Registers a timed callback that will overwrite itself if
+	 * the same id is used within the timeout period. Useful
+	 * for de-bouncing fast-calls.
+	 * @param {String} id An ID for the call (use the same one
+	 * to debounce the same calls).
+	 * @param {Function} callback The callback method to call on
+	 * timeout.
+	 * @param {Number} timeout The timeout in milliseconds before
+	 * the callback is called.
+	 */
+	debounce: function (id, callback, timeout) {
+		var self = this,
+			newData;
+
+		self._debounce = self._debounce || {};
+
+		if (self._debounce[id]) {
+			// Clear timeout for this item
+			clearTimeout(self._debounce[id].timeout);
+		}
+
+		newData = {
+			callback: callback,
+			timeout: setTimeout(function () {
+				// Delete existing reference
+				delete self._debounce[id];
+
+				// Call the callback
+				callback();
+			}, timeout)
+		};
+
+		// Save current data
+		self._debounce[id] = newData;
 	}
 };
 
@@ -7972,6 +8002,14 @@ var Matching = {
 			substringCache,
 			i;
 
+		if (sourceType === 'object' && source === null) {
+			sourceType = 'null';
+		}
+
+		if (testType === 'object' && test === null) {
+			testType = 'null';
+		}
+
 		options = options || {};
 		queryOptions = queryOptions || {};
 
@@ -7993,11 +8031,11 @@ var Matching = {
 		options.$rootData = options.$rootData || {};
 
 		// Check if the comparison data are both strings or numbers
-		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
+		if ((sourceType === 'string' || sourceType === 'number' || sourceType === 'null') && (testType === 'string' || testType === 'number' || testType === 'null')) {
 			// The source and test data are flat types that do not require recursive searches,
 			// so just compare them and return the result
-			if (sourceType === 'number') {
-				// Number comparison
+			if (sourceType === 'number' || sourceType === 'null' || testType === 'null') {
+				// Number or null comparison
 				if (source !== test) {
 					matchedAll = false;
 				}
@@ -8294,7 +8332,8 @@ var Matching = {
 				} else if (typeof test === 'object') {
 					return this._match(source, test, queryOptions, 'and', options);
 				} else {
-					throw(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key);
+					console.log(this.logIdentifier() + ' Cannot use an $in operator on a non-array key: ' + key, options.$rootQuery);
+					return false;
 				}
 				break;
 
@@ -8315,7 +8354,8 @@ var Matching = {
 				} else if (typeof test === 'object') {
 					return this._match(source, test, queryOptions, 'and', options);
 				} else {
-					throw(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key);
+					console.log(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key, options.$rootQuery);
+					return false;
 				}
 				break;
 
@@ -8427,6 +8467,251 @@ var Matching = {
 		}
 
 		return -1;
+	},
+
+	/**
+	 *
+	 * @param {Array | Object} docArr An array of objects to run the join
+	 * operation against or a single object.
+	 * @param {Array} joinClause The join clause object array (the array in
+	 * the $join key of a normal join options object).
+	 * @param {Object} joinSource An object containing join source reference
+	 * data or a blank object if you are doing a bespoke join operation.
+	 * @param {Object} options An options object or blank object if no options.
+	 * @returns {Array}
+	 * @private
+	 */
+	applyJoin: function (docArr, joinClause, joinSource, options) {
+		var self = this,
+			joinSourceIndex,
+			joinSourceKey,
+			joinMatch,
+			joinSourceType,
+			joinSourceIdentifier,
+			resultKeyName,
+			joinSourceInstance,
+			resultIndex,
+			joinSearchQuery,
+			joinMulti,
+			joinRequire,
+			joinPrefix,
+			joinMatchIndex,
+			joinMatchData,
+			joinSearchOptions,
+			joinFindResults,
+			joinFindResult,
+			joinItem,
+			resultRemove = [],
+			l;
+
+		if (!(docArr instanceof Array)) {
+			// Turn the document into an array
+			docArr = [docArr];
+		}
+
+		for (joinSourceIndex = 0; joinSourceIndex < joinClause.length; joinSourceIndex++) {
+			for (joinSourceKey in joinClause[joinSourceIndex]) {
+				if (joinClause[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
+					// Get the match data for the join
+					joinMatch = joinClause[joinSourceIndex][joinSourceKey];
+
+					// Check if the join is to a collection (default) or a specified source type
+					// e.g 'view' or 'collection'
+					joinSourceType = joinMatch.$sourceType || 'collection';
+					joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+					// Set the key to store the join result in to the collection name by default
+					// can be overridden by the '$as' clause in the join object
+					resultKeyName = joinSourceKey;
+
+					// Get the join collection instance from the DB
+					if (joinSource[joinSourceIdentifier]) {
+						// We have a joinSource for this identifier already (given to us by
+						// an index when we analysed the query earlier on) and we can use
+						// that source instead.
+						joinSourceInstance = joinSource[joinSourceIdentifier];
+					} else {
+						// We do not already have a joinSource so grab the instance from the db
+						if (this._db[joinSourceType] && typeof this._db[joinSourceType] === 'function') {
+							joinSourceInstance = this._db[joinSourceType](joinSourceKey);
+						}
+					}
+
+					// Loop our result data array
+					for (resultIndex = 0; resultIndex < docArr.length; resultIndex++) {
+						// Loop the join conditions and build a search object from them
+						joinSearchQuery = {};
+						joinMulti = false;
+						joinRequire = false;
+						joinPrefix = '';
+
+						for (joinMatchIndex in joinMatch) {
+							if (joinMatch.hasOwnProperty(joinMatchIndex)) {
+								joinMatchData = joinMatch[joinMatchIndex];
+
+								// Check the join condition name for a special command operator
+								if (joinMatchIndex.substr(0, 1) === '$') {
+									// Special command
+									switch (joinMatchIndex) {
+										case '$where':
+											if (joinMatchData.$query || joinMatchData.$options) {
+												if (joinMatchData.$query) {
+													// Commented old code here, new one does dynamic reverse lookups
+													//joinSearchQuery = joinMatchData.query;
+													joinSearchQuery = self.resolveDynamicQuery(joinMatchData.$query, docArr[resultIndex]);
+												}
+												if (joinMatchData.$options) {
+													joinSearchOptions = joinMatchData.$options;
+												}
+											} else {
+												throw('$join $where clause requires "$query" and / or "$options" keys to work!');
+											}
+											break;
+
+										case '$as':
+											// Rename the collection when stored in the result document
+											resultKeyName = joinMatchData;
+											break;
+
+										case '$multi':
+											// Return an array of documents instead of a single matching document
+											joinMulti = joinMatchData;
+											break;
+
+										case '$require':
+											// Remove the result item if no matching join data is found
+											joinRequire = joinMatchData;
+											break;
+
+										case '$prefix':
+											// Add a prefix to properties mixed in
+											joinPrefix = joinMatchData;
+											break;
+
+										default:
+											break;
+									}
+								} else {
+									// Get the data to match against and store in the search object
+									// Resolve complex referenced query
+									joinSearchQuery[joinMatchIndex] = self.resolveDynamicQuery(joinMatchData, docArr[resultIndex]);
+								}
+							}
+						}
+
+						// Do a find on the target collection against the match data
+						joinFindResults = joinSourceInstance.find(joinSearchQuery, joinSearchOptions);
+
+						// Check if we require a joined row to allow the result item
+						if (!joinRequire || (joinRequire && joinFindResults[0])) {
+							// Join is not required or condition is met
+							if (resultKeyName === '$root') {
+								// The property name to store the join results in is $root
+								// which means we need to mixin the results but this only
+								// works if joinMulti is disabled
+								if (joinMulti !== false) {
+									// Throw an exception here as this join is not physically possible!
+									throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
+								}
+
+								// Mixin the result
+								joinFindResult = joinFindResults[0];
+								joinItem = docArr[resultIndex];
+
+								for (l in joinFindResult) {
+									if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
+										// Properties are only mixed in if they do not already exist
+										// in the target item (are undefined). Using a prefix denoted via
+										// $prefix is a good way to prevent property name conflicts
+										joinItem[joinPrefix + l] = joinFindResult[l];
+									}
+								}
+							} else {
+								docArr[resultIndex][resultKeyName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
+							}
+						} else {
+							// Join required but condition not met, add item to removal queue
+							resultRemove.push(resultIndex);
+						}
+					}
+				}
+			}
+		}
+
+		return resultRemove;
+	},
+
+	/**
+	 * Takes a query object with dynamic references and converts the references
+	 * into actual values from the references source.
+	 * @param {Object} query The query object with dynamic references.
+	 * @param {Object} item The document to apply the references to.
+	 * @returns {*}
+	 * @private
+	 */
+	resolveDynamicQuery: function (query, item) {
+		var self = this,
+			newQuery,
+			propType,
+			propVal,
+			pathResult,
+			i;
+
+		// Check for early exit conditions
+		if (typeof query === 'string') {
+			// Check if the property name starts with a back-reference
+			if (query.substr(0, 3) === '$$.') {
+				// Fill the query with a back-referenced value
+				pathResult = this.sharedPathSolver.value(item, query.substr(3, query.length - 3));
+			} else {
+				pathResult = this.sharedPathSolver.value(item, query);
+			}
+
+			if (pathResult.length > 1) {
+				return {$in: pathResult};
+			} else {
+				return pathResult[0];
+			}
+		}
+
+		newQuery = {};
+
+		for (i in query) {
+			if (query.hasOwnProperty(i)) {
+				propType = typeof query[i];
+				propVal = query[i];
+
+				switch (propType) {
+					case 'string':
+						// Check if the property name starts with a back-reference
+						if (propVal.substr(0, 3) === '$$.') {
+							// Fill the query with a back-referenced value
+							newQuery[i] = this.sharedPathSolver.value(item, propVal.substr(3, propVal.length - 3))[0];
+						} else {
+							newQuery[i] = propVal;
+						}
+						break;
+
+					case 'object':
+						newQuery[i] = self.resolveDynamicQuery(propVal, item);
+						break;
+
+					default:
+						newQuery[i] = propVal;
+						break;
+				}
+			}
+		}
+
+		return newQuery;
+	},
+
+	spliceArrayByIndexList: function (arr, list) {
+		var i;
+
+		for (i = list.length - 1; i >= 0; i--) {
+			arr.splice(list[i], 1);
+		}
 	}
 };
 
@@ -8597,15 +8882,24 @@ var Overload = _dereq_('./Overload');
  */
 var Triggers = {
 	/**
+	 * When called in a before phase the newDoc object can be directly altered
+	 * to modify the data in it before the operation is carried out.
+	 * @callback addTriggerCallback
+	 * @param {Object} operation The details about the operation.
+	 * @param {Object} oldDoc The document before the operation.
+	 * @param {Object} newDoc The document after the operation.
+	 */
+
+	/**
 	 * Add a trigger by id.
 	 * @param {String} id The id of the trigger. This must be unique to the type and
 	 * phase of the trigger. Only one trigger may be added with this id per type and
 	 * phase.
-	 * @param {Number} type The type of operation to apply the trigger to. See
+	 * @param {Constants} type The type of operation to apply the trigger to. See
 	 * Mixin.Constants for constants to use.
-	 * @param {Number} phase The phase of an operation to fire the trigger on. See
+	 * @param {Constants} phase The phase of an operation to fire the trigger on. See
 	 * Mixin.Constants for constants to use.
-	 * @param {Function} method The method to call when the trigger is fired.
+	 * @param {addTriggerCallback} method The method to call when the trigger is fired.
 	 * @returns {boolean} True if the trigger was added successfully, false if not.
 	 */
 	addTrigger: function (id, type, phase, method) {
@@ -9025,7 +9319,7 @@ var Updating = {
 		doc[prop] = val;
 
 		if (this.debug()) {
-			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '"');
+			console.log(this.logIdentifier() + ' Setting non-data-bound document property "' + prop + '" to val "' + val + '"');
 		}
 	},
 
@@ -9339,11 +9633,19 @@ module.exports = Operation;
 /**
  * Allows a method to accept overloaded calls with different parameters controlling
  * which passed overload function is called.
- * @param {Object} def
+ * @param {String=} name A name to provide this overload to help identify
+ * it if any errors occur during the resolving phase of the overload. This
+ * is purely for debug purposes and serves no functional purpose.
+ * @param {Object} def The overload definition.
  * @returns {Function}
  * @constructor
  */
-var Overload = function (def) {
+var Overload = function (name, def) {
+	if (!def) {
+		def = name;
+		name = undefined;
+	}
+
 	if (def) {
 		var self = this,
 			index,
@@ -9386,7 +9688,7 @@ var Overload = function (def) {
 			var arr = [],
 				lookup,
 				type,
-				name;
+				overloadName;
 
 			// Check if we are being passed a key/function object or an array of functions
 			if (def instanceof Array) {
@@ -9435,9 +9737,10 @@ var Overload = function (def) {
 				}
 			}
 
-			name = typeof this.name === 'function' ? this.name() : 'Unknown';
-			console.log('Overload: ', def);
-			throw('ForerunnerDB.Overload "' + name + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
+			overloadName = name !== undefined ? name : typeof this.name === 'function' ? this.name() : 'Unknown';
+
+			console.log('Overload Definition:', def);
+			throw('ForerunnerDB.Overload "' + overloadName + '": Overloaded method does not have a matching signature "' + lookup + '" for the passed arguments: ' + this.jStringify(arr));
 		};
 	}
 
@@ -9460,7 +9763,7 @@ var Overload = function (def) {
 Overload.prototype.generateSignaturePermutations = function (str) {
 	var signatures = [],
 		newSignature,
-		types = ['string', 'object', 'number', 'function', 'undefined'],
+		types = ['array', 'string', 'object', 'number', 'function', 'undefined'],
 		index;
 
 	if (str.indexOf('*') > -1) {
@@ -10302,9 +10605,10 @@ Persist.prototype._decode = function (val, meta, finished) {
 
 		if (data) {
 			meta.foundData = true;
-			meta.rowCount = data.length;
+			meta.rowCount = data.length || 0;
 		} else {
 			meta.foundData = false;
+			meta.rowCount = 0;
 		}
 
 		if (finished) {
@@ -10340,9 +10644,10 @@ Persist.prototype._encode = function (val, meta, finished) {
 
 	if (data) {
 		meta.foundData = true;
-		meta.rowCount = data.length;
+		meta.rowCount = data.length || 0;
 	} else {
 		meta.foundData = false;
+		meta.rowCount = 0;
 	}
 
 	if (finished) {
@@ -10801,7 +11106,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":4,"./CollectionGroup":5,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
+},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":35,"localforage":71}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -11106,193 +11411,113 @@ var Serialiser = function () {
 };
 
 Serialiser.prototype.init = function () {
+	var self = this;
+
 	this._encoder = [];
-	this._decoder = {};
+	this._decoder = [];
 
 	// Handler for Date() objects
-	this.registerEncoder('$date', function (data) {
-		if (data instanceof Date) {
-			return data.toISOString();
-		}
-	});
+	this.registerHandler('$date', function (objInstance) {
+		if (objInstance instanceof Date) {
+			// Augment this date object with a new toJSON method
+			objInstance.toJSON = function () {
+				return "$date:" + this.toISOString();
+			};
 
-	this.registerDecoder('$date', function (data) {
-		return new Date(data);
+			// Tell the converter we have matched this object
+			return true;
+		}
+
+		// Tell converter to keep looking, we didn't match this object
+		return false;
+	}, function (data) {
+		if (typeof data === 'string' && data.indexOf('$date:') === 0) {
+			return self.convert(new Date(data.substr(6)));
+		}
+
+		return undefined;
 	});
 
 	// Handler for RegExp() objects
-	this.registerEncoder('$regexp', function (data) {
-		if (data instanceof RegExp) {
-			return {
-				source: data.source,
-				params: '' + (data.global ? 'g' : '') + (data.ignoreCase ? 'i' : '')
+	this.registerHandler('$regexp', function (objInstance) {
+		if (objInstance instanceof RegExp) {
+			objInstance.toJSON = function () {
+				return "$regexp:" + this.source.length + ":" + this.source + ":" + (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '');
+				/*return {
+					source: this.source,
+					params: '' + (this.global ? 'g' : '') + (this.ignoreCase ? 'i' : '')
+				};*/
 			};
-		}
-	});
 
-	this.registerDecoder('$regexp', function (data) {
-		var type = typeof data;
-
-		if (type === 'object') {
-			return new RegExp(data.source, data.params);
-		} else if (type === 'string') {
-			return new RegExp(data);
-		}
-	});
-};
-
-/**
- * Register an encoder that can handle encoding for a particular
- * object type.
- * @param {String} handles The name of the handler e.g. $date.
- * @param {Function} method The encoder method.
- */
-Serialiser.prototype.registerEncoder = function (handles, method) {
-	this._encoder.push(function (data) {
-		var methodVal = method(data),
-				returnObj;
-
-		if (methodVal !== undefined) {
-			returnObj = {};
-			returnObj[handles] = methodVal;
+			// Tell the converter we have matched this object
+			return true;
 		}
 
-		return returnObj;
+		// Tell converter to keep looking, we didn't match this object
+		return false;
+	}, function (data) {
+		if (typeof data === 'string' && data.indexOf('$regexp:') === 0) {
+			var dataStr = data.substr(8),//±
+				lengthEnd = dataStr.indexOf(':'),
+				sourceLength = Number(dataStr.substr(0, lengthEnd)),
+				source = dataStr.substr(lengthEnd + 1, sourceLength),
+				params = dataStr.substr(lengthEnd + sourceLength + 2);
+
+			return self.convert(new RegExp(source, params));
+		}
+
+		return undefined;
 	});
 };
 
-/**
- * Register a decoder that can handle decoding for a particular
- * object type.
- * @param {String} handles The name of the handler e.g. $date. When an object
- * has a field matching this handler name then this decode will be invoked
- * to provide a decoded version of the data that was previously encoded by
- * it's counterpart encoder method.
- * @param {Function} method The decoder method.
- */
-Serialiser.prototype.registerDecoder = function (handles, method) {
-	this._decoder[handles] = method;
-};
+Serialiser.prototype.registerHandler = function (handles, encoder, decoder) {
+	if (handles !== undefined) {
+		// Register encoder
+		this._encoder.push(encoder);
 
-/**
- * Loops the encoders and asks each one if it wants to handle encoding for
- * the passed data object. If no value is returned (undefined) then the data
- * will be passed to the next encoder and so on. If a value is returned the
- * loop will break and the encoded data will be used.
- * @param {Object} data The data object to handle.
- * @returns {*} The encoded data.
- * @private
- */
-Serialiser.prototype._encode = function (data) {
-	// Loop the encoders and if a return value is given by an encoder
-	// the loop will exit and return that value.
-	var count = this._encoder.length,
-		retVal;
-
-	while (count-- && !retVal) {
-		retVal = this._encoder[count](data);
+		// Register decoder
+		this._decoder.push(decoder);
 	}
-
-	return retVal;
 };
 
-
-/**
- * Converts a previously encoded string back into an object.
- * @param {String} data The string to convert to an object.
- * @returns {Object} The reconstituted object.
- */
-Serialiser.prototype.parse = function (data) {
-	return this._parse(JSON.parse(data));
-};
-
-/**
- * Handles restoring an object with special data markers back into
- * it's original format.
- * @param {Object} data The object to recurse.
- * @param {Object=} target The target object to restore data to.
- * @returns {Object} The final restored object.
- * @private
- */
-Serialiser.prototype._parse = function (data, target) {
-	var i;
-
-	if (typeof data === 'object' && data !== null) {
-		if (data instanceof Array) {
-			target = target || [];
-		} else {
-			target = target || {};
-		}
-
-		// Iterate through the object's keys and handle
-		// special object types and restore them
-		for (i in data) {
-			if (data.hasOwnProperty(i)) {
-				if (i.substr(0, 1) === '$' && this._decoder[i]) {
-					// This is a special object type and a handler
-					// exists, restore it
-					return this._decoder[i](data[i]);
-				}
-
-				// Not a special object or no handler, recurse as normal
-				target[i] = this._parse(data[i], target[i]);
-			}
-		}
-	} else {
-		target = data;
-	}
-
-	// The data is a basic type
-	return target;
-};
-
-/**
- * Converts an object to a encoded string representation.
- * @param {Object} data The object to encode.
- */
-Serialiser.prototype.stringify = function (data) {
-	return JSON.stringify(this._stringify(data));
-};
-
-/**
- * Recurse down an object and encode special objects so they can be
- * stringified and later restored.
- * @param {Object} data The object to parse.
- * @param {Object=} target The target object to store converted data to.
- * @returns {Object} The converted object.
- * @private
- */
-Serialiser.prototype._stringify = function (data, target) {
-	var handledData,
+Serialiser.prototype.convert = function (data) {
+	// Run through converters and check for match
+	var arr = this._encoder,
 		i;
 
-	if (typeof data === 'object' && data !== null) {
-		// Handle special object types so they can be encoded with
-		// a special marker and later restored by a decoder counterpart
-		handledData = this._encode(data);
-		if (handledData) {
-			// An encoder handled this object type so return it now
-			return handledData;
+	for (i = 0; i < arr.length; i++) {
+		if (arr[i](data)) {
+			// The converter we called matched the object and converted it
+			// so let's return it now.
+			return data;
 		}
-
-		if (data instanceof Array) {
-			target = target || [];
-		} else {
-			target = target || {};
-		}
-
-		// Iterate through the object's keys and serialise
-		for (i in data) {
-			if (data.hasOwnProperty(i)) {
-				target[i] = this._stringify(data[i], target[i]);
-			}
-		}
-	} else {
-		target = data;
 	}
 
-	// The data is a basic type
-	return target;
+	// No converter matched the object, return the unaltered one
+	return data;
+};
+
+Serialiser.prototype.reviver = function () {
+	var arr = this._decoder;
+
+	return function (key, value) {
+		// Check if we have a decoder method for this key
+		var decodedData,
+			i;
+
+		for (i = 0; i < arr.length; i++) {
+			decodedData = arr[i](value);
+
+			if (decodedData !== undefined) {
+				// The decoder we called matched the object and decoded it
+				// so let's return it now.
+				return decodedData;
+			}
+		}
+
+		// No decoder, return basic value
+		return value;
+	};
 };
 
 module.exports = Serialiser;
@@ -11307,9 +11532,10 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.580',
+	version: '1.3.722',
 	modules: {},
 	plugins: {},
+	index: {},
 
 	_synth: {},
 
@@ -11377,13 +11603,15 @@ var Shared = {
 		return Boolean(this.modules[name]);
 	},
 
-	/**
-	 * Adds the properties and methods defined in the mixin to the passed object.
-	 * @memberof Shared
-	 * @param {Object} obj The target object to add mixin key/values to.
-	 * @param {String} mixinName The name of the mixin to add to the object.
-	 */
 	mixin: new Overload({
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {String} mixinName The name of the mixin to add to the object.
+		 */
 		'object, string': function (obj, mixinName) {
 			var mixinObj;
 
@@ -11398,6 +11626,15 @@ var Shared = {
 			return this.$main.call(this, obj, mixinObj);
 		},
 
+		/**
+		 * Adds the properties and methods defined in the mixin to the passed
+		 * object.
+		 * @memberof Shared
+		 * @name mixin
+		 * @param {Object} obj The target object to add mixin key/values to.
+		 * @param {Object} mixinObj The object containing the keys to mix into
+		 * the target object.
+		 */
 		'object, *': function (obj, mixinObj) {
 			return this.$main.call(this, obj, mixinObj);
 		},

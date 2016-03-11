@@ -28,7 +28,7 @@ QUnit.asyncTest("View.page :: Limit view page", function() {
 
 	userView._debug = false;
 
-	user.insert(arr, 0, function () {
+	user.insert(arr, function () {
 		console.log('Insert of ' + arr.length + ' records complete');
 
 		elem = $('#testTarget').find('li');

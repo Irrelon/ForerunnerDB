@@ -315,9 +315,10 @@ Persist.prototype._decode = function (val, meta, finished) {
 
 		if (data) {
 			meta.foundData = true;
-			meta.rowCount = data.length;
+			meta.rowCount = data.length || 0;
 		} else {
 			meta.foundData = false;
+			meta.rowCount = 0;
 		}
 
 		if (finished) {
@@ -353,9 +354,10 @@ Persist.prototype._encode = function (val, meta, finished) {
 
 	if (data) {
 		meta.foundData = true;
-		meta.rowCount = data.length;
+		meta.rowCount = data.length || 0;
 	} else {
 		meta.foundData = false;
+		meta.rowCount = 0;
 	}
 
 	if (finished) {

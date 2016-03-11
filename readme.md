@@ -1,11 +1,11 @@
 # ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed by [Irrelon Software Limited](http://www.irrelon.com/),
+ForerunnerDB is developed with ❤ love by [Irrelon Software Limited](http://www.irrelon.com/),
 a UK registered company.
 
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.580
+## Version 1.3.722
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -28,10 +28,11 @@ ready and battle tested in real-world applications.
 * [Joins](#joins) - Query with joins across multiple collections and views.
 * [Sub-Queries](#subqueries-and-subquery-syntax) - ForerunnerDB supports sub-queries across collections and views.
 * [Collection Groups](#collection-groups) - Add collections to a group and operate CRUD on them as a single entity.
-* [Data Binding (*Browser Only*)](#data-binding) - Bind data to your DOM and have it update your page in realtime as data changes.
-* [Persistent Storage (*Browser & Node.js*)](#data-persistence-save-and-load-between-pages) - Save your data and load it back at a later time, great for multi-page apps.
+* [Data Binding (*Browser Only*)](#data-binding) - Optional binding module to bind data to your DOM and have it update your page in realtime as data changes.
+* [Persistent Storage (*Browser & Node.js*)](#data-persistence-save-and-load-between-pages) - Optional persist module to save your data and load it back at a later time, great for multi-page apps.
 * [Compression & Encryption](#data-compression-and-encryption) - Support for compressing and encrypting your persisted data.
 * [Built-In REST Server (*Node.js*)](#forerunnerdb-built-in-json-rest-api-server) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
+* [AngularJS and Ionic Support](#angularjs-and-ionic-support) - Optional AngularJS module provides ForerunnerDB as an angular service.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
@@ -56,18 +57,38 @@ a very easy setup (simple installation via NPM and no requirements except
 Node.js) you will also find ForerunnerDB very useful.
 
 > An example hybrid application that runs on iOS, Android and Windows Mobile
-via Ionic (AngluarJS + Cordova with some nice extensions) is available in
+via Ionic (AngularJS + Cordova with some nice extensions) is available in
 this repository under the ionicExampleClient folder.
 [See here for more details](#ionic-example-app). 
 
 ## Download
+
+### NPM
 If you are using Node.js (or have it installed) you can use NPM to download ForerunnerDB via:
 
 ```bash
 npm install forerunnerdb
 ```
 
-This will also work for browser-based development, however if you prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
+### NPM Dev Builds
+You can also install the development version which usually includes new features that
+are considered either unstable or untested. To install the development version you can
+ask NPM for the dev tag:
+
+```bash
+npm install forerunnerdb --tag dev
+```
+
+### Bower
+You can also install ForerunnerDB via the bower package manager:
+
+```bash
+bower install forerunnerdb
+```
+
+
+### No Package Manager
+If you are still a package manager hold-out or you would prefer a more traditional download, please click [here](https://github.com/irrelon/ForerunnerDB/archive/master.zip).
 
 # How to Use
 ## Use ForerunnerDB in *Browser*
@@ -152,6 +173,13 @@ var collection = db.collection("collectionName", {capped: true, size: 5});
 generated for any documents inserted into a collection. Auto-generated primary
 keys are pseudo-random 16 character strings.
 
+> **PLEASE NOTE**: When doing an insert into a collection, ForerunnerDB will
+automatically split the insert up into smaller chunks (usually of 100 documents)
+at a time to ensure the main processing thread remains unblocked. If you wish
+to be informed when the insert operation is complete you can pass a callback
+method to the insert call. Alternatively you can turn off this behaviour by
+calling yourCollection.deferredCalls(false);
+
 You can either insert a single document object:
 
 ```js
@@ -175,6 +203,126 @@ itemCollection.insert([{
 	name: "Chicken Yum Yum"
 }]);
 ```
+
+When inserting large amounts of documents ForerunnerDB may break your insert
+operation into multiple smaller operations (usually of 100 documents at a time)
+in order to avoid blocking the main processing thread of your browser. You can
+find out when an insert has completed either by passing a callback to the insert
+call or by switching off async behaviour.
+
+Passing a callback:
+
+```js
+itemCollection.insert([{
+	_id: 4,
+	price: 267,
+	name:"Scooby Snacks"
+}, {
+	_id: 5,
+	price: 234,
+	name: "Chicken Yum Yum"
+}], function (result) {
+	// The result object will contain two arrays (inserted and failed)
+	// which represent the documents that did get inserted and those
+	// that didn't for some reason (usually index violation). Failed
+	// items also contain a reason. Inspect the failed array for further
+	// information.
+});
+```
+
+If you wish to switch off async behaviour you can do so on a per-collection basis
+via:
+
+```js
+db.collection('myCollectionName').deferredCalls(false);
+```
+
+### Inserting Special Objects
+JSON has limitations on the types of objects it will serialise and de-serialise back to
+an object. Two very good examples of this are the Date() and RegExp() objects. Both can
+be serialised via JSON.stringify() but when calling JSON.parse() on the serialised
+version neither type will be "re-materialised" back to their object representations.
+
+For example:
+
+```js
+var a = {
+	dt: new Date()
+};
+
+a.dt instanceof Date; // true
+
+var b = JSON.stringify(a); // "{"dt":"2016-02-11T09:52:49.170Z"}"
+
+var c = JSON.parse(b); // {dt: "2016-02-11T09:52:49.170Z"}
+
+c.dt instanceof Date; // false
+```
+
+As you can see, parsing the JSON string works but the dt key no longer contains a Date
+instance and only holds the string representation of the date. This is a fundamental drawback
+of using JSON.stringify() and JSON.parse() in their native form.
+
+If you want ForerunnerDB to serialise / de-serialise your object instances you must
+use this format instead:
+
+```js
+var a = {
+	dt: fdb.make(new Date())
+};
+```
+
+By wrapping the new Date() in fdb.make() we allow ForerunnerDB to provide the Date()
+object with a custom .toJSON() method that serialises it differently to the native
+implementation.
+
+For convenience the make() method is also available on all ForerunnerDB class
+instances e.g. db, collection, view etc. For instance you can access make via:
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('testCollection'),
+	date = new Date();
+
+// All of these calls will do the same thing:
+date = fdb.make(date);
+date = db.make(date);
+date = coll.make(date);
+```
+
+You can read more about how ForerunnerDB's serialiser works [here](https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks).
+
+#### Supported Instance Types and Usage
+
+##### Date
+```js
+var a = {
+	dt: fdb.make(new Date())
+};
+```
+
+##### RegExp
+```js
+var a = {
+	re: fdb.make(new RegExp(".*", "i"))
+};
+```
+
+or
+
+```js
+var a = {
+	re: fdb.make(/.*/i))
+};
+```
+
+#### Adding Custom Types to the Serialiser
+ForerunnerDB's serialisation system allows for custom type handling so that you
+can expand JSON serialisation to your own custom class instances.
+
+This can be a complex topic so it has been broken out into the Wiki section for
+further reading [here](https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Types-to-the-Serialiser).
 
 ## Searching the Collection
 > **PLEASE NOTE** While we have tried to remain as close to MongoDB's query language
@@ -207,6 +355,29 @@ Searches support regular expressions for advanced text-based queries. Simply pas
 regular expression object as the value for the key you wish to search, just like when
 using regular expressions with MongoDB.
 
+Insert a document:
+```js
+collection.insert([{
+	"foo": "hello"
+}]);
+```
+
+Search by regular expression:
+```js
+collection.find({
+	"foo": /el/
+});
+```
+
+You can also use the RegExp object instead:
+```js
+var myRegExp = new RegExp("el");
+
+collection.find({
+	"foo": myRegExp
+});
+```
+
 ### Query Operators
 ForerunnerDB supports many of the same query operators that MongoDB does, and adds some
 that are not available in MongoDB but which can help in browser-centric applications.
@@ -229,6 +400,7 @@ that are not available in MongoDB but which can help in browser-centric applicat
 * [$elemMatch](#elemMatch) Limit sub-array documents by query
 * [$elemsMatch](#elemsMatch) Multiple document version of $elemMatch
 * [$aggregate](#aggregate) Converts an array of documents into an array of values base on a path / key
+* [$near](#near) Geo-spatial operation finds outward from a central point
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -1112,11 +1284,85 @@ result = coll.find({}, {
 	$aggregate: "val"
 });
 ```
-	
+
 Result is:
 
 ```json
 [1, 2, 3]
+```
+
+#### $near
+> **PLEASE NOTE**: BETA STATUS - PASSES UNIT TESTING BUT MAY BE UNSTABLE
+
+Finds other documents whose co-ordinates based on a 2d index are within the specified
+distance from the specified centre point. Co-ordinates must be presented in
+longitude / latitude for $near to work.
+
+```js
+{
+	field: {
+		$near: {
+			$point: [<longitude number>, <latitude number>],
+			$maxDistance: <number>,
+			$distanceUnits: <units string>
+		}
+	}
+}
+```
+
+##### Usage
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db("test"),
+	coll = db.collection("test");
+
+coll.insert([{
+	lngLat: [51.50722, -0.12750],
+	name: 'Central London'
+}, {
+	lngLat: [51.525745, -0.167550], // 2.18 miles
+	name: 'Marylebone, London'
+}, {
+	lngLat: [51.576981, -0.335091], // 10.54 miles
+	name: 'Harrow, London'
+}, {
+	lngLat: [51.769451, 0.086509], // 20.33 miles
+	name: 'Harlow, Essex'
+}]);
+
+// Create a 2d index on the lngLat field
+coll.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+
+// Query index by distance
+// $near queries are sorted by distance from centre point by default
+result = coll.find({
+	lngLat: {
+		$near: {
+			$point: [51.50722, -0.12750],
+			$maxDistance: 3,
+			$distanceUnits: 'miles'
+		}
+	}
+});
+```
+
+Result is:
+
+```json
+[{
+	"lngLat": [51.50722, -0.1275],
+	"name": "Central London",
+	"_id": "1f56c0b5885de40"
+}, {
+	"lngLat": [51.525745, -0.16755],
+	"name": "Marylebone, London",
+	"_id": "372a34d9f17fbe0"
+}]
 ```
 
 ### Ordering / Sorting Results
@@ -1410,7 +1656,7 @@ result = users.find({
 ```
 
 When this query is executed the $find sub-query object is replaced with the results from
-the sub-query so that the final query looks like this:
+the sub-query so that the final query (with (aggregated)[#$aggregate] _id field) looks like this:
 
 ```js
 result = users.find({
@@ -2334,7 +2580,7 @@ itemCollection.find({}, {
 	"$join": [{
 		"purchase": {
 			"$where": {
-				"query": {
+				"$query": {
 					"itemId": "$$._id"
 				}
 			},
@@ -2373,10 +2619,10 @@ var result = a.find({}, {
 	"$join": [{
 		"b": {
 			"$where": {
-				"query": {
+				"$query": {
 					"_id": "$$._id"
 				},
-				"options": {
+				"$options": {
 					"_id": 0
 				}
 			},
@@ -2861,6 +3107,129 @@ was executed and if a table scan was involved or not, helping you to plan your i
 Keep in mind that indices require memory to maintain and there is always a trade-off between
 speed and memory usage.
 
+### Index Types (Choosing the Type of Index to Use)
+> B-Tree and Geospatial indexes are currently considered beta level and although
+they are passing unit tests, are provided for testing and development purposes.
+We cannot guarantee their functionality or performance at this time as more
+stringent tests and real-world usage must be done before they are considered
+production-ready. Please DO test them and report any bugs or issues. It is only
+with the help of the community that new features can get put through their paces!
+
+> **CUSTOM INDEX** If you are interested in developing your own custom index
+class for ForerunnerDB please see the wiki page on creating and registering your
+index class / type: [Adding Custom Index to ForerunnerDB](https://github.com/Irrelon/ForerunnerDB/wiki/Adding-Custom-Index-to-ForerunnerDB)
+ 
+ForerunnerDB currently defaults to a hash table index when you call ensureIndex().
+There is also support for both b-tree and geospatial indexing and you can specify
+the type of index you wish to use via the ensureIndex() call:
+
+#### Example of Creating a B-Tree Index 
+> Version >= 1.3.691
+
+```js
+collection.ensureIndex({
+	name: 1
+}, {
+	type: 'btree'
+});
+```
+
+#### Example of Creating a Geo-Spatial 2d Index 
+> Version >= 1.3.691
+
+```js
+collection.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+```
+
+#### Example of Creating a Hash Table Index 
+```js
+collection.ensureIndex({
+	name: 1
+}, {
+	type: 'hashed'
+});
+```
+
+## Geo-Spatial (2d) Queries
+> Version >= 1.3.691
+
+> **PLEASE NOTE**: BETA STATUS - PASSES UNIT TESTING BUT MAY BE UNSTABLE
+
+> Geo-spatial indices and queries are currently considered beta and although
+unit tests for geo-spatial queries are passing we would recommend you use them
+with caution. Please report any bugs or inconsistencies you might find when using
+geo-spatial queries in ForerunnerDB on our GitHub issues page. 
+
+We can insert some documents with longitude / latitude co-ordinates:
+
+```js
+var coll = db.collection('houses');
+
+coll.insert([{
+	lngLat: [51.50722, -0.12750],
+	name: 'Central London'
+}, {
+	lngLat: [51.525745, -0.167550], // 2.18 miles
+	name: 'Marylebone, London'
+}, {
+	lngLat: [51.576981, -0.335091], // 10.54 miles
+	name: 'Harrow, London'
+}, {
+	lngLat: [51.769451, 0.086509], // 20.33 miles
+	name: 'Harlow, Essex'
+}]);
+```
+
+To query this data using a geo-spatial operator we need to set up a 2d index against
+it:
+
+```js
+coll.ensureIndex({
+	lngLat: 1
+}, {
+	type: '2d'
+});
+```
+
+Now we can run a query with the geo-spatial operator "$near" to return results
+ordered by the distance from the centre point we provide:
+
+```js
+// Query index by distance
+// $near queries are sorted by distance from centre point by default
+result = coll.find({
+	lngLat: {
+		$near: {
+			$point: [51.50722, -0.12750],
+			$maxDistance: 3,
+			$distanceUnits: 'miles'
+		}
+	}
+});
+```
+
+The result is:
+
+```json
+[{
+	"lngLat": [51.50722, -0.1275],
+	"name": "Central London",
+	"_id": "1f56c0b5885de40"
+}, {
+	"lngLat": [51.525745, -0.16755],
+	"name": "Marylebone, London",
+	"_id": "372a34d9f17fbe0"
+}]
+```
+
+These documents have lngLat co-ordinates that are within 3 miles from the $point
+co-ordinate 51.50722, -0.12750 (Central London, UK). The results are ordered by
+distance from the centre point ascending.
+
 ## Data Persistence (Save and Load Between Pages)
 
 ### Data Persistence In Browser
@@ -2884,18 +3253,44 @@ collection.save(function (err) {
 You can then load the collection's data back again via:
 
 ```js
-collection.load(function (err) {
+collection.load(function (err, tableStats, metaStats) {
 	if (!err) {
 		// Load was successful
 	}
 });
 ```
 
-If you call collection.load() when your application starts and collection.save() when you make changes
-to your collection you can ensure that your application always has up-to-date data.
+If you call collection.load() when your application starts and collection.save() when
+you make changes to your collection you can ensure that your application always has
+up-to-date data.
 
 > An eager-saving mode is currently being worked on to automatically save changes to
 collections, please see #41 for more information.
+
+In the _load()_ method callback the tableStats and metaStats objects contain
+information about what (if anything) was loaded for the collection and the
+collection's meta-data. You can inspect these objects to determine if the collection
+actually loaded any data or if the persistent storage for the collection was empty.
+
+Here is an example stats object (tableStats and metaStats contain the same keys with
+different data for the collection's data and the collection's meta-data):
+
+```json
+{
+	"foundData": true,
+	"rowCount": 1
+}
+```
+
+Keep in mind that the _foundData_ key can be true at the same time as _rowCount_ is
+zero. This is because _foundData_ is true if any previously persisted data exists,
+even if there are no rows in the data file. Therefore if you wish to check if 
+previous data exists and contains rows, you should do:
+
+```js
+...
+if (tableStats.foundData && tableStats.rowCount > 0) { ... }
+```
 
 #### Manually Specifying Storage Engine
 If you would like to manually specify the storage engine that ForerunnerDB will use you can call the
@@ -3246,6 +3641,9 @@ underlying collection is altered. Views are accessed in the same way as a collec
 contain all the main CRUD functionality that a collection does. Inserting or updating on
 a view will alter the underlying collection.
 
+For a detailed insight into how data propagates from an underlying data source to a view
+see the section on (View Data Propagation and Synchronisation)[#notes_on_view_data_propagation_and_synchronisation].
+
 #### Instantiating a View
 Views are instantiated the same way collections are:
 
@@ -3519,7 +3917,7 @@ Setting the $wrap option to 'items' passes the entire collection's data array in
 template inside the *items* property which can then be accessed and iterated through like
 a normal array of data.
 
-You can also wrap inside a ForeunnerDB Document instance which will allow you to control
+You can also wrap inside a ForerunnerDB Document instance which will allow you to control
 other properties on the wrapper and have them update in realtime if you are using the
 data-binding module.
 
@@ -3560,7 +3958,7 @@ and automatically keep the charts in sync with changes to the collection.
 
 ### Prerequisites
 The Highcharts JavaScript library is required to use the ForerunnerDB Highcharts module. You can
-get Highcharts from http://www.highcharts.com
+get Highcharts from (http://www.highcharts.com)
 
 ### Usage
 To use the chart module you call one of the chart methods on a collection object. Charts are an optional
@@ -3604,10 +4002,10 @@ coll.pieChart("#demo-chart", "name", "val", "Food", {
 });
 ```
 
-> Note that the options object passed as the 5th parameter in the call above has a chartOptions key. This
- key is passed to Highcharts directly so any options that are described in the Highcharts documentation
- should be added inside the chartOptions object. You'll notice that we set the chart title in the call
- above using this object.
+> Note that the options object passed as the 5th parameter in the call above has a
+chartOptions key. This key is passed to Highcharts directly so any options that are
+described in the Highcharts documentation should be added inside the chartOptions
+object. You'll notice that we set the chart title in the call above using this object.
 
 #### collection.lineChart()
 
@@ -3627,21 +4025,21 @@ var fdb = new ForerunnerDB(),
 
 // Set the collection data
 coll.insert([{
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-13")).substr(0, 15),
 	val: 100
 }, {
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-14")).substr(0, 15),
 	val: 33
 }, {
-	type: "Jam",
+	series: "Jam",
 	date: String(new Date("2014-09-15")).substr(0, 15),
 	val: 24
 }]);
 
 // Create a pie chart on the element with the id "demo-chart"
-coll.lineChart("#demo-chart", "type", "date", "val", {
+coll.lineChart("#demo-chart", "series", "date", "val", {
 	chartOptions: {
 		title: {
 			text: "Jam Stores Over Time"
@@ -3657,8 +4055,8 @@ object. You'll notice that we set the chart title in the call above using this o
 
 #### Other Chart Types
 
-The lineChart() function uses the same parameters as the rest of the chart types currently supported by
-ForerunnerDB:
+The lineChart() function uses the same parameters as the rest of the chart types
+currently supported by ForerunnerDB:
 
 * collection.barChart()
 * collection.columnChart()
@@ -3666,7 +4064,8 @@ ForerunnerDB:
 
 ### Removing a Chart
 
-You can drop a chart using the dropChart() method on the collection the chart is assigned to:
+You can drop a chart using the dropChart() method on the collection the chart is
+assigned to:
 
 Function definition:
 
@@ -3725,9 +4124,9 @@ db.collection("test").find({
 ```
 
 # Differences Between ForerunnerDB and MongoDB
-Developers familiar with the MongoDB query language will find ForerunnerDB quite similar
-however there are some differences that you should be aware of when writing queries for
-ForerunnerDB.
+Developers familiar with the MongoDB query language will find ForerunnerDB quite
+similar however there are some differences that you should be aware of when writing
+queries for ForerunnerDB.
 
 > An update is being worked on that will allow a MongoDB emulation mode flag to be set
 to force ForerunnerDB to behave exactly like MongoDB when running find and update
@@ -3753,9 +4152,11 @@ of calling a MongoDB update without the MongoDB $set operator.
 Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
 
 # Browser Compatibility
-ForerunnerDB works in all modern browsers (IE8+)
+ForerunnerDB works in all modern browsers (IE8+) and mobile hybrid frameworks
 
 * Android Browser 4
+* AngularJS
+* Apache Cordova / PhoneGap 1.2.0
 * Blackberry 7
 * Chrome 23
 * Chrome for Android 32
@@ -3764,9 +4165,9 @@ ForerunnerDB works in all modern browsers (IE8+)
 * Firefox OS 1.0
 * IE 8
 * IE Mobile 10
+* Ionic
 * Opera 15
 * Opera Mobile 11
-* Phonegap/Apache Cordova 1.2.0
 * Safari 4 (includes Mobile Safari)
 
 # Distribution Files
@@ -3878,6 +4279,93 @@ git push
 9. If your pull request is accepted it will be merged into the main repository
 10. Pat yourself on the back for being a true open-source warrior! :)
 
+### Notes on the Chain Reactor System
+ForerunnerDB's chain reactor system is a graph of interconnected nodes that send
+and receive data. Each node is essentially an input, process and output. A node
+is defined as any instance that has utilised the Mixin.ChainReactor mixin methods.
+
+The chain reactor system exists to allow data synchronisation between disparate
+class instances that need to share data for example a view that uses a collection
+as a data-source. When data is modified via CRUD on the collection, chain reactor
+packets are sent down the reactor graph and one of the receiver nodes is the view.
+
+The view receives chain reactor packets from the collection and then runs its own
+custom logic during the node's process phase which can completely control packets
+sent further down the graph from the view to other nodes. Packets can be created,
+modified or destroyed during a node's process phase.
+
+In order for a node to apply custom logic to the chain reactor process phase, it
+only needs to implement a *chainHandler* method which takes a single argument
+representing the packet being sent to the node.
+
+The chain handler method can control the further propagation of the current packet
+by returning true or false from itself. If the chain handler returns true the
+packet propagation will stop and no proceed further down the graph.
+
+The chain handler method can also utilise the chainSend() method to create new
+chain reactor packets that emit from the current node down the graph. Packets
+never travel up the graph, only down.
+
+Data sent to the chain reactor system is expected to be safe to modify or operate
+on by the receiver. If data sent is an array or object and you have references to
+that data somewhere else it is expected that the sender will decouple the data
+first before passing it down the graph by using the decouple() method available
+in the Mixin.Common mixin. Since decoupling large arrays of data can incur a CPU
+cost you can check if it is required before decoupling by running chainWillSend()
+to see if you have any listeners that will need the data.
+
+### Notes on View Data Propagation and Synchronisation
+Views are essentially collections whose data has been pre-processed usually by a limiting
+query (called an active query) and sometimes by a data transform method. Data from the
+View's *data source* (collection, view etc) that is assigned via the from() method is
+passed through ForerunnerDB's chain reactor system before it reaches the View itself.
+
+ForerunnerDB's chain reactor system allows class instances to be linked together to receive
+CRUD and other events from other instances, apply processing to them and then pass them on
+down the chain reactor graph.
+
+You can think of the chain reactor as a series of connected nodes that each as an input,
+process and output. The input and outputs of a node are usually collection and view instances
+although they can be any instance that implements the chain reactor mixin methods available
+in the Mixin.ChainReactor.js file. The process is a custom method that determines how the
+chain reactor "packet" data is handled. In the case of a View instance, a chain reactor node
+is set up between the *data source* and the view itself.
+
+When a change occurs on the view's source data, the chain reactor node receives the data
+packet from the source which describes the type of operation that has occurred and contains
+information about what documents were operated on and what queries were run on those documents.
+
+The view's reactor node process checks over this data and determines how to handle it.
+
+The process follows these high-level steps:
+
+1. Check if the view has an *active join* in the view's query options. *Active joins* are
+designated as any $join operator in the view's *active query*. They are operated against
+the data being sent from the view's *data source*. We do this first because joined data can
+be utilised by any *active query* or *active transform* which means the data must be present
+before resolving queries and transforms in the next steps.
+
+2. Check if there is an *active query*. Queries are run against the source data after any
+*active joins* have been executed against the data. This allows an *active query* to operate
+on data that would only exist after an *active join* has been executed. If the data coming
+from the *data source* does not match the *active query* parameters then it added to a
+*removal array* to be processed in a following step. If the data *does* match the *active query*
+parameters then it is added to an *upsert array*.
+
+3. Check if there is an *active transform*. An *active transform* is a transform operation
+registered against the view where the operation includes a *dataIn method*. If a transform
+exists we execute it against the data after it has been run through the *active join* and
+*active query* steps.
+
+4. Process the *removal array*. We loop the *removal array* and ask the view to remove any
+items that match the items in this array.
+
+5. Process the *upsert array*. We loop the *upsert array*, determine if each item is either
+an insert operation (the item does not currently exist in the view data) or an update operation
+(the item DOES currently exist in the view and the data is different from the current entry).
+
+6. Finish the process by inserting and updating data depending on the result of step 5.
+
 ## Contributing to This Project
 Contributions through pull requests are welcome. Please ensure that if your pull request includes
 code changes that you have run the unit tests and they have all passed. If your code changes
@@ -3913,7 +4401,7 @@ ForerunnerDB's project road-map:
 ### Future Updates
 * Data persistence on server-side - COMPLETED
 * Pull from server - allow client-side DB to auto-request server-side data especially useful when paging
-* Push to clients - allow server-side to push changes to client-side data automatically and instantly
+* Push to clients - allow server-side to push changes to client-side data automatically and instantly - COMPLETED
 * Push to server - allow client-side DB changes to be pushed to the server automatically (obvious security / authentication requirements)
 * Replication - allow server-side DB to replicate to other server-side DB instances on the same or different physical servers
 * Native iOS version
@@ -3964,6 +4452,37 @@ Please check below for details of any changes that break previous operation or
 behaviour of ForerunnerDB. Changes that break functionality are not taken lightly
 and we do not allow them to be merged in to the master branch without good cause!
 
+## Since Version 1.3.669
+To provide a massive performance boost (5 times the performance) the data
+serialisation system has undergone a rewrite that requires some changes to your
+code if you query data with JavaScript Date() objects or use RegExp objects.
+ 
+Before this version you could do:
+
+```js
+db.insert({
+	dt: new Date(),
+	reg: /*./i
+});
+```
+
+After this version if you want Date objects to remain as objects and not be
+converted into strings you must use:
+
+```js
+db.insert({
+	dt: db.make(new Date())
+	reg: db.make(/*./i)
+});
+```
+
+Wrapping the Date and RegExp instances in make() provides ForerunnerDB with a way
+to optimise JSON serialisation and achieve five times the stringification speed
+of previous versions. Parsing this data is also 1/3 faster than the previous version.
+
+You can read more about the benchmarking and performance optimisations made during
+this change [on the wiki here](https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks).
+
 ## Since Version 1.3.36
 In order to support multiple named databases Forerunner's instantiation has changed
 slightly. In previous versions you only had access to a single database that you
@@ -4001,7 +4520,7 @@ to search / replace your entire codebase for "join" to "$join" as this may break
 code in your project. Ensure that changes are limited to ForerunnerDB query sections.
 
 # ForerunnerDB Built-In JSON REST API Server
-> BETA STATUS SUBJECT TO CHANGE
+> **PLEASE NOTE**: BETA STATUS SUBJECT TO CHANGE
 
 When running ForerunnerDB under Node.js you can activate a powerful REST API server
 that allows you to build a backend for your application in record speed, providing
@@ -4034,28 +4553,9 @@ db.persist.dataDir('./data');
 db.persist.auto(true);
 
 // Set access control to allow all HTTP verbs on all collections
-// db.api.access(<database name>, <object type>, <object name>, <http verb>, <your control method>);
-fdb.api.access('testApi', 'collection', '*', '*', function (dbName, objName, modelName, methodName, req, callback) {
-	// You can customise this method to only callback false when you are happy
-	// that the client connecting is allowed to connect. Calling back with true
-	// or an error string as the first argument will cause the client connection
-	// to be rejected.
-
-	// The req.query object will contain the query parameters you include
-	// when making an API call. This allows you to check a client session
-	// etc to determine if they are allowed to access this collection based
-	// on the method (req.method - GET, POST, PUT, PATCH, DELETE, SYNC)
-	console.log(req.query);
-	
-	// Note the special case of req.method === 'SYNC' is where the client has
-	// requested to synchronise data with the server. This is effectively
-	// the same as a GET request except that changes to the server-side data
-	// are pushed automatically to the client. If you don't want this to be
-	// allowed, deny calls with the req.method of "SYNC".
-
-	// In this case here we are simply allowing all clients to connect
-	callback(false, dbName, objName, modelName, methodName, req);
-});
+// Note that you can also pass a callback method instead of 'allow' to
+// handle custom access control with logic
+fdb.api.access('testApi', 'collection', '*', '*', 'allow');
 
 // Ask the API server to start listening on all IP addresses assigned to
 // this machine on port 9010 and to allow cross-origin resource sharing (cors)
@@ -4078,14 +4578,14 @@ an action.
 
 ##### Accessing all collection's documents:
 
-	GET http://0.0.0.0:9010/<database name>/collection/<collection name>
+	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4095,14 +4595,14 @@ $.ajax({
 
 ##### Accessing an individual document in a collection by id:
 
-	GET http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -4115,7 +4615,7 @@ $.ajax({
 insert multiple documents by iterating through the array you send. This allows you
 to insert multiple records with a single API call.
 
-	POST http://0.0.0.0:9010/<database name>/collection/<collection name>
+	POST http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4123,7 +4623,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "post",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4137,7 +4637,7 @@ $.ajax({
 
 ##### Replacing a document by id:
 
-	PUT http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	PUT http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4145,7 +4645,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "put",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4159,7 +4659,7 @@ $.ajax({
 
 ##### Updating a document by id:
 
-	PATCH http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	PATCH http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -4167,7 +4667,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "patch",
-	"url": "http://0.0.0.0:9010/myDatabase/collection/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -4181,20 +4681,133 @@ $.ajax({
 
 ##### Deleting a document by id:
 
-	DELETE http://0.0.0.0:9010/<database name>/collection/<collection name>/<document id>
+	DELETE http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "delete",
-	"url": "http://0.0.0.0:9010/myDatabase/myCollection/myDocId",
+	"url": "http://0.0.0.0:9010/fdb/myDatabase/myCollection/myDocId",
 	"dataType": "json",
 	"contentType": "application/json; charset=utf-8",
 	"success": function (data) {
 		console.log(data);
 	}
 });
+```
+
+### Creating Your Own Routes
+ForerunnerDB's API utilises ExpressJS and exposes the express app should you wish
+to register your own routes under the same host and port.
+
+You can retrieve the express app via:
+
+```js
+var app = fdb.api.serverApp();
+```
+
+The response from serverApp() is the express instance like doing: app = express();
+
+You can then register routes in the normal express way:
+
+```js
+app.get('/myRoute', function (req, res) { ... }
+```
+
+#### Serving Static Content
+> You don't have to use this helper, you can define static routes via the express
+app in the normal way if you prefer, this just makes it a tiny bit easier.
+
+If you would like to serve static files we have exposed a helper method for you:
+
+```js
+/**
+ * @param {String} urlPath The route to serve static files from.
+ * @param {String} folderPath The actual filesystem path where the static
+ * files should be read from.
+ */
+fdb.api.static('/mystaticroute', './www');
+```
+
+#### Customising Further
+
+You can get hold of the express library directly (to use things like express.static)
+via the express method:
+
+```js
+var express = fdb.api.express();
+```
+
+#### Routes That ForerunnerDB Uses
+
+ForerunnerDB's routes all start with **/fdb** by default so you can register any
+ other routes that don't start with /fdb and they will not interfere with
+ Forerunner's routes.
+
+#### Default Middleware
+
+ForerunnerDB enables various middleware packages by default. These are:
+
+1. bodyParser.json()
+2. A system to turn JSON sent as the query string into an accessible object. This
+should not interfere with normal query parameters.
+
+If you start the server with {cors: true} we will also enable the cors middleware
+via:
+
+```js
+// Enable cors middleware
+app.use(cors({origin: true}));
+
+// Allow preflight CORS
+app.options('*', cors({origin: true}));
+```
+
+# AngularJS and Ionic Support
+ForerunnerDB includes an AngularJS module that allows you to require ForerunnerDB as
+a dependency in your AngularJS (or Ionic) application. In order to use ForerunnerDB
+in AngularJS or Ionic you must include forerunner's library and the AngularJS module
+after the angular (or Ionic) library script tag:
+
+```html
+...
+<!-- Include ionic (or AngularJS) library -->
+<script src="lib/ionic/js/ionic.bundle.js"></script>
+...
+<!-- Include ForerunnerDB -->
+<script src="lib/forerunnerdb/js/dist/fdb-all.min.js"></script>
+<script src="lib/forerunnerdb/js/dist/fdb-angular.min.js"></script>
+```
+
+Once you have included the library files you can require ForerunnerDB as a dependency
+in the normal angular way:
+
+```js
+// Define our app and require forerunnerdb
+angular.module('app', ['ionic', 'forerunnerdb', 'app.controllers', 'app.routes', 'app.services', 'app.directives'])
+	// Run the app and tell angular we need the $fdb service
+	.run(function ($ionicPlatform, $rootScope, $fdb) {
+		// Define a ForerunnerDB database on the root scope
+		$rootScope.$db = $fdb.db('myDatabase');
+		
+		...
+```
+
+You can then access your database from either $rootScope.$db or $fdb.db('myDatabase').
+
+Since $fdb.db() will either create a database if one does not exist by that name, 
+or return the existing instance of the database, you can use it whenever you like
+to get a reference to your database from any controller just by requiring *$fdb*
+as a dependency e.g:
+
+```js
+angular.module('app.controllers')
+	.controller('itemListCtrl', function ($scope, $fdb) {
+		var allItemsInMyCollection = $fdb
+			.db('myDatabase')
+			.collection('myCollection')
+			.find();
 ```
 
 # Ionic Example App
@@ -4205,7 +4818,7 @@ usage in an Ionic app (AngularJS + Apache Cordova).
 > You must have node.js installed to run the example because it uses ForerunnerDB's
 built-in REST API server for a quick and easy way to simulate a back-end.
 
-> The example app requires that you have already installed ionic on your sytem
+> The example app requires that you have already installed ionic on your system
 via *npm install -g ionic*
 
 1. Start the app's server

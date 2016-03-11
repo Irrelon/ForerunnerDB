@@ -15,6 +15,19 @@ Common = {
 	serialiser: serialiser,
 
 	/**
+	 * Generates a JSON serialisation-compatible object instance. After the
+	 * instance has been passed through this method, it will be able to survive
+	 * a JSON.stringify() and JSON.parse() cycle and still end up as an
+	 * instance at the end. Further information about this process can be found
+	 * in the ForerunnerDB wiki at: https://github.com/Irrelon/ForerunnerDB/wiki/Serialiser-&-Performance-Benchmarks
+	 * @param {*} val The object instance such as "new Date()" or "new RegExp()".
+	 */
+	make: function (val) {
+		// This is a conversion request, hand over to serialiser
+		return serialiser.convert(val);
+	},
+
+	/**
 	 * Gets / sets data in the item store. The store can be used to set and
 	 * retrieve data against a key. Useful for adding arbitrary key/value data
 	 * to a collection / view etc and retrieving it later.
@@ -89,8 +102,7 @@ Common = {
 	 * @returns {Object} The parsed JSON object from the data.
 	 */
 	jParse: function (data) {
-		return serialiser.parse(data);
-		//return JSON.parse(data);
+		return JSON.parse(data, serialiser.reviver());
 	},
 
 	/**
@@ -99,8 +111,8 @@ Common = {
 	 * @returns {String} The stringified data.
 	 */
 	jStringify: function (data) {
-		return serialiser.stringify(data);
-		//return JSON.stringify(data);
+		//return serialiser.stringify(data);
+		return JSON.stringify(data);
 	},
 	
 	/**
@@ -137,6 +149,15 @@ Common = {
 		}
 
 		return id;
+	},
+
+	/**
+	 * Generates a unique hash for the passed object.
+	 * @param {Object} obj The object to generate a hash for.
+	 * @returns {String}
+	 */
+	hash: function (obj) {
+		return JSON.stringify(obj);
 	},
 
 	/**
@@ -211,7 +232,7 @@ Common = {
 	 * @returns {string} The log identifier.
 	 */
 	logIdentifier: function () {
-		return this.classIdentifier() + ': ' + this.instanceIdentifier();
+		return 'ForerunnerDB ' + this.instanceIdentifier();
 	},
 
 	/**
@@ -259,6 +280,43 @@ Common = {
 	 */
 	isDropped: function () {
 		return this._state === 'dropped';
+	},
+
+	/**
+	 * Registers a timed callback that will overwrite itself if
+	 * the same id is used within the timeout period. Useful
+	 * for de-bouncing fast-calls.
+	 * @param {String} id An ID for the call (use the same one
+	 * to debounce the same calls).
+	 * @param {Function} callback The callback method to call on
+	 * timeout.
+	 * @param {Number} timeout The timeout in milliseconds before
+	 * the callback is called.
+	 */
+	debounce: function (id, callback, timeout) {
+		var self = this,
+			newData;
+
+		self._debounce = self._debounce || {};
+
+		if (self._debounce[id]) {
+			// Clear timeout for this item
+			clearTimeout(self._debounce[id].timeout);
+		}
+
+		newData = {
+			callback: callback,
+			timeout: setTimeout(function () {
+				// Delete existing reference
+				delete self._debounce[id];
+
+				// Call the callback
+				callback();
+			}, timeout)
+		};
+
+		// Save current data
+		self._debounce[id] = newData;
 	}
 };
 

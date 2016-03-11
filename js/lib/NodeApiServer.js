@@ -13,6 +13,7 @@ var Shared = require('./Shared'),
 	http = require('http'),
 	https = require('https'),
 	url = require('url'),
+	pem = require('pem'),
 	app = express(),
 	server,
 	Core,
@@ -22,6 +23,7 @@ var Shared = require('./Shared'),
 	ReactorIO,
 	Overload,
 	_access = {},
+	_accessOrder = [],
 	_io = {};
 
 NodeApiServer = function () {
@@ -38,10 +40,12 @@ NodeApiServer.prototype.init = function (core) {
 	self._app = app;
 
 	this.name('ApiServer');
+	this.rootPath('/fdb');
 };
 
 Shared.addModule('NodeApiServer', NodeApiServer);
 Shared.mixin(NodeApiServer.prototype, 'Mixin.Common');
+Shared.mixin(NodeApiServer.prototype, 'Mixin.Events');
 Shared.mixin(NodeApiServer.prototype, 'Mixin.ChainReactor');
 
 Core = Shared.modules.Core;
@@ -51,6 +55,20 @@ ReactorIO = Shared.modules.ReactorIO;
 Overload = Shared.overload;
 
 Shared.synthesize(NodeApiServer.prototype, 'name');
+Shared.synthesize(NodeApiServer.prototype, 'rootPath', function (val) {
+	if (val !== undefined && server) {
+		throw('Cannot set rootPath of server after start() has been called!');
+	}
+
+	if (val !== undefined && !server) {
+		this._rootSectionCount = (val.split('/').length - 1);
+		if (this._rootSectionCount < 0) {
+			this._rootSectionCount =  0;
+		}
+	}
+
+	return this.$super.call(this, val);
+});
 
 /**
  * Starts the rest server listening for requests against the ip and
@@ -64,80 +82,82 @@ Shared.synthesize(NodeApiServer.prototype, 'name');
  * @returns {NodeApiServer}
  */
 NodeApiServer.prototype.start = function (host, port, options, callback) {
-	var ssl,
-		httpServer,
-		i;
+	var self = this;
 
 	// Start listener
 	if (!server) {
+		this._startData = {
+			host: host,
+			port: port,
+			options: options,
+			callback: callback
+		};
+
 		if (options && options.cors === true) {
+			// Enable cors middleware
 			app.use(cors({origin: true}));
 
 			// Allow preflight CORS
 			app.options('*', cors({origin: true}));
 		}
 
+		// Parse body in requests
+		app.use(bodyParser.json());
+
 		// Parse JSON as a query parameter
 		app.use(function (req, res, next) {
 			var query,
+				jsonData,
 				urlObj = url.parse(req.url);
 
-			if (req.json || !urlObj.query) {
-				return next();
-			}
+			req.json = req.json || {};
 
-			try {
-				query = url.parse(req.url).query;
-				query = decodeURIComponent(query);
+			if (urlObj.query) {
+				try {
+					query = urlObj.query;
+					query = decodeURIComponent(query);
 
-				if (query) {
-					req.json = JSON.parse(decodeURIComponent(query));
+					if (query) {
+						jsonData = JSON.parse(decodeURIComponent(query));
+						Shared.mixin(req.json, jsonData);
+					}
+				} catch (e) {
+					// Check for normal query params
+					if (req.query && Object.keys(req.query).length > 0) {
+						return next();
+					} else {
+						res.status(500).send('Error parsing query string ' + query + ' ' + e);
+						return;
+					}
 				}
-
-				return next();
-			} catch (e) {
-				res.status(500).send('Error parsing query string ' + query + ' '  + e);
 			}
-		});
 
-		// Parse body in requests
-		app.use(bodyParser.json());
+			return next();
+		});
 
 		// Activate routes
 		this._defineRoutes();
 
-		if (options && options.ssl && options.ssl.enable) {
-			ssl = {
-				key: fs.readFileSync(options.ssl.key),
-				cert: fs.readFileSync(options.ssl.cert)
-			};
-
-			if (options.ssl.ca) {
-				ssl.ca = [];
-				for (i = 0; i < options.ssl.ca.length; i++) {
-					ssl.ca.push(fs.readFileSync(options.ssl.ca[i]));
-				}
-			}
-
-			httpServer = https.createServer(ssl, app);
-		} else {
-			httpServer = http.createServer(app);
-		}
-
-		server = httpServer.listen(port, host, function (err) {
+		self._createHttpServer(options, function (err, httpServer) {
 			if (!err) {
-				if (options && options.ssl && options.ssl.enable) {
-					console.log('ForerunnerDB REST API listening at https://%s:%s', host, port);
-				} else {
-					console.log('ForerunnerDB REST API listening at http://%s:%s', host, port);
-				}
+				server = httpServer.listen(port, host, function (err) {
+					if (!err) {
+						if (options && options.ssl && options.ssl.enable) {
+							console.log('ForerunnerDB REST API listening at https://%s:%s/fdb', host, port);
+						} else {
+							console.log('ForerunnerDB REST API listening at http://%s:%s/fdb', host, port);
+						}
 
-				if (callback) {
-					callback(false, server);
-				}
-			} else {
-				console.log('Listen error', err);
-				callback(err);
+						if (callback) {
+							callback(false, server);
+						}
+
+						self.emit('started');
+					} else {
+						console.log('Listen error', err);
+						callback(err);
+					}
+				});
 			}
 		});
 	} else {
@@ -151,11 +171,128 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 };
 
 /**
+ * Gets the express app (router).
+ * @returns {*}
+ */
+NodeApiServer.prototype.serverApp = function () {
+	return app;
+};
+
+/**
+ * Gets the express library.
+ * @returns {*|exports|module.exports}
+ */
+NodeApiServer.prototype.express = function () {
+	return express;
+};
+
+NodeApiServer.static = function (urlPath, folderPath) {
+	return app.use(urlPath, express.static(folderPath));
+};
+
+/**
+ * Creates the http(s) server instance.
+ * @param options
+ * @param callback
+ * @private
+ */
+NodeApiServer.prototype._createHttpServer = function (options, callback) {
+	var self = this,
+		ssl,
+		httpServer,
+		i;
+
+	if (options && options.ssl && options.ssl.enable) {
+		// Check if we were provided certificate data
+		if (options.ssl.key && options.ssl.cert) {
+			ssl = {
+				key: fs.readFileSync(options.ssl.key),
+				cert: fs.readFileSync(options.ssl.cert)
+			};
+
+			if (options.ssl.ca) {
+				ssl.ca = [];
+				for (i = 0; i < options.ssl.ca.length; i++) {
+					ssl.ca.push(fs.readFileSync(options.ssl.ca[i]));
+				}
+			}
+
+			httpServer = https.createServer(ssl, app);
+
+			callback(false, httpServer);
+		} else {
+			// Check for existing certs we have already generated
+			fs.stat('./forerunnerdbTempCert/privkey.pem', function (err, stat) {
+				if (!err) {
+					fs.stat('./forerunnerdbTempCert/fullchain.pem', function (err, stat) {
+						if (!err) {
+							ssl = {
+								key: fs.readFileSync('./forerunnerdbTempCert/key.pem'),
+								cert: fs.readFileSync('./forerunnerdbTempCert/cert.pem')
+							};
+
+							httpServer = https.createServer(ssl, app);
+
+							callback(false, httpServer);
+						} else {
+							self._generateSelfCertHttpsServer(callback);
+						}
+					});
+				} else {
+					self._generateSelfCertHttpsServer(callback);
+				}
+			});
+		}
+	} else {
+		httpServer = http.createServer(app);
+		callback(false, httpServer);
+	}
+};
+
+/**
+ * Uses PEM module to generate a self-signed SSL certificate and creates
+ * an https server from it, returning it in the callback.
+ * @param callback
+ * @private
+ */
+NodeApiServer.prototype._generateSelfCertHttpsServer = function (callback) {
+	var ssl,
+		httpServer;
+
+	// Generate our own self-signed cert for easy use of https prototyping
+	pem.createCertificate({
+		days: 1,
+		selfSigned: true
+	}, function(err, keys) {
+		if (!err) {
+			// Write self-signed cert data so we can re-use it
+			fs.writeFile('./forerunnerdbTempCert/key.pem', keys.serviceKey, function () {});
+			fs.writeFile('./forerunnerdbTempCert/cert.pem', keys.certificate, function () {});
+
+			// Assign data to the ssl object
+			ssl = {
+				key: keys.serviceKey,
+				cert: keys.certificate
+			};
+
+			httpServer = https.createServer(ssl, app);
+
+			callback(false, httpServer);
+		} else {
+			throw('Cannot enable SSL, generating a self-signed certificate failed: ' +  err);
+		}
+	});
+};
+
+/**
  * Stops the server listener.
  */
 NodeApiServer.prototype.stop = function () {
 	if (server) {
 		server.close();
+		server = undefined;
+
+		this.emit('stopped');
 		return true;
 	}
 
@@ -177,61 +314,79 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 		query,
 		options,
 		db,
-		obj;
+		obj,
+		urlPath,
+		pathSections;
+
+	if (self.debug && self.debug()) {
+		console.log(self.logIdentifier() + ' Received REST: ' + method + ' ' + req.url);
+	}
 
 	// Check permissions
 	self.hasPermission(dbName, objType, objName, method, req, function (err, results) {
 		if (!err) {
+			if (self.debug && self.debug()) {
+				console.log(self.logIdentifier() + ' REST call is allowed: ' + method + ' ' + req.url);
+			}
+
 			// Check if the database has this type of object
 			// TODO: Do we want to call collectionExists (objType + 'Exists') here?
 			if (typeof self._core.db(dbName)[objType] === 'function') {
 				// Get the query and option params
-				query = req.json && req.json.query ? req.json.query : undefined;
-				options = req.json && req.json.options ? req.json.options : undefined;
+				query = req.json && req.json.$query ? req.json.$query : undefined;
+				options = req.json && req.json.$options ? req.json.$options : undefined;
 
 				db = self._core.db(dbName);
 				obj = db[objType](objName);
 
 				// Check the object type for special considerations
 				if (objType === 'procedure') {
-					// Handle procedure
-					return obj.exec(req, res);
+					if (obj && obj.exec && typeof obj.exec === 'function') {
+						// Handle procedure
+						if (self.debug && self.debug()) {
+							console.log(self.logIdentifier() + ' REST executing procedure: ' + method + ' ' + req.url);
+						}
+
+						return obj.exec(req, res);
+					} else {
+						if (self.debug && self.debug()) {
+							console.log(self.logIdentifier() + ' REST procedure not found: ' + method + ' ' + req.url);
+						}
+
+						return res.status(404).send('Procedure "' + objName + '" not found!');
+					}
+				}
+
+				// Get url path
+				urlPath = url.parse(req.url).pathname;
+
+				// Split path into sections
+				pathSections = urlPath.split('/');
+
+				if (self._rootPath) {
+					// Remove the first 5 sections as we already used these (rootPath, dbName, objType, objName, itemId)
+					pathSections.splice(0, 4 + self._rootSectionCount);
+				} else {
+					// Remove the first 4 sections as we already used these (dbName, objType, objName, itemId)
+					pathSections.splice(0, 4);
 				}
 
 				switch (method) {
+					case 'HEAD':
 					case 'GET':
-						if (!objId) {
-							// Get all
-							if (obj.isProcessingQueue && obj.isProcessingQueue()) {
-								if (db.debug()) {
-									console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
-								}
-
-								obj.once('ready', function () {
-									if (db.debug()) {
-										console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
-									}
-									res.send(obj.find(query, options));
-								});
-							} else {
-								res.send(obj.find(query, options));
+						if (obj.isProcessingQueue && obj.isProcessingQueue()) {
+							if (db.debug()) {
+								console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
 							}
+
+							obj.once('ready', function () {
+								if (db.debug()) {
+									console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
+								}
+								self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, obj.find(query, options));
+							});
 						} else {
-							// Get one
-							if (obj.isProcessingQueue && obj.isProcessingQueue()) {
-								if (db.debug()) {
-									console.log(db.logIdentifier() + ' Waiting for async queue: ' + objName);
-								}
-
-								obj.once('ready', function () {
-									if (db.debug()) {
-										console.log(db.logIdentifier() + ' Async queue complete: ' + objName);
-									}
-									res.send(obj.findById(objId, options));
-								});
-							} else {
-								res.send(obj.findById(objId, options));
-							}
+							self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, obj.find(query, options));
 						}
 						break;
 
@@ -333,13 +488,93 @@ NodeApiServer.prototype.handleRequest = function (req, res) {
 						res.status(403).send('Unknown method');
 						break;
 				}
+
+				if (self.debug && self.debug()) {
+					console.log(self.logIdentifier() + ' REST call finished: ' + method + ' ' + req.url);
+				}
 			} else {
+				if (self.debug && self.debug()) {
+					console.log(self.logIdentifier() + ' REST call object type unknown: ' + method + ' ' + req.url);
+				}
+
 				res.status(500).send('Unknown object type: ' + objType);
 			}
 		} else {
+			if (self.debug && self.debug()) {
+				console.log(self.logIdentifier() + ' REST call permission denied: ' + method + ' ' + req.url);
+			}
+
 			res.status(403).send(err);
 		}
 	});
+};
+
+NodeApiServer.prototype._handleResponse = function (req, res, dbName, objType, objName, obj, pathSections, responseData) {
+	var self = this,
+		pathSection,
+		tmpParts,
+		pathIdField = obj._primaryKey !== undefined ? obj._primaryKey : '_id',
+		i;
+
+	// Check if we need to generate a sub-document query
+	if (pathSections.length) {
+		// Get the next path section
+		pathSection = pathSections.shift();
+
+		if (responseData instanceof Array) {
+			// Set the id field to default
+			pathIdField = '_id';
+
+			// Check if the patch section has a colon in it, denoting a search field and value
+			if (pathSection.indexOf(':') > -1) {
+				// Split the path section
+				tmpParts = pathSection.split(':');
+				pathIdField = tmpParts[0];
+				pathSection = tmpParts[1];
+			}
+
+			// The path section must correspond to an id in the array of items
+			for (i = 0; i < responseData.length; i++) {
+				if (responseData[i][pathIdField] === pathSection) {
+					return self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, responseData[i]);
+				}
+			}
+
+			// Could not find a matching document, send nothing back
+			return self._sendResponse(req, res);
+		}
+
+		// Grab the document sub-data
+		return self._handleResponse(req, res, dbName, objType, objName, obj, pathSections, responseData[pathSection]);
+	} else {
+		return self._sendResponse(req, res, responseData);
+	}
+};
+
+NodeApiServer.prototype._sendResponse = function (req, res, data) {
+	var statusCode = data !== undefined ? 200 : 404;
+
+	switch (req.method) {
+		case 'HEAD':
+			// Only send status codes - head is a unique case in that a
+			// blank data string means we should send 204 (no content)
+			// not 200, and if undefined we can still send 404
+			if (data !== undefined) {
+				res.sendStatus(204);
+			} else {
+				res.sendStatus(404);
+			}
+			break;
+
+		case 'GET':
+			// Send status code and data
+			res.status(statusCode).send(data);
+			break;
+
+		default:
+			res.send(data);
+			break;
+	}
 };
 
 /**
@@ -384,31 +619,15 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 					// coming from the object (collection, view etc), and then
 					// pass them to the clients
 					_io[objType][objName].io = new ReactorIO(obj, self, function (chainPacket) {
-						switch (chainPacket.type) {
-							case 'insert':
-								self.sendToAll(_io[objType][objName], chainPacket.type, chainPacket.data);
-								break;
-
-							case 'remove':
-								self.sendToAll(_io[objType][objName], chainPacket.type, {query: chainPacket.data.query});
-								break;
-
-							case 'update':
-								self.sendToAll(_io[objType][objName], chainPacket.type, {
-									query: chainPacket.data.query,
-									update: chainPacket.data.update
-								});
-								break;
-
-							default:
-								break;
-						}
+						self.sendToAll(_io[objType][objName], chainPacket.type, chainPacket.data);
 
 						// Returning false informs the chain reactor to continue propagation
 						// of the chain packet down the graph tree
 						return false;
 					});
 				}
+
+				req.socket.setNoDelay(true);
 
 				// Send headers for event-stream connection
 				res.writeHead(200, {
@@ -417,7 +636,7 @@ NodeApiServer.prototype.handleSyncRequest = function (req, res) {
 					'Connection': 'keep-alive'
 				});
 
-				res.write('\n');
+				res.write(':ok\n\n');
 
 				// Send connected message to the client with messageId zero
 				self.sendToClient(res, 0, 'connected', "{}");
@@ -477,6 +696,8 @@ NodeApiServer.prototype.sendToClient = function (res, messageId, eventName, stri
 	res.write('event: ' + eventName + '\n');
 	res.write('id: ' + messageId + '\n');
 	res.write("data: " + stringifiedData + '\n\n');
+
+	//console.log('EventStream: "' + eventName + '" ' + stringifiedData);
 };
 
 /**
@@ -510,28 +731,43 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
 };
 
 /**
- * Defines an access rule for a model and method combination. When
+ * Defines an access rule for an object and HTTP method combination. When
  * access is requested via a REST call, the function provided will be
  * executed and the callback from that method will determine if the
  * access will be allowed or denied. Multiple access functions can
  * be provided for a single model and method allowing authentication
  * checks to be stacked.
+ *
+ * This call also allows you to pass a wildcard "*" instead of the objType,
+ * objName and methodName parameters which will match all items. This
+ * allows you to set permissions globally.
+ *
+ * If no access permissions are present ForerunnerDB will automatically
+ * deny any request to the resource by default.
  * @name access
  * @param {String} dbName The name of the database to set access rules for.
  * @param {String} objType The type of object that the name refers to
- * e.g. collection, view etc.
- * @param {String} objName The model name (collection) to apply the
- * access function to.
- * @param {String} methodName The name of the method to apply the access
- * function to e.g. "insert".
- * @param {Function} checkFunction The function to call when an access attempt
- * is made against the collection. A callback method is passed to this
+ * e.g. "collection", "view" etc. This effectively maps to a method name on
+ * the Db class instance. If you can do db.collection() then you can use the
+ * string "collection" since it maps to the db.collection() method. This means
+ * you can also use this to map to custom classes as long as you register
+ * an accessor method on the Db class.
+ * @param {String} objName The object name to apply the access rule to.
+ * @param {String} methodName The name of the HTTP method to apply the access
+ * function to e.g. "GET", "POST", "PUT", "PATCH" etc.
+ * @param {Function|String} checkFunction The function to call when an access
+ * attempt is made against the collection. A callback method is passed to this
  * function which should be called after the function has finished
- * processing.
+ * processing. If you do not need custom logic to allow or deny access you
+ * can simply pass the string "allow" or "deny" instead of a function and
+ * ForerunnerDB will handle the logic automatically.
  * @returns {*}
  */
 NodeApiServer.prototype.access = function (dbName, objType, objName, methodName, checkFunction) {
-	var methodArr;
+	var methodArr,
+		accessOrderItem,
+		foundEntry = false,
+		i;
 
 	if (objType !== undefined && objName !== undefined && methodName !== undefined) {
 		if (checkFunction !== undefined) {
@@ -552,33 +788,53 @@ NodeApiServer.prototype.access = function (dbName, objType, objName, methodName,
 			_access.db[dbName] = _access.db[dbName] || {};
 			_access.db[dbName][objType] = _access.db[dbName][objType] || {};
 			_access.db[dbName][objType][objName] = _access.db[dbName][objType][objName] || {};
-			_access.db[dbName][objType][objName][methodName] = _access.db[dbName][objType][objName][methodName] || [];
-			_access.db[dbName][objType][objName][methodName].push(checkFunction);
+			_access.db[dbName][objType][objName][methodName] = true;
+
+			_accessOrder.push({
+				dbName: dbName,
+				objType: objType,
+				objName: objName,
+				methodName: methodName,
+				checkFunction: checkFunction
+			});
 
 			return this;
 		}
 
 		methodArr = [];
 
-		// Get all checkFunctions for the specified access data
+		// Do quick lookup check
 		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName][methodName]);
+			foundEntry = true;
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
+			foundEntry = true;
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
+			foundEntry = true;
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
+			foundEntry = true;
+		} else if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
+			foundEntry = true;
+		} else {
+			// None of the matching patterns exist, exit without permissions
+			return methodArr;
 		}
 
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType][objName] && _access.db[dbName][objType][objName]['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType][objName]['*']);
-		}
+		// Now we know that at least one of the permission rules matches the passed pattern
+		// so we loop through the permissions in order they are registered and add matching
+		// ones to the methodArr array.
+		for (i = 0; i < _accessOrder.length; i++) {
+			accessOrderItem = _accessOrder[i];
 
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*'][methodName]) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*'][methodName]);
-		}
-
-		if (_access.db && _access.db[dbName] && _access.db[dbName][objType] && _access.db[dbName][objType]['*'] && _access.db[dbName][objType]['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName][objType]['*']['*']);
-		}
-
-		if (_access.db && _access.db[dbName] && _access.db[dbName]['*'] && _access.db[dbName]['*']['*'] && _access.db[dbName]['*']['*']['*']) {
-			methodArr = methodArr.concat(_access.db[dbName]['*']['*']['*']);
+			// Determine if the access data fits the query
+			if (accessOrderItem.dbName === '*' || accessOrderItem.dbName === dbName) {
+				if (accessOrderItem.objType === '*' || accessOrderItem.objType === objType) {
+					if (accessOrderItem.objName === '*' || accessOrderItem.objName === objName) {
+						if (accessOrderItem.methodName === '*' || accessOrderItem.methodName === methodName) {
+							methodArr.push(accessOrderItem.checkFunction);
+						}
+					}
+				}
+			}
 		}
 
 		return methodArr;
@@ -600,9 +856,10 @@ NodeApiServer.prototype._denyMethod = function defaultDenyMethod (dbName, objTyp
  * @private
  */
 NodeApiServer.prototype._defineRoutes = function () {
-	var self = this;
+	var self = this,
+		root = this._rootPath;
 
-	app.get('/', function (req, res) {
+	app.get(root + '/', function (req, res) {
 		res.send({
 			server: 'ForerunnerDB',
 			version: self._core.version()
@@ -610,21 +867,32 @@ NodeApiServer.prototype._defineRoutes = function () {
 	});
 
 	// Handle sync routes
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/_sync', function () { self.handleSyncRequest.apply(self, arguments); });
 
 	// Handle all other routes
-	app.get('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId/*', function () { self.handleRequest.apply(self, arguments); });
+	app.head(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.post('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.put('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
-	app.patch('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.post(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.put(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.patch(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.delete('/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
-	app.delete('/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
+	app.delete(root + '/:dbName/:objType/:objName', function () { self.handleRequest.apply(self, arguments); });
+	app.delete(root + '/:dbName/:objType/:objName/:objId', function () { self.handleRequest.apply(self, arguments); });
 
-	app.get('/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
-	app.get('/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/_sync', function () { self.handleRequest.apply(self, arguments); });
+	app.get(root + '/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
+};
+
+NodeApiServer.prototype._generateCert = function () {
+	pem.createCertificate({
+		days: 365,
+		selfSigned: true
+	}, function(err, keys) {
+
+	});
 };
 
 /**

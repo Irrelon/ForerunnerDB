@@ -24,7 +24,7 @@ Overload = require('./Overload');
  * multiple database instances.
  * @constructor
  */
-var Core = function (name) {
+var Core = function (val) {
 	this.init.apply(this, arguments);
 };
 

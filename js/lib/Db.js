@@ -4,7 +4,7 @@ var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Crc,
+	Checksum,
 	Overload;
 
 Shared = require('./Shared');
@@ -147,7 +147,7 @@ Shared.mixin(Db.prototype, 'Mixin.Tags');
 Core = Shared.modules.Core;
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
-Crc = require('./Crc.js');
+Checksum = require('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -205,7 +205,7 @@ Db.prototype.isServer = function () {
  * @param {String} string The string to checksum.
  * @return {String} The checksum generated.
  */
-Db.prototype.crc = Crc;
+Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or

@@ -71,7 +71,6 @@ Odm.prototype.drop = function () {
 			delete this._from._odm;
 		}
 
-		delete this._name;
 		delete this._listeners;
 	}
 

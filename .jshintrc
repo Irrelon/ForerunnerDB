@@ -15,6 +15,5 @@
 	"strict": true,
 	"undef": true,
 	"bitwise": true,
-	"browser": true,
-	"camelcase": true
+	"browser": true
 }

@@ -355,5 +355,8 @@ IndexHashMap.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index.hashed = IndexHashMap;
+
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>Infinilist Functionality Demo</title>
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+	<script src="../unitTests/lib/jquery-1.11.0.min.js"></script>
+
+	<script src="../unitTests/lib/fdb-all.js" data-cover></script>
+	<script src="../unitTests/lib/fdb-autobind.js" data-cover></script>
+	<script src="../unitTests/lib/fdb-infinilist.js"></script>
+
+	<script src="../unitTests/lib/jsrender-helpers.js"></script>
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<style>
+		* {
+			font-family: 'Open Sans', sans-serif;
+			font-size: 14px;
+		}
+
+		.il_topMargin {
+			height: 0;
+		}
+		
+		.il_items {
+			/*height: 0;*/
+		}
+
+		.il_bottomMargin {
+			height: 0;
+		}
+
+		#testContainer {
+			display: block;
+			height: 385px;
+			min-width: 200px;
+			border-right: 1px solid #ccc;
+			padding: 0;
+			margin: 0;
+			float: left;
+			overflow-y: auto;
+		}
+
+		.item {
+			padding: 5px;
+			margin: 0px;
+			cursor: pointer;
+			position: relative;
+			white-space: nowrap;
+			padding-right: 30px;
+			height: 24px;
+		}
+
+		.item:after {
+			content: "";
+			border-top: 5px solid transparent;
+			border-bottom: 5px solid transparent;
+			border-left: 5px solid #999999;
+			position: absolute;
+			right: 10px;
+			top: 7px;
+		}
+
+		.tx {
+			margin-right: 20px;
+			white-space: nowrap;
+		}
+	</style>
+</head>
+<body>
+	<div id="testContainer"></div>
+
+	<script type="text/x-jsrender" id="listItem">
+		<div class="item" data-link="id{:_id}"><input type="checkbox" data-link="checked{:checked}" /> <span class="glyphicon glyphicon-user"></span> <span class="tx">{^{:name}}</span></div>
+	</script>
+
+	<script src="js/infinilist3.js"></script>
+</body>
+</html>

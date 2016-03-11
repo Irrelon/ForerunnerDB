@@ -1019,7 +1019,7 @@ QUnit.test("Collection.find() :: Value in array of strings", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Single join", function () {
+QUnit.test("Collection.find() :: Options :: Single join against collection", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1039,6 +1039,85 @@ QUnit.test("Collection.find() :: Options :: Single join", function () {
 	strictEqual(result[2].orgId, result[2].org._id, "Complete");
 
 	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: Test $nin:[null] #81", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.insert([{
+		_id: '1',
+		value: 'a'
+	}, {
+		_id: '2',
+		value: null
+	}]);
+
+	result = coll.find({
+		value: {
+			$exists: true,
+			$nin: [null]
+		}
+	});
+
+	strictEqual(result.length, 1, "Find with not matching null returned correct number of results");
+	strictEqual(result[0]._id, '1', "Find with not matching null works");
+
+	result = coll.find({
+		value: {
+			$exists: true,
+			$in: [null]
+		}
+	});
+
+	strictEqual(result.length, 1, "Find with matching null returned correct number of results");
+	strictEqual(result[0]._id, '2', "Find with matching null works");
+
+	base.dbDown();
+});
+
+ForerunnerDB.moduleLoaded('View', function () {
+	QUnit.test("Collection.find() :: Options :: Single join against a view", function () {
+		base.dbUp();
+		base.dataUp();
+
+		var orgView = db.view('organisationView')
+			.from('organisation')
+			.query({
+				profit: 135
+			});
+
+		var result = user.find({}, {
+			"$join": [{
+				"organisationView": {
+					"_id": "orgId",
+					"$sourceType": 'view',
+					"$as": "orgView",
+					"$require": true,
+					"$multi": false
+				}
+			}]
+		});
+
+		strictEqual(result.length, 3, "Correct number of results after join");
+
+		strictEqual(result[0].orgId, result[0].orgView._id, "Org id matches original data for 1");
+		strictEqual(result[1].orgId, result[1].orgView._id, "Org id matches original data for 2");
+		strictEqual(result[2].orgId, result[2].orgView._id, "Org id matches original data for 3");
+
+		strictEqual(result[0].orgView._id, "2", "Correct organisation from view in 1");
+		strictEqual(result[1].orgView._id, "3", "Correct organisation from view in 2");
+		strictEqual(result[2].orgView._id, "3", "Correct organisation from view in 3");
+
+		strictEqual(result[0]._id, "3", "Correct user in result for 1");
+		strictEqual(result[1]._id, "4", "Correct user in result for 2");
+		strictEqual(result[2]._id, "5", "Correct user in result for 3");
+
+		base.dbDown();
+	});
 });
 
 QUnit.test("Collection.find() :: Options :: Single join, array of ids", function () {
@@ -1161,7 +1240,7 @@ QUnit.test("Collection.find() :: Options :: Multi join with path to ids in an ar
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Queries joined data", function () {
+QUnit.test("Collection.find() :: Options :: Queries joined data from a joined collection", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1187,7 +1266,34 @@ QUnit.test("Collection.find() :: Options :: Queries joined data", function () {
 	base.dbDown();
 });
 
-QUnit.test("Collection.find() :: Options :: Join with mixin", function () {
+// TODO : Write this test, it should now be possible
+/*QUnit.test("Collection.find() :: Options :: Queries joined data from a joined view", function () {
+	base.dbUp();
+	base.dataUp();
+
+	var result = user.find({
+		org: {
+			type: 'beta'
+		}
+	}, {
+		"$join": [{
+			"organisation": {
+				"_id": "orgId",
+				"$as": "org",
+				"$require": true,
+				"$multi": false
+			}
+		}]
+	});
+
+	strictEqual(result[0].orgId, result[0].org._id, "Joined org id matches rerturned data");
+	strictEqual(result[0].org.type, "beta", "Joined org type matches queried type");
+	strictEqual(result.length, 1, "Number of returned records is correct");
+
+	base.dbDown();
+});*/
+
+QUnit.test("Collection.find() :: Options :: Join with prefix", function () {
 	base.dbUp();
 	base.dataUp();
 
@@ -1203,10 +1309,10 @@ QUnit.test("Collection.find() :: Options :: Join with mixin", function () {
 		}]
 	});
 
-	strictEqual(result[0].orgname, 'Organisation 1', "Correct data mixed in 1");
-	strictEqual(result[1].orgname, 'Organisation 2', "Correct data mixed in 2");
-	strictEqual(result[2].orgname, 'Organisation 3', "Correct data mixed in 3");
-	strictEqual(result[3].orgname, 'Organisation 3', "Correct data mixed in 4");
+	strictEqual(result[0].orgname, 'Organisation 1', "Correct data prefixed in 1");
+	strictEqual(result[1].orgname, 'Organisation 2', "Correct data prefixed in 2");
+	strictEqual(result[2].orgname, 'Organisation 3', "Correct data prefixed in 3");
+	strictEqual(result[3].orgname, 'Organisation 3', "Correct data prefixed in 4");
 
 	base.dbDown();
 });
@@ -1222,7 +1328,7 @@ QUnit.test("Collection.find() :: Options :: Join with query", function () {
 					$in: "$$.friends"
 				},
 				"$where": {
-					options: {
+					$options: {
 						$orderBy: {
 							_id: 1
 						}
@@ -1251,12 +1357,12 @@ QUnit.test("Collection.find() :: Options :: Join with query and right-side back-
 		"$join": [{
 			"user": {
 				"$where": {
-					"query": {
+					"$query": {
 						"_id": {
 							"$in": "$$.friends"
 						}
 					},
-					"options": {
+					"$options": {
 						"$orderBy": {
 							"_id": 1
 						}
@@ -1311,7 +1417,7 @@ QUnit.test("Collection.find() :: Options :: Join with query with both a right-si
 		"$join": [{
 			"b": {
 				"$where": {
-					"query": {
+					"$query": {
 						"id": "$$._id",
 						"name": 'test1'
 					}
@@ -2093,6 +2199,30 @@ QUnit.test("Collection.find() :: $distinct clause", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $distinct clause strings", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.setData([{'test': "Hello"}, {'test': "hello"}, {'test': "Hello"}]);
+
+	strictEqual(coll.find().length, 3, 'Check data inserted correctly');
+
+	// Run distinct query
+	result = coll.find({
+		$distinct: {
+			test: 1
+		}
+	});
+
+	strictEqual(result.length, 2, 'Check correct $distinct query result number');
+	strictEqual(result[0].test, "Hello", 'Check correct result 1');
+	strictEqual(result[1].test, "hello", 'Check correct result 2');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: // Comment properties", function () {
 	base.dbUp();
 
@@ -2681,6 +2811,33 @@ QUnit.asyncTest("Collection.insert() :: Process insert with many defferred docum
 	});
 });
 
+QUnit.test("Collection.insert() :: Process insert with deferred turned off - should instantly be available in find()", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		data = [],
+		count = 150,
+		result,
+		i;
+
+	// Turn off deferred calls
+	coll.deferredCalls(false);
+
+	// Generate random data
+	for (i = 0; i < count; i++) {
+		data.push({
+			val: i
+		});
+	}
+
+	coll.insert(data);
+	result = coll.find();
+
+	strictEqual(result.length, 150, 'Operation was not deferred - this is a correct result');
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.indexOf() :: Get a document's current array index by the document", function () {
 	base.dbUp();
 
@@ -3170,10 +3327,12 @@ QUnit.test("Collection :: Create collection and specify primary key", function (
 	base.dbDown();
 });
 
-QUnit.test("Collection :: Create capped collection", function () {
+QUnit.asyncTest("Collection :: Create capped collection", function () {
 	base.dbUp();
-
-	var coll;
+	expect(17);
+	var coll,
+		data = [],
+		i;
 
 	coll = db.collection('testCapped', {
 		capped: true,
@@ -3207,7 +3366,29 @@ QUnit.test("Collection :: Create capped collection", function () {
 	strictEqual(coll.count(), 5, 'Count is correct');
 	strictEqual(coll.find()[0]._id, 4, 'Id for first record is correct');
 
-	base.dbDown();
+	// Now throw a load of documents at the collection all at once and check that
+	// capped collections still work
+	for (i = 0; i < 200; i++) {
+		data.push({
+			_id: i + 9,
+			test: "test"
+		});
+	}
+
+	coll.insert(data, function () {
+		var result = db.collection('testCapped').find();
+
+		strictEqual(result.length, 5, 'After bulk insert the capped collection is still registering 5 documents');
+		strictEqual(result[0]._id, 204, 'Bulk insert 1 document id correct');
+		strictEqual(result[1]._id, 205, 'Bulk insert 2 document id correct');
+		strictEqual(result[2]._id, 206, 'Bulk insert 3 document id correct');
+		strictEqual(result[3]._id, 207, 'Bulk insert 4 document id correct');
+		strictEqual(result[4]._id, 208, 'Bulk insert 5 document id correct');
+
+		start();
+
+		base.dbDown();
+	});
 });
 
 QUnit.test("Collection.find() :: Waterfall queries", function () {

@@ -532,133 +532,135 @@ QUnit.test("Disable and then re-enable trigger by id only", function() {
 	base.dbDown();
 });
 
-QUnit.test("Trigger before insert cancel operation doesn't travel further down chain reactor", function() {
-	base.dbUp();
+ForerunnerDB.moduleLoaded('View', function () {
+	QUnit.test("Trigger before insert cancel operation doesn't travel further down chain reactor", function () {
+		base.dbUp();
 
-	var coll = db.collection('transformColl').truncate(),
-		view = db.view('transformColl'),
-		triggerMethod,
-		result;
+		var coll = db.collection('transformColl').truncate(),
+			view = db.view('transformColl'),
+			triggerMethod,
+			result;
 
-	view.from(coll);
+		view.from(coll);
 
-	triggerMethod = function (operation, oldData, newData) {
-		// Update the object to indicate the trigger fired
-		newData.triggered = true;
+		triggerMethod = function (operation, oldData, newData) {
+			// Update the object to indicate the trigger fired
+			newData.triggered = true;
 
-		// Return false to cancel operation from the trigger
-		return false;
-	};
+			// Return false to cancel operation from the trigger
+			return false;
+		};
 
-	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+		coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
 
-	var obj = {
-		_id: 1,
-		triggered: false
-	};
+		var obj = {
+			_id: 1,
+			triggered: false
+		};
 
-	coll.insert(obj);
+		coll.insert(obj);
 
-	result = coll.find();
+		result = coll.find();
 
-	strictEqual(obj.triggered, true, "Trigger fired");
-	strictEqual(result.length, 0, "Didn't insert into collection");
+		strictEqual(obj.triggered, true, "Trigger fired");
+		strictEqual(result.length, 0, "Didn't insert into collection");
 
-	result = view.find();
+		result = view.find();
 
-	strictEqual(result.length, 0, "Didn't insert into view");
+		strictEqual(result.length, 0, "Didn't insert into view");
 
-	base.dbDown();
-});
-
-QUnit.test("Trigger before update cancel operation doesn't travel further down chain reactor", function() {
-	base.dbUp();
-
-	var coll = db.collection('transformColl').truncate(),
-		view = db.view('transformColl'),
-		triggerMethod,
-		triggered = false,
-		result,
-		obj;
-
-	view.from(coll);
-
-	obj = {
-		_id: 1,
-		triggered: false
-	};
-
-	coll.insert(obj);
-
-	triggerMethod = function (operation, oldData, newData) {
-		// Update the object to indicate the trigger fired
-		triggered = true;
-
-		// Return false to cancel operation from the trigger
-		return false;
-	};
-
-	coll.addTrigger('availability', db.TYPE_UPDATE, db.PHASE_BEFORE, triggerMethod);
-
-	coll.update({
-		_id: 1
-	}, {
-		updated: true
+		base.dbDown();
 	});
 
-	result = coll.find();
+	QUnit.test("Trigger before update cancel operation doesn't travel further down chain reactor", function () {
+		base.dbUp();
 
-	strictEqual(triggered, true, "Trigger fired");
-	strictEqual(result[0].updated, undefined, "Didn't update into collection");
+		var coll = db.collection('transformColl').truncate(),
+			view = db.view('transformColl'),
+			triggerMethod,
+			triggered = false,
+			result,
+			obj;
 
-	result = view.find();
+		view.from(coll);
 
-	strictEqual(result[0].updated, undefined, "Didn't update into view");
+		obj = {
+			_id: 1,
+			triggered: false
+		};
 
-	base.dbDown();
-});
+		coll.insert(obj);
 
-QUnit.test("Trigger before remove cancel operation doesn't travel further down chain reactor", function() {
-	base.dbUp();
+		triggerMethod = function (operation, oldData, newData) {
+			// Update the object to indicate the trigger fired
+			triggered = true;
 
-	var coll = db.collection('transformColl').truncate(),
-		view = db.view('transformColl'),
-		triggerMethod,
-		triggered = false,
-		result,
-		obj;
+			// Return false to cancel operation from the trigger
+			return false;
+		};
 
-	view.from(coll);
+		coll.addTrigger('availability', db.TYPE_UPDATE, db.PHASE_BEFORE, triggerMethod);
 
-	obj = {
-		_id: 1,
-		triggered: false
-	};
+		coll.update({
+			_id: 1
+		}, {
+			updated: true
+		});
 
-	coll.insert(obj);
+		result = coll.find();
 
-	triggerMethod = function (operation, oldData, newData) {
-		// Update the object to indicate the trigger fired
-		triggered = true;
+		strictEqual(triggered, true, "Trigger fired");
+		strictEqual(result[0].updated, undefined, "Didn't update into collection");
 
-		// Return false to cancel operation from the trigger
-		return false;
-	};
+		result = view.find();
 
-	coll.addTrigger('availability', db.TYPE_REMOVE, db.PHASE_BEFORE, triggerMethod);
+		strictEqual(result[0].updated, undefined, "Didn't update into view");
 
-	coll.remove({
-		_id: 1
+		base.dbDown();
 	});
 
-	result = coll.find();
+	QUnit.test("Trigger before remove cancel operation doesn't travel further down chain reactor", function () {
+		base.dbUp();
 
-	strictEqual(triggered, true, "Trigger fired");
-	strictEqual(result.length, 1, "Didn't remove from collection");
+		var coll = db.collection('transformColl').truncate(),
+			view = db.view('transformColl'),
+			triggerMethod,
+			triggered = false,
+			result,
+			obj;
 
-	result = view.find();
+		view.from(coll);
 
-	strictEqual(result.length, 1, "Didn't remove from view");
+		obj = {
+			_id: 1,
+			triggered: false
+		};
 
-	base.dbDown();
+		coll.insert(obj);
+
+		triggerMethod = function (operation, oldData, newData) {
+			// Update the object to indicate the trigger fired
+			triggered = true;
+
+			// Return false to cancel operation from the trigger
+			return false;
+		};
+
+		coll.addTrigger('availability', db.TYPE_REMOVE, db.PHASE_BEFORE, triggerMethod);
+
+		coll.remove({
+			_id: 1
+		});
+
+		result = coll.find();
+
+		strictEqual(triggered, true, "Trigger fired");
+		strictEqual(result.length, 1, "Didn't remove from collection");
+
+		result = view.find();
+
+		strictEqual(result.length, 1, "Didn't remove from view");
+
+		base.dbDown();
+	});
 });

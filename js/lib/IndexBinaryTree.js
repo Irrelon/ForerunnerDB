@@ -236,5 +236,8 @@ IndexBinaryTree.prototype._itemHashArr = function (item, keys) {
 	return hashArr;
 };
 
+// Register this index on the shared object
+Shared.index.btree = IndexBinaryTree;
+
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;

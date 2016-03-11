@@ -4,6 +4,11 @@ var Angular = _dereq_('../lib/Angular');
 module.exports = Angular;
 
 },{"../lib/Angular":2}],2:[function(_dereq_,module,exports){
+/*global
+	angular,
+	ForerunnerDB
+*/
+
 "use strict";
 
 /**
@@ -69,7 +74,7 @@ Angular.extendCollection = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							self.off('change', link.callback);
+							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
@@ -77,7 +82,7 @@ Angular.extendCollection = function (Module) {
 			});
 
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', link.callback);
+			self.on('immediateChange', link.callback);
 
 			// Now update the view
 			if (link.callback) { link.callback(); }
@@ -129,9 +134,9 @@ Angular.extendView = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.publicData().findOne(self._querySettings.query, self._querySettings.options) || {};
+						scope[varName] = self.data().findOne() || {};
 					} else {
-						scope[varName] = self.publicData().find(self._querySettings.query, self._querySettings.options);
+						scope[varName] = self.data().find();
 					}
 
 					setTimeout(function () {
@@ -147,15 +152,15 @@ Angular.extendView = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							self.publicData().off('change', link.callback);
+							self.data().off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
 				}
 			});
 
-			// Hook the ForerunnerDB change event to inform angular of a change
-			self.publicData().on('change', function () {
+			// Hook the ForerunnerDB immediateChange event to inform angular of a change
+			self.data().on('immediateChange', function () {
 				link.callback();
 			} );
 
@@ -206,6 +211,7 @@ Angular.extendDocument = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
+							//TODO: Implement immediateChange in Document class and hook that instead of change event
 							self.off('change', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
@@ -272,6 +278,15 @@ var modules = ['Collection', 'View', 'Overview', 'Document'],
 // Extend modules that are finished loading
 for (moduleIndex = 0; moduleIndex < modules.length; moduleIndex++) {
 	Shared.moduleFinished(modules[moduleIndex], moduleFinished);
+}
+
+// Expose ForerunnerDB as a service for AngularJS
+if (typeof angular !== 'undefined' && angular.module) {
+	angular.module('forerunnerdb', [])
+		.factory('$fdb', function() {
+			// Return the global ForerunnerDB class
+			return new ForerunnerDB();
+		});
 }
 
 Shared.finishModule('Angular');

@@ -6,7 +6,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.queryData({}, {
+		var targetId = base.tmpDomUp();
+
+		userView.query({}, {
 			$orderBy: {
 				createdTs: -1
 			}
@@ -26,21 +28,22 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			createdTs: 2
 		}]);
 
-		userView.link('#testTarget', {
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
-		var elems = $('#testTarget').find('li');
+		var elems = $('#' + targetId).find('li');
 
 		strictEqual(elems.length, 3, "Document count is correct");
 		strictEqual($(elems[0]).text(), 'foo', "Output is correct");
 		strictEqual($(elems[1]).text(), 'boo', "Output is correct");
 		strictEqual($(elems[2]).text(), 'hello', "Output is correct");
 
-		userView.unlink('#testTarget', {
+		userView.unlink('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -50,9 +53,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		var coll = db.collection('test');
 
-		coll.link('#testTarget', {
+		coll.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:slots[0].arr[0].count}}:{^{if slots[0].arr[0].remaining}}{^{:slots[0].arr[0].remaining.val}}{{/if}}, {^{:slots[0].arr[1].count}}:{^{:slots[0].arr[1].remaining.val}}</li>'
 		});
 
@@ -77,7 +82,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		}]);
 
 		var before = coll.find()[0];
-		var beforeElem = $('#testTarget').find('#1');
+		var beforeElem = $('#' + targetId).find('#1');
 
 		strictEqual(before.slots[0].arr[0].remaining.val, 20, "Check initial numbers");
 		strictEqual(before.slots[0].arr[1].remaining.val, 15, "Check initial numbers");
@@ -102,12 +107,13 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		});
 
 		var after = coll.find()[0];
-		var afterElem = $('#testTarget').find('#1');
+		var afterElem = $('#' + targetId).find('#1');
 
 		strictEqual(after.slots[0].arr[0].remaining, undefined, "Check final properties");
 		strictEqual(after.slots[0].arr[1].remaining.val, 15, "Check final properties");
 		strictEqual(afterElem.text(), '10:, 7:15', "Check final link data");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.dbDown();
 	});
@@ -118,7 +124,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -127,14 +135,15 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
-		userView.unlink('#testTarget', {
+		userView.unlink('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -146,7 +155,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -155,10 +166,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -170,7 +182,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link($('#testTarget'), {
+		var targetId = base.tmpDomUp();
+
+		userView.link($('#' + targetId), {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -181,12 +195,12 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
 		// Now unlink the bind and check that we no longer get updates to the DOM
-		userView.unlink($('#testTarget'), {
+		userView.unlink($('#' + targetId), {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -197,10 +211,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "unbound"
 		});
 
-		elem = $('#testTarget').find('#3444423');
+		elem = $('#' + targetId).find('#3444423');
 
 		strictEqual(elem.length, 0, "Insert single document did not bind after unlink");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -212,7 +227,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link($('#testTarget'), {
+		var targetId = base.tmpDomUp();
+
+		userView.link($('#' + targetId), {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -223,7 +240,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
@@ -237,10 +254,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "unbound"
 		});
 
-		elem = $('#testTarget').find('#3444423');
+		elem = $('#' + targetId).find('#3444423');
 
 		strictEqual(elem.length, 0, "Insert single document did not bind after unlink");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -252,7 +270,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -261,7 +281,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		user.update({
@@ -270,9 +290,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello2', "Update single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -284,7 +305,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -293,7 +316,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		user.upsert({
@@ -301,9 +324,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello2', "Update single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -315,7 +339,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -324,16 +350,17 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 1, "Insert single document");
 
 		user.remove({
 			_id: '2342'
 		});
 
-		elem = $('#testTarget').find('#2342');
+		elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Remove single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -345,6 +372,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dataUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		expect(8);
 
 		userView
@@ -353,7 +382,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 					name: 1
 				}
 			})
-			.link('#testTarget', {
+			.link('#' + targetId, {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
 
@@ -371,9 +400,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			_id: '2322',
 			name: "beta"
 		});
+		$('body').scrollTop(10000);
 
 		setTimeout(function () {
-			var elems = $('#testTarget').find('.item');
+			var elems = $('#' + targetId).find('.item');
 
 			strictEqual(elems.length, 7, "Insert documents");
 
@@ -386,6 +416,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			strictEqual($(elems[5]).attr('id'), '3', "Alphabetical 6");
 			strictEqual($(elems[6]).attr('id'), '23432', "Alphabetical 7");
 
+			base.tmpDomDown(targetId);
 			base.viewDown();
 			base.domDown();
 			base.dbDown();
@@ -400,17 +431,19 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dataUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView
 			.queryOptions({
 				$orderBy: {
 					name: 1
 				}
 			})
-			.link('#testTarget', {
+			.link('#' + targetId, {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 4, "Document count");
 
@@ -426,7 +459,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: 'Zelda'
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 4, "Document count");
 
@@ -436,6 +469,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		strictEqual($(elems[2]).text(), 'Kat', "Alphabetical 3");
 		strictEqual($(elems[3]).text(), 'Zelda', "Alphabetical 4");
 
+		base.tmpDomUp(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -448,9 +482,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -459,14 +495,15 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
-		userView.unlink('#testTarget', {
+		userView.unlink('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -478,9 +515,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -489,10 +528,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -504,9 +544,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -515,10 +557,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello333"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 0, "Didn't insert single document");
-
+		
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -529,10 +572,12 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dataUp();
 		base.viewUp();
 		base.domUp();
+		
+		var targetId = base.tmpDomUp();
 
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -541,7 +586,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		user.update({
@@ -550,9 +595,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello2"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Document was removed because it does not match query");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -564,9 +610,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -575,7 +623,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello2"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Doc not in view");
 
 		user.update({
@@ -584,9 +632,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		elem = $('#testTarget').find('#2342');
+		elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 1, "Document is now in view as updated data matches query");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -598,9 +647,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -609,7 +660,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		user.upsert({
@@ -617,9 +668,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello2"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Document was removed because it does not match query");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -631,9 +683,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView.query({
 			name: 'hello'
-		}).link('#testTarget', {
+		}).link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -642,16 +696,17 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 1, "Insert single document");
 
 		user.remove({
 			_id: '2342'
 		});
 
-		elem = $('#testTarget').find('#2342');
+		elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Remove single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -663,13 +718,15 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dataUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView
 			.queryOptions({
 				$orderBy: {
 					name: 1
 				}
 			})
-			.link('#testTarget', {
+			.link('#' + targetId, {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
 
@@ -688,7 +745,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: "beta"
 		});
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 7, "Insert documents");
 
@@ -701,6 +758,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		strictEqual($(elems[5]).text(), 'Kat', "Alphabetical 6");
 		strictEqual($(elems[6]).text(), 'Zelda', "Alphabetical 7");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -712,17 +770,19 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dataUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		userView
 			.queryOptions({
 				$orderBy: {
 					name: 1
 				}
 			})
-			.link('#testTarget', {
+			.link('#' + targetId, {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 4, "Document count");
 
@@ -742,7 +802,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: 'Zelda'
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 4, "Document count");
 
@@ -752,6 +812,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		strictEqual($(elems[2]).text(), 'Kat', "Alphabetical 3");
 		strictEqual($(elems[3]).text(), 'Zelda', "Alphabetical 4");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -762,6 +823,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.viewUp();
 		base.dataUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		// Add an active === false to all user records
 		user.update({}, {active: false});
@@ -775,11 +838,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 					name: 1
 				}
 			})
-			.link('#testTarget', {
+			.link('#' + targetId, {
 				template: '<li class="item" data-link="id{:_id}">{^{:name}}</li>'
 			});
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 
 		strictEqual(elems.length, 0, "Document count is zero");
 
@@ -790,7 +853,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			active: true
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, 1, "Document count is one");
 
 		user.update({
@@ -799,7 +862,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			active: true
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, 2, "Document count is two");
 
 		strictEqual($(elems[0]).attr('id') === '4' && $(elems[0]).text(), 'Dean', "Alphabetical 1");
@@ -811,7 +874,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			active: true
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, 3, "Document count is three");
 
 		strictEqual($(elems[0]).attr('id') === '4' && $(elems[0]).text(), 'Dean', "Alphabetical 1");
@@ -824,7 +887,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			active: true
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, 4, "Document count");
 
 		// Check sort order
@@ -839,7 +902,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			name: 'Zelda'
 		});
 
-		elems = $('#testTarget').find('.item');
+		elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, 4, "Document count");
 
 		// Check sort order
@@ -848,6 +911,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		strictEqual($(elems[2]).attr('id') === '3' && $(elems[2]).text(), 'Kat', "Alphabetical 3");
 		strictEqual($(elems[3]).attr('id') === '2' && $(elems[3]).text(), 'Zelda', "Alphabetical 4");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -858,6 +922,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		var oldDebug = db.debug();
 		db.debug(false);
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		var coll = db.collection('test'),
 			i,
@@ -870,9 +936,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 
 		var view = db.view('test');
 
-		view._privateData._deferThreshold.insert = 10000;
-		view._privateData._deferThreshold.update = 10000;
-		view._privateData._deferThreshold.remove = 10000;
+		view._data._deferThreshold.insert = 10000;
+		view._data._deferThreshold.update = 10000;
+		view._data._deferThreshold.remove = 10000;
 
 		view
 			.from(coll)
@@ -885,7 +951,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 				}
 			});
 
-		view.link('#testTarget', {
+		view.link('#' + targetId, {
 			template: '<li class="item" data-link="id{:_id}"><div><div><div><div><div><div><div>{^{:i}}</div></div></div></div></div></div></div></li>'
 		});
 
@@ -910,9 +976,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 
 		ok(totalTime < 200, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, count, "Document count " + count + ": " + elems.length);
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		db.debug(oldDebug);
 		base.dbDown();
@@ -921,6 +988,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 	QUnit.test("View() with query :: View order large number of items before linking", function() {
 		base.dbUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		var coll = db.collection('test'),
 			view = db.view('test'),
@@ -946,9 +1015,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		var timeStart = new Date().getTime();
 		view = db.view('test');
 
-		view._privateData._deferThreshold.insert = 10000;
-		view._privateData._deferThreshold.update = 10000;
-		view._privateData._deferThreshold.remove = 10000;
+		view._data._deferThreshold.insert = 10000;
+		view._data._deferThreshold.update = 10000;
+		view._data._deferThreshold.remove = 10000;
 
 		view
 			.from(coll)
@@ -961,7 +1030,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 				}
 			});
 
-		view.link('#testTarget', {
+		view.link('#' + targetId, {
 			template: '<li class="item" data-link="id{:_id}"><div><div><div><div><div><div><div>{^{:i}}</div></div></div></div></div></div></div></li>'
 		});
 
@@ -977,9 +1046,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 
 		ok(totalTime < 50, 'Time taken to insert new item into existing large DOM list is acceptable: ' + totalTime + 'ms');
 
-		var elems = $('#testTarget').find('.item');
+		var elems = $('#' + targetId).find('.item');
 		strictEqual(elems.length, count, "Document count " + count + ": " + elems.length);
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.dbDown();
 	});
@@ -1051,7 +1121,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		}, 1);
 	});
 
-	QUnit.asyncTest('View chain propagation to document :: Collection -> View -> Document', function () {
+	QUnit.asyncTest('View chain propagation to document :: Collection -> View -> View -> Document', function () {
 		"use strict";
 
 		expect(2);
@@ -1542,6 +1612,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewGroupUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		/*expect(1);
 		 start();*/
 
@@ -1561,7 +1633,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group insert');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1570,10 +1642,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1587,6 +1660,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewGroupUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		user.on('update', function () {
 			ok(true, 'Collection update');
 		});
@@ -1603,7 +1678,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group update');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1612,7 +1687,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		user.update({
@@ -1621,9 +1696,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello2', "Update single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1636,6 +1712,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.viewGroupUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		user.on('remove', function () {
 			ok(true, 'Collection remove');
@@ -1653,7 +1731,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group remove');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1662,16 +1740,17 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 1, "Insert single document");
 
 		user.remove({
 			_id: '2342'
 		});
 
-		elem = $('#testTarget').find('#2342');
+		elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Remove single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1684,6 +1763,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.viewGroupUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		/*expect(1);
 		 start();*/
@@ -1704,7 +1785,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group insert');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1713,10 +1794,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 
 		strictEqual(elem.length, 1, "Insert single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1729,6 +1811,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.viewGroupUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		user.on('update', function () {
 			ok(true, 'Collection update');
@@ -1746,7 +1830,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group update');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1755,7 +1839,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'hello', "Insert single document");
 
 		userGroup.update({
@@ -1764,9 +1848,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello2"
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello2', "Update single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1779,6 +1864,8 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.viewGroupUp();
 		base.domUp();
+
+		var targetId = base.tmpDomUp();
 
 		user.on('remove', function () {
 			ok(true, 'Collection remove');
@@ -1796,7 +1883,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			ok(true, 'View from group remove');
 		});
 
-		userGroupView.link('#testTarget', {
+		userGroupView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1805,16 +1892,17 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: "hello"
 		});
 
-		var elem = $('#testTarget').find('#2342');
+		var elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 1, "Insert single document");
 
 		userGroup.remove({
 			_id: '2342'
 		});
 
-		elem = $('#testTarget').find('#2342');
+		elem = $('#' + targetId).find('#2342');
 		strictEqual(elem.length, 0, "Remove single document");
 
+		base.tmpDomDown(targetId);
 		base.domDown();
 		base.viewGroupDown();
 		base.viewDown();
@@ -1827,7 +1915,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.domUp();
 
-		userView.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{for arr}}{^{if show}}{^{for subjects}}{^{:name}}:{^{:available}},{{/for}}{{/if}}{{/for}}</li>'
 		});
 
@@ -1851,7 +1941,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			}]
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, '', "Bind is currently blank");
 
 		user.update({
@@ -1862,7 +1952,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			}
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello1:0,hello2:0,hello3:0,', "Update single document");
 
 		user.update({
@@ -1880,9 +1970,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			}
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'hello1:0,hello2:1,hello3:0,', "Update single document");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -1894,7 +1985,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.domUp();
 
-		user.link('#testTarget', {
+		var targetId = base.tmpDomUp();
+
+		user.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1903,7 +1996,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo1'
 		});
 
-		var currentName = $('#testTarget').find('#2342').text();
+		var currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'moo1', "Bind is currently moo1");
 
 		user.update({
@@ -1912,11 +2005,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo2'
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'moo2', "Update name is now moo2");
 
 		// Unlink
-		user.unlink('#testTarget', {
+		user.unlink('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1926,9 +2019,10 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo3'
 		});
 
-		var newName = $('#testTarget').find('#2342').text();
+		var newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'moo2', "After unlink, name updated in data but HTML should still be moo2");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
 		base.dbDown();
@@ -1940,9 +2034,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 		base.viewUp();
 		base.domUp();
 
+		var targetId = base.tmpDomUp();
+
 		var currentName, newName;
 
-		userView.link('#testTarget', {
+		userView.link('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1951,7 +2047,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo1'
 		});
 
-		currentName = $('#testTarget').find('#2342').text();
+		currentName = $('#' + targetId).find('#2342').text();
 		strictEqual(currentName, 'moo1', "Bind is currently moo1");
 
 		user.update({
@@ -1960,11 +2056,11 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo2'
 		});
 
-		newName = $('#testTarget').find('#2342').text();
+		newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'moo2', "Update name is now moo2");
 
 		// Unlink
-		userView.unlink('#testTarget', {
+		userView.unlink('#' + targetId, {
 			template: '<li data-link="id{:_id}">{^{:name}}</li>'
 		});
 
@@ -1974,11 +2070,49 @@ ForerunnerDB.moduleLoaded('View, AutoBind, CollectionGroup', function () {
 			name: 'moo3'
 		});
 
-		newName = $('#testTarget').find('#2342').text();
+		newName = $('#' + targetId).find('#2342').text();
 		strictEqual(newName, 'moo2', "After unlink, name updated in data but HTML should still be moo2");
 
+		base.tmpDomDown(targetId);
 		base.viewDown();
 		base.domDown();
+		base.dbDown();
+	});
+
+	QUnit.test("View.on() :: Bind to an object without the property the template wants, then upsert with the property", function () {
+		base.dbUp();
+
+		$('<div id="inboxTotalBadge"></div>').appendTo('body');
+
+		// Create the unreadCounts collection
+		var elem,
+			coll = db.collection('unreadCounts');
+
+		coll.upsert({
+			"_id": "total"
+		});
+
+		db
+			.view('unreadTotalCounts')
+			.query({ _id: "total" })
+			.from('unreadCounts')
+			.link('#inboxTotalBadge', {
+				template: '<div class="count" data-link="id{:_id}">{^{:count}}</div>'
+			});
+
+		elem = $('#inboxTotalBadge').find('#total');
+		strictEqual(elem.text(), "", "Text output is blank");
+
+		coll.upsert({
+			"_id": "total",
+			"count": 20
+		});
+
+		elem = $('#inboxTotalBadge').find('#total');
+		strictEqual(elem.text(), "20", "Text output is 20");
+
+		$('#inboxTotalBadge').remove();
+
 		base.dbDown();
 	});
 });

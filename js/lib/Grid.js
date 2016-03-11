@@ -272,7 +272,7 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.query) {
 				// Remove listeners
-				elem.off('click', '[data-grid-filter]', sortClickListener );
+				elem.off('click', '[data-grid-filter]', sortClickListener);
 			}
 
 			// Set wrap name if none is provided

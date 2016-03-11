@@ -8,7 +8,6 @@ var Shared,
 	IndexHashMap,
 	IndexBinaryTree,
 	Index2d,
-	Crc,
 	Overload,
 	ReactorIO,
 	sharedPathSolver;
@@ -25,6 +24,7 @@ var Collection = function (name, options) {
 };
 
 Collection.prototype.init = function (name, options) {
+	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
 	this._primaryIndex = new KeyValueStore('primary');
 	this._primaryCrc = new KeyValueStore('primaryCrc');
@@ -90,18 +90,10 @@ Path = require('./Path');
 IndexHashMap = require('./IndexHashMap');
 IndexBinaryTree = require('./IndexBinaryTree');
 Index2d = require('./Index2d');
-Crc = require('./Crc');
 Db = Shared.modules.Db;
 Overload = require('./Overload');
 ReactorIO = require('./ReactorIO');
 sharedPathSolver = new Path();
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Collection.prototype.crc = Crc;
 
 /**
  * Gets / sets the deferred calls flag. If set to true (default)
@@ -205,22 +197,21 @@ Collection.prototype.drop = function (callback) {
 			delete this._primaryIndex;
 			delete this._primaryCrc;
 			delete this._crcLookup;
-			delete this._name;
 			delete this._data;
 			delete this._metrics;
 			delete this._listeners;
 
-			if (callback) { callback(false, true); }
+			if (callback) { callback.call(this, false, true); }
 
 			return true;
 		}
 	} else {
-		if (callback) { callback(false, true); }
+		if (callback) { callback.call(this, false, true); }
 
 		return true;
 	}
 
-	if (callback) { callback(false, true); }
+	if (callback) { callback.call(this, false, true); }
 	return false;
 };
 
@@ -242,7 +233,10 @@ Collection.prototype.primaryKey = function (keyName) {
 			this.rebuildPrimaryKeyIndex();
 
 			// Propagate change down the chain
-			this.chainSend('primaryKey', keyName, {oldData: oldKey});
+			this.chainSend('primaryKey', {
+				keyName: keyName,
+				oldData: oldKey
+			});
 		}
 		return this;
 	}
@@ -285,7 +279,7 @@ Collection.prototype._onRemove = function (items) {
 Collection.prototype._onChange = function () {
 	if (this._options.changeTimestamp) {
 		// Record the last change timestamp
-		this._metaData.lastChange = new Date();
+		this._metaData.lastChange = this.serialiser.convert(new Date());
 	}
 };
 
@@ -324,58 +318,69 @@ Shared.synthesize(Collection.prototype, 'mongoEmulation');
  * @param options Optional options object.
  * @param callback Optional callback function.
  */
-Collection.prototype.setData = function (data, options, callback) {
-	if (this.isDropped()) {
-		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
-	}
+Collection.prototype.setData = new Overload('Collection.prototype.setData', {
+	'*': function (data) {
+		return this.$main.call(this, data, {});
+	},
 
-	if (data) {
-		var op = this._metrics.create('setData');
-		op.start();
+	'*, object': function (data, options) {
+		return this.$main.call(this, data, options);
+	},
 
-		options = this.options(options);
-		this.preSetData(data, options, callback);
+	'*, function': function (data, callback) {
+		return this.$main.call(this, data, {}, callback);
+	},
 
-		if (options.$decouple) {
-			data = this.decouple(data);
+	'*, *, function': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+	'*, *, *': function (data, options, callback) {
+		return this.$main.call(this, data, options, callback);
+	},
+
+
+	'$main': function (data, options, callback) {
+		if (this.isDropped()) {
+			throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 		}
 
-		if (!(data instanceof Array)) {
-			data = [data];
+		if (data) {
+			var deferredSetting = this.deferredCalls(),
+				oldData = [].concat(this._data);
+
+			// Switch off deferred calls since setData should be
+			// a synchronous call
+			this.deferredCalls(false);
+
+			options = this.options(options);
+
+			if (options.$decouple) {
+				data = this.decouple(data);
+			}
+
+			if (!(data instanceof Array)) {
+				data = [data];
+			}
+
+			// Remove all items from the collection
+			this.remove({});
+
+			// Insert the new data
+			this.insert(data);
+
+			// Switch deferred calls back to previous settings
+			this.deferredCalls(deferredSetting);
+
+			this._onChange();
+			this.emit('setData', this._data, oldData);
 		}
 
-		op.time('transformIn');
-		data = this.transformIn(data);
-		op.time('transformIn');
+		if (callback) { callback.call(this); }
 
-		var oldData = [].concat(this._data);
-
-		this._dataReplace(data);
-
-		// Update the primary key index
-		op.time('Rebuild Primary Key Index');
-		this.rebuildPrimaryKeyIndex(options);
-		op.time('Rebuild Primary Key Index');
-
-		// Rebuild all other indexes
-		op.time('Rebuild All Other Indexes');
-		this._rebuildIndexes();
-		op.time('Rebuild All Other Indexes');
-
-		op.time('Resolve chains');
-		this.chainSend('setData', data, {oldData: oldData});
-		op.time('Resolve chains');
-
-		op.stop();
-
-		this._onChange();
-		this.emit('setData', this._data, oldData);
+		return this;
 	}
-
-	if (callback) { callback(false); }
-
-	return this;
-};
+});
 
 /**
  * Drops and rebuilds the primary key index for all documents in the collection.
@@ -426,8 +431,8 @@ Collection.prototype.rebuildPrimaryKeyIndex = function (options) {
 			pIndex.set(arrItem[pKey], arrItem);
 		}
 
-		// Generate a CRC string
-		jString = this.jStringify(arrItem);
+		// Generate a hash string
+		jString = this.hash(arrItem);
 
 		crcIndex.set(arrItem[pKey], jString);
 		crcLookup.set(jString, arrItem);
@@ -455,7 +460,8 @@ Collection.prototype.truncate = function () {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
-
+	// TODO: This should use remove so that chain reactor events are properly
+	// TODO: handled, but ensure that chunking is switched off
 	this.emit('truncate', this._data);
 
 	// Clear all the data from the collection
@@ -467,6 +473,7 @@ Collection.prototype.truncate = function () {
 	this._crcLookup = new KeyValueStore('crcLookup');
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'truncate'});
 	this.deferEmit('change', {type: 'truncate'});
 	return this;
 };
@@ -525,7 +532,7 @@ Collection.prototype.upsert = function (obj, callback) {
 					returnData.push(this.upsert(obj[i]));
 				}
 
-				if (callback) { callback(); }
+				if (callback) { callback.call(this); }
 
 				return returnData;
 			}
@@ -551,11 +558,11 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		switch (returnData.op) {
 			case 'insert':
-				returnData.result = this.insert(obj);
+				returnData.result = this.insert(obj, callback);
 				break;
 
 			case 'update':
-				returnData.result = this.update(query, obj);
+				returnData.result = this.update(query, obj, {}, callback);
 				break;
 
 			default:
@@ -564,7 +571,7 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		return returnData;
 	} else {
-		if (callback) { callback(); }
+		if (callback) { callback.call(this); }
 	}
 
 	return {};
@@ -627,25 +634,31 @@ Collection.prototype.filterUpdate = function (query, func, options) {
  * match keys on the existing document will be overwritten with this data. Any
  * keys that do not currently exist on the document will be added to the document.
  * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when the update is
+ * complete.
  * @returns {Array} The items that were updated.
  */
-Collection.prototype.update = function (query, update, options) {
+Collection.prototype.update = function (query, update, options, callback) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
-
-	// Decouple the update data
-	update = this.decouple(update);
 
 	// Convert queries from mongo dot notation to forerunner queries
 	if (this.mongoEmulation()) {
 		this.convertToFdb(query);
 		this.convertToFdb(update);
+	} else {
+		// Decouple the update data
+		update = this.decouple(update);
 	}
 
 	// Handle transform
 	update = this.transformIn(update);
 
+	return this._handleUpdate(query, update, options, callback);
+};
+
+Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
 		dataSet,
@@ -711,15 +724,21 @@ Collection.prototype.update = function (query, update, options) {
 			}
 
 			op.time('Resolve chains');
-			this.chainSend('update', {
-				query: query,
-				update: update,
-				dataSet: updated
-			}, options);
+			if (this.chainWillSend()) {
+				this.chainSend('update', {
+					query: query,
+					update: update,
+					dataSet: this.decouple(updated)
+				}, options);
+			}
 			op.time('Resolve chains');
 
 			this._onUpdate(updated);
 			this._onChange();
+
+			if (callback) { callback.call(this); }
+
+			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
 		}
 	}
@@ -1341,7 +1360,7 @@ Collection.prototype.remove = function (query, options, callback) {
 			this._onRemove(returnArr);
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	} else {
 		returnArr = [];
@@ -1395,11 +1414,12 @@ Collection.prototype.remove = function (query, options, callback) {
 				}
 
 				this._onChange();
+				this.emit('immediateChange', {type: 'remove', data: returnArr});
 				this.deferEmit('change', {type: 'remove', data: returnArr});
 			}
 		}
 
-		if (callback) { callback(false, returnArr); }
+		if (callback) { callback.call(this, false, returnArr); }
 		return returnArr;
 	}
 };
@@ -1461,7 +1481,7 @@ Collection.prototype.processQueue = function (type, callback, resultObj) {
 			self.processQueue.call(self, type, callback, resultObj);
 		}, deferTime);
 	} else {
-		if (callback) { callback(resultObj); }
+		if (callback) { callback.call(this, resultObj); }
 
 		this._asyncComplete(type);
 	}
@@ -1582,9 +1602,10 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	};
 
 	this._onInsert(inserted, failed);
-	if (callback) { callback(resultObj); }
+	if (callback) { callback.call(this, resultObj); }
 
 	this._onChange();
+	this.emit('immediateChange', {type: 'insert', data: inserted});
 	this.deferEmit('change', {type: 'insert', data: inserted});
 
 	return resultObj;
@@ -1635,7 +1656,13 @@ Collection.prototype._insert = function (doc, index) {
 			}
 
 			//op.time('Resolve chains');
-			self.chainSend('insert', doc, {index: index});
+			if (self.chainWillSend()) {
+				self.chainSend('insert', {
+					dataSet: self.decouple([doc])
+				}, {
+					index: index
+				});
+			}
 			//op.time('Resolve chains');
 		};
 
@@ -1721,12 +1748,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
 		violated,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[this._primaryKey], doc);
-	this._primaryCrc.uniqueSet(doc[this._primaryKey], jString);
-	this._crcLookup.uniqueSet(jString, doc);
+	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	this._primaryCrc.uniqueSet(doc[pk], hash);
+	this._crcLookup.uniqueSet(hash, doc);
 
 	// Insert into other indexes
 	for (arrIndex in arr) {
@@ -1746,12 +1774,13 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 Collection.prototype._removeFromIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		jString = this.jStringify(doc);
+		hash = this.hash(doc),
+		pk = this._primaryKey;
 
 	// Remove from primary key index
-	this._primaryIndex.unSet(doc[this._primaryKey]);
-	this._primaryCrc.unSet(doc[this._primaryKey]);
-	this._crcLookup.unSet(jString);
+	this._primaryIndex.unSet(doc[pk]);
+	this._primaryCrc.unSet(doc[pk]);
+	this._crcLookup.unSet(hash);
 
 	// Remove from other indexes
 	for (arrIndex in arr) {
@@ -1797,12 +1826,17 @@ Collection.prototype._rebuildIndexes = function () {
  * @returns {*}
  */
 Collection.prototype.subset = function (query, options) {
-	var result = this.find(query, options);
+	var result = this.find(query, options),
+		coll;
 
-	return new Collection()
-		.subsetOf(this)
+	coll = new Collection();
+	coll.db(this._db);
+
+	coll.subsetOf(this)
 		.primaryKey(this._primaryKey)
 		.setData(result);
+
+	return coll;
 };
 
 /**
@@ -1955,7 +1989,7 @@ Collection.prototype.find = function (query, options, callback) {
 		// Check the size of the collection's data array
 
 		// Split operation into smaller tasks and callback when complete
-		callback('Callbacks for the find() operation are not yet implemented!', []);
+		callback.call(this, 'Callbacks for the find() operation are not yet implemented!', []);
 		return [];
 	}
 
@@ -1977,28 +2011,16 @@ Collection.prototype._find = function (query, options) {
 		scanLength,
 		requiresTableScan = true,
 		resultArr,
-		joinCollectionIndex,
 		joinIndex,
-		joinCollection = {},
+		joinSource = {},
 		joinQuery,
 		joinPath,
-		joinCollectionName,
-		joinCollectionInstance,
-		joinMatch,
-		joinMatchIndex,
-		joinSearchQuery,
-		joinSearchOptions,
-		joinMulti,
-		joinRequire,
-		joinFindResults,
-		joinFindResult,
-		joinItem,
-		joinPrefix,
-		resultCollectionName,
-		resultIndex,
+		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinSourceData,
 		resultRemove = [],
-		index,
-		i, j, k, l,
+		i, j, k,
 		fieldListOn = [],
 		fieldListOff = [],
 		elemMatchPathSolver,
@@ -2070,18 +2092,26 @@ Collection.prototype._find = function (query, options) {
 		op.time('analyseQuery');
 		op.data('analysis', analysis);
 
+		// Check if the query tries to limit by data that would only exist after
+		// the join operation has been completed
 		if (analysis.hasJoin && analysis.queriesJoin) {
 			// The query has a join and tries to limit by it's joined data
-			// Get an instance reference to the join collections
+			// Get references to the join sources
 			op.time('joinReferences');
 			for (joinIndex = 0; joinIndex < analysis.joinsOn.length; joinIndex++) {
-				joinCollectionName = analysis.joinsOn[joinIndex];
-				joinPath = new Path(analysis.joinQueries[joinCollectionName]);
+				joinSourceData = analysis.joinsOn[joinIndex];
+				joinSourceKey = joinSourceData.key;
+
+				joinSourceType = joinSourceData.type;
+				joinSourceIdentifier = joinSourceData.id;
+
+				joinPath = new Path(analysis.joinQueries[joinSourceKey]);
 				joinQuery = joinPath.value(query)[0];
-				joinCollection[analysis.joinsOn[joinIndex]] = this._db.collection(analysis.joinsOn[joinIndex]).subset(joinQuery);
+
+				joinSource[joinSourceIdentifier] = this._db[joinSourceType](joinSourceKey).subset(joinQuery);
 
 				// Remove join clause from main query
-				delete query[analysis.joinQueries[joinCollectionName]];
+				delete query[analysis.joinQueries[joinSourceKey]];
 			}
 			op.time('joinReferences');
 		}
@@ -2117,7 +2147,6 @@ Collection.prototype._find = function (query, options) {
 				op.time('tableScan: ' + scanLength);
 				resultArr = this._data.filter(matcher);
 			}
-
 
 			op.time('tableScan: ' + scanLength);
 		}
@@ -2169,128 +2198,14 @@ Collection.prototype._find = function (query, options) {
 
 		// Now process any joins on the final data
 		if (options.$join) {
-			for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
-				for (joinCollectionName in options.$join[joinCollectionIndex]) {
-					if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
-						// Set the key to store the join result in to the collection name by default
-						resultCollectionName = joinCollectionName;
-
-						// Get the join collection instance from the DB
-						if (joinCollection[joinCollectionName]) {
-							joinCollectionInstance = joinCollection[joinCollectionName];
-						} else {
-							joinCollectionInstance = this._db.collection(joinCollectionName);
-						}
-
-						// Get the match data for the join
-						joinMatch = options.$join[joinCollectionIndex][joinCollectionName];
-
-						// Loop our result data array
-						for (resultIndex = 0; resultIndex < resultArr.length; resultIndex++) {
-							// Loop the join conditions and build a search object from them
-							joinSearchQuery = {};
-							joinMulti = false;
-							joinRequire = false;
-							joinPrefix = '';
-
-							for (joinMatchIndex in joinMatch) {
-								if (joinMatch.hasOwnProperty(joinMatchIndex)) {
-									// Check the join condition name for a special command operator
-									if (joinMatchIndex.substr(0, 1) === '$') {
-										// Special command
-										switch (joinMatchIndex) {
-											case '$where':
-												if (joinMatch[joinMatchIndex].query) {
-													// Commented old code here, new one does dynamic reverse lookups
-													//joinSearchQuery = joinMatch[joinMatchIndex].query;
-													joinSearchQuery = self._resolveDynamicQuery(joinMatch[joinMatchIndex].query, resultArr[resultIndex]);
-												}
-												if (joinMatch[joinMatchIndex].options) { joinSearchOptions = joinMatch[joinMatchIndex].options; }
-												break;
-
-											case '$as':
-												// Rename the collection when stored in the result document
-												resultCollectionName = joinMatch[joinMatchIndex];
-												break;
-
-											case '$multi':
-												// Return an array of documents instead of a single matching document
-												joinMulti = joinMatch[joinMatchIndex];
-												break;
-
-											case '$require':
-												// Remove the result item if no matching join data is found
-												joinRequire = joinMatch[joinMatchIndex];
-												break;
-
-											case '$prefix':
-												// Add a prefix to properties mixed in
-												joinPrefix = joinMatch[joinMatchIndex];
-												break;
-
-											default:
- 												break;
-										}
-									} else {
-										// Get the data to match against and store in the search object
-										// Resolve complex referenced query
-										joinSearchQuery[joinMatchIndex] = self._resolveDynamicQuery(joinMatch[joinMatchIndex], resultArr[resultIndex]);
-									}
-								}
-							}
-
-							// Do a find on the target collection against the match data
-							joinFindResults = joinCollectionInstance.find(joinSearchQuery, joinSearchOptions);
-
-							// Check if we require a joined row to allow the result item
-							if (!joinRequire || (joinRequire && joinFindResults[0])) {
-								// Join is not required or condition is met
-								if (resultCollectionName === '$root') {
-									// The property name to store the join results in is $root
-									// which means we need to mixin the results but this only
-									// works if joinMulti is disabled
-									if (joinMulti !== false) {
-										// Throw an exception here as this join is not physically possible!
-										throw(this.logIdentifier() + ' Cannot combine [$as: "$root"] with [$multi: true] in $join clause!');
-									}
-
-									// Mixin the result
-									joinFindResult = joinFindResults[0];
-									joinItem = resultArr[resultIndex];
-
-									for (l in joinFindResult) {
-										if (joinFindResult.hasOwnProperty(l) && joinItem[joinPrefix + l] === undefined) {
-											// Properties are only mixed in if they do not already exist
-											// in the target item (are undefined). Using a prefix denoted via
-											// $prefix is a good way to prevent property name conflicts
-											joinItem[joinPrefix + l] = joinFindResult[l];
-										}
-									}
-								} else {
-									resultArr[resultIndex][resultCollectionName] = joinMulti === false ? joinFindResults[0] : joinFindResults;
-								}
-							} else {
-								// Join required but condition not met, add item to removal queue
-								resultRemove.push(resultArr[resultIndex]);
-							}
-						}
-					}
-				}
-			}
-
+			resultRemove = resultRemove.concat(this.applyJoin(resultArr, options.$join, joinSource));
 			op.data('flag.join', true);
 		}
 
 		// Process removal queue
 		if (resultRemove.length) {
 			op.time('removalQueue');
-			for (i = 0; i < resultRemove.length; i++) {
-				index = resultArr.indexOf(resultRemove[i]);
-
-				if (index > -1) {
-					resultArr.splice(index, 1);
-				}
-			}
+			this.spliceArrayByIndexList(resultArr, resultRemove);
 			op.time('removalQueue');
 		}
 
@@ -2483,62 +2398,6 @@ Collection.prototype._find = function (query, options) {
 	return resultArr;
 };
 
-Collection.prototype._resolveDynamicQuery = function (query, item) {
-	var self = this,
-		newQuery,
-		propType,
-		propVal,
-		pathResult,
-		i;
-
-	if (typeof query === 'string') {
-		// Check if the property name starts with a back-reference
-		if (query.substr(0, 3) === '$$.') {
-			// Fill the query with a back-referenced value
-			pathResult = new Path(query.substr(3, query.length - 3)).value(item);
-		} else {
-			pathResult = new Path(query).value(item);
-		}
-
-		if (pathResult.length > 1) {
-			return {$in: pathResult};
-		} else {
-			return pathResult[0];
-		}
-	}
-
-	newQuery = {};
-
-	for (i in query) {
-		if (query.hasOwnProperty(i)) {
-			propType = typeof query[i];
-			propVal = query[i];
-
-			switch (propType) {
-				case 'string':
-					// Check if the property name starts with a back-reference
-					if (propVal.substr(0, 3) === '$$.') {
-						// Fill the query with a back-referenced value
-						newQuery[i] = new Path(propVal.substr(3, propVal.length - 3)).value(item)[0];
-					} else {
-						newQuery[i] = propVal;
-					}
-					break;
-
-				case 'object':
-					newQuery[i] = self._resolveDynamicQuery(propVal, item);
-					break;
-
-				default:
-					newQuery[i] = propVal;
-					break;
-			}
-		}
-	}
-
-	return newQuery;
-};
-
 /**
  * Returns one document that satisfies the specified query criteria. If multiple
  * documents satisfy the query, this method returns the first document to match
@@ -2673,10 +2532,19 @@ Collection.prototype.transform = function (obj) {
 Collection.prototype.transformIn = function (data) {
 	if (this._transformEnabled && this._transformIn) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformIn(data[i]);
+				transformResult = this._transformIn(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
@@ -2696,10 +2564,19 @@ Collection.prototype.transformIn = function (data) {
 Collection.prototype.transformOut = function (data) {
 	if (this._transformEnabled && this._transformOut) {
 		if (data instanceof Array) {
-			var finalArr = [], i;
+			var finalArr = [],
+				transformResult,
+				i;
 
 			for (i = 0; i < data.length; i++) {
-				finalArr[i] = this._transformOut(data[i]);
+				transformResult = this._transformOut(data[i]);
+
+				// Support transforms returning multiple items
+				if (transformResult instanceof Array) {
+					finalArr = finalArr.concat(transformResult);
+				} else {
+					finalArr.push(transformResult);
+				}
 			}
 
 			return finalArr;
@@ -2901,7 +2778,7 @@ Collection.prototype._sort = function (key, arr) {
  */
 Collection.prototype._analyseQuery = function (query, options, op) {
 	var analysis = {
-			queriesOn: [this._name],
+			queriesOn: [{id: '$collection.' + this._name, type: 'colletion', key: this._name}],
 			indexMatch: [],
 			hasJoin: false,
 			queriesJoin: false,
@@ -2909,10 +2786,13 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			query: query,
 			options: options
 		},
-		joinCollectionIndex,
-		joinCollectionName,
-		joinCollections = [],
-		joinCollectionReferences = [],
+		joinSourceIndex,
+		joinSourceKey,
+		joinSourceType,
+		joinSourceIdentifier,
+		joinMatch,
+		joinSources = [],
+		joinSourceReferences = [],
 		queryPath,
 		index,
 		indexMatchData,
@@ -3015,59 +2895,70 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 		analysis.hasJoin = true;
 
 		// Loop all join operations
-		for (joinCollectionIndex = 0; joinCollectionIndex < options.$join.length; joinCollectionIndex++) {
-			// Loop the join collections and keep a reference to them
-			for (joinCollectionName in options.$join[joinCollectionIndex]) {
-				if (options.$join[joinCollectionIndex].hasOwnProperty(joinCollectionName)) {
-					joinCollections.push(joinCollectionName);
+		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
+			// Loop the join sources and keep a reference to them
+			for (joinSourceKey in options.$join[joinSourceIndex]) {
+				if (options.$join[joinSourceIndex].hasOwnProperty(joinSourceKey)) {
+					joinMatch = options.$join[joinSourceIndex][joinSourceKey];
+
+					joinSourceType = joinMatch.$sourceType || 'collection';
+					joinSourceIdentifier = '$' + joinSourceType + '.' + joinSourceKey;
+
+					joinSources.push({
+						id: joinSourceIdentifier,
+						type: joinSourceType,
+						key: joinSourceKey
+					});
 
 					// Check if the join uses an $as operator
-					if ('$as' in options.$join[joinCollectionIndex][joinCollectionName]) {
-						joinCollectionReferences.push(options.$join[joinCollectionIndex][joinCollectionName].$as);
+					if (options.$join[joinSourceIndex][joinSourceKey].$as !== undefined) {
+						joinSourceReferences.push(options.$join[joinSourceIndex][joinSourceKey].$as);
 					} else {
-						joinCollectionReferences.push(joinCollectionName);
+						joinSourceReferences.push(joinSourceKey);
 					}
 				}
 			}
 		}
 
-		// Loop the join collection references and determine if the query references
-		// any of the collections that are used in the join. If there no queries against
-		// joined collections the find method can use a code path optimised for this.
-		// Queries against joined collections requires the joined collections to be filtered
+		// Loop the join source references and determine if the query references
+		// any of the sources that are used in the join. If there no queries against
+		// joined sources the find method can use a code path optimised for this.
+
+		// Queries against joined sources requires the joined sources to be filtered
 		// first and then joined so requires a little more work.
-		for (index = 0; index < joinCollectionReferences.length; index++) {
-			// Check if the query references any collection data that the join will create
-			queryPath = this._queryReferencesCollection(query, joinCollectionReferences[index], '');
+		for (index = 0; index < joinSourceReferences.length; index++) {
+			// Check if the query references any source data that the join will create
+			queryPath = this._queryReferencesSource(query, joinSourceReferences[index], '');
 
 			if (queryPath) {
-				analysis.joinQueries[joinCollections[index]] = queryPath;
+				analysis.joinQueries[joinSources[index].key] = queryPath;
 				analysis.queriesJoin = true;
 			}
 		}
 
-		analysis.joinsOn = joinCollections;
-		analysis.queriesOn = analysis.queriesOn.concat(joinCollections);
+		analysis.joinsOn = joinSources;
+		analysis.queriesOn = analysis.queriesOn.concat(joinSources);
 	}
 
 	return analysis;
 };
 
 /**
- * Checks if the passed query references this collection.
- * @param query
- * @param collection
- * @param path
+ * Checks if the passed query references a source object (such
+ * as a collection) by name.
+ * @param {Object} query The query object to scan.
+ * @param {String} sourceName The source name to scan for in the query.
+ * @param {String=} path The path to scan from.
  * @returns {*}
  * @private
  */
-Collection.prototype._queryReferencesCollection = function (query, collection, path) {
+Collection.prototype._queryReferencesSource = function (query, sourceName, path) {
 	var i;
 
 	for (i in query) {
 		if (query.hasOwnProperty(i)) {
 			// Check if this key is a reference match
-			if (i === collection) {
+			if (i === sourceName) {
 				if (path) { path += '.'; }
 				return path + i;
 			} else {
@@ -3075,7 +2966,7 @@ Collection.prototype._queryReferencesCollection = function (query, collection, p
 					// Recurse
 					if (path) { path += '.'; }
 					path += i;
-					return this._queryReferencesCollection(query[i], collection, path);
+					return this._queryReferencesSource(query[i], sourceName, path);
 				}
 			}
 		}
@@ -3118,7 +3009,7 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		docCount = docArr.length,
 		docIndex,
 		subDocArr,
-		subDocCollection = new Collection('__FDB_temp_' + this.objectId()),
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()).db(this._db),
 		subDocResults,
 		resultObj = {
 			parents: docCount,
@@ -3237,23 +3128,17 @@ Collection.prototype.ensureIndex = function (keys, options) {
 		};
 
 	if (options) {
-		switch (options.type) {
-			case 'hashed':
-				index = new IndexHashMap(keys, options, this);
-				break;
-
-			case 'btree':
-				index = new IndexBinaryTree(keys, options, this);
-				break;
-
-			case '2d':
-				index = new Index2d(keys, options, this);
-				break;
-
-			default:
-				// Default
-				index = new IndexHashMap(keys, options, this);
-				break;
+		if (options.type) {
+			// Check if the specified type is available
+			if (Shared.index[options.type]) {
+				// We found the type, generate it
+				index = new Shared.index[options.type](keys, options, this);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create index of type "' + options.type + '", type not found in the index type register (Shared.index)');
+			}
+		} else {
+			// Create default index type
+			index = new IndexHashMap(keys, options, this);
 		}
 	} else {
 		// Default
@@ -3389,7 +3274,7 @@ Collection.prototype.diff = function (collection) {
 	return diff;
 };
 
-Collection.prototype.collateAdd = new Overload({
+Collection.prototype.collateAdd = new Overload('Collection.prototype.collateAdd', {
 	/**
 	 * Adds a data source to collate data from and specifies the
 	 * key name to collate data to.
@@ -3414,10 +3299,10 @@ Collection.prototype.collateAdd = new Overload({
 							$push: {}
 						};
 
-						obj1.$push[keyName] = self.decouple(packet.data);
+						obj1.$push[keyName] = self.decouple(packet.data.dataSet);
 						self.update({}, obj1);
 					} else {
-						self.insert(packet.data);
+						self.insert(packet.data.dataSet);
 					}
 					break;
 
@@ -3446,7 +3331,7 @@ Collection.prototype.collateAdd = new Overload({
 
 						self.update({}, obj1);
 					} else {
-						self.remove(packet.data);
+						self.remove(packet.data.dataSet);
 					}
 					break;
 
@@ -3504,7 +3389,7 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
-Db.prototype.collection = new Overload({
+Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that

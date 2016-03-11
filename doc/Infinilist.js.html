@@ -37,10 +37,15 @@
  *
  * This module requires that the AutoBind module is loaded before it
  * will work.
+ *
+ * Infinilists work from views and those views cannot have an $orderBy
+ * clause in them because that would slow down rendering. Instead if you
+ * wish to have your data ordered you have to create a temporary collection
+ * from which your view feeds from and pre-order the data before inserting
+ * it into the temporary collection.
  * @class Infinilist
  * @requires AutoBind
  */
-
 var Shared = window.ForerunnerDB.shared,
 	View = Shared.modules.View;
 
@@ -77,6 +82,16 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemBottomMargin = $("&lt;div class='il_bottomMargin'>&lt;/div>");
 	self.total = self.view.from().count(self.options.countQuery);
 	self.itemHeight(self.options.itemHeight);
+
+	self.___fromChangeFunc = function () {
+		// View data changed, recalculate total items count and check
+		// that the currently displayed view data is correct by forcing
+		// a scroll event after a height recalculation
+		self.recalcHeight();
+		self.scroll(true);
+	};
+
+	self.view.from().on('change', self.___fromChangeFunc);
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -115,13 +130,24 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 	var self = this;
 
 	if (val !== undefined) {
-		self.virtualHeight = self.total * val;
 		self._itemHeight = val;
+		self.virtualHeight = self.total * self._itemHeight;
 		self.resize();
 	}
 
 	return this.$super.apply(this, arguments);
 });
+
+Infinilist.prototype.recalcHeight = function () {
+	var self = this;
+
+	if (self._state !== 'dropped') {
+		self.total = self.view.from().count(self.options.countQuery);
+		self.virtualHeight = self.total * self._itemHeight;
+
+		self.resize();
+	}
+};
 
 /**
  * Handle screen resizing.
@@ -142,6 +168,8 @@ Infinilist.prototype.resize = function () {
 		self.skip = skipCount;
 		self.limit = self.maxItemCount + 1;
 
+		// Check if current range is different from existing range
+
 		self.view.queryOptions(self.currentRange());
 
 		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
@@ -155,7 +183,7 @@ Infinilist.prototype.currentRange = function () {
 	};
 };
 
-Infinilist.prototype.scroll = function () {
+Infinilist.prototype.scroll = function (force) {
 	var self = this,
 		delta,
 		skipCount,
@@ -166,7 +194,7 @@ Infinilist.prototype.scroll = function () {
 	self.previousScrollTop = scrollTop;
 
 	// Check if a scroll change occurred
-	if (delta !== 0) {
+	if (force || delta !== 0) {
 		// Determine the new item range
 		skipCount = Math.floor(scrollTop / self._itemHeight);
 
@@ -239,6 +267,9 @@ Infinilist.prototype.drop = function (callback) {
 	// Unlink the view from the dom
 	self.view.unlink(self.itemContainer, self.template);
 
+	// Stop listening for changes
+	self.view.from().off('change', self.___fromChangeFunc);
+
 	// Set state to dropped
 	self._state = 'dropped';
 
@@ -256,6 +287,7 @@ Infinilist.prototype.drop = function (callback) {
 	delete self.itemTopMargin;
 	delete self.itemContainer;
 	delete self.itemBottomMargin;
+	delete self.___fromChangeFunc;
 
 	this.emit('drop', this);
 
@@ -301,13 +333,13 @@ module.exports = Infinilist;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="crcTable.html">crcTable</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#auth">auth</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#server">server</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#NodeRAS">NodeRAS</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Jan 20 2016 20:41:58 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Mar 11 2016 14:58:56 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

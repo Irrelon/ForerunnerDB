@@ -15,10 +15,15 @@ module.exports = Infinilist;
  *
  * This module requires that the AutoBind module is loaded before it
  * will work.
+ *
+ * Infinilists work from views and those views cannot have an $orderBy
+ * clause in them because that would slow down rendering. Instead if you
+ * wish to have your data ordered you have to create a temporary collection
+ * from which your view feeds from and pre-order the data before inserting
+ * it into the temporary collection.
  * @class Infinilist
  * @requires AutoBind
  */
-
 var Shared = window.ForerunnerDB.shared,
 	View = Shared.modules.View;
 
@@ -55,6 +60,16 @@ var Infinilist = function (selector, template, options, view) {
 	self.itemBottomMargin = $("<div class='il_bottomMargin'></div>");
 	self.total = self.view.from().count(self.options.countQuery);
 	self.itemHeight(self.options.itemHeight);
+
+	self.___fromChangeFunc = function () {
+		// View data changed, recalculate total items count and check
+		// that the currently displayed view data is correct by forcing
+		// a scroll event after a height recalculation
+		self.recalcHeight();
+		self.scroll(true);
+	};
+
+	self.view.from().on('change', self.___fromChangeFunc);
 
 	selector.append(self.itemTopMargin);
 	selector.append(self.itemContainer);
@@ -93,13 +108,24 @@ Shared.synthesize(Infinilist.prototype, 'itemHeight', function (val) {
 	var self = this;
 
 	if (val !== undefined) {
-		self.virtualHeight = self.total * val;
 		self._itemHeight = val;
+		self.virtualHeight = self.total * self._itemHeight;
 		self.resize();
 	}
 
 	return this.$super.apply(this, arguments);
 });
+
+Infinilist.prototype.recalcHeight = function () {
+	var self = this;
+
+	if (self._state !== 'dropped') {
+		self.total = self.view.from().count(self.options.countQuery);
+		self.virtualHeight = self.total * self._itemHeight;
+
+		self.resize();
+	}
+};
 
 /**
  * Handle screen resizing.
@@ -120,6 +146,8 @@ Infinilist.prototype.resize = function () {
 		self.skip = skipCount;
 		self.limit = self.maxItemCount + 1;
 
+		// Check if current range is different from existing range
+
 		self.view.queryOptions(self.currentRange());
 
 		self.itemBottomMargin.height(self.virtualHeight - (skipCount * self._itemHeight)- (self.maxItemCount * self._itemHeight));
@@ -133,7 +161,7 @@ Infinilist.prototype.currentRange = function () {
 	};
 };
 
-Infinilist.prototype.scroll = function () {
+Infinilist.prototype.scroll = function (force) {
 	var self = this,
 		delta,
 		skipCount,
@@ -144,7 +172,7 @@ Infinilist.prototype.scroll = function () {
 	self.previousScrollTop = scrollTop;
 
 	// Check if a scroll change occurred
-	if (delta !== 0) {
+	if (force || delta !== 0) {
 		// Determine the new item range
 		skipCount = Math.floor(scrollTop / self._itemHeight);
 
@@ -217,6 +245,9 @@ Infinilist.prototype.drop = function (callback) {
 	// Unlink the view from the dom
 	self.view.unlink(self.itemContainer, self.template);
 
+	// Stop listening for changes
+	self.view.from().off('change', self.___fromChangeFunc);
+
 	// Set state to dropped
 	self._state = 'dropped';
 
@@ -234,6 +265,7 @@ Infinilist.prototype.drop = function (callback) {
 	delete self.itemTopMargin;
 	delete self.itemContainer;
 	delete self.itemBottomMargin;
+	delete self.___fromChangeFunc;
 
 	this.emit('drop', this);
 

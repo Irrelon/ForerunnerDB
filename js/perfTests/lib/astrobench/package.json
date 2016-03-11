@@ -1,0 +1,62 @@
+{
+  "name": "astrobench",
+  "title": "Astrobench",
+  "version": "0.1.2",
+  "description": "Library for JavaScript benchmarks based on Benchmark.js",
+  "main": "dist/astrobench.js",
+  "directories": {
+    "example": "examples"
+  },
+  "devDependencies": {
+    "benchmark": "1.0.0",
+    "browserify": "3.46",
+    "gulp": "^3.8.1",
+    "gulp-concat": "^2.2.0",
+    "gulp-header": "^1.0.2",
+    "gulp-uglify": "^0.3.1",
+    "jbone": "1.0.16",
+    "lodash": "2.4.1",
+    "node-underscorify": "0.0.9",
+    "vinyl-source-stream": "^0.1.1"
+  },
+  "keywords": [
+    "benchmark",
+    "benchmark.js",
+    "speed",
+    "performance"
+  ],
+  "author": {
+    "name": "Alexey Kupriyanenko",
+    "email": "a.kupriyanenko@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/kupriyanenko/astrobench",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kupriyanenko/astrobench"
+  },
+  "gitHead": "80eaa372afe6e5507a4d97047798bf177c14c203",
+  "bugs": {
+    "url": "https://github.com/kupriyanenko/astrobench/issues"
+  },
+  "_id": "astrobench@0.1.2",
+  "scripts": {},
+  "_shasum": "840353d4bcba3cdb2ddfa665581be0910fa3df73",
+  "_from": "astrobench@*",
+  "_npmVersion": "1.5.0-alpha-3",
+  "_npmUser": {
+    "name": "upwards",
+    "email": "a.kupriyanenko@gmail.com"
+  },
+  "maintainers": [
+    {
+      "name": "upwards",
+      "email": "a.kupriyanenko@gmail.com"
+    }
+  ],
+  "dist": {
+    "shasum": "840353d4bcba3cdb2ddfa665581be0910fa3df73",
+    "tarball": "http://registry.npmjs.org/astrobench/-/astrobench-0.1.2.tgz"
+  },
+  "_resolved": "http://registry.npmjs.org/astrobench/-/astrobench-0.1.2.tgz"
+}

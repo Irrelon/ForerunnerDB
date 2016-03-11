@@ -38,6 +38,7 @@ NodePersist.prototype.init = function (db) {
 	];
 
 	this._db = db;
+	this._opQueue = {};
 };
 
 Shared.addModule('NodePersist', NodePersist);
@@ -66,17 +67,52 @@ Shared.synthesize(NodePersist.prototype, 'mode');
  * will automatically load data for collections the first time they are
  * accessed and save data whenever it changes. This is disabled by
  * default.
- * @param {Boolean} val Set to true to enable, false to disable
+ * @param {Boolean} val Set to true to enable, false to disable.
+ * @param {Object=} objNames Optional object of type keys with an array
+ * of object names under them for which auto-persist is enabled.
  * @returns {*}
  */
-Shared.synthesize(NodePersist.prototype, 'auto', function (val) {
+NodePersist.prototype.auto = function (val, objNames) {
 	var self = this;
 
 	if (val !== undefined) {
 		if (val) {
+			if (objNames) {
+				this._autoNames = objNames;
+			}
+
 			// Hook db events
-			this._db.on('create', function () { self._autoLoad.apply(self, arguments); });
-			this._db.on('change', function () { self._autoSave.apply(self, arguments); });
+			this._db.on('create', function (obj, objType, name) {
+				var arr;
+
+				if (!self._autoNames) {
+					self._autoLoad.call(self, obj, objType, name);
+				} else {
+					// Get list of names
+					arr = self._autoNames[objType];
+
+					// Check if this object is in the list of objects to auto-persist
+					if (arr && arr.indexOf(name) > -1) {
+						self._autoLoad.call(self, obj, objType, name);
+					}
+				}
+			});
+
+			this._db.on('change', function (obj, objType, name) {
+				var arr;
+
+				if (!self._autoNames) {
+					self._autoSave.call(self, obj, objType, name);
+				} else {
+					// Get list of names
+					arr = self._autoNames[objType];
+
+					// Check if this object is in the list of objects to auto-persist
+					if (arr && arr.indexOf(name) > -1) {
+						self._autoSave.call(self, obj, objType, name);
+					}
+				}
+			});
 
 			if (this._db.debug()) {
 				console.log(this._db.logIdentifier() + ' Automatic load/save enabled');
@@ -90,10 +126,13 @@ Shared.synthesize(NodePersist.prototype, 'auto', function (val) {
 				console.log(this._db.logIdentifier() + ' Automatic load/save disbled');
 			}
 		}
+
+		this._auto = val;
+		return this;
 	}
 
-	return this.$super.call(this, val);
-});
+	return this._auto;
+};
 
 NodePersist.prototype._autoLoad = function (obj, objType, name) {
 	var self = this;
@@ -249,9 +288,10 @@ NodePersist.prototype._decode = function (val, meta, finished) {
 
 		if (data) {
 			meta.foundData = true;
-			meta.rowCount = data.length;
+			meta.rowCount = data.length || 0;
 		} else {
 			meta.foundData = false;
+			meta.rowCount = 0;
 		}
 
 		if (finished) {
@@ -287,9 +327,10 @@ NodePersist.prototype._encode = function (val, meta, finished) {
 
 	if (data) {
 		meta.foundData = true;
-		meta.rowCount = data.length;
+		meta.rowCount = data.length || 0;
 	} else {
 		meta.foundData = false;
+		meta.rowCount = 0;
 	}
 
 	if (finished) {
@@ -565,9 +606,9 @@ Collection.prototype.load = function (callback) {
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
 					if (data) {
-						self.remove({});
-						self.insert(data);
-						//self.setData(data);
+						//self.remove({});
+						//self.insert(data);
+						self.setData(data);
 					}
 
 					// Now load the collection's metadata

@@ -65,6 +65,17 @@ Base.prototype.domDown = function () {
 	$('#demo-chart').remove();
 };
 
+Base.prototype.tmpDomUp = function () {
+	var id = fdb.objectId();
+	$('<ul id="' + id + '"></ul>').appendTo('body');
+
+	return id;
+};
+
+Base.prototype.tmpDomDown = function (id) {
+	$('#' + id).remove();
+};
+
 // Declare a global for ForerunnerDB
 
 // Use global

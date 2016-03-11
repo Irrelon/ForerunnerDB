@@ -346,7 +346,7 @@ QUnit.test("Sorting :: Nested key sorts", function () {
 	base.dbDown();
 });
 
-ForerunnerDB.moduleLoaded('View', function () {
+ForerunnerDB.moduleLoaded(['View', 'Angular'], function () {
 	QUnit.asyncTest("Sorting Views :: Nested key sorts", function () {
 		base.dbUp();
 

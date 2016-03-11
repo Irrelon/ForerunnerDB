@@ -34,6 +34,7 @@ Shared.mixin(CollectionGroup.prototype, 'Mixin.ChainReactor');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Constants');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Triggers');
 Shared.mixin(CollectionGroup.prototype, 'Mixin.Tags');
+Shared.mixin(CollectionGroup.prototype, 'Mixin.Events');
 
 Collection = require('./Collection');
 Db = Shared.modules.Db;
@@ -81,7 +82,7 @@ Shared.synthesize(CollectionGroup.prototype, 'db');
 
 /**
  * Gets / sets the instance name.
- * @param {Name=} name The new name to set.
+ * @param {String=} name The new name to set.
  * @returns {*}
  */
 Shared.synthesize(CollectionGroup.prototype, 'name');
@@ -170,21 +171,21 @@ CollectionGroup.prototype._chainHandler = function (chainPacket) {
 	switch (chainPacket.type) {
 		case 'setData':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Remove old data
-			this._data.remove(chainPacket.options.oldData);
+			this._data.remove(chainPacket.data.oldData);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'insert':
 			// Decouple the data to ensure we are working with our own copy
-			chainPacket.data = this.decouple(chainPacket.data);
+			chainPacket.data.dataSet = this.decouple(chainPacket.data.dataSet);
 
 			// Add new data
-			this._data.insert(chainPacket.data);
+			this._data.insert(chainPacket.data.dataSet);
 			break;
 
 		case 'update':
@@ -303,15 +304,32 @@ Db.prototype.init = function () {
 	DbInit.apply(this, arguments);
 };
 
-Db.prototype.collectionGroup = function (collectionGroupName) {
-	if (collectionGroupName) {
+/**
+ * Creates a new collectionGroup instance or returns an existing
+ * instance if one already exists with the passed name.
+ * @func collectionGroup
+ * @memberOf Db
+ * @param {String} name The name of the instance.
+ * @returns {*}
+ */
+Db.prototype.collectionGroup = function (name) {
+	var self = this;
+
+	if (name) {
 		// Handle being passed an instance
-		if (collectionGroupName instanceof CollectionGroup) {
-			return collectionGroupName;
+		if (name instanceof CollectionGroup) {
+			return name;
 		}
 
-		this._collectionGroup[collectionGroupName] = this._collectionGroup[collectionGroupName] || new CollectionGroup(collectionGroupName).db(this);
-		return this._collectionGroup[collectionGroupName];
+		if (this._collectionGroup && this._collectionGroup[name]) {
+			return this._collectionGroup[name];
+		}
+
+		this._collectionGroup[name] = new CollectionGroup(name).db(this);
+
+		self.emit('create', self._collectionGroup[name], 'collectionGroup', name);
+
+		return this._collectionGroup[name];
 	} else {
 		// Return an object of collection data
 		return this._collectionGroup;
