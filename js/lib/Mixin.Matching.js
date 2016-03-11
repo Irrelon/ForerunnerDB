@@ -30,6 +30,14 @@ var Matching = {
 			substringCache,
 			i;
 
+		if (sourceType === 'object' && source === null) {
+			sourceType = 'null';
+		}
+
+		if (testType === 'object' && test === null) {
+			testType = 'null';
+		}
+
 		options = options || {};
 		queryOptions = queryOptions || {};
 
@@ -51,11 +59,11 @@ var Matching = {
 		options.$rootData = options.$rootData || {};
 
 		// Check if the comparison data are both strings or numbers
-		if ((sourceType === 'string' || sourceType === 'number') && (testType === 'string' || testType === 'number')) {
+		if ((sourceType === 'string' || sourceType === 'number' || sourceType === 'null') && (testType === 'string' || testType === 'number' || testType === 'null')) {
 			// The source and test data are flat types that do not require recursive searches,
 			// so just compare them and return the result
-			if (sourceType === 'number') {
-				// Number comparison
+			if (sourceType === 'number' || sourceType === 'null' || testType === 'null') {
+				// Number or null comparison
 				if (source !== test) {
 					matchedAll = false;
 				}
