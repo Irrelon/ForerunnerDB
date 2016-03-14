@@ -4164,6 +4164,7 @@ ForerunnerDB works in all modern browsers (IE8+) and mobile hybrid frameworks
 * Firefox for Android 25
 * Firefox OS 1.0
 * IE 8
+* IE Mobile 8.1
 * IE Mobile 10
 * Ionic
 * Opera 15
