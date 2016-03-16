@@ -9209,6 +9209,169 @@ var Triggers = {
 		return false;
 	},
 
+	/**
+	 * Generates triggers that fire in the after phase for all CRUD ops
+	 * that automatically transform data back and forth and keep both
+	 * import and export collections in sync with each other.
+	 * @param {String} id The unique id for this link IO.
+	 * @param {Object} ioData The settings for the link IO.
+	 */
+	addLinkIO: function (id, ioData) {
+		var self = this,
+			matchAll,
+			exportData,
+			importData,
+			exportTriggerMethod,
+			importTriggerMethod,
+			exportTo,
+			importFrom,
+			allTypes,
+			i;
+
+		// Store the linkIO
+		self._linkIO = self._linkIO || {};
+		self._linkIO[id] = ioData;
+
+		exportData = ioData['export'];
+		importData = ioData['import'];
+
+		if (exportData) {
+			exportTo = self.db().collection(exportData.to());
+		}
+
+		if (importData) {
+			importFrom = self.db().collection(importData.from());
+		}
+
+		allTypes = [
+			self.TYPE_INSERT,
+			self.TYPE_UPDATE,
+			self.TYPE_REMOVE
+		];
+
+		matchAll = function (data, callback) {
+			// Match all
+			callback(false, true);
+		};
+
+		if (exportData) {
+			// Check for export match method
+			if (!exportData.match) {
+				// No match method found, use the match all method
+				exportData.match = matchAll;
+			}
+
+			// Check for export types
+			if (!exportData.types) {
+				exportData.types = allTypes;
+			}
+
+			exportTriggerMethod = function (operation, oldDoc, newDoc) {
+				// Check if we should execute against this data
+				exportData.match(newDoc, function (err, doExport) {
+					if (doExport) {
+						// Get data to upsert (if any)
+						exportData.data(newDoc, operation.type, function (err, data, callback) {
+							if (data) {
+								if (operation.type !== 'remove') {
+									// Do upsert
+									exportTo.upsert(data, callback);
+								} else {
+									// Do remove
+									exportTo.remove(data, callback);
+								}
+							}
+						});
+					}
+				});
+			};
+		}
+
+		if (importData) {
+			// Check for import match method
+			if (!importData.match) {
+				// No match method found, use the match all method
+				importData.match = matchAll;
+			}
+
+			// Check for import types
+			if (!importData.types) {
+				importData.types = allTypes;
+			}
+
+			importTriggerMethod = function (operation, oldDoc, newDoc) {
+				// Check if we should execute against this data
+				importData.match(newDoc, function (err, doExport) {
+					if (doExport) {
+						// Get data to upsert (if any)
+						importData.data(newDoc, operation.type, function (err, data, callback) {
+							if (data) {
+								if (operation.type !== 'remove') {
+									// Do upsert
+									self.upsert(data, callback);
+								} else {
+									// Do remove
+									self.remove(data, callback);
+								}
+							}
+						});
+					}
+				});
+			};
+		}
+
+		if (exportData) {
+			for (i = 0; i < exportData.types.length; i++) {
+				self.addTrigger(id + 'export' + exportData.types[i], exportData.types[i], self.db.PHASE_AFTER, exportTriggerMethod);
+			}
+		}
+
+		if (importData) {
+			for (i = 0; i < importData.types.length; i++) {
+				importFrom.addTrigger(id + 'import' + importData.types[i], importData.types[i], self.db.PHASE_AFTER, importTriggerMethod);
+			}
+		}
+	},
+
+	/**
+	 * Removes a previously added link IO via it's ID.
+	 * @param {String} id The id of the link IO to remove.
+	 * @returns {boolean} True if successful, false if the link IO
+	 * was not found.
+	 */
+	removeLinkIO: function (id) {
+		var self = this,
+			linkIO = self._linkIO[id],
+			exportData,
+			importData,
+			importFrom,
+			i;
+
+		if (linkIO) {
+			exportData = linkIO['export'];
+			importData = linkIO['import'];
+
+			if (exportData) {
+				for (i = 0; i < exportData.types.length; i++) {
+					self.removeTrigger(id + 'export' + exportData.types[i], exportData.types[i], self.db.PHASE_AFTER);
+				}
+			}
+
+			if (importData) {
+				importFrom = self.db().collection(importData.from);
+
+				for (i = 0; i < importData.types.length; i++) {
+					importFrom.removeTrigger(id + 'import' + importData.types[i], importData.types[i], self.db.PHASE_AFTER);
+				}
+			}
+
+			delete self._linkIO[id];
+			return true;
+		}
+
+		return false;
+	},
+
 	enableTrigger: new Overload({
 		'string': function (id) {
 			// Alter all triggers of this type
@@ -10769,7 +10932,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.723',
+	version: '1.3.724',
 	modules: {},
 	plugins: {},
 	index: {},

@@ -256,7 +256,7 @@ for constants to use.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line407">line 407</a>
+        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line570">line 570</a>
     </li></ul></dd>
     
 
@@ -297,6 +297,162 @@ for constants to use.</td>
 </dl>
 
     
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".addLinkIO"><span class="type-signature">(static) </span>addLinkIO<span class="signature">(id, ioData)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Generates triggers that fire in the after phase for all CRUD ops
+that automatically transform data back and forth and keep both
+import and export collections in sync with each other.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The unique id for this link IO.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>ioData</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The settings for the link IO.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line87">line 87</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -727,7 +883,7 @@ carried out against the data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line319">line 319</a>
+        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line482">line 482</a>
     </li></ul></dd>
     
 
@@ -753,6 +909,160 @@ carried out against the data.</td>
 <h5>Returns:</h5>
 
         
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="global.html#boolean">boolean</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".removeLinkIO"><span class="type-signature">(static) </span>removeLinkIO<span class="signature">(id)</span><span class="type-signature"> &rarr; {<a href="global.html#boolean">boolean</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Removes a previously added link IO via it's ID.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The id of the link IO to remove.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line210">line 210</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    True if successful, false if the link IO
+was not found.
+</div>
+
 
 
 <dl>
@@ -1098,7 +1408,7 @@ for constants to use.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line290">line 290</a>
+        <a href="Mixin.Triggers.js.html">Mixin.Triggers.js</a>, <a href="Mixin.Triggers.js.html#line453">line 453</a>
     </li></ul></dd>
     
 
@@ -1168,7 +1478,7 @@ for constants to use.</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Mar 11 2016 15:03:08 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Mar 16 2016 22:45:16 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
