@@ -104,11 +104,11 @@ var Triggers = {
 		importData = ioData['import'];
 
 		if (exportData) {
-			exportTo = self.db().collection(exportData.to());
+			exportTo = self.db().collection(exportData.to);
 		}
 
 		if (importData) {
-			importFrom = self.db().collection(importData.from());
+			importFrom = self.db().collection(importData.from);
 		}
 
 		allTypes = [

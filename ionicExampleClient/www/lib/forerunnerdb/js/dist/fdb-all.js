@@ -11157,11 +11157,11 @@ var Triggers = {
 		importData = ioData['import'];
 
 		if (exportData) {
-			exportTo = self.db().collection(exportData.to());
+			exportTo = self.db().collection(exportData.to);
 		}
 
 		if (importData) {
-			importFrom = self.db().collection(importData.from());
+			importFrom = self.db().collection(importData.from);
 		}
 
 		allTypes = [
@@ -14820,7 +14820,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.724',
+	version: '1.3.725',
 	modules: {},
 	plugins: {},
 	index: {},
