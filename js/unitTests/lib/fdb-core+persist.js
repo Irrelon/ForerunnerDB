@@ -9064,13 +9064,13 @@ var Triggers = {
 
 		if (exportData) {
 			for (i = 0; i < exportData.types.length; i++) {
-				self.addTrigger(id + 'export' + exportData.types[i], exportData.types[i], self.db.PHASE_AFTER, exportTriggerMethod);
+				self.addTrigger(id + 'export' + exportData.types[i], exportData.types[i], self.PHASE_AFTER, exportTriggerMethod);
 			}
 		}
 
 		if (importData) {
 			for (i = 0; i < importData.types.length; i++) {
-				importFrom.addTrigger(id + 'import' + importData.types[i], importData.types[i], self.db.PHASE_AFTER, importTriggerMethod);
+				importFrom.addTrigger(id + 'import' + importData.types[i], importData.types[i], self.PHASE_AFTER, importTriggerMethod);
 			}
 		}
 	},
@@ -11695,7 +11695,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.725',
+	version: '1.3.726',
 	modules: {},
 	plugins: {},
 	index: {},
