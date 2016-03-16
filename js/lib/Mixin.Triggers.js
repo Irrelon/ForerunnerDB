@@ -78,6 +78,22 @@ var Triggers = {
 	},
 
 	/**
+	 * Tells the current instance to fire or ignore all triggers whether they
+	 * are enabled or not.
+	 * @param {Boolean} val Set to true to ignore triggers or false to not
+	 * ignore them.
+	 * @returns {*}
+	 */
+	ignoreTriggers: function (val) {
+		if (val !== undefined) {
+			this._ignoreTriggers = val;
+			return this;
+		}
+
+		return this._ignoreTriggers;
+	},
+
+	/**
 	 * Generates triggers that fire in the after phase for all CRUD ops
 	 * that automatically transform data back and forth and keep both
 	 * import and export collections in sync with each other.
@@ -141,6 +157,10 @@ var Triggers = {
 						// Get data to upsert (if any)
 						exportData.data(newDoc, operation.type, function (err, data, callback) {
 							if (data) {
+								// Disable all currently enabled triggers so that we
+								// don't go into a trigger loop
+								exportTo.ignoreTriggers(true);
+
 								if (operation.type !== 'remove') {
 									// Do upsert
 									exportTo.upsert(data, callback);
@@ -148,6 +168,9 @@ var Triggers = {
 									// Do remove
 									exportTo.remove(data, callback);
 								}
+
+								// Re-enable the previous triggers
+								exportTo.ignoreTriggers(false);
 							}
 						});
 					}
@@ -174,6 +197,10 @@ var Triggers = {
 						// Get data to upsert (if any)
 						importData.data(newDoc, operation.type, function (err, data, callback) {
 							if (data) {
+								// Disable all currently enabled triggers so that we
+								// don't go into a trigger loop
+								exportTo.ignoreTriggers(true);
+
 								if (operation.type !== 'remove') {
 									// Do upsert
 									self.upsert(data, callback);
@@ -181,6 +208,9 @@ var Triggers = {
 									// Do remove
 									self.remove(data, callback);
 								}
+
+								// Re-enable the previous triggers
+								exportTo.ignoreTriggers(false);
 							}
 						});
 					}
@@ -451,7 +481,7 @@ var Triggers = {
 	 * @returns {Boolean} True if the trigger will fire, false otherwise.
 	 */
 	willTrigger: function (type, phase) {
-		if (this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length) {
+		if (!this._ignoreTriggers && this._trigger && this._trigger[type] && this._trigger[type][phase] && this._trigger[type][phase].length) {
 			// Check if a trigger in this array is enabled
 			var arr = this._trigger[type][phase],
 				i;
@@ -487,7 +517,7 @@ var Triggers = {
 			triggerItem,
 			response;
 
-		if (self._trigger && self._trigger[type] && self._trigger[type][phase]) {
+		if (!self._ignoreTriggers && self._trigger && self._trigger[type] && self._trigger[type][phase]) {
 			triggerArr = self._trigger[type][phase];
 			triggerCount = triggerArr.length;
 
