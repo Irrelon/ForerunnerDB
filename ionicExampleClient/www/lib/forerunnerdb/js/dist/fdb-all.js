@@ -11570,7 +11570,9 @@ var Triggers = {
 			triggerIndex,
 			triggerCount,
 			triggerItem,
-			response;
+			response,
+			typeName,
+			phaseName;
 
 		if (!self._ignoreTriggers && self._trigger && self._trigger[type] && self._trigger[type][phase]) {
 			triggerArr = self._trigger[type][phase];
@@ -11582,9 +11584,6 @@ var Triggers = {
 				// Check if the trigger is enabled
 				if (triggerItem.enabled) {
 					if (self.debug()) {
-						var typeName,
-							phaseName;
-
 						switch (type) {
 							case this.TYPE_INSERT:
 								typeName = 'insert';
@@ -14874,7 +14873,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.729',
+	version: '1.3.731',
 	modules: {},
 	plugins: {},
 	index: {},

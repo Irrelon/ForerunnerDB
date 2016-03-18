@@ -517,7 +517,9 @@ var Triggers = {
 			triggerIndex,
 			triggerCount,
 			triggerItem,
-			response;
+			response,
+			typeName,
+			phaseName;
 
 		if (!self._ignoreTriggers && self._trigger && self._trigger[type] && self._trigger[type][phase]) {
 			triggerArr = self._trigger[type][phase];
@@ -529,9 +531,6 @@ var Triggers = {
 				// Check if the trigger is enabled
 				if (triggerItem.enabled) {
 					if (self.debug()) {
-						var typeName,
-							phaseName;
-
 						switch (type) {
 							case this.TYPE_INSERT:
 								typeName = 'insert';
