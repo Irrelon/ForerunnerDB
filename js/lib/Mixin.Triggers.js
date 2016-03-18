@@ -581,6 +581,7 @@ var Triggers = {
 
 					// Add the trigger to the stack so we don't go down an endless
 					// trigger loop
+					self.triggerStack = self.triggerStack || {};
 					self.triggerStack[type] = {};
 					self.triggerStack[type][phase] = {};
 					self.triggerStack[type][phase][triggerItem.id] = true;
