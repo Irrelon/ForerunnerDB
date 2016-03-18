@@ -9722,6 +9722,9 @@ var Triggers = {
 					response = triggerItem.method.call(self, operation, oldDoc, newDoc);
 
 					// Remove the trigger from the stack
+					self.triggerStack = self.triggerStack || {};
+					self.triggerStack[type] = {};
+					self.triggerStack[type][phase] = {};
 					self.triggerStack[type][phase][triggerItem.id] = false;
 
 					// Check the response for a non-expected result (anything other than
@@ -10986,7 +10989,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.732',
+	version: '1.3.733',
 	modules: {},
 	plugins: {},
 	index: {},

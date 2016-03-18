@@ -590,6 +590,9 @@ var Triggers = {
 					response = triggerItem.method.call(self, operation, oldDoc, newDoc);
 
 					// Remove the trigger from the stack
+					self.triggerStack = self.triggerStack || {};
+					self.triggerStack[type] = {};
+					self.triggerStack[type][phase] = {};
 					self.triggerStack[type][phase][triggerItem.id] = false;
 
 					// Check the response for a non-expected result (anything other than
