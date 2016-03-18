@@ -2778,16 +2778,62 @@ db.collection("test").disableTrigger(db.TYPE_INSERT, db.PHASE_BEFORE);
 db.collection("test").disableTrigger("myTriggerId", db.TYPE_INSERT, db.PHASE_BEFORE);
 ```
 
+### Trigger Recursion Protection
+> Version >= 1.3.728
+
+> Unlike some databases, ForerunnerDB allows you to execute CRUD operations from
+inside trigger methods and are guaranteed safe (will not cause infinite recursion).
+
+ForerunnerDB includes trigger recursion protection so that triggers cannot end up
+calling themselves over and over again in an infinite loop.
+
+An example of a recursive trigger is one in which an INSERT trigger is created, and
+inside that trigger, some code inserts another record which would then fire the
+trigger again, over and over.
+
+ForerunnerDB does not let this happen because only one trigger with the same type,
+phase and id is allowed to be executed on the trigger processing stack at any one
+time.
+
+The benefit of this protection is that you can be sure that calling CRUD operations
+from inside a trigger method is safe. The downside is that CRUD operations from
+inside a trigger method will not fire any triggers that have already fired previously
+in the trigger stack.
+
+A quick example is to imagine you have triggers A, B, C and D:
+
+A -> B
+B -> C
+C -> D
+D -> A <-- Trigger A will not fire.
+
+The same is true here:
+
+A -> B
+B -> A <-- Trigger A will not fire.
+
+And here:
+
+A -> B
+B -> C
+C -> B <-- Trigger B will not fire.
+
+No errors are thrown when a trigger is denied execution, however if you enable debug
+mode on the database or collection the trigger is added to you will see a console
+message informing you that the trigger attempted to fire but was denied because of
+potential infinite recursion.
+
 ## Events
-Collections emit events when they carry out CRUD operations. You can hook an event using
-the on() method. Events that collections currently emit are:
+Collections emit events when they carry out CRUD operations. You can hook an event
+using the on() method. Events that collections currently emit are:
 
 ### insert
-Emitted after an insert operation has completed. The passed arguments to the listener are:
+Emitted after an insert operation has completed. The passed arguments to the listener
+are:
 
 * {Array} inserted An array of the successfully inserted documents.
-* {Array} failed An array of the documents that failed to insert (for instance because of
-an index violation or trigger cancelling the insert).
+* {Array} failed An array of the documents that failed to insert (for instance because
+of an index violation or trigger cancelling the insert).
 
 ```js
 var coll = db.collection("myCollection");
@@ -2801,7 +2847,8 @@ coll.insert({moo: true});
 ```
 
 ### update
-Emitted after an update operation has completed. The passed arguments to the listener are:
+Emitted after an update operation has completed. The passed arguments to the listener
+are:
 
 * {Array} items An array of the documents that were updated by the update operation.
 
@@ -2817,7 +2864,8 @@ coll.update({moo: true}, {moo: false});
 ```
 
 ### remove
-Emitted after a remove operation has completed. The passed arguments to the listener are:
+Emitted after a remove operation has completed. The passed arguments to the listener
+are:
 
 * {Array} items An array of the documents that were removed by the remove operation.
 
@@ -2833,10 +2881,13 @@ coll.remove({moo: true});
 ```
 
 ### setData
-Emitted after a setData operation has completed. The passed arguments to the listener are:
+Emitted after a setData operation has completed. The passed arguments to the listener
+are:
 
-* {Array} newData An array of the documents that were added to the collection by the operation.
-* {Array} oldData An array of the documents that were in the collection before the operation.
+* {Array} newData An array of the documents that were added to the collection by the
+operation.
+* {Array} oldData An array of the documents that were in the collection before the
+operation.
 
 ```js
 var coll = db.collection("myCollection");
@@ -2851,7 +2902,8 @@ coll.setData({foo: -1});
 ```
 
 ### truncate
-Emitted **BEFORE** a truncate operation has completed. The passed arguments to the listener are:
+Emitted **BEFORE** a truncate operation has completed. The passed arguments to the
+listener are:
 
 * {Array} data An array of the documents that will be truncated from the collection.
 
@@ -2921,7 +2973,8 @@ for (i = 0; i < 100000; i++) {
 }
 ```
 
-You can see that in our collection we have some random names and some random ages. If we ask Forerunner to explain the query plan for querying the name and age fields:
+You can see that in our collection we have some random names and some random ages.
+If we ask Forerunner to explain the query plan for querying the name and age fields:
 
 ```js
 collection.explain({
@@ -2957,7 +3010,13 @@ The result shows that the largest amount of time was taken in the "tableScan" st
 }
 ```
 
-From the explain output we can see that a large amount of time was taken up doing a table scan. This means that the database had to scan through every item in the collection and determine if it matched the query you passed. Let's speed this up by creating an index on the "name" field so that lookups against that field are very fast. In the index below we are indexing against the "name" field in ascending order, which is what the 1 denotes in name: 1. If we wish to index in descending order we would use name: -1 instead.
+From the explain output we can see that a large amount of time was taken up doing a
+table scan. This means that the database had to scan through every item in the
+collection and determine if it matched the query you passed. Let's speed this up by
+creating an index on the "name" field so that lookups against that field are very
+fast. In the index below we are indexing against the "name" field in ascending order,
+which is what the 1 denotes in name: 1. If we wish to index in descending order we
+would use name: -1 instead.
 
 ```js
 collection.ensureIndex({
@@ -2965,7 +3024,8 @@ collection.ensureIndex({
 });
 ```
 
-The collection now contains an ascending index against the name field. Queries that check against the name field will now be optimised:
+The collection now contains an ascending index against the name field. Queries that
+check against the name field will now be optimised:
 
 ```js
 collection.explain({
@@ -3007,7 +3067,10 @@ Now the explain output has some different results:
 }
 ```
 
-The query plan shows that the index was used because it has an "indexLookup" step, however we still have a "tableScan" step that took 13 milliseconds to execute. Why was this? If we delve into the query plan a little more by expanding the analysis object we can see why:
+The query plan shows that the index was used because it has an "indexLookup" step,
+however we still have a "tableScan" step that took 13 milliseconds to execute. Why
+was this? If we delve into the query plan a little more by expanding the analysis
+object we can see why:
 
 ```
 {
