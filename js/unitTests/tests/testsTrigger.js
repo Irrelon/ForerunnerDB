@@ -532,6 +532,35 @@ QUnit.test("Disable and then re-enable trigger by id only", function() {
 	base.dbDown();
 });
 
+QUnit.test("Trigger with recursive behaviour will not cause infinite loop", function() {
+	base.dbUp();
+	var coll = db.collection('transformColl').truncate(),
+		triggerMethod;
+
+	triggerMethod = function (operation, oldData, newData) {
+		newData.triggered = true;
+
+		coll.insert({
+			triggered: false
+		});
+	};
+
+	coll.addTrigger('availability', db.TYPE_INSERT, db.PHASE_BEFORE, triggerMethod);
+
+	coll.insert({
+		_id: 1,
+		triggered: false
+	});
+
+	var result = coll.find();
+
+	strictEqual(result.length, 2, "Document count correct");
+	strictEqual(result[0].triggered, true, "First insert trigger fired");
+	strictEqual(result[1].triggered, false, "Second insert trigger fired");
+
+	base.dbDown();
+});
+
 ForerunnerDB.moduleLoaded('View', function () {
 	QUnit.test("Trigger before insert cancel operation doesn't travel further down chain reactor", function () {
 		base.dbUp();
@@ -664,3 +693,4 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 });
+
