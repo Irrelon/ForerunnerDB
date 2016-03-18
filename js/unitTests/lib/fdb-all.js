@@ -11053,8 +11053,7 @@ module.exports = Tags;
 },{}],28:[function(_dereq_,module,exports){
 "use strict";
 
-var Overload = _dereq_('./Overload'),
-	triggerStack = {};
+var Overload = _dereq_('./Overload');
 
 /**
  * Provides trigger functionality methods.
@@ -11090,6 +11089,8 @@ var Triggers = {
 		triggerIndex = self._triggerIndexOf(id, type, phase);
 
 		if (triggerIndex === -1) {
+			self.triggerStack = {};
+
 			// The trigger does not exist, create it
 			self._trigger = self._trigger || {};
 			self._trigger[type] = self._trigger[type] || {};
@@ -11580,7 +11581,7 @@ var Triggers = {
 
 				// Check if the trigger is enabled
 				if (triggerItem.enabled) {
-					if (this.debug()) {
+					if (self.debug()) {
 						var typeName,
 							phaseName;
 
@@ -11623,9 +11624,9 @@ var Triggers = {
 					// don't fire it again (this is so we avoid infinite loops
 					// where a trigger triggers another trigger which calls this
 					// one and so on)
-					if  (triggerStack[type] && triggerStack[type][phase] && triggerStack[type][phase][triggerItem.id]) {
+					if  (self.triggerStack && self.triggerStack[type] && self.triggerStack[type][phase] && self.triggerStack[type][phase][triggerItem.id]) {
 						// The trigger is already in the stack, do not fire the trigger again
-						if (this.debug()) {
+						if (self.debug()) {
 							console.log('Triggers: Will not run trigger "' + triggerItem.id + '" for ' + typeName + ' in phase "' + phaseName + '" as it is already in the stack!');
 						}
 
@@ -11634,15 +11635,15 @@ var Triggers = {
 
 					// Add the trigger to the stack so we don't go down an endless
 					// trigger loop
-					triggerStack[type] = {};
-					triggerStack[type][phase] = {};
-					triggerStack[type][phase][triggerItem.id] = true;
+					self.triggerStack[type] = {};
+					self.triggerStack[type][phase] = {};
+					self.triggerStack[type][phase][triggerItem.id] = true;
 
 					// Run the trigger's method and store the response
 					response = triggerItem.method.call(self, operation, oldDoc, newDoc);
 
 					// Remove the trigger from the stack
-					triggerStack[type][phase][triggerItem.id] = false;
+					self.triggerStack[type][phase][triggerItem.id] = false;
 
 					// Check the response for a non-expected result (anything other than
 					// [undefined, true or false] is considered a throwable error)
@@ -14873,7 +14874,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.728',
+	version: '1.3.729',
 	modules: {},
 	plugins: {},
 	index: {},
