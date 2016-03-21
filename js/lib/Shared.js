@@ -8,7 +8,7 @@ var Overload = require('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.733',
+	version: '1.3.736',
 	modules: {},
 	plugins: {},
 	index: {},
