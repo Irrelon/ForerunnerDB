@@ -11,7 +11,8 @@ module.exports = function(grunt) {
 	//grunt.loadNpmTasks('grunt-qunit-blanket-lcov');
 	grunt.loadNpmTasks('grunt-umd');
 	grunt.loadNpmTasks('grunt-jsdoc');
-	grunt.loadNpmTasks('grunt-qunit-istanbul');
+	//grunt.loadNpmTasks('grunt-qunit-istanbul');
+	grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-node-qunit');
 
 	grunt.initConfig({
