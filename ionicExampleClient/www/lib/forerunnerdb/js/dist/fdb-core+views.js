@@ -9287,10 +9287,10 @@ var Triggers = {
 			exportTriggerMethod = function (operation, oldDoc, newDoc) {
 				// Check if we should execute against this data
 				exportData.match(newDoc, function (err, doExport) {
-					if (doExport) {
+					if (!err && doExport) {
 						// Get data to upsert (if any)
 						exportData.data(newDoc, operation.type, function (err, data, callback) {
-							if (data) {
+							if (!err && data) {
 								// Disable all currently enabled triggers so that we
 								// don't go into a trigger loop
 								exportTo.ignoreTriggers(true);
@@ -9327,10 +9327,10 @@ var Triggers = {
 			importTriggerMethod = function (operation, oldDoc, newDoc) {
 				// Check if we should execute against this data
 				importData.match(newDoc, function (err, doExport) {
-					if (doExport) {
+					if (!err && doExport) {
 						// Get data to upsert (if any)
 						importData.data(newDoc, operation.type, function (err, data, callback) {
-							if (data) {
+							if (!err && data) {
 								// Disable all currently enabled triggers so that we
 								// don't go into a trigger loop
 								exportTo.ignoreTriggers(true);
@@ -10989,7 +10989,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.743',
+	version: '1.3.744',
 	modules: {},
 	plugins: {},
 	index: {},
