@@ -6,6 +6,7 @@
 		"js/perfTests/**",
 		"js/builds/**",
 		"js/tonic/**",
+		"js/lib/vendor/**",
 		"configData/**",
 		"coverage/**",
 		"data/**",
