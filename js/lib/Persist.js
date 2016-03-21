@@ -378,11 +378,19 @@ Persist.prototype.save = function (key, data, callback) {
 	switch (this.mode()) {
 		case 'localforage':
 			this.encode(data, function (err, data, tableStats) {
-				localforage.setItem(key, data).then(function (data) {
-					if (callback) { callback(false, data, tableStats); }
-				}, function (err) {
-					if (callback) { callback(err); }
-				});
+				if (!err) {
+					localforage.setItem(key, data).then(function (data) {
+						if (callback) {
+							callback(false, data, tableStats);
+						}
+					}, function (err) {
+						if (callback) {
+							callback(err);
+						}
+					});
+				} else {
+					callback(err);
+				}
 			});
 			break;
 
