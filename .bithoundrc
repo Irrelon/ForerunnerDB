@@ -1,6 +1,16 @@
 {
 	"ignore": [
 		"./js/dist/**",
+		"./js/unitTests/**",
+		"./js/useTests/**",
+		"./js/perfTests/**",
+		"./js/builds/**",
+		"./js/tonic/**",
+		"./chrome-extension/**",
+		"./ionicExampleClient/**",
+		"./ionicExampleServer/**",
+		"./doc/**",
+		"./out/**",
 		"**/node_modules/**",
 		"**/**-min-**",
 		"**/**-min.**",
