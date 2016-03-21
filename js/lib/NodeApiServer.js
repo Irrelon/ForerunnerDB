@@ -886,6 +886,7 @@ NodeApiServer.prototype._defineRoutes = function () {
 	app.get(root + '/:dbName/:objType/:objName/:objId/_sync', function () { self.handleRequest.apply(self, arguments); });
 };
 
+/*
 NodeApiServer.prototype._generateCert = function () {
 	pem.createCertificate({
 		days: 365,
@@ -894,6 +895,7 @@ NodeApiServer.prototype._generateCert = function () {
 
 	});
 };
+*/
 
 /**
  * Override the Core init to instantiate the plugin.
