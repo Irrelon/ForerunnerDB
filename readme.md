@@ -10,6 +10,8 @@ ready and battle tested in real-world applications.
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
 
+[![NPM Stats](https://nodei.co/npm/forerunnerdb.png?downloads=true)](https://npmjs.org/package/forerunnerdb)
+
 #### TravisCI Build Test Status
 <table>
 <tr>
