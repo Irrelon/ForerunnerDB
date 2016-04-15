@@ -4366,7 +4366,7 @@ representing the packet being sent to the node.
 
 The chain handler method can control the further propagation of the current packet
 by returning true or false from itself. If the chain handler returns true the
-packet propagation will stop and no proceed further down the graph.
+packet propagation will stop and not proceed further down the graph.
 
 The chain handler method can also utilise the chainSend() method to create new
 chain reactor packets that emit from the current node down the graph. Packets
