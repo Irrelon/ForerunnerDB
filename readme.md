@@ -2804,21 +2804,27 @@ in the trigger stack.
 
 A quick example is to imagine you have triggers A, B, C and D:
 
+```
 A -> B
 B -> C
 C -> D
 D -> A <-- Trigger A will not fire.
+```
 
 The same is true here:
 
+```
 A -> B
 B -> A <-- Trigger A will not fire.
+```
 
 And here:
 
+```
 A -> B
 B -> C
 C -> B <-- Trigger B will not fire.
+```
 
 No errors are thrown when a trigger is denied execution, however if you enable debug
 mode on the database or collection the trigger is added to you will see a console
