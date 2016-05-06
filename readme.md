@@ -1727,6 +1727,7 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [$pop](#pop)
 * [$move](#move)
 * [$cast](#cast)
+* [$unset](#unset)
 * [Array Positional in Updates (.$)](#array-positional-in-updates)
 
 #### $replace
@@ -2384,6 +2385,47 @@ Result:
 	"orders":[{
 		"initial": true
 	}]
+}]
+```
+
+#### $unset
+The $unset operator removes a field from a document.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$unset: {
+		<field>: 1
+	}
+});
+```
+
+In the following example, the "count" field is remove from the document that
+matches the id "445324":
+
+```js
+db.collection("test").insert({
+	_id: "445324",
+	count: 5
+});
+
+db.collection("test").update({
+	_id: "445324"
+}, {
+	$unset: {
+		count: 1
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+    
+Result:
+
+```js
+[{
+	"_id": "445324"
 }]
 ```
 
