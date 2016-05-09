@@ -1658,7 +1658,7 @@ result = users.find({
 ```
 
 When this query is executed the $find sub-query object is replaced with the results from
-the sub-query so that the final query (with (aggregated)[#$aggregate] _id field) looks like this:
+the sub-query so that the final query with (aggregated)[#$aggregate] _id field looks like this:
 
 ```js
 result = users.find({
