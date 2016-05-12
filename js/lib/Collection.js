@@ -2392,6 +2392,14 @@ Collection.prototype._find = function (query, options) {
 		op.time('aggregate');
 	}
 
+	// Now process any $groupBy clause
+	if (options.$groupBy) {
+		op.data('flag.group', true);
+		op.time('group');
+		resultArr = this.group(options.$groupBy, resultArr);
+		op.time('group');
+	}
+
 	op.stop();
 	resultArr.__fdbOp = op;
 	resultArr.$cursor = cursor;
@@ -2626,6 +2634,39 @@ Collection.prototype.sort = function (sortObj, arr) {
 	}
 
 	return arr;
+};
+
+/**
+ * Groups an array of documents into multiple array fields, named by the value
+ * of the given group path.
+ * @param {*} groupObj The key path the array objects should be grouped by.
+ * @param {Array} arr The array of documents to group.
+ * @returns {Object}
+ */
+Collection.prototype.group = function (groupObj, arr) {
+	// Convert the index object to an array of key val objects
+	var self = this,
+		keys = sharedPathSolver.parse(groupObj, true),
+		groupPathSolver = new Path(),
+		groupValue,
+		groupResult = {},
+		keyIndex,
+		i;
+
+	if (keys.length) {
+		for (keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+			groupPathSolver.path(keys[keyIndex].path);
+
+			// Execute group
+			for (i = 0; i < arr.length; i++) {
+				groupValue = groupPathSolver.get(arr[i]);
+				groupResult[groupValue] = groupResult[groupValue] || [];
+				groupResult[groupValue].push(arr[i]);
+			}
+		}
+	}
+
+	return groupResult;
 };
 
 // Commented as we have a new method that was originally implemented for binary trees.
