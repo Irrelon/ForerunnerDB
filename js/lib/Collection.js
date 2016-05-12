@@ -2645,8 +2645,7 @@ Collection.prototype.sort = function (sortObj, arr) {
  */
 Collection.prototype.group = function (groupObj, arr) {
 	// Convert the index object to an array of key val objects
-	var self = this,
-		keys = sharedPathSolver.parse(groupObj, true),
+	var keys = sharedPathSolver.parse(groupObj, true),
 		groupPathSolver = new Path(),
 		groupValue,
 		groupResult = {},
