@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.757
+## Version 1.3.758
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1382,6 +1382,60 @@ itemCollection.find({
 	}
 });
 ```
+
+### Grouping Results
+> Version >= 1.3.757
+
+You can specify a $groupBy option along with the find call to group your results:
+
+```js
+myColl = db.collection('myColl');
+
+myColl.insert([{
+	"price": "100",
+	"category": "dogFood"
+}, {
+ 	"price": "60",
+ 	"category": "catFood"
+}, {
+	"price": "70",
+	"category": "catFood"
+}, {
+	"price": "65",
+	"category": "catFood"
+}, {
+	"price": "35",
+	"category": "dogFood"
+}]);
+
+myColl.find({}, {
+	$groupBy: {
+		"category": 1 // Group using the "category" field. Path's are also allowed e.g. "category.name"
+	}
+});
+```
+
+Result is:
+
+{
+	"dogFood": [{
+		"price": "100",
+		"category": "dogFood"
+	}, {
+		"price": "35",
+		"category": "dogFood"
+	}],
+	"catFood": [{
+		"price": "60",
+		"category": "catFood"
+	}, {
+		"price": "70",
+		"category": "catFood"
+	}, {
+		"price": "65",
+		"category": "catFood"
+	}],
+}
 
 ### Limiting Return Fields
 You can specify which fields are included in the return data for a query by adding them in
