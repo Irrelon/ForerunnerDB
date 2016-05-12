@@ -3503,11 +3503,58 @@ QUnit.test("Collection.find() :: Waterfall queries", function () {
 			}
 		}
 	}]);
-console.log(results);
+
+	console.log(results);
 	strictEqual(results.length, 3, 'Correct number of sub-documents pulled');
 
 	base.dbDown();
 });
+
+QUnit.test("Collection.find() :: $groupBy clause single field", function () {
+	base.dbUp();
+
+	var result,
+		coll = db.collection('test').truncate();
+
+	coll.insert([{
+		_id: 1,
+		name: 'Jim',
+		category: 'One'
+	}, {
+		_id: 2,
+		name: 'Bob',
+		category: 'Two'
+	}, {
+		_id: 3,
+		name: 'Bob',
+		category: 'One'
+	}, {
+		_id: 4,
+		name: 'Anne',
+		category: 'Three'
+	}, {
+		_id: 5,
+		name: 'Simon',
+		category: 'Two'
+	}]);
+
+	result = coll.find({
+
+	}, {
+		$groupBy: {
+			category: 1
+		}
+	});
+
+	strictEqual(typeof result, 'object', "Check type of result is an object");
+	strictEqual(result.One instanceof Array, true, "Check result category is an array");
+	strictEqual(result.One[0].name, 'Jim', "Check result name is as expected");
+	strictEqual(result.One[1].name, 'Bob', "Check result name is as expected");
+	strictEqual(result.Two[0].name, 'Bob', "Check result name is as expected");
+
+	base.dbDown();
+});
+
 
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
