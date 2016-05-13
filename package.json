@@ -61,7 +61,7 @@
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
-    "fs-extra": "^0.26.2",
+    "fs-extra": "^0.29.0",
     "grunt": "^0.4.5",
     "grunt-browserify": "^5.0.0",
     "grunt-cli": "^1.2.0",
