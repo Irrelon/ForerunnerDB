@@ -1417,6 +1417,7 @@ myColl.find({}, {
 
 Result is:
 
+```json
 {
 	"dogFood": [{
 		"price": "100",
@@ -1436,6 +1437,7 @@ Result is:
 		"category": "catFood"
 	}],
 }
+```
 
 ### Limiting Return Fields
 You can specify which fields are included in the return data for a query by adding them in
