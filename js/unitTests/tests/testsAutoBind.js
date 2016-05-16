@@ -550,11 +550,13 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			collResults,
 			viewResults;
 
-		view.link('#' + targetId, {
-			template: '<li data-link="id{:_id}">{^{:foo}}</li>'
+		view.from(coll);
+
+		view.query({
+			moo: true
 		});
 
-		coll.transform({
+		view.transform({
 			enabled: true,
 			dataIn: function (data) {
 				data.foo = 'works';
@@ -562,7 +564,9 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 			}
 		});
 
-		view.from(coll);
+		view.link('#' + targetId, {
+			template: '<li data-link="id{:_id}">{^{:foo}}</li>'
+		});
 
 		viewResults = view.find();
 
@@ -578,7 +582,7 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 
 		strictEqual(collResults.length, 1, 'Results count after insert is correct');
 		strictEqual(collResults[0].moo, true, 'Results data is correct');
-		strictEqual(collResults[0].foo, 'works', 'Results data is correct');
+		strictEqual(collResults[0].foo, undefined, 'Results data is correct');
 
 		strictEqual(viewResults.length, 1, 'Results count after insert is correct');
 		strictEqual(viewResults[0].moo, true, 'Results data is correct');
