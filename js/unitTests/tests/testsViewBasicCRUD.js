@@ -89,6 +89,47 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
+	QUnit.test('View Basics :: Transform :: Insert into underlying collection with data-bound view, view data is transformed correctly', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			collResults,
+			viewResults;
+
+		coll.transform({
+			enabled: true,
+			dataIn: function (data) {
+				data.foo = true;
+				return data;
+			}
+		});
+
+		view.from(coll);
+
+		collResults = view.find();
+
+		strictEqual(collResults.length, 0, 'Results count before insert is correct');
+
+		coll.upsert({
+			moo: true
+		});
+
+		collResults = coll.find();
+		viewResults = view.find();
+
+		strictEqual(collResults.length, 1, 'Results count after insert is correct');
+		strictEqual(collResults[0].moo, true, 'Results data is correct');
+		strictEqual(collResults[0].foo, true, 'Results data is correct');
+
+		strictEqual(viewResults.length, 1, 'Results count after insert is correct');
+		strictEqual(viewResults[0].moo, true, 'Results data is correct');
+		strictEqual(viewResults[0].foo, true, 'Results data is correct');
+
+		base.dbDown();
+	});
+
 	QUnit.test('View Basics :: CRUD :: Update into underlying collection is reflected in view', function () {
 		"use strict";
 		base.dbUp();
