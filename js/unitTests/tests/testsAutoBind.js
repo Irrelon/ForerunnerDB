@@ -538,6 +538,61 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
+	QUnit.test("View.on() with query :: Insert into collection with transform, check transformed data exists in bound view", function () {
+		base.dbUp();
+		base.dataUp();
+		base.domUp();
+
+		var targetId = base.tmpDomUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			collResults,
+			viewResults;
+
+		view.link('#' + targetId, {
+			template: '<li data-link="id{:_id}">{^{:foo}}</li>'
+		});
+
+		coll.transform({
+			enabled: true,
+			dataIn: function (data) {
+				data.foo = 'works';
+				return data;
+			}
+		});
+
+		view.from(coll);
+
+		viewResults = view.find();
+
+		strictEqual(viewResults.length, 0, 'Results count before insert is correct');
+
+		coll.upsert({
+			_id: '2342',
+			moo: true
+		});
+
+		collResults = coll.find();
+		viewResults = view.find();
+
+		strictEqual(collResults.length, 1, 'Results count after insert is correct');
+		strictEqual(collResults[0].moo, true, 'Results data is correct');
+		strictEqual(collResults[0].foo, 'works', 'Results data is correct');
+
+		strictEqual(viewResults.length, 1, 'Results count after insert is correct');
+		strictEqual(viewResults[0].moo, true, 'Results data is correct');
+		strictEqual(viewResults[0].foo, 'works', 'Results data is correct');
+
+		var elem = $('#' + targetId).find('#2342');
+		strictEqual(elem.length, 1, "Data bound element count correct");
+		strictEqual(elem.text(), 'works', 'Data bound element text is correct (transformed data exists in element)');
+
+		base.tmpDomDown(targetId);
+		base.domDown();
+		base.dbDown();
+	});
+
 	QUnit.test("View.on() with query :: Insert from Collection With Item That Does Not Match View Query", function () {
 		base.dbUp();
 		base.dataUp();
