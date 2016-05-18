@@ -14618,10 +14618,17 @@ Collection.prototype.save = function (callback) {
 		if (self._db) {
 			processSave = function () {
 				// Save the collection data
-				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, data, tableStats) {
+				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
 					if (!err) {
-						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
-							if (callback) { callback(err, data, tableStats, metaStats); }
+						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
+							if (callback) {
+								callback(err, tableStats, metaStats, {
+									tableData: tableData,
+									metaData: metaData,
+									tableDataName: self._db._name + '-' + self._name,
+									metaDataName: self._db._name + '-' + self._name + '-metaData'
+								});
+							}
 						});
 					} else {
 						if (callback) { callback(err); }
@@ -14660,22 +14667,23 @@ Collection.prototype.load = function (callback) {
 			// Load the collection data
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
-					if (data) {
-						// Remove all previous data
-						self.remove({});
-						self.insert(data);
+					// Remove all previous data
+					self.remove({}, function () {
+						// Now insert the new data
+						data = data || [];
+						self.insert(data, function () {
+							// Now load the collection's metadata
+							self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
+								if (!err) {
+									if (data) {
+										self.metaData(data);
+									}
+								}
+
+								if (callback) { callback(err, tableStats, metaStats); }
+							});
+						});
 						//self.setData(data);
-					}
-
-					// Now load the collection's metadata
-					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
-						if (!err) {
-							if (data) {
-								self.metaData(data);
-							}
-						}
-
-						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
 					if (callback) { callback(err); }
@@ -15330,7 +15338,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.765',
+	version: '1.3.766',
 	modules: {},
 	plugins: {},
 	index: {},
