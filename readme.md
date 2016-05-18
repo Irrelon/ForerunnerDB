@@ -206,11 +206,13 @@ itemCollection.insert([{
 }]);
 ```
 
+### Inserting a Large Number of Documents
+
 When inserting large amounts of documents ForerunnerDB may break your insert
 operation into multiple smaller operations (usually of 100 documents at a time)
-in order to avoid blocking the main processing thread of your browser. You can
-find out when an insert has completed either by passing a callback to the insert
-call or by switching off async behaviour.
+in order to avoid blocking the main processing thread of your browser / Node.js
+application. You can find out when an insert has completed either by passing
+a callback to the insert call or by switching off async behaviour.
 
 Passing a callback:
 
@@ -238,6 +240,10 @@ via:
 ```js
 db.collection('myCollectionName').deferredCalls(false);
 ```
+
+After async behaviour (deferred calls) has been disabled, you can insert records
+and be sure that they will all have inserted before the next statement is
+processed by the application's main thread.
 
 ### Inserting Special Objects
 JSON has limitations on the types of objects it will serialise and de-serialise back to
