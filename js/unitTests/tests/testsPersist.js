@@ -343,4 +343,108 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			});
 		});
 	});
+
+	QUnit.asyncTest('Persist.save() :: Save large amount of data and ensure load callback is called AFTER it has all been inserted', function () {
+		expect(7);
+
+		var fdb = new ForerunnerDB(),
+			db = fdb.db('db1'),
+			items = db.collection('project'),
+			tmpData = [],
+			numRecords,
+			data,
+			i;
+
+		numRecords = 25000;
+
+		for (i = 0; i < numRecords; i++) {
+			data = {
+				_id: i,
+				data: 'data ' + i
+			};
+
+			tmpData.push(data);
+		}
+
+		items.insert(tmpData, function (result) {
+			strictEqual(result.inserted.length === numRecords, true, 'Inserted correct number of rows');
+			strictEqual(result.failed.length === 0, true, 'No inserted rows failed');
+			strictEqual(items.count(), numRecords, 'The collection contains the correct number of rows after insert');
+
+			items.save(function (err, data) {
+				strictEqual(Boolean(err), false, 'The save operation did not result in error');
+
+				// Drop the database from memory without dropping persistent storage (pass false)
+				db.drop(false);
+
+				// Now get new database reference
+				db = fdb.db('db1');
+
+				// Get new collection reference
+				items = db.collection('project');
+
+				items.load(function (err, tableStats, metaStats) {
+					strictEqual(err, false, 'The load operation did not produce an error');
+					strictEqual(tableStats.rowCount > 0, true, 'Loaded data contains rows');
+					strictEqual(items.count(), numRecords, 'Loaded data contains the correct number of rows');
+
+					// Now drop the whole database, removing all persistent storage as well
+					db.drop(true);
+					start();
+				});
+			});
+		});
+	});
+
+	QUnit.asyncTest('Persist.save() :: Save with empty collection then load back empty collection check that callbacks fire', function () {
+		expect(7);
+
+		var fdb = new ForerunnerDB(),
+			db = fdb.db('db1'),
+			items = db.collection('project'),
+			tmpData = [],
+			numRecords,
+			data,
+			i;
+
+		numRecords = 0;
+
+		for (i = 0; i < numRecords; i++) {
+			data = {
+				_id: i,
+				data: 'data ' + i
+			};
+
+			tmpData.push(data);
+		}
+
+		items.insert(tmpData, function (result) {
+			strictEqual(result.inserted.length === numRecords, true, 'Inserted correct number of rows');
+			strictEqual(result.failed.length === 0, true, 'No inserted rows failed');
+			strictEqual(items.count(), numRecords, 'The collection contains the correct number of rows after insert');
+
+			items.save(function (err, data) {
+				strictEqual(Boolean(err), false, 'The save operation did not result in error');
+
+				// Drop the database from memory without dropping persistent storage (pass false)
+				db.drop(false);
+
+				// Now get new database reference
+				db = fdb.db('db1');
+
+				// Get new collection reference
+				items = db.collection('project');
+
+				items.load(function (err, tableStats, metaStats) {
+					strictEqual(err, false, 'The load operation did not produce an error');
+					strictEqual(tableStats.rowCount === 0, true, 'Loaded data contains zero rows');
+					strictEqual(items.count(), numRecords, 'Loaded data contains the correct number of rows');
+
+					// Now drop the whole database, removing all persistent storage as well
+					db.drop(true);
+					start();
+				});
+			});
+		});
+	});
 });
