@@ -587,22 +587,23 @@ Collection.prototype.load = function (callback) {
 			// Load the collection data
 			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
 				if (!err) {
-					if (data) {
-						// Remove all previous data
-						self.remove({});
-						self.insert(data);
+					// Remove all previous data
+					self.remove({}, function () {
+						// Now insert the new data
+						data = data || [];
+						self.insert(data, function () {
+							// Now load the collection's metadata
+							self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
+								if (!err) {
+									if (data) {
+										self.metaData(data);
+									}
+								}
+
+								if (callback) { callback(err, tableStats, metaStats); }
+							});
+						});
 						//self.setData(data);
-					}
-
-					// Now load the collection's metadata
-					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
-						if (!err) {
-							if (data) {
-								self.metaData(data);
-							}
-						}
-
-						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
 					if (callback) { callback(err); }
