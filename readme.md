@@ -3554,6 +3554,13 @@ collections, please see #41 for more information.
 
 ### Both Browser and Node.js
 
+#### Removing Persisted Data
+When a database instance is dropped, the persistent storage that belongs to that instance
+is automatically removed as well.
+
+Please see [Dropping and Persistent Storage](#dropping-and-persistent-storage) for
+more information.
+
 #### Plugins
 > Version >= 1.3.235
 
@@ -3721,6 +3728,70 @@ You can remove a collection from a collection group via the removeCollection() m
 
 ```js
 group.removeCollection(coll);
+```
+
+## Dropping Database Instances
+All database instances have a drop() method which removes the instance from memory.
+
+You can individually drop databases, collections, views, overviews etc.
+
+For instance, if you wish to drop an entire database:
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll;
+
+// Create a collection called testColl
+coll = db.collection('testColl');
+
+// Insert a record
+coll.insert({
+	_id: 1,
+	name: 'Test'
+});
+
+// Ask for a list of collections
+console.log('Before drop', JSON.stringify(db.collections()));
+
+// Drop the entire database
+db.drop();
+
+// Now grab the database again (note that previous references will no longer work)
+db = fdb.db('test');
+
+// Ask for a list of collections
+console.log('After drop', db.collections());
+```
+
+Output:
+
+```json
+Before drop [{"name":"testColl","count":1,"linked":false}]
+After drop []
+```
+
+Dropping a database automatically drops all instances connected with that database.
+
+### Dropping and Persistent Storage
+When dropping a database or collection the persistent storage related to that
+instance will be dropped as well. If you wish to keep the persistent storage
+you must specify that when you call the drop() method. Passing false as the
+first argument to drop() will tell ForerunnerDB not to drop the persistent
+storage for the instance being dropped.
+
+For example, to drop a collection without removing its persistent storage:
+
+```js
+db.collection('test').drop(false);
+```
+
+The same is true when dropping an entire database. If you pass false in the
+first argument then no instances stored in the database will drop their
+persistent storage:
+
+```js
+db.drop(false);
 ```
 
 ## Grid / Table Output
