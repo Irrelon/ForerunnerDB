@@ -1199,7 +1199,6 @@ View.prototype.refresh = function () {
 
 		// Store the current cursor data
 		this._data._data.$cursor = refreshResults.$cursor;
-		this._data._data.$cursor = refreshResults.$cursor;
 	}
 
 	if (this._querySettings && this._querySettings.options && this._querySettings.options.$join && this._querySettings.options.$join.length) {
