@@ -2255,8 +2255,8 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Function=} callback Optional callback called once action is complete.
- * objects to insert into the collection.
+ * @param {Collection~insertCallback=} callback Optional callback called
+ * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
 	if (this.isDropped()) {
@@ -2273,13 +2273,25 @@ Collection.prototype.insert = function (data, index, callback) {
 	data = this.transformIn(data);
 	return this._insertHandle(data, index, callback);
 };
+/**
+ * The insert operation's callback.
+ * @callback Collection~insertCallback
+ * @param {Object} result The result object will contain two arrays (inserted
+ * and failed) which represent the documents that did get inserted and those
+ * that didn't for some reason (usually index violation). Failed items also
+ * contain a reason. Inspect the failed array for further information.
+ *
+ * A third field called "deferred" is a boolean value to indicate if the
+ * insert operation was deferred across more than one CPU cycle (to avoid
+ * blocking the main thread).
+ */
 
 /**
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Function=} callback Optional callback called once action is complete.
- * objects to insert into the collection.
+ * @param {Collection~insertCallback=} callback Optional callback called
+ * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
 	var //self = this,
@@ -10403,7 +10415,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.761',
+	version: '1.3.762',
 	modules: {},
 	plugins: {},
 	index: {},
