@@ -626,6 +626,86 @@ ForerunnerDB.moduleLoaded('View, AutoBind', function () {
 		base.dbDown();
 	});
 
+	QUnit.test("View() :: View order is correct after upsert on collection, with $limit and multi-key $orderBy on view", function() {
+		base.dbUp();
+		base.domUp();
+
+		var targetId = base.tmpDomUp(),
+			coll,
+			view;
+
+		coll = db.collection('testColl').truncate();
+		view = db.view('testView')
+			.from('testColl');
+
+		coll.insert([{
+			name: 'Test 1',
+			age: 1,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 2',
+			age: 2,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 3',
+			age: 3,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 4',
+			age: 4,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 5',
+			age: 5,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 6',
+			age: 6,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 7',
+			age: 7,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 8',
+			age: 8,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 9',
+			age: 9,
+			dateTs: db.make(new Date())
+		}, {
+			name: 'Test 10',
+			age: 10,
+			dateTs: db.make(new Date())
+		}]);
+
+		// NOTE THIS $LIMIT ONLY WORKS IF DECLARED AFTER THE COLLECTION INSERT!
+		view.queryOptions({
+				$orderBy: {
+					age: -1,
+					name: 1,
+					dateTs: -1
+				},
+				$limit: 2
+			})
+			.link('#' + targetId, {
+				template: '<li class="item" data-link="id{:_id} data-name{:name}">{^{:name}} {^{:age}} {^{:dateTs}}</li>'
+			});
+
+		var elems = $('#' + targetId).find('.item');
+
+		strictEqual(elems.length, 2, "Document count");
+
+		// Check sort order
+		strictEqual($(elems[0]).attr('data-name'), 'Test 10', "Alphabetical 1");
+		strictEqual($(elems[1]).attr('data-name'), 'Test 9', "Alphabetical 2");
+
+		base.tmpDomDown(targetId);
+		base.domDown();
+		base.dbDown();
+	});
+
 	QUnit.test("View.on() with query :: Update from Collection to outside view query constraints", function () {
 		base.dbUp();
 		base.dataUp();
