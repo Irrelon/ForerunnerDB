@@ -172,7 +172,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		results = view.find();
 
-		strictEqual(results.length, 0, 'Results count after insert is correct');
+		strictEqual(results.length, 0, 'Results count after upsert is correct');
 		strictEqual(results[0], undefined, 'Results data is correct');
 
 		base.dbDown();

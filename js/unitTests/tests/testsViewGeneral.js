@@ -150,20 +150,22 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	// TODO: This will currently fail, fix this bug!
 	/*QUnit.test('View.find() :: Update an underlying collection with data changed in a before trigger and check view has same record', function () {
 		"use strict";
 		base.dbUp();
 
 		var coll = db.collection('test').truncate(),
 			view = db.view('test'),
-			result;
+			collResult,
+			viewResult;
 
 		view.from(coll);
 
-		result = view.find({});
+		collResult = coll.find({});
+		viewResult = view.find({});
 
-		strictEqual(result.length, 0, 'Result count before insert correct');
+		strictEqual(viewResult.length, 0, 'Collection result count before insert correct');
+		strictEqual(viewResult.length, 0, 'View result count before insert correct');
 
 		coll.insert({
 			moo: true
@@ -180,11 +182,16 @@ ForerunnerDB.moduleLoaded('View', function () {
 			moo: false
 		});
 
-		result = view.find({});
+		collResult = coll.find({});
+		viewResult = view.find({});
 
-		strictEqual(result.length, 1, 'Result count after update correct');
-		strictEqual(result[0].moo, false, 'Result data after update correct');
-		strictEqual(result[0].foo, true, 'Result trigger data after update correct');
+		strictEqual(collResult.length, 1, 'Collection result count after update correct');
+		strictEqual(collResult[0].moo, false, 'Collection result data after update correct');
+		strictEqual(collResult[0].foo, true, 'Collection result trigger data after update correct');
+
+		strictEqual(viewResult.length, 1, 'View result count after update correct');
+		strictEqual(viewResult[0].moo, false, 'View result data after update correct');
+		strictEqual(viewResult[0].foo, true, 'View result trigger data after update correct');
 
 		base.dbDown();
 	});*/
