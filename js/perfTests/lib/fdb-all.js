@@ -13022,7 +13022,7 @@ Overview.prototype._addSource = function (source) {
 	if (source && source.className === 'View') {
 		// The source is a view so IO to the internal data collection
 		// instead of the view proper
-		source = source.privateData();
+		source = source.data();
 		if (this.debug()) {
 			console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
 		}
@@ -13043,7 +13043,7 @@ Overview.prototype._removeSource = function (source) {
 	if (source && source.className === 'View') {
 		// The source is a view so IO to the internal data collection
 		// instead of the view proper
-		source = source.privateData();
+		source = source.data();
 		if (this.debug()) {
 			console.log(this.logIdentifier() + ' Using internal private data "' + source.instanceIdentifier() + '" for IO graph linking');
 		}
@@ -14937,7 +14937,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.763',
+	version: '1.3.764',
 	modules: {},
 	plugins: {},
 	index: {},
