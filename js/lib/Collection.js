@@ -121,25 +121,46 @@ Shared.synthesize(Collection.prototype, 'name');
 
 /**
  * Gets / sets the metadata stored in the collection.
+ * @param {Object=} val The data to set.
+ * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'metaData');
 
 /**
  * Gets / sets boolean to determine if the collection should be
  * capped or not.
+ * @param {Boolean=} val The value to set.
+ * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'capped');
 
 /**
  * Gets / sets capped collection size. This is the maximum number
  * of records that the capped collection will store.
+ * @param {Number=} val The value to set.
+ * @returns {*}
  */
 Shared.synthesize(Collection.prototype, 'cappedSize');
 
+/**
+ * Adds a job id to the async queue to signal to other parts
+ * of the application that some async work is currently being
+ * done.
+ * @param {String} key The id of the async job.
+ * @private
+ */
 Collection.prototype._asyncPending = function (key) {
 	this._deferQueue.async.push(key);
 };
 
+/**
+ * Removes a job id from the async queue to signal to other
+ * parts of the application that some async work has been
+ * completed. If no further async jobs exist on the queue then
+ * the "ready" event is emitted from this collection instance.
+ * @param {String} key The id of the async job.
+ * @private
+ */
 Collection.prototype._asyncComplete = function (key) {
 	// Remove async flag for this type
 	var index = this._deferQueue.async.indexOf(key);
@@ -167,6 +188,8 @@ Collection.prototype.data = function () {
 
 /**
  * Drops a collection and all it's stored data from the database.
+ * @param {Function=} callback A callback method to call once the
+ * operation has completed.
  * @returns {boolean} True on success, false on failure.
  */
 Collection.prototype.drop = function (callback) {
@@ -273,7 +296,10 @@ Collection.prototype._onRemove = function (items) {
 };
 
 /**
- * Handles any change to the collection.
+ * Handles any change to the collection by updating the
+ * lastChange timestamp on the collection's metaData. This
+ * only happens if the changeTimestamp option is enabled
+ * on the collection (it is disabled by default).
  * @private
  */
 Collection.prototype._onChange = function () {
@@ -309,37 +335,89 @@ Shared.synthesize(Collection.prototype, 'db', function (db) {
  */
 Shared.synthesize(Collection.prototype, 'mongoEmulation');
 
-/**
- * Sets the collection's data to the array / documents passed.  If any
- * data already exists in the collection it will be removed before the
- * new data is set.
- * @param {Array|Object} data The array of documents or a single document
- * that will be set as the collections data.
- * @param options Optional options object.
- * @param callback Optional callback function.
- */
 Collection.prototype.setData = new Overload('Collection.prototype.setData', {
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 */
 	'*': function (data) {
 		return this.$main.call(this, data, {});
 	},
 
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 * @param {Object} options Optional options object.
+	 */
 	'*, object': function (data, options) {
 		return this.$main.call(this, data, options);
 	},
 
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 * @param {Function} callback Optional callback function.
+	 */
 	'*, function': function (data, callback) {
 		return this.$main.call(this, data, {}, callback);
 	},
 
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 * @param {*} options Optional options object.
+	 * @param {Function} callback Optional callback function.
+	 */
 	'*, *, function': function (data, options, callback) {
 		return this.$main.call(this, data, options, callback);
 	},
 
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 * @param {*} options Optional options object.
+	 * @param {*} callback Optional callback function.
+	 */
 	'*, *, *': function (data, options, callback) {
 		return this.$main.call(this, data, options, callback);
 	},
 
-
+	/**
+	 * Sets the collection's data to the array / documents passed.  If any
+	 * data already exists in the collection it will be removed before the
+	 * new data is set via the remove() method, and the remove event will
+	 * fire as well.
+	 * @name setData
+	 * @param {Array|Object} data The array of documents or a single document
+	 * that will be set as the collections data.
+	 * @param {Object} options Optional options object.
+	 * @param {Function} callback Optional callback function.
+	 */
 	'$main': function (data, options, callback) {
 		if (this.isDropped()) {
 			throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
@@ -383,7 +461,8 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 });
 
 /**
- * Drops and rebuilds the primary key index for all documents in the collection.
+ * Drops and rebuilds the primary key index for all documents
+ * in the collection.
  * @param {Object=} options An optional options object.
  * @private
  */
@@ -475,31 +554,35 @@ Collection.prototype.truncate = function () {
 	this._onChange();
 	this.emit('immediateChange', {type: 'truncate'});
 	this.deferEmit('change', {type: 'truncate'});
+
 	return this;
 };
 
 /**
- * Modifies an existing document or documents in a collection. This will update
- * all matches for 'query' with the data held in 'update'. It will not overwrite
- * the matched documents with the update document.
+ * Inserts a new document or updates an existing document in a
+ * collection depending on if a matching primary key exists in
+ * the collection already or not.
  *
- * @param {Object} obj The document object to upsert or an array containing
- * documents to upsert.
+ * If the document contains a primary key field (based on the
+ * collections's primary key) then the database will search for
+ * an existing document with a matching id. If a matching
+ * document is found, the document will be updated. Any keys that
+ * match keys on the existing document will be overwritten with
+ * new data. Any keys that do not currently exist on the document
+ * will be added to the document.
  *
- * If the document contains a primary key field (based on the collections's primary
- * key) then the database will search for an existing document with a matching id.
- * If a matching document is found, the document will be updated. Any keys that
- * match keys on the existing document will be overwritten with new data. Any keys
- * that do not currently exist on the document will be added to the document.
+ * If the document does not contain an id or the id passed does
+ * not match an existing document, an insert is performed instead.
+ * If no id is present a new primary key id is provided for the
+ * document and the document is inserted.
  *
- * If the document does not contain an id or the id passed does not match an existing
- * document, an insert is performed instead. If no id is present a new primary key
- * id is provided for the item.
- *
+ * @param {Object} obj The document object to upsert or an array
+ * containing documents to upsert.
  * @param {Function=} callback Optional callback method.
- * @returns {Object} An object containing two keys, "op" contains either "insert" or
- * "update" depending on the type of operation that was performed and "result"
- * contains the return data from the operation used.
+ * @returns {Object} An object containing two keys, "op" contains
+ * either "insert" or "update" depending on the type of operation
+ * that was performed and "result" contains the return data from
+ * the operation used.
  */
 Collection.prototype.upsert = function (obj, callback) {
 	if (this.isDropped()) {
@@ -624,18 +707,20 @@ Collection.prototype.filterUpdate = function (query, func, options) {
 };
 
 /**
- * Modifies an existing document or documents in a collection. This will update
- * all matches for 'query' with the data held in 'update'. It will not overwrite
- * the matched documents with the update document.
+ * Modifies an existing document or documents in a collection.
+ * This will update all matches for 'query' with the data held
+ * in 'update'. It will not overwrite the matched documents
+ * with the update document.
  *
- * @param {Object} query The query that must be matched for a document to be
- * operated on.
- * @param {Object} update The object containing updated key/values. Any keys that
- * match keys on the existing document will be overwritten with this data. Any
- * keys that do not currently exist on the document will be added to the document.
+ * @param {Object} query The query that must be matched for a
+ * document to be operated on.
+ * @param {Object} update The object containing updated
+ * key/values. Any keys that match keys on the existing document
+ * will be overwritten with this data. Any keys that do not
+ * currently exist on the document will be added to the document.
  * @param {Object=} options An options object.
- * @param {Function=} callback The callback method to call when the update is
- * complete.
+ * @param {Function=} callback The callback method to call when
+ * the update is complete.
  * @returns {Array} The items that were updated.
  */
 Collection.prototype.update = function (query, update, options, callback) {
@@ -658,6 +743,20 @@ Collection.prototype.update = function (query, update, options, callback) {
 	return this._handleUpdate(query, update, options, callback);
 };
 
+/**
+ * Handles the update operation that was initiated by a call to update().
+ * @param {Object} query The query that must be matched for a
+ * document to be operated on.
+ * @param {Object} update The object containing updated
+ * key/values. Any keys that match keys on the existing document
+ * will be overwritten with this data. Any keys that do not
+ * currently exist on the document will be added to the document.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when
+ * the update is complete.
+ * @returns {Array} The items that were updated.
+ * @private
+ */
 Collection.prototype._handleUpdate = function (query, update, options, callback) {
 	var self = this,
 		op = this._metrics.create('update'),
@@ -751,9 +850,14 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 
 /**
  * Replaces an existing object with data from the new object without
- * breaking data references.
- * @param {Object} currentObj The object to alter.
- * @param {Object} newObj The new object to overwrite the existing one with.
+ * breaking data references. It does this by removing existing keys
+ * from the base object and then adding the passed object's keys to
+ * the existing base object, thereby maintaining any references to
+ * the existing base object but effectively replacing the object with
+ * the new one.
+ * @param {Object} currentObj The base object to alter.
+ * @param {Object} newObj The new object to overwrite the existing one
+ * with.
  * @returns {*} Chain.
  * @private
  */
@@ -790,9 +894,10 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
 };
 
 /**
- * Helper method to update a document from it's id.
+ * Helper method to update a document via it's id.
  * @param {String} id The id of the document.
- * @param {Object} update The object containing the key/values to update to.
+ * @param {Object} update The object containing the key/values to
+ * update to.
  * @returns {Object} The document that was updated or undefined
  * if no document was updated.
  */
@@ -805,14 +910,18 @@ Collection.prototype.updateById = function (id, update) {
 /**
  * Internal method for document updating.
  * @param {Object} doc The document to update.
- * @param {Object} update The object with key/value pairs to update the document with.
- * @param {Object} query The query object that we need to match to perform an update.
+ * @param {Object} update The object with key/value pairs to update
+ * the document with.
+ * @param {Object} query The query object that we need to match to
+ * perform an update.
  * @param {Object} options An options object.
  * @param {String} path The current recursive path.
- * @param {String} opType The type of update operation to perform, if none is specified
- * default is to set new data against matching fields.
- * @returns {Boolean} True if the document was updated with new / changed data or
- * false if it was not updated because the data was the same.
+ * @param {String} opType The type of update operation to perform,
+ * if none is specified default is to set new data against matching
+ * fields.
+ * @returns {Boolean} True if the document was updated with new /
+ * changed data or false if it was not updated because the data was
+ * the same.
  * @private
  */
 Collection.prototype.updateObject = function (doc, update, query, options, path, opType) {
@@ -1306,8 +1415,8 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 };
 
 /**
- * Determines if the passed key has an array positional mark (a dollar at the end
- * of its name).
+ * Determines if the passed key has an array positional mark
+ * (a dollar at the end of its name).
  * @param {String} key The key to check.
  * @returns {Boolean} True if it is a positional or false if not.
  * @private
@@ -1317,8 +1426,8 @@ Collection.prototype._isPositionalKey = function (key) {
 };
 
 /**
- * Removes any documents from the collection that match the search query
- * key/values.
+ * Removes any documents from the collection that match the search
+ * query key/values.
  * @param {Object} query The query object.
  * @param {Object=} options An options object.
  * @param {Function=} callback A callback method.
@@ -1918,8 +2027,8 @@ Collection.prototype.findById = function (id, options) {
  * regardless of where the string might occur within the document. This
  * will match strings from the start, middle or end of the document's
  * string (partial match).
- * @param search The string to search for. Case sensitive.
- * @param options A standard find() options object.
+ * @param {String} search The string to search for. Case sensitive.
+ * @param {Object=} options A standard find() options object.
  * @returns {Array} An array of documents that matched the search string.
  */
 Collection.prototype.peek = function (search, options) {
@@ -2708,6 +2817,7 @@ Collection.prototype.group = function (groupObj, arr) {
 };*/
 
 /**
+ * REMOVED AS SUPERCEDED BY BETTER SORT SYSTEMS
  * Takes array of sort paths and sorts them into buckets before returning final
  * array fully sorted by multi-keys.
  * @param keyArr
@@ -2782,8 +2892,8 @@ Collection.prototype.group = function (groupObj, arr) {
 
 /**
  * Sorts array by individual sort path.
- * @param key
- * @param arr
+ * @param {String} key The path to sort by.
+ * @param {Array} arr The array of objects to sort.
  * @returns {Array|*}
  * @private
  */
@@ -2819,12 +2929,15 @@ Collection.prototype._sort = function (key, arr) {
 };
 
 /**
- * Internal method that takes a search query and options and returns an object
- * containing details about the query which can be used to optimise the search.
+ * Internal method that takes a search query and options and
+ * returns an object containing details about the query which
+ * can be used to optimise the search.
  *
- * @param query
- * @param options
- * @param op
+ * @param {Object} query The search query to analyse.
+ * @param {Object} options The query options object.
+ * @param {Operation} op The instance of the Operation class that
+ * this operation is using to track things like performance and steps
+ * taken etc.
  * @returns {Object}
  * @private
  */
@@ -3042,14 +3155,14 @@ Collection.prototype.count = function (query, options) {
 
 /**
  * Finds sub-documents from the collection's documents.
- * @param {Object} match The query object to use when matching parent documents
- * from which the sub-documents are queried.
- * @param {String} path The path string used to identify the key in which
- * sub-documents are stored in parent documents.
- * @param {Object=} subDocQuery The query to use when matching which sub-documents
- * to return.
- * @param {Object=} subDocOptions The options object to use when querying for
- * sub-documents.
+ * @param {Object} match The query object to use when matching
+ * parent documents from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the
+ * key in which sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching
+ * which sub-documents to return.
+ * @param {Object=} subDocOptions The options object to use
+ * when querying for sub-documents.
  * @returns {*}
  */
 Collection.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
@@ -3109,16 +3222,16 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 };
 
 /**
- * Finds the first sub-document from the collection's documents that matches
- * the subDocQuery parameter.
- * @param {Object} match The query object to use when matching parent documents
- * from which the sub-documents are queried.
- * @param {String} path The path string used to identify the key in which
- * sub-documents are stored in parent documents.
- * @param {Object=} subDocQuery The query to use when matching which sub-documents
- * to return.
- * @param {Object=} subDocOptions The options object to use when querying for
- * sub-documents.
+ * Finds the first sub-document from the collection's documents
+ * that matches the subDocQuery parameter.
+ * @param {Object} match The query object to use when matching
+ * parent documents from which the sub-documents are queried.
+ * @param {String} path The path string used to identify the
+ * key in which sub-documents are stored in parent documents.
+ * @param {Object=} subDocQuery The query to use when matching
+ * which sub-documents to return.
+ * @param {Object=} subDocOptions The options object to use
+ * when querying for sub-documents.
  * @returns {Object}
  */
 Collection.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
@@ -3499,8 +3612,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
-	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
-	 * objects. Defaults to "_id".
+	 * @param {String} primaryKey Optional primary key to specify the
+	 * primary key field on the collection objects. Defaults to "_id".
 	 * @returns {Collection}
 	 */
 	'string, string': function (collectionName, primaryKey) {
@@ -3531,8 +3644,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
-	 * @param {String} primaryKey Optional primary key to specify the primary key field on the collection
-	 * objects. Defaults to "_id".
+	 * @param {String} primaryKey Optional primary key to specify the
+	 * primary key field on the collection objects. Defaults to "_id".
 	 * @param {Object} options An options object.
 	 * @returns {Collection}
 	 */
@@ -3544,8 +3657,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	},
 
 	/**
-	 * The main handler method. This gets called by all the other variants and
-	 * handles the actual logic of the overloaded method.
+	 * The main handler method. This gets called by all the other
+	 * variants and handles the actual logic of the overloaded method.
 	 * @func collection
 	 * @memberof Db
 	 * @param {Object} options An options object.
@@ -3619,10 +3732,10 @@ Db.prototype.collectionExists = function (viewName) {
 /**
  * Returns an array of collections the DB currently has.
  * @memberof Db
- * @param {String|RegExp=} search The optional search string or regular expression to use
- * to match collection names against.
- * @returns {Array} An array of objects containing details of each collection
- * the database is currently managing.
+ * @param {String|RegExp=} search The optional search string or
+ * regular expression to use to match collection names against.
+ * @returns {Array} An array of objects containing details of each
+ * collection the database is currently managing.
  */
 Db.prototype.collections = function (search) {
 	var arr = [],
