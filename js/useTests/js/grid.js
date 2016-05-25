@@ -4,6 +4,19 @@ window.db = window.fdba.db('gridTest');
 var coll = window.db.collection('gridData'),
 	view = window.db.view('gridData');
 
+view.from(coll);
+view.queryData({
+	firstName: /A./
+}, {
+	$page: 0,
+	$limit: 3
+});
+view.grid('#gridContainer', '#gridTable', {
+	$orderBy: {
+		_id: 1
+	}
+});
+
 coll.setData([{
 	_id: 'AAABBB4',
 	firstName: 'Anne',
@@ -40,16 +53,3 @@ coll.setData([{
 	lastName: 'Frogsbottom',
 	age: 9
 }]);
-
-view.from(coll);
-view.queryData({
-	firstName: /A./
-}, {
-	$page: 0,
-	$limit: 3
-});
-view.grid('#gridContainer', '#gridTable', {
-	$orderBy: {
-		_id: 1
-	}
-});
