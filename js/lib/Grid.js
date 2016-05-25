@@ -303,6 +303,7 @@ Grid.prototype.refresh = function () {
 						dropDownButton,
 						dropDownMenu,
 						template,
+						onFilterSourceChange,
 						filterQuery,
 						filterView = self._db.view('tmpGridFilter_' + self._id + '_' + filterField);
 
@@ -316,6 +317,42 @@ Grid.prototype.refresh = function () {
 						.query(filterQuery)
 						.orderBy(filterSort)
 						.from(self._from._from);
+
+					onFilterSourceChange = function () {
+						filterView.refresh();
+					};
+
+					// Listen for changes on the filter source and update
+					// the filters if changes occur
+					self._from._from.on('change', onFilterSourceChange);
+
+					// This bit of commented code can filter other filter
+					// views so that only items that match other filter
+					// selections show in the other filters, but this can
+					// be confusing to the user. The best possible way to
+					// use this would be to "grey out" the selections that
+					// cannot be used because they would return zero results
+					// when used in conjuctions with other filter selections.
+					/*self._from.on('change', function () {
+						if (self._from && self._from instanceof View) {
+							var query = self._from.query();
+							query.$distinct = filterSort;
+							delete query[filterField];
+
+							filterView
+								.query(query);
+
+							console.log(self._from._from.find(query));
+						}
+					});*/
+
+					// Listen for the grid being dropped and remove listener
+					// for changes on filter source
+					self.on('drop', function () {
+						if (self._from && self._from._from) {
+							self._from._from.off('change', onFilterSourceChange);
+						}
+					});
 
 					template = [
 						'<div class="dropdown" id="' + self._id + '_' + filterField + '">',
