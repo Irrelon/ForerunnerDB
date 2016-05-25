@@ -980,7 +980,7 @@ View.prototype.queryRemove = function (obj, refresh) {
  */
 View.prototype.query = new Overload({
 	'': function () {
-		return this._querySettings.query;
+		return this.decouple(this._querySettings.query);
 	},
 
 	'object': function (query) {
@@ -1034,7 +1034,7 @@ View.prototype.query = new Overload({
 			return this;
 		}
 
-		return this._querySettings;
+		return this.decouple(this._querySettings);
 	}
 });
 
