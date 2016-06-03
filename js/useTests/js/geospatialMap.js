@@ -9,7 +9,7 @@ function initMap() {
 		result2,
 		centerPoint = [51.50722, -0.12750],
 		result1Distance = 10,
-		result2Distance = 500,
+		result2Distance = 1000,
 		display1 = true,
 		display2 = true;
 
@@ -49,7 +49,7 @@ function initMap() {
 			result1 = coll.find({
 				lngLat: {
 					$near: {
-						$point: [51.50722, -0.12750],
+						$point: centerPoint,
 						$maxDistance: result1Distance,
 						$distanceUnits: 'miles',
 						$distanceField: 'dist',
@@ -127,11 +127,6 @@ function initMap() {
 					//console.log(hashLatLng.lat, hashLatLng.lng);
 					myLatlng = new google.maps.LatLng(hashLatLng.lat[2], hashLatLng.lng[2]);
 
-					/*marker = new google.maps.Marker({
-					 position: myLatlng,
-					 label: geoHash + ' (50)'
-					 }).setMap(map);*/
-
 					mapLabel = new MapLabel({
 						text: geoHash + ' (100)',
 						position: myLatlng,
@@ -198,8 +193,14 @@ function initMap() {
 					fillOpacity: 0.35,
 					map: map,
 					center: new google.maps.LatLng(centerPoint[0], centerPoint[1]),
-					radius: result2Distance * 1.609344 * 1000
+					radius: (result2Distance * 1000) * 1.609344
 				});
+
+				new google.maps.Marker({
+					position: new google.maps.LatLng(centerPoint[0], centerPoint[1]),
+					label: '#',
+					title: '#'
+				}).setMap(map);
 			}
 
 			if (display1) {
@@ -213,9 +214,36 @@ function initMap() {
 					center: new google.maps.LatLng(centerPoint[0], centerPoint[1]),
 					radius: result1Distance * 1.609344 * 1000
 				});
+
+				new google.maps.Marker({
+					position: new google.maps.LatLng(centerPoint[0], centerPoint[1]),
+					label: '#',
+					title: '#'
+				}).setMap(map);
 			}
 
-			//hashArr = sharedGeoHashSolver.calculateHashArrayByRadius(centerPoint, result1Distance * 1.609344, 3);
+			extent = sharedGeoHashSolver.calculateExtentByRadius(centerPoint, result2Distance * 1.609344, 3);
+			new google.maps.Polyline({
+				path: [
+					new google.maps.LatLng(extent.lat[0], extent.lng[0]),
+					new google.maps.LatLng(extent.lat[1], extent.lng[1])
+				],
+				geodesic: true,
+				strokeColor: '#0000FF',
+				strokeOpacity: 1.0,
+				strokeWeight: 4
+			}).setMap(map);
+
+			new google.maps.Polyline({
+				path: [
+					new google.maps.LatLng(extent.lat[0], extent.lng[1]),
+					new google.maps.LatLng(extent.lat[1], extent.lng[0])
+				],
+				geodesic: true,
+				strokeColor: '#0000FF',
+				strokeOpacity: 1.0,
+				strokeWeight: 4
+			}).setMap(map);
 			//console.log(hashArr);
 
 			/*new google.maps.Rectangle({
