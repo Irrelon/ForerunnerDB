@@ -400,27 +400,28 @@ BinaryTree.prototype.rightMost = function () {
  * passed (query).
  * @param data
  * @param options
+ * @param op
  * @param {Array=} resultArr The results passed between recursive calls.
  * Do not pass anything into this argument when calling externally.
  * @returns {*|Array}
  */
-BinaryTree.prototype.lookup = function (data, options, resultArr) {
+BinaryTree.prototype.lookup = function (data, options, op, resultArr) {
 	var result = this._compareFunc(this._data, data);
 
 	resultArr = resultArr || [];
 
 	if (result === 0) {
-		if (this._left) { this._left.lookup(data, options, resultArr); }
+		if (this._left) { this._left.lookup(data, options, op, resultArr); }
 		resultArr.push(this._data);
-		if (this._right) { this._right.lookup(data, options, resultArr); }
+		if (this._right) { this._right.lookup(data, options, op, resultArr); }
 	}
 
 	if (result === -1) {
-		if (this._right) { this._right.lookup(data, options, resultArr); }
+		if (this._right) { this._right.lookup(data, options, op, resultArr); }
 	}
 
 	if (result === 1) {
-		if (this._left) { this._left.lookup(data, options, resultArr); }
+		if (this._left) { this._left.lookup(data, options, op, resultArr); }
 	}
 
 	return resultArr;
@@ -479,13 +480,15 @@ BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
 		thisDataPathValSubStr = thisDataPathVal.substr(0, val.length),
 		result;
 
-	regex = regex || new RegExp('^' + val);
+	//regex = regex || new RegExp('^' + val);
 	resultArr = resultArr || [];
 
-	if (resultArr._visited === undefined) { resultArr._visited = 0; }
-	resultArr._visited++;
+	if (resultArr._visitedCount === undefined) { resultArr._visitedCount = 0; }
+	resultArr._visitedCount++;
+	resultArr._visitedNodes = resultArr._visitedNodes || [];
+	resultArr._visitedNodes.push(thisDataPathVal);
 
-	result = this.sortAsc(thisDataPathVal, val);
+	result = this.sortAsc(thisDataPathValSubStr, val);
 	reTest = thisDataPathValSubStr === val;
 
 	if (result === 0) {
