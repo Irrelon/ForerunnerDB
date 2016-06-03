@@ -167,8 +167,8 @@ IndexBinaryTree.prototype.hashViolation = function (uniqueHash) {
 	return Boolean(this._uniqueLookup[uniqueHash]);
 };
 
-IndexBinaryTree.prototype.lookup = function (query, options) {
-	return this._btree.lookup(query, options);
+IndexBinaryTree.prototype.lookup = function (query, options, op) {
+	return this._btree.lookup(query, options, op);
 };
 
 IndexBinaryTree.prototype.match = function (query, options) {
