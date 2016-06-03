@@ -2986,7 +2986,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			if (pkQueryType === 'string' || pkQueryType === 'number' || query[this._primaryKey] instanceof Array) {
 				// Return item via primary key possible
 				op.time('checkIndexMatch: Primary Key');
-				lookupResult = this._primaryIndex.lookup(query, options);
+				lookupResult = this._primaryIndex.lookup(query, options, op);
 
 				analysis.indexMatch.push({
 					lookup: lookupResult,
@@ -3012,7 +3012,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 				if (indexMatchData.score > 0) {
 					// This index can be used, store it
-					indexLookup = indexRef.lookup(query, options);
+					indexLookup = indexRef.lookup(query, options, op);
 
 					analysis.indexMatch.push({
 						lookup: indexLookup,
