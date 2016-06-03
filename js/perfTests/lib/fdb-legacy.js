@@ -6735,7 +6735,6 @@ GeoHash.prototype.calculateHashArrayByRadius = function (centerPoint, radiusKm, 
 	var extent = this.calculateExtentByRadius(centerPoint, radiusKm),
 		northWest = [extent.lat[0], extent.lng[0]],
 		northEast = [extent.lat[0], extent.lng[1]],
-		southEast = [extent.lat[1], extent.lng[1]],
 		southWest = [extent.lat[1], extent.lng[0]],
 		northWestHash = this.encode(northWest[0], northWest[1], precision),
 		northEastHash = this.encode(northEast[0], northEast[1], precision),
@@ -6912,7 +6911,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 	return geoHash;
 };
 
-typeof module !== 'undefined' ? module.exports = GeoHash : '';
+if (typeof module !== 'undefined') { module.exports = GeoHash; }
 },{}],11:[function(_dereq_,module,exports){
 "use strict";
 
@@ -15679,7 +15678,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.774',
+	version: '1.3.777',
 	modules: {},
 	plugins: {},
 	index: {},
