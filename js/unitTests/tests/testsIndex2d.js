@@ -103,7 +103,7 @@ QUnit.test("Collection.index() :: Test 2d index search", function () {
 
 QUnit.asyncTest("Collection.index() :: Test 2d index search on large data set", function () {
 	base.dbUp();
-	expect(5);
+	expect(23);
 
 	var coll = db.collection('cities').truncate(),
 		result1,
@@ -154,16 +154,30 @@ QUnit.asyncTest("Collection.index() :: Test 2d index search on large data set", 
 				}
 			});
 
-			debugger;
-
 			strictEqual(result1.length < result2.length, true, 'Number of doc in 100 miles is more than docs in 50 miles');
 
-			strictEqual(result1.length, 2, 'Result1 count correct');
+			strictEqual(result1.length, 9, 'Result1 count correct');
+			strictEqual(result2.length, 22, 'Result2 count correct');
 
-			if (result1.length) {
-				strictEqual(result1[0].name, 'Central London', 'Result 1 correct');
-				strictEqual(result1[1].name, 'Marylebone, London', 'Result 2 correct');
-			}
+			strictEqual(result1[0].name, 'London, UK', 'Result 1 correct');
+			strictEqual(result1[1].name, 'Wycombe, Swanley, Greater London BR8, UK', 'Result 2 correct');
+			strictEqual(result1[2].name, 'Basildon, Essex, UK', 'Result 3 correct');
+			strictEqual(result1[3].name, 'Luton, UK', 'Result 4 correct');
+			strictEqual(result1[4].name, 'Chelmsford, Essex, UK', 'Result 5 correct');
+			strictEqual(result1[5].name, 'Southend-on-Sea, UK', 'Result 6 correct');
+			strictEqual(result1[6].name, 'Aylesbury, Buckinghamshire, UK', 'Result 7 correct');
+			strictEqual(result1[7].name, 'Milton Keynes, UK', 'Result 8 correct');
+			strictEqual(result1[8].name, 'Brighton, Brighton and Hove, UK', 'Result 9 correct');
+
+			strictEqual(result2[0].name, 'London, UK', 'Result 1 correct');
+			strictEqual(result2[1].name, 'Wycombe, Swanley, Greater London BR8, UK', 'Result 2 correct');
+			strictEqual(result2[2].name, 'Basildon, Essex, UK', 'Result 3 correct');
+			strictEqual(result2[3].name, 'Luton, UK', 'Result 4 correct');
+			strictEqual(result2[4].name, 'Chelmsford, Essex, UK', 'Result 5 correct');
+			strictEqual(result2[5].name, 'Southend-on-Sea, UK', 'Result 6 correct');
+			strictEqual(result2[6].name, 'Aylesbury, Buckinghamshire, UK', 'Result 7 correct');
+			strictEqual(result2[7].name, 'Milton Keynes, UK', 'Result 8 correct');
+			strictEqual(result2[8].name, 'Brighton, Brighton and Hove, UK', 'Result 9 correct');
 
 			start();
 
