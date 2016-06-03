@@ -5474,7 +5474,10 @@ of the module.
 var bits,
 	base32,
 	neighbors,
-	borders;
+	borders,
+	PI180 = Math.PI / 180,
+	PI180R = 180 / Math.PI,
+	earthRadius = 6371; // mean radius of the earth
 
 bits = [16, 8, 4, 2, 1];
 
@@ -5504,6 +5507,24 @@ borders.left.odd = borders.bottom.even;
 borders.right.odd = borders.top.even;
 
 var GeoHash = function () {};
+
+/**
+ * Converts degrees to radians.
+ * @param {Number} degrees
+ * @return {Number} radians
+ */
+GeoHash.prototype.radians = function radians (degrees) {
+	return degrees * PI180;
+};
+
+/**
+ * Converts radians to degrees.
+ * @param {Number} radians
+ * @return {Number} degrees
+ */
+GeoHash.prototype.degrees = function (radians) {
+	return radians * PI180R;
+};
 
 GeoHash.prototype.refineInterval = function (interval, cd, mask) {
 	if (cd & mask) { //jshint ignore: line
@@ -5551,6 +5572,122 @@ GeoHash.prototype.calculateNeighbours = function (centerHash, options) {
 	}
 
 	return response;
+};
+
+/**
+ * Calculates a new lat/lng by travelling from the center point in the
+ * bearing specified for the distance specified.
+ * @param {Array} centerPoint An array with latitude at index 0 and
+ * longitude at index 1.
+ * @param {Number} distanceKm The distance to travel in kilometers.
+ * @param {Number} bearing The bearing to travel in degrees (zero is
+ * north).
+ * @returns {{lat: Number, lng: Number}}
+ */
+GeoHash.prototype.calculateLatLngByDistanceBearing = function (centerPoint, distanceKm, bearing) {
+	var curLon = centerPoint[1],
+		curLat = centerPoint[0],
+
+		destLat = Math.asin(Math.sin(this.radians(curLat)) * Math.cos(distanceKm / earthRadius) + Math.cos(this.radians(curLat)) * Math.sin(distanceKm / earthRadius) * Math.cos(this.radians(bearing))),
+ 		tmpLon = this.radians(curLon) + Math.atan2(Math.sin(this.radians(bearing)) * Math.sin(distanceKm / earthRadius) * Math.cos(this.radians(curLat)), Math.cos(distanceKm / earthRadius) - Math.sin(this.radians(curLat)) * Math.sin(destLat)),
+		destLon = (tmpLon + 3 * Math.PI) % (2 * Math.PI) - Math.PI;  // normalise to -180..+180º
+
+	return {
+		lat: this.degrees(destLat),
+		lng: this.degrees(destLon)
+	};
+};
+
+/**
+ * Calculates the extents of a bounding box around the center point which
+ * encompasses the radius in kilometers passed.
+ * @param {Array} centerPoint An array with latitude at index 0 and
+ * longitude at index 1.
+ * @param radiusKm Radius in kilometers.
+ * @returns {{lat: Array, lng: Array}}
+ */
+GeoHash.prototype.calculateExtentByRadius = function (centerPoint, radiusKm) {
+	var maxWest,
+		maxEast,
+		maxNorth,
+		maxSouth,
+		lat = [],
+		lng = [];
+
+	maxNorth = this.calculateLatLngByDistanceBearing(centerPoint, radiusKm, 0);
+	maxEast = this.calculateLatLngByDistanceBearing(centerPoint, radiusKm, 90);
+	maxSouth = this.calculateLatLngByDistanceBearing(centerPoint, radiusKm, 180);
+	maxWest = this.calculateLatLngByDistanceBearing(centerPoint, radiusKm, 270);
+
+	lat[0] = maxNorth.lat;
+	lat[1] = maxSouth.lat;
+
+	lng[0] = maxWest.lng;
+	lng[1] = maxEast.lng;
+
+	return {
+		lat: lat,
+		lng: lng
+	};
+};
+
+/**
+ * Calculates all the geohashes that make up the bounding box that surrounds
+ * the circle created from the center point and radius passed.
+ * @param {Array} centerPoint An array with latitude at index 0 and
+ * longitude at index 1.
+ * @param {Number} radiusKm The radius in kilometers to encompass.
+ * @param {Number} precision The number of characters to limit the returned
+ * geohash strings to.
+ * @returns {Array} The array of geohashes that encompass the bounding box.
+ */
+GeoHash.prototype.calculateHashArrayByRadius = function (centerPoint, radiusKm, precision) {
+	var extent = this.calculateExtentByRadius(centerPoint, radiusKm),
+		northWest = [extent.lat[0], extent.lng[0]],
+		northEast = [extent.lat[0], extent.lng[1]],
+		southEast = [extent.lat[1], extent.lng[1]],
+		southWest = [extent.lat[1], extent.lng[0]],
+		northWestHash = this.encode(northWest[0], northWest[1], precision),
+		northEastHash = this.encode(northEast[0], northEast[1], precision),
+		southWestHash = this.encode(southWest[0], southWest[1], precision),
+		hash,
+		widthCount = 0,
+		heightCount = 0,
+		widthIndex,
+		heightIndex,
+		hashArray = [];
+
+	hash = northWestHash;
+	hashArray.push(hash);
+
+	// Walk from north west to north east until we find the north east geohash
+	while (hash !== northEastHash) {
+		hash = this.calculateAdjacent(hash, 'right');
+		widthCount++;
+
+		hashArray.push(hash);
+	}
+
+	hash = northWestHash;
+
+	// Walk from north west to south west until we find the south west geohash
+	while (hash !== southWestHash) {
+		hash = this.calculateAdjacent(hash, 'bottom');
+		heightCount++;
+	}
+
+	// We now know the width and height in hash boxes of the area, fill in the
+	// rest of the hashes into the hashArray array
+	for (widthIndex = 0; widthIndex <= widthCount; widthIndex++) {
+		hash = hashArray[widthIndex];
+
+		for (heightIndex = 0; heightIndex < heightCount; heightIndex++) {
+			hash = this.calculateAdjacent(hash, 'bottom');
+			hashArray.push(hash);
+		}
+	}
+
+	return hashArray;
 };
 
 /**
@@ -5622,8 +5759,8 @@ GeoHash.prototype.decode = function (geohash) {
 	lon[2] = (lon[0] + lon[1]) / 2;
 
 	return {
-		latitude: lat,
-		longitude: lon
+		lat: lat,
+		lng: lon
 	};
 };
 
@@ -5952,7 +6089,6 @@ Index2d.prototype.lookup = function (query, options, op) {
 
 Index2d.prototype.near = function (pathStr, query, options, op) {
 	var self = this,
-		geoHash,
 		neighbours,
 		visitedCount,
 		visitedNodes,
@@ -5979,7 +6115,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 		for (i = 0; i < geoHashDistance.length; i++) {
 			if (maxDistanceKm > geoHashDistance[i]) {
-				precision = i;
+				precision = i + 1;
 				break;
 			}
 		}
@@ -5988,7 +6124,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 		for (i = 0; i < geoHashDistance.length; i++) {
 			if (maxDistanceKm > geoHashDistance[i]) {
-				precision = i;
+				precision = i + 1;
 				break;
 			}
 		}
@@ -5998,20 +6134,16 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 		precision = 1;
 	}
 
-	// Get the lngLat geohash from the query
-	geoHash = sharedGeoHashSolver.encode(query.$point[0], query.$point[1], precision);
-
 	// Calculate 9 box geohashes
-	if (op) { op.time('index2d.calculateNeighbours'); }
-	neighbours = sharedGeoHashSolver.calculateNeighbours(geoHash, {type: 'array'});
-	if (op) { op.time('index2d.calculateNeighbours'); }
+	if (op) { op.time('index2d.calculateHashArea'); }
+	neighbours = sharedGeoHashSolver.calculateHashArrayByRadius(query.$point, maxDistanceKm, precision);
+	if (op) { op.time('index2d.calculateHashArea'); }
 
 	if (op) {
 		op.data('index2d.near.precision', precision);
-		op.data('index2d.near.neighbours', neighbours);
+		op.data('index2d.near.hashArea', neighbours);
 		op.data('index2d.near.maxDistanceKm', maxDistanceKm);
 		op.data('index2d.near.centerPointCoords', [query.$point[0], query.$point[1]]);
-		op.data('index2d.near.centerPointGeoHash', geoHash);
 	}
 
 	// Lookup all matching co-ordinates from the btree
@@ -6020,8 +6152,8 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 	visitedData = {};
 	visitedNodes = [];
 
-	if (op) { op.time('index2d.near.neighbourSearch'); }
-	for (i = 0; i < 9; i++) {
+	if (op) { op.time('index2d.near.getDocsInsideHashArea'); }
+	for (i = 0; i < neighbours.length; i++) {
 		search = this._btree.startsWith(pathStr, neighbours[i]);
 		visitedData[neighbours[i]] = search;
 		visitedCount += search._visitedCount;
@@ -6029,15 +6161,15 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 		results = results.concat(search);
 	}
 	if (op) {
-		op.time('index2d.near.neighbourSearch');
+		op.time('index2d.near.getDocsInsideHashArea');
 		op.data('index2d.near.startsWith', visitedData);
 		op.data('index2d.near.visitedTreeNodes', visitedNodes);
 	}
 
 	// Work with original data
-	if (op) { op.time('index2d.near.primaryIndexLookup'); }
+	if (op) { op.time('index2d.near.lookupDocsById'); }
 	results = this._collection._primaryIndex.lookup(results);
-	if (op) { op.time('index2d.near.primaryIndexLookup'); }
+	if (op) { op.time('index2d.near.lookupDocsById'); }
 
 	if (query.$distanceField) {
 		// Decouple the results before we modify them
@@ -6068,9 +6200,6 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 				// Add item as it is inside radius distance
 				finalResults.push(results[i]);
-				//console.log('Accepted', results[i].name, query.$distanceUnits === 'km' ? distCache : Math.round(distCache * 0.621371), '<=', maxDistanceKm, query.$distanceUnits);
-			} else {
-				//console.log('REJECTED', results[i].name, query.$distanceUnits === 'km' ? distCache : Math.round(distCache * 0.621371), '<=', maxDistanceKm, query.$distanceUnits);
 			}
 		}
 		if (op) { op.time('index2d.near.calculateDistanceFromCenter'); }
@@ -6088,6 +6217,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 };
 
 Index2d.prototype.geoWithin = function (pathStr, query, options) {
+	console.log('geoWithin() is currently a prototype method with no actual implementation... it just returns a blank array.');
 	return [];
 };
 
@@ -10589,7 +10719,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.773',
+	version: '1.3.774',
 	modules: {},
 	plugins: {},
 	index: {},
