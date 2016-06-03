@@ -263,7 +263,6 @@ Index2d.prototype.lookup = function (query, options, op) {
 
 Index2d.prototype.near = function (pathStr, query, options, op) {
 	var self = this,
-		geoHash,
 		neighbours,
 		visitedCount,
 		visitedNodes,
@@ -290,7 +289,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 		for (i = 0; i < geoHashDistance.length; i++) {
 			if (maxDistanceKm > geoHashDistance[i]) {
-				precision = i;
+				precision = i + 1;
 				break;
 			}
 		}
@@ -299,7 +298,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 		for (i = 0; i < geoHashDistance.length; i++) {
 			if (maxDistanceKm > geoHashDistance[i]) {
-				precision = i;
+				precision = i + 1;
 				break;
 			}
 		}
@@ -309,20 +308,16 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 		precision = 1;
 	}
 
-	// Get the lngLat geohash from the query
-	geoHash = sharedGeoHashSolver.encode(query.$point[0], query.$point[1], precision);
-
 	// Calculate 9 box geohashes
-	if (op) { op.time('index2d.calculateNeighbours'); }
-	neighbours = sharedGeoHashSolver.calculateNeighbours(geoHash, {type: 'array'});
-	if (op) { op.time('index2d.calculateNeighbours'); }
+	if (op) { op.time('index2d.calculateHashArea'); }
+	neighbours = sharedGeoHashSolver.calculateHashArrayByRadius(query.$point, maxDistanceKm, precision);
+	if (op) { op.time('index2d.calculateHashArea'); }
 
 	if (op) {
 		op.data('index2d.near.precision', precision);
-		op.data('index2d.near.neighbours', neighbours);
+		op.data('index2d.near.hashArea', neighbours);
 		op.data('index2d.near.maxDistanceKm', maxDistanceKm);
 		op.data('index2d.near.centerPointCoords', [query.$point[0], query.$point[1]]);
-		op.data('index2d.near.centerPointGeoHash', geoHash);
 	}
 
 	// Lookup all matching co-ordinates from the btree
@@ -331,8 +326,8 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 	visitedData = {};
 	visitedNodes = [];
 
-	if (op) { op.time('index2d.near.neighbourSearch'); }
-	for (i = 0; i < 9; i++) {
+	if (op) { op.time('index2d.near.getDocsInsideHashArea'); }
+	for (i = 0; i < neighbours.length; i++) {
 		search = this._btree.startsWith(pathStr, neighbours[i]);
 		visitedData[neighbours[i]] = search;
 		visitedCount += search._visitedCount;
@@ -340,15 +335,15 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 		results = results.concat(search);
 	}
 	if (op) {
-		op.time('index2d.near.neighbourSearch');
+		op.time('index2d.near.getDocsInsideHashArea');
 		op.data('index2d.near.startsWith', visitedData);
 		op.data('index2d.near.visitedTreeNodes', visitedNodes);
 	}
 
 	// Work with original data
-	if (op) { op.time('index2d.near.primaryIndexLookup'); }
+	if (op) { op.time('index2d.near.lookupDocsById'); }
 	results = this._collection._primaryIndex.lookup(results);
-	if (op) { op.time('index2d.near.primaryIndexLookup'); }
+	if (op) { op.time('index2d.near.lookupDocsById'); }
 
 	if (query.$distanceField) {
 		// Decouple the results before we modify them
@@ -379,9 +374,6 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 
 				// Add item as it is inside radius distance
 				finalResults.push(results[i]);
-				//console.log('Accepted', results[i].name, query.$distanceUnits === 'km' ? distCache : Math.round(distCache * 0.621371), '<=', maxDistanceKm, query.$distanceUnits);
-			} else {
-				//console.log('REJECTED', results[i].name, query.$distanceUnits === 'km' ? distCache : Math.round(distCache * 0.621371), '<=', maxDistanceKm, query.$distanceUnits);
 			}
 		}
 		if (op) { op.time('index2d.near.calculateDistanceFromCenter'); }
@@ -399,6 +391,7 @@ Index2d.prototype.near = function (pathStr, query, options, op) {
 };
 
 Index2d.prototype.geoWithin = function (pathStr, query, options) {
+	console.log('geoWithin() is currently a prototype method with no actual implementation... it just returns a blank array.');
 	return [];
 };
 
