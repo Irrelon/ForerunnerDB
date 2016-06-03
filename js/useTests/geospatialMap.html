@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Simple Map</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<meta charset="utf-8">
+	<style>
+		html, body {
+			height: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		#map {
+			height: 100%;
+		}
+	</style>
+	<script src="../unitTests/lib/jquery-2.1.4.min.js"></script>
+	<script src="../unitTests/lib/fdb-all.js"></script>
+	<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBXDbURYomO0loiOsKWu2eEf5Ym-Ye0zlw&callback=initMap" async defer></script>
+</head>
+<body>
+<div id="map"></div>
+<script src="../lib/GeoHash.js"></script>
+<script src="js/geospatialMap.js"></script>
+<script src="js/mapLabel.js"></script>
+</body>
+</html>

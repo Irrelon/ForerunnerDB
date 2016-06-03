@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.772
+## Version 1.3.773
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -408,7 +408,7 @@ that are not available in MongoDB but which can help in browser-centric applicat
 * [$elemMatch](#elemMatch) Limit sub-array documents by query
 * [$elemsMatch](#elemsMatch) Multiple document version of $elemMatch
 * [$aggregate](#aggregate) Converts an array of documents into an array of values base on a path / key
-* [$near](#near) Geo-spatial operation finds outward from a central point
+* [$near](#near) Geospatial operation finds outward from a central point
 
 #### $gt
 Selects those documents where the value of the field is greater than (i.e. >) the specified value.
@@ -3309,7 +3309,7 @@ collection.ensureIndex({
 });
 ```
 
-#### Example of Creating a Geo-Spatial 2d Index 
+#### Example of Creating a Geospatial 2d Index 
 > Version >= 1.3.691
 
 ```js
@@ -3329,15 +3329,15 @@ collection.ensureIndex({
 });
 ```
 
-## Geo-Spatial (2d) Queries
+## Geospatial (2d) Queries
 > Version >= 1.3.691
 
 > **PLEASE NOTE**: BETA STATUS - PASSES UNIT TESTING BUT MAY BE UNSTABLE
 
-> Geo-spatial indices and queries are currently considered beta and although
-unit tests for geo-spatial queries are passing we would recommend you use them
+> Geospatial indices and queries are currently considered beta and although
+unit tests for geospatial queries are passing we would recommend you use them
 with caution. Please report any bugs or inconsistencies you might find when using
-geo-spatial queries in ForerunnerDB on our GitHub issues page. 
+geospatial queries in ForerunnerDB on our GitHub issues page. 
 
 We can insert some documents with longitude / latitude co-ordinates:
 
@@ -3359,7 +3359,7 @@ coll.insert([{
 }]);
 ```
 
-To query this data using a geo-spatial operator we need to set up a 2d index against
+To query this data using a geospatial operator we need to set up a 2d index against
 it:
 
 ```js
@@ -3370,7 +3370,7 @@ coll.ensureIndex({
 });
 ```
 
-Now we can run a query with the geo-spatial operator "$near" to return results
+Now we can run a query with the geospatial operator "$near" to return results
 ordered by the distance from the centre point we provide:
 
 ```js

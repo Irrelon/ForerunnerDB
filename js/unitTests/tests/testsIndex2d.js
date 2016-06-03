@@ -101,177 +101,73 @@ QUnit.test("Collection.index() :: Test 2d index search", function () {
 	base.dbDown();
 });
 
-/*ForerunnerDB.moduleLoaded('Persist', function () {
-	QUnit.asyncTest("Collection.ensureIndex() :: Ensure an index is maintained after persist.load()", function () {
-		expect(3);
+QUnit.asyncTest("Collection.index() :: Test 2d index search on large data set", function () {
+	base.dbUp();
+	expect(5);
 
-		base.dbUp();
-		base.dataUp();
+	var coll = db.collection('cities').truncate(),
+		result1,
+		result2;
 
-		var coll = db.collection('test27'),
-			result;
-
-		coll.insert({name: 'Jim'});
-
-		coll.save(function () {
-			// Data saved, now clear the collection
-			db.collection('test27').drop(false);
-
-			// Check that there are no docs
-			result = db.collection('test27').find();
-
-			strictEqual(result.length, 0, 'Check for empty collection');
-
-			// Now create an index on the collection
-			var indexResult = db.collection('test27').ensureIndex({
-				name: 1
-			}, {
-				unique: true,
-				name: 'testIndex',
-				type: 'btree'
-			});
-
-			// Now load the persisted data
-			db.collection('test27').load(function () {
-				// Now check that we have our doc
-				result = db.collection('test27').find();
-				strictEqual(result.length, 1, 'Check for doc in collection');
-
-				// Now query for the doc with explain to see if an index is used
-				result = db.collection('test27').explain({name: 'Jim'});
-				ok(result.index.used, 'Check for index use in query');
-
-				start();
-				base.dbDown();
-			});
-		});
-	});
-});*/
-
-ForerunnerDB.version('1.4', function () {
-	QUnit.test("Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
-		base.dbUp();
-
-		var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
-			collection = db.collection('test').truncate(),
-			tempName,
-			tempAge,
-			i;
-
-		for (i = 0; i < 1000; i++) {
-			tempName = names[Math.ceil(Math.random() * names.length) - 1];
-			tempAge = Math.ceil(Math.random() * 100);
-
-			collection.insert({
-				name: tempName,
-				age: tempAge
-			});
-		}
-
-		collection.ensureIndex({
-			age: 1
+	// Load the data
+	$.getJSON('./data/cities.json', function (cityData) {
+		coll.ensureIndex({
+			lngLat: 1
 		}, {
-			type: 'btree'
+			name: 'cityLatLngIndex',
+			type: '2d'
 		});
 
-		var explain = collection.explain({
-			age: {
-				'$gte': 30,
-				'$lte': 40
-			}
-		});
+		console.log('Inserting records: ' + cityData.length);
 
-		strictEqual(explain.index.used, true, 'Query explanation shows index in use');
-		console.log(explain);
+		coll.insert(cityData, function () {
+			console.log('Collection record count: ' + coll.count());
 
-		base.dbDown();
-	});
-});
+			var index = coll.index('cityLatLngIndex');
 
-ForerunnerDB.version('1.4', function () {
-	QUnit.test("Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
-		base.dbUp();
+			ok(index !== undefined, "Check index is available: " + index);
+			ok(index.name() === 'cityLatLngIndex', "Check index is correct name: " + index.name());
 
-		var coll,
-			result,
-			allowedInsert,
-			deniedInsert,
-			find,
-			index;
-
-		coll = db.collection('temp').truncate();
-		coll.setData([{
-			"_id": "139",
-			"eventId": "139",
-			"nthRepeat": 0,
-			"name": "Test",
-			"notes": "wfewef",
-			"startDateTime": "2014-09-01T23:00:00+00:00",
-			"endDateTime": "2014-09-03T23:00:00+00:00",
-			"reminderType": "",
-			"reminderTime": 0,
-			"isRepeatedEvent": false,
-			"repeatContext": null,
-			"repeatDate": null,
-			"repeatForever": 0,
-			"creator": {
-				"organisationUserId": "63614",
-				"dateTime": "2014-09-01T13:01:54+00:00"
-			},
-			"updated": [],
-			"_s": "Test:::01:::09:00",
-			"attendees": {
-				"moo": {
-					"foo": [{
-						"name": "1"
-					}]
-				}
-			}
-		}]);
-
-		result = coll.ensureIndex({
-			attendees: {
-				moo: {
-					foo: 1
-				}
-			}
-		}, {
-			unique: true, // Only allow unique values
-			scope: 'document', // Index against documents individually rather than the whole collection
-			name: 'uniqueAttendeeMooFoo',
-			type: 'btree'
-		});
-
-		allowedInsert = coll.updateById("139", {
-			"attendees": {
-				"moo": {
-					"$push": {
-						"foo": {
-							"name": "2"
-						}
+			// Query index by distance
+			// $near queries are sorted by distance from center point by default
+			result1 = coll.find({
+				lngLat: {
+					$near: {
+						$point: [51.50722, -0.12750],
+						$maxDistance: 50,
+						$distanceUnits: 'miles',
+						$distanceField: 'dist',
+						$geoHashField: 'geoHash'
 					}
 				}
-			}
-		});
+			});
 
-		deniedInsert = coll.update({_id: "139"}, {
-			"attendees": {
-				"moo": {
-					"$push": {
-						"foo": {
-							"name": "2"
-						}
+			result2 = coll.find({
+				lngLat: {
+					$near: {
+						$point: [51.50722, -0.12750],
+						$maxDistance: 100,
+						$distanceUnits: 'miles',
+						$distanceField: 'dist',
+						$geoHashField: 'geoHash'
 					}
 				}
+			});
+
+			debugger;
+
+			strictEqual(result1.length < result2.length, true, 'Number of doc in 100 miles is more than docs in 50 miles');
+
+			strictEqual(result1.length, 2, 'Result1 count correct');
+
+			if (result1.length) {
+				strictEqual(result1[0].name, 'Central London', 'Result 1 correct');
+				strictEqual(result1[1].name, 'Marylebone, London', 'Result 2 correct');
 			}
+
+			start();
+
+			//base.dbDown();
 		});
-
-		find = coll.find();
-
-		strictEqual(find.length, 1, "Check expected number of items exists");
-		strictEqual(allowedInsert.length, 1, "Check expected update worked (index should allow it)");
-		strictEqual(deniedInsert.length, 0, "Check expected update failed (index should make it fail)");
-
-		base.dbDown();
 	});
 });
