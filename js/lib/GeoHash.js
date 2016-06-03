@@ -118,7 +118,11 @@ GeoHash.prototype.calculateAdjacent = function (srcHash, dir) {
 };
 
 /**
- * Decodes a string geohash back to longitude/latitude.
+ * Decodes a string geohash back to a longitude/latitude array.
+ * The array contains three latitudes and three longitudes. The
+ * first of each is the lower extent of the geohash bounding box,
+ * the second is the upper extent and the third is the center
+ * of the geohash bounding box.
  * @param {String} geohash The hash to decode.
  * @returns {Object}
  */
@@ -224,4 +228,4 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 	return geoHash;
 };
 
-module.exports = GeoHash;
+typeof module !== 'undefined' ? module.exports = GeoHash : '';
