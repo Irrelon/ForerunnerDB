@@ -398,9 +398,10 @@ BinaryTree.prototype.rightMost = function () {
 /**
  * Searches the binary tree for all matching documents based on the data
  * passed (query).
- * @param data
- * @param options
- * @param op
+ * @param {Object} data The data / document to use for lookups.
+ * @param {Object} options An options object.
+ * @param {Operation} op An optional operation instance. Pass undefined
+ * if not being used.
  * @param {Array=} resultArr The results passed between recursive calls.
  * Do not pass anything into this argument when calling externally.
  * @returns {*|Array}
