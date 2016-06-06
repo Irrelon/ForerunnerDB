@@ -235,9 +235,10 @@ TB.test('Collection.index() :: Test 2d index search on large data set', function
 		type: '2d'
 	});
 
-	console.log('Inserting records: ' + cityData.length);
+	TB.ok(cityData.length, 499, 'Correct number of geospatial records loaded from data file');
 
 	coll.insert(cityData, function () {
+		TB.ok(cityData.length, coll.count(), 'Correct number of geospatial records inserted');
 		console.log('Collection record count: ' + coll.count());
 
 		var index = coll.index('cityLatLngIndex');
