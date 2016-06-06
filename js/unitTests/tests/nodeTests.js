@@ -226,7 +226,7 @@ TB.test('Collection.index() :: Test 2d index search on large data set', function
 		result2,
 		cityData;
 
-	cityData = require('../data/cities.json');
+	cityData = require('./cities.json');
 
 	coll.ensureIndex({
 		lngLat: 1
