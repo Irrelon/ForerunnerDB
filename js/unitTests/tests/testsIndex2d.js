@@ -101,6 +101,7 @@ QUnit.test("Collection.index() :: Test 2d index search", function () {
 	base.dbDown();
 });
 
+/*
 QUnit.asyncTest("Collection.index() :: Test 2d index search on large data set", function () {
 	base.dbUp();
 	expect(23);
@@ -184,4 +185,4 @@ QUnit.asyncTest("Collection.index() :: Test 2d index search on large data set", 
 			//base.dbDown();
 		});
 	});
-});
+});*/
