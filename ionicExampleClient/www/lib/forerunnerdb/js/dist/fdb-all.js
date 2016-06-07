@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/BinaryLog":4,"../lib/CollectionGroup":8,"../lib/Document":11,"../lib/Grid":13,"../lib/Highchart":14,"../lib/NodeApiClient":30,"../lib/Overview":33,"../lib/Persist":35,"../lib/View":42,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/BinaryLog":4,"../lib/CollectionGroup":8,"../lib/Document":12,"../lib/Grid":14,"../lib/Highchart":15,"../lib/NodeApiClient":31,"../lib/Overview":34,"../lib/Persist":36,"../lib/View":43,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":9,"../lib/Shim.IE8":41}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":10,"../lib/Shim.IE8":42}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -281,7 +281,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":34,"./Shared":40}],4:[function(_dereq_,module,exports){
+},{"./Path":35,"./Shared":41}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -367,7 +367,7 @@ Collection.prototype.init = function () {
 
 Shared.finishModule('BinaryLog');
 module.exports = BinaryLog;
-},{"./Shared":40}],5:[function(_dereq_,module,exports){
+},{"./Shared":41}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -1061,7 +1061,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":34,"./Shared":40}],6:[function(_dereq_,module,exports){
+},{"./Path":35,"./Shared":41}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable,
@@ -1114,6 +1114,7 @@ var Shared,
 	Index2d,
 	Overload,
 	ReactorIO,
+	Condition,
 	sharedPathSolver;
 
 Shared = _dereq_('./Shared');
@@ -1197,6 +1198,7 @@ Index2d = _dereq_('./Index2d');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
+Condition = _dereq_('./Condition');
 sharedPathSolver = new Path();
 
 /**
@@ -4162,7 +4164,6 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	// Check for join data
 	if (options.$join) {
 		analysis.hasJoin = true;
-
 		// Loop all join operations
 		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
 			// Loop the join sources and keep a reference to them
@@ -4658,6 +4659,35 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
+/**
+ * Creates a condition handler that will react to changes in data on the
+ * collection.
+ * @example Create a condition handler that reacts when data changes.
+ * 	var coll = db.collection('test'),
+ * 		condition = coll.when({_id: 'test1', val: 1})
+ * 		.then(function () {
+ * 			console.log('Condition met!');
+ *	 	})
+ *	 	.else(function () {
+ *	 		console.log('Condition un-met');
+ *	 	});
+ *
+ *	 	coll.insert({_id: 'test1', val: 1});
+ *
+ * @see Condition
+ * @param {Object} query The query that will trigger the condition's then()
+ * callback.
+ * @returns {Condition}
+ */
+Collection.prototype.when = function (query) {
+	var queryId = this.decouple(query);
+
+	this._when = this._when || {};
+	this._when[queryId] = this._when[queryId] || new Condition(this, query);
+
+	return this._when[queryId];
+};
+
 Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
@@ -4885,7 +4915,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Index2d":15,"./IndexBinaryTree":16,"./IndexHashMap":17,"./KeyValueStore":18,"./Metrics":19,"./Overload":32,"./Path":34,"./ReactorIO":38,"./Shared":40}],8:[function(_dereq_,module,exports){
+},{"./Condition":9,"./Index2d":16,"./IndexBinaryTree":17,"./IndexHashMap":18,"./KeyValueStore":19,"./Metrics":20,"./Overload":33,"./Path":35,"./ReactorIO":39,"./Shared":41}],8:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5245,7 +5275,149 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":7,"./Shared":40}],9:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Shared":41}],9:[function(_dereq_,module,exports){
+"use strict";
+
+/**
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ */
+
+var Shared,
+	Condition;
+
+Shared = _dereq_('./Shared');
+
+/**
+ * Create a constructor method that calls the instance's init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ */
+Condition = function () {
+	this.init.apply(this, arguments);
+};
+
+Condition.prototype.init = function (dataSource, clause) {
+	this._dataSource = dataSource;
+	this._query = [clause];
+	this._started = false;
+	this._state = [false];
+
+	this._satisfied = false;
+
+	// Set this to true by default for faster performance
+	this.earlyExit(true);
+};
+
+// Tell ForerunnerDB about our new module
+Shared.addModule('Condition', Condition);
+
+// Mixin some commonly used methods
+Shared.mixin(Condition.prototype, 'Mixin.Common');
+Shared.mixin(Condition.prototype, 'Mixin.ChainReactor');
+
+Shared.synthesize(Condition.prototype, 'then');
+Shared.synthesize(Condition.prototype, 'else');
+Shared.synthesize(Condition.prototype, 'earlyExit');
+
+/**
+ * Adds a new clause to the condition.
+ * @param {Object} clause The query clause to add to the condition.
+ * @returns {Condition}
+ */
+Condition.prototype.and = function (clause) {
+	this._query.push(clause);
+	this._state.push(false);
+
+	return this;
+};
+
+/**
+ * Starts the condition so that changes to data will call callback
+ * methods according to clauses being met.
+ * @returns {Condition}
+ */
+Condition.prototype.start = function () {
+	if (!this._started) {
+		var self = this;
+
+		// Resolve the current state
+		this._updateStates();
+
+		self._onChange = function () {
+			self._updateStates();
+		};
+
+		// Create a chain reactor link to the data source so we start receiving CRUD ops from it
+		this._dataSource.on('change', self._onChange);
+
+		this._started = true;
+	}
+
+	return this;
+};
+
+/**
+ * Updates the internal status of all the clauses against the underlying
+ * data source.
+ * @private
+ */
+Condition.prototype._updateStates = function () {
+	var satisfied = true,
+		i;
+
+	for (i = 0; i < this._query.length; i++) {
+		this._state[i] = this._dataSource.count(this._query[i]) > 0;
+
+		if (!this._state[i]) {
+			satisfied = false;
+
+			// Early exit since we have found a state that is not true
+			if (this._earlyExit) {
+				break;
+			}
+		}
+	}
+
+	if (this._satisfied !== satisfied) {
+		// Our state has changed, fire the relevant operation
+		if (satisfied) {
+			// Fire the "then" operation
+			if (this._then) {
+				this._then();
+			}
+		} else {
+			// Fire the "else" operation
+			if (this._else) {
+				this._else();
+			}
+		}
+
+		this._satisfied = satisfied;
+	}
+};
+
+/**
+ * Stops the condition so that callbacks will no longer fire.
+ * @returns {Condition}
+ */
+Condition.prototype.stop = function () {
+	if (this._started) {
+		this._dataSource.off('change', this._onChange);
+		delete this._onChange;
+
+		this._started = false;
+	}
+
+	return this;
+};
+
+// Tell ForerunnerDB that our module has finished loading
+Shared.finishModule('Condition');
+module.exports = Condition;
+},{"./Shared":41}],10:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5536,7 +5708,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":10,"./Metrics.js":19,"./Overload":32,"./Shared":40}],10:[function(_dereq_,module,exports){
+},{"./Db.js":11,"./Metrics.js":20,"./Overload":33,"./Shared":41}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -6175,7 +6347,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":6,"./Collection.js":7,"./Metrics.js":19,"./Overload":32,"./Shared":40}],11:[function(_dereq_,module,exports){
+},{"./Checksum.js":6,"./Collection.js":7,"./Metrics.js":20,"./Overload":33,"./Shared":41}],12:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -6639,7 +6811,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":7,"./Shared":40}],12:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Shared":41}],13:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -7007,7 +7179,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],13:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7740,7 +7912,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":7,"./CollectionGroup":8,"./ReactorIO":38,"./Shared":40,"./View":42}],14:[function(_dereq_,module,exports){
+},{"./Collection":7,"./CollectionGroup":8,"./ReactorIO":39,"./Shared":41,"./View":43}],15:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8406,7 +8578,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":32,"./Shared":40}],15:[function(_dereq_,module,exports){
+},{"./Overload":33,"./Shared":41}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -8896,7 +9068,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":5,"./GeoHash":12,"./Path":34,"./Shared":40}],16:[function(_dereq_,module,exports){
+},{"./BinaryTree":5,"./GeoHash":13,"./Path":35,"./Shared":41}],17:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -9140,7 +9312,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":5,"./Path":34,"./Shared":40}],17:[function(_dereq_,module,exports){
+},{"./BinaryTree":5,"./Path":35,"./Shared":41}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9503,7 +9675,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":34,"./Shared":40}],18:[function(_dereq_,module,exports){
+},{"./Path":35,"./Shared":41}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -9755,7 +9927,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":40}],19:[function(_dereq_,module,exports){
+},{"./Shared":41}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9830,7 +10002,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":31,"./Shared":40}],20:[function(_dereq_,module,exports){
+},{"./Operation":32,"./Shared":41}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -9844,7 +10016,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9991,7 +10163,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],22:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -10315,7 +10487,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":32,"./Serialiser":39}],23:[function(_dereq_,module,exports){
+},{"./Overload":33,"./Serialiser":40}],24:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10332,7 +10504,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],24:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10540,7 +10712,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":32}],25:[function(_dereq_,module,exports){
+},{"./Overload":33}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11287,7 +11459,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],26:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11337,7 +11509,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],27:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -11442,7 +11614,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -12091,7 +12263,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":32}],29:[function(_dereq_,module,exports){
+},{"./Overload":33}],30:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -12271,7 +12443,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],30:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 "use strict";
 
 // Tell JSHint about EventSource
@@ -12919,7 +13091,7 @@ Core.prototype.init = function () {
 Shared.finishModule('NodeApiClient');
 
 module.exports = NodeApiClient;
-},{"./Shared":40}],31:[function(_dereq_,module,exports){
+},{"./Shared":41}],32:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -13066,7 +13238,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":34,"./Shared":40}],32:[function(_dereq_,module,exports){
+},{"./Path":35,"./Shared":41}],33:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -13238,7 +13410,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],33:[function(_dereq_,module,exports){
+},{}],34:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -13536,7 +13708,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":7,"./Document":11,"./Shared":40}],34:[function(_dereq_,module,exports){
+},{"./Collection":7,"./Document":12,"./Shared":41}],35:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -14024,7 +14196,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":40}],35:[function(_dereq_,module,exports){
+},{"./Shared":41}],36:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -14859,7 +15031,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":7,"./CollectionGroup":8,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":44,"localforage":82}],36:[function(_dereq_,module,exports){
+},{"./Collection":7,"./CollectionGroup":8,"./PersistCompress":37,"./PersistCrypto":38,"./Shared":41,"async":45,"localforage":83}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -14940,7 +15112,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":40,"pako":84}],37:[function(_dereq_,module,exports){
+},{"./Shared":41,"pako":85}],38:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -15061,7 +15233,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":40,"crypto-js":53}],38:[function(_dereq_,module,exports){
+},{"./Shared":41,"crypto-js":54}],39:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -15148,7 +15320,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":40}],39:[function(_dereq_,module,exports){
+},{"./Shared":41}],40:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -15274,7 +15446,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],40:[function(_dereq_,module,exports){
+},{}],41:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -15285,7 +15457,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.783',
+	version: '1.3.784',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -15473,7 +15645,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":20,"./Mixin.ChainReactor":21,"./Mixin.Common":22,"./Mixin.Constants":23,"./Mixin.Events":24,"./Mixin.Matching":25,"./Mixin.Sorting":26,"./Mixin.Tags":27,"./Mixin.Triggers":28,"./Mixin.Updating":29,"./Overload":32}],41:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":21,"./Mixin.ChainReactor":22,"./Mixin.Common":23,"./Mixin.Constants":24,"./Mixin.Events":25,"./Mixin.Matching":26,"./Mixin.Sorting":27,"./Mixin.Tags":28,"./Mixin.Triggers":29,"./Mixin.Updating":30,"./Overload":33}],42:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -15593,7 +15765,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],42:[function(_dereq_,module,exports){
+},{}],43:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -17109,7 +17281,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":7,"./CollectionGroup":8,"./Overload":32,"./ReactorIO":38,"./Shared":40}],43:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":7,"./CollectionGroup":8,"./Overload":33,"./ReactorIO":39,"./Shared":41}],44:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -17226,7 +17398,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":100}],44:[function(_dereq_,module,exports){
+},{"_process":101}],45:[function(_dereq_,module,exports){
 (function (process,global){
 /*!
  * async
@@ -18495,7 +18667,7 @@ module.exports = asap;
 }());
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":100}],45:[function(_dereq_,module,exports){
+},{"_process":101}],46:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18723,7 +18895,7 @@ module.exports = asap;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],46:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],47:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19599,7 +19771,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":47}],47:[function(_dereq_,module,exports){
+},{"./core":48}],48:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20342,7 +20514,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{}],48:[function(_dereq_,module,exports){
+},{}],49:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20467,7 +20639,7 @@ module.exports = asap;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":47}],49:[function(_dereq_,module,exports){
+},{"./core":48}],50:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20617,7 +20789,7 @@ module.exports = asap;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":47}],50:[function(_dereq_,module,exports){
+},{"./core":48}],51:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20750,7 +20922,7 @@ module.exports = asap;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":47,"./hmac":52,"./sha1":71}],51:[function(_dereq_,module,exports){
+},{"./core":48,"./hmac":53,"./sha1":72}],52:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20817,7 +20989,7 @@ module.exports = asap;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":46,"./core":47}],52:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],53:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20961,7 +21133,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":47}],53:[function(_dereq_,module,exports){
+},{"./core":48}],54:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20980,7 +21152,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./aes":45,"./cipher-core":46,"./core":47,"./enc-base64":48,"./enc-utf16":49,"./evpkdf":50,"./format-hex":51,"./hmac":52,"./lib-typedarrays":54,"./md5":55,"./mode-cfb":56,"./mode-ctr":58,"./mode-ctr-gladman":57,"./mode-ecb":59,"./mode-ofb":60,"./pad-ansix923":61,"./pad-iso10126":62,"./pad-iso97971":63,"./pad-nopadding":64,"./pad-zeropadding":65,"./pbkdf2":66,"./rabbit":68,"./rabbit-legacy":67,"./rc4":69,"./ripemd160":70,"./sha1":71,"./sha224":72,"./sha256":73,"./sha3":74,"./sha384":75,"./sha512":76,"./tripledes":77,"./x64-core":78}],54:[function(_dereq_,module,exports){
+},{"./aes":46,"./cipher-core":47,"./core":48,"./enc-base64":49,"./enc-utf16":50,"./evpkdf":51,"./format-hex":52,"./hmac":53,"./lib-typedarrays":55,"./md5":56,"./mode-cfb":57,"./mode-ctr":59,"./mode-ctr-gladman":58,"./mode-ecb":60,"./mode-ofb":61,"./pad-ansix923":62,"./pad-iso10126":63,"./pad-iso97971":64,"./pad-nopadding":65,"./pad-zeropadding":66,"./pbkdf2":67,"./rabbit":69,"./rabbit-legacy":68,"./rc4":70,"./ripemd160":71,"./sha1":72,"./sha224":73,"./sha256":74,"./sha3":75,"./sha384":76,"./sha512":77,"./tripledes":78,"./x64-core":79}],55:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21057,7 +21229,7 @@ module.exports = asap;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":47}],55:[function(_dereq_,module,exports){
+},{"./core":48}],56:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21326,7 +21498,7 @@ module.exports = asap;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":47}],56:[function(_dereq_,module,exports){
+},{"./core":48}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21405,7 +21577,7 @@ module.exports = asap;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":46,"./core":47}],57:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21522,7 +21694,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":46,"./core":47}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21581,7 +21753,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":46,"./core":47}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21622,7 +21794,7 @@ module.exports = asap;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":46,"./core":47}],60:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21677,7 +21849,7 @@ module.exports = asap;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":46,"./core":47}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],62:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21727,7 +21899,7 @@ module.exports = asap;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":46,"./core":47}],62:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],63:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21772,7 +21944,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":46,"./core":47}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21813,7 +21985,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":46,"./core":47}],64:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],65:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21844,7 +22016,7 @@ module.exports = asap;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":46,"./core":47}],65:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],66:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21890,7 +22062,7 @@ module.exports = asap;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":46,"./core":47}],66:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48}],67:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22036,7 +22208,7 @@ module.exports = asap;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":47,"./hmac":52,"./sha1":71}],67:[function(_dereq_,module,exports){
+},{"./core":48,"./hmac":53,"./sha1":72}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22227,7 +22399,7 @@ module.exports = asap;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],68:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],69:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22420,7 +22592,7 @@ module.exports = asap;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],69:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],70:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22560,7 +22732,7 @@ module.exports = asap;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],70:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],71:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22828,7 +23000,7 @@ module.exports = asap;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":47}],71:[function(_dereq_,module,exports){
+},{"./core":48}],72:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22979,7 +23151,7 @@ module.exports = asap;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":47}],72:[function(_dereq_,module,exports){
+},{"./core":48}],73:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23060,7 +23232,7 @@ module.exports = asap;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":47,"./sha256":73}],73:[function(_dereq_,module,exports){
+},{"./core":48,"./sha256":74}],74:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23260,7 +23432,7 @@ module.exports = asap;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":47}],74:[function(_dereq_,module,exports){
+},{"./core":48}],75:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23584,7 +23756,7 @@ module.exports = asap;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":47,"./x64-core":78}],75:[function(_dereq_,module,exports){
+},{"./core":48,"./x64-core":79}],76:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23668,7 +23840,7 @@ module.exports = asap;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":47,"./sha512":76,"./x64-core":78}],76:[function(_dereq_,module,exports){
+},{"./core":48,"./sha512":77,"./x64-core":79}],77:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23992,7 +24164,7 @@ module.exports = asap;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":47,"./x64-core":78}],77:[function(_dereq_,module,exports){
+},{"./core":48,"./x64-core":79}],78:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24763,7 +24935,7 @@ module.exports = asap;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],78:[function(_dereq_,module,exports){
+},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],79:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25068,7 +25240,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./core":47}],79:[function(_dereq_,module,exports){
+},{"./core":48}],80:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -25631,7 +25803,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":102}],80:[function(_dereq_,module,exports){
+},{"promise":103}],81:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -25974,7 +26146,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":83,"promise":102}],81:[function(_dereq_,module,exports){
+},{"./../utils/serializer":84,"promise":103}],82:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -26393,7 +26565,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":83,"promise":102}],82:[function(_dereq_,module,exports){
+},{"./../utils/serializer":84,"promise":103}],83:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -26812,7 +26984,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":79,"./drivers/localstorage":80,"./drivers/websql":81,"promise":102}],83:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":80,"./drivers/localstorage":81,"./drivers/websql":82,"promise":103}],84:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -27088,7 +27260,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],84:[function(_dereq_,module,exports){
+},{}],85:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -27104,7 +27276,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":85,"./lib/inflate":86,"./lib/utils/common":87,"./lib/zlib/constants":90}],85:[function(_dereq_,module,exports){
+},{"./lib/deflate":86,"./lib/inflate":87,"./lib/utils/common":88,"./lib/zlib/constants":91}],86:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27483,7 +27655,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":87,"./utils/strings":88,"./zlib/deflate":92,"./zlib/messages":97,"./zlib/zstream":99}],86:[function(_dereq_,module,exports){
+},{"./utils/common":88,"./utils/strings":89,"./zlib/deflate":93,"./zlib/messages":98,"./zlib/zstream":100}],87:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27886,7 +28058,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":87,"./utils/strings":88,"./zlib/constants":90,"./zlib/gzheader":93,"./zlib/inflate":95,"./zlib/messages":97,"./zlib/zstream":99}],87:[function(_dereq_,module,exports){
+},{"./utils/common":88,"./utils/strings":89,"./zlib/constants":91,"./zlib/gzheader":94,"./zlib/inflate":96,"./zlib/messages":98,"./zlib/zstream":100}],88:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27990,7 +28162,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],88:[function(_dereq_,module,exports){
+},{}],89:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -28177,7 +28349,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":87}],89:[function(_dereq_,module,exports){
+},{"./common":88}],90:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -28211,7 +28383,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],90:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -28263,7 +28435,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],91:[function(_dereq_,module,exports){
+},{}],92:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -28306,7 +28478,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],92:[function(_dereq_,module,exports){
+},{}],93:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -30073,7 +30245,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":87,"./adler32":89,"./crc32":91,"./messages":97,"./trees":98}],93:[function(_dereq_,module,exports){
+},{"../utils/common":88,"./adler32":90,"./crc32":92,"./messages":98,"./trees":99}],94:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -30115,7 +30287,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],94:[function(_dereq_,module,exports){
+},{}],95:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -30443,7 +30615,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],95:[function(_dereq_,module,exports){
+},{}],96:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31948,7 +32120,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":87,"./adler32":89,"./crc32":91,"./inffast":94,"./inftrees":96}],96:[function(_dereq_,module,exports){
+},{"../utils/common":88,"./adler32":90,"./crc32":92,"./inffast":95,"./inftrees":97}],97:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -32277,7 +32449,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":87}],97:[function(_dereq_,module,exports){
+},{"../utils/common":88}],98:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -32292,7 +32464,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],98:[function(_dereq_,module,exports){
+},{}],99:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33496,7 +33668,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":87}],99:[function(_dereq_,module,exports){
+},{"../utils/common":88}],100:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33527,7 +33699,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],100:[function(_dereq_,module,exports){
+},{}],101:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -33620,7 +33792,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],101:[function(_dereq_,module,exports){
+},{}],102:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -33727,7 +33899,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":43}],102:[function(_dereq_,module,exports){
+},{"asap":44}],103:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -33909,4 +34081,4 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":101,"asap":43}]},{},[1]);
+},{"./core.js":102,"asap":44}]},{},[1]);

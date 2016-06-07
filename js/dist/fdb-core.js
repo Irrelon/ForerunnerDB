@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":5,"../lib/Shim.IE8":29}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":6,"../lib/Shim.IE8":30}],2:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -700,7 +700,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":25,"./Shared":28}],3:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var crcTable,
@@ -753,6 +753,7 @@ var Shared,
 	Index2d,
 	Overload,
 	ReactorIO,
+	Condition,
 	sharedPathSolver;
 
 Shared = _dereq_('./Shared');
@@ -836,6 +837,7 @@ Index2d = _dereq_('./Index2d');
 Db = Shared.modules.Db;
 Overload = _dereq_('./Overload');
 ReactorIO = _dereq_('./ReactorIO');
+Condition = _dereq_('./Condition');
 sharedPathSolver = new Path();
 
 /**
@@ -3801,7 +3803,6 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 	// Check for join data
 	if (options.$join) {
 		analysis.hasJoin = true;
-
 		// Loop all join operations
 		for (joinSourceIndex = 0; joinSourceIndex < options.$join.length; joinSourceIndex++) {
 			// Loop the join sources and keep a reference to them
@@ -4297,6 +4298,35 @@ Collection.prototype.collateRemove = function (collection) {
 	}
 };
 
+/**
+ * Creates a condition handler that will react to changes in data on the
+ * collection.
+ * @example Create a condition handler that reacts when data changes.
+ * 	var coll = db.collection('test'),
+ * 		condition = coll.when({_id: 'test1', val: 1})
+ * 		.then(function () {
+ * 			console.log('Condition met!');
+ *	 	})
+ *	 	.else(function () {
+ *	 		console.log('Condition un-met');
+ *	 	});
+ *
+ *	 	coll.insert({_id: 'test1', val: 1});
+ *
+ * @see Condition
+ * @param {Object} query The query that will trigger the condition's then()
+ * callback.
+ * @returns {Condition}
+ */
+Collection.prototype.when = function (query) {
+	var queryId = this.decouple(query);
+
+	this._when = this._when || {};
+	this._when[queryId] = this._when[queryId] || new Condition(this, query);
+
+	return this._when[queryId];
+};
+
 Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection with no name (generates a random name). If the
@@ -4524,7 +4554,149 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Index2d":8,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":28}],5:[function(_dereq_,module,exports){
+},{"./Condition":5,"./Index2d":9,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":25,"./Path":26,"./ReactorIO":27,"./Shared":29}],5:[function(_dereq_,module,exports){
+"use strict";
+
+/**
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ */
+
+var Shared,
+	Condition;
+
+Shared = _dereq_('./Shared');
+
+/**
+ * Create a constructor method that calls the instance's init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ */
+Condition = function () {
+	this.init.apply(this, arguments);
+};
+
+Condition.prototype.init = function (dataSource, clause) {
+	this._dataSource = dataSource;
+	this._query = [clause];
+	this._started = false;
+	this._state = [false];
+
+	this._satisfied = false;
+
+	// Set this to true by default for faster performance
+	this.earlyExit(true);
+};
+
+// Tell ForerunnerDB about our new module
+Shared.addModule('Condition', Condition);
+
+// Mixin some commonly used methods
+Shared.mixin(Condition.prototype, 'Mixin.Common');
+Shared.mixin(Condition.prototype, 'Mixin.ChainReactor');
+
+Shared.synthesize(Condition.prototype, 'then');
+Shared.synthesize(Condition.prototype, 'else');
+Shared.synthesize(Condition.prototype, 'earlyExit');
+
+/**
+ * Adds a new clause to the condition.
+ * @param {Object} clause The query clause to add to the condition.
+ * @returns {Condition}
+ */
+Condition.prototype.and = function (clause) {
+	this._query.push(clause);
+	this._state.push(false);
+
+	return this;
+};
+
+/**
+ * Starts the condition so that changes to data will call callback
+ * methods according to clauses being met.
+ * @returns {Condition}
+ */
+Condition.prototype.start = function () {
+	if (!this._started) {
+		var self = this;
+
+		// Resolve the current state
+		this._updateStates();
+
+		self._onChange = function () {
+			self._updateStates();
+		};
+
+		// Create a chain reactor link to the data source so we start receiving CRUD ops from it
+		this._dataSource.on('change', self._onChange);
+
+		this._started = true;
+	}
+
+	return this;
+};
+
+/**
+ * Updates the internal status of all the clauses against the underlying
+ * data source.
+ * @private
+ */
+Condition.prototype._updateStates = function () {
+	var satisfied = true,
+		i;
+
+	for (i = 0; i < this._query.length; i++) {
+		this._state[i] = this._dataSource.count(this._query[i]) > 0;
+
+		if (!this._state[i]) {
+			satisfied = false;
+
+			// Early exit since we have found a state that is not true
+			if (this._earlyExit) {
+				break;
+			}
+		}
+	}
+
+	if (this._satisfied !== satisfied) {
+		// Our state has changed, fire the relevant operation
+		if (satisfied) {
+			// Fire the "then" operation
+			if (this._then) {
+				this._then();
+			}
+		} else {
+			// Fire the "else" operation
+			if (this._else) {
+				this._else();
+			}
+		}
+
+		this._satisfied = satisfied;
+	}
+};
+
+/**
+ * Stops the condition so that callbacks will no longer fire.
+ * @returns {Condition}
+ */
+Condition.prototype.stop = function () {
+	if (this._started) {
+		this._dataSource.off('change', this._onChange);
+		delete this._onChange;
+
+		this._started = false;
+	}
+
+	return this;
+};
+
+// Tell ForerunnerDB that our module has finished loading
+Shared.finishModule('Condition');
+module.exports = Condition;
+},{"./Shared":29}],6:[function(_dereq_,module,exports){
 /*
  License
 
@@ -4815,7 +4987,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":6,"./Metrics.js":12,"./Overload":24,"./Shared":28}],6:[function(_dereq_,module,exports){
+},{"./Db.js":7,"./Metrics.js":13,"./Overload":25,"./Shared":29}],7:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -5454,7 +5626,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":3,"./Collection.js":4,"./Metrics.js":12,"./Overload":24,"./Shared":28}],7:[function(_dereq_,module,exports){
+},{"./Checksum.js":3,"./Collection.js":4,"./Metrics.js":13,"./Overload":25,"./Shared":29}],8:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -5822,7 +5994,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],8:[function(_dereq_,module,exports){
+},{}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6312,7 +6484,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":2,"./GeoHash":7,"./Path":25,"./Shared":28}],9:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./GeoHash":8,"./Path":26,"./Shared":29}],10:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6556,7 +6728,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":2,"./Path":25,"./Shared":28}],10:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./Path":26,"./Shared":29}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -6919,7 +7091,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":25,"./Shared":28}],11:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7171,7 +7343,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":28}],12:[function(_dereq_,module,exports){
+},{"./Shared":29}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7246,7 +7418,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":23,"./Shared":28}],13:[function(_dereq_,module,exports){
+},{"./Operation":24,"./Shared":29}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -7260,7 +7432,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],14:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7407,7 +7579,7 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],15:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
@@ -7731,7 +7903,7 @@ Common = {
 };
 
 module.exports = Common;
-},{"./Overload":24,"./Serialiser":27}],16:[function(_dereq_,module,exports){
+},{"./Overload":25,"./Serialiser":28}],17:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7748,7 +7920,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],17:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -7956,7 +8128,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":24}],18:[function(_dereq_,module,exports){
+},{"./Overload":25}],19:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8703,7 +8875,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],19:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8753,7 +8925,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],20:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -8858,7 +9030,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],21:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -9507,7 +9679,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":24}],22:[function(_dereq_,module,exports){
+},{"./Overload":25}],23:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9687,7 +9859,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],23:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9834,7 +10006,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":25,"./Shared":28}],24:[function(_dereq_,module,exports){
+},{"./Path":26,"./Shared":29}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10006,7 +10178,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],25:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10494,7 +10666,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":28}],26:[function(_dereq_,module,exports){
+},{"./Shared":29}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10581,7 +10753,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":28}],27:[function(_dereq_,module,exports){
+},{"./Shared":29}],28:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10707,7 +10879,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],28:[function(_dereq_,module,exports){
+},{}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10718,7 +10890,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.783',
+	version: '1.3.784',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -10906,7 +11078,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Tags":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],29:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Tags":21,"./Mixin.Triggers":22,"./Mixin.Updating":23,"./Overload":25}],30:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {

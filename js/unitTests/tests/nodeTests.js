@@ -301,4 +301,113 @@ TB.test('Collection.index() :: Test 2d index search on large data set', function
 	});
 });
 
+// This test works but has no conditions yet
+/*TB.test('Use when().else() new boolean logic operations / event emitter', function (callback) {
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('temp'),
+		coll = db.collection('test');
+
+	coll
+		.when({
+			_id: 'test1',
+			val: 1
+		})
+		.and({
+			_id: 'test2',
+			val: 2
+		})
+		.then(function () {
+			callback();
+		})
+		.else(function () {
+			console.log('Condition un-met');
+		})
+		.start();
+
+	coll.insert({_id:'test1',val:1});
+	coll.insert({_id:'test2',val:2});
+});*/
+
+// This works but haven't written any test (strictEquals) stuff for it
+/*TB.test('Join multiple levels', function (callback) {
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('temp'),
+		customers = db.collection('customers'),
+		orders = db.collection('orders'),
+		addresses = db.collection('addresses');
+
+	customers.insert([{
+		"_id": 1,
+		"name": 'Customer 1'
+	}, {
+		"_id": 2,
+		"name": 'Customer 2'
+	}, {
+		"_id": 3,
+		"name": 'Customer 3'
+	}, {
+		"_id": 4,
+		"name": 'Customer 4'
+	}]);
+
+	addresses.insert([{
+		"customerId": 1,
+		"address": "Customer 1 Address"
+	}, {
+		"customerId": 2,
+		"address": "Customer 2 Address"
+	}, {
+		"customerId": 3,
+		"address": "Customer 3 Address"
+	}, {
+		"customerId": 4,
+		"address": "Customer 4 Address"
+	}]);
+
+	orders.insert([{
+		"_id": 1,
+		"customers": [
+			1, 2
+		]
+	}, {
+		"_id": 2,
+		"customers": [
+			3, 4
+		]
+	}]);
+
+	var result = orders.find({}, {
+		"$join": [{
+			"customers": {
+				"$where": {
+					"$query": {
+						"_id": "$$.customers"
+					},
+					$options: {
+						"$join": [{
+							"addresses": {
+								"$where": {
+									"$query": {
+										"customerId": "$$._id"
+									}
+								},
+								"$as": "customerAddress",
+								"$require": false,
+								"$multi": false
+							}
+						}]
+					}
+				},
+				"$as": "customerDetails",
+				"$require": false,
+				"$multi": true
+			}
+		}]
+	});
+
+	TB.strictEqual(result.length, 2, 'Customer data joined');
+
+	callback();
+});*/
+
 TB.start();
