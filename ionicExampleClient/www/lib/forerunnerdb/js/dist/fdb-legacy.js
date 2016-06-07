@@ -4585,7 +4585,7 @@ Collection.prototype.collateRemove = function (collection) {
  * @returns {Condition}
  */
 Collection.prototype.when = function (query) {
-	var queryId = this.decouple(query);
+	var queryId = JSON.stringify(query);
 
 	this._when = this._when || {};
 	this._when[queryId] = this._when[queryId] || new Condition(this, query);
@@ -15850,7 +15850,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.786',
+	version: '1.3.787',
 	modules: {},
 	plugins: {},
 	index: {},
