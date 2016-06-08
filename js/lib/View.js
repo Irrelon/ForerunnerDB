@@ -31,7 +31,7 @@ Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.Matching');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 Shared.mixin(View.prototype, 'Mixin.Constants');
-Shared.mixin(View.prototype, 'Mixin.Triggers');
+//Shared.mixin(View.prototype, 'Mixin.Triggers');
 Shared.mixin(View.prototype, 'Mixin.Tags');
 
 Collection = require('./Collection');
