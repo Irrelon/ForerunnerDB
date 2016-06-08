@@ -2479,8 +2479,8 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	if (callback) { callback.call(this, resultObj); }
 
 	this._onChange();
-	this.emit('immediateChange', {type: 'insert', data: inserted});
-	this.deferEmit('change', {type: 'insert', data: inserted});
+	this.emit('immediateChange', {type: 'insert', data: inserted, failed: failed});
+	this.deferEmit('change', {type: 'insert', data: inserted, failed: failed});
 
 	return resultObj;
 };
@@ -12295,7 +12295,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.788',
+	version: '1.3.789',
 	modules: {},
 	plugins: {},
 	index: {},

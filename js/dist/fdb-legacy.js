@@ -2737,8 +2737,8 @@ Collection.prototype._insertHandle = function (data, index, callback) {
 	if (callback) { callback.call(this, resultObj); }
 
 	this._onChange();
-	this.emit('immediateChange', {type: 'insert', data: inserted});
-	this.deferEmit('change', {type: 'insert', data: inserted});
+	this.emit('immediateChange', {type: 'insert', data: inserted, failed: failed});
+	this.deferEmit('change', {type: 'insert', data: inserted, failed: failed});
 
 	return resultObj;
 };
@@ -15850,7 +15850,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.788',
+	version: '1.3.789',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -16072,7 +16072,7 @@ Shared.mixin(View.prototype, 'Mixin.Common');
 Shared.mixin(View.prototype, 'Mixin.Matching');
 Shared.mixin(View.prototype, 'Mixin.ChainReactor');
 Shared.mixin(View.prototype, 'Mixin.Constants');
-Shared.mixin(View.prototype, 'Mixin.Triggers');
+//Shared.mixin(View.prototype, 'Mixin.Triggers');
 Shared.mixin(View.prototype, 'Mixin.Tags');
 
 Collection = _dereq_('./Collection');
@@ -16843,6 +16843,38 @@ View.prototype.distinct = function (key, query, options) {
  */
 View.prototype.primaryKey = function () {
 	return this._data.primaryKey();
+};
+
+View.prototype.addTrigger = function () {
+	return this._data.addTrigger.apply(this._data, arguments);
+};
+
+View.prototype.removeTrigger = function () {
+	return this._data.removeTrigger.apply(this._data, arguments);
+};
+
+View.prototype.ignoreTriggers = function () {
+	return this._data.ignoreTriggers.apply(this._data, arguments);
+};
+
+View.prototype.addLinkIO = function () {
+	return this._data.addLinkIO.apply(this._data, arguments);
+};
+
+View.prototype.removeLinkIO = function () {
+	return this._data.removeLinkIO.apply(this._data, arguments);
+};
+
+View.prototype.willTrigger = function () {
+	return this._data.willTrigger.apply(this._data, arguments);
+};
+
+View.prototype.processTrigger = function () {
+	return this._data.processTrigger.apply(this._data, arguments);
+};
+
+View.prototype._triggerIndexOf = function () {
+	return this._data._triggerIndexOf.apply(this._data, arguments);
 };
 
 /**
