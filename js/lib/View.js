@@ -804,6 +804,38 @@ View.prototype.primaryKey = function () {
 	return this._data.primaryKey();
 };
 
+View.prototype.addTrigger = function () {
+	return this._data.addTrigger.apply(this._data, arguments);
+};
+
+View.prototype.removeTrigger = function () {
+	return this._data.removeTrigger.apply(this._data, arguments);
+};
+
+View.prototype.ignoreTriggers = function () {
+	return this._data.ignoreTriggers.apply(this._data, arguments);
+};
+
+View.prototype.addLinkIO = function () {
+	return this._data.addLinkIO.apply(this._data, arguments);
+};
+
+View.prototype.removeLinkIO = function () {
+	return this._data.removeLinkIO.apply(this._data, arguments);
+};
+
+View.prototype.willTrigger = function () {
+	return this._data.willTrigger.apply(this._data, arguments);
+};
+
+View.prototype.processTrigger = function () {
+	return this._data.processTrigger.apply(this._data, arguments);
+};
+
+View.prototype._triggerIndexOf = function () {
+	return this._data._triggerIndexOf.apply(this._data, arguments);
+};
+
 /**
  * Drops a view and all it's stored data from the database.
  * @returns {boolean} True on success, false on failure.
