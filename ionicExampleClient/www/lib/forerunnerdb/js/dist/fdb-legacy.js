@@ -15850,7 +15850,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.789',
+	version: '1.3.790',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -16845,34 +16845,58 @@ View.prototype.primaryKey = function () {
 	return this._data.primaryKey();
 };
 
+/**
+ * @see Mixin.Triggers::addTrigger()
+ */
 View.prototype.addTrigger = function () {
 	return this._data.addTrigger.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::removeTrigger()
+ */
 View.prototype.removeTrigger = function () {
 	return this._data.removeTrigger.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::ignoreTriggers()
+ */
 View.prototype.ignoreTriggers = function () {
 	return this._data.ignoreTriggers.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::addLinkIO()
+ */
 View.prototype.addLinkIO = function () {
 	return this._data.addLinkIO.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::removeLinkIO()
+ */
 View.prototype.removeLinkIO = function () {
 	return this._data.removeLinkIO.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::willTrigger()
+ */
 View.prototype.willTrigger = function () {
 	return this._data.willTrigger.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::processTrigger()
+ */
 View.prototype.processTrigger = function () {
 	return this._data.processTrigger.apply(this._data, arguments);
 };
 
+/**
+ * @see Mixin.Triggers::_triggerIndexOf()
+ */
 View.prototype._triggerIndexOf = function () {
 	return this._data._triggerIndexOf.apply(this._data, arguments);
 };
