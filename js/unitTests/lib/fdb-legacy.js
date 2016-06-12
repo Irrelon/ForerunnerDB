@@ -10464,9 +10464,13 @@ var Events = {
 	once: new Overload({
 		'string, function': function (eventName, callback) {
 			var self = this,
+				fired = false,
 				internalCallback = function () {
-					self.off(eventName, internalCallback);
-					callback.apply(self, arguments);
+					if (!fired) {
+						self.off(eventName, internalCallback);
+						callback.apply(self, arguments);
+						fired = true;
+					}
 				};
 
 			return this.on(eventName, internalCallback);
@@ -10474,9 +10478,13 @@ var Events = {
 		
 		'string, *, function': function (eventName, id, callback) {
 			var self = this,
+				fired = false,
 				internalCallback = function () {
-					self.off(eventName, id, internalCallback);
-					callback.apply(self, arguments);
+					if (!fired) {
+						self.off(eventName, id, internalCallback);
+						callback.apply(self, arguments);
+						fired = true;
+					}
 				};
 
 			return this.on(eventName, id, internalCallback);
@@ -15928,7 +15936,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.795',
+	version: '1.3.796',
 	modules: {},
 	plugins: {},
 	index: {},
