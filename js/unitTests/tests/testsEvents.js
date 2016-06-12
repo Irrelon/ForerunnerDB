@@ -8,7 +8,6 @@ QUnit.asyncTest("Collection.once() :: Register an event listener to fire once", 
 
 	var eventFunc = function (successArr, failed) {
 		strictEqual(successArr.length, 1, "Insert single document");
-		start();
 	};
 
 	user.once('insert', eventFunc);
@@ -21,6 +20,8 @@ QUnit.asyncTest("Collection.once() :: Register an event listener to fire once", 
 	user.insert({
 		_id: '2342',
 		name: "hello"
+	}, function () {
+		start();
 	});
 
 	base.dbDown();
