@@ -60,11 +60,16 @@ Condition.prototype.and = function (clause) {
 /**
  * Starts the condition so that changes to data will call callback
  * methods according to clauses being met.
+ * @param {*} initialState Initial state of condition.
  * @returns {Condition}
  */
-Condition.prototype.start = function () {
+Condition.prototype.start = function (initialState) {
 	if (!this._started) {
 		var self = this;
+
+		if (arguments.length !== 0) {
+			this._satisfied = initialState;
+		}
 
 		// Resolve the current state
 		this._updateStates();
