@@ -7996,28 +7996,45 @@ var Events = {
 
 	off: new Overload({
 		'string': function (event) {
-			if (this._listeners && this._listeners[event] && event in this._listeners) {
-				delete this._listeners[event];
+			var self = this;
+
+			if (this._emitting) {
+				this._eventRemovalQueue = this._eventRemovalQueue || [];
+				this._eventRemovalQueue.push(function () {
+					self.off(event);
+				});
+			} else {
+				if (this._listeners && this._listeners[event] && event in this._listeners) {
+					delete this._listeners[event];
+				}
 			}
 
 			return this;
 		},
 
 		'string, function': function (event, listener) {
-			var arr,
+			var self = this,
+				arr,
 				index;
 
-			if (typeof(listener) === 'string') {
-				if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
-					delete this._listeners[event][listener];
-				}
+			if (this._emitting) {
+				this._eventRemovalQueue = this._eventRemovalQueue || [];
+				this._eventRemovalQueue.push(function () {
+					self.off(event, listener);
+				});
 			} else {
-				if (this._listeners && event in this._listeners) {
-					arr = this._listeners[event]['*'];
-					index = arr.indexOf(listener);
+				if (typeof(listener) === 'string') {
+					if (this._listeners && this._listeners[event] && this._listeners[event][listener]) {
+						delete this._listeners[event][listener];
+					}
+				} else {
+					if (this._listeners && event in this._listeners) {
+						arr = this._listeners[event]['*'];
+						index = arr.indexOf(listener);
 
-					if (index > -1) {
-						arr.splice(index, 1);
+						if (index > -1) {
+							arr.splice(index, 1);
+						}
 					}
 				}
 			}
@@ -8026,26 +8043,51 @@ var Events = {
 		},
 
 		'string, *, function': function (event, id, listener) {
-			if (this._listeners && event in this._listeners && id in this.listeners[event]) {
-				var arr = this._listeners[event][id],
-					index = arr.indexOf(listener);
+			var self = this;
 
-				if (index > -1) {
-					arr.splice(index, 1);
+			if (this._emitting) {
+				this._eventRemovalQueue = this._eventRemovalQueue || [];
+				this._eventRemovalQueue.push(function () {
+					self.off(event, id, listener);
+				});
+			} else {
+				if (this._listeners && event in this._listeners && id in this.listeners[event]) {
+					var arr = this._listeners[event][id],
+						index = arr.indexOf(listener);
+
+					if (index > -1) {
+						arr.splice(index, 1);
+					}
 				}
 			}
 		},
 
 		'string, *': function (event, id) {
-			if (this._listeners && event in this._listeners && id in this._listeners[event]) {
-				// Kill all listeners for this event id
-				delete this._listeners[event][id];
+			var self = this;
+
+			if (this._emitting) {
+				this._eventRemovalQueue = this._eventRemovalQueue || [];
+				this._eventRemovalQueue.push(function () {
+					self.off(event, id);
+				});
+			} else {
+				if (this._listeners && event in this._listeners && id in this._listeners[event]) {
+					// Kill all listeners for this event id
+					delete this._listeners[event][id];
+				}
 			}
 		}
 	}),
 
 	emit: function (event, data) {
 		this._listeners = this._listeners || {};
+		this._emitting = true;
+
+		// FIXME: TODO: Add a flag to show we are emitting and then
+		// modify the "off" method to add items to a removal queue
+		// if we are currently emitting, meaning that events that
+		// cause an "off" call in their event method will not intefere
+		// with the event queue until after the queue has completed
 
 		if (event in this._listeners) {
 			var arrIndex,
@@ -8096,7 +8138,33 @@ var Events = {
 			}
 		}
 
+		this._emitting = false;
+		this._processRemovalQueue();
+
 		return this;
+	},
+
+	/**
+	 * If events are cleared with the off() method while the event emitter is
+	 * actively processing any events then the off() calls get added to a
+	 * queue to be executed after the event emitter is finished. This stops
+	 * errors that might occur by potentially modifying the event queue while
+	 * the emitter is running through them. This method is called after the
+	 * event emitter is finished processing.
+	 * @private
+	 */
+	_processRemovalQueue: function () {
+		var i;
+
+		if (this._eventRemovalQueue && this._eventRemovalQueue.length) {
+			// Execute each removal call
+			for (i = 0; i < this._eventRemovalQueue.length; i++) {
+				this._eventRemovalQueue[i]();
+			}
+
+			// Clear the removal queue
+			this._eventRemovalQueue = [];
+		}
 	},
 
 	/**
@@ -10900,7 +10968,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.793',
+	version: '1.3.794',
 	modules: {},
 	plugins: {},
 	index: {},
