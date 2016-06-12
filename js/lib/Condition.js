@@ -43,6 +43,7 @@ Shared.mixin(Condition.prototype, 'Mixin.ChainReactor');
 Shared.synthesize(Condition.prototype, 'then');
 Shared.synthesize(Condition.prototype, 'else');
 Shared.synthesize(Condition.prototype, 'earlyExit');
+Shared.synthesize(Condition.prototype, 'debug');
 
 /**
  * Adds a new clause to the condition.
@@ -92,6 +93,10 @@ Condition.prototype._updateStates = function () {
 
 	for (i = 0; i < this._query.length; i++) {
 		this._state[i] = this._dataSource.count(this._query[i]) > 0;
+
+		if (this._debug) {
+			console.log(this.logIdentifier() + ' Evaluating', this._query[i], '=', this._query[i]);
+		}
 
 		if (!this._state[i]) {
 			satisfied = false;
