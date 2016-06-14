@@ -430,8 +430,12 @@ View.prototype.insert = function () {
  * Executes an update against the view's underlying data-source.
  * @see Collection::update()
  */
-View.prototype.update = function () {
-	this._from.update.apply(this._from, arguments);
+View.prototype.update = function (query, update, options, callback) {
+	var finalQuery = {
+		$and: [this.query(), query]
+	};
+
+	this._from.update.call(this._from, finalQuery, update, options, callback);
 };
 
 /**
