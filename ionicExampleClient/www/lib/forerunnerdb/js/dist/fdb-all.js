@@ -10675,12 +10675,6 @@ var Events = {
 		this._listeners = this._listeners || {};
 		this._emitting = true;
 
-		// FIXME: TODO: Add a flag to show we are emitting and then
-		// modify the "off" method to add items to a removal queue
-		// if we are currently emitting, meaning that events that
-		// cause an "off" call in their event method will not intefere
-		// with the event queue until after the queue has completed
-
 		if (event in this._listeners) {
 			var arrIndex,
 				arrCount,
@@ -15543,7 +15537,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.797',
+	version: '1.3.798',
 	modules: {},
 	plugins: {},
 	index: {},
