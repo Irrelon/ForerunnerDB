@@ -656,7 +656,7 @@ Db.prototype.load = function (callback) {
 
 	obj = this._collection;
 
-	if (obj) {
+	if (obj && obj.keys && typeof obj.keys === 'function') {
 		keys = obj.keys();
 		keyCount = keys.length;
 
@@ -703,7 +703,7 @@ Db.prototype.save = function (callback) {
 
 	obj = this._collection;
 
-	if (obj) {
+	if (obj && obj.keys && typeof obj.keys === 'function') {
 		keys = obj.keys();
 		keyCount = keys.length;
 
