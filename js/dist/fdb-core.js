@@ -1580,11 +1580,15 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			this._onUpdate(updated);
 			this._onChange();
 
-			if (callback) { callback.call(this); }
+			if (callback) { callback.call(this, updated || []); }
 
 			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
+		} else {
+			if (callback) { callback.call(this, updated || []); }
 		}
+	} else {
+		if (callback) { callback.call(this, updated || []); }
 	}
 
 	op.stop();
@@ -10970,7 +10974,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.801',
+	version: '1.3.802',
 	modules: {},
 	plugins: {},
 	index: {},

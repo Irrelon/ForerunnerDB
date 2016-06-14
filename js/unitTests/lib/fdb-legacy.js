@@ -1846,11 +1846,15 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			this._onUpdate(updated);
 			this._onChange();
 
-			if (callback) { callback.call(this); }
+			if (callback) { callback.call(this, updated || []); }
 
 			this.emit('immediateChange', {type: 'update', data: updated});
 			this.deferEmit('change', {type: 'update', data: updated});
+		} else {
+			if (callback) { callback.call(this, updated || []); }
 		}
+	} else {
+		if (callback) { callback.call(this, updated || []); }
 	}
 
 	op.stop();
@@ -15930,7 +15934,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.801',
+	version: '1.3.802',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -16551,8 +16555,12 @@ View.prototype.insert = function () {
  * Executes an update against the view's underlying data-source.
  * @see Collection::update()
  */
-View.prototype.update = function () {
-	this._from.update.apply(this._from, arguments);
+View.prototype.update = function (query, update, options, callback) {
+	var finalQuery = {
+		$and: [this.query(), query]
+	};
+
+	this._from.update.call(this._from, finalQuery, update, options, callback);
 };
 
 /**
