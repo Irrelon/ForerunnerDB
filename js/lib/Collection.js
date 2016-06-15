@@ -3580,7 +3580,7 @@ Collection.prototype.collateRemove = function (collection) {
  * @returns {Condition}
  */
 Collection.prototype.when = function (query) {
-	var queryId = JSON.stringify(query);
+	var queryId = this.objectId();
 
 	this._when = this._when || {};
 	this._when[queryId] = this._when[queryId] || new Condition(this, queryId, query);
