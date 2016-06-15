@@ -5057,6 +5057,24 @@ angular.module('app.controllers')
 			.find();
 ```
 
+Binding ForerunnerDB data from a collection or view to a scope is very easy,
+just call the .ng() method, passing the current scope and the name of the
+property you want the array of data to be placed in:
+
+```js
+$fdb
+	.db('myDatabase')
+	.collection('myCollection')
+	.ng($scope, 'myData');
+```
+
+The data stored in "myCollection" is now available on your view under the
+"myData" variable. You can do an ng-repeat on it or other standard angular
+operations in the normal way.
+
+When changes are made to the "myCollection" collection data, they will be
+automatically reflected in the angular view.
+
 # Ionic Example App
 We've put together a very basic demo app that showcases ForerunnerDB's client-side
 usage in an Ionic app (AngularJS + Apache Cordova).
