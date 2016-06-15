@@ -3058,6 +3058,105 @@ coll.on("drop", function () {
 coll.drop();
 ```
 
+## Conditions / Response (If This Then That - IFTTT)
+Reacting to changes in data is one of the most powerful features of ForerunnerDB
+and making it easy to define what you wish to observe and what you wish to do
+when an observed condition changes form the basis of the If This Then That
+concept.
+
+ForerunnerDB includes the ability to define an intuitive condition / response
+mechanism that allows your application to respond to changing data elegantly
+and with ease.
+
+Creating IFTTT conditions is easy using expressive language methods (when,
+and, then, else):
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db('test'),
+	coll = db.collection('stocksIOwn'),
+	condition;
+
+condition = coll.when({
+		_id: 'TSLA',
+		val: {
+			$gt: 210
+		}
+	})
+	.and({
+		_id: 'SCTY',
+		val: {
+			$gt: 23
+		}
+	})
+	.then(function () {
+		console.log('My stocks are worth more than I paid for them! Yay!');
+	})
+	.else(function () {
+		console.log('I\'m loosing money :(');
+	});
+```
+
+With the IFTTT condition / response set up, let's make some stock data!
+
+```js
+coll.insert([{
+	_id: 'TSLA',
+	val: 214
+}, {
+	_id: 'SCTY',
+	val: 20
+}]);
+```
+
+Nothing happened! That's because we have to tell the condition to start
+listening for changes to its clauses:
+
+```js
+condition.start(undefined);
+```
+
+The result:
+
+```
+I'm loosing money :(
+```
+
+Notice that we passed ```undefined``` to the start() method? That's because
+we want the condition to start off without a defined state. If we don't
+pass undefined, the default state of a condition is false. This means that
+when start() is called, if the clauses you have defined via when() and and()
+evaluate to false, nothing has technically changed so your else() method will
+not be called.
+
+The starting state allows you control what happens the first time your clauses
+are evaluated by the condition engine.
+
+Now let's update Solar City's stock to a nicer value (higher than my purchase
+price):
+
+```js
+coll.update({_id: 'SCTY'}, {val: 25});
+```
+
+The result:
+
+```
+My stocks are worth more than I paid for them! Yay!
+```
+
+Now let's stop the condition from evaluating any more changes:
+
+```js
+condition.stop();
+```
+
+And finally, let's drop the condition, removing it from memory:
+
+```js
+condition.drop();
+```
+
 ## Indices & Performance
 ForerunnerDB currently supports basic indexing for performance enhancements when
 querying a collection. You can create an index on a collection using the
