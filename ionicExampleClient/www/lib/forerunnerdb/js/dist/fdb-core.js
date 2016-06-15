@@ -4326,7 +4326,7 @@ Collection.prototype.when = function (query) {
 	var queryId = JSON.stringify(query);
 
 	this._when = this._when || {};
-	this._when[queryId] = this._when[queryId] || new Condition(this, query);
+	this._when[queryId] = this._when[queryId] || new Condition(this, queryId, query);
 
 	return this._when[queryId];
 };
@@ -4582,8 +4582,9 @@ Condition = function () {
 	this.init.apply(this, arguments);
 };
 
-Condition.prototype.init = function (dataSource, clause) {
+Condition.prototype.init = function (dataSource, id, clause) {
 	this._dataSource = dataSource;
+	this._id = id;
 	this._query = [clause];
 	this._started = false;
 	this._state = [false];
@@ -4703,6 +4704,17 @@ Condition.prototype.stop = function () {
 
 		this._started = false;
 	}
+
+	return this;
+};
+
+/**
+ * Drops the condition and removes it from memory.
+ * @returns {Condition}
+ */
+Condition.prototype.drop = function () {
+	this.stop();
+	delete this._dataSource.when[this._id];
 
 	return this;
 };
@@ -10974,7 +10986,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.803',
+	version: '1.3.804',
 	modules: {},
 	plugins: {},
 	index: {},
