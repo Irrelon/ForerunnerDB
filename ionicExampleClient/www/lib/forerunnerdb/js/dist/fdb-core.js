@@ -4323,7 +4323,7 @@ Collection.prototype.collateRemove = function (collection) {
  * @returns {Condition}
  */
 Collection.prototype.when = function (query) {
-	var queryId = JSON.stringify(query);
+	var queryId = this.objectId();
 
 	this._when = this._when || {};
 	this._when[queryId] = this._when[queryId] || new Condition(this, queryId, query);
@@ -4568,7 +4568,8 @@ module.exports = Collection;
  * but data changed that made them un-met, the else() callback is fired.
  */
 
-var Shared,
+var //Overload = require('./Overload'),
+	Shared,
 	Condition;
 
 Shared = _dereq_('./Shared');
@@ -4602,6 +4603,7 @@ Shared.addModule('Condition', Condition);
 Shared.mixin(Condition.prototype, 'Mixin.Common');
 Shared.mixin(Condition.prototype, 'Mixin.ChainReactor');
 
+Shared.synthesize(Condition.prototype, 'id');
 Shared.synthesize(Condition.prototype, 'then');
 Shared.synthesize(Condition.prototype, 'else');
 Shared.synthesize(Condition.prototype, 'earlyExit');
@@ -10986,7 +10988,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.804',
+	version: '1.3.806',
 	modules: {},
 	plugins: {},
 	index: {},
