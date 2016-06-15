@@ -3,7 +3,7 @@
 var TB = require('testbear'),
 	ForerunnerDB = require('../../builds/nodecore');
 
-TB.test('Instantiate ForerunnerDB', function (callback) {
+TB.test('Core', 'Instantiate ForerunnerDB', function (callback) {
 	var fdb = new ForerunnerDB();
 
 	TB.strictEqual(fdb instanceof ForerunnerDB, true, 'ForerunnerDB instance is instantiated');
@@ -11,7 +11,7 @@ TB.test('Instantiate ForerunnerDB', function (callback) {
 	callback();
 });
 
-TB.test('Instantiate a Database Instance', function (callback) {
+TB.test('Core', 'Instantiate a Database Instance', function (callback) {
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('temp');
 
@@ -20,7 +20,7 @@ TB.test('Instantiate a Database Instance', function (callback) {
 	callback();
 });
 
-TB.test('Instantiate a Collection Instance', function (callback) {
+TB.test('Collection', 'Instantiate a Collection Instance', function (callback) {
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('temp'),
 		coll = db.collection('test');
@@ -30,7 +30,7 @@ TB.test('Instantiate a Collection Instance', function (callback) {
 	callback();
 });
 
-TB.test('Save Collection Data and Load it Back From File-Based Persistent Storage', function (callback) {
+TB.test('Persist', 'Save Collection Data and Load it Back From File-Based Persistent Storage', function (callback) {
 	var fdb = new ForerunnerDB(),
 		self = this,
 		db = fdb.db('temp'),
@@ -87,7 +87,7 @@ TB.test('Save Collection Data and Load it Back From File-Based Persistent Storag
 	});
 });
 
-TB.test('Timed save, 50,000 records', function (callback) {
+TB.test('Persist', 'Timed save, 50,000 records', function (callback) {
 	var fdb = new ForerunnerDB(),
 		self = this,
 		db = fdb.db('temp'),
@@ -218,7 +218,7 @@ TB.test('Timed save, 50,000 records', function (callback) {
 	});
 });
 
-TB.test('Collection.index() :: Test 2d index search on large data set', function (callback) {
+TB.test('Collection', 'index() :: Test 2d index search on large data set', function (callback) {
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('temp'),
 		coll = db.collection('cities').truncate(),
@@ -301,35 +301,57 @@ TB.test('Collection.index() :: Test 2d index search on large data set', function
 	});
 });
 
-// This test works but has no conditions yet
-/*TB.test('Use when().else() new boolean logic operations / event emitter', function (callback) {
+TB.test('Condition', 'Test IFTTT condition functionality', function (finishTest) {
 	var fdb = new ForerunnerDB(),
-		db = fdb.db('temp'),
-		coll = db.collection('test');
+		db = fdb.db('test'),
+		coll = db.collection('stocksIOwn'),
+		condition;
 
-	coll
-		.when({
-			_id: 'test1',
-			val: 1
+	condition = coll.when({
+			_id: 'TSLA',
+			val: {
+				$gt: 210
+			}
 		})
 		.and({
-			_id: 'test2',
-			val: 2
+			_id: 'SCTY',
+			val: {
+				$gt: 23
+			}
 		})
 		.then(function () {
-			callback();
+			var tsla = coll.findById('TSLA'),
+				scty = coll.findById('SCTY');
+
+			TB.strictEqual(tsla.val, 214, 'TSLA value is 214');
+			TB.strictEqual(scty.val, 25, 'TSLA value is 25');
+
+			TB.expect(4);
+			finishTest();
 		})
 		.else(function () {
-			console.log('Condition un-met');
-		})
-		.start();
+			var tsla = coll.findById('TSLA'),
+				scty = coll.findById('SCTY');
 
-	coll.insert({_id:'test1',val:1});
-	coll.insert({_id:'test2',val:2});
-});*/
+			TB.strictEqual(tsla.val, 214, 'TSLA value is 214');
+			TB.strictEqual(scty.val, 20, 'TSLA value is 20');
+		});
+
+	coll.insert([{
+		_id: 'TSLA',
+		val: 214
+	}, {
+		_id: 'SCTY',
+		val: 20
+	}]);
+
+	condition.start(undefined);
+
+	coll.update({_id: 'SCTY'}, {val: 25});
+});
 
 // This works but haven't written any test (strictEquals) stuff for it
-/*TB.test('Join multiple levels', function (callback) {
+/*TB.test('Joins', 'Join multiple levels', function (callback) {
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('temp'),
 		customers = db.collection('customers'),
