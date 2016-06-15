@@ -3583,7 +3583,7 @@ Collection.prototype.when = function (query) {
 	var queryId = JSON.stringify(query);
 
 	this._when = this._when || {};
-	this._when[queryId] = this._when[queryId] || new Condition(this, query);
+	this._when[queryId] = this._when[queryId] || new Condition(this, queryId, query);
 
 	return this._when[queryId];
 };
