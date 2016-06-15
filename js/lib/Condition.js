@@ -7,7 +7,8 @@
  * but data changed that made them un-met, the else() callback is fired.
  */
 
-var Shared,
+var //Overload = require('./Overload'),
+	Shared,
 	Condition;
 
 Shared = require('./Shared');
@@ -41,6 +42,7 @@ Shared.addModule('Condition', Condition);
 Shared.mixin(Condition.prototype, 'Mixin.Common');
 Shared.mixin(Condition.prototype, 'Mixin.ChainReactor');
 
+Shared.synthesize(Condition.prototype, 'id');
 Shared.synthesize(Condition.prototype, 'then');
 Shared.synthesize(Condition.prototype, 'else');
 Shared.synthesize(Condition.prototype, 'earlyExit');
