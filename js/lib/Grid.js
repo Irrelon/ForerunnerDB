@@ -332,7 +332,7 @@ Grid.prototype.refresh = function () {
 					// be confusing to the user. The best possible way to
 					// use this would be to "grey out" the selections that
 					// cannot be used because they would return zero results
-					// when used in conjuctions with other filter selections.
+					// when used in conjunction with other filter selections.
 					/*self._from.on('change', function () {
 						if (self._from && self._from instanceof View) {
 							var query = self._from.query();
