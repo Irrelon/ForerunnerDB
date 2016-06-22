@@ -29,6 +29,7 @@ var Grid = function (selector, template, options) {
 Grid.prototype.init = function (selector, template, options) {
 	var self = this;
 
+	this._baseQuery = {};
 	this._selector = selector;
 	this._template = template;
 	this._options = options || {};
@@ -111,16 +112,16 @@ Grid.prototype.remove = function () {
 };
 
 /**
- * Sets the collection from which the grid will assemble its data.
+ * Sets the data source from which the grid will assemble its data.
  * @func from
  * @memberof Grid
- * @param {Collection} collection The collection to use to assemble grid data.
+ * @param {View} dataSource The data source to use to assemble grid data.
  * @returns {Grid}
  */
-Grid.prototype.from = function (collection) {
+Grid.prototype.from = function (dataSource) {
 	//var self = this;
 
-	if (collection !== undefined) {
+	if (dataSource !== undefined) {
 		// Check if we have an existing from
 		if (this._from) {
 			// Remove the listener to the drop event
@@ -128,12 +129,19 @@ Grid.prototype.from = function (collection) {
 			this._from._removeGrid(this);
 		}
 
-		if (typeof(collection) === 'string') {
-			collection = this._db.collection(collection);
+		if (typeof(dataSource) === 'string') {
+			dataSource = this._db.collection(dataSource);
 		}
 
-		this._from = collection;
+		this._from = dataSource;
 		this._from.on('drop', this._collectionDroppedWrap);
+
+		// If the data source has a query method, assign the current
+		// query to our base query so we use it in all further updates
+		if (typeof this._from.query === 'function') {
+			this._baseQuery = this._from.query();
+		}
+
 		this.refresh();
 	}
 
@@ -248,6 +256,13 @@ Grid.prototype._sortGridClick = function (e) {
 	this.emit('sort', sortObj);
 };
 
+Grid.prototype.query = function (queryObj, queryOptions) {
+	this._baseQuery = queryObj;
+	this._baseQueryOptions = queryOptions;
+
+	return this;
+};
+
 /**
  * Refreshes the grid data such as ordering etc.
  * @func refresh
@@ -291,7 +306,7 @@ Grid.prototype.refresh = function () {
 
 			if (self._from.query) {
 				// Listen for filter requests
-				var queryObj = {};
+				var queryObj = self.decouple(self._baseQuery);
 
 				elem.find('[data-grid-filter]').each(function (index, filterElem) {
 					filterElem = window.jQuery(filterElem);
