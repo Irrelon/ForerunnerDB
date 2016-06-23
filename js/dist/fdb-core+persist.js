@@ -7602,7 +7602,7 @@ KeyValueStore.prototype.lookup = function (val) {
 			}
 
 			return result;
-		} else if (val[pk]) {
+		} else if (val[pk] !== undefined && val[pk] !== null) {
 			return this.lookup(val[pk]);
 		}
 	}
@@ -12393,7 +12393,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.808',
+	version: '1.3.809',
 	modules: {},
 	plugins: {},
 	index: {},
