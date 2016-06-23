@@ -112,7 +112,7 @@ KeyValueStore.prototype.lookup = function (val) {
 			}
 
 			return result;
-		} else if (val[pk]) {
+		} else if (val[pk] !== undefined && val[pk] !== null) {
 			return this.lookup(val[pk]);
 		}
 	}
