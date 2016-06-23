@@ -367,6 +367,8 @@ Grid.prototype.refresh = function () {
 						if (self._from && self._from._from) {
 							self._from._from.off('change', onFilterSourceChange);
 						}
+
+						filterView.drop();
 					});
 
 					template = [
