@@ -362,4 +362,131 @@ ForerunnerDB.moduleLoaded('View', function () {
 			start();
 		}, 1);
 	});
+
+	/*QUnit.test('View.from() :: View from a view from a collection', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view1 = db.view('test1'),
+			view2 = db.view('test2'),
+			from,
+			result;
+
+		view1.from(coll);
+		view2.from(view1);
+
+		view1.query({
+
+		});
+
+		view2.query({
+			inView2: true
+		}, {
+			$page: 0,
+			$limit: 10
+		});
+
+		coll.insert([{
+			_id: '1',
+			inColl: true,
+			inView1: true,
+			inView2: false
+		}, {
+			_id: '2',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '3',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '4',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '5',
+			inColl: true,
+			inView1: true,
+			inView2: false
+		}, {
+			_id: '6',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '7',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '8',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '9',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '10',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '11',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '12',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '13',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '14',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '15',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}, {
+			_id: '16',
+			inColl: true,
+			inView1: true,
+			inView2: true
+		}]);
+
+		result = view2.find();
+
+		strictEqual(result.length, 10, 'View 2 count is correct');
+
+		// Break the view2 from view1
+		view2.from('tempColl');
+
+		result = view2.find();
+
+		strictEqual(result.length, 0, 'View 2 count is correct');
+
+		// Re-establish the view2 from view1
+		view2.from(view1);
+
+		result = view2.find();
+
+		strictEqual(result.length, 10, 'View 2 count is correct');
+
+		base.dbDown();
+	});*/
 });
