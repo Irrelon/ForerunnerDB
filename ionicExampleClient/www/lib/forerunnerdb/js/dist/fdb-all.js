@@ -7577,6 +7577,8 @@ Grid.prototype.refresh = function () {
 						if (self._from && self._from._from) {
 							self._from._from.off('change', onFilterSourceChange);
 						}
+
+						filterView.drop();
 					});
 
 					template = [
@@ -15570,7 +15572,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.809',
+	version: '1.3.811',
 	modules: {},
 	plugins: {},
 	index: {},
