@@ -7886,11 +7886,27 @@ var ChainReactor = {
 	},
 
 	/**
+	 * Gets / sets the flag that will enable / disable chain reactor sending
+	 * from this instance. Chain reactor sending is enabled by default on all
+	 * instances.
+	 * @param {Boolean} val True or false to enable or disable chain sending.
+	 * @returns {*}
+	 */
+	chainEnabled: function (val) {
+		if (val !== undefined) {
+			this._chainDisabled = !val;
+			return this;
+		}
+
+		return !this._chainDisabled;
+	},
+
+	/**
 	 * Determines if this chain reactor node has any listeners downstream.
 	 * @returns {Boolean} True if there are nodes downstream of this node.
 	 */
 	chainWillSend: function () {
-		return Boolean(this._chain);
+		return Boolean(this._chain && !this._chainDisabled);
 	},
 
 	/**
@@ -7907,7 +7923,7 @@ var ChainReactor = {
 	 * key/value pairs that your custom chain reactor code can operate on.
 	 */
 	chainSend: function (type, data, options) {
-		if (this._chain) {
+		if (this._chain && !this._chainDisabled) {
 			var arr = this._chain,
 				arrItem,
 				count = arr.length,
@@ -12393,7 +12409,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.811',
+	version: '1.3.812',
 	modules: {},
 	plugins: {},
 	index: {},

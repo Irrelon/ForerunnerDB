@@ -141,15 +141,15 @@ multiple database instances.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Checks if a module is loaded and if so calls the passed
-success method, otherwise calls the failure method.
+    Checks if an array of named modules are loaded and if so
+calls the passed callback method.
 </div>
 
 
@@ -191,7 +191,7 @@ success method, otherwise calls the failure method.
             <td class="type">
             
                 
-<span class="param-type">String</span>
+<span class="param-type">Array</span>
 
 
             
@@ -201,14 +201,14 @@ success method, otherwise calls the failure method.
 
             
 
-            <td class="description last">The name of the module to check for.</td>
+            <td class="description last">The array of module names to check for.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>success</code></td>
+                <td class="name"><code>callback</code></td>
             
 
             <td class="type">
@@ -224,30 +224,7 @@ success method, otherwise calls the failure method.
 
             
 
-            <td class="description last">The callback method to call if module is loaded.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>failure</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type"><a href="global.html#function">function</a></span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call if module not loaded.</td>
+            <td class="description last">The callback method to call if modules are loaded.</td>
         </tr>
 
     
@@ -288,7 +265,7 @@ success method, otherwise calls the failure method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
     </li></ul></dd>
     
 
@@ -627,15 +604,15 @@ callback method.
 
     
 
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, success, failure)</span><span class="type-signature"></span></h4>
 
     
 
 
 
 <div class="description">
-    Checks if an array of named modules are loaded and if so
-calls the passed callback method.
+    Checks if a module is loaded and if so calls the passed
+success method, otherwise calls the failure method.
 </div>
 
 
@@ -677,7 +654,7 @@ calls the passed callback method.
             <td class="type">
             
                 
-<span class="param-type">Array</span>
+<span class="param-type">String</span>
 
 
             
@@ -687,14 +664,14 @@ calls the passed callback method.
 
             
 
-            <td class="description last">The array of module names to check for.</td>
+            <td class="description last">The name of the module to check for.</td>
         </tr>
 
     
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>success</code></td>
             
 
             <td class="type">
@@ -710,7 +687,30 @@ calls the passed callback method.
 
             
 
-            <td class="description last">The callback method to call if modules are loaded.</td>
+            <td class="description last">The callback method to call if module is loaded.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>failure</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type"><a href="global.html#function">function</a></span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call if module not loaded.</td>
         </tr>
 
     
@@ -751,7 +751,7 @@ calls the passed callback method.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line142">line 142</a>
+        <a href="Core.js.html">Core.js</a>, <a href="Core.js.html#line174">line 174</a>
     </li></ul></dd>
     
 
@@ -2128,7 +2128,7 @@ then the callback is called.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jun 23 2016 13:34:00 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Jun 23 2016 13:55:56 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
