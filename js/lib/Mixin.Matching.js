@@ -387,6 +387,16 @@ var Matching = {
 				}
 				break;
 
+			case '$fastIn':
+				if (test instanceof Array) {
+					// Source is a string or number, use indexOf to identify match in array
+					return test.indexOf(source) !== -1;
+				} else {
+					console.log(this.logIdentifier() + ' Cannot use an $fastIn operator on a non-array key: ' + key, options.$rootQuery);
+					return false;
+				}
+				break;
+
 			case '$distinct':
 				// Ensure options holds a distinct lookup
 				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
