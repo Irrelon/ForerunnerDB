@@ -399,6 +399,7 @@ that are not available in MongoDB but which can help in browser-centric applicat
 * [$ne](#ne) Not Equal To (!=)
 * [$nee](#nee) Strict Not Equal To (!==)
 * [$in](#in) Match Any Value In An Array Of Values
+* [$fastIn](#fastIn) Match Any String or Number In An Array Of String or Numbers
 * [$nin](#nin)  Match Any Value Not In An Array Of Values
 * [$distinct](#distinct) Match By Distinct Key/Value Pairs
 * [$count](#count) Match By Length Of Sub-Document Array
@@ -766,6 +767,12 @@ Result is:
 ```
 
 #### $in
+> If your field is a string or number and your array of values are also either strings
+or numbers you can utilise $fastIn which is an optimised $in query that uses indexOf()
+to identify matching values instead of looping over all items in the array of values
+and running a new matching process against each one. If your array of values include
+sub-queries or other complex logic you should use $in, not $fastIn.
+
 Selects documents where the value of a field equals any value in the specified array.
 
 ```js
@@ -793,6 +800,59 @@ coll.insert([{
 result = coll.find({
 	val: {
 		$in: [1, 3]
+	}
+});
+```
+	
+Result is:
+
+```js
+[{
+	_id: 1,
+	val: 1
+}, {
+	_id: 3,
+	val: 3
+}]
+```
+
+#### $fastIn
+> You can use $fastIn instead of $in when your field contains a string or number and 
+your array of values contains only strings or numbers. $fastIn utilises indexOf() to
+speed up performance of the query. This means that the array of values is not evaluated
+for sub-queries, other operators like $gt etc, and it is assumed that the array of
+values is a completely flat array, filled only with strings or numbers.
+
+Selects documents where the string or number value of a field equals any string or number
+value in the specified array.
+
+The array of values *MUST* be a flat array and contain only strings or numbers.
+
+```js
+{ field: { $fastIn: [<value1>, <value2>, ... <valueN> ] } }
+```
+
+##### Usage
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db("test"),
+	coll = db.collection("test");
+	
+coll.insert([{
+	_id: 1,
+	val: 1
+}, {
+	_id: 2,
+	val: 2
+}, {
+	_id: 3,
+	val: 3
+}]);
+
+result = coll.find({
+	val: {
+		$fastIn: [1, 3]
 	}
 });
 ```
