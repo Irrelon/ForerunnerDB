@@ -5233,6 +5233,12 @@ operations in the normal way.
 When changes are made to the "myCollection" collection data, they will be
 automatically reflected in the angular view.
 
+## Automatic Clean Up / Memory Management
+ForerunnerDB automatically hooks the $destroy event of a scope so that when
+the scope is removed from memory, ForerunnerDB will also remove all binding
+to it. This means that angular / ionic integration is automatic and does not
+require manual cleanup.
+
 # Ionic Example App
 We've put together a very basic demo app that showcases ForerunnerDB's client-side
 usage in an Ionic app (AngularJS + Apache Cordova).
