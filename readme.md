@@ -3119,10 +3119,9 @@ coll.drop();
 ```
 
 ## Conditions / Response (If This Then That - IFTTT)
-Reacting to changes in data is one of the most powerful features of ForerunnerDB
-and making it easy to define what you wish to observe and what you wish to do
-when an observed condition changes form the basis of the If This Then That
-concept.
+Reacting to changes in data is one of the most powerful features of ForerunnerDB.
+ForerunnerDB makes it easy to define what you wish to observe and what you wish to do
+when an observed condition changes.
 
 ForerunnerDB includes the ability to define an intuitive condition / response
 mechanism that allows your application to respond to changing data elegantly
@@ -3190,7 +3189,7 @@ evaluate to false, nothing has technically changed so your else() method will
 not be called.
 
 The starting state allows you control what happens the first time your clauses
-are evaluated by the condition engine.
+are evaluated by the condition engine when you call start().
 
 Now let's update Solar City's stock to a nicer value (higher than my purchase
 price):
