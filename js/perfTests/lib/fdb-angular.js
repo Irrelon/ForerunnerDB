@@ -45,6 +45,7 @@ Angular.extendCollection = function (Module) {
 	 */
 	Module.prototype.ng = function (scope, varName, options) {
 		var self = this,
+			watchUpdating,
 			link,
 			i;
 
@@ -81,8 +82,21 @@ Angular.extendCollection = function (Module) {
 				}
 			});
 
+			// Hook the angular watch event to update our data if the
+			// angular data is updated by content
+			scope.$watch(varName, function(newValue) {
+				watchUpdating = true;
+				console.log('angular update', newValue);
+				self.upsert(newValue);
+				watchUpdating = false;
+			}, true);
+
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('immediateChange', link.callback);
+			self.on('change', function () {
+				if (!watchUpdating) {
+					link.callback.apply(this, arguments);
+				}
+			});
 
 			// Now update the view
 			if (link.callback) { link.callback(); }
@@ -185,9 +199,9 @@ Angular.extendDocument = function (Module) {
 
 	Module.prototype.ng = function (scope, varName, options) {
 		var self = this,
-				watchUpdating = false,
-				link,
-				i;
+			watchUpdating = false,
+			link,
+			i;
 
 		if (scope && varName) {
 			self._ngLinks = self._ngLinks || [];
