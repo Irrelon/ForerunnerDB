@@ -39,7 +39,8 @@ Angular.extendCollection = function (Module) {
 	 */
 	Module.prototype.ng = function (scope, varName, options) {
 		var self = this,
-			watchUpdating,
+			hasApplied = false,
+			watchUpdating = false,
 			link,
 			i;
 
@@ -58,6 +59,7 @@ Angular.extendCollection = function (Module) {
 
 					setTimeout(function () {
 						scope.$apply();
+						hasApplied = true;
 					}, 0);
 				}
 			};
@@ -76,21 +78,26 @@ Angular.extendCollection = function (Module) {
 				}
 			});
 
-			// Hook the angular watch event to update our data if the
-			// angular data is updated by content
-			scope.$watch(varName, function(newValue) {
-				watchUpdating = true;
-				console.log('angular update', newValue);
-				self.upsert(newValue);
-				watchUpdating = false;
-			}, true);
+			if (!options || (options && !options.$noWatch)) {
+				// Hook the angular watch event to update our data if the
+				// angular data is updated by content
+				scope.$watch(varName, function (newValue) {
+					if (hasApplied) {
+						watchUpdating = true;
+						self.upsert(newValue);
+						watchUpdating = false;
+					}
+				}, true);
+			}
 
-			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', function () {
-				if (!watchUpdating) {
-					link.callback.apply(this, arguments);
-				}
-			});
+			if (!options || (options && !options.$noBind)) {
+				// Hook the ForerunnerDB change event to inform angular of a change
+				self.on('change', function () {
+					if (!watchUpdating) {
+						link.callback.apply(this, arguments);
+					}
+				});
+			}
 
 			// Now update the view
 			if (link.callback) { link.callback(); }
