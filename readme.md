@@ -5193,7 +5193,7 @@ in the normal angular way:
 angular.module('app', ['ionic', 'forerunnerdb', 'app.controllers', 'app.routes', 'app.services', 'app.directives'])
 	// Run the app and tell angular we need the $fdb service
 	.run(function ($ionicPlatform, $rootScope, $fdb) {
-		// Define a ForerunnerDB database on the root scope
+		// Define a ForerunnerDB database on the root scope (optional)
 		$rootScope.$db = $fdb.db('myDatabase');
 		
 		...
@@ -5215,6 +5215,7 @@ angular.module('app.controllers')
 			.find();
 ```
 
+## Binding Data from ForerunnerDB to AngularJS
 Binding ForerunnerDB data from a collection or view to a scope is very easy,
 just call the .ng() method, passing the current scope and the name of the
 property you want the array of data to be placed in:
@@ -5230,8 +5231,60 @@ The data stored in "myCollection" is now available on your view under the
 "myData" variable. You can do an ng-repeat on it or other standard angular
 operations in the normal way.
 
+```html
+<div ng-repeat="obj in myData">
+	<span id="{{obj._id}}">{{obj.title}}</span>
+</div>
+```
+
 When changes are made to the "myCollection" collection data, they will be
 automatically reflected in the angular view.
+
+## Binding From a Collection to a Single Scope Object
+If you wish to only bind a single document inside a collection or view to
+a single object in AngularJS you can do so by passing the $single option:
+
+```js
+$fdb
+	.db('myDatabase')
+	.collection('myCollection')
+	.ng($scope, 'myData', {
+		$single: true
+	});
+```
+
+On the AngularJS view the myData variable is now an object instead of an array:
+
+```html
+<div ng-if="myData && myData.myFlag === true">Hello!</div>
+```
+
+If you do this from a collection it is equivelant to running a findOne() on the
+collection so you will get the first document in the collection.
+
+If you do this on a view you can limit the view to a single document via a query
+first do selectively decide which document to bind the scope variable to.
+
+## Updating Data in ForerunnerDB from an AngularJS View
+ForerunnerDB hooks changes from AngularJS and automatically updates the bound
+collection on updates to data that is on an AngularJS view using the ng-model
+attribute.
+
+## Switching Off Two-Way Data Binding
+
+If you do not want two-way data binding you can switch off either direction
+by passing options to the ng() method:
+
+```js
+$fdb
+	.db('myDatabase')
+	.collection('myCollection')
+	.ng($scope, 'myData', {
+		$noWatch: true, // Changes to the AngularJS view will not propagate to ForerunnerDB
+		$noBind: true // Changes to ForerunnerDB's collection will not propagate to AngularJS
+	});
+```
+
 
 ## Automatic Clean Up / Memory Management
 ForerunnerDB automatically hooks the $destroy event of a scope so that when
