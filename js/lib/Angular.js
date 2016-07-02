@@ -52,9 +52,9 @@ Angular.extendCollection = function (Module) {
 				varName: varName,
 				callback: function () {
 					if (options && options.$single) {
-						scope[varName] = self.findOne() || {};
+						self.sharedPathSolver.set(scope, varName, self.findOne() || {});
 					} else {
-						scope[varName] = self.find();
+						self.sharedPathSolver.set(scope, varName, self.find());
 					}
 
 					setTimeout(function () {
