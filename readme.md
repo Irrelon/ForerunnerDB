@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.825
+## Version 1.3.829
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -2195,6 +2195,65 @@ db.collection("test").update({
 	$splicePush: {
 		shoppingList: "Milk",
 		$index: 1
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[
+	{
+		"_id": "23231",
+		"shoppingList": [
+			"Sugar",
+			"Milk",
+			"Tea",
+			"Coffee"
+		]
+	}
+]
+```
+
+#### $splicePull
+The $splicePull operator removes an item (or items) from an array at a specified index.
+If you specify a $count operator the splicePull operation will remove from the $index
+to the number of items you specify. $count defaults to 1 if it is not specified.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$splicePull: {
+		<field>: {
+			$index: <index>,
+			$count: <integer>
+		}
+	}
+});
+```
+
+The following example inserts "Milk" to the "shoppingList" array at index 1 in the document with the id "23231":
+
+```js
+db.collection("test").insert({
+	_id: "23231",
+	shoppingList: [
+		"Sugar",
+		"Tea",
+		"Coffee"
+	]
+});
+
+db.collection("test").update({
+	_id: "23231"
+}, {
+	$splicePull: {
+		shoppingList: {
+			$index: 1
+		}
 	}
 });
 

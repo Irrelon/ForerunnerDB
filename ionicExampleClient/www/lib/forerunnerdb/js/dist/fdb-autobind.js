@@ -34,6 +34,7 @@ AutoBind.extendCollection = function (Module) {
 		superUpdateIncrement = Module.prototype._updateIncrement,
 		superUpdateSpliceMove = Module.prototype._updateSpliceMove,
 		superUpdateSplicePush = Module.prototype._updateSplicePush,
+		superUpdateSplicePull = Module.prototype._updateSplicePull,
 		superUpdatePush = Module.prototype._updatePush,
 		superUpdatePull = Module.prototype._updatePull,
 		superUpdateMultiply = Module.prototype._updateMultiply,
@@ -383,6 +384,25 @@ AutoBind.extendCollection = function (Module) {
 			}
 		} else {
 			superUpdateSplicePush.apply(this, arguments);
+		}
+	};
+
+	/**
+	 * Removes an item from the passed array at the specified index.
+	 * @param {Array} arr The array to remove from.
+	 * @param {Number} index The index of the item to remove.
+	 * @param {Number} count The number of items to remove.
+	 * @private
+	 */
+	Module.prototype._updateSplicePull = function (arr, index, count) {
+		if (this._linked) {
+			if (this.debug()) {
+				console.log(this.logIdentifier() + ' Pulling from document sub-array');
+			}
+
+			window.jQuery.observable(arr).remove(index, count);
+		} else {
+			superUpdateSplicePull.apply(this, arguments);
 		}
 	};
 

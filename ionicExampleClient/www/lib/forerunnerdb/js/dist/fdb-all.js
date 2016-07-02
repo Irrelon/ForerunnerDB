@@ -2445,6 +2445,29 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							}
 							break;
 
+						case '$splicePull':
+							// Check that the target key is not undefined
+							if (doc[i] !== undefined) {
+								// Check that the target key is an array
+								if (doc[i] instanceof Array) {
+									tempIndex = update[i].$index;
+
+									if (tempIndex !== undefined) {
+
+										// Check for in bounds index
+										if (tempIndex < doc[i].length) {
+											this._updateSplicePull(doc[i], tempIndex);
+											updated = true;
+										}
+									} else {
+										throw(this.logIdentifier() + ' Cannot splicePull without a $index integer value!');
+									}
+								} else {
+									throw(this.logIdentifier() + ' Cannot splicePull from a key that is not an array! (' + i + ')');
+								}
+							}
+							break;
+
 						case '$move':
 							if (doc[i] instanceof Array) {
 								// Loop the array and find matches to our search
@@ -12469,6 +12492,18 @@ var Updating = {
 	},
 
 	/**
+	 * Removes an item from the passed array at the specified index.
+	 * @param {Array} arr The array to remove from.
+	 * @param {Number} index The index of the item to remove.
+	 * @param {Number} count The number of items to remove.
+	 * @private
+	 */
+	_updateSplicePull: function (arr, index, count) {
+		if (!count) { count = 1; }
+		arr.splice(index, count);
+	},
+
+	/**
 	 * Inserts an item at the end of an array.
 	 * @param {Array} arr The array to insert the item into.
 	 * @param {Object} doc The document to insert.
@@ -15598,7 +15633,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.825',
+	version: '1.3.829',
 	modules: {},
 	plugins: {},
 	index: {},
