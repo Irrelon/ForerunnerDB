@@ -62,6 +62,18 @@ var Updating = {
 	},
 
 	/**
+	 * Removes an item from the passed array at the specified index.
+	 * @param {Array} arr The array to remove from.
+	 * @param {Number} index The index of the item to remove.
+	 * @param {Number} count The number of items to remove.
+	 * @private
+	 */
+	_updateSplicePull: function (arr, index, count) {
+		if (!count) { count = 1; }
+		arr.splice(index, count);
+	},
+
+	/**
 	 * Inserts an item at the end of an array.
 	 * @param {Array} arr The array to insert the item into.
 	 * @param {Object} doc The document to insert.
