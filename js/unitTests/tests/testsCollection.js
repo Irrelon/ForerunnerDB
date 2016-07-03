@@ -1691,6 +1691,49 @@ QUnit.test("Collection.update() :: $splicePush array operator", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.update() :: $splicePull array operator", function () {
+	base.dbUp();
+
+	var coll = db.collection('test').truncate(),
+		result;
+
+	coll.insert({
+		_id: 1,
+		arr: [{
+			_id: 1
+		}, {
+			_id: 2
+		}, {
+			_id: 3
+		}]
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Check for correct initial array length");
+	strictEqual(result[0].arr.length, 3, "Check for correct initial array length");
+	strictEqual(result[0].arr[0]._id, 1, "Check for correct array data");
+	strictEqual(result[0].arr[1]._id, 2, "Check for correct array data");
+	strictEqual(result[0].arr[2]._id, 3, "Check for correct array data");
+
+	var result = coll.updateById(1, {
+		"$splicePull": {
+			"arr": {
+				"$index": 1
+			}
+		}
+	});
+
+	result = coll.find();
+
+	strictEqual(result.length, 1, "Check for correct initial array length");
+	strictEqual(result[0].arr.length, 2, "Check for correct initial array length");
+	strictEqual(result[0].arr[0]._id, 1, "Check for correct array data");
+	strictEqual(result[0].arr[1]._id, 3, "Check for correct array data");
+
+	base.dbDown();
+});
+
 QUnit.test("Collection.update() :: $move array operator", function () {
 	base.dbUp();
 	base.dataUp();
