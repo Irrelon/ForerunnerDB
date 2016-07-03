@@ -37,7 +37,7 @@
     "colors": "^1.1.2",
     "cors": "^2.7.1",
     "crypto-js": "^3.1.5",
-    "express": "4.x",
+    "express": "4.14.0",
     "localforage": "^1.2.10",
     "pako": "^1.0.0",
     "pem": "^1.8.1",
