@@ -1844,6 +1844,7 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [$inc](#inc)
 * [$push](#push)
 * [$splicePush](#splicepush)
+* [$splicePull](#splicepull)
 * [$addToSet](#addtoset)
 * [$pull](#pull)
 * [$pop](#pop)
