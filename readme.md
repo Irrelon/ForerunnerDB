@@ -26,6 +26,7 @@ ready and battle tested in real-world applications.
 
 ### Standout Features
 
+* [AngularJS and Ionic Support](#angularjs-and-ionic-support) - Optional AngularJS module provides ForerunnerDB as an angular service.
 * [Views](#views) - Virtual collections that are built from existing collections and limited by live queries.
 * [Joins](#joins) - Query with joins across multiple collections and views.
 * [Sub-Queries](#subqueries-and-subquery-syntax) - ForerunnerDB supports sub-queries across collections and views.
@@ -34,7 +35,6 @@ ready and battle tested in real-world applications.
 * [Persistent Storage (*Browser & Node.js*)](#data-persistence-save-and-load-between-pages) - Optional persist module to save your data and load it back at a later time, great for multi-page apps.
 * [Compression & Encryption](#data-compression-and-encryption) - Support for compressing and encrypting your persisted data.
 * [Built-In REST Server (*Node.js*)](#forerunnerdb-built-in-json-rest-api-server) - Optional REST server with powerful access control, remote procedures, access collections, views etc via REST interface. Rapid prototyping is made very easy with ForerunnerDB server-side.
-* [AngularJS and Ionic Support](#angularjs-and-ionic-support) - Optional AngularJS module provides ForerunnerDB as an angular service.
 
 ## What is ForerunnerDB
 ForerunnerDB is a NoSQL JavaScript JSON database with a query language based on
