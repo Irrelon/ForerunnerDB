@@ -5299,6 +5299,12 @@ operations in the normal way.
 When changes are made to the "myCollection" collection data, they will be
 automatically reflected in the angular view.
 
+If you bind a ForerunnerDB-based data variable to an ng-model attribute you
+will have two-way data binding as ForerunnerDB will be automatically updated
+when changes are made on the AngularJS view and the view will be updated
+when you make changes to ForerunnerDB. To control data binding see
+[Switching Off Two-Way Data Binding](#switching-off-two-way-data-binding)
+
 ## Binding From a Collection to a Single Scope Object
 If you wish to only bind a single document inside a collection or view to
 a single object in AngularJS you can do so by passing the $single option:
@@ -5318,7 +5324,7 @@ On the AngularJS view the myData variable is now an object instead of an array:
 <div ng-if="myData && myData.myFlag === true">Hello!</div>
 ```
 
-If you do this from a collection it is equivelant to running a findOne() on the
+If you do this from a collection it is equivalent to running a findOne() on the
 collection so you will get the first document in the collection.
 
 If you do this on a view you can limit the view to a single document via a query
