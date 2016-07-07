@@ -2466,7 +2466,8 @@ Collection.prototype._isPositionalKey = function (key) {
 /**
  * Removes any documents from the collection that match the search
  * query key/values.
- * @param {Object} query The query object.
+ * @param {Object=} query The query identifying the documents to remove. If no
+ * query object is passed, all documents will be removed from the collection.
  * @param {Object=} options An options object.
  * @param {Function=} callback A callback method.
  * @returns {Array} An array of the documents that were removed.
@@ -11675,7 +11676,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.835',
+	version: '1.3.836',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -12061,7 +12062,7 @@ View.prototype.init = function (name, query, options) {
  * Update packets are especially complex to handle because an update
  * on the underlying source data could translate into an insert,
  * update or remove call on the view. Take a scenario where the view's
- * query limits the data see from the source. If the source data is
+ * query limits the data seen from the source. If the source data is
  * updated and the data now falls inside the view's query limitations
  * the data is technically now an insert on the view, not an update.
  * The same is true in reverse where the update becomes a remove. If

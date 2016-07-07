@@ -287,6 +287,9 @@ Angular.extendOverview = function (Module) {
 	};
 };
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Now execute the code that will extend the relevant classes with angular functionality ///
+/////////////////////////////////////////////////////////////////////////////////////////////
 // Define modules that we wish to work on
 var modules = ['Collection', 'View', 'Overview', 'Document'],
 	moduleIndex,
