@@ -5358,6 +5358,23 @@ the scope is removed from memory, ForerunnerDB will also remove all binding
 to it. This means that angular / ionic integration is automatic and does not
 require manual cleanup.
 
+## Performance and Large Collections
+As per the AngularJS documentation, you can significantly increased performance
+of large collections when you provide AngularJS with a unique ID with which to
+track items in an ng-repeat. Since documents in a ForerunnerDB collection will
+always have a unique primary key id you can tell AngularJS to use this.
+
+Assuming your collection's primary key is "_id" you can tell AngularJS to track
+against this id in an ng-repeat attribute like this:
+
+```html
+<div ng-repeat="model in collection track by model._id">
+  {{model.name}}
+</div>
+```
+
+You can read more about this in [AngularJS's documentation on ng-repeat](https://docs.angularjs.org/api/ng/directive/ngRepeat).
+
 # Ionic Example App
 We've put together a very basic demo app that showcases ForerunnerDB's client-side
 usage in an Ionic app (AngularJS + Apache Cordova).
