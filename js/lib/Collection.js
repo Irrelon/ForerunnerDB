@@ -1457,7 +1457,8 @@ Collection.prototype._isPositionalKey = function (key) {
 /**
  * Removes any documents from the collection that match the search
  * query key/values.
- * @param {Object} query The query object.
+ * @param {Object=} query The query identifying the documents to remove. If no
+ * query object is passed, all documents will be removed from the collection.
  * @param {Object=} options An options object.
  * @param {Function=} callback A callback method.
  * @returns {Array} An array of the documents that were removed.
