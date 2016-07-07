@@ -4106,7 +4106,7 @@ contain all the main CRUD functionality that a collection does. Inserting or upd
 a view will alter the underlying collection.
 
 For a detailed insight into how data propagates from an underlying data source to a view
-see the section on (View Data Propagation and Synchronisation)[#notes_on_view_data_propagation_and_synchronisation].
+see the section on [View Data Propagation and Synchronisation](#notes_on_view_data_propagation_and_synchronisation).
 
 #### Instantiating a View
 Views are instantiated the same way collections are:
