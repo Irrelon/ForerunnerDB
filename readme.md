@@ -4789,10 +4789,10 @@ ForerunnerDB's chain reactor system allows class instances to be linked together
 CRUD and other events from other instances, apply processing to them and then pass them on
 down the chain reactor graph.
 
-You can think of the chain reactor as a series of connected nodes that each as an input,
-process and output. The input and outputs of a node are usually collection and view instances
+You can think of the chain reactor as a series of connected nodes that each as an **input**,
+**process** and **output**. The **input** and **outputs** of a node are usually collection and view instances
 although they can be any instance that implements the chain reactor mixin methods available
-in the Mixin.ChainReactor.js file. The process is a custom method that determines how the
+in the Mixin.ChainReactor.js file. The **process** is a custom method that determines how the
 chain reactor "packet" data is handled. In the case of a View instance, a chain reactor node
 is set up between the *data source* and the view itself.
 
@@ -4813,7 +4813,7 @@ before resolving queries and transforms in the next steps.
 2. Check if there is an *active query*. Queries are run against the source data after any
 *active joins* have been executed against the data. This allows an *active query* to operate
 on data that would only exist after an *active join* has been executed. If the data coming
-from the *data source* does not match the *active query* parameters then it added to a
+from the *data source* does not match the *active query* parameters then it is added to a
 *removal array* to be processed in a following step. If the data *does* match the *active query*
 parameters then it is added to an *upsert array*.
 
