@@ -75,7 +75,7 @@ View.prototype.init = function (name, query, options) {
  * Update packets are especially complex to handle because an update
  * on the underlying source data could translate into an insert,
  * update or remove call on the view. Take a scenario where the view's
- * query limits the data see from the source. If the source data is
+ * query limits the data seen from the source. If the source data is
  * updated and the data now falls inside the view's query limitations
  * the data is technically now an insert on the view, not an update.
  * The same is true in reverse where the update becomes a remove. If
