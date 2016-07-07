@@ -236,4 +236,44 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 		base.dbDown();
 	});
+
+	/*QUnit.test('View Queried :: CRUD :: $groupBy in view and collection post-view-insert', function () {
+		"use strict";
+		base.dbUp();
+
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			results;
+
+		view.from(coll)
+			.query({}, {
+				$groupBy: {
+					category: 1
+				}
+			});
+
+		results = view.findOne();
+
+		strictEqual(Object.keys(results).length, 0, 'Object key count before insert is correct');
+
+		coll.insert([{
+			moo: true,
+			category: 'Cows'
+		}, {
+			moo: false,
+			category: 'Cows'
+		}, {
+			baa: true,
+			category: 'Sheep'
+		}]);
+
+		results = view.findOne();
+
+		debugger;
+
+		strictEqual(results.length, 1, 'Results count after insert is correct');
+		strictEqual(results[0].moo, true, 'Results data is correct');
+
+		base.dbDown();
+	});*/
 });
