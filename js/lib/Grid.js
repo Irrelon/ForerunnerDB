@@ -251,6 +251,9 @@ Grid.prototype._sortGridClick = function (e) {
 	}
 
 	Shared.mixin(sortObj, this._options.$orderBy);
+	
+	this.emit('beforeChange', 'sort');
+	this.emit('beforeSort', sortObj);
 
 	this._from.orderBy(sortObj);
 	this.emit('sort', sortObj);
@@ -283,11 +286,6 @@ Grid.prototype.refresh = function () {
 			if (self._from.orderBy) {
 				// Remove listeners
 				elem.off('click', '[data-grid-sort]', sortClickListener);
-			}
-
-			if (self._from.query) {
-				// Remove listeners
-				elem.off('click', '[data-grid-filter]', sortClickListener);
 			}
 
 			// Set wrap name if none is provided
