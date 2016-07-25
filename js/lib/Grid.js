@@ -513,9 +513,13 @@ Grid.prototype.refresh = function () {
 								delete queryObj[filterField];
 							}
 						}
+						
+						self.emit('beforeChange', 'filter');
+						self.emit('beforeFilter', queryObj);
 
 						// Set the view query
 						self._from.queryData(queryObj);
+						
 						if (self._from.pageFirst) {
 							self._from.pageFirst();
 						}
