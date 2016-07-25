@@ -7485,6 +7485,9 @@ Grid.prototype._sortGridClick = function (e) {
 	}
 
 	Shared.mixin(sortObj, this._options.$orderBy);
+	
+	this.emit('beforeChange', 'sort');
+	this.emit('beforeSort', sortObj);
 
 	this._from.orderBy(sortObj);
 	this.emit('sort', sortObj);
@@ -7517,11 +7520,6 @@ Grid.prototype.refresh = function () {
 			if (self._from.orderBy) {
 				// Remove listeners
 				elem.off('click', '[data-grid-sort]', sortClickListener);
-			}
-
-			if (self._from.query) {
-				// Remove listeners
-				elem.off('click', '[data-grid-filter]', sortClickListener);
 			}
 
 			// Set wrap name if none is provided
@@ -7727,6 +7725,11 @@ Grid.prototype.refresh = function () {
 							};
 
 							fieldInArr = queryObj[filterField].$in;
+							
+							// If no $in array exists for this field, generate one now
+							if (!fieldInArr) {
+								fieldInArr = queryObj[filterField].$in = [];
+							}
 
 							for (i = 0; i < fieldInArr.length; i++) {
 								if (fieldInArr[i] === fieldValue) {
@@ -7749,9 +7752,13 @@ Grid.prototype.refresh = function () {
 								delete queryObj[filterField];
 							}
 						}
+						
+						self.emit('beforeChange', 'filter');
+						self.emit('beforeFilter', queryObj);
 
 						// Set the view query
 						self._from.queryData(queryObj);
+						
 						if (self._from.pageFirst) {
 							self._from.pageFirst();
 						}
@@ -15634,7 +15641,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.836',
+	version: '1.3.840',
 	modules: {},
 	plugins: {},
 	index: {},
