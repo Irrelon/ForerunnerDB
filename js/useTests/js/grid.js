@@ -2,16 +2,19 @@ window.fdba = new ForerunnerDB();
 window.db = window.fdba.db('gridTest');
 
 var coll = window.db.collection('gridData'),
-	view = window.db.view('gridData');
+	view = window.db.view('gridData'),
+	grid;
 
 view.from(coll);
+
 view.queryData({
 	firstName: /A./
 }, {
 	$page: 0,
 	$limit: 3
 });
-view.grid('#gridContainer', '#gridTable', {
+
+grid = view.grid('#gridContainer', '#gridTable', {
 	$orderBy: {
 		_id: 1
 	}
@@ -53,3 +56,16 @@ coll.setData([{
 	lastName: 'Frogsbottom',
 	age: 9
 }]);
+
+// Hook events
+grid.on('beforeChange', function () {
+	console.log('beforeChange');
+});
+
+grid.on('beforeSort', function () {
+	console.log('beforeSort');
+});
+
+grid.on('beforeFilter', function () {
+	console.log('beforeFilter');
+});

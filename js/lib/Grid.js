@@ -490,7 +490,12 @@ Grid.prototype.refresh = function () {
 								$in: []
 							};
 
-							fieldInArr = queryObj[filterField].$in || [];
+							fieldInArr = queryObj[filterField].$in;
+							
+							// If no $in array exists for this field, generate one now
+							if (!fieldInArr) {
+								fieldInArr = queryObj[filterField].$in = [];
+							}
 
 							for (i = 0; i < fieldInArr.length; i++) {
 								if (fieldInArr[i] === fieldValue) {
