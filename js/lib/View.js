@@ -961,7 +961,7 @@ View.prototype.queryData = function (query, options, refresh) {
 		return this;
 	}
 
-	return this._querySettings;
+	return this.decouple(this._querySettings);
 };
 
 /**
