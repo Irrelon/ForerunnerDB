@@ -11678,7 +11678,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.843',
+	version: '1.3.844',
 	modules: {},
 	plugins: {},
 	index: {},
