@@ -1539,8 +1539,10 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 				if (self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_BEFORE, referencedDoc, newDoc) !== false) {
 					// No triggers complained so let's execute the replacement of the existing
 					// object with the new one
+					self._removeFromIndexes(referencedDoc);
 					result = self.updateObject(referencedDoc, newDoc, triggerOperation.query, triggerOperation.options, '');
-
+					self._insertIntoIndexes(referencedDoc);
+					
 					// NOTE: If for some reason we would only like to fire this event if changes are actually going
 					// to occur on the object from the proposed update then we can add "result &&" to the if
 					self.processTrigger(triggerOperation, self.TYPE_UPDATE, self.PHASE_AFTER, oldDoc, newDoc);
@@ -1551,11 +1553,10 @@ Collection.prototype._handleUpdate = function (query, update, options, callback)
 			} else {
 				// No triggers complained so let's execute the replacement of the existing
 				// object with the new one
+				self._removeFromIndexes(referencedDoc);
 				result = self.updateObject(referencedDoc, update, query, options, '');
+				self._insertIntoIndexes(referencedDoc);
 			}
-
-			// Inform indexes of the change
-			self._updateIndexes(oldDoc, referencedDoc);
 
 			return result;
 		};
@@ -2694,7 +2695,8 @@ Collection.prototype._removeFromIndexes = function (doc) {
 
 /**
  * Updates collection index data for the passed document.
- * @param {Object} oldDoc The old document as it was before the update.
+ * @param {Object} oldDoc The old document as it was before the update (must be
+ * actual reference to original document).
  * @param {Object} newDoc The document as it now is after the update.
  * @private
  */
@@ -12455,7 +12457,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.842',
+	version: '1.3.843',
 	modules: {},
 	plugins: {},
 	index: {},
