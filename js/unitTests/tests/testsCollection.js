@@ -3598,6 +3598,31 @@ QUnit.test("Collection.find() :: $groupBy clause single field", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: Test index with insert, remove and then find", function () {
+	base.dbUp();
+	
+	var items = db.collection('items'),
+		redItems,
+		newRedItems;
+	
+	items.ensureIndex({color: 1});
+	
+	items.insert([
+		{_id: 1, name: 'Banana', color: 'yellow'},
+		{_id: 2, name: 'Apple', color: 'red'},
+		{_id: 3, name: 'Strawberry', color: 'red'}
+	]);
+	
+	redItems = items.find({color: 'red'});
+	strictEqual(redItems.length, 2, 'There should be 2 red items');
+	
+	items.updateById(2, {color: 'green'});
+	
+	newRedItems = items.find({color: 'red'});
+	
+	strictEqual(newRedItems.length, 1, 'There should be only 1 red item after update');
+});
+
 
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
