@@ -3623,6 +3623,31 @@ QUnit.test("Collection.find() :: Test index with insert, remove and then find", 
 	strictEqual(newRedItems.length, 1, 'There should be only 1 red item after update');
 });
 
+QUnit.test("Collection.find() :: Test index with remove then find", function () {
+	base.dbUp();
+	
+	var items = db.collection('items'),
+		redItems,
+		newRedItems;
+	
+	items.ensureIndex({color: 1});
+	
+	items.insert([
+		{ _id: 1, name: 'Banana', color: 'yellow' },
+		{ _id: 2, name: 'Apple', color: 'red' },
+		{ _id: 3, name: 'Strawberry', color: 'red' }
+	]);
+	
+	redItems = items.find();
+	strictEqual(redItems.length, 3, 'There should be 3 items');
+	
+	items.remove({color: 'red'});
+	
+	newRedItems = items.find();
+	
+	strictEqual(newRedItems.length, 1, 'There should be only 1 item after delete');
+});
+
 
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
