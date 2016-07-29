@@ -3019,7 +3019,7 @@ Collection.prototype._find = function (query, options) {
 
 			// Get the data from the index
 			op.time('indexLookup');
-			resultArr = analysis.indexMatch[0].lookup || [];
+			resultArr = [].concat(analysis.indexMatch[0].lookup) || [];
 			op.time('indexLookup');
 
 			// Check if the index coverage is all keys, if not we still need to table scan it
@@ -3761,7 +3761,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 			if (pkQueryType === 'string' || pkQueryType === 'number' || query[this._primaryKey] instanceof Array) {
 				// Return item via primary key possible
 				op.time('checkIndexMatch: Primary Key');
-				lookupResult = this._primaryIndex.lookup(query, options, op);
+				lookupResult = [].concat(this._primaryIndex.lookup(query, options, op));
 
 				analysis.indexMatch.push({
 					lookup: lookupResult,
@@ -3787,7 +3787,7 @@ Collection.prototype._analyseQuery = function (query, options, op) {
 
 				if (indexMatchData.score > 0) {
 					// This index can be used, store it
-					indexLookup = indexRef.lookup(query, options, op);
+					indexLookup = [].concat(indexRef.lookup(query, options, op));
 
 					analysis.indexMatch.push({
 						lookup: indexLookup,
@@ -11052,7 +11052,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.844',
+	version: '1.3.847',
 	modules: {},
 	plugins: {},
 	index: {},

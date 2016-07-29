@@ -3601,7 +3601,7 @@ QUnit.test("Collection.find() :: $groupBy clause single field", function () {
 QUnit.test("Collection.find() :: Test index with insert, remove and then find", function () {
 	base.dbUp();
 	
-	var items = db.collection('items'),
+	var items = db.collection('items').truncate(),
 		redItems,
 		newRedItems;
 	
@@ -3621,12 +3621,14 @@ QUnit.test("Collection.find() :: Test index with insert, remove and then find", 
 	newRedItems = items.find({color: 'red'});
 	
 	strictEqual(newRedItems.length, 1, 'There should be only 1 red item after update');
+	
+	base.dbDown();
 });
 
 QUnit.test("Collection.find() :: Test index with remove then find", function () {
 	base.dbUp();
 	
-	var items = db.collection('items'),
+	var items = db.collection('items').truncate(),
 		redItems,
 		newRedItems;
 	
@@ -3646,6 +3648,8 @@ QUnit.test("Collection.find() :: Test index with remove then find", function () 
 	newRedItems = items.find();
 	
 	strictEqual(newRedItems.length, 1, 'There should be only 1 item after delete');
+	
+	base.dbDown();
 });
 
 
