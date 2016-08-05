@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.848
+## Version 1.3.853
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1854,6 +1854,9 @@ This will update the document with the _id field of 1 to a new price of 180.
 * [Array Positional in Updates (.$)](#array-positional-in-updates)
 
 #### $replace
+> PLEASE NOTE: $replace can only be used on the top-level. Nested $replace operators
+ are not currently supported and may cause unexpected behaviour.
+
 The $replace operator will take the passed object and overwrite the target document
 with the object's keys and values. If a key exists in the existing document but
 not in the passed object, ForerunnerDB will remove the key from the document.
