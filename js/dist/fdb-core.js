@@ -1481,6 +1481,18 @@ Collection.prototype.update = function (query, update, options, callback) {
 		// Decouple the update data
 		update = this.decouple(update);
 	}
+	
+	// Detect $replace operations and set flag
+	if (update.$replace) {
+		// Make sure we have an options object
+		options = options || {};
+		
+		// Set the $replace flag in the options object
+		options.$replace = true;
+		
+		// Move the replacement object out into the main update object
+		update = update.$replace;
+	}
 
 	// Handle transform
 	update = this.transformIn(update);
@@ -1697,6 +1709,39 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		sourceIsArray,
 		updateIsArray,
 		i;
+	
+	// Check if we have a $replace flag in the options object
+	if (options && options.$replace === true) {
+		operation = true;
+		
+		replaceObj = update;
+		pk = this.primaryKey();
+		
+		// Loop the existing item properties and compare with
+		// the replacement (never remove primary key)
+		for (tempKey in doc) {
+			if (doc.hasOwnProperty(tempKey) && tempKey !== pk) {
+				if (replaceObj[tempKey] === undefined) {
+					// The new document doesn't have this field, remove it from the doc
+					this._updateUnset(doc, tempKey);
+					updated = true;
+				}
+			}
+		}
+		
+		// Loop the new item props and update the doc
+		for (tempKey in replaceObj) {
+			if (replaceObj.hasOwnProperty(tempKey) && tempKey !== pk) {
+				this._updateOverwrite(doc, tempKey, replaceObj[tempKey]);
+				updated = true;
+			}
+		}
+		
+		// Early exit
+		return updated;
+	}
+	
+	// DEVS PLEASE NOTE -- Early exit could have occurred above and code below will never be reached - Rob Evans - CEO - 05/08/2016
 
 	// Loop each key in the update object
 	for (i in update) {
@@ -1705,7 +1750,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 			operation = false;
 
 			// Check if the property starts with a dollar (function)
-			if (i.substr(0, 1) === '$') {
+			if (!operation && i.substr(0, 1) === '$') {
 				// Check for commands
 				switch (i) {
 					case '$key':
@@ -1770,7 +1815,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 			}
 
 			// Check if the key has a .$ at the end, denoting an array lookup
-			if (this._isPositionalKey(i)) {
+			if (!operation && this._isPositionalKey(i)) {
 				operation = true;
 
 				// Modify i to be the name of the field
@@ -11052,7 +11097,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.848',
+	version: '1.3.854',
 	modules: {},
 	plugins: {},
 	index: {},
