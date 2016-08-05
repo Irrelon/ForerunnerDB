@@ -738,6 +738,15 @@ Collection.prototype.update = function (query, update, options, callback) {
 		// Decouple the update data
 		update = this.decouple(update);
 	}
+	
+	// Detect $replace operations and set flag
+	/*if (update.$replace) {
+		// Set the $replace flag in the options object
+		options.$replace = true;
+		
+		// Move the replacement object out into the main update object
+		update = update.$replace;
+	}*/
 
 	// Handle transform
 	update = this.transformIn(update);
@@ -960,6 +969,11 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 		if (update.hasOwnProperty(i)) {
 			// Reset operation flag
 			operation = false;
+			
+			// Check if we have a $replace flag in the options object
+			/*if (options.$replace === true) {
+				
+			}*/
 
 			// Check if the property starts with a dollar (function)
 			if (i.substr(0, 1) === '$') {
@@ -1027,7 +1041,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 			}
 
 			// Check if the key has a .$ at the end, denoting an array lookup
-			if (this._isPositionalKey(i)) {
+			if (!operation && this._isPositionalKey(i)) {
 				operation = true;
 
 				// Modify i to be the name of the field
