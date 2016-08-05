@@ -3652,6 +3652,104 @@ QUnit.test("Collection.find() :: Test index with remove then find", function () 
 	base.dbDown();
 });
 
+QUnit.test("Collection.update() :: $replace with active triggers", function () {
+	"use strict";
+	base.dbUp();
+	
+	var coll = db.collection('test').truncate(),
+		result;
+	
+	coll.addTrigger('myTrigger', db.TYPE_UPDATE , db.PHASE_AFTER, function (operation, oldDoc, newDoc) {
+		// Trigger event on collection update
+	});
+	
+	coll.insert({
+		_id: '3',
+		name: 'Kat',
+		age: 12,
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}]
+	});
+	
+	result = coll.find();
+	
+	strictEqual(result[0].arr[0].val, 1, 'Data exists as expected before update');
+	
+	coll.update({}, {
+		$replace: {
+			arr: {moo: 1},
+			newData: true
+		}
+	});
+	
+	result = coll.find();
+	
+	strictEqual(result[0]._id, '3', 'ID exists as expected after update');
+	strictEqual(result[0].arr.moo, 1, 'New data exists as expected after update');
+	strictEqual(typeof result[0].arr, 'object', 'New data exists as expected after update');
+	strictEqual(result[0].arr instanceof Array, false, 'New data exists as expected after update');
+	strictEqual(result[0].newData, true, 'New data exists as expected after update');
+	strictEqual(result[0].name, undefined, 'Old data does not exist as expected after update');
+	strictEqual(result[0].age, undefined, 'Old data does not exist as expected after update');
+	strictEqual(result[0].lookup, undefined, 'Old data does not exist as expected after update');
+	
+	base.dbDown();
+});
+
+QUnit.test("Collection.update() :: $replace with before trigger that modifies final object", function () {
+	"use strict";
+	base.dbUp();
+	
+	var coll = db.collection('test').truncate(),
+		result;
+	
+	coll.addTrigger('myTrigger', db.TYPE_UPDATE , db.PHASE_BEFORE, function (operation, oldDoc, newDoc) {
+		// Trigger event on collection update
+		newDoc.newNewData = true;
+		delete newDoc.newData;
+	});
+	
+	coll.insert({
+		_id: '3',
+		name: 'Kat',
+		age: 12,
+		lookup: false,
+		arr: [{
+			_id: 'zke',
+			val: 1
+		}]
+	});
+	
+	result = coll.find();
+	
+	strictEqual(result[0].arr[0].val, 1, 'Data exists as expected before update');
+	
+	coll.update({}, {
+		$replace: {
+			arr: {
+				moo: 1
+			},
+			newData: true
+		}
+	});
+	
+	result = coll.find();
+	
+	strictEqual(result[0]._id, '3', 'ID exists as expected after update');
+	strictEqual(result[0].arr.moo, 1, 'New data arr property is correct length');
+	strictEqual(typeof result[0].arr, 'object', 'New data arr is typeof object');
+	strictEqual(result[0].arr instanceof Array, false, 'New data arr is an instance of an array');
+	strictEqual(result[0].newData, undefined, 'New data newData property is undefined');
+	strictEqual(result[0].newNewData, true, 'New data newNewData property is true');
+	strictEqual(result[0].name, undefined, 'Old data name property does not exist as expected after update');
+	strictEqual(result[0].age, undefined, 'Old data age property does not exist as expected after update');
+	strictEqual(result[0].lookup, undefined, 'Old data lookup property does not exist as expected after update');
+	
+	base.dbDown();
+});
 
 /*QUnit.test("Collection() :: $query in query", function () {
 	base.dbUp();
