@@ -619,11 +619,14 @@ Collection.prototype.load = function (callback) {
 								self.metaData(data);
 							}
 						}
-
+						
+						self.deferEmit('load', tableStats, metaStats);
 						if (callback) { callback(err, tableStats, metaStats); }
 					});
 				} else {
 					self._asyncComplete('load');
+					
+					self.deferEmit('load', tableStats);
 					if (callback) { callback(err); }
 				}
 			});

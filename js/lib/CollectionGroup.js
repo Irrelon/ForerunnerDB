@@ -327,7 +327,7 @@ Db.prototype.collectionGroup = function (name) {
 
 		this._collectionGroup[name] = new CollectionGroup(name).db(this);
 
-		self.emit('create', self._collectionGroup[name], 'collectionGroup', name);
+		self.deferEmit('create', self._collectionGroup[name], 'collectionGroup', name);
 
 		return this._collectionGroup[name];
 	} else {

@@ -259,7 +259,7 @@ Db.prototype.overview = function (name) {
 		this._overview = this._overview || {};
 		this._overview[name] = new Overview(name).db(this);
 
-		self.emit('create', self._overview[name], 'overview', name);
+		self.deferEmit('create', self._overview[name], 'overview', name);
 
 		return this._overview[name];
 	} else {

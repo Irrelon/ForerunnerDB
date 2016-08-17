@@ -1532,7 +1532,7 @@ Db.prototype.view = function (name) {
 
 	this._view[name] = new View(name).db(this);
 
-	self.emit('create', self._view[name], 'view', name);
+	self.deferEmit('create', self._view[name], 'view', name);
 
 	return this._view[name];
 };

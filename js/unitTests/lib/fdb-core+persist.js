@@ -4967,7 +4967,7 @@ Db.prototype.collectionGroup = function (name) {
 
 		this._collectionGroup[name] = new CollectionGroup(name).db(this);
 
-		self.emit('create', self._collectionGroup[name], 'collectionGroup', name);
+		self.deferEmit('create', self._collectionGroup[name], 'collectionGroup', name);
 
 		return this._collectionGroup[name];
 	} else {
@@ -11845,13 +11845,14 @@ Collection.prototype.load = function (callback) {
 									}
 								}
 								
-								self.emit('load', tableStats, metaStats);
+								self.deferEmit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
 						});
 						//self.setData(data);
 					});
 				} else {
+					self.deferEmit('load', tableStats);
 					if (callback) { callback(err); }
 				}
 			});
@@ -12504,7 +12505,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.863',
+	version: '1.3.867',
 	modules: {},
 	plugins: {},
 	index: {},

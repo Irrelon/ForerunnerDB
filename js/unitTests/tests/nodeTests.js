@@ -3,6 +3,9 @@
 var TB = require('testbear'),
 	ForerunnerDB = require('../../builds/nodecore');
 
+//TB.config.noCatch = true;
+TB.timeout = 10000;
+
 TB.test('Core', 'Instantiate ForerunnerDB', function (callback) {
 	var fdb = new ForerunnerDB();
 
@@ -348,6 +351,22 @@ TB.test('Condition', 'Test IFTTT condition functionality', function (finishTest)
 	condition.start(undefined);
 
 	coll.update({_id: 'SCTY'}, {val: 25});
+});
+
+TB.test('Persist', 'Check persist.auto()', function (finishTest) {
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('testPersistDb'),
+		coll;
+	
+	db.persist.dataDir('./testData');
+	db.persist.auto(true);
+	
+	coll = db.collection('testPersist');
+	
+	coll.on('load', function () {
+		TB.ok(true, 'Collection load event fired');
+		finishTest();
+	});
 });
 
 // This works but haven't written any test (strictEquals) stuff for it
