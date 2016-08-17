@@ -4822,7 +4822,7 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 				self.emit('change', self._collection[name], 'collection', name);
 			});
 
-			self.emit('create', self._collection[name], 'collection', name);
+			self.deferEmit('create', self._collection[name], 'collection', name);
 
 			return this._collection[name];
 		} else {
@@ -5858,6 +5858,7 @@ Shared.mixin(Db.prototype, 'Mixin.Common');
 Shared.mixin(Db.prototype, 'Mixin.ChainReactor');
 Shared.mixin(Db.prototype, 'Mixin.Constants');
 Shared.mixin(Db.prototype, 'Mixin.Tags');
+Shared.mixin(Db.prototype, 'Mixin.Events');
 
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
@@ -5957,13 +5958,13 @@ Db.prototype.arrayToCollection = function (arr) {
  * the event is fired.
  * @returns {*}
  */
-Db.prototype.on = function(event, listener) {
+/*Db.prototype.on = function(event, listener) {
 	this._listeners = this._listeners || {};
 	this._listeners[event] = this._listeners[event] || [];
 	this._listeners[event].push(listener);
 
 	return this;
-};
+};*/
 
 /**
  * De-registers an event listener from an event name.
@@ -5972,7 +5973,7 @@ Db.prototype.on = function(event, listener) {
  * registering the event listener.
  * @returns {*}
  */
-Db.prototype.off = function(event, listener) {
+/*Db.prototype.off = function(event, listener) {
 	if (event in this._listeners) {
 		var arr = this._listeners[event],
 			index = arr.indexOf(listener);
@@ -5983,7 +5984,7 @@ Db.prototype.off = function(event, listener) {
 	}
 
 	return this;
-};
+};*/
 
 /**
  * Emits an event by name with the given data.
@@ -5991,7 +5992,7 @@ Db.prototype.off = function(event, listener) {
  * @param {*=} data The data to emit with the event.
  * @returns {*}
  */
-Db.prototype.emit = function(event, data) {
+/*Db.prototype.emit = function(event, data) {
 	this._listeners = this._listeners || {};
 
 	if (event in this._listeners) {
@@ -6005,7 +6006,7 @@ Db.prototype.emit = function(event, data) {
 	}
 
 	return this;
-};
+};*/
 
 Db.prototype.peek = function (search) {
 	var i,
@@ -11723,7 +11724,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.858',
+	version: '1.3.863',
 	modules: {},
 	plugins: {},
 	index: {},
