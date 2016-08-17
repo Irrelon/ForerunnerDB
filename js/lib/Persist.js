@@ -599,7 +599,8 @@ Collection.prototype.load = function (callback) {
 										self.metaData(data);
 									}
 								}
-
+								
+								self.emit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
 						});
