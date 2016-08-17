@@ -362,6 +362,75 @@ ForerunnerDB.moduleLoaded('View', function () {
 			start();
 		}, 1);
 	});
+	
+	QUnit.test("Collection.update() to view :: $replace in update propagates to view correctly", function () {
+		"use strict";
+		base.dbUp();
+		
+		var coll = db.collection('test').truncate(),
+			view = db.view('test'),
+			result1,
+			result2;
+		
+		coll.addTrigger('myTrigger', db.TYPE_UPDATE , db.PHASE_BEFORE, function (operation, oldDoc, newDoc) {
+			// Trigger event on collection update
+			newDoc.newNewData = true;
+			delete newDoc.newData;
+		});
+		
+		view.from(coll);
+		
+		coll.insert({
+			_id: '3',
+			name: 'Kat',
+			age: 12,
+			lookup: false,
+			arr: [{
+				_id: 'zke',
+				val: 1
+			}]
+		});
+		
+		result1 = coll.find();
+		result2 = view.find();
+		
+		strictEqual(result1[0].arr[0].val, 1, 'Collection data exists as expected before update');
+		strictEqual(result2[0].arr[0].val, 1, 'View data exists as expected before update');
+		debugger;
+		coll.update({}, {
+			$replace: {
+				arr: {
+					moo: 1
+				},
+				newData: true
+			}
+		});
+		
+		result1 = coll.find();
+		result2 = view.find();
+		
+		strictEqual(result1[0]._id, '3', 'ID exists as expected after update');
+		strictEqual(result1[0].arr.moo, 1, 'New data arr property is correct length');
+		strictEqual(typeof result1[0].arr, 'object', 'New data arr is typeof object');
+		strictEqual(result1[0].arr instanceof Array, false, 'New data arr is an instance of an array');
+		strictEqual(result1[0].newData, undefined, 'New data newData property is undefined');
+		strictEqual(result1[0].newNewData, true, 'New data newNewData property is true');
+		strictEqual(result1[0].name, undefined, 'Old data name property does not exist as expected after update');
+		strictEqual(result1[0].age, undefined, 'Old data age property does not exist as expected after update');
+		strictEqual(result1[0].lookup, undefined, 'Old data lookup property does not exist as expected after update');
+		
+		strictEqual(result2[0]._id, '3', 'ID exists as expected after update');
+		strictEqual(result2[0].arr.moo, 1, 'New data arr property is correct length');
+		strictEqual(typeof result2[0].arr, 'object', 'New data arr is typeof object');
+		strictEqual(result2[0].arr instanceof Array, false, 'New data arr is an instance of an array');
+		strictEqual(result2[0].newData, undefined, 'New data newData property is undefined');
+		strictEqual(result2[0].newNewData, true, 'New data newNewData property is true');
+		strictEqual(result2[0].name, undefined, 'Old data name property does not exist as expected after update');
+		strictEqual(result2[0].age, undefined, 'Old data age property does not exist as expected after update');
+		strictEqual(result2[0].lookup, undefined, 'Old data lookup property does not exist as expected after update');
+		
+		base.dbDown();
+	});
 
 	/*QUnit.test('View.from() :: View from a view from a collection', function () {
 		"use strict";
