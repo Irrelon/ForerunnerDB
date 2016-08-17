@@ -4,7 +4,7 @@
   "description": "A NoSQL document store database for browsers and Node.js.",
   "version": "1.3.858",
   "keywords": [
-	"irrelon",
+    "irrelon",
     "forerunnerdb",
     "forerunner",
     "database",
@@ -74,7 +74,7 @@
     "grunt-umd": "^2.3.5",
     "qunit": "^0.9.0",
     "stringify": "^5.1.0",
-    "testbear": "^1.0.25"
+    "testbear": "^1.0.28"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",
