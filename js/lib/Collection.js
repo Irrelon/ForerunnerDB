@@ -3813,7 +3813,7 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 				self.emit('change', self._collection[name], 'collection', name);
 			});
 
-			self.emit('create', self._collection[name], 'collection', name);
+			self.deferEmit('create', self._collection[name], 'collection', name);
 
 			return this._collection[name];
 		} else {
