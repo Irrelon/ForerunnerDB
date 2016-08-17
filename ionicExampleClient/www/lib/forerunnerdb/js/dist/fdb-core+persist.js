@@ -11843,7 +11843,8 @@ Collection.prototype.load = function (callback) {
 										self.metaData(data);
 									}
 								}
-
+								
+								self.emit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
 						});
@@ -12502,7 +12503,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.855',
+	version: '1.3.858',
 	modules: {},
 	plugins: {},
 	index: {},
