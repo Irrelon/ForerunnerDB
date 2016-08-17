@@ -600,13 +600,14 @@ Collection.prototype.load = function (callback) {
 									}
 								}
 								
-								self.emit('load', tableStats, metaStats);
+								self.deferEmit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
 						});
 						//self.setData(data);
 					});
 				} else {
+					self.deferEmit('load', tableStats);
 					if (callback) { callback(err); }
 				}
 			});

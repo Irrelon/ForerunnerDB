@@ -80,7 +80,7 @@ Db.prototype.procedure = function (name, method) {
 
 			self._procedure[name] = new Procedure(name, method);
 
-			self.emit('create', self._procedure[name], 'procedure', name);
+			self.deferEmit('create', self._procedure[name], 'procedure', name);
 		}
 
 		return self._procedure[name];

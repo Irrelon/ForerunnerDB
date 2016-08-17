@@ -424,7 +424,7 @@ Db.prototype.document = function (name) {
 		this._document = this._document || {};
 		this._document[name] = new FdbDocument(name).db(this);
 
-		self.emit('create', self._document[name], 'document', name);
+		self.deferEmit('create', self._document[name], 'document', name);
 
 		return this._document[name];
 	} else {
