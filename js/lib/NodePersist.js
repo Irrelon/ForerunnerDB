@@ -433,11 +433,11 @@ Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
 		fs.stat(val, function (err, stats) {
 			if (!err) {
 				if (!stats.isDirectory() && !stats.isFile()) {
-					fs.mkdir(val);
+					fs.mkdir(val, function (err) {});
 				}
 			} else {
 				try {
-					fs.mkdir(val);
+					fs.mkdir(val, function (err) {});
 				} catch (e) {
 
 				}
