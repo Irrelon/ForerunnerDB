@@ -2,7 +2,7 @@
   "author": "Rob Evans - Irrelon Software Limited",
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
-  "version": "1.3.875",
+  "version": "1.3.876",
   "keywords": [
     "irrelon",
     "forerunnerdb",
@@ -34,16 +34,15 @@
   ],
   "dependencies": {
     "async": "^2.0.1",
-    "body-parser": "^1.14.2",
+    "body-parser": "^1.15.2",
     "colors": "^1.1.2",
-    "cors": "^2.7.1",
+    "cors": "^2.8.0",
     "crypto-js": "^3.1.5",
-    "express": "4.x",
+    "express": "^4.14.0",
     "localforage": "^1.2.10",
     "pako": "^1.0.3",
-    "pem": "^1.8.1",
-    "rest": "^1.3.1",
-    "testbear": "^1.0.28"
+    "pem": "^1.8.3",
+    "rest": "^2.0.0"
   },
   "engines": {
     "node": "*"
@@ -63,7 +62,7 @@
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
-    "fs-extra": "^0.26.2",
+    "fs-extra": "^0.30.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-cli": "^1.2.0",
@@ -75,7 +74,7 @@
     "grunt-umd": "^2.3.5",
     "qunit": "^0.9.0",
     "stringify": "^5.1.0",
-    "testbear": "^1.0.25"
+    "testbear": "^1.0.28"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",
