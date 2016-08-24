@@ -75,7 +75,7 @@
     "grunt-umd": "^2.3.5",
     "qunit": "^0.9.0",
     "stringify": "^5.1.0",
-    "testbear": "^1.0.25"
+    "testbear": "^1.0.27"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",
