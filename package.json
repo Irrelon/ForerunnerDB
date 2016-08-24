@@ -33,7 +33,7 @@
     "taffy"
   ],
   "dependencies": {
-    "async": "^1.5.0",
+    "async": "^2.0.1",
     "body-parser": "^1.14.2",
     "colors": "^1.1.2",
     "cors": "^2.7.1",
