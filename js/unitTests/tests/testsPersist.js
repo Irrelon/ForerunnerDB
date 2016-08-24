@@ -7,7 +7,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 		try {
 			db.collection('random112354234').load(function (err, tableStats, metaStats) {
-				equal(err, false, 'Didn\'t cause an error');
+				equal(Boolean(err), false, 'Didn\'t cause an error');
 				base.dbDown();
 				start();
 			});
@@ -384,7 +384,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				items = db.collection('project');
 
 				items.load(function (err, tableStats, metaStats) {
-					strictEqual(err, false, 'The load operation did not produce an error');
+					strictEqual(Boolean(err), false, 'The load operation did not produce an error');
 					strictEqual(tableStats.rowCount > 0, true, 'Loaded data contains rows');
 					strictEqual(items.count(), numRecords, 'Loaded data contains the correct number of rows');
 
@@ -436,7 +436,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				items = db.collection('project');
 
 				items.load(function (err, tableStats, metaStats) {
-					strictEqual(err, false, 'The load operation did not produce an error');
+					strictEqual(Boolean(err), false, 'The load operation did not produce an error');
 					strictEqual(tableStats.rowCount === 0, true, 'Loaded data contains zero rows');
 					strictEqual(items.count(), numRecords, 'Loaded data contains the correct number of rows');
 
