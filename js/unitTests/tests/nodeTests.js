@@ -33,6 +33,60 @@ TB.test('Collection', 'Instantiate a Collection Instance', function (callback) {
 	callback();
 });
 
+TB.test('Collection', 'Upsert with array in update correctly removes maintain references', function (callback) {
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('temp'),
+		coll = db.collection('test'),
+		newArr = [{
+			_id: 0,
+			attended: 0
+		}, {
+			_id: 1,
+			attended: 0
+		}],
+		data;
+	
+	coll.insert({_id: 1, arr: []}, {_id: 2, arr: []});
+	coll.upsert({
+		_id: 1,
+		arr: newArr
+	});
+	coll.upsert({
+		_id: 2,
+		arr: newArr
+	});
+	
+	coll.update({
+		_id: 1,
+		'arr.$': {
+			_id: 0
+		}
+	}, {
+		arr: {
+			attended:1
+		}
+	});
+	
+	// Check if upsert worked
+	data = coll.find();
+	
+	TB.strictEqual(data.length, 2, 'Data length is correct');
+	TB.strictEqual(data[0]._id, 1, 'Data id 1 is correct');
+	TB.strictEqual(data[1]._id, 2, 'Data id 2 is correct');
+	TB.strictEqual(data[0].arr[0].attended, 1, 'Data id 1 arr 1 is correct');
+	TB.strictEqual(data[1].arr[0].attended, 0, 'Data id 2 arr 1 is correct');
+	TB.strictEqual(data[0].arr.length, 2, 'Data 1 length is correct');
+	TB.strictEqual(data[1].arr.length, 2, 'Data 1 length is correct');
+	
+	// Check if the arrays are non-referenced in find
+	TB.strictEqual(data[0].arr === data[1].arr, false, 'Data arrays in find result have been decoupled');
+	
+	// Check if the arrays are non-referenced in underlying data objects
+	TB.strictEqual(coll._data[0].arr === coll._data[1].arr, false, 'Data arrays in underlying data have been decoupled');
+	
+	callback();
+});
+
 TB.test('Persist', 'Save Collection Data and Load it Back From File-Based Persistent Storage', function (callback) {
 	var fdb = new ForerunnerDB(),
 		self = this,
