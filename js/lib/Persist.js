@@ -20,6 +20,7 @@ var Shared = require('./Shared'),
 /**
  * The persistent storage class handles loading and saving data to browser
  * storage.
+ * @class
  * @constructor
  */
 Persist = function () {
@@ -222,35 +223,58 @@ Persist.prototype.encode = function (val, finished) {
 Shared.synthesize(Persist.prototype, 'encodeSteps');
 Shared.synthesize(Persist.prototype, 'decodeSteps');
 
-/**
- * Adds an encode/decode step to the persistent storage system so
- * that you can add custom functionality.
- * @param {Function} encode The encode method called with the data from the
- * previous encode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the encoder will fail and throw an error.
- * @param {Function} decode The decode method called with the data from the
- * previous decode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the decoder will fail and throw an error.
- * @param {Number=} index Optional index to add the encoder step to. This
- * allows you to place a step before or after other existing steps. If not
- * provided your step is placed last in the list of steps. For instance if
- * you are providing an encryption step it makes sense to place this last
- * since all previous steps will then have their data encrypted by your
- * final step.
- */
 Persist.prototype.addStep = new Overload({
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} obj The object to encode / decode.
+	 */
 	'object': function (obj) {
-		this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
+		return this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 */
 	'function, function': function (encode, decode) {
-		this.$main.call(this, encode, decode, 0);
+		return this.$main.call(this, encode, decode, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 * @param {Number=} index Optional index to add the encoder step to. This
+	 * allows you to place a step before or after other existing steps. If not
+	 * provided your step is placed last in the list of steps. For instance if
+	 * you are providing an encryption step it makes sense to place this last
+	 * since all previous steps will then have their data encrypted by your
+	 * final step.
+	 */
 	'function, function, number': function (encode, decode, index) {
-		this.$main.call(this, encode, decode, index);
+		return this.$main.call(this, encode, decode, index);
 	},
 
 	$main: function (encode, decode, index) {
@@ -451,6 +475,8 @@ Persist.prototype.drop = function (key, callback) {
 Collection.prototype.drop = new Overload({
 	/**
 	 * Drop collection and persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 */
 	'': function () {
 		if (!this.isDropped()) {
@@ -460,6 +486,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
@@ -470,6 +498,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and optionally drop persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
@@ -494,6 +524,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collections and optionally drop persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
 	 */
@@ -737,13 +769,23 @@ Db.prototype.init = function () {
 Db.prototype.load = new Overload({
 	/**
 	 * Loads an entire database's data from persistent storage.
+	 * @name load
+	 * @method Db.load
 	 * @param {Function=} callback The method to call when the load function
 	 * has completed.
 	 */
 	'function': function (callback) {
 		this.$main.call(this, {}, callback);
 	},
-
+	
+	/**
+	 * Loads an entire database's data from persistent storage.
+	 * @name load
+	 * @method Db.load
+	 * @param {Object} myData Custom data to load into the collection.
+	 * @param {Function} callback The method to call when the load function
+	 * has completed.
+	 */
 	'object, function': function (myData, callback) {
 		this.$main.call(this, myData, callback);
 	},
@@ -788,13 +830,23 @@ Db.prototype.load = new Overload({
 Db.prototype.save = new Overload({
 	/**
 	 * Saves an entire database's data to persistent storage.
+	 * @name save
+	 * @method Db.save
 	 * @param {Function=} callback The method to call when the save function
 	 * has completed.
 	 */
 	'function': function (callback) {
 		this.$main.call(this, {}, callback);
 	},
-
+	
+	/**
+	 * Saves an entire database's data to persistent storage.
+	 * @name save
+	 * @method Db.save
+	 * @param {Object} options The options object.
+	 * @param {Function} callback The method to call when the save function
+	 * has completed.
+	 */
 	'object, function': function (options, callback) {
 		this.$main.call(this, options, callback);
 	},

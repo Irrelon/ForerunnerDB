@@ -36,8 +36,8 @@ var Shared = require('./Shared'),
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- * @param {object} orderBy An order object.
- * @constructor
+ * @param {Object} orderBy An order object.
+ * @class
  */
 var ActiveBucket = function (orderBy) {
 	this._primaryKey = '_id';
@@ -63,15 +63,15 @@ Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 /**
  * Quicksorts a single document into the passed array and
  * returns the index that the document should occupy.
- * @param {object} obj The document to calculate index for.
- * @param {array} arr The array the document index will be
+ * @param {Object} obj The document to calculate index for.
+ * @param {Array} arr The array the document index will be
  * calculated for.
- * @param {string} item The string key representation of the
+ * @param {String} item The string key representation of the
  * document whose index is being calculated.
- * @param {function} fn The comparison function that is used
+ * @param {Function} fn The comparison function that is used
  * to determine if a document is sorted below or above the
  * document we are calculating the index for.
- * @returns {number} The index the document should occupy.
+ * @returns {Number} The index the document should occupy.
  */
 ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 	// If the array is empty then return index zero
@@ -125,12 +125,12 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 
 /**
  * Calculates the sort position of an item against another item.
- * @param {object} sorter An object or instance that contains
+ * @param {Object} sorter An object or instance that contains
  * sortAsc and sortDesc methods.
- * @param {object} obj The document to compare.
- * @param {string} a The first key to compare.
- * @param {string} b The second key to compare.
- * @returns {number} Either 1 for sort a after b or -1 to sort
+ * @param {Object} obj The document to compare.
+ * @param {String} a The first key to compare.
+ * @param {String} b The second key to compare.
+ * @returns {Number} Either 1 for sort a after b or -1 to sort
  * a before b.
  * @private
  */
@@ -168,8 +168,8 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 
 /**
  * Inserts a document into the active bucket.
- * @param {object} obj The document to insert.
- * @returns {number} The index the document now occupies.
+ * @param {Object} obj The document to insert.
+ * @returns {Number} The index the document now occupies.
  */
 ActiveBucket.prototype.insert = function (obj) {
 	var key,
@@ -195,7 +195,7 @@ ActiveBucket.prototype.insert = function (obj) {
 
 /**
  * Removes a document from the active bucket.
- * @param {object} obj The document to remove.
+ * @param {Object} obj The document to remove.
  * @returns {boolean} True if the document was removed
  * successfully or false if it wasn't found in the active
  * bucket.
@@ -226,8 +226,8 @@ ActiveBucket.prototype.remove = function (obj) {
 /**
  * Get the index that the passed document currently occupies
  * or the index it will occupy if added to the active bucket.
- * @param {object} obj The document to get the index for.
- * @returns {number} The index.
+ * @param {Object} obj The document to get the index for.
+ * @returns {Number} The index.
  */
 ActiveBucket.prototype.index = function (obj) {
 	var key,
@@ -246,8 +246,8 @@ ActiveBucket.prototype.index = function (obj) {
 
 /**
  * The key that represents the passed document.
- * @param {object} obj The document to get the key for.
- * @returns {string} The document key.
+ * @param {Object} obj The document to get the key for.
+ * @returns {String} The document key.
  */
 ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
@@ -275,7 +275,7 @@ ActiveBucket.prototype.documentKey = function (obj) {
 /**
  * Get the number of documents currently indexed in the active
  * bucket instance.
- * @returns {number} The number of documents.
+ * @returns {Number} The number of documents.
  */
 ActiveBucket.prototype.count = function () {
 	return this._count;
@@ -292,13 +292,13 @@ module.exports = ActiveBucket;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#Condition">Condition</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#NodeRAS">NodeRAS</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#setData">setData</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Sep 05 2016 14:02:16 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Sep 07 2016 12:23:24 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>

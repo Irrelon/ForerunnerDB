@@ -474,6 +474,8 @@ NodePersist.prototype.dataExists = function (collectionName, callback) {
 Collection.prototype.drop = new Overload({
 	/**
 	 * Drop collection and persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 */
 	'': function () {
 		if (!this.isDropped()) {
@@ -483,6 +485,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
@@ -493,6 +497,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and optionally drop persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
@@ -517,6 +523,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collections and optionally drop persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
 	 */

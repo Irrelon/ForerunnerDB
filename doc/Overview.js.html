@@ -36,10 +36,18 @@ var Shared,
 
 Shared = require('./Shared');
 
+/**
+ * The Overview class provides a queryable interface for data aggregation in realtime.
+ * @class
+ */
 var Overview = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Initialises the overview, called by the class as it is instantiated.
+ * @constructor
+ */
 Overview.prototype.init = function (name) {
 	var self = this;
 
@@ -72,8 +80,25 @@ Db = Shared.modules.Db;
  */
 Shared.synthesize(Overview.prototype, 'state');
 
+/**
+ * Gets / sets the db.
+ * @param {Db=} val The db to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'db');
+
+/**
+ * Gets / sets the name.
+ * @param {String=} val The name to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'name');
+
+/**
+ * Gets / sets the query.
+ * @param {Object=} val The query to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'query', function (val) {
 	var ret = this.$super(val);
 
@@ -83,6 +108,12 @@ Shared.synthesize(Overview.prototype, 'query', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the query options.
+ * @param {Object=} val The query options to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 	var ret = this.$super(val);
 
@@ -92,6 +123,12 @@ Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the reduce object.
+ * @param {Object=} val The reduce object to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	var ret = this.$super(val);
 
@@ -102,6 +139,11 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	return ret;
 });
 
+/**
+ * Gets / sets the data source the overview uses for underlying data.
+ * @param {Collection|View=} source The data source to set.
+ * @returns {*}
+ */
 Overview.prototype.from = function (source) {
 	if (source !== undefined) {
 		if (typeof(source) === 'string') {
@@ -115,7 +157,15 @@ Overview.prototype.from = function (source) {
 	return this._sources;
 };
 
-Overview.prototype.find = function () {
+/**
+ * Returns the data in the overview.
+ * @param {Object=} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
+ * @returns {*}
+ * @see Collection.find()
+ */
+Overview.prototype.find = function (query, options, callback) {
 	return this._collData.find.apply(this._collData, arguments);
 };
 
@@ -130,6 +180,10 @@ Overview.prototype.exec = function () {
 	return reduceFunc ? reduceFunc.apply(this) : undefined;
 };
 
+/**
+ * Returns a count of the documents in the overview data set.
+ * @returns {*}
+ */
 Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
 };
@@ -243,6 +297,11 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
+/**
+ * Drops the overview.
+ * @param {Function=} callback A callback function.
+ * @returns {Boolean}
+ */
 Overview.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
@@ -271,6 +330,11 @@ Overview.prototype.drop = function (callback) {
 	return true;
 };
 
+/**
+ * Create an overview instance from a Db instance.
+ * @param {String} name The name of the overview.
+ * @returns {*}
+ */
 Db.prototype.overview = function (name) {
 	var self = this;
 
@@ -332,13 +396,13 @@ module.exports = Overview;</code></pre>
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="global.html#Shared">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3>Global</h3><ul><li><a href="global.html#%2522boolean,function%2522">"boolean, function"</a></li><li><a href="global.html#%2522object,function%2522">"object, function"</a></li><li><a href="global.html#%2522object,object,function%2522">"object, object, function"</a></li><li><a href="global.html#%2522string,*,function%2522">"string, *, function"</a></li><li><a href="global.html#%2522string,function%2522">"string, function"</a></li><li><a href="global.html#%2522string,object,function%2522">"string, object, function"</a></li><li><a href="global.html#%2522string,object,object,function%2522">"string, object, object, function"</a></li><li><a href="global.html#%2522string,string,function%2522">"string, string, function"</a></li><li><a href="global.html#%2522string,string,object,function%2522">"string, string, object, function"</a></li><li><a href="global.html#%2522string,string,object,object,function%2522">"string, string, object, object, function"</a></li><li><a href="global.html#access">access</a></li><li><a href="global.html#boolean">boolean</a></li><li><a href="global.html#checksum">checksum</a></li><li><a href="global.html#Condition">Condition</a></li><li><a href="global.html#function">function</a></li><li><a href="global.html#MyModule">MyModule</a></li><li><a href="global.html#name">name</a></li><li><a href="global.html#NodeRAS">NodeRAS</a></li><li><a href="global.html#Section">Section</a></li><li><a href="global.html#server">server</a></li><li><a href="global.html#setData">setData</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Mon Sep 05 2016 14:02:16 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Sep 07 2016 12:23:24 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>

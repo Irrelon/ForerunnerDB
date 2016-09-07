@@ -13,6 +13,11 @@ var Shared = require('./Shared'),
 	NodeApiClient,
 	Overload;
 
+/**
+ * The NodeApiClient class.
+ * @class
+ * @constructor
+ */
 NodeApiClient = function () {
 	this.init.apply(this, arguments);
 };
@@ -38,11 +43,17 @@ CoreInit = Core.prototype.init;
 Collection = Shared.modules.Collection;
 Overload = Shared.overload;
 
+/**
+ * Gets / sets the rootPath for the client to use in each API call.
+ * @name rootPath
+ * @method NodeApiClient.rootPath
+ * @param {String=} val The path to set.
+ * @returns {*}
+ */
 Shared.synthesize(NodeApiClient.prototype, 'rootPath');
 
 /**
  * Set the url of the server to use for API.
- * @name server
  * @param {String} host The server host name including protocol. E.g.
  * "https://0.0.0.0".
  * @param {String} port The server port number e.g. "8080".
@@ -406,6 +417,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 Collection.prototype.sync = new Overload({
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
 	 */
@@ -415,6 +428,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
@@ -425,6 +440,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
@@ -435,6 +452,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.
@@ -447,6 +466,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -458,6 +479,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.
@@ -471,6 +494,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Object} query A query object.
 	 * @param {Object} options An options object.
 	 * @param {Function} callback The callback method to call once
@@ -482,6 +507,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Object} options An options object.
@@ -494,6 +521,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.

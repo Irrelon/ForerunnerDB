@@ -349,6 +349,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 */
@@ -362,6 +363,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -376,6 +378,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Function} callback Optional callback function.
@@ -390,6 +393,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -405,6 +409,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -420,6 +425,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1706,7 +1712,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -1726,7 +1732,7 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback insertCallback
+ * @callback Collection.insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -1741,7 +1747,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
