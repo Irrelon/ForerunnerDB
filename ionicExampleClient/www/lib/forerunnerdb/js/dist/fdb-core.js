@@ -2415,7 +2415,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -2435,7 +2435,8 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback insertCallback
+ * @name Collection.insertCallback
+ * @callback Collection.insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -2450,7 +2451,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
@@ -5068,7 +5069,6 @@ var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5263,13 +5263,6 @@ Db.prototype.isClient = function () {
 Db.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -9313,16 +9306,9 @@ var Overload = _dereq_('./Overload');
  */
 var Triggers = {
 	/**
-	 * When called in a before phase the newDoc object can be directly altered
-	 * to modify the data in it before the operation is carried out.
-	 * @callback addTriggerCallback
-	 * @param {Object} operation The details about the operation.
-	 * @param {Object} oldDoc The document before the operation.
-	 * @param {Object} newDoc The document after the operation.
-	 */
-
-	/**
-	 * Add a trigger by id.
+	 * Add a trigger by id, type and phase.
+	 * @name addTrigger
+	 * @method Triggers.addTrigger
 	 * @param {String} id The id of the trigger. This must be unique to the type and
 	 * phase of the trigger. Only one trigger may be added with this id per type and
 	 * phase.
@@ -9330,7 +9316,7 @@ var Triggers = {
 	 * Mixin.Constants for constants to use.
 	 * @param {Constants} phase The phase of an operation to fire the trigger on. See
 	 * Mixin.Constants for constants to use.
-	 * @param {addTriggerCallback} method The method to call when the trigger is fired.
+	 * @param {Triggers.addTriggerCallback} method The method to call when the trigger is fired.
 	 * @returns {boolean} True if the trigger was added successfully, false if not.
 	 */
 	addTrigger: function (id, type, phase, method) {
@@ -9361,7 +9347,9 @@ var Triggers = {
 	},
 
 	/**
-	 *
+	 * Removes a trigger by id, type and phase.
+	 * @name removeTrigger
+	 * @method Triggers.removeTrigger
 	 * @param {String} id The id of the trigger to remove.
 	 * @param {Number} type The type of operation to remove the trigger from. See
 	 * Mixin.Constants for constants to use.
@@ -9949,6 +9937,15 @@ var Triggers = {
 		return -1;
 	}
 };
+
+/**
+ * When called in a before phase the newDoc object can be directly altered
+ * to modify the data in it before the operation is carried out.
+ * @callback Triggers.addTriggerCallback
+ * @param {Object} operation The details about the operation.
+ * @param {Object} oldDoc The document before the operation.
+ * @param {Object} newDoc The document after the operation.
+ */
 
 module.exports = Triggers;
 },{"./Overload":24}],22:[function(_dereq_,module,exports){
@@ -11174,7 +11171,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.884',
+	version: '1.3.886',
 	modules: {},
 	plugins: {},
 	index: {},

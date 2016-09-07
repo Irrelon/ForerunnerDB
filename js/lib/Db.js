@@ -4,7 +4,6 @@ var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Checksum,
 	Overload;
 
 Shared = require('./Shared');
