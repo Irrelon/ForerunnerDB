@@ -125,7 +125,7 @@ NodeRAS.prototype.encodeDataLine = function (opType, data, pointer) {
  * de-fragments entries that span multiple points and then re-writes the
  * file.
  *
- * @returns {number} The number of bytes saved by the compact process.
+ * @returns {Number} The number of bytes saved by the compact process.
  * This is the file size in bytes before the operation minus the file size
  * in bytes after the operation.
  */

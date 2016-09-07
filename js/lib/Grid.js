@@ -220,7 +220,7 @@ Grid.prototype.drop = function (callback) {
  * Gets / sets the grid's HTML template to use when rendering.
  * @func template
  * @memberof Grid
- * @param {Selector} template The template's jQuery selector.
+ * @param {String} template The template's jQuery selector.
  * @returns {*}
  */
 Grid.prototype.template = function (template) {
