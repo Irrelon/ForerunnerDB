@@ -572,6 +572,11 @@ Collection.prototype.save = function (callback) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
 							self._asyncComplete('save');
+							
+							if (!err) {
+								self.deferEmit('save', tableStats, metaStats);
+							}
+							
 							if (callback) { callback(err, data, tableStats, metaStats); }
 						});
 					} else {
@@ -622,11 +627,12 @@ Collection.prototype.load = function (callback) {
 					// Now load the collection's metadata
 					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
 						if (!err) {
-							self._asyncComplete('load');
 							if (data) {
 								self.metaData(data);
 							}
 						}
+						
+						self._asyncComplete('load');
 						
 						self.deferEmit('load', tableStats, metaStats);
 						if (callback) { callback(err, tableStats, metaStats); }
@@ -659,7 +665,8 @@ Db.prototype.init = function () {
  */
 Db.prototype.load = function (callback) {
 	// Loop the collections in the database
-	var obj,
+	var self = this,
+		obj,
 		keys,
 		keyCount,
 		loadCallback,
@@ -676,9 +683,8 @@ Db.prototype.load = function (callback) {
 				keyCount--;
 
 				if (keyCount === 0) {
-					if (callback) {
-						callback(false);
-					}
+					self.deferEmit('load');
+					if (callback) { callback(false); }
 				}
 			} else {
 				if (callback) {
@@ -706,7 +712,8 @@ Db.prototype.load = function (callback) {
  */
 Db.prototype.save = function (callback) {
 	// Loop the collections in the database
-	var obj,
+	var self = this,
+		obj,
 		keys,
 		keyCount,
 		saveCallback,
@@ -723,14 +730,11 @@ Db.prototype.save = function (callback) {
 				keyCount--;
 
 				if (keyCount === 0) {
-					if (callback) {
-						callback(false);
-					}
+					self.deferEmit('save');
+					if (callback) { callback(false); }
 				}
 			} else {
-				if (callback) {
-					callback(err);
-				}
+				if (callback) { callback(err); }
 			}
 		};
 

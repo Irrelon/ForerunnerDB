@@ -573,6 +573,13 @@ Collection.prototype.save = function (callback) {
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
+							self.deferEmit('save', tableStats, metaStats, {
+								tableData: tableData,
+								metaData: metaData,
+								tableDataName: self._db._name + '-' + self._name,
+								metaDataName: self._db._name + '-' + self._name + '-metaData'
+							});
+							
 							if (callback) {
 								callback(err, tableStats, metaStats, {
 									tableData: tableData,
@@ -680,7 +687,7 @@ Collection.prototype.saveCustom = function (callback) {
 									store: data,
 									tableStats: tableStats
 								};
-
+								
 								callback(false, myData);
 							} else {
 								callback(err);
@@ -792,7 +799,8 @@ Db.prototype.load = new Overload({
 
 	'$main': function (myData, callback) {
 		// Loop the collections in the database
-		var obj = this._collection,
+		var self = this,
+			obj = this._collection,
 			keys = obj.keys(),
 			keyCount = keys.length,
 			loadCallback,
@@ -803,14 +811,11 @@ Db.prototype.load = new Overload({
 				keyCount--;
 
 				if (keyCount === 0) {
-					if (callback) {
-						callback(false);
-					}
+					self.deferEmit('load');
+					if (callback) { callback(false); }
 				}
 			} else {
-				if (callback) {
-					callback(err);
-				}
+				if (callback) { callback(err); }
 			}
 		};
 
@@ -853,7 +858,8 @@ Db.prototype.save = new Overload({
 
 	'$main': function (options, callback) {
 		// Loop the collections in the database
-		var obj = this._collection,
+		var self = this,
+			obj = this._collection,
 			keys = obj.keys(),
 			keyCount = keys.length,
 			saveCallback,
@@ -864,6 +870,7 @@ Db.prototype.save = new Overload({
 				keyCount--;
 
 				if (keyCount === 0) {
+					self.deferEmit('save');
 					if (callback) { callback(false); }
 				}
 			} else {
