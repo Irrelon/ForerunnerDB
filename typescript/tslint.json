@@ -1,0 +1,16 @@
+{
+	"extends": "tslint:latest",
+	"rules": {
+		"interface-name": false,
+		"max-line-length": [true, 140],
+		"member-ordering": false,
+		"member-access": false,
+		"no-unused-variable": false,
+		"no-unused-expression": false,
+		"semicolon": false,
+		"no-bitwise": false,
+		"whitespace": false,
+		"jsdoc-format": false,
+		"label-position": false
+	}
+}
