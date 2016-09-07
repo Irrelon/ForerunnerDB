@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/View":34,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/View":33,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":9,"../lib/Shim.IE8":33}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":8,"../lib/Shim.IE8":32}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -25,8 +25,8 @@ var Shared = _dereq_('./Shared'),
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- * @param {object} orderBy An order object.
- * @constructor
+ * @param {Object} orderBy An order object.
+ * @class
  */
 var ActiveBucket = function (orderBy) {
 	this._primaryKey = '_id';
@@ -52,15 +52,15 @@ Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 /**
  * Quicksorts a single document into the passed array and
  * returns the index that the document should occupy.
- * @param {object} obj The document to calculate index for.
- * @param {array} arr The array the document index will be
+ * @param {Object} obj The document to calculate index for.
+ * @param {Array} arr The array the document index will be
  * calculated for.
- * @param {string} item The string key representation of the
+ * @param {String} item The string key representation of the
  * document whose index is being calculated.
- * @param {function} fn The comparison function that is used
+ * @param {Function} fn The comparison function that is used
  * to determine if a document is sorted below or above the
  * document we are calculating the index for.
- * @returns {number} The index the document should occupy.
+ * @returns {Number} The index the document should occupy.
  */
 ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 	// If the array is empty then return index zero
@@ -114,12 +114,12 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 
 /**
  * Calculates the sort position of an item against another item.
- * @param {object} sorter An object or instance that contains
+ * @param {Object} sorter An object or instance that contains
  * sortAsc and sortDesc methods.
- * @param {object} obj The document to compare.
- * @param {string} a The first key to compare.
- * @param {string} b The second key to compare.
- * @returns {number} Either 1 for sort a after b or -1 to sort
+ * @param {Object} obj The document to compare.
+ * @param {String} a The first key to compare.
+ * @param {String} b The second key to compare.
+ * @returns {Number} Either 1 for sort a after b or -1 to sort
  * a before b.
  * @private
  */
@@ -157,8 +157,8 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 
 /**
  * Inserts a document into the active bucket.
- * @param {object} obj The document to insert.
- * @returns {number} The index the document now occupies.
+ * @param {Object} obj The document to insert.
+ * @returns {Number} The index the document now occupies.
  */
 ActiveBucket.prototype.insert = function (obj) {
 	var key,
@@ -184,7 +184,7 @@ ActiveBucket.prototype.insert = function (obj) {
 
 /**
  * Removes a document from the active bucket.
- * @param {object} obj The document to remove.
+ * @param {Object} obj The document to remove.
  * @returns {boolean} True if the document was removed
  * successfully or false if it wasn't found in the active
  * bucket.
@@ -215,8 +215,8 @@ ActiveBucket.prototype.remove = function (obj) {
 /**
  * Get the index that the passed document currently occupies
  * or the index it will occupy if added to the active bucket.
- * @param {object} obj The document to get the index for.
- * @returns {number} The index.
+ * @param {Object} obj The document to get the index for.
+ * @returns {Number} The index.
  */
 ActiveBucket.prototype.index = function (obj) {
 	var key,
@@ -235,8 +235,8 @@ ActiveBucket.prototype.index = function (obj) {
 
 /**
  * The key that represents the passed document.
- * @param {object} obj The document to get the key for.
- * @returns {string} The document key.
+ * @param {Object} obj The document to get the key for.
+ * @returns {String} The document key.
  */
 ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
@@ -264,7 +264,7 @@ ActiveBucket.prototype.documentKey = function (obj) {
 /**
  * Get the number of documents currently indexed in the active
  * bucket instance.
- * @returns {number} The number of documents.
+ * @returns {Number} The number of documents.
  */
 ActiveBucket.prototype.count = function () {
 	return this._count;
@@ -272,7 +272,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":29,"./Shared":32}],4:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -384,7 +384,7 @@ BinaryTree.prototype.pull = function (val) {
  * Default compare method. Can be overridden.
  * @param a
  * @param b
- * @returns {number}
+ * @returns {Number}
  * @private
  */
 BinaryTree.prototype._compareFunc = function (a, b) {
@@ -966,47 +966,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":29,"./Shared":32}],5:[function(_dereq_,module,exports){
-"use strict";
-
-var crcTable,
-	checksum;
-
-crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-/**
- * Returns a checksum of a string.
- * @param {String} str The string to checksum.
- * @return {Number} The checksum generated.
- */
-checksum = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-
-module.exports = checksum;
-},{}],6:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -1028,11 +988,16 @@ Shared = _dereq_('./Shared');
  * Creates a new collection. Collections store multiple documents and
  * handle CRUD against those documents.
  * @constructor
+ * @class
  */
 var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
+ */
 Collection.prototype.init = function (name, options) {
 	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
@@ -1353,6 +1318,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 */
@@ -1366,6 +1332,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1380,6 +1347,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Function} callback Optional callback function.
@@ -1394,6 +1362,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1409,6 +1378,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1424,6 +1394,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -2710,7 +2681,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -2730,7 +2701,7 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback Collection~insertCallback
+ * @callback insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -2745,7 +2716,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
@@ -2910,8 +2881,8 @@ Collection.prototype._insert = function (doc, index) {
  * Inserts a document into the internal collection data array at
  * Inserts a document into the internal collection data array at
  * the specified index.
- * @param {number} index The index to insert at.
- * @param {object} doc The document to insert.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
  * @private
  */
 Collection.prototype._dataInsertAtIndex = function (index, doc) {
@@ -2921,7 +2892,7 @@ Collection.prototype._dataInsertAtIndex = function (index, doc) {
 /**
  * Removes a document from the internal collection data array at
  * the specified index.
- * @param {number} index The index to remove from.
+ * @param {Number} index The index to remove from.
  * @private
  */
 Collection.prototype._dataRemoveAtIndex = function (index) {
@@ -2931,7 +2902,7 @@ Collection.prototype._dataRemoveAtIndex = function (index) {
 /**
  * Replaces all data in the collection's internal data array with
  * the passed array of data.
- * @param {array} data The array of data to replace existing data with.
+ * @param {Array} data The array of data to replace existing data with.
  * @private
  */
 Collection.prototype._dataReplace = function (data) {
@@ -3159,8 +3130,8 @@ Collection.prototype.explain = function (query, options) {
  * Generates an options object with default values or adds default
  * values to a passed object if those values are not currently set
  * to anything.
- * @param {object=} obj Optional options object to modify.
- * @returns {object} The options object.
+ * @param {Object=} obj Optional options object to modify.
+ * @returns {Object} The options object.
  */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
@@ -4895,7 +4866,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Condition":8,"./Index2d":12,"./IndexBinaryTree":13,"./IndexHashMap":14,"./KeyValueStore":15,"./Metrics":16,"./Overload":28,"./Path":29,"./ReactorIO":30,"./Shared":32}],7:[function(_dereq_,module,exports){
+},{"./Condition":7,"./Index2d":11,"./IndexBinaryTree":12,"./IndexHashMap":13,"./KeyValueStore":14,"./Metrics":15,"./Overload":27,"./Path":28,"./ReactorIO":29,"./Shared":31}],6:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5255,15 +5226,8 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":6,"./Shared":32}],8:[function(_dereq_,module,exports){
+},{"./Collection":5,"./Shared":31}],7:[function(_dereq_,module,exports){
 "use strict";
-
-/**
- * The condition class monitors a data source and updates it's internal
- * state depending on clauses that it has been given. When all clauses
- * are satisfied the then() callback is fired. If conditions were met
- * but data changed that made them un-met, the else() callback is fired.
- */
 
 var //Overload = require('./Overload'),
 	Shared,
@@ -5272,14 +5236,25 @@ var //Overload = require('./Overload'),
 Shared = _dereq_('./Shared');
 
 /**
- * Create a constructor method that calls the instance's init method.
- * This allows the constructor to be overridden by other modules because
- * they can override the init method with their own.
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ * @class
+ * @constructor
  */
 Condition = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Class constructor calls this init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ * @param {Collection|View} dataSource The condition's data source.
+ * @param {String} id The id to assign to the new Condition.
+ * @param {Object} clause The query clause.
+ */
 Condition.prototype.init = function (dataSource, id, clause) {
 	this._dataSource = dataSource;
 	this._id = id;
@@ -5421,7 +5396,7 @@ Condition.prototype.drop = function () {
 // Tell ForerunnerDB that our module has finished loading
 Shared.finishModule('Condition');
 module.exports = Condition;
-},{"./Shared":32}],9:[function(_dereq_,module,exports){
+},{"./Shared":31}],8:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5712,7 +5687,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":10,"./Metrics.js":16,"./Overload":28,"./Shared":32}],10:[function(_dereq_,module,exports){
+},{"./Db.js":9,"./Metrics.js":15,"./Overload":27,"./Shared":31}],9:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -5863,7 +5838,6 @@ Shared.mixin(Db.prototype, 'Mixin.Events');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -6063,7 +6037,7 @@ Db.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {object}
+ * @returns {Object}
  */
 Db.prototype.peekCat = function (search) {
 	var i,
@@ -6352,7 +6326,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":5,"./Collection.js":6,"./Metrics.js":16,"./Overload":28,"./Shared":32}],11:[function(_dereq_,module,exports){
+},{"./Collection.js":5,"./Metrics.js":15,"./Overload":27,"./Shared":31}],10:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -6720,7 +6694,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],12:[function(_dereq_,module,exports){
+},{}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -7210,7 +7184,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":4,"./GeoHash":11,"./Path":29,"./Shared":32}],13:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./GeoHash":10,"./Path":28,"./Shared":31}],12:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -7454,7 +7428,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":4,"./Path":29,"./Shared":32}],14:[function(_dereq_,module,exports){
+},{"./BinaryTree":4,"./Path":28,"./Shared":31}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7817,7 +7791,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":29,"./Shared":32}],15:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -8069,7 +8043,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":32}],16:[function(_dereq_,module,exports){
+},{"./Shared":31}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -8144,7 +8118,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":27,"./Shared":32}],17:[function(_dereq_,module,exports){
+},{"./Operation":26,"./Shared":31}],16:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -8158,7 +8132,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],18:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8321,14 +8295,32 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],19:[function(_dereq_,module,exports){
+},{}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Serialiser = _dereq_('./Serialiser'),
 	Common,
-	serialiser = new Serialiser();
+	serialiser = new Serialiser(),
+	crcTable;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+	
+	for (n = 0; n < 256; n++) {
+		c = n;
+		
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+		
+		crcTable[n] = c;
+	}
+	
+	return crcTable;
+}());
 
 /**
  * Provides commonly used methods to most classes in ForerunnerDB.
@@ -8535,7 +8527,7 @@ Common = {
 
 	/**
 	 * Returns a string describing the class this instance is derived from.
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
@@ -8553,7 +8545,7 @@ Common = {
 	/**
 	 * Returns a string used to denote a console log against this instance,
 	 * consisting of the class identifier and instance identifier.
-	 * @returns {string} The log identifier.
+	 * @returns {String} The log identifier.
 	 */
 	logIdentifier: function () {
 		return 'ForerunnerDB ' + this.instanceIdentifier();
@@ -8641,11 +8633,27 @@ Common = {
 
 		// Save current data
 		self._debounce[id] = newData;
+	},
+	
+	/**
+	 * Returns a checksum of a string.
+	 * @param {String} str The string to checksum.
+	 * @return {Number} The checksum generated.
+	 */
+	checksum: function (str) {
+		var crc = 0 ^ (-1), // jshint ignore:line
+			i;
+		
+		for (i = 0; i < str.length; i++) {
+			crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+		}
+		
+		return (crc ^ (-1)) >>> 0; // jshint ignore:line
 	}
 };
 
 module.exports = Common;
-},{"./Overload":28,"./Serialiser":31}],20:[function(_dereq_,module,exports){
+},{"./Overload":27,"./Serialiser":30}],19:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8662,7 +8670,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],21:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8670,13 +8678,17 @@ var Overload = _dereq_('./Overload');
 /**
  * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
  * @mixin
+ * @name Events
  */
 var Events = {
 	on: new Overload({
 		/**
 		 * Attach an event listener to the passed event.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, function': function (event, listener) {
 			this._listeners = this._listeners || {};
@@ -8690,9 +8702,12 @@ var Events = {
 		/**
 		 * Attach an event listener to the passed event only if the passed
 		 * id matches the document id for the event being fired.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {*} id The document id to match against.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, *, function': function (event, id, listener) {
 			this._listeners = this._listeners || {};
@@ -8705,36 +8720,60 @@ var Events = {
 	}),
 
 	once: new Overload({
-		'string, function': function (eventName, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, function': function (event, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, internalCallback);
+			return this.on(event, internalCallback);
 		},
 		
-		'string, *, function': function (eventName, id, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {String} id The document id to match against.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, *, function': function (event, id, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, id, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, id, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, id, internalCallback);
+			return this.on(event, id, internalCallback);
 		}
 	}),
 
 	off: new Overload({
+		/**
+		 * Cancels all event listeners for the passed event.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The name of the event.
+		 * @returns {*}
+		 */
 		'string': function (event) {
 			var self = this;
 
@@ -8751,7 +8790,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels the event listener for the passed event and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 * @returns {*}
+		 */
 		'string, function': function (event, listener) {
 			var self = this,
 				arr,
@@ -8781,7 +8829,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels an event listener based on an event name, id and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {String} id The ID of the event to cancel listening for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 */
 		'string, *, function': function (event, id, listener) {
 			var self = this;
 
@@ -8802,6 +8859,13 @@ var Events = {
 			}
 		},
 
+		/**
+		 * Cancels all listeners for an event based on the passed event name and id.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event name to cancel listeners for.
+		 * @param {*} id The ID to cancel all listeners for.
+		 */
 		'string, *': function (event, id) {
 			var self = this;
 
@@ -8818,7 +8882,15 @@ var Events = {
 			}
 		}
 	}),
-
+	
+	/**
+	 * Emit an event with data.
+	 * @name emit
+	 * @method Events.emit
+	 * @param {String} event The event to emit.
+	 * @param {*} data Data to emit with the event.
+	 * @returns {*}
+	 */
 	emit: function (event, data) {
 		this._listeners = this._listeners || {};
 		this._emitting = true;
@@ -8885,6 +8957,8 @@ var Events = {
 	 * errors that might occur by potentially modifying the event queue while
 	 * the emitter is running through them. This method is called after the
 	 * event emitter is finished processing.
+	 * @name _processRemovalQueue
+	 * @method Events._processRemovalQueue
 	 * @private
 	 */
 	_processRemovalQueue: function () {
@@ -8907,6 +8981,8 @@ var Events = {
 	 * one will all be wrapped into a single emit rather than emitting tons of
 	 * events for lots of chained inserts etc. Only the data from the last
 	 * de-bounced event will be emitted.
+	 * @name deferEmit
+	 * @method Events.deferEmit
 	 * @param {String} eventName The name of the event to emit.
 	 * @param {*=} data Optional data to emit with the event.
 	 */
@@ -8940,7 +9016,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":28}],22:[function(_dereq_,module,exports){
+},{"./Overload":27}],21:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9697,7 +9773,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],23:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9747,7 +9823,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],24:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -9852,7 +9928,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],25:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10476,7 +10552,7 @@ var Triggers = {
 	 * constants to use.
 	 * @param {Number} phase The phase of the operation. See Mixin.Constants
 	 * for constants to use.
-	 * @returns {number}
+	 * @returns {Number}
 	 * @private
 	 */
 	_triggerIndexOf: function (id, type, phase) {
@@ -10501,7 +10577,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":28}],26:[function(_dereq_,module,exports){
+},{"./Overload":27}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10693,7 +10769,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],27:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10840,7 +10916,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":29,"./Shared":32}],28:[function(_dereq_,module,exports){
+},{"./Path":28,"./Shared":31}],27:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11012,7 +11088,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],29:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11500,7 +11576,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":32}],30:[function(_dereq_,module,exports){
+},{"./Shared":31}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11587,7 +11663,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":32}],31:[function(_dereq_,module,exports){
+},{"./Shared":31}],30:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11713,7 +11789,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],32:[function(_dereq_,module,exports){
+},{}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -11724,7 +11800,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.883',
+	version: '1.3.884',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -11912,7 +11988,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":17,"./Mixin.ChainReactor":18,"./Mixin.Common":19,"./Mixin.Constants":20,"./Mixin.Events":21,"./Mixin.Matching":22,"./Mixin.Sorting":23,"./Mixin.Tags":24,"./Mixin.Triggers":25,"./Mixin.Updating":26,"./Overload":28}],33:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":16,"./Mixin.ChainReactor":17,"./Mixin.Common":18,"./Mixin.Constants":19,"./Mixin.Events":20,"./Mixin.Matching":21,"./Mixin.Sorting":22,"./Mixin.Tags":23,"./Mixin.Triggers":24,"./Mixin.Updating":25,"./Overload":27}],32:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -12032,7 +12108,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],34:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -13608,4 +13684,4 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":6,"./CollectionGroup":7,"./Overload":28,"./ReactorIO":30,"./Shared":32}]},{},[1]);
+},{"./ActiveBucket":3,"./Collection":5,"./CollectionGroup":6,"./Overload":27,"./ReactorIO":29,"./Shared":31}]},{},[1]);

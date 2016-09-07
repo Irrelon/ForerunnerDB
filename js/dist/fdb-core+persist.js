@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Persist":29,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/Persist":28,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -14,7 +14,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":8,"../lib/Shim.IE8":35}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":7,"../lib/Shim.IE8":34}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -126,7 +126,7 @@ BinaryTree.prototype.pull = function (val) {
  * Default compare method. Can be overridden.
  * @param a
  * @param b
- * @returns {number}
+ * @returns {Number}
  * @private
  */
 BinaryTree.prototype._compareFunc = function (a, b) {
@@ -708,47 +708,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":28,"./Shared":34}],4:[function(_dereq_,module,exports){
-"use strict";
-
-var crcTable,
-	checksum;
-
-crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-/**
- * Returns a checksum of a string.
- * @param {String} str The string to checksum.
- * @return {Number} The checksum generated.
- */
-checksum = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-
-module.exports = checksum;
-},{}],5:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":33}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -770,11 +730,16 @@ Shared = _dereq_('./Shared');
  * Creates a new collection. Collections store multiple documents and
  * handle CRUD against those documents.
  * @constructor
+ * @class
  */
 var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
+ */
 Collection.prototype.init = function (name, options) {
 	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
@@ -1095,6 +1060,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 */
@@ -1108,6 +1074,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1122,6 +1089,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Function} callback Optional callback function.
@@ -1136,6 +1104,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1151,6 +1120,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1166,6 +1136,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -2452,7 +2423,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -2472,7 +2443,7 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback Collection~insertCallback
+ * @callback insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -2487,7 +2458,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
@@ -2652,8 +2623,8 @@ Collection.prototype._insert = function (doc, index) {
  * Inserts a document into the internal collection data array at
  * Inserts a document into the internal collection data array at
  * the specified index.
- * @param {number} index The index to insert at.
- * @param {object} doc The document to insert.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
  * @private
  */
 Collection.prototype._dataInsertAtIndex = function (index, doc) {
@@ -2663,7 +2634,7 @@ Collection.prototype._dataInsertAtIndex = function (index, doc) {
 /**
  * Removes a document from the internal collection data array at
  * the specified index.
- * @param {number} index The index to remove from.
+ * @param {Number} index The index to remove from.
  * @private
  */
 Collection.prototype._dataRemoveAtIndex = function (index) {
@@ -2673,7 +2644,7 @@ Collection.prototype._dataRemoveAtIndex = function (index) {
 /**
  * Replaces all data in the collection's internal data array with
  * the passed array of data.
- * @param {array} data The array of data to replace existing data with.
+ * @param {Array} data The array of data to replace existing data with.
  * @private
  */
 Collection.prototype._dataReplace = function (data) {
@@ -2901,8 +2872,8 @@ Collection.prototype.explain = function (query, options) {
  * Generates an options object with default values or adds default
  * values to a passed object if those values are not currently set
  * to anything.
- * @param {object=} obj Optional options object to modify.
- * @returns {object} The options object.
+ * @param {Object=} obj Optional options object to modify.
+ * @returns {Object} The options object.
  */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
@@ -4637,7 +4608,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Condition":7,"./Index2d":11,"./IndexBinaryTree":12,"./IndexHashMap":13,"./KeyValueStore":14,"./Metrics":15,"./Overload":27,"./Path":28,"./ReactorIO":32,"./Shared":34}],6:[function(_dereq_,module,exports){
+},{"./Condition":6,"./Index2d":10,"./IndexBinaryTree":11,"./IndexHashMap":12,"./KeyValueStore":13,"./Metrics":14,"./Overload":26,"./Path":27,"./ReactorIO":31,"./Shared":33}],5:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -4997,15 +4968,8 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":5,"./Shared":34}],7:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Shared":33}],6:[function(_dereq_,module,exports){
 "use strict";
-
-/**
- * The condition class monitors a data source and updates it's internal
- * state depending on clauses that it has been given. When all clauses
- * are satisfied the then() callback is fired. If conditions were met
- * but data changed that made them un-met, the else() callback is fired.
- */
 
 var //Overload = require('./Overload'),
 	Shared,
@@ -5014,14 +4978,25 @@ var //Overload = require('./Overload'),
 Shared = _dereq_('./Shared');
 
 /**
- * Create a constructor method that calls the instance's init method.
- * This allows the constructor to be overridden by other modules because
- * they can override the init method with their own.
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ * @class
+ * @constructor
  */
 Condition = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Class constructor calls this init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ * @param {Collection|View} dataSource The condition's data source.
+ * @param {String} id The id to assign to the new Condition.
+ * @param {Object} clause The query clause.
+ */
 Condition.prototype.init = function (dataSource, id, clause) {
 	this._dataSource = dataSource;
 	this._id = id;
@@ -5163,7 +5138,7 @@ Condition.prototype.drop = function () {
 // Tell ForerunnerDB that our module has finished loading
 Shared.finishModule('Condition');
 module.exports = Condition;
-},{"./Shared":34}],8:[function(_dereq_,module,exports){
+},{"./Shared":33}],7:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5454,7 +5429,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":9,"./Metrics.js":15,"./Overload":27,"./Shared":34}],9:[function(_dereq_,module,exports){
+},{"./Db.js":8,"./Metrics.js":14,"./Overload":26,"./Shared":33}],8:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -5605,7 +5580,6 @@ Shared.mixin(Db.prototype, 'Mixin.Events');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5805,7 +5779,7 @@ Db.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {object}
+ * @returns {Object}
  */
 Db.prototype.peekCat = function (search) {
 	var i,
@@ -6094,7 +6068,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":4,"./Collection.js":5,"./Metrics.js":15,"./Overload":27,"./Shared":34}],10:[function(_dereq_,module,exports){
+},{"./Collection.js":4,"./Metrics.js":14,"./Overload":26,"./Shared":33}],9:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -6462,7 +6436,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],11:[function(_dereq_,module,exports){
+},{}],10:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6952,7 +6926,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":3,"./GeoHash":10,"./Path":28,"./Shared":34}],12:[function(_dereq_,module,exports){
+},{"./BinaryTree":3,"./GeoHash":9,"./Path":27,"./Shared":33}],11:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -7196,7 +7170,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":3,"./Path":28,"./Shared":34}],13:[function(_dereq_,module,exports){
+},{"./BinaryTree":3,"./Path":27,"./Shared":33}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7559,7 +7533,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":28,"./Shared":34}],14:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":33}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7811,7 +7785,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":34}],15:[function(_dereq_,module,exports){
+},{"./Shared":33}],14:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7886,7 +7860,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":26,"./Shared":34}],16:[function(_dereq_,module,exports){
+},{"./Operation":25,"./Shared":33}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -7900,7 +7874,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],17:[function(_dereq_,module,exports){
+},{}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8063,14 +8037,32 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],18:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Serialiser = _dereq_('./Serialiser'),
 	Common,
-	serialiser = new Serialiser();
+	serialiser = new Serialiser(),
+	crcTable;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+	
+	for (n = 0; n < 256; n++) {
+		c = n;
+		
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+		
+		crcTable[n] = c;
+	}
+	
+	return crcTable;
+}());
 
 /**
  * Provides commonly used methods to most classes in ForerunnerDB.
@@ -8277,7 +8269,7 @@ Common = {
 
 	/**
 	 * Returns a string describing the class this instance is derived from.
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
@@ -8295,7 +8287,7 @@ Common = {
 	/**
 	 * Returns a string used to denote a console log against this instance,
 	 * consisting of the class identifier and instance identifier.
-	 * @returns {string} The log identifier.
+	 * @returns {String} The log identifier.
 	 */
 	logIdentifier: function () {
 		return 'ForerunnerDB ' + this.instanceIdentifier();
@@ -8383,11 +8375,27 @@ Common = {
 
 		// Save current data
 		self._debounce[id] = newData;
+	},
+	
+	/**
+	 * Returns a checksum of a string.
+	 * @param {String} str The string to checksum.
+	 * @return {Number} The checksum generated.
+	 */
+	checksum: function (str) {
+		var crc = 0 ^ (-1), // jshint ignore:line
+			i;
+		
+		for (i = 0; i < str.length; i++) {
+			crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+		}
+		
+		return (crc ^ (-1)) >>> 0; // jshint ignore:line
 	}
 };
 
 module.exports = Common;
-},{"./Overload":27,"./Serialiser":33}],19:[function(_dereq_,module,exports){
+},{"./Overload":26,"./Serialiser":32}],18:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8404,7 +8412,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],20:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8412,13 +8420,17 @@ var Overload = _dereq_('./Overload');
 /**
  * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
  * @mixin
+ * @name Events
  */
 var Events = {
 	on: new Overload({
 		/**
 		 * Attach an event listener to the passed event.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, function': function (event, listener) {
 			this._listeners = this._listeners || {};
@@ -8432,9 +8444,12 @@ var Events = {
 		/**
 		 * Attach an event listener to the passed event only if the passed
 		 * id matches the document id for the event being fired.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {*} id The document id to match against.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, *, function': function (event, id, listener) {
 			this._listeners = this._listeners || {};
@@ -8447,36 +8462,60 @@ var Events = {
 	}),
 
 	once: new Overload({
-		'string, function': function (eventName, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, function': function (event, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, internalCallback);
+			return this.on(event, internalCallback);
 		},
 		
-		'string, *, function': function (eventName, id, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {String} id The document id to match against.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, *, function': function (event, id, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, id, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, id, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, id, internalCallback);
+			return this.on(event, id, internalCallback);
 		}
 	}),
 
 	off: new Overload({
+		/**
+		 * Cancels all event listeners for the passed event.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The name of the event.
+		 * @returns {*}
+		 */
 		'string': function (event) {
 			var self = this;
 
@@ -8493,7 +8532,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels the event listener for the passed event and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 * @returns {*}
+		 */
 		'string, function': function (event, listener) {
 			var self = this,
 				arr,
@@ -8523,7 +8571,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels an event listener based on an event name, id and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {String} id The ID of the event to cancel listening for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 */
 		'string, *, function': function (event, id, listener) {
 			var self = this;
 
@@ -8544,6 +8601,13 @@ var Events = {
 			}
 		},
 
+		/**
+		 * Cancels all listeners for an event based on the passed event name and id.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event name to cancel listeners for.
+		 * @param {*} id The ID to cancel all listeners for.
+		 */
 		'string, *': function (event, id) {
 			var self = this;
 
@@ -8560,7 +8624,15 @@ var Events = {
 			}
 		}
 	}),
-
+	
+	/**
+	 * Emit an event with data.
+	 * @name emit
+	 * @method Events.emit
+	 * @param {String} event The event to emit.
+	 * @param {*} data Data to emit with the event.
+	 * @returns {*}
+	 */
 	emit: function (event, data) {
 		this._listeners = this._listeners || {};
 		this._emitting = true;
@@ -8627,6 +8699,8 @@ var Events = {
 	 * errors that might occur by potentially modifying the event queue while
 	 * the emitter is running through them. This method is called after the
 	 * event emitter is finished processing.
+	 * @name _processRemovalQueue
+	 * @method Events._processRemovalQueue
 	 * @private
 	 */
 	_processRemovalQueue: function () {
@@ -8649,6 +8723,8 @@ var Events = {
 	 * one will all be wrapped into a single emit rather than emitting tons of
 	 * events for lots of chained inserts etc. Only the data from the last
 	 * de-bounced event will be emitted.
+	 * @name deferEmit
+	 * @method Events.deferEmit
 	 * @param {String} eventName The name of the event to emit.
 	 * @param {*=} data Optional data to emit with the event.
 	 */
@@ -8682,7 +8758,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":27}],21:[function(_dereq_,module,exports){
+},{"./Overload":26}],20:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9439,7 +9515,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],22:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9489,7 +9565,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],23:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -9594,7 +9670,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],24:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10218,7 +10294,7 @@ var Triggers = {
 	 * constants to use.
 	 * @param {Number} phase The phase of the operation. See Mixin.Constants
 	 * for constants to use.
-	 * @returns {number}
+	 * @returns {Number}
 	 * @private
 	 */
 	_triggerIndexOf: function (id, type, phase) {
@@ -10243,7 +10319,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":27}],25:[function(_dereq_,module,exports){
+},{"./Overload":26}],24:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10435,7 +10511,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],26:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10582,7 +10658,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":28,"./Shared":34}],27:[function(_dereq_,module,exports){
+},{"./Path":27,"./Shared":33}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10754,7 +10830,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],28:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -11242,7 +11318,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":34}],29:[function(_dereq_,module,exports){
+},{"./Shared":33}],28:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -11265,6 +11341,7 @@ var Shared = _dereq_('./Shared'),
 /**
  * The persistent storage class handles loading and saving data to browser
  * storage.
+ * @class
  * @constructor
  */
 Persist = function () {
@@ -11467,35 +11544,58 @@ Persist.prototype.encode = function (val, finished) {
 Shared.synthesize(Persist.prototype, 'encodeSteps');
 Shared.synthesize(Persist.prototype, 'decodeSteps');
 
-/**
- * Adds an encode/decode step to the persistent storage system so
- * that you can add custom functionality.
- * @param {Function} encode The encode method called with the data from the
- * previous encode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the encoder will fail and throw an error.
- * @param {Function} decode The decode method called with the data from the
- * previous decode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the decoder will fail and throw an error.
- * @param {Number=} index Optional index to add the encoder step to. This
- * allows you to place a step before or after other existing steps. If not
- * provided your step is placed last in the list of steps. For instance if
- * you are providing an encryption step it makes sense to place this last
- * since all previous steps will then have their data encrypted by your
- * final step.
- */
 Persist.prototype.addStep = new Overload({
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} obj The object to encode / decode.
+	 */
 	'object': function (obj) {
-		this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
+		return this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 */
 	'function, function': function (encode, decode) {
-		this.$main.call(this, encode, decode, 0);
+		return this.$main.call(this, encode, decode, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 * @param {Number=} index Optional index to add the encoder step to. This
+	 * allows you to place a step before or after other existing steps. If not
+	 * provided your step is placed last in the list of steps. For instance if
+	 * you are providing an encryption step it makes sense to place this last
+	 * since all previous steps will then have their data encrypted by your
+	 * final step.
+	 */
 	'function, function, number': function (encode, decode, index) {
-		this.$main.call(this, encode, decode, index);
+		return this.$main.call(this, encode, decode, index);
 	},
 
 	$main: function (encode, decode, index) {
@@ -11696,6 +11796,8 @@ Persist.prototype.drop = function (key, callback) {
 Collection.prototype.drop = new Overload({
 	/**
 	 * Drop collection and persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 */
 	'': function () {
 		if (!this.isDropped()) {
@@ -11705,6 +11807,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
@@ -11715,6 +11819,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and optionally drop persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
@@ -11739,6 +11845,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collections and optionally drop persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
 	 */
@@ -12079,7 +12187,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":5,"./CollectionGroup":6,"./PersistCompress":30,"./PersistCrypto":31,"./Shared":34,"async":37,"localforage":75}],30:[function(_dereq_,module,exports){
+},{"./Collection":4,"./CollectionGroup":5,"./PersistCompress":29,"./PersistCrypto":30,"./Shared":33,"async":36,"localforage":74}],29:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12160,7 +12268,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":34,"pako":77}],31:[function(_dereq_,module,exports){
+},{"./Shared":33,"pako":76}],30:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -12281,7 +12389,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":34,"crypto-js":46}],32:[function(_dereq_,module,exports){
+},{"./Shared":33,"crypto-js":45}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -12368,7 +12476,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":34}],33:[function(_dereq_,module,exports){
+},{"./Shared":33}],32:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -12494,7 +12602,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],34:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -12505,7 +12613,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.883',
+	version: '1.3.884',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -12693,7 +12801,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":16,"./Mixin.ChainReactor":17,"./Mixin.Common":18,"./Mixin.Constants":19,"./Mixin.Events":20,"./Mixin.Matching":21,"./Mixin.Sorting":22,"./Mixin.Tags":23,"./Mixin.Triggers":24,"./Mixin.Updating":25,"./Overload":27}],35:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":15,"./Mixin.ChainReactor":16,"./Mixin.Common":17,"./Mixin.Constants":18,"./Mixin.Events":19,"./Mixin.Matching":20,"./Mixin.Sorting":21,"./Mixin.Tags":22,"./Mixin.Triggers":23,"./Mixin.Updating":24,"./Overload":26}],34:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -12813,7 +12921,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],36:[function(_dereq_,module,exports){
+},{}],35:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -12930,7 +13038,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":93}],37:[function(_dereq_,module,exports){
+},{"_process":92}],36:[function(_dereq_,module,exports){
 (function (process,global){
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -18148,7 +18256,7 @@ module.exports = asap;
 
 }));
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":93}],38:[function(_dereq_,module,exports){
+},{"_process":92}],37:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -18376,7 +18484,7 @@ module.exports = asap;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":39,"./core":40,"./enc-base64":41,"./evpkdf":43,"./md5":48}],39:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39,"./enc-base64":40,"./evpkdf":42,"./md5":47}],38:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19252,7 +19360,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":40}],40:[function(_dereq_,module,exports){
+},{"./core":39}],39:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -19995,7 +20103,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{}],41:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20120,7 +20228,7 @@ module.exports = asap;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":40}],42:[function(_dereq_,module,exports){
+},{"./core":39}],41:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20270,7 +20378,7 @@ module.exports = asap;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":40}],43:[function(_dereq_,module,exports){
+},{"./core":39}],42:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20403,7 +20511,7 @@ module.exports = asap;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":40,"./hmac":45,"./sha1":64}],44:[function(_dereq_,module,exports){
+},{"./core":39,"./hmac":44,"./sha1":63}],43:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20470,7 +20578,7 @@ module.exports = asap;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":39,"./core":40}],45:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],44:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20614,7 +20722,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":40}],46:[function(_dereq_,module,exports){
+},{"./core":39}],45:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20633,7 +20741,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./aes":38,"./cipher-core":39,"./core":40,"./enc-base64":41,"./enc-utf16":42,"./evpkdf":43,"./format-hex":44,"./hmac":45,"./lib-typedarrays":47,"./md5":48,"./mode-cfb":49,"./mode-ctr":51,"./mode-ctr-gladman":50,"./mode-ecb":52,"./mode-ofb":53,"./pad-ansix923":54,"./pad-iso10126":55,"./pad-iso97971":56,"./pad-nopadding":57,"./pad-zeropadding":58,"./pbkdf2":59,"./rabbit":61,"./rabbit-legacy":60,"./rc4":62,"./ripemd160":63,"./sha1":64,"./sha224":65,"./sha256":66,"./sha3":67,"./sha384":68,"./sha512":69,"./tripledes":70,"./x64-core":71}],47:[function(_dereq_,module,exports){
+},{"./aes":37,"./cipher-core":38,"./core":39,"./enc-base64":40,"./enc-utf16":41,"./evpkdf":42,"./format-hex":43,"./hmac":44,"./lib-typedarrays":46,"./md5":47,"./mode-cfb":48,"./mode-ctr":50,"./mode-ctr-gladman":49,"./mode-ecb":51,"./mode-ofb":52,"./pad-ansix923":53,"./pad-iso10126":54,"./pad-iso97971":55,"./pad-nopadding":56,"./pad-zeropadding":57,"./pbkdf2":58,"./rabbit":60,"./rabbit-legacy":59,"./rc4":61,"./ripemd160":62,"./sha1":63,"./sha224":64,"./sha256":65,"./sha3":66,"./sha384":67,"./sha512":68,"./tripledes":69,"./x64-core":70}],46:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20710,7 +20818,7 @@ module.exports = asap;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":40}],48:[function(_dereq_,module,exports){
+},{"./core":39}],47:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -20979,7 +21087,7 @@ module.exports = asap;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":40}],49:[function(_dereq_,module,exports){
+},{"./core":39}],48:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21058,7 +21166,7 @@ module.exports = asap;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":39,"./core":40}],50:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],49:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21175,7 +21283,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":39,"./core":40}],51:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],50:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21234,7 +21342,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":39,"./core":40}],52:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],51:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21275,7 +21383,7 @@ module.exports = asap;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":39,"./core":40}],53:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],52:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21330,7 +21438,7 @@ module.exports = asap;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":39,"./core":40}],54:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],53:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21380,7 +21488,7 @@ module.exports = asap;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":39,"./core":40}],55:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],54:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21425,7 +21533,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":39,"./core":40}],56:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],55:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21466,7 +21574,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":39,"./core":40}],57:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],56:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21497,7 +21605,7 @@ module.exports = asap;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":39,"./core":40}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21543,7 +21651,7 @@ module.exports = asap;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":39,"./core":40}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21689,7 +21797,7 @@ module.exports = asap;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":40,"./hmac":45,"./sha1":64}],60:[function(_dereq_,module,exports){
+},{"./core":39,"./hmac":44,"./sha1":63}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -21880,7 +21988,7 @@ module.exports = asap;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":39,"./core":40,"./enc-base64":41,"./evpkdf":43,"./md5":48}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39,"./enc-base64":40,"./evpkdf":42,"./md5":47}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22073,7 +22181,7 @@ module.exports = asap;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":39,"./core":40,"./enc-base64":41,"./evpkdf":43,"./md5":48}],62:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39,"./enc-base64":40,"./evpkdf":42,"./md5":47}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22213,7 +22321,7 @@ module.exports = asap;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":39,"./core":40,"./enc-base64":41,"./evpkdf":43,"./md5":48}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39,"./enc-base64":40,"./evpkdf":42,"./md5":47}],62:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22481,7 +22589,7 @@ module.exports = asap;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":40}],64:[function(_dereq_,module,exports){
+},{"./core":39}],63:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22632,7 +22740,7 @@ module.exports = asap;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":40}],65:[function(_dereq_,module,exports){
+},{"./core":39}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22713,7 +22821,7 @@ module.exports = asap;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":40,"./sha256":66}],66:[function(_dereq_,module,exports){
+},{"./core":39,"./sha256":65}],65:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -22913,7 +23021,7 @@ module.exports = asap;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":40}],67:[function(_dereq_,module,exports){
+},{"./core":39}],66:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23237,7 +23345,7 @@ module.exports = asap;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":40,"./x64-core":71}],68:[function(_dereq_,module,exports){
+},{"./core":39,"./x64-core":70}],67:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23321,7 +23429,7 @@ module.exports = asap;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":40,"./sha512":69,"./x64-core":71}],69:[function(_dereq_,module,exports){
+},{"./core":39,"./sha512":68,"./x64-core":70}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23645,7 +23753,7 @@ module.exports = asap;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":40,"./x64-core":71}],70:[function(_dereq_,module,exports){
+},{"./core":39,"./x64-core":70}],69:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24416,7 +24524,7 @@ module.exports = asap;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":39,"./core":40,"./enc-base64":41,"./evpkdf":43,"./md5":48}],71:[function(_dereq_,module,exports){
+},{"./cipher-core":38,"./core":39,"./enc-base64":40,"./evpkdf":42,"./md5":47}],70:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24721,7 +24829,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./core":40}],72:[function(_dereq_,module,exports){
+},{"./core":39}],71:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -25284,7 +25392,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":95}],73:[function(_dereq_,module,exports){
+},{"promise":94}],72:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -25627,7 +25735,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":76,"promise":95}],74:[function(_dereq_,module,exports){
+},{"./../utils/serializer":75,"promise":94}],73:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -26046,7 +26154,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":76,"promise":95}],75:[function(_dereq_,module,exports){
+},{"./../utils/serializer":75,"promise":94}],74:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -26465,7 +26573,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":72,"./drivers/localstorage":73,"./drivers/websql":74,"promise":95}],76:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":71,"./drivers/localstorage":72,"./drivers/websql":73,"promise":94}],75:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -26741,7 +26849,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],77:[function(_dereq_,module,exports){
+},{}],76:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -26757,7 +26865,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":78,"./lib/inflate":79,"./lib/utils/common":80,"./lib/zlib/constants":83}],78:[function(_dereq_,module,exports){
+},{"./lib/deflate":77,"./lib/inflate":78,"./lib/utils/common":79,"./lib/zlib/constants":82}],77:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27159,7 +27267,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":80,"./utils/strings":81,"./zlib/deflate":85,"./zlib/messages":90,"./zlib/zstream":92}],79:[function(_dereq_,module,exports){
+},{"./utils/common":79,"./utils/strings":80,"./zlib/deflate":84,"./zlib/messages":89,"./zlib/zstream":91}],78:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27579,7 +27687,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":80,"./utils/strings":81,"./zlib/constants":83,"./zlib/gzheader":86,"./zlib/inflate":88,"./zlib/messages":90,"./zlib/zstream":92}],80:[function(_dereq_,module,exports){
+},{"./utils/common":79,"./utils/strings":80,"./zlib/constants":82,"./zlib/gzheader":85,"./zlib/inflate":87,"./zlib/messages":89,"./zlib/zstream":91}],79:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27683,7 +27791,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],81:[function(_dereq_,module,exports){
+},{}],80:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -27870,7 +27978,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":80}],82:[function(_dereq_,module,exports){
+},{"./common":79}],81:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -27904,7 +28012,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],83:[function(_dereq_,module,exports){
+},{}],82:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -27956,7 +28064,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],84:[function(_dereq_,module,exports){
+},{}],83:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -27999,7 +28107,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -29856,7 +29964,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":80,"./adler32":82,"./crc32":84,"./messages":90,"./trees":91}],86:[function(_dereq_,module,exports){
+},{"../utils/common":79,"./adler32":81,"./crc32":83,"./messages":89,"./trees":90}],85:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -29898,7 +30006,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],87:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -30226,7 +30334,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],88:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31766,7 +31874,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":80,"./adler32":82,"./crc32":84,"./inffast":87,"./inftrees":89}],89:[function(_dereq_,module,exports){
+},{"../utils/common":79,"./adler32":81,"./crc32":83,"./inffast":86,"./inftrees":88}],88:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -32095,7 +32203,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":80}],90:[function(_dereq_,module,exports){
+},{"../utils/common":79}],89:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -32110,7 +32218,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],91:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33314,7 +33422,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":80}],92:[function(_dereq_,module,exports){
+},{"../utils/common":79}],91:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33345,7 +33453,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],93:[function(_dereq_,module,exports){
+},{}],92:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -33438,7 +33546,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],94:[function(_dereq_,module,exports){
+},{}],93:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -33545,7 +33653,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":36}],95:[function(_dereq_,module,exports){
+},{"asap":35}],94:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -33727,4 +33835,4 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":94,"asap":36}]},{},[1]);
+},{"./core.js":93,"asap":35}]},{},[1]);

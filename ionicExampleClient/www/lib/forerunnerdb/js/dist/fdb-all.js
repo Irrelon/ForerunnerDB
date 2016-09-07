@@ -15,7 +15,7 @@ if (typeof window !== 'undefined') {
 }
 
 module.exports = Core;
-},{"../lib/BinaryLog":4,"../lib/CollectionGroup":8,"../lib/Document":12,"../lib/Grid":14,"../lib/Highchart":15,"../lib/NodeApiClient":31,"../lib/Overview":34,"../lib/Persist":36,"../lib/View":43,"./core":2}],2:[function(_dereq_,module,exports){
+},{"../lib/BinaryLog":4,"../lib/CollectionGroup":7,"../lib/Document":11,"../lib/Grid":13,"../lib/Highchart":14,"../lib/NodeApiClient":30,"../lib/Overview":33,"../lib/Persist":35,"../lib/View":42,"./core":2}],2:[function(_dereq_,module,exports){
 var Core = _dereq_('../lib/Core'),
 	ShimIE8 = _dereq_('../lib/Shim.IE8');
 
@@ -23,7 +23,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":10,"../lib/Shim.IE8":42}],3:[function(_dereq_,module,exports){
+},{"../lib/Core":9,"../lib/Shim.IE8":41}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -34,8 +34,8 @@ var Shared = _dereq_('./Shared'),
  * Creates an always-sorted multi-key bucket that allows ForerunnerDB to
  * know the index that a document will occupy in an array with minimal
  * processing, speeding up things like sorted views.
- * @param {object} orderBy An order object.
- * @constructor
+ * @param {Object} orderBy An order object.
+ * @class
  */
 var ActiveBucket = function (orderBy) {
 	this._primaryKey = '_id';
@@ -61,15 +61,15 @@ Shared.synthesize(ActiveBucket.prototype, 'primaryKey');
 /**
  * Quicksorts a single document into the passed array and
  * returns the index that the document should occupy.
- * @param {object} obj The document to calculate index for.
- * @param {array} arr The array the document index will be
+ * @param {Object} obj The document to calculate index for.
+ * @param {Array} arr The array the document index will be
  * calculated for.
- * @param {string} item The string key representation of the
+ * @param {String} item The string key representation of the
  * document whose index is being calculated.
- * @param {function} fn The comparison function that is used
+ * @param {Function} fn The comparison function that is used
  * to determine if a document is sorted below or above the
  * document we are calculating the index for.
- * @returns {number} The index the document should occupy.
+ * @returns {Number} The index the document should occupy.
  */
 ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 	// If the array is empty then return index zero
@@ -123,12 +123,12 @@ ActiveBucket.prototype.qs = function (obj, arr, item, fn) {
 
 /**
  * Calculates the sort position of an item against another item.
- * @param {object} sorter An object or instance that contains
+ * @param {Object} sorter An object or instance that contains
  * sortAsc and sortDesc methods.
- * @param {object} obj The document to compare.
- * @param {string} a The first key to compare.
- * @param {string} b The second key to compare.
- * @returns {number} Either 1 for sort a after b or -1 to sort
+ * @param {Object} obj The document to compare.
+ * @param {String} a The first key to compare.
+ * @param {String} b The second key to compare.
+ * @returns {Number} Either 1 for sort a after b or -1 to sort
  * a before b.
  * @private
  */
@@ -166,8 +166,8 @@ ActiveBucket.prototype._sortFunc = function (sorter, obj, a, b) {
 
 /**
  * Inserts a document into the active bucket.
- * @param {object} obj The document to insert.
- * @returns {number} The index the document now occupies.
+ * @param {Object} obj The document to insert.
+ * @returns {Number} The index the document now occupies.
  */
 ActiveBucket.prototype.insert = function (obj) {
 	var key,
@@ -193,7 +193,7 @@ ActiveBucket.prototype.insert = function (obj) {
 
 /**
  * Removes a document from the active bucket.
- * @param {object} obj The document to remove.
+ * @param {Object} obj The document to remove.
  * @returns {boolean} True if the document was removed
  * successfully or false if it wasn't found in the active
  * bucket.
@@ -224,8 +224,8 @@ ActiveBucket.prototype.remove = function (obj) {
 /**
  * Get the index that the passed document currently occupies
  * or the index it will occupy if added to the active bucket.
- * @param {object} obj The document to get the index for.
- * @returns {number} The index.
+ * @param {Object} obj The document to get the index for.
+ * @returns {Number} The index.
  */
 ActiveBucket.prototype.index = function (obj) {
 	var key,
@@ -244,8 +244,8 @@ ActiveBucket.prototype.index = function (obj) {
 
 /**
  * The key that represents the passed document.
- * @param {object} obj The document to get the key for.
- * @returns {string} The document key.
+ * @param {Object} obj The document to get the key for.
+ * @returns {String} The document key.
  */
 ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
@@ -273,7 +273,7 @@ ActiveBucket.prototype.documentKey = function (obj) {
 /**
  * Get the number of documents currently indexed in the active
  * bucket instance.
- * @returns {number} The number of documents.
+ * @returns {Number} The number of documents.
  */
 ActiveBucket.prototype.count = function () {
 	return this._count;
@@ -281,7 +281,7 @@ ActiveBucket.prototype.count = function () {
 
 Shared.finishModule('ActiveBucket');
 module.exports = ActiveBucket;
-},{"./Path":35,"./Shared":41}],4:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],4:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -367,7 +367,7 @@ Collection.prototype.init = function () {
 
 Shared.finishModule('BinaryLog');
 module.exports = BinaryLog;
-},{"./Shared":41}],5:[function(_dereq_,module,exports){
+},{"./Shared":40}],5:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -479,7 +479,7 @@ BinaryTree.prototype.pull = function (val) {
  * Default compare method. Can be overridden.
  * @param a
  * @param b
- * @returns {number}
+ * @returns {Number}
  * @private
  */
 BinaryTree.prototype._compareFunc = function (a, b) {
@@ -1061,47 +1061,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":35,"./Shared":41}],6:[function(_dereq_,module,exports){
-"use strict";
-
-var crcTable,
-	checksum;
-
-crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-/**
- * Returns a checksum of a string.
- * @param {String} str The string to checksum.
- * @return {Number} The checksum generated.
- */
-checksum = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-
-module.exports = checksum;
-},{}],7:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -1123,11 +1083,16 @@ Shared = _dereq_('./Shared');
  * Creates a new collection. Collections store multiple documents and
  * handle CRUD against those documents.
  * @constructor
+ * @class
  */
 var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
+ */
 Collection.prototype.init = function (name, options) {
 	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
@@ -1448,6 +1413,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 */
@@ -1461,6 +1427,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1475,6 +1442,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Function} callback Optional callback function.
@@ -1489,6 +1457,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1504,6 +1473,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1519,6 +1489,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -2805,7 +2776,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -2825,7 +2796,7 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback Collection~insertCallback
+ * @callback insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -2840,7 +2811,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
@@ -3005,8 +2976,8 @@ Collection.prototype._insert = function (doc, index) {
  * Inserts a document into the internal collection data array at
  * Inserts a document into the internal collection data array at
  * the specified index.
- * @param {number} index The index to insert at.
- * @param {object} doc The document to insert.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
  * @private
  */
 Collection.prototype._dataInsertAtIndex = function (index, doc) {
@@ -3016,7 +2987,7 @@ Collection.prototype._dataInsertAtIndex = function (index, doc) {
 /**
  * Removes a document from the internal collection data array at
  * the specified index.
- * @param {number} index The index to remove from.
+ * @param {Number} index The index to remove from.
  * @private
  */
 Collection.prototype._dataRemoveAtIndex = function (index) {
@@ -3026,7 +2997,7 @@ Collection.prototype._dataRemoveAtIndex = function (index) {
 /**
  * Replaces all data in the collection's internal data array with
  * the passed array of data.
- * @param {array} data The array of data to replace existing data with.
+ * @param {Array} data The array of data to replace existing data with.
  * @private
  */
 Collection.prototype._dataReplace = function (data) {
@@ -3254,8 +3225,8 @@ Collection.prototype.explain = function (query, options) {
  * Generates an options object with default values or adds default
  * values to a passed object if those values are not currently set
  * to anything.
- * @param {object=} obj Optional options object to modify.
- * @returns {object} The options object.
+ * @param {Object=} obj Optional options object to modify.
+ * @returns {Object} The options object.
  */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
@@ -4990,7 +4961,7 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Condition":9,"./Index2d":16,"./IndexBinaryTree":17,"./IndexHashMap":18,"./KeyValueStore":19,"./Metrics":20,"./Overload":33,"./Path":35,"./ReactorIO":39,"./Shared":41}],8:[function(_dereq_,module,exports){
+},{"./Condition":8,"./Index2d":15,"./IndexBinaryTree":16,"./IndexHashMap":17,"./KeyValueStore":18,"./Metrics":19,"./Overload":32,"./Path":34,"./ReactorIO":38,"./Shared":40}],7:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -5350,15 +5321,8 @@ Db.prototype.collectionGroups = function () {
 };
 
 module.exports = CollectionGroup;
-},{"./Collection":7,"./Shared":41}],9:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Shared":40}],8:[function(_dereq_,module,exports){
 "use strict";
-
-/**
- * The condition class monitors a data source and updates it's internal
- * state depending on clauses that it has been given. When all clauses
- * are satisfied the then() callback is fired. If conditions were met
- * but data changed that made them un-met, the else() callback is fired.
- */
 
 var //Overload = require('./Overload'),
 	Shared,
@@ -5367,14 +5331,25 @@ var //Overload = require('./Overload'),
 Shared = _dereq_('./Shared');
 
 /**
- * Create a constructor method that calls the instance's init method.
- * This allows the constructor to be overridden by other modules because
- * they can override the init method with their own.
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ * @class
+ * @constructor
  */
 Condition = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Class constructor calls this init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ * @param {Collection|View} dataSource The condition's data source.
+ * @param {String} id The id to assign to the new Condition.
+ * @param {Object} clause The query clause.
+ */
 Condition.prototype.init = function (dataSource, id, clause) {
 	this._dataSource = dataSource;
 	this._id = id;
@@ -5516,7 +5491,7 @@ Condition.prototype.drop = function () {
 // Tell ForerunnerDB that our module has finished loading
 Shared.finishModule('Condition');
 module.exports = Condition;
-},{"./Shared":41}],10:[function(_dereq_,module,exports){
+},{"./Shared":40}],9:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5807,7 +5782,7 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":11,"./Metrics.js":20,"./Overload":33,"./Shared":41}],11:[function(_dereq_,module,exports){
+},{"./Db.js":10,"./Metrics.js":19,"./Overload":32,"./Shared":40}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -5958,7 +5933,6 @@ Shared.mixin(Db.prototype, 'Mixin.Events');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -6158,7 +6132,7 @@ Db.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {object}
+ * @returns {Object}
  */
 Db.prototype.peekCat = function (search) {
 	var i,
@@ -6447,7 +6421,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":6,"./Collection.js":7,"./Metrics.js":20,"./Overload":33,"./Shared":41}],12:[function(_dereq_,module,exports){
+},{"./Collection.js":6,"./Metrics.js":19,"./Overload":32,"./Shared":40}],11:[function(_dereq_,module,exports){
 "use strict";
 // TODO: Remove the _update* methods because we are already mixing them
 // TODO: in now via Mixin.Updating and update autobind to extend the _update*
@@ -6911,7 +6885,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":7,"./Shared":41}],13:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Shared":40}],12:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -7279,7 +7253,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],14:[function(_dereq_,module,exports){
+},{}],13:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -7502,7 +7476,7 @@ Grid.prototype.drop = function (callback) {
  * Gets / sets the grid's HTML template to use when rendering.
  * @func template
  * @memberof Grid
- * @param {Selector} template The template's jQuery selector.
+ * @param {String} template The template's jQuery selector.
  * @returns {*}
  */
 Grid.prototype.template = function (template) {
@@ -8036,7 +8010,7 @@ Db.prototype.grids = function () {
 
 Shared.finishModule('Grid');
 module.exports = Grid;
-},{"./Collection":7,"./CollectionGroup":8,"./ReactorIO":39,"./Shared":41,"./View":43}],15:[function(_dereq_,module,exports){
+},{"./Collection":6,"./CollectionGroup":7,"./ReactorIO":38,"./Shared":40,"./View":42}],14:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -8702,7 +8676,7 @@ Collection.prototype.dropChart = function (selector) {
 
 Shared.finishModule('Highchart');
 module.exports = Highchart;
-},{"./Overload":33,"./Shared":41}],16:[function(_dereq_,module,exports){
+},{"./Overload":32,"./Shared":40}],15:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -9192,7 +9166,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":5,"./GeoHash":13,"./Path":35,"./Shared":41}],17:[function(_dereq_,module,exports){
+},{"./BinaryTree":5,"./GeoHash":12,"./Path":34,"./Shared":40}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -9436,7 +9410,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":5,"./Path":35,"./Shared":41}],18:[function(_dereq_,module,exports){
+},{"./BinaryTree":5,"./Path":34,"./Shared":40}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -9799,7 +9773,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":35,"./Shared":41}],19:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],18:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10051,7 +10025,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":41}],20:[function(_dereq_,module,exports){
+},{"./Shared":40}],19:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10126,7 +10100,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":32,"./Shared":41}],21:[function(_dereq_,module,exports){
+},{"./Operation":31,"./Shared":40}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -10140,7 +10114,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],22:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10303,14 +10277,32 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],23:[function(_dereq_,module,exports){
+},{}],22:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Serialiser = _dereq_('./Serialiser'),
 	Common,
-	serialiser = new Serialiser();
+	serialiser = new Serialiser(),
+	crcTable;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+	
+	for (n = 0; n < 256; n++) {
+		c = n;
+		
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+		
+		crcTable[n] = c;
+	}
+	
+	return crcTable;
+}());
 
 /**
  * Provides commonly used methods to most classes in ForerunnerDB.
@@ -10517,7 +10509,7 @@ Common = {
 
 	/**
 	 * Returns a string describing the class this instance is derived from.
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
@@ -10535,7 +10527,7 @@ Common = {
 	/**
 	 * Returns a string used to denote a console log against this instance,
 	 * consisting of the class identifier and instance identifier.
-	 * @returns {string} The log identifier.
+	 * @returns {String} The log identifier.
 	 */
 	logIdentifier: function () {
 		return 'ForerunnerDB ' + this.instanceIdentifier();
@@ -10623,11 +10615,27 @@ Common = {
 
 		// Save current data
 		self._debounce[id] = newData;
+	},
+	
+	/**
+	 * Returns a checksum of a string.
+	 * @param {String} str The string to checksum.
+	 * @return {Number} The checksum generated.
+	 */
+	checksum: function (str) {
+		var crc = 0 ^ (-1), // jshint ignore:line
+			i;
+		
+		for (i = 0; i < str.length; i++) {
+			crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+		}
+		
+		return (crc ^ (-1)) >>> 0; // jshint ignore:line
 	}
 };
 
 module.exports = Common;
-},{"./Overload":33,"./Serialiser":40}],24:[function(_dereq_,module,exports){
+},{"./Overload":32,"./Serialiser":39}],23:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10644,7 +10652,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],25:[function(_dereq_,module,exports){
+},{}],24:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -10652,13 +10660,17 @@ var Overload = _dereq_('./Overload');
 /**
  * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
  * @mixin
+ * @name Events
  */
 var Events = {
 	on: new Overload({
 		/**
 		 * Attach an event listener to the passed event.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, function': function (event, listener) {
 			this._listeners = this._listeners || {};
@@ -10672,9 +10684,12 @@ var Events = {
 		/**
 		 * Attach an event listener to the passed event only if the passed
 		 * id matches the document id for the event being fired.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {*} id The document id to match against.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, *, function': function (event, id, listener) {
 			this._listeners = this._listeners || {};
@@ -10687,36 +10702,60 @@ var Events = {
 	}),
 
 	once: new Overload({
-		'string, function': function (eventName, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, function': function (event, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, internalCallback);
+			return this.on(event, internalCallback);
 		},
 		
-		'string, *, function': function (eventName, id, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {String} id The document id to match against.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, *, function': function (event, id, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, id, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, id, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, id, internalCallback);
+			return this.on(event, id, internalCallback);
 		}
 	}),
 
 	off: new Overload({
+		/**
+		 * Cancels all event listeners for the passed event.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The name of the event.
+		 * @returns {*}
+		 */
 		'string': function (event) {
 			var self = this;
 
@@ -10733,7 +10772,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels the event listener for the passed event and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 * @returns {*}
+		 */
 		'string, function': function (event, listener) {
 			var self = this,
 				arr,
@@ -10763,7 +10811,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels an event listener based on an event name, id and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {String} id The ID of the event to cancel listening for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 */
 		'string, *, function': function (event, id, listener) {
 			var self = this;
 
@@ -10784,6 +10841,13 @@ var Events = {
 			}
 		},
 
+		/**
+		 * Cancels all listeners for an event based on the passed event name and id.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event name to cancel listeners for.
+		 * @param {*} id The ID to cancel all listeners for.
+		 */
 		'string, *': function (event, id) {
 			var self = this;
 
@@ -10800,7 +10864,15 @@ var Events = {
 			}
 		}
 	}),
-
+	
+	/**
+	 * Emit an event with data.
+	 * @name emit
+	 * @method Events.emit
+	 * @param {String} event The event to emit.
+	 * @param {*} data Data to emit with the event.
+	 * @returns {*}
+	 */
 	emit: function (event, data) {
 		this._listeners = this._listeners || {};
 		this._emitting = true;
@@ -10867,6 +10939,8 @@ var Events = {
 	 * errors that might occur by potentially modifying the event queue while
 	 * the emitter is running through them. This method is called after the
 	 * event emitter is finished processing.
+	 * @name _processRemovalQueue
+	 * @method Events._processRemovalQueue
 	 * @private
 	 */
 	_processRemovalQueue: function () {
@@ -10889,6 +10963,8 @@ var Events = {
 	 * one will all be wrapped into a single emit rather than emitting tons of
 	 * events for lots of chained inserts etc. Only the data from the last
 	 * de-bounced event will be emitted.
+	 * @name deferEmit
+	 * @method Events.deferEmit
 	 * @param {String} eventName The name of the event to emit.
 	 * @param {*=} data Optional data to emit with the event.
 	 */
@@ -10922,7 +10998,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":33}],26:[function(_dereq_,module,exports){
+},{"./Overload":32}],25:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11679,7 +11755,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],27:[function(_dereq_,module,exports){
+},{}],26:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11729,7 +11805,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],28:[function(_dereq_,module,exports){
+},{}],27:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -11834,7 +11910,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],29:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -12458,7 +12534,7 @@ var Triggers = {
 	 * constants to use.
 	 * @param {Number} phase The phase of the operation. See Mixin.Constants
 	 * for constants to use.
-	 * @returns {number}
+	 * @returns {Number}
 	 * @private
 	 */
 	_triggerIndexOf: function (id, type, phase) {
@@ -12483,7 +12559,7 @@ var Triggers = {
 };
 
 module.exports = Triggers;
-},{"./Overload":33}],30:[function(_dereq_,module,exports){
+},{"./Overload":32}],29:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -12675,7 +12751,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],31:[function(_dereq_,module,exports){
+},{}],30:[function(_dereq_,module,exports){
 "use strict";
 
 // Tell JSHint about EventSource
@@ -12691,6 +12767,11 @@ var Shared = _dereq_('./Shared'),
 	NodeApiClient,
 	Overload;
 
+/**
+ * The NodeApiClient class.
+ * @class
+ * @constructor
+ */
 NodeApiClient = function () {
 	this.init.apply(this, arguments);
 };
@@ -12716,11 +12797,17 @@ CoreInit = Core.prototype.init;
 Collection = Shared.modules.Collection;
 Overload = Shared.overload;
 
+/**
+ * Gets / sets the rootPath for the client to use in each API call.
+ * @name rootPath
+ * @method NodeApiClient.rootPath
+ * @param {String=} val The path to set.
+ * @returns {*}
+ */
 Shared.synthesize(NodeApiClient.prototype, 'rootPath');
 
 /**
  * Set the url of the server to use for API.
- * @name server
  * @param {String} host The server host name including protocol. E.g.
  * "https://0.0.0.0".
  * @param {String} port The server port number e.g. "8080".
@@ -13084,6 +13171,8 @@ NodeApiClient.prototype.sync = function (collectionInstance, path, query, option
 Collection.prototype.sync = new Overload({
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
 	 */
@@ -13093,6 +13182,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
@@ -13103,6 +13194,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
 	 * the connection to the server has been established.
@@ -13113,6 +13206,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.
@@ -13125,6 +13220,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Function} callback The callback method to call once
@@ -13136,6 +13233,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.
@@ -13149,6 +13248,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {Object} query A query object.
 	 * @param {Object} options An options object.
 	 * @param {Function} callback The callback method to call once
@@ -13160,6 +13261,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} collectionName The collection to sync from.
 	 * @param {Object} query A query object.
 	 * @param {Object} options An options object.
@@ -13172,6 +13275,8 @@ Collection.prototype.sync = new Overload({
 
 	/**
 	 * Sync with this collection on the server-side.
+	 * @name sync
+	 * @method Collection.sync
 	 * @param {String} objectType The type of object to sync to e.g.
 	 * "collection" or "view".
 	 * @param {String} objectName The name of the object to sync from.
@@ -13323,7 +13428,7 @@ Core.prototype.init = function () {
 Shared.finishModule('NodeApiClient');
 
 module.exports = NodeApiClient;
-},{"./Shared":41}],32:[function(_dereq_,module,exports){
+},{"./Shared":40}],31:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -13470,7 +13575,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":35,"./Shared":41}],33:[function(_dereq_,module,exports){
+},{"./Path":34,"./Shared":40}],32:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -13642,7 +13747,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],34:[function(_dereq_,module,exports){
+},{}],33:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -13653,10 +13758,18 @@ var Shared,
 
 Shared = _dereq_('./Shared');
 
+/**
+ * The Overview class provides a queryable interface for data aggregation in realtime.
+ * @class
+ */
 var Overview = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Initialises the overview, called by the class as it is instantiated.
+ * @constructor
+ */
 Overview.prototype.init = function (name) {
 	var self = this;
 
@@ -13689,8 +13802,25 @@ Db = Shared.modules.Db;
  */
 Shared.synthesize(Overview.prototype, 'state');
 
+/**
+ * Gets / sets the db.
+ * @param {Db=} val The db to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'db');
+
+/**
+ * Gets / sets the name.
+ * @param {String=} val The name to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'name');
+
+/**
+ * Gets / sets the query.
+ * @param {Object=} val The query to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'query', function (val) {
 	var ret = this.$super(val);
 
@@ -13700,6 +13830,12 @@ Shared.synthesize(Overview.prototype, 'query', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the query options.
+ * @param {Object=} val The query options to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 	var ret = this.$super(val);
 
@@ -13709,6 +13845,12 @@ Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the reduce object.
+ * @param {Object=} val The reduce object to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	var ret = this.$super(val);
 
@@ -13719,6 +13861,11 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	return ret;
 });
 
+/**
+ * Gets / sets the data source the overview uses for underlying data.
+ * @param {Collection|View=} source The data source to set.
+ * @returns {*}
+ */
 Overview.prototype.from = function (source) {
 	if (source !== undefined) {
 		if (typeof(source) === 'string') {
@@ -13732,7 +13879,15 @@ Overview.prototype.from = function (source) {
 	return this._sources;
 };
 
-Overview.prototype.find = function () {
+/**
+ * Returns the data in the overview.
+ * @param {Object=} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
+ * @returns {*}
+ * @see Collection.find()
+ */
+Overview.prototype.find = function (query, options, callback) {
 	return this._collData.find.apply(this._collData, arguments);
 };
 
@@ -13747,6 +13902,10 @@ Overview.prototype.exec = function () {
 	return reduceFunc ? reduceFunc.apply(this) : undefined;
 };
 
+/**
+ * Returns a count of the documents in the overview data set.
+ * @returns {*}
+ */
 Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
 };
@@ -13860,6 +14019,11 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
+/**
+ * Drops the overview.
+ * @param {Function=} callback A callback function.
+ * @returns {Boolean}
+ */
 Overview.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
@@ -13888,6 +14052,11 @@ Overview.prototype.drop = function (callback) {
 	return true;
 };
 
+/**
+ * Create an overview instance from a Db instance.
+ * @param {String} name The name of the overview.
+ * @returns {*}
+ */
 Db.prototype.overview = function (name) {
 	var self = this;
 
@@ -13940,7 +14109,7 @@ Db.prototype.overviews = function () {
 
 Shared.finishModule('Overview');
 module.exports = Overview;
-},{"./Collection":7,"./Document":12,"./Shared":41}],35:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Document":11,"./Shared":40}],34:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -14428,7 +14597,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":41}],36:[function(_dereq_,module,exports){
+},{"./Shared":40}],35:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -14451,6 +14620,7 @@ var Shared = _dereq_('./Shared'),
 /**
  * The persistent storage class handles loading and saving data to browser
  * storage.
+ * @class
  * @constructor
  */
 Persist = function () {
@@ -14653,35 +14823,58 @@ Persist.prototype.encode = function (val, finished) {
 Shared.synthesize(Persist.prototype, 'encodeSteps');
 Shared.synthesize(Persist.prototype, 'decodeSteps');
 
-/**
- * Adds an encode/decode step to the persistent storage system so
- * that you can add custom functionality.
- * @param {Function} encode The encode method called with the data from the
- * previous encode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the encoder will fail and throw an error.
- * @param {Function} decode The decode method called with the data from the
- * previous decode step. When your method is complete it MUST call the
- * callback method. If you provide anything other than false to the err
- * parameter the decoder will fail and throw an error.
- * @param {Number=} index Optional index to add the encoder step to. This
- * allows you to place a step before or after other existing steps. If not
- * provided your step is placed last in the list of steps. For instance if
- * you are providing an encryption step it makes sense to place this last
- * since all previous steps will then have their data encrypted by your
- * final step.
- */
 Persist.prototype.addStep = new Overload({
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} obj The object to encode / decode.
+	 */
 	'object': function (obj) {
-		this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
+		return this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 */
 	'function, function': function (encode, decode) {
-		this.$main.call(this, encode, decode, 0);
+		return this.$main.call(this, encode, decode, 0);
 	},
-
+	
+	/**
+	 * Adds an encode/decode step to the persistent storage system so
+	 * that you can add custom functionality.
+	 * @name addStep
+	 * @method Persist.addStep
+	 * @param {Function} encode The encode method called with the data from the
+	 * previous encode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the encoder will fail and throw an error.
+	 * @param {Function} decode The decode method called with the data from the
+	 * previous decode step. When your method is complete it MUST call the
+	 * callback method. If you provide anything other than false to the err
+	 * parameter the decoder will fail and throw an error.
+	 * @param {Number=} index Optional index to add the encoder step to. This
+	 * allows you to place a step before or after other existing steps. If not
+	 * provided your step is placed last in the list of steps. For instance if
+	 * you are providing an encryption step it makes sense to place this last
+	 * since all previous steps will then have their data encrypted by your
+	 * final step.
+	 */
 	'function, function, number': function (encode, decode, index) {
-		this.$main.call(this, encode, decode, index);
+		return this.$main.call(this, encode, decode, index);
 	},
 
 	$main: function (encode, decode, index) {
@@ -14882,6 +15075,8 @@ Persist.prototype.drop = function (key, callback) {
 Collection.prototype.drop = new Overload({
 	/**
 	 * Drop collection and persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 */
 	'': function () {
 		if (!this.isDropped()) {
@@ -14891,6 +15086,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
@@ -14901,6 +15098,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and optionally drop persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
@@ -14925,6 +15124,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collections and optionally drop persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
 	 */
@@ -15265,7 +15466,7 @@ Db.prototype.save = new Overload({
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":7,"./CollectionGroup":8,"./PersistCompress":37,"./PersistCrypto":38,"./Shared":41,"async":45,"localforage":83}],37:[function(_dereq_,module,exports){
+},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":44,"localforage":82}],36:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -15346,7 +15547,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":41,"pako":85}],38:[function(_dereq_,module,exports){
+},{"./Shared":40,"pako":84}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -15467,7 +15668,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCrypto = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":41,"crypto-js":54}],39:[function(_dereq_,module,exports){
+},{"./Shared":40,"crypto-js":53}],38:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -15554,7 +15755,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":41}],40:[function(_dereq_,module,exports){
+},{"./Shared":40}],39:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -15680,7 +15881,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],41:[function(_dereq_,module,exports){
+},{}],40:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -15691,7 +15892,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.883',
+	version: '1.3.884',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -15879,7 +16080,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":21,"./Mixin.ChainReactor":22,"./Mixin.Common":23,"./Mixin.Constants":24,"./Mixin.Events":25,"./Mixin.Matching":26,"./Mixin.Sorting":27,"./Mixin.Tags":28,"./Mixin.Triggers":29,"./Mixin.Updating":30,"./Overload":33}],42:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":20,"./Mixin.ChainReactor":21,"./Mixin.Common":22,"./Mixin.Constants":23,"./Mixin.Events":24,"./Mixin.Matching":25,"./Mixin.Sorting":26,"./Mixin.Tags":27,"./Mixin.Triggers":28,"./Mixin.Updating":29,"./Overload":32}],41:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {
@@ -15999,7 +16200,7 @@ if (!Array.prototype.indexOf) {
 }
 
 module.exports = {};
-},{}],43:[function(_dereq_,module,exports){
+},{}],42:[function(_dereq_,module,exports){
 "use strict";
 
 // Import external names locally
@@ -17575,7 +17776,7 @@ Db.prototype.views = function () {
 
 Shared.finishModule('View');
 module.exports = View;
-},{"./ActiveBucket":3,"./Collection":7,"./CollectionGroup":8,"./Overload":33,"./ReactorIO":39,"./Shared":41}],44:[function(_dereq_,module,exports){
+},{"./ActiveBucket":3,"./Collection":6,"./CollectionGroup":7,"./Overload":32,"./ReactorIO":38,"./Shared":40}],43:[function(_dereq_,module,exports){
 (function (process){
 
 // Use the fastest possible means to execute a task in a future turn
@@ -17692,7 +17893,7 @@ module.exports = asap;
 
 
 }).call(this,_dereq_('_process'))
-},{"_process":101}],45:[function(_dereq_,module,exports){
+},{"_process":100}],44:[function(_dereq_,module,exports){
 (function (process,global){
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
@@ -22910,7 +23111,7 @@ module.exports = asap;
 
 }));
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":101}],46:[function(_dereq_,module,exports){
+},{"_process":100}],45:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -23138,7 +23339,7 @@ module.exports = asap;
 	return CryptoJS.AES;
 
 }));
-},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],47:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],46:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24014,7 +24215,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":48}],48:[function(_dereq_,module,exports){
+},{"./core":47}],47:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24757,7 +24958,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{}],49:[function(_dereq_,module,exports){
+},{}],48:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -24882,7 +25083,7 @@ module.exports = asap;
 	return CryptoJS.enc.Base64;
 
 }));
-},{"./core":48}],50:[function(_dereq_,module,exports){
+},{"./core":47}],49:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25032,7 +25233,7 @@ module.exports = asap;
 	return CryptoJS.enc.Utf16;
 
 }));
-},{"./core":48}],51:[function(_dereq_,module,exports){
+},{"./core":47}],50:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25165,7 +25366,7 @@ module.exports = asap;
 	return CryptoJS.EvpKDF;
 
 }));
-},{"./core":48,"./hmac":53,"./sha1":72}],52:[function(_dereq_,module,exports){
+},{"./core":47,"./hmac":52,"./sha1":71}],51:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25232,7 +25433,7 @@ module.exports = asap;
 	return CryptoJS.format.Hex;
 
 }));
-},{"./cipher-core":47,"./core":48}],53:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],52:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25376,7 +25577,7 @@ module.exports = asap;
 
 
 }));
-},{"./core":48}],54:[function(_dereq_,module,exports){
+},{"./core":47}],53:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25395,7 +25596,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./aes":46,"./cipher-core":47,"./core":48,"./enc-base64":49,"./enc-utf16":50,"./evpkdf":51,"./format-hex":52,"./hmac":53,"./lib-typedarrays":55,"./md5":56,"./mode-cfb":57,"./mode-ctr":59,"./mode-ctr-gladman":58,"./mode-ecb":60,"./mode-ofb":61,"./pad-ansix923":62,"./pad-iso10126":63,"./pad-iso97971":64,"./pad-nopadding":65,"./pad-zeropadding":66,"./pbkdf2":67,"./rabbit":69,"./rabbit-legacy":68,"./rc4":70,"./ripemd160":71,"./sha1":72,"./sha224":73,"./sha256":74,"./sha3":75,"./sha384":76,"./sha512":77,"./tripledes":78,"./x64-core":79}],55:[function(_dereq_,module,exports){
+},{"./aes":45,"./cipher-core":46,"./core":47,"./enc-base64":48,"./enc-utf16":49,"./evpkdf":50,"./format-hex":51,"./hmac":52,"./lib-typedarrays":54,"./md5":55,"./mode-cfb":56,"./mode-ctr":58,"./mode-ctr-gladman":57,"./mode-ecb":59,"./mode-ofb":60,"./pad-ansix923":61,"./pad-iso10126":62,"./pad-iso97971":63,"./pad-nopadding":64,"./pad-zeropadding":65,"./pbkdf2":66,"./rabbit":68,"./rabbit-legacy":67,"./rc4":69,"./ripemd160":70,"./sha1":71,"./sha224":72,"./sha256":73,"./sha3":74,"./sha384":75,"./sha512":76,"./tripledes":77,"./x64-core":78}],54:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25472,7 +25673,7 @@ module.exports = asap;
 	return CryptoJS.lib.WordArray;
 
 }));
-},{"./core":48}],56:[function(_dereq_,module,exports){
+},{"./core":47}],55:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25741,7 +25942,7 @@ module.exports = asap;
 	return CryptoJS.MD5;
 
 }));
-},{"./core":48}],57:[function(_dereq_,module,exports){
+},{"./core":47}],56:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25820,7 +26021,7 @@ module.exports = asap;
 	return CryptoJS.mode.CFB;
 
 }));
-},{"./cipher-core":47,"./core":48}],58:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],57:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25937,7 +26138,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTRGladman;
 
 }));
-},{"./cipher-core":47,"./core":48}],59:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],58:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -25996,7 +26197,7 @@ module.exports = asap;
 	return CryptoJS.mode.CTR;
 
 }));
-},{"./cipher-core":47,"./core":48}],60:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],59:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26037,7 +26238,7 @@ module.exports = asap;
 	return CryptoJS.mode.ECB;
 
 }));
-},{"./cipher-core":47,"./core":48}],61:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],60:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26092,7 +26293,7 @@ module.exports = asap;
 	return CryptoJS.mode.OFB;
 
 }));
-},{"./cipher-core":47,"./core":48}],62:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],61:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26142,7 +26343,7 @@ module.exports = asap;
 	return CryptoJS.pad.Ansix923;
 
 }));
-},{"./cipher-core":47,"./core":48}],63:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],62:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26187,7 +26388,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso10126;
 
 }));
-},{"./cipher-core":47,"./core":48}],64:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],63:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26228,7 +26429,7 @@ module.exports = asap;
 	return CryptoJS.pad.Iso97971;
 
 }));
-},{"./cipher-core":47,"./core":48}],65:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],64:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26259,7 +26460,7 @@ module.exports = asap;
 	return CryptoJS.pad.NoPadding;
 
 }));
-},{"./cipher-core":47,"./core":48}],66:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],65:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26305,7 +26506,7 @@ module.exports = asap;
 	return CryptoJS.pad.ZeroPadding;
 
 }));
-},{"./cipher-core":47,"./core":48}],67:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47}],66:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26451,7 +26652,7 @@ module.exports = asap;
 	return CryptoJS.PBKDF2;
 
 }));
-},{"./core":48,"./hmac":53,"./sha1":72}],68:[function(_dereq_,module,exports){
+},{"./core":47,"./hmac":52,"./sha1":71}],67:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26642,7 +26843,7 @@ module.exports = asap;
 	return CryptoJS.RabbitLegacy;
 
 }));
-},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],69:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],68:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26835,7 +27036,7 @@ module.exports = asap;
 	return CryptoJS.Rabbit;
 
 }));
-},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],70:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],69:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -26975,7 +27176,7 @@ module.exports = asap;
 	return CryptoJS.RC4;
 
 }));
-},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],71:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],70:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -27243,7 +27444,7 @@ module.exports = asap;
 	return CryptoJS.RIPEMD160;
 
 }));
-},{"./core":48}],72:[function(_dereq_,module,exports){
+},{"./core":47}],71:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -27394,7 +27595,7 @@ module.exports = asap;
 	return CryptoJS.SHA1;
 
 }));
-},{"./core":48}],73:[function(_dereq_,module,exports){
+},{"./core":47}],72:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -27475,7 +27676,7 @@ module.exports = asap;
 	return CryptoJS.SHA224;
 
 }));
-},{"./core":48,"./sha256":74}],74:[function(_dereq_,module,exports){
+},{"./core":47,"./sha256":73}],73:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -27675,7 +27876,7 @@ module.exports = asap;
 	return CryptoJS.SHA256;
 
 }));
-},{"./core":48}],75:[function(_dereq_,module,exports){
+},{"./core":47}],74:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -27999,7 +28200,7 @@ module.exports = asap;
 	return CryptoJS.SHA3;
 
 }));
-},{"./core":48,"./x64-core":79}],76:[function(_dereq_,module,exports){
+},{"./core":47,"./x64-core":78}],75:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -28083,7 +28284,7 @@ module.exports = asap;
 	return CryptoJS.SHA384;
 
 }));
-},{"./core":48,"./sha512":77,"./x64-core":79}],77:[function(_dereq_,module,exports){
+},{"./core":47,"./sha512":76,"./x64-core":78}],76:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -28407,7 +28608,7 @@ module.exports = asap;
 	return CryptoJS.SHA512;
 
 }));
-},{"./core":48,"./x64-core":79}],78:[function(_dereq_,module,exports){
+},{"./core":47,"./x64-core":78}],77:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -29178,7 +29379,7 @@ module.exports = asap;
 	return CryptoJS.TripleDES;
 
 }));
-},{"./cipher-core":47,"./core":48,"./enc-base64":49,"./evpkdf":51,"./md5":56}],79:[function(_dereq_,module,exports){
+},{"./cipher-core":46,"./core":47,"./enc-base64":48,"./evpkdf":50,"./md5":55}],78:[function(_dereq_,module,exports){
 ;(function (root, factory) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -29483,7 +29684,7 @@ module.exports = asap;
 	return CryptoJS;
 
 }));
-},{"./core":48}],80:[function(_dereq_,module,exports){
+},{"./core":47}],79:[function(_dereq_,module,exports){
 // Some code originally from async_storage.js in
 // [Gaia](https://github.com/mozilla-b2g/gaia).
 (function() {
@@ -30046,7 +30247,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"promise":103}],81:[function(_dereq_,module,exports){
+},{"promise":102}],80:[function(_dereq_,module,exports){
 // If IndexedDB isn't available, we'll fall back to localStorage.
 // Note that this will have considerable performance and storage
 // side-effects (all data will be serialized on save and only data that
@@ -30389,7 +30590,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":84,"promise":103}],82:[function(_dereq_,module,exports){
+},{"./../utils/serializer":83,"promise":102}],81:[function(_dereq_,module,exports){
 /*
  * Includes code from:
  *
@@ -30808,7 +31009,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./../utils/serializer":84,"promise":103}],83:[function(_dereq_,module,exports){
+},{"./../utils/serializer":83,"promise":102}],82:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -31227,7 +31428,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{"./drivers/indexeddb":80,"./drivers/localstorage":81,"./drivers/websql":82,"promise":103}],84:[function(_dereq_,module,exports){
+},{"./drivers/indexeddb":79,"./drivers/localstorage":80,"./drivers/websql":81,"promise":102}],83:[function(_dereq_,module,exports){
 (function() {
     'use strict';
 
@@ -31503,7 +31704,7 @@ module.exports = asap;
     }
 }).call(window);
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -31519,7 +31720,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":86,"./lib/inflate":87,"./lib/utils/common":88,"./lib/zlib/constants":91}],86:[function(_dereq_,module,exports){
+},{"./lib/deflate":85,"./lib/inflate":86,"./lib/utils/common":87,"./lib/zlib/constants":90}],85:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -31921,7 +32122,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":88,"./utils/strings":89,"./zlib/deflate":93,"./zlib/messages":98,"./zlib/zstream":100}],87:[function(_dereq_,module,exports){
+},{"./utils/common":87,"./utils/strings":88,"./zlib/deflate":92,"./zlib/messages":97,"./zlib/zstream":99}],86:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -32341,7 +32542,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":88,"./utils/strings":89,"./zlib/constants":91,"./zlib/gzheader":94,"./zlib/inflate":96,"./zlib/messages":98,"./zlib/zstream":100}],88:[function(_dereq_,module,exports){
+},{"./utils/common":87,"./utils/strings":88,"./zlib/constants":90,"./zlib/gzheader":93,"./zlib/inflate":95,"./zlib/messages":97,"./zlib/zstream":99}],87:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -32445,7 +32646,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -32632,7 +32833,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":88}],90:[function(_dereq_,module,exports){
+},{"./common":87}],89:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -32666,7 +32867,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],91:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -32718,7 +32919,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],92:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -32761,7 +32962,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],93:[function(_dereq_,module,exports){
+},{}],92:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -34618,7 +34819,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":88,"./adler32":90,"./crc32":92,"./messages":98,"./trees":99}],94:[function(_dereq_,module,exports){
+},{"../utils/common":87,"./adler32":89,"./crc32":91,"./messages":97,"./trees":98}],93:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -34660,7 +34861,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],95:[function(_dereq_,module,exports){
+},{}],94:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -34988,7 +35189,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],96:[function(_dereq_,module,exports){
+},{}],95:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -36528,7 +36729,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":88,"./adler32":90,"./crc32":92,"./inffast":95,"./inftrees":97}],97:[function(_dereq_,module,exports){
+},{"../utils/common":87,"./adler32":89,"./crc32":91,"./inffast":94,"./inftrees":96}],96:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -36857,7 +37058,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":88}],98:[function(_dereq_,module,exports){
+},{"../utils/common":87}],97:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -36872,7 +37073,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],99:[function(_dereq_,module,exports){
+},{}],98:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -38076,7 +38277,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":88}],100:[function(_dereq_,module,exports){
+},{"../utils/common":87}],99:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -38107,7 +38308,7 @@ function ZStream() {
 
 module.exports = ZStream;
 
-},{}],101:[function(_dereq_,module,exports){
+},{}],100:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -38200,7 +38401,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],102:[function(_dereq_,module,exports){
+},{}],101:[function(_dereq_,module,exports){
 'use strict';
 
 var asap = _dereq_('asap')
@@ -38307,7 +38508,7 @@ function doResolve(fn, onFulfilled, onRejected) {
   }
 }
 
-},{"asap":44}],103:[function(_dereq_,module,exports){
+},{"asap":43}],102:[function(_dereq_,module,exports){
 'use strict';
 
 //This file contains then/promise specific extensions to the core promise API
@@ -38489,4 +38690,4 @@ Promise.prototype['catch'] = function (onRejected) {
   return this.then(null, onRejected);
 }
 
-},{"./core.js":102,"asap":44}]},{},[1]);
+},{"./core.js":101,"asap":43}]},{},[1]);
