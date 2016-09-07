@@ -148,7 +148,6 @@ Shared.mixin(Db.prototype, 'Mixin.Events');
 Core = Shared.modules.Core;
 Collection = require('./Collection.js');
 Metrics = require('./Metrics.js');
-Checksum = require('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -200,13 +199,6 @@ Db.prototype.isClient = function () {
 Db.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
