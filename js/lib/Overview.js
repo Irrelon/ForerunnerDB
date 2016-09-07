@@ -8,10 +8,18 @@ var Shared,
 
 Shared = require('./Shared');
 
+/**
+ * The Overview class provides a queryable interface for data aggregation in realtime.
+ * @class
+ */
 var Overview = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Initialises the overview, called by the class as it is instantiated.
+ * @constructor
+ */
 Overview.prototype.init = function (name) {
 	var self = this;
 
@@ -44,8 +52,25 @@ Db = Shared.modules.Db;
  */
 Shared.synthesize(Overview.prototype, 'state');
 
+/**
+ * Gets / sets the db.
+ * @param {Db=} val The db to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'db');
+
+/**
+ * Gets / sets the name.
+ * @param {String=} val The name to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'name');
+
+/**
+ * Gets / sets the query.
+ * @param {Object=} val The query to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'query', function (val) {
 	var ret = this.$super(val);
 
@@ -55,6 +80,12 @@ Shared.synthesize(Overview.prototype, 'query', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the query options.
+ * @param {Object=} val The query options to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 	var ret = this.$super(val);
 
@@ -64,6 +95,12 @@ Shared.synthesize(Overview.prototype, 'queryOptions', function (val) {
 
 	return ret;
 });
+
+/**
+ * Gets / sets the reduce object.
+ * @param {Object=} val The reduce object to set.
+ * @returns {*}
+ */
 Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	var ret = this.$super(val);
 
@@ -74,6 +111,11 @@ Shared.synthesize(Overview.prototype, 'reduce', function (val) {
 	return ret;
 });
 
+/**
+ * Gets / sets the data source the overview uses for underlying data.
+ * @param {Collection|View=} source The data source to set.
+ * @returns {*}
+ */
 Overview.prototype.from = function (source) {
 	if (source !== undefined) {
 		if (typeof(source) === 'string') {
@@ -87,7 +129,15 @@ Overview.prototype.from = function (source) {
 	return this._sources;
 };
 
-Overview.prototype.find = function () {
+/**
+ * Returns the data in the overview.
+ * @param {Object=} query The query object.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback A callback method.
+ * @returns {*}
+ * @see Collection.find()
+ */
+Overview.prototype.find = function (query, options, callback) {
 	return this._collData.find.apply(this._collData, arguments);
 };
 
@@ -102,6 +152,10 @@ Overview.prototype.exec = function () {
 	return reduceFunc ? reduceFunc.apply(this) : undefined;
 };
 
+/**
+ * Returns a count of the documents in the overview data set.
+ * @returns {*}
+ */
 Overview.prototype.count = function () {
 	return this._collData.count.apply(this._collData, arguments);
 };
@@ -215,6 +269,11 @@ Overview.prototype.data = function () {
 	return this._data;
 };
 
+/**
+ * Drops the overview.
+ * @param {Function=} callback A callback function.
+ * @returns {Boolean}
+ */
 Overview.prototype.drop = function (callback) {
 	if (!this.isDropped()) {
 		this._state = 'dropped';
@@ -243,6 +302,11 @@ Overview.prototype.drop = function (callback) {
 	return true;
 };
 
+/**
+ * Create an overview instance from a Db instance.
+ * @param {String} name The name of the overview.
+ * @returns {*}
+ */
 Db.prototype.overview = function (name) {
 	var self = this;
 
