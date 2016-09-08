@@ -928,13 +928,18 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
  * @param {String} id The id of the document.
  * @param {Object} update The object containing the key/values to
  * update to.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when
+ * the update is complete.
  * @returns {Object} The document that was updated or undefined
  * if no document was updated.
  */
-Collection.prototype.updateById = function (id, update) {
+Collection.prototype.updateById = function (id, update, options, callback) {
 	var searchObj = {};
 	searchObj[this._primaryKey] = id;
-	return this.update(searchObj, update)[0];
+	return this.update(searchObj, update, options, function (data) {
+		callback(data[0]);
+	})[0];
 };
 
 /**

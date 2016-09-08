@@ -1519,6 +1519,36 @@ QUnit.test("Collection.update() :: $inc operator advanced", function () {
 	base.dbDown();
 });
 
+QUnit.asyncTest("Collection.updateById() :: Call returns data and can accept a callback", function () {
+	base.dbUp();
+	base.dataUp();
+	
+	expect(6);
+	
+	var before = user.findById("2");
+	
+	strictEqual(before.arr.length, 2, "Complete");
+	
+	var result = user.updateById("2", {
+		"$push": {
+			"arr": {
+				_id: 'ahh',
+				val: 8
+			}
+		}
+	}, {}, function (updatedDocument) {
+		ok(true, "Callback was fired");
+		strictEqual(updatedDocument !== undefined, true, "Callback data is not undefined");
+		strictEqual(updatedDocument._id, "2", "Callback data has correct id");
+		
+		base.dbDown();
+		start();
+	});
+	
+	strictEqual(result !== undefined, true, "Return data is not undefined");
+	strictEqual(result._id, "2", "Return data has correct id");
+});
+
 QUnit.test("Collection.updateById() :: $push array operator", function () {
 	base.dbUp();
 	base.dataUp();
