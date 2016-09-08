@@ -935,11 +935,18 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
  * if no document was updated.
  */
 Collection.prototype.updateById = function (id, update, options, callback) {
-	var searchObj = {};
+	var searchObj = {},
+		wrappedCallback;
+	
 	searchObj[this._primaryKey] = id;
-	return this.update(searchObj, update, options, function (data) {
-		callback(data[0]);
-	})[0];
+	
+	if (callback) {
+		wrappedCallback = function (data) {
+			callback(data[0]);
+		};
+	}
+	
+	return this.update(searchObj, update, options, wrappedCallback)[0];
 };
 
 /**

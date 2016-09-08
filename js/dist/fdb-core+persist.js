@@ -1639,13 +1639,25 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
  * @param {String} id The id of the document.
  * @param {Object} update The object containing the key/values to
  * update to.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when
+ * the update is complete.
  * @returns {Object} The document that was updated or undefined
  * if no document was updated.
  */
-Collection.prototype.updateById = function (id, update) {
-	var searchObj = {};
+Collection.prototype.updateById = function (id, update, options, callback) {
+	var searchObj = {},
+		wrappedCallback;
+	
 	searchObj[this._primaryKey] = id;
-	return this.update(searchObj, update)[0];
+	
+	if (callback) {
+		wrappedCallback = function (data) {
+			callback(data[0]);
+		};
+	}
+	
+	return this.update(searchObj, update, options, wrappedCallback)[0];
 };
 
 /**
@@ -12637,7 +12649,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.887',
+	version: '1.3.889',
 	modules: {},
 	plugins: {},
 	index: {},
