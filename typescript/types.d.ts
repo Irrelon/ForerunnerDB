@@ -439,10 +439,13 @@ declare class Collection {
     * @param {String} id The id of the document.
     * @param {Object} update The object containing the key/values to
     * update to.
+    * @param {Object=} options An options object.
+    * @param {Function=} callback The callback method to call when
+    * the update is complete.
     * @returns {Object} The document that was updated or undefined
     * if no document was updated.
     */
-   updateById(id: String, update: Object): Object;
+   updateById(id: String, update: Object, options?: Object, callback?: (() => any)): Object;
 
    /**
     * Internal method for document updating.
@@ -1339,6 +1342,8 @@ declare class Db {
     * Get a collection with no name (generates a random name). If the
     * collection does not already exist then one is created for that
     * name automatically.
+    * @name collection
+    * @method Db.collection
     * @func collection
     * @memberof Db
     * @returns {Collection}
