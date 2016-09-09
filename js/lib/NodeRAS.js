@@ -1,13 +1,13 @@
 "use strict";
 
-/**
+/*
  * NodeRAS is a random access storage engine that allows us to load and save
  * data at high speed whilst maintaining the ability to only read sections
  * of data from the storage. It also supports middleware to allow for
  * functionality like encryption and data compression.
  */
 
-/**
+/*
  * Data files saved by this storage engine are composed of an initial header
  * section which contains meta-data used to identify data entry boundaries
  * and then a body section which contains the data proper.
@@ -32,6 +32,8 @@ var NodeRAS,
  * Create a constructor method that calls the instance's init method.
  * This allows the constructor to be overridden by other modules because
  * they can override the init method with their own.
+ * @class
+ * @constructor
  */
 NodeRAS = function () {
 	this.init.apply(this, arguments);
@@ -125,7 +127,7 @@ NodeRAS.prototype.encodeDataLine = function (opType, data, pointer) {
  * de-fragments entries that span multiple points and then re-writes the
  * file.
  *
- * @returns {number} The number of bytes saved by the compact process.
+ * @returns {Number} The number of bytes saved by the compact process.
  * This is the file size in bytes before the operation minus the file size
  * in bytes after the operation.
  */

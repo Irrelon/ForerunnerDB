@@ -433,11 +433,11 @@ Shared.synthesize(NodePersist.prototype, 'dataDir', function (val) {
 		fs.stat(val, function (err, stats) {
 			if (!err) {
 				if (!stats.isDirectory() && !stats.isFile()) {
-					fs.mkdir(val);
+					fs.mkdir(val, function (err) {});
 				}
 			} else {
 				try {
-					fs.mkdir(val);
+					fs.mkdir(val, function (err) {});
 				} catch (e) {
 
 				}
@@ -474,6 +474,8 @@ NodePersist.prototype.dataExists = function (collectionName, callback) {
 Collection.prototype.drop = new Overload({
 	/**
 	 * Drop collection and persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 */
 	'': function () {
 		if (!this.isDropped()) {
@@ -483,6 +485,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Function} callback Callback method.
 	 */
 	'function': function (callback) {
@@ -493,6 +497,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collection and optionally drop persistent storage.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 */
 	'boolean': function (removePersistent) {
@@ -517,6 +523,8 @@ Collection.prototype.drop = new Overload({
 
 	/**
 	 * Drop collections and optionally drop persistent storage with callback.
+	 * @name drop
+	 * @method Collection.drop
 	 * @param {Boolean} removePersistent True to drop persistent storage, false to keep it.
 	 * @param {Function} callback Callback method.
 	 */
@@ -564,6 +572,11 @@ Collection.prototype.save = function (callback) {
 					if (!err) {
 						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, data, metaStats) {
 							self._asyncComplete('save');
+							
+							if (!err) {
+								self.deferEmit('save', tableStats, metaStats);
+							}
+							
 							if (callback) { callback(err, data, tableStats, metaStats); }
 						});
 					} else {
@@ -614,11 +627,12 @@ Collection.prototype.load = function (callback) {
 					// Now load the collection's metadata
 					self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
 						if (!err) {
-							self._asyncComplete('load');
 							if (data) {
 								self.metaData(data);
 							}
 						}
+						
+						self._asyncComplete('load');
 						
 						self.deferEmit('load', tableStats, metaStats);
 						if (callback) { callback(err, tableStats, metaStats); }
@@ -651,7 +665,8 @@ Db.prototype.init = function () {
  */
 Db.prototype.load = function (callback) {
 	// Loop the collections in the database
-	var obj,
+	var self = this,
+		obj,
 		keys,
 		keyCount,
 		loadCallback,
@@ -668,9 +683,8 @@ Db.prototype.load = function (callback) {
 				keyCount--;
 
 				if (keyCount === 0) {
-					if (callback) {
-						callback(false);
-					}
+					self.deferEmit('load');
+					if (callback) { callback(false); }
 				}
 			} else {
 				if (callback) {
@@ -698,7 +712,8 @@ Db.prototype.load = function (callback) {
  */
 Db.prototype.save = function (callback) {
 	// Loop the collections in the database
-	var obj,
+	var self = this,
+		obj,
 		keys,
 		keyCount,
 		saveCallback,
@@ -715,14 +730,11 @@ Db.prototype.save = function (callback) {
 				keyCount--;
 
 				if (keyCount === 0) {
-					if (callback) {
-						callback(false);
-					}
+					self.deferEmit('save');
+					if (callback) { callback(false); }
 				}
 			} else {
-				if (callback) {
-					callback(err);
-				}
+				if (callback) { callback(err); }
 			}
 		};
 

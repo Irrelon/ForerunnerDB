@@ -6,7 +6,7 @@ if (typeof window !== 'undefined') {
 	window.ForerunnerDB = Core;
 }
 module.exports = Core;
-},{"../lib/Core":6,"../lib/Shim.IE8":30}],2:[function(_dereq_,module,exports){
+},{"../lib/Core":5,"../lib/Shim.IE8":29}],2:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -118,7 +118,7 @@ BinaryTree.prototype.pull = function (val) {
  * Default compare method. Can be overridden.
  * @param a
  * @param b
- * @returns {number}
+ * @returns {Number}
  * @private
  */
 BinaryTree.prototype._compareFunc = function (a, b) {
@@ -700,47 +700,7 @@ BinaryTree.prototype.match = function (query, queryOptions, matchOptions) {
 
 Shared.finishModule('BinaryTree');
 module.exports = BinaryTree;
-},{"./Path":26,"./Shared":29}],3:[function(_dereq_,module,exports){
-"use strict";
-
-var crcTable,
-	checksum;
-
-crcTable = (function () {
-	var crcTable = [],
-		c, n, k;
-
-	for (n = 0; n < 256; n++) {
-		c = n;
-
-		for (k = 0; k < 8; k++) {
-			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
-		}
-
-		crcTable[n] = c;
-	}
-
-	return crcTable;
-}());
-
-/**
- * Returns a checksum of a string.
- * @param {String} str The string to checksum.
- * @return {Number} The checksum generated.
- */
-checksum = function(str) {
-	var crc = 0 ^ (-1), // jshint ignore:line
-		i;
-
-	for (i = 0; i < str.length; i++) {
-		crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
-	}
-
-	return (crc ^ (-1)) >>> 0; // jshint ignore:line
-};
-
-module.exports = checksum;
-},{}],4:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],3:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
@@ -762,11 +722,16 @@ Shared = _dereq_('./Shared');
  * Creates a new collection. Collections store multiple documents and
  * handle CRUD against those documents.
  * @constructor
+ * @class
  */
 var Collection = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Creates a new collection. Collections store multiple documents and
+ * handle CRUD against those documents.
+ */
 Collection.prototype.init = function (name, options) {
 	this.sharedPathSolver = sharedPathSolver;
 	this._primaryKey = '_id';
@@ -1087,6 +1052,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 */
@@ -1100,6 +1066,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1114,6 +1081,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Function} callback Optional callback function.
@@ -1128,6 +1096,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1143,6 +1112,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {*} options Optional options object.
@@ -1158,6 +1128,7 @@ Collection.prototype.setData = new Overload('Collection.prototype.setData', {
 	 * new data is set via the remove() method, and the remove event will
 	 * fire as well.
 	 * @name setData
+	 * @method Collection.setData
 	 * @param {Array|Object} data The array of documents or a single document
 	 * that will be set as the collections data.
 	 * @param {Object} options Optional options object.
@@ -1660,13 +1631,25 @@ Collection.prototype._replaceObj = function (currentObj, newObj) {
  * @param {String} id The id of the document.
  * @param {Object} update The object containing the key/values to
  * update to.
+ * @param {Object=} options An options object.
+ * @param {Function=} callback The callback method to call when
+ * the update is complete.
  * @returns {Object} The document that was updated or undefined
  * if no document was updated.
  */
-Collection.prototype.updateById = function (id, update) {
-	var searchObj = {};
+Collection.prototype.updateById = function (id, update, options, callback) {
+	var searchObj = {},
+		wrappedCallback;
+	
 	searchObj[this._primaryKey] = id;
-	return this.update(searchObj, update)[0];
+	
+	if (callback) {
+		wrappedCallback = function (data) {
+			callback(data[0]);
+		};
+	}
+	
+	return this.update(searchObj, update, options, wrappedCallback)[0];
 };
 
 /**
@@ -2444,7 +2427,7 @@ Collection.prototype.isProcessingQueue = function () {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype.insert = function (data, index, callback) {
@@ -2464,7 +2447,8 @@ Collection.prototype.insert = function (data, index, callback) {
 };
 /**
  * The insert operation's callback.
- * @callback Collection~insertCallback
+ * @name Collection.insertCallback
+ * @callback Collection.insertCallback
  * @param {Object} result The result object will contain two arrays (inserted
  * and failed) which represent the documents that did get inserted and those
  * that didn't for some reason (usually index violation). Failed items also
@@ -2479,7 +2463,7 @@ Collection.prototype.insert = function (data, index, callback) {
  * Inserts a document or array of documents into the collection.
  * @param {Object|Array} data Either a document object or array of document
  * @param {Number=} index Optional index to insert the record at.
- * @param {Collection~insertCallback=} callback Optional callback called
+ * @param {Collection.insertCallback=} callback Optional callback called
  * once the insert is complete.
  */
 Collection.prototype._insertHandle = function (data, index, callback) {
@@ -2644,8 +2628,8 @@ Collection.prototype._insert = function (doc, index) {
  * Inserts a document into the internal collection data array at
  * Inserts a document into the internal collection data array at
  * the specified index.
- * @param {number} index The index to insert at.
- * @param {object} doc The document to insert.
+ * @param {Number} index The index to insert at.
+ * @param {Object} doc The document to insert.
  * @private
  */
 Collection.prototype._dataInsertAtIndex = function (index, doc) {
@@ -2655,7 +2639,7 @@ Collection.prototype._dataInsertAtIndex = function (index, doc) {
 /**
  * Removes a document from the internal collection data array at
  * the specified index.
- * @param {number} index The index to remove from.
+ * @param {Number} index The index to remove from.
  * @private
  */
 Collection.prototype._dataRemoveAtIndex = function (index) {
@@ -2665,7 +2649,7 @@ Collection.prototype._dataRemoveAtIndex = function (index) {
 /**
  * Replaces all data in the collection's internal data array with
  * the passed array of data.
- * @param {array} data The array of data to replace existing data with.
+ * @param {Array} data The array of data to replace existing data with.
  * @private
  */
 Collection.prototype._dataReplace = function (data) {
@@ -2893,8 +2877,8 @@ Collection.prototype.explain = function (query, options) {
  * Generates an options object with default values or adds default
  * values to a passed object if those values are not currently set
  * to anything.
- * @param {object=} obj Optional options object to modify.
- * @returns {object} The options object.
+ * @param {Object=} obj Optional options object to modify.
+ * @returns {Object} The options object.
  */
 Collection.prototype.options = function (obj) {
 	obj = obj || {};
@@ -4629,15 +4613,8 @@ Db.prototype.collections = function (search) {
 
 Shared.finishModule('Collection');
 module.exports = Collection;
-},{"./Condition":5,"./Index2d":9,"./IndexBinaryTree":10,"./IndexHashMap":11,"./KeyValueStore":12,"./Metrics":13,"./Overload":25,"./Path":26,"./ReactorIO":27,"./Shared":29}],5:[function(_dereq_,module,exports){
+},{"./Condition":4,"./Index2d":8,"./IndexBinaryTree":9,"./IndexHashMap":10,"./KeyValueStore":11,"./Metrics":12,"./Overload":24,"./Path":25,"./ReactorIO":26,"./Shared":28}],4:[function(_dereq_,module,exports){
 "use strict";
-
-/**
- * The condition class monitors a data source and updates it's internal
- * state depending on clauses that it has been given. When all clauses
- * are satisfied the then() callback is fired. If conditions were met
- * but data changed that made them un-met, the else() callback is fired.
- */
 
 var //Overload = require('./Overload'),
 	Shared,
@@ -4646,14 +4623,25 @@ var //Overload = require('./Overload'),
 Shared = _dereq_('./Shared');
 
 /**
- * Create a constructor method that calls the instance's init method.
- * This allows the constructor to be overridden by other modules because
- * they can override the init method with their own.
+ * The condition class monitors a data source and updates it's internal
+ * state depending on clauses that it has been given. When all clauses
+ * are satisfied the then() callback is fired. If conditions were met
+ * but data changed that made them un-met, the else() callback is fired.
+ * @class
+ * @constructor
  */
 Condition = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Class constructor calls this init method.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ * @param {Collection|View} dataSource The condition's data source.
+ * @param {String} id The id to assign to the new Condition.
+ * @param {Object} clause The query clause.
+ */
 Condition.prototype.init = function (dataSource, id, clause) {
 	this._dataSource = dataSource;
 	this._id = id;
@@ -4795,7 +4783,7 @@ Condition.prototype.drop = function () {
 // Tell ForerunnerDB that our module has finished loading
 Shared.finishModule('Condition');
 module.exports = Condition;
-},{"./Shared":29}],6:[function(_dereq_,module,exports){
+},{"./Shared":28}],5:[function(_dereq_,module,exports){
 /*
  License
 
@@ -5086,14 +5074,13 @@ Core.prototype.collection = function () {
 };
 
 module.exports = Core;
-},{"./Db.js":7,"./Metrics.js":13,"./Overload":25,"./Shared":29}],7:[function(_dereq_,module,exports){
+},{"./Db.js":6,"./Metrics.js":12,"./Overload":24,"./Shared":28}],6:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared,
 	Core,
 	Collection,
 	Metrics,
-	Checksum,
 	Overload;
 
 Shared = _dereq_('./Shared');
@@ -5237,7 +5224,6 @@ Shared.mixin(Db.prototype, 'Mixin.Events');
 Core = Shared.modules.Core;
 Collection = _dereq_('./Collection.js');
 Metrics = _dereq_('./Metrics.js');
-Checksum = _dereq_('./Checksum.js');
 
 Db.prototype._isServer = false;
 
@@ -5289,13 +5275,6 @@ Db.prototype.isClient = function () {
 Db.prototype.isServer = function () {
 	return this._isServer;
 };
-
-/**
- * Returns a checksum of a string.
- * @param {String} string The string to checksum.
- * @return {String} The checksum generated.
- */
-Db.prototype.Checksum = Checksum;
 
 /**
  * Checks if the database is running on a client (browser) or
@@ -5437,7 +5416,7 @@ Db.prototype.peek = function (search) {
  * string or search object and return them in an object where each key is the name
  * of the collection that the document was matched in.
  * @param search String or search object.
- * @returns {object}
+ * @returns {Object}
  */
 Db.prototype.peekCat = function (search) {
 	var i,
@@ -5726,7 +5705,7 @@ Core.prototype.databases = function (search) {
 
 Shared.finishModule('Db');
 module.exports = Db;
-},{"./Checksum.js":3,"./Collection.js":4,"./Metrics.js":13,"./Overload":25,"./Shared":29}],8:[function(_dereq_,module,exports){
+},{"./Collection.js":3,"./Metrics.js":12,"./Overload":24,"./Shared":28}],7:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -6094,7 +6073,7 @@ GeoHash.prototype.encode = function (latitude, longitude, precision) {
 };
 
 if (typeof module !== 'undefined') { module.exports = GeoHash; }
-},{}],9:[function(_dereq_,module,exports){
+},{}],8:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6584,7 +6563,7 @@ Shared.index['2d'] = Index2d;
 
 Shared.finishModule('Index2d');
 module.exports = Index2d;
-},{"./BinaryTree":2,"./GeoHash":8,"./Path":26,"./Shared":29}],10:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./GeoHash":7,"./Path":25,"./Shared":28}],9:[function(_dereq_,module,exports){
 "use strict";
 
 /*
@@ -6828,7 +6807,7 @@ Shared.index.btree = IndexBinaryTree;
 
 Shared.finishModule('IndexBinaryTree');
 module.exports = IndexBinaryTree;
-},{"./BinaryTree":2,"./Path":26,"./Shared":29}],11:[function(_dereq_,module,exports){
+},{"./BinaryTree":2,"./Path":25,"./Shared":28}],10:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7191,7 +7170,7 @@ Shared.index.hashed = IndexHashMap;
 
 Shared.finishModule('IndexHashMap');
 module.exports = IndexHashMap;
-},{"./Path":26,"./Shared":29}],12:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],11:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -7443,7 +7422,7 @@ KeyValueStore.prototype.uniqueSet = function (key, value) {
 
 Shared.finishModule('KeyValueStore');
 module.exports = KeyValueStore;
-},{"./Shared":29}],13:[function(_dereq_,module,exports){
+},{"./Shared":28}],12:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -7518,7 +7497,7 @@ Metrics.prototype.list = function () {
 
 Shared.finishModule('Metrics');
 module.exports = Metrics;
-},{"./Operation":24,"./Shared":29}],14:[function(_dereq_,module,exports){
+},{"./Operation":23,"./Shared":28}],13:[function(_dereq_,module,exports){
 "use strict";
 
 var CRUD = {
@@ -7532,7 +7511,7 @@ var CRUD = {
 };
 
 module.exports = CRUD;
-},{}],15:[function(_dereq_,module,exports){
+},{}],14:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -7695,14 +7674,32 @@ var ChainReactor = {
 };
 
 module.exports = ChainReactor;
-},{}],16:[function(_dereq_,module,exports){
+},{}],15:[function(_dereq_,module,exports){
 "use strict";
 
 var idCounter = 0,
 	Overload = _dereq_('./Overload'),
 	Serialiser = _dereq_('./Serialiser'),
 	Common,
-	serialiser = new Serialiser();
+	serialiser = new Serialiser(),
+	crcTable;
+
+crcTable = (function () {
+	var crcTable = [],
+		c, n, k;
+	
+	for (n = 0; n < 256; n++) {
+		c = n;
+		
+		for (k = 0; k < 8; k++) {
+			c = ((c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1)); // jshint ignore:line
+		}
+		
+		crcTable[n] = c;
+	}
+	
+	return crcTable;
+}());
 
 /**
  * Provides commonly used methods to most classes in ForerunnerDB.
@@ -7909,7 +7906,7 @@ Common = {
 
 	/**
 	 * Returns a string describing the class this instance is derived from.
-	 * @returns {string}
+	 * @returns {String}
 	 */
 	classIdentifier: function () {
 		return 'ForerunnerDB.' + this.className;
@@ -7927,7 +7924,7 @@ Common = {
 	/**
 	 * Returns a string used to denote a console log against this instance,
 	 * consisting of the class identifier and instance identifier.
-	 * @returns {string} The log identifier.
+	 * @returns {String} The log identifier.
 	 */
 	logIdentifier: function () {
 		return 'ForerunnerDB ' + this.instanceIdentifier();
@@ -8015,11 +8012,27 @@ Common = {
 
 		// Save current data
 		self._debounce[id] = newData;
+	},
+	
+	/**
+	 * Returns a checksum of a string.
+	 * @param {String} str The string to checksum.
+	 * @return {Number} The checksum generated.
+	 */
+	checksum: function (str) {
+		var crc = 0 ^ (-1), // jshint ignore:line
+			i;
+		
+		for (i = 0; i < str.length; i++) {
+			crc = (crc >>> 8) ^ crcTable[(crc ^ str.charCodeAt(i)) & 0xFF]; // jshint ignore:line
+		}
+		
+		return (crc ^ (-1)) >>> 0; // jshint ignore:line
 	}
 };
 
 module.exports = Common;
-},{"./Overload":25,"./Serialiser":28}],17:[function(_dereq_,module,exports){
+},{"./Overload":24,"./Serialiser":27}],16:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -8036,7 +8049,7 @@ var Constants = {
 };
 
 module.exports = Constants;
-},{}],18:[function(_dereq_,module,exports){
+},{}],17:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -8044,13 +8057,17 @@ var Overload = _dereq_('./Overload');
 /**
  * Provides event emitter functionality including the methods: on, off, once, emit, deferEmit.
  * @mixin
+ * @name Events
  */
 var Events = {
 	on: new Overload({
 		/**
 		 * Attach an event listener to the passed event.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, function': function (event, listener) {
 			this._listeners = this._listeners || {};
@@ -8064,9 +8081,12 @@ var Events = {
 		/**
 		 * Attach an event listener to the passed event only if the passed
 		 * id matches the document id for the event being fired.
+		 * @name on
+		 * @method Events.on
 		 * @param {String} event The name of the event to listen for.
 		 * @param {*} id The document id to match against.
 		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
 		 */
 		'string, *, function': function (event, id, listener) {
 			this._listeners = this._listeners || {};
@@ -8079,36 +8099,60 @@ var Events = {
 	}),
 
 	once: new Overload({
-		'string, function': function (eventName, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, function': function (event, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, internalCallback);
+			return this.on(event, internalCallback);
 		},
 		
-		'string, *, function': function (eventName, id, callback) {
+		/**
+		 * Attach an event listener to the passed event that will be called only once.
+		 * @name once
+		 * @method Events.once
+		 * @param {String} event The name of the event to listen for.
+		 * @param {String} id The document id to match against.
+		 * @param {Function} listener The method to call when the event is fired.
+		 * @returns {*}
+		 */
+		'string, *, function': function (event, id, listener) {
 			var self = this,
 				fired = false,
 				internalCallback = function () {
 					if (!fired) {
-						self.off(eventName, id, internalCallback);
-						callback.apply(self, arguments);
+						self.off(event, id, internalCallback);
+						listener.apply(self, arguments);
 						fired = true;
 					}
 				};
 
-			return this.on(eventName, id, internalCallback);
+			return this.on(event, id, internalCallback);
 		}
 	}),
 
 	off: new Overload({
+		/**
+		 * Cancels all event listeners for the passed event.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The name of the event.
+		 * @returns {*}
+		 */
 		'string': function (event) {
 			var self = this;
 
@@ -8125,7 +8169,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels the event listener for the passed event and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 * @returns {*}
+		 */
 		'string, function': function (event, listener) {
 			var self = this,
 				arr,
@@ -8155,7 +8208,16 @@ var Events = {
 
 			return this;
 		},
-
+		
+		/**
+		 * Cancels an event listener based on an event name, id and listener function.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event to cancel listener for.
+		 * @param {String} id The ID of the event to cancel listening for.
+		 * @param {Function} listener The event listener function used in the on()
+		 * or once() call to cancel.
+		 */
 		'string, *, function': function (event, id, listener) {
 			var self = this;
 
@@ -8176,6 +8238,13 @@ var Events = {
 			}
 		},
 
+		/**
+		 * Cancels all listeners for an event based on the passed event name and id.
+		 * @name off
+		 * @method Events.off
+		 * @param {String} event The event name to cancel listeners for.
+		 * @param {*} id The ID to cancel all listeners for.
+		 */
 		'string, *': function (event, id) {
 			var self = this;
 
@@ -8192,7 +8261,15 @@ var Events = {
 			}
 		}
 	}),
-
+	
+	/**
+	 * Emit an event with data.
+	 * @name emit
+	 * @method Events.emit
+	 * @param {String} event The event to emit.
+	 * @param {*} data Data to emit with the event.
+	 * @returns {*}
+	 */
 	emit: function (event, data) {
 		this._listeners = this._listeners || {};
 		this._emitting = true;
@@ -8259,6 +8336,8 @@ var Events = {
 	 * errors that might occur by potentially modifying the event queue while
 	 * the emitter is running through them. This method is called after the
 	 * event emitter is finished processing.
+	 * @name _processRemovalQueue
+	 * @method Events._processRemovalQueue
 	 * @private
 	 */
 	_processRemovalQueue: function () {
@@ -8281,6 +8360,8 @@ var Events = {
 	 * one will all be wrapped into a single emit rather than emitting tons of
 	 * events for lots of chained inserts etc. Only the data from the last
 	 * de-bounced event will be emitted.
+	 * @name deferEmit
+	 * @method Events.deferEmit
 	 * @param {String} eventName The name of the event to emit.
 	 * @param {*=} data Optional data to emit with the event.
 	 */
@@ -8314,7 +8395,7 @@ var Events = {
 };
 
 module.exports = Events;
-},{"./Overload":25}],19:[function(_dereq_,module,exports){
+},{"./Overload":24}],18:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9071,7 +9152,7 @@ var Matching = {
 };
 
 module.exports = Matching;
-},{}],20:[function(_dereq_,module,exports){
+},{}],19:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -9121,7 +9202,7 @@ var Sorting = {
 };
 
 module.exports = Sorting;
-},{}],21:[function(_dereq_,module,exports){
+},{}],20:[function(_dereq_,module,exports){
 "use strict";
 
 var Tags,
@@ -9226,7 +9307,7 @@ Tags = {
 };
 
 module.exports = Tags;
-},{}],22:[function(_dereq_,module,exports){
+},{}],21:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -9237,16 +9318,9 @@ var Overload = _dereq_('./Overload');
  */
 var Triggers = {
 	/**
-	 * When called in a before phase the newDoc object can be directly altered
-	 * to modify the data in it before the operation is carried out.
-	 * @callback addTriggerCallback
-	 * @param {Object} operation The details about the operation.
-	 * @param {Object} oldDoc The document before the operation.
-	 * @param {Object} newDoc The document after the operation.
-	 */
-
-	/**
-	 * Add a trigger by id.
+	 * Add a trigger by id, type and phase.
+	 * @name addTrigger
+	 * @method Triggers.addTrigger
 	 * @param {String} id The id of the trigger. This must be unique to the type and
 	 * phase of the trigger. Only one trigger may be added with this id per type and
 	 * phase.
@@ -9254,7 +9328,7 @@ var Triggers = {
 	 * Mixin.Constants for constants to use.
 	 * @param {Constants} phase The phase of an operation to fire the trigger on. See
 	 * Mixin.Constants for constants to use.
-	 * @param {addTriggerCallback} method The method to call when the trigger is fired.
+	 * @param {Triggers.addTriggerCallback} method The method to call when the trigger is fired.
 	 * @returns {boolean} True if the trigger was added successfully, false if not.
 	 */
 	addTrigger: function (id, type, phase, method) {
@@ -9285,7 +9359,9 @@ var Triggers = {
 	},
 
 	/**
-	 *
+	 * Removes a trigger by id, type and phase.
+	 * @name removeTrigger
+	 * @method Triggers.removeTrigger
 	 * @param {String} id The id of the trigger to remove.
 	 * @param {Number} type The type of operation to remove the trigger from. See
 	 * Mixin.Constants for constants to use.
@@ -9850,7 +9926,7 @@ var Triggers = {
 	 * constants to use.
 	 * @param {Number} phase The phase of the operation. See Mixin.Constants
 	 * for constants to use.
-	 * @returns {number}
+	 * @returns {Number}
 	 * @private
 	 */
 	_triggerIndexOf: function (id, type, phase) {
@@ -9874,8 +9950,17 @@ var Triggers = {
 	}
 };
 
+/**
+ * When called in a before phase the newDoc object can be directly altered
+ * to modify the data in it before the operation is carried out.
+ * @callback Triggers.addTriggerCallback
+ * @param {Object} operation The details about the operation.
+ * @param {Object} oldDoc The document before the operation.
+ * @param {Object} newDoc The document after the operation.
+ */
+
 module.exports = Triggers;
-},{"./Overload":25}],23:[function(_dereq_,module,exports){
+},{"./Overload":24}],22:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10067,7 +10152,7 @@ var Updating = {
 };
 
 module.exports = Updating;
-},{}],24:[function(_dereq_,module,exports){
+},{}],23:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -10214,7 +10299,7 @@ Operation.prototype.stop = function () {
 
 Shared.finishModule('Operation');
 module.exports = Operation;
-},{"./Path":26,"./Shared":29}],25:[function(_dereq_,module,exports){
+},{"./Path":25,"./Shared":28}],24:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -10386,7 +10471,7 @@ Overload.prototype.callExtend = function (context, prop, propContext, func, args
 };
 
 module.exports = Overload;
-},{}],26:[function(_dereq_,module,exports){
+},{}],25:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10874,7 +10959,7 @@ Path.prototype.clean = function (str) {
 
 Shared.finishModule('Path');
 module.exports = Path;
-},{"./Shared":29}],27:[function(_dereq_,module,exports){
+},{"./Shared":28}],26:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared');
@@ -10961,7 +11046,7 @@ Shared.mixin(ReactorIO.prototype, 'Mixin.Events');
 
 Shared.finishModule('ReactorIO');
 module.exports = ReactorIO;
-},{"./Shared":29}],28:[function(_dereq_,module,exports){
+},{"./Shared":28}],27:[function(_dereq_,module,exports){
 "use strict";
 
 /**
@@ -11087,7 +11172,7 @@ Serialiser.prototype.reviver = function () {
 };
 
 module.exports = Serialiser;
-},{}],29:[function(_dereq_,module,exports){
+},{}],28:[function(_dereq_,module,exports){
 "use strict";
 
 var Overload = _dereq_('./Overload');
@@ -11098,7 +11183,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.867',
+	version: '1.3.891',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -11286,7 +11371,7 @@ var Shared = {
 Shared.mixin(Shared, 'Mixin.Events');
 
 module.exports = Shared;
-},{"./Mixin.CRUD":14,"./Mixin.ChainReactor":15,"./Mixin.Common":16,"./Mixin.Constants":17,"./Mixin.Events":18,"./Mixin.Matching":19,"./Mixin.Sorting":20,"./Mixin.Tags":21,"./Mixin.Triggers":22,"./Mixin.Updating":23,"./Overload":25}],30:[function(_dereq_,module,exports){
+},{"./Mixin.CRUD":13,"./Mixin.ChainReactor":14,"./Mixin.Common":15,"./Mixin.Constants":16,"./Mixin.Events":17,"./Mixin.Matching":18,"./Mixin.Sorting":19,"./Mixin.Tags":20,"./Mixin.Triggers":21,"./Mixin.Updating":22,"./Overload":24}],29:[function(_dereq_,module,exports){
 /* jshint strict:false */
 if (!Array.prototype.filter) {
 	Array.prototype.filter = function(fun/*, thisArg*/) {

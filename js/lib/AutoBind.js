@@ -621,8 +621,8 @@ AutoBind.extendView = function (Module) {
 	 * Removes a previously set-up data-binding via the link() method.
 	 * @func unlink
 	 * @memberof View
-	 * @param {Selector} outputTargetSelector The jQuery target selector.
-	 * @param {Selector} templateSelector The jQuery template selector.
+	 * @param {String} outputTargetSelector The jQuery target selector.
+	 * @param {String} templateSelector The jQuery template selector.
 	 * @see link
 	 * @returns {View}
 	 */

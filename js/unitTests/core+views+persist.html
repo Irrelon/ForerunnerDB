@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>ForerunnerDB Core+Persist Unit Tests</title>
+	<link rel="stylesheet" href="css/qunit.css" />
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+	<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+
+	<script src="./lib/polyfiller.js"></script>
+	<script src="./lib/jquery-1.11.0.min.js"></script>
+	<script src="./lib/qunit.js"></script>
+	<script src="./lib/blanket.min.js"></script>
+
+	<script src="./lib/fdb-core.js" data-cover></script>
+
+	<script src="./lib/highcharts-all.js"></script>
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+
+	<!-- Include the plugin's CSS and JS: -->
+	<script type="text/javascript" src="./lib/multiselect/js/bootstrap-multiselect.js"></script>
+	<link rel="stylesheet" href="./lib/multiselect/css/bootstrap-multiselect.css" type="text/css"/>
+</head>
+<body>
+	<div id="qunit"></div>
+	<div id="qunit-fixture"></div>
+
+	<script src="data.js"></script>
+	<script src="base.js"></script>
+	<script src="tests/testsActiveBucket.js"></script>
+	<!--<script src="tests/testsAngular.js"></script>-->
+	<script src="tests/testsDb.js"></script>
+	<!--<script src="tests/testsBind.js"></script>-->
+	<script src="tests/testsPerformance.js"></script>
+	<script src="tests/testsCore.js"></script>
+	<script src="tests/testsCollection.js"></script>
+	<script src="tests/testsCollectionToViewChain.js"></script>
+	<script src="tests/testsCollectionToCollectionGroupChain.js"></script>
+	<script src="tests/testsCollectionGroupToViewChain.js"></script>
+	<script src="tests/testsCollectionGroup.js"></script>
+	<script src="tests/testsIndexHashMap.js"></script>
+	<script src="tests/testsIndexBinaryTree.js"></script>
+	<script src="tests/testsIndex2d.js"></script>
+	<script src="tests/testsEvents.js"></script>
+
+	<script src="tests/testsTransform.js"></script>
+	<script src="tests/testsDocument.js"></script>
+	<script src="tests/testsOverview.js"></script>
+	<script src="tests/testsOverload.js"></script>
+	<script src="tests/testsPersist.js"></script>
+	<script src="tests/testsHighCharts.js"></script>
+	<script src="tests/testsGrid.js"></script>
+	<script src="tests/testsRest.js"></script>
+	<script src="tests/testsTrigger.js"></script>
+	<script src="tests/testsViewGeneral.js"></script>
+	<script src="tests/testsViewBasicCRUD.js"></script>
+	<script src="tests/testsViewQueriedCRUD.js"></script>
+	<script src="tests/testsViewComplexCRUD.js"></script>
+	<script src="tests/testsSorting.js"></script>
+	<!--<script src="tests/testsPaging.js"></script>-->
+
+	<script type="text/x-jsrender" id="gridTable">
+		<div id="myData">
+		{^{:myData}}
+		</div>
+		<div class="container" role="main">
+			<div class="table-responsive">
+				<div class="gridContainer"></div>
+
+				<table class="table table-striped gridTable">
+					<thead class="gridHead">
+						<tr>
+							<td data-grid-filter="firstName">First Name</td>
+							<td data-grid-filter="lastName">Last Name</td>
+							<td data-grid-filter="age">Age</td>
+						</tr>
+					</thead>
+					<tbody class="gridBody">
+						{^{for gridRow}}
+						<tr data-link="id{:_id}">
+							<td>{^{:firstName}}</td>
+							<td>{^{:lastName}}</td>
+							<td>{^{:age}}</td>
+						</tr>
+						{^{/for}}
+					</tbody>
+					<tfoot>
+						<tr>
+							<td></td>
+							<td></td>
+							<td></td>
+						</tr>
+					</tfoot>
+				</table>
+			</div>
+		</div>
+	</script>
+</body>
+</html>

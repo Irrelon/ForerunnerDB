@@ -14,6 +14,7 @@ Shared = require('./Shared');
  * code including responding to clients directly.
  * @param {String} name The name of the procedure.
  * @param {Function} method The handler method.
+ * @class
  * @constructor
  */
 Procedure = function (name, method) {
@@ -40,6 +41,7 @@ Shared.mixin(Procedure.prototype, 'Mixin.Events');
 /**
  * Get / set the procedure name.
  * @name name
+ * @method Procedure.name
  * @param {String=} name The name to set.
  */
 Shared.synthesize(Procedure.prototype, 'name');

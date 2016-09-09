@@ -6,6 +6,13 @@ var Shared,
 
 Shared = require('./Shared');
 
+/**
+ * The ODM class provides some experimental interfaces for accessing collection data.
+ * This is considered alpha code and should not be used in production.
+ * @experimental
+ * @class
+ * @constructor
+ */
 var Odm = function () {
 	this.init.apply(this, arguments);
 };

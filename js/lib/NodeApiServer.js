@@ -26,6 +26,11 @@ var Shared = require('./Shared'),
 	_accessOrder = [],
 	_io = {};
 
+/**
+ * The NodeApiServer class.
+ * @class
+ * @constructor
+ */
 NodeApiServer = function () {
 	this.init.apply(this, arguments);
 };
@@ -745,6 +750,7 @@ NodeApiServer.prototype.hasPermission = function (dbName, objType, objName, meth
  * If no access permissions are present ForerunnerDB will automatically
  * deny any request to the resource by default.
  * @name access
+ * @method NodeApiServer.access
  * @param {String} dbName The name of the database to set access rules for.
  * @param {String} objType The type of object that the name refers to
  * e.g. "collection", "view" etc. This effectively maps to a method name on

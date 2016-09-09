@@ -1,6 +1,6 @@
 "use strict";
 
-/**
+/*
  * This is a skeleton module definition that you can use as a springboard to
  * develop new modules easily. It includes registering the module with
  * ForerunnerDB and shows how to use common helper methods such as mixins
@@ -18,6 +18,8 @@ Shared = require('./Shared');
  * Create a constructor method that calls the instance's init method.
  * This allows the constructor to be overridden by other modules because
  * they can override the init method with their own.
+ * @class
+ * @constructor
  */
 MyModule = function () {
 	this.init.apply(this, arguments);

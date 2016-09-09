@@ -23,9 +23,9 @@ var Shared = window.ForerunnerDB.shared,
 
 /**
  * Creates an infinilist instance.
- * @param {Selector} selector A jQuery selector targeting the element that
+ * @param {String} selector A jQuery selector targeting the element that
  * will contain the list items.
- * @param {Selector} template jQuery selector of the template to use when
+ * @param {String} template jQuery selector of the template to use when
  * rendering an individual list item.
  * @param {Object} options The options object.
  * @param {View} view The view to read data from.

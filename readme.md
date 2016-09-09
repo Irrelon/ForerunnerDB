@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.867
+## Version 1.3.891
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1505,9 +1505,11 @@ Result is:
 }
 ```
 
-### Limiting Return Fields
+### Limiting Return Fields - Querying for Partial Documents / Objects
 You can specify which fields are included in the return data for a query by adding them in
-the options object. This follows the same rules specified by MongoDB here: 
+the options object. This returns a partial document for each matching document in your query. 
+
+This follows the same rules specified by MongoDB here: 
 
 [MongoDB Documentation](http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/)
 
@@ -1524,29 +1526,18 @@ var fdb = new ForerunnerDB(),
 coll.insert([{
 	_id: 1,
 	text: "Jim",
-	val: 2131232
-}, {
-	_id: 2,
-	text: "Bob",
-	val: 2425234321
-}, {
-	_id: 3,
-	text: "Bob",
-	val: 54353454
-}, {
-	_id: 4,
-	text: "Anne",
-	val: 1231432
-}, {
-	_id: 5,
-	text: "Simon",
-	val: 87567455
-}, {
-	_id: 6,
-	text: "Uber",
-	val: 93472834
+	val: 2131232,
+	arr: [
+		"foo",
+		"bar",
+		"you"
+	]
 }]);
+```
 
+Now query for only the "text" field of each document:
+
+```js
 result = coll.find({}, {
 	text: 1
 });
@@ -1558,21 +1549,23 @@ Result is:
 [{
 	_id: 1,
 	text: "Jim"
-}, {
-	_id: 2,
-	text: "Bob"
-}, {
-	_id: 3,
-	text: "Bob"
-}, {
-	_id: 4,
-	text: "Anne"
-}, {
-	_id: 5,
-	text: "Simon"
-}, {
-	_id: 6,
-	text: "Uber"
+}]
+```
+
+Notice the _id field is ALWAYS included in the results unless you explicitly exclude it:
+
+```js
+result = coll.find({}, {
+	_id: 0,
+	text: 1
+});
+```
+	
+Result is:
+
+```js
+[{
+	text: "Jim"
 }]
 ```
 

@@ -274,6 +274,19 @@ module.exports = function(grunt) {
 					]
 				}
 			},
+			
+			"core+views+persist": {
+				src: ["./js/builds/core+views+persist.js"],
+				dest: "./js/dist/fdb-core+views+persist.js",
+				options: {
+					verbose: true,
+					debug: true,
+					transform: [aliasify, stringify(['.html'])],
+					plugin: [
+						[ "browserify-derequire" ]
+					]
+				}
+			},
 
 			"legacy": {
 				src: ["./js/builds/legacy.js"],
@@ -329,6 +342,12 @@ module.exports = function(grunt) {
 			"core+persist": {
 				"files": {
 					"./js/dist/fdb-core+persist.min.js": ["./js/dist/fdb-core+persist.js"]
+				}
+			},
+			
+			"core+views+persist": {
+				"files": {
+					"./js/dist/fdb-core+views+persist.min.js": ["./js/dist/fdb-core+views+persist.js"]
 				}
 			},
 
@@ -388,6 +407,13 @@ module.exports = function(grunt) {
 					globalAlias: 'ForerunnerDB'
 				}
 			},
+			
+			"core+views+persist": {
+				options: {
+					src: './js/dist/fdb-core+views+persist.js',
+					globalAlias: 'ForerunnerDB'
+				}
+			},
 
 			"legacy": {
 				options: {
@@ -437,6 +463,7 @@ module.exports = function(grunt) {
 		fixFile('fdb-infinilist.js');
 		fixFile('fdb-core+persist.js');
 		fixFile('fdb-core+views.js');
+		fixFile('fdb-core+views+persist.js');
 		fixFile('fdb-legacy.js');
 	});
 
@@ -474,6 +501,7 @@ module.exports = function(grunt) {
 		copyFile('fdb-core.min.js');
 		copyFile('fdb-core+persist.min.js');
 		copyFile('fdb-core+views.min.js');
+		copyFile('fdb-core+views+persist.min.js');
 		copyFile('fdb-legacy.min.js');
 	});
 

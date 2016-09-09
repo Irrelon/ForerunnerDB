@@ -8,14 +8,19 @@ var Shared,
 Shared = require('./Shared');
 
 /**
- * Create a constructor method that calls the instance's init method.
- * This allows the constructor to be overridden by other modules because
- * they can override the init method with their own.
+ * The section class.
+ * @class
+ * @constructor
  */
 Section = function () {
 	this.init.apply(this, arguments);
 };
 
+/**
+ * Create a constructor method that is called by the instance on instantiation.
+ * This allows the constructor to be overridden by other modules because
+ * they can override the init method with their own.
+ */
 Section.prototype.init = function () {
 	//var self = this;
 };
