@@ -1149,10 +1149,16 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								}
 							}
 						} else {
-							// The doc key is an object so traverse the
-							// update further
-							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-							updated = updated || recurseUpdated;
+							// Check if the doc key is a date instance
+							if (doc[i] instanceof Date) {
+								// The doc key is a date object, assign the new date
+								this._updateProperty(doc, i, update[i]);
+							} else {
+								// The doc key is an object so traverse the
+								// update further
+								recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+								updated = updated || recurseUpdated;
+							}
 						}
 					} else {
 						if (doc[i] !== update[i]) {
