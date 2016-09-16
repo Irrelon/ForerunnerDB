@@ -2118,10 +2118,16 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								}
 							}
 						} else {
-							// The doc key is an object so traverse the
-							// update further
-							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-							updated = updated || recurseUpdated;
+							// Check if the doc key is a date instance
+							if (doc[i] instanceof Date) {
+								// The doc key is a date object, assign the new date
+								this._updateProperty(doc, i, update[i]);
+							} else {
+								// The doc key is an object so traverse the
+								// update further
+								recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+								updated = updated || recurseUpdated;
+							}
 						}
 					} else {
 						if (doc[i] !== update[i]) {
@@ -4657,6 +4663,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that
 	 * name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @returns {Collection}
@@ -4670,6 +4678,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {Object} data An options object or a collection instance.
@@ -4693,6 +4703,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4707,6 +4719,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4724,6 +4738,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4739,6 +4755,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4753,15 +4771,7 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 
 		return this.$main.call(this, options);
 	},
-
-	/**
-	 * The main handler method. This gets called by all the other
-	 * variants and handles the actual logic of the overloaded method.
-	 * @func collection
-	 * @memberof Db
-	 * @param {Object} options An options object.
-	 * @returns {*}
-	 */
+	
 	'$main': function (options) {
 		var self = this,
 			name = options.name;
@@ -16292,7 +16302,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.893',
+	version: '1.3.896',
 	modules: {},
 	plugins: {},
 	index: {},
