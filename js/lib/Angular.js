@@ -37,7 +37,7 @@ Angular.extendCollection = function (Module) {
 	 * @param {Object=} options Optional extra options.
 	 * @see unlink
 	 */
-	Module.prototype.ng = function (scope, varName, options) {
+	Module.prototype.ng = function (scope, varName, options, beforeAngularToForerunner) {
 		var self = this,
 			hasApplied = false,
 			watchUpdating = false,
@@ -82,17 +82,30 @@ Angular.extendCollection = function (Module) {
 				// Hook the angular watch event to update our data if the
 				// angular data is updated by content
 				scope.$watch(varName, function (newValue) {
+					var next;
+					
+					next = function (err, finalValue) {
+						if (!err) {
+							self.upsert(finalValue);
+						}
+						
+						watchUpdating = false;
+					};
+					
 					if (hasApplied) {
 						watchUpdating = true;
-						self.upsert(newValue);
-						watchUpdating = false;
+						if (beforeAngularToForerunner) {
+							beforeAngularToForerunner(newValue, next);
+						} else {
+							next(false, newValue);
+						}
 					}
 				}, true);
 			}
 
 			if (!options || (options && !options.$noBind)) {
 				// Hook the ForerunnerDB change event to inform angular of a change
-				self.on('change', function () {
+				self.on('immediateChange', function () {
 					if (!watchUpdating) {
 						link.callback.apply(this, arguments);
 					}
@@ -227,7 +240,7 @@ Angular.extendDocument = function (Module) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
 							//TODO: Implement immediateChange in Document class and hook that instead of change event
-							self.off('change', link.callback);
+							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
@@ -244,7 +257,7 @@ Angular.extendDocument = function (Module) {
 			}, true);
 
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', function () {
+			self.on('immediateChange', function () {
 				if (!watchUpdating) {
 					link.callback.apply(this, arguments);
 				} else {
