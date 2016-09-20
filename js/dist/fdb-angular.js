@@ -41,6 +41,10 @@ Angular.extendCollection = function (Module) {
 	 * @param scope
 	 * @param varName
 	 * @param {Object=} options Optional extra options.
+	 * @param {Function=} beforeAngularToForerunner Provides an optional function
+	 * that allows you to modify data before angularJS updates ForerunnerDB with
+	 * data from a view that has changed (like when a user edits a form element
+	 * value that has been data-bound via ng-model).
 	 * @see unlink
 	 */
 	Module.prototype.ng = function (scope, varName, options, beforeAngularToForerunner) {
