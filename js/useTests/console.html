@@ -12,6 +12,17 @@
 <script>
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
+
+	db.load(function () {
+		console.log('Loaded');
+
+		console.log('Current data', db.collection('test').find());
+		db.collection('test').insert({_id: 0, test: true});
+		console.log('Current data', db.collection('test').find());
+		db.save(function () {
+			console.log('Saved');
+		});
+	});
 </script>
 </body>
 </html>
