@@ -1,3 +1,5 @@
+"use strict";
+
 QUnit.module('Db');
 QUnit.test("DB.collection() :: Create Collection", function() {
 	base.dbUp();
