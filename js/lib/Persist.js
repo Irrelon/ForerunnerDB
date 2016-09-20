@@ -782,7 +782,7 @@ Db.prototype.load = new Overload({
 	 * has completed.
 	 */
 	'function': function (callback) {
-		this.$main.call(this, {}, callback);
+		this.$main.call(this, undefined, callback);
 	},
 	
 	/**
