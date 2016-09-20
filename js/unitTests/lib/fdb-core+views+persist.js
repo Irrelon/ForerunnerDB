@@ -12381,7 +12381,7 @@ Db.prototype.load = new Overload({
 	 * has completed.
 	 */
 	'function': function (callback) {
-		this.$main.call(this, {}, callback);
+		this.$main.call(this, undefined, callback);
 	},
 	
 	/**
@@ -12938,7 +12938,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.905',
+	version: '1.3.907',
 	modules: {},
 	plugins: {},
 	index: {},

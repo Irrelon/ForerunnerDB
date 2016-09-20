@@ -13,16 +13,25 @@
 	var fdb = new ForerunnerDB(),
 		db = fdb.db('test');
 
+	/*db.collection('test');
+
 	db.load(function () {
-		console.log('Loaded');
+		console.log('Loaded', arguments);
 
 		console.log('Current data', db.collection('test').find());
 		db.collection('test').insert({_id: 0, test: true});
 		console.log('Current data', db.collection('test').find());
 		db.save(function () {
-			console.log('Saved');
+			console.log('Saved', arguments);
+			db.drop(true, function () {
+				console.log('Dropped');
+				console.log('Current data', db.collection('test').find());
+
+				// Generate a new database instance
+				db = fdb.db('test');
+			});
 		});
-	});
+	});*/
 </script>
 </body>
 </html>
