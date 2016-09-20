@@ -1,3 +1,5 @@
+"use strict";
+
 QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
 	QUnit.asyncTest('Persist.load() :: Load un-saved collection', function () {
@@ -144,7 +146,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 	});*/
 
 	QUnit.asyncTest('Persist.save() :: Save data to multiple database storage with same collection names', function () {
-		expect(12);
+		expect(18);
 
 		var fdb = new ForerunnerDB(),
 			db1 = fdb.db('db1'),
@@ -181,6 +183,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 					ok(!err, 'Save did not produce an error');
 				}
 
+				// Drop the databases but don't drop persistent storage
 				db1.drop(false);
 				db2.drop(false);
 
@@ -223,8 +226,8 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 						strictEqual(result.length, 1, 'Check that items were loaded correctly');
 						strictEqual(result[0] && result[0].name, 'Test2', 'Check that the data loaded holds correct information');
 
-						// Fully drop databases
-						/*db1.drop(true, function (err) {
+						// Fully drop databases including persistent storage
+						db1.drop(true, function (err) {
 							if (err) {
 								console.log(err);
 								ok(false, err);
@@ -275,9 +278,9 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 									});
 								});
 							});
-						});*/
+						});
 
-						start();
+						//start();
 					});
 				});
 			});
