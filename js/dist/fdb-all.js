@@ -6443,7 +6443,8 @@ module.exports = Db;
 // TODO: methods like we already do with collection
 var Shared,
 	Collection,
-	Db;
+	Db,
+	Path;
 
 Shared = _dereq_('./Shared');
 
@@ -6477,6 +6478,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Tags');
 
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
+Path = _dereq_('./Path');
 
 /**
  * Gets / sets the current state.
@@ -6574,6 +6576,75 @@ FdbDocument.prototype.find = function (query, options) {
 	}
 
 	return result;
+};
+
+/**
+ * Finds sub-documents in this document.
+ * @param {Object} match A query to check if this document should
+ * be queried. If this document data doesn't match the query then
+ * no results are returned.
+ * @param {String} path The path string used to identify the
+ * key in which sub-documents are stored in the parent document.
+ * @param {Object=} subDocQuery The query to use when matching
+ * which sub-documents to return.
+ * @param {Object=} subDocOptions The options object to use
+ * when querying for sub-documents.
+ * @returns {*}
+ */
+FdbDocument.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+	return this._findSub([this.find(match)], path, subDocQuery, subDocOptions);
+};
+
+FdbDocument.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
+	var pathHandler = new Path(path),
+		docCount = docArr.length,
+		docIndex,
+		subDocArr,
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()).db(this._db),
+		subDocResults,
+		resultObj = {
+			parents: docCount,
+			subDocTotal: 0,
+			subDocs: [],
+			pathFound: false,
+			err: ''
+		};
+	
+	subDocOptions = subDocOptions || {};
+	
+	for (docIndex = 0; docIndex < docCount; docIndex++) {
+		subDocArr = pathHandler.value(docArr[docIndex])[0];
+		if (subDocArr) {
+			subDocCollection.setData(subDocArr);
+			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
+			if (subDocOptions.returnFirst && subDocResults.length) {
+				return subDocResults[0];
+			}
+			
+			if (subDocOptions.$split) {
+				resultObj.subDocs.push(subDocResults);
+			} else {
+				resultObj.subDocs = resultObj.subDocs.concat(subDocResults);
+			}
+			
+			resultObj.subDocTotal += subDocResults.length;
+			resultObj.pathFound = true;
+		}
+	}
+	
+	// Drop the sub-document collection
+	subDocCollection.drop();
+	
+	if (!resultObj.pathFound) {
+		resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
+	}
+	
+	// Check if the call should not return stats, if so return only subDocs array
+	if (subDocOptions.$stats) {
+		return resultObj;
+	} else {
+		return resultObj.subDocs[0];
+	}
 };
 
 /**
@@ -6900,7 +6971,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":6,"./Shared":40}],12:[function(_dereq_,module,exports){
+},{"./Collection":6,"./Path":34,"./Shared":40}],12:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -15958,7 +16029,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.909',
+	version: '1.3.913',
 	modules: {},
 	plugins: {},
 	index: {},

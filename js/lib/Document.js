@@ -4,7 +4,8 @@
 // TODO: methods like we already do with collection
 var Shared,
 	Collection,
-	Db;
+	Db,
+	Path;
 
 Shared = require('./Shared');
 
@@ -38,6 +39,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Tags');
 
 Collection = require('./Collection');
 Db = Shared.modules.Db;
+Path = require('./Path');
 
 /**
  * Gets / sets the current state.
@@ -151,7 +153,7 @@ FdbDocument.prototype.find = function (query, options) {
  * @returns {*}
  */
 FdbDocument.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
-	return this._findSub([this.find(match), path, subDocQuery, subDocOptions);
+	return this._findSub([this.find(match)], path, subDocQuery, subDocOptions);
 };
 
 FdbDocument.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
