@@ -138,6 +138,75 @@ FdbDocument.prototype.find = function (query, options) {
 };
 
 /**
+ * Finds sub-documents in this document.
+ * @param {Object} match A query to check if this document should
+ * be queried. If this document data doesn't match the query then
+ * no results are returned.
+ * @param {String} path The path string used to identify the
+ * key in which sub-documents are stored in the parent document.
+ * @param {Object=} subDocQuery The query to use when matching
+ * which sub-documents to return.
+ * @param {Object=} subDocOptions The options object to use
+ * when querying for sub-documents.
+ * @returns {*}
+ */
+FdbDocument.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
+	return this._findSub([this.find(match), path, subDocQuery, subDocOptions);
+};
+
+FdbDocument.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
+	var pathHandler = new Path(path),
+		docCount = docArr.length,
+		docIndex,
+		subDocArr,
+		subDocCollection = new Collection('__FDB_temp_' + this.objectId()).db(this._db),
+		subDocResults,
+		resultObj = {
+			parents: docCount,
+			subDocTotal: 0,
+			subDocs: [],
+			pathFound: false,
+			err: ''
+		};
+	
+	subDocOptions = subDocOptions || {};
+	
+	for (docIndex = 0; docIndex < docCount; docIndex++) {
+		subDocArr = pathHandler.value(docArr[docIndex])[0];
+		if (subDocArr) {
+			subDocCollection.setData(subDocArr);
+			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
+			if (subDocOptions.returnFirst && subDocResults.length) {
+				return subDocResults[0];
+			}
+			
+			if (subDocOptions.$split) {
+				resultObj.subDocs.push(subDocResults);
+			} else {
+				resultObj.subDocs = resultObj.subDocs.concat(subDocResults);
+			}
+			
+			resultObj.subDocTotal += subDocResults.length;
+			resultObj.pathFound = true;
+		}
+	}
+	
+	// Drop the sub-document collection
+	subDocCollection.drop();
+	
+	if (!resultObj.pathFound) {
+		resultObj.err = 'No objects found in the parent documents with a matching path of: ' + path;
+	}
+	
+	// Check if the call should not return stats, if so return only subDocs array
+	if (subDocOptions.$stats) {
+		return resultObj;
+	} else {
+		return resultObj.subDocs[0];
+	}
+};
+
+/**
  * Modifies the document. This will update the document with the data held in 'update'.
  * @func update
  * @memberof Document
