@@ -6422,6 +6422,7 @@ Shared.synthesize(FdbDocument.prototype, 'name');
  */
 FdbDocument.prototype.setData = function (data, options) {
 	var i,
+		eventData,
 		$unset;
 
 	if (data) {
@@ -6455,8 +6456,11 @@ FdbDocument.prototype.setData = function (data, options) {
 			// Straight data assignment
 			this._data = data;
 		}
-
-		this.deferEmit('change', {type: 'setData', data: this.decouple(this._data)});
+		
+		eventData = {type: 'setData', data: this.decouple(this._data)};
+		
+		this.emit('immediateChange', eventData);
+		this.deferEmit('change', eventData);
 	}
 
 	return this;
@@ -6565,10 +6569,14 @@ FdbDocument.prototype._findSub = function (docArr, path, subDocQuery, subDocOpti
  * @returns {Array} The items that were updated.
  */
 FdbDocument.prototype.update = function (query, update, options) {
-	var result = this.updateObject(this._data, update, query, options);
+	var result = this.updateObject(this._data, update, query, options),
+		eventData;
 
 	if (result) {
-		this.deferEmit('change', {type: 'update', data: this.decouple(this._data)});
+		eventData = {type: 'update', data: this.decouple(this._data)};
+		
+		this.emit('immediateChange', eventData);
+		this.deferEmit('change', eventData);
 	}
 };
 
@@ -16393,7 +16401,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.913',
+	version: '1.3.914',
 	modules: {},
 	plugins: {},
 	index: {},
