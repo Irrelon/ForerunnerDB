@@ -1386,22 +1386,22 @@ var fdb = new ForerunnerDB(),
 	coll = db.collection("test");
 
 coll.insert([{
-	lngLat: [51.50722, -0.12750],
+	latLng: [51.50722, -0.12750],
 	name: 'Central London'
 }, {
-	lngLat: [51.525745, -0.167550], // 2.18 miles
+	latLng: [51.525745, -0.167550], // 2.18 miles
 	name: 'Marylebone, London'
 }, {
-	lngLat: [51.576981, -0.335091], // 10.54 miles
+	latLng: [51.576981, -0.335091], // 10.54 miles
 	name: 'Harrow, London'
 }, {
-	lngLat: [51.769451, 0.086509], // 20.33 miles
+	latLng: [51.769451, 0.086509], // 20.33 miles
 	name: 'Harlow, Essex'
 }]);
 
 // Create a 2d index on the lngLat field
 coll.ensureIndex({
-	lngLat: 1
+	latLng: 1
 }, {
 	type: '2d'
 });
@@ -1409,7 +1409,7 @@ coll.ensureIndex({
 // Query index by distance
 // $near queries are sorted by distance from centre point by default
 result = coll.find({
-	lngLat: {
+	latLng: {
 		$near: {
 			$point: [51.50722, -0.12750],
 			$maxDistance: 3,
