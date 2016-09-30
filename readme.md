@@ -1364,13 +1364,13 @@ Result is:
 
 Finds other documents whose co-ordinates based on a 2d index are within the specified
 distance from the specified centre point. Co-ordinates must be presented in
-longitude / latitude for $near to work.
+latitude / longitude for $near to work.
 
 ```js
 {
 	field: {
 		$near: {
-			$point: [<longitude number>, <latitude number>],
+			$point: [<latitude number>, <longitude number>],
 			$maxDistance: <number>,
 			$distanceUnits: <units string>
 		}
