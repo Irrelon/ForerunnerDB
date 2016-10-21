@@ -264,8 +264,6 @@ Angular.extendDocument = function (Module) {
 			self.on('immediateChange', function () {
 				if (!watchUpdating) {
 					link.callback.apply(this, arguments);
-				} else {
-					//console.log('Ignoring update as it is a watch update');
 				}
 			});
 
