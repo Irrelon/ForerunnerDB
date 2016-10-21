@@ -128,10 +128,7 @@ Common = {
 	 * @param {Object} data The data to stringify.
 	 * @returns {String} The stringified data.
 	 */
-	jStringify: function (data) {
-		//return serialiser.stringify(data);
-		return JSON.stringify(data);
-	},
+	jStringify: JSON.stringify,
 	
 	/**
 	 * Generates a new 16-character hexadecimal unique ID or
