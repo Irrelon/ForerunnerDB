@@ -261,7 +261,6 @@ Angular.extendDocument = function (Module) {
 			// angular data is updated by content
 			scope.$watch(varName, function(newValue) {
 				watchUpdating = true;
-				//console.log('Updating', newValue);
 				self.update({}, newValue);
 				watchUpdating = false;
 			}, true);
