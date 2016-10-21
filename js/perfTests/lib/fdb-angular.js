@@ -261,7 +261,7 @@ Angular.extendDocument = function (Module) {
 			// angular data is updated by content
 			scope.$watch(varName, function(newValue) {
 				watchUpdating = true;
-				console.log('Updating', newValue);
+				//console.log('Updating', newValue);
 				self.update({}, newValue);
 				watchUpdating = false;
 			}, true);
@@ -270,8 +270,6 @@ Angular.extendDocument = function (Module) {
 			self.on('immediateChange', function () {
 				if (!watchUpdating) {
 					link.callback.apply(this, arguments);
-				} else {
-					console.log('Ignoring update as it is a watch update');
 				}
 			});
 
