@@ -3154,10 +3154,33 @@ var coll = db.collection("myCollection");
 
 
 coll.on("change", function () {
+	// This will ONLY FIRE ONCE when all three inserts below have completed
 	console.log("Changed");
 });
 
 coll.insert({moo: true});
+coll.insert({foo: true});
+coll.insert({goo: true});
+```
+
+### immediateChange
+Emitted after each CRUD operation has completed. This is different from the "change" event
+in that immediateChange is emitted without any debouncing. The debounced change event will
+only fire 100ms after all changes have finished. The immediateChange event will fire
+on all changes straight away.
+
+```js
+var coll = db.collection("myCollection");
+
+
+coll.on("immediateChange", function () {
+	// This will fire once FOR EACH of the inserts below
+	console.log("Immediate Change");
+});
+
+coll.insert({moo: true});
+coll.insert({foo: true});
+coll.insert({goo: true});
 ```
 
 ### drop
