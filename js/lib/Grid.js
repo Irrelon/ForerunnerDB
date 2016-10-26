@@ -259,6 +259,13 @@ Grid.prototype._sortGridClick = function (e) {
 	this.emit('sort', sortObj);
 };
 
+/**
+ * Sets the base query and query options on the grid that
+ * will remain part of the query regardless of other changes.
+ * @param {Object} queryObj The query object.
+ * @param {Object} queryOptions The query options object.
+ * @returns {Grid}
+ */
 Grid.prototype.query = function (queryObj, queryOptions) {
 	this._baseQuery = queryObj;
 	this._baseQueryOptions = queryOptions;
