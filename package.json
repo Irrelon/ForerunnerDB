@@ -45,7 +45,7 @@
     "rest": "^2.0.0"
   },
   "engines": {
-    "node": "*"
+    "node": ">= 4"
   },
   "scripts": {
     "start": "forever start server/server.js",
