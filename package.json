@@ -58,7 +58,7 @@
     "url": "git://github.com/irrelon/ForerunnerDB.git"
   },
   "devDependencies": {
-    "aliasify": "^2.0.0",
+    "aliasify": "^2.1.0",
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
