@@ -333,7 +333,7 @@ var Events = {
 				}
 
 				self.emit.apply(self, args);
-			}, 30);
+			}, 1);
 		} else {
 			this.emit.apply(this, arguments);
 		}
