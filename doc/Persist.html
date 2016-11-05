@@ -207,7 +207,7 @@ storage.
 
     
 
-    <h4 class="name" id=".addStep"><span class="type-signature">(static) </span>addStep<span class="signature">(obj)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".addStep"><span class="type-signature">(static) </span>addStep<span class="signature">(encode, decode, index<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -239,6 +239,8 @@ that you can add custom functionality.
         <th>Type</th>
 
         
+        <th>Attributes</th>
+        
 
         
 
@@ -251,7 +253,7 @@ that you can add custom functionality.
 
         <tr>
             
-                <td class="name"><code>obj</code></td>
+                <td class="name"><code>encode</code></td>
             
 
             <td class="type">
@@ -264,10 +266,93 @@ that you can add custom functionality.
             </td>
 
             
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
 
             
 
-            <td class="description last">The object to encode / decode.</td>
+            <td class="description last">The encode method called with the data from the
+previous encode step. When your method is complete it MUST call the
+callback method. If you provide anything other than false to the err
+parameter the encoder will fail and throw an error.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>decode</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The decode method called with the data from the
+previous decode step. When your method is complete it MUST call the
+callback method. If you provide anything other than false to the err
+parameter the decoder will fail and throw an error.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>index</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Number</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Optional index to add the encoder step to. This
+allows you to place a step before or after other existing steps. If not
+provided your step is placed last in the list of steps. For instance if
+you are providing an encryption step it makes sense to place this last
+since all previous steps will then have their data encrypted by your
+final step.</td>
         </tr>
 
     
@@ -308,7 +393,7 @@ that you can add custom functionality.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line227">line 227</a>
+        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line256">line 256</a>
     </li></ul></dd>
     
 
@@ -500,7 +585,7 @@ parameter the decoder will fail and throw an error.</td>
 
     
 
-    <h4 class="name" id=".addStep"><span class="type-signature">(static) </span>addStep<span class="signature">(encode, decode, index<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".addStep"><span class="type-signature">(static) </span>addStep<span class="signature">(obj)</span><span class="type-signature"></span></h4>
 
     
 
@@ -532,8 +617,6 @@ that you can add custom functionality.
         <th>Type</th>
 
         
-        <th>Attributes</th>
-        
 
         
 
@@ -546,7 +629,7 @@ that you can add custom functionality.
 
         <tr>
             
-                <td class="name"><code>encode</code></td>
+                <td class="name"><code>obj</code></td>
             
 
             <td class="type">
@@ -559,93 +642,10 @@ that you can add custom functionality.
             </td>
 
             
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
 
             
 
-            <td class="description last">The encode method called with the data from the
-previous encode step. When your method is complete it MUST call the
-callback method. If you provide anything other than false to the err
-parameter the encoder will fail and throw an error.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>decode</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">The decode method called with the data from the
-previous decode step. When your method is complete it MUST call the
-callback method. If you provide anything other than false to the err
-parameter the decoder will fail and throw an error.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>index</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Number</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Optional index to add the encoder step to. This
-allows you to place a step before or after other existing steps. If not
-provided your step is placed last in the list of steps. For instance if
-you are providing an encryption step it makes sense to place this last
-since all previous steps will then have their data encrypted by your
-final step.</td>
+            <td class="description last">The object to encode / decode.</td>
         </tr>
 
     
@@ -686,7 +686,7 @@ final step.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line256">line 256</a>
+        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line227">line 227</a>
     </li></ul></dd>
     
 
@@ -2032,7 +2032,7 @@ has completed.</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Oct 21 2016 11:06:05 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Sat Nov 05 2016 11:59:38 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

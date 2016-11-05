@@ -360,7 +360,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 			base.dbDown();
 			start();
-		}, 1);
+		}, 200);
 	});
 
 	/*QUnit.test('View.from() :: View from a view from a collection', function () {
