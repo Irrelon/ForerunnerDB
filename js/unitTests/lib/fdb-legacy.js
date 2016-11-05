@@ -10991,7 +10991,7 @@ var Events = {
 				}
 
 				self.emit.apply(self, args);
-			}, 30);
+			}, 1);
 		} else {
 			this.emit.apply(this, arguments);
 		}
@@ -16405,7 +16405,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.925',
+	version: '1.3.926',
 	modules: {},
 	plugins: {},
 	index: {},
