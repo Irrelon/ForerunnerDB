@@ -1617,6 +1617,8 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
+	var i;
+	
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
@@ -1631,6 +1633,15 @@ Collection.prototype.truncate = function () {
 	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
 	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
 	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
+	
+	// Re-create any existing collection indexes
+	// TODO: This might not be the most efficient way to do this, perhaps just re-creating
+	// the indexes would be faster than calling rebuild?
+	for (i in this._indexByName) {
+		if (this._indexByName.hasOwnProperty(i)) {
+			this._indexByName[i].rebuild();
+		}
+	}
 
 	this._onChange();
 	this.emit('immediateChange', {type: 'truncate'});
@@ -16051,7 +16062,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.927',
+	version: '1.3.928',
 	modules: {},
 	plugins: {},
 	index: {},
