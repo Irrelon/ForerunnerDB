@@ -30,11 +30,15 @@ var Collection = function (name, options) {
  * handle CRUD against those documents.
  */
 Collection.prototype.init = function (name, options) {
+	// Ensure we have an options object
+	options = options || {};
+	
+	// Set internals
 	this.sharedPathSolver = sharedPathSolver;
-	this._primaryKey = '_id';
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryKey = options.primaryKey || '_id';
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
 	this._name = name;
 	this._data = [];
 	this._metrics = new Metrics();
@@ -560,9 +564,9 @@ Collection.prototype.truncate = function () {
 	this._data.length = 0;
 
 	// Re-create the primary index data
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
 
 	this._onChange();
 	this.emit('immediateChange', {type: 'truncate'});
