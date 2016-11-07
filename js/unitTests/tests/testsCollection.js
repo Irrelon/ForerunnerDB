@@ -3818,6 +3818,9 @@ QUnit.test("Collection.truncate() :: Check primary key is handled correctly when
 	result = coll.find();
 	strictEqual(result.length, 1, 'There should be 1 item');
 	
+	result = coll.find({color: 'red'});
+	strictEqual(result.length, 0, 'There should be 0 red items');
+	
 	result = coll.findById(4);
 	strictEqual(Boolean(result), true, 'Element should not be null or undefined');
 	
