@@ -733,11 +733,15 @@ var Collection = function (name, options) {
  * handle CRUD against those documents.
  */
 Collection.prototype.init = function (name, options) {
+	// Ensure we have an options object
+	options = options || {};
+	
+	// Set internals
 	this.sharedPathSolver = sharedPathSolver;
-	this._primaryKey = '_id';
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryKey = options.primaryKey || '_id';
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
 	this._name = name;
 	this._data = [];
 	this._metrics = new Metrics();
@@ -1263,9 +1267,9 @@ Collection.prototype.truncate = function () {
 	this._data.length = 0;
 
 	// Re-create the primary index data
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
 
 	this._onChange();
 	this.emit('immediateChange', {type: 'truncate'});
@@ -7190,16 +7194,22 @@ var Shared = _dereq_('./Shared');
  * and can be queried for quick retrieval. Mostly used for collection
  * primary key indexes and lookups.
  * @param {String=} name Optional KV store name.
+ * @param {Object=} options Optional KV store options object. Currently
+ * supports "primaryKey" as a string.
  * @constructor
  */
-var KeyValueStore = function (name) {
+var KeyValueStore = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
-KeyValueStore.prototype.init = function (name) {
+KeyValueStore.prototype.init = function (name, options) {
+	// Ensure we have options
+	options = options || {};
+	
+	// Set our internal data settings
 	this._name = name;
 	this._data = {};
-	this._primaryKey = '_id';
+	this._primaryKey = options.primaryKey || '_id';
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
@@ -11190,7 +11200,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.926',
+	version: '1.3.927',
 	modules: {},
 	plugins: {},
 	index: {},
