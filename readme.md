@@ -2641,6 +2641,55 @@ at the query part of the call to see if a corresponding clause exists for it. In
 above the "arr.$" property in the update part has a corresponding "arr" in the query part
 which determines which sub-documents are to be updated based on if they match or not.
 
+## Upsert Documents
+Upserts are operations that automatically decide if the database should run an insert or an
+update operation based on the data you provide.
+
+Using upsert() is effectively the same as using insert(). You pass an object or array of
+objects to the upsert() method and they are processed.
+
+```js
+// This will execute an insert operation because a document with the _id "1" does not
+// currently exist in the database.
+db.collection("test").upsert({
+	"_id": "1",
+	"test": true
+});
+
+db.collection("test").find(); // [{"_id": "1", "test": true}]
+
+// We now perform an upsert and change "test" to false. This will perform an update operation
+// since a document with the _id "1" now exists.
+db.collection("test").upsert({
+	"_id": "1",
+	"test": false
+});
+
+db.collection("test").find(); // [{"_id": "1", "test": false}]
+```
+
+One of the restrictions of upsert() is that you cannot use any update operators in your
+document because the operation *could* be an insert. For this reason, upserts should only
+contain data and no $ operators like $push, $unset etc.
+
+## Count Documents
+The count() method is useful when you want to get a count of the number of documents in a
+collection or a count of documents that match a specified query.
+
+### Count All Documents
+```js
+// Cound all documents in the "test" collection
+var num = db.collection("test").count();
+```
+
+### Count Documents Based on Query
+```js
+// Get all documents whos myField property has the value of 1
+var num = db.collection("test").count({
+	myField: 1
+});
+```
+
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
 
