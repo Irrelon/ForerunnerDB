@@ -2,6 +2,22 @@
 
 QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
+	/*QUnit.asyncTest('Persist.load() :: Check for saved databases', function () {
+		expect(1);
+		
+		base.dbUp();
+		
+		db.collection('test1').insert({"test": true});
+		db.collection('test2').insert({"test": true});
+		db.collection('test3').insert({"test": true});
+		
+		db.load(function (err, tableStats, metaStats) {
+			equal(Boolean(err), false, 'Didn\'t cause an error');
+			base.dbDown();
+			start();
+		});
+	});*/
+	
 	QUnit.asyncTest('Persist.load() :: Load un-saved collection', function () {
 		expect(1);
 
