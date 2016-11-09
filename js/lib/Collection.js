@@ -691,13 +691,29 @@ Collection.prototype.upsert = function (obj, callback) {
 /**
  * Executes a method against each document that matches query and returns an
  * array of documents that may have been modified by the method.
- * @param {Object} query The query object.
+ * @param {Object=} query The optional query object.
+ * @param {Object=} options Optional options object. If you specify an options object
+ * you MUST also specify a query object.
  * @param {Function} func The method that each document is passed to. If this method
- * returns false for a particular document it is excluded from the results.
- * @param {Object=} options Optional options object.
+ * returns false for a particular document it is excluded from the results. If you
+ * return a modified object from the one passed to it will be included in the results
+ * as the modified version but will not affect the data in the collection at all.
+ * Your function will be called with a single object as the first argument and will
+ * be called once for every document in your initial query result.
  * @returns {Array}
  */
-Collection.prototype.filter = function (query, func, options) {
+Collection.prototype.filter = function (query, options, func) {
+	if (typeof query === 'function') {
+		func = query;
+		query = {};
+		options = {};
+	}
+	
+	if (typeof options === 'function') {
+		func = options;
+		options = {};
+	}
+	
 	return (this.find(query, options)).filter(func);
 };
 
