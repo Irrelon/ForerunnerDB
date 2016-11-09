@@ -44,6 +44,19 @@
     "pem": "^1.8.3",
     "rest": "^2.0.0"
   },
+	"engines": {
+		"node": ">= 4"
+	},
+	"scripts": {
+		"start": "forever start server/server.js",
+		"stop": "forever stop server/server.js",
+		"test": "grunt --verbose",
+		"postinstall": "node ./postinstall.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/irrelon/ForerunnerDB.git"
+	},
   "devDependencies": {
     "aliasify": "^2.0.0",
     "browserify-derequire": "^0.9.4",
@@ -65,19 +78,6 @@
     "tsd-jsdoc": "^1.0.1",
     "tslint": "^3.15.1",
     "typescript": "^2.0.8"
-  },
-  "engines": {
-    "node": "*"
-  },
-  "scripts": {
-    "start": "forever start server/server.js",
-    "stop": "forever stop server/server.js",
-    "test": "grunt --verbose",
-    "postinstall": "node ./postinstall.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/irrelon/ForerunnerDB.git"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",
