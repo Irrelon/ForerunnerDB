@@ -723,7 +723,7 @@ data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3564">line 3564</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3586">line 3586</a>
     </li></ul></dd>
     
 
@@ -879,7 +879,7 @@ collation).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3629">line 3629</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3651">line 3651</a>
     </li></ul></dd>
     
 
@@ -6051,7 +6051,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1787">line 1787</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1809">line 1809</a>
     </li></ul></dd>
     
 
@@ -6133,7 +6133,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3268">line 3268</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3290">line 3290</a>
     </li></ul></dd>
     
 
@@ -6387,7 +6387,7 @@ data as the one passed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3500">line 3500</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3522">line 3522</a>
     </li></ul></dd>
     
 
@@ -6613,7 +6613,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2110">line 2110</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2132">line 2132</a>
     </li></ul></dd>
     
 
@@ -7082,7 +7082,7 @@ operation has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3403">line 3403</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3425">line 3425</a>
     </li></ul></dd>
     
 
@@ -7274,7 +7274,7 @@ operation has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2189">line 2189</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2211">line 2211</a>
     </li></ul></dd>
     
 
@@ -7327,7 +7327,7 @@ operation has completed.</td>
 
     
 
-    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(query, func, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(query<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>, func)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -7388,36 +7388,7 @@ array of documents that may have been modified by the method.
             
                 <td class="attributes">
                 
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">The query object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>func</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
+                    &lt;optional><br>
                 
 
                 
@@ -7428,8 +7399,7 @@ array of documents that may have been modified by the method.
 
             
 
-            <td class="description last">The method that each document is passed to. If this method
-returns false for a particular document it is excluded from the results.</td>
+            <td class="description last">The optional query object.</td>
         </tr>
 
     
@@ -7462,7 +7432,44 @@ returns false for a particular document it is excluded from the results.</td>
 
             
 
-            <td class="description last">Optional options object.</td>
+            <td class="description last">Optional options object. If you specify an options object
+you MUST also specify a query object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>func</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The method that each document is passed to. If this method
+returns false for a particular document it is excluded from the results. If you
+return a modified object from the one passed to it will be included in the results
+as the modified version but will not affect the data in the collection at all.
+Your function will be called with a single object as the first argument and will
+be called once for every document in your initial query result.</td>
         </tr>
 
     
@@ -7503,7 +7510,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line700">line 700</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line705">line 705</a>
     </li></ul></dd>
     
 
@@ -7728,7 +7735,7 @@ returns false for a particular document it is excluded from the update.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line713">line 713</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line735">line 735</a>
     </li></ul></dd>
     
 
@@ -7960,7 +7967,7 @@ will be passed back to the callback once completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2225">line 2225</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2247">line 2247</a>
     </li></ul></dd>
     
 
@@ -8157,7 +8164,7 @@ documents that matched the query.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2141">line 2141</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2163">line 2163</a>
     </li></ul></dd>
     
 
@@ -8263,7 +8270,7 @@ the query.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2658">line 2658</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2680">line 2680</a>
     </li></ul></dd>
     
 
@@ -8523,7 +8530,7 @@ when querying for sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3289">line 3289</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3311">line 3311</a>
     </li></ul></dd>
     
 
@@ -8784,7 +8791,7 @@ when querying for sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3358">line 3358</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3380">line 3380</a>
     </li></ul></dd>
     
 
@@ -8957,7 +8964,7 @@ of the given group path.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2889">line 2889</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2911">line 2911</a>
     </li></ul></dd>
     
 
@@ -9106,7 +9113,7 @@ of the given group path.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3479">line 3479</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3501">line 3501</a>
     </li></ul></dd>
     
 
@@ -9299,7 +9306,7 @@ the passed query object.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2669">line 2669</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2691">line 2691</a>
     </li></ul></dd>
     
 
@@ -9492,7 +9499,7 @@ or the id to lookup.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2696">line 2696</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2718">line 2718</a>
     </li></ul></dd>
     
 
@@ -9808,7 +9815,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1751">line 1751</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1773">line 1773</a>
     </li></ul></dd>
     
 
@@ -9940,7 +9947,7 @@ inserted into the collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3369">line 3369</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3391">line 3391</a>
     </li></ul></dd>
     
 
@@ -10046,7 +10053,7 @@ be processed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1730">line 1730</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1752">line 1752</a>
     </li></ul></dd>
     
 
@@ -10200,7 +10207,7 @@ or false if all queues are clear.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2098">line 2098</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2120">line 2120</a>
     </li></ul></dd>
     
 
@@ -10305,7 +10312,7 @@ the current collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3489">line 3489</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3511">line 3511</a>
     </li></ul></dd>
     
 
@@ -11011,7 +11018,7 @@ to anything.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2201">line 2201</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2223">line 2223</a>
     </li></ul></dd>
     
 
@@ -11210,7 +11217,7 @@ string (partial match).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2156">line 2156</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2178">line 2178</a>
     </li></ul></dd>
     
 
@@ -11598,7 +11605,7 @@ string (partial match).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1674">line 1674</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1696">line 1696</a>
     </li></ul></dd>
     
 
@@ -11809,7 +11816,7 @@ query object is passed, all documents will be removed from the collection.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1556">line 1556</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1578">line 1578</a>
     </li></ul></dd>
     
 
@@ -11962,7 +11969,7 @@ query object is passed, all documents will be removed from the collection.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1662">line 1662</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1684">line 1684</a>
     </li></ul></dd>
     
 
@@ -12117,7 +12124,7 @@ data array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2729">line 2729</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2751">line 2751</a>
     </li></ul></dd>
     
 
@@ -12715,7 +12722,7 @@ storage system.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2848">line 2848</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2870">line 2870</a>
     </li></ul></dd>
     
 
@@ -12908,7 +12915,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2071">line 2071</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2093">line 2093</a>
     </li></ul></dd>
     
 
@@ -13057,7 +13064,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2750">line 2750</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2772">line 2772</a>
     </li></ul></dd>
     
 
@@ -13206,7 +13213,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2783">line 2783</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2805">line 2805</a>
     </li></ul></dd>
     
 
@@ -13355,7 +13362,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2815">line 2815</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2837">line 2837</a>
     </li></ul></dd>
     
 
@@ -13824,7 +13831,7 @@ the update is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line754">line 754</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line776">line 776</a>
     </li></ul></dd>
     
 
@@ -14086,7 +14093,7 @@ the update is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line952">line 952</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line974">line 974</a>
     </li></ul></dd>
     
 
@@ -14652,7 +14659,7 @@ callback.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3698">line 3698</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3720">line 3720</a>
     </li></ul></dd>
     
 
@@ -14836,7 +14843,7 @@ blocking the main thread).</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1766">line 1766</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1788">line 1788</a>
     </li></ul></dd>
     
 
@@ -14882,7 +14889,7 @@ blocking the main thread).</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Nov 08 2016 09:29:14 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Nov 09 2016 12:08:34 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>
