@@ -2826,7 +2826,28 @@ QUnit.test("Collection.filter() :: Filter documents in a collection", function (
 	base.dbUp();
 	base.dataUp();
 	
-	var result = user.filter({}, function (data) {
+	var result;
+	
+	// Test usage with only a function
+	result = user.filter(function (data) {
+		data.newData = true;
+		return data;
+	});
+	
+	strictEqual(result[0]._id, "2", "New data filter worked");
+	strictEqual(result[0].newData, true, "New data filter worked");
+	
+	// Test with query and function
+	result = user.filter({}, function (data) {
+		data.newData = true;
+		return data;
+	});
+	
+	strictEqual(result[0]._id, "2", "New data filter worked");
+	strictEqual(result[0].newData, true, "New data filter worked");
+	
+	// Test with query and options and function
+	result = user.filter({}, {_id: 1, newData: 1}, function (data) {
 		data.newData = true;
 		return data;
 	});
