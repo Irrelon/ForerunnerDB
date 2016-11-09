@@ -703,6 +703,8 @@ Collection.prototype.upsert = function (obj, callback) {
  * @returns {Array}
  */
 Collection.prototype.filter = function (query, options, func) {
+	var temp;
+	
 	if (typeof query === 'function') {
 		func = query;
 		query = {};
@@ -710,8 +712,12 @@ Collection.prototype.filter = function (query, options, func) {
 	}
 	
 	if (typeof options === 'function') {
+		if (func) {
+			temp = func;
+		}
+		
 		func = options;
-		options = {};
+		options = temp || {};
 	}
 	
 	return (this.find(query, options)).filter(func);
