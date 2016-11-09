@@ -2,7 +2,7 @@
   "author": "Rob Evans - Irrelon Software Limited",
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
-  "version": "1.3.891",
+  "version": "1.4.2",
   "keywords": [
     "irrelon",
     "forerunnerdb",
@@ -44,30 +44,17 @@
     "pem": "^1.8.3",
     "rest": "^2.0.0"
   },
-  "engines": {
-    "node": "*"
-  },
-  "scripts": {
-    "start": "forever start server/server.js",
-    "stop": "forever stop server/server.js",
-    "test": "grunt --verbose",
-    "postinstall": "node ./postinstall.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/irrelon/ForerunnerDB.git"
-  },
   "devDependencies": {
     "aliasify": "^2.0.0",
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
-    "fs-extra": "^0.30.0",
+    "fs-extra": "^1.0.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-cli": "^1.2.0",
     "grunt-contrib-jshint": "^1.0.0",
-    "grunt-contrib-qunit": "^1.1.0",
+    "grunt-contrib-qunit": "^1.2.0",
     "grunt-contrib-uglify": "^2.0.0",
     "grunt-jsdoc": "^2.1.0",
     "grunt-node-qunit": "^2.0.2",
@@ -77,7 +64,20 @@
     "testbear": "^1.0.28",
     "tsd-jsdoc": "^1.0.1",
     "tslint": "^3.15.1",
-    "typescript": "^1.8.10"
+    "typescript": "^2.0.8"
+  },
+  "engines": {
+      "node": ">= 4"
+  },
+  "scripts": {
+      "start": "forever start server/server.js",
+      "stop": "forever stop server/server.js",
+      "test": "grunt --verbose",
+      "postinstall": "node ./postinstall.js"
+  },
+  "repository": {
+      "type": "git",
+      "url": "git://github.com/irrelon/ForerunnerDB.git"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",

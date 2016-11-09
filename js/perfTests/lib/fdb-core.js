@@ -733,11 +733,15 @@ var Collection = function (name, options) {
  * handle CRUD against those documents.
  */
 Collection.prototype.init = function (name, options) {
+	// Ensure we have an options object
+	options = options || {};
+	
+	// Set internals
 	this.sharedPathSolver = sharedPathSolver;
-	this._primaryKey = '_id';
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryKey = options.primaryKey || '_id';
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
 	this._name = name;
 	this._data = [];
 	this._metrics = new Metrics();
@@ -1252,6 +1256,8 @@ Collection.prototype.ensurePrimaryKey = function (obj) {
  * @returns {Collection}
  */
 Collection.prototype.truncate = function () {
+	var i;
+	
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
@@ -1263,9 +1269,18 @@ Collection.prototype.truncate = function () {
 	this._data.length = 0;
 
 	// Re-create the primary index data
-	this._primaryIndex = new KeyValueStore('primary');
-	this._primaryCrc = new KeyValueStore('primaryCrc');
-	this._crcLookup = new KeyValueStore('crcLookup');
+	this._primaryIndex = new KeyValueStore('primary', {primaryKey: this.primaryKey()});
+	this._primaryCrc = new KeyValueStore('primaryCrc', {primaryKey: this.primaryKey()});
+	this._crcLookup = new KeyValueStore('crcLookup', {primaryKey: this.primaryKey()});
+	
+	// Re-create any existing collection indexes
+	// TODO: This might not be the most efficient way to do this, perhaps just re-creating
+	// the indexes would be faster than calling rebuild?
+	for (i in this._indexByName) {
+		if (this._indexByName.hasOwnProperty(i)) {
+			this._indexByName[i].rebuild();
+		}
+	}
 
 	this._onChange();
 	this.emit('immediateChange', {type: 'truncate'});
@@ -1379,13 +1394,35 @@ Collection.prototype.upsert = function (obj, callback) {
 /**
  * Executes a method against each document that matches query and returns an
  * array of documents that may have been modified by the method.
- * @param {Object} query The query object.
+ * @param {Object=} query The optional query object.
+ * @param {Object=} options Optional options object. If you specify an options object
+ * you MUST also specify a query object.
  * @param {Function} func The method that each document is passed to. If this method
- * returns false for a particular document it is excluded from the results.
- * @param {Object=} options Optional options object.
+ * returns false for a particular document it is excluded from the results. If you
+ * return a modified object from the one passed to it will be included in the results
+ * as the modified version but will not affect the data in the collection at all.
+ * Your function will be called with a single object as the first argument and will
+ * be called once for every document in your initial query result.
  * @returns {Array}
  */
-Collection.prototype.filter = function (query, func, options) {
+Collection.prototype.filter = function (query, options, func) {
+	var temp;
+	
+	if (typeof query === 'function') {
+		func = query;
+		query = {};
+		options = {};
+	}
+	
+	if (typeof options === 'function') {
+		if (func) {
+			temp = func;
+		}
+		
+		func = options;
+		options = temp || {};
+	}
+	
 	return (this.find(query, options)).filter(func);
 };
 
@@ -1852,10 +1889,16 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 								}
 							}
 						} else {
-							// The doc key is an object so traverse the
-							// update further
-							recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
-							updated = updated || recurseUpdated;
+							// Check if the doc key is a date instance
+							if (doc[i] instanceof Date) {
+								// The doc key is a date object, assign the new date
+								this._updateProperty(doc, i, update[i]);
+							} else {
+								// The doc key is an object so traverse the
+								// update further
+								recurseUpdated = this.updateObject(doc[i], update[i], query, options, path + '.' + i, opType);
+								updated = updated || recurseUpdated;
+							}
 						}
 					} else {
 						if (doc[i] !== update[i]) {
@@ -4391,6 +4434,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	 * Get a collection with no name (generates a random name). If the
 	 * collection does not already exist then one is created for that
 	 * name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @returns {Collection}
@@ -4404,6 +4449,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {Object} data An options object or a collection instance.
@@ -4427,6 +4474,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4441,6 +4490,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4458,6 +4509,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4473,6 +4526,8 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 	/**
 	 * Get a collection by name. If the collection does not already exist
 	 * then one is created for that name automatically.
+	 * @name collection
+	 * @method Db.collection
 	 * @func collection
 	 * @memberof Db
 	 * @param {String} collectionName The name of the collection.
@@ -4487,15 +4542,7 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 
 		return this.$main.call(this, options);
 	},
-
-	/**
-	 * The main handler method. This gets called by all the other
-	 * variants and handles the actual logic of the overloaded method.
-	 * @func collection
-	 * @memberof Db
-	 * @param {Object} options An options object.
-	 * @returns {*}
-	 */
+	
 	'$main': function (options) {
 		var self = this,
 			name = options.name;
@@ -7180,16 +7227,22 @@ var Shared = _dereq_('./Shared');
  * and can be queried for quick retrieval. Mostly used for collection
  * primary key indexes and lookups.
  * @param {String=} name Optional KV store name.
+ * @param {Object=} options Optional KV store options object. Currently
+ * supports "primaryKey" as a string.
  * @constructor
  */
-var KeyValueStore = function (name) {
+var KeyValueStore = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
-KeyValueStore.prototype.init = function (name) {
+KeyValueStore.prototype.init = function (name, options) {
+	// Ensure we have options
+	options = options || {};
+	
+	// Set our internal data settings
 	this._name = name;
 	this._data = {};
-	this._primaryKey = '_id';
+	this._primaryKey = options.primaryKey || '_id';
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);
@@ -7805,10 +7858,7 @@ Common = {
 	 * @param {Object} data The data to stringify.
 	 * @returns {String} The stringified data.
 	 */
-	jStringify: function (data) {
-		//return serialiser.stringify(data);
-		return JSON.stringify(data);
-	},
+	jStringify: JSON.stringify,
 	
 	/**
 	 * Generates a new 16-character hexadecimal unique ID or
@@ -11183,7 +11233,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.891',
+	version: '1.3.935',
 	modules: {},
 	plugins: {},
 	index: {},

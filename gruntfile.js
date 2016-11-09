@@ -1,3 +1,5 @@
+"use strict";
+
 var util = require('util'),
 	aliasify = require('aliasify'),
 	stringify = require('stringify'),

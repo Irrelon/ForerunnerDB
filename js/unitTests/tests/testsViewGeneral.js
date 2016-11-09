@@ -360,7 +360,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 
 			base.dbDown();
 			start();
-		}, 1);
+		}, 200);
 	});
 	
 	QUnit.test("Collection.update() to view :: $replace in update propagates to view correctly", function () {

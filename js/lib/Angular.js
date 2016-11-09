@@ -35,9 +35,13 @@ Angular.extendCollection = function (Module) {
 	 * @param scope
 	 * @param varName
 	 * @param {Object=} options Optional extra options.
+	 * @param {Function=} beforeAngularToForerunner Provides an optional function
+	 * that allows you to modify data before angularJS updates ForerunnerDB with
+	 * data from a view that has changed (like when a user edits a form element
+	 * value that has been data-bound via ng-model).
 	 * @see unlink
 	 */
-	Module.prototype.ng = function (scope, varName, options) {
+	Module.prototype.ng = function (scope, varName, options, beforeAngularToForerunner) {
 		var self = this,
 			hasApplied = false,
 			watchUpdating = false,
@@ -82,17 +86,30 @@ Angular.extendCollection = function (Module) {
 				// Hook the angular watch event to update our data if the
 				// angular data is updated by content
 				scope.$watch(varName, function (newValue) {
+					var next;
+					
+					next = function (err, finalValue) {
+						if (!err) {
+							self.upsert(finalValue);
+						}
+						
+						watchUpdating = false;
+					};
+					
 					if (hasApplied) {
 						watchUpdating = true;
-						self.upsert(newValue);
-						watchUpdating = false;
+						if (beforeAngularToForerunner) {
+							beforeAngularToForerunner(newValue, next);
+						} else {
+							next(false, newValue);
+						}
 					}
 				}, true);
 			}
 
 			if (!options || (options && !options.$noBind)) {
 				// Hook the ForerunnerDB change event to inform angular of a change
-				self.on('change', function () {
+				self.on('immediateChange', function () {
 					if (!watchUpdating) {
 						link.callback.apply(this, arguments);
 					}
@@ -227,7 +244,7 @@ Angular.extendDocument = function (Module) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
 							//TODO: Implement immediateChange in Document class and hook that instead of change event
-							self.off('change', link.callback);
+							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
 					}
@@ -238,17 +255,14 @@ Angular.extendDocument = function (Module) {
 			// angular data is updated by content
 			scope.$watch(varName, function(newValue) {
 				watchUpdating = true;
-				console.log('Updating', newValue);
 				self.update({}, newValue);
 				watchUpdating = false;
 			}, true);
 
 			// Hook the ForerunnerDB change event to inform angular of a change
-			self.on('change', function () {
+			self.on('immediateChange', function () {
 				if (!watchUpdating) {
 					link.callback.apply(this, arguments);
-				} else {
-					console.log('Ignoring update as it is a watch update');
 				}
 			});
 

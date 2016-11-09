@@ -673,35 +673,33 @@ Db.prototype.load = function (callback) {
 		index;
 
 	obj = this._collection;
+	keys = Object.keys(obj);
+	keyCount = keys.length;
 
-	if (obj && obj.keys && typeof obj.keys === 'function') {
-		keys = obj.keys();
-		keyCount = keys.length;
+	if (keyCount <= 0) {
+		return callback(false);
+	}
 
-		loadCallback = function (err) {
-			if (!err) {
-				keyCount--;
+	loadCallback = function (err) {
+		if (!err) {
+			keyCount--;
 
-				if (keyCount === 0) {
-					self.deferEmit('load');
-					if (callback) { callback(false); }
-				}
-			} else {
-				if (callback) {
-					callback(err);
-				}
+			if (keyCount <= 0) {
+				self.deferEmit('load');
+				if (callback) { callback(false); }
 			}
-		};
-
-		for (index in obj) {
-			if (obj.hasOwnProperty(index)) {
-				// Call the collection load method
-				obj[index].load(loadCallback);
+		} else {
+			if (callback) {
+				callback(err);
 			}
 		}
-	} else {
-		// No collections to load, callback
-		callback(false);
+	};
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection load method
+			obj[index].load(loadCallback);
+		}
 	}
 };
 
@@ -720,33 +718,31 @@ Db.prototype.save = function (callback) {
 		index;
 
 	obj = this._collection;
+	keys = Object.keys(obj);
+	keyCount = keys.length;
 
-	if (obj && obj.keys && typeof obj.keys === 'function') {
-		keys = obj.keys();
-		keyCount = keys.length;
+	if (keyCount <= 0) {
+		return callback(false);
+	}
+		
+	saveCallback = function (err) {
+		if (!err) {
+			keyCount--;
 
-		saveCallback = function (err) {
-			if (!err) {
-				keyCount--;
-
-				if (keyCount === 0) {
-					self.deferEmit('save');
-					if (callback) { callback(false); }
-				}
-			} else {
-				if (callback) { callback(err); }
+			if (keyCount <= 0) {
+				self.deferEmit('save');
+				if (callback) { callback(false); }
 			}
-		};
-
-		for (index in obj) {
-			if (obj.hasOwnProperty(index)) {
-				// Call the collection save method
-				obj[index].save(saveCallback);
-			}
+		} else {
+			if (callback) { callback(err); }
 		}
-	} else {
-		// No collections to save, callback
-		callback(false);
+	};
+
+	for (index in obj) {
+		if (obj.hasOwnProperty(index)) {
+			// Call the collection save method
+			obj[index].save(saveCallback);
+		}
 	}
 };
 

@@ -7,16 +7,22 @@ var Shared = require('./Shared');
  * and can be queried for quick retrieval. Mostly used for collection
  * primary key indexes and lookups.
  * @param {String=} name Optional KV store name.
+ * @param {Object=} options Optional KV store options object. Currently
+ * supports "primaryKey" as a string.
  * @constructor
  */
-var KeyValueStore = function (name) {
+var KeyValueStore = function (name, options) {
 	this.init.apply(this, arguments);
 };
 
-KeyValueStore.prototype.init = function (name) {
+KeyValueStore.prototype.init = function (name, options) {
+	// Ensure we have options
+	options = options || {};
+	
+	// Set our internal data settings
 	this._name = name;
 	this._data = {};
-	this._primaryKey = '_id';
+	this._primaryKey = options.primaryKey || '_id';
 };
 
 Shared.addModule('KeyValueStore', KeyValueStore);

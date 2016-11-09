@@ -723,7 +723,7 @@ data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3543">line 3543</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3586">line 3586</a>
     </li></ul></dd>
     
 
@@ -879,7 +879,7 @@ collation).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3608">line 3608</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3651">line 3651</a>
     </li></ul></dd>
     
 
@@ -2080,7 +2080,7 @@ collation).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Grid.js.html">Grid.js</a>, <a href="Grid.js.html#line554">line 554</a>
+        <a href="Grid.js.html">Grid.js</a>, <a href="Grid.js.html#line561">line 561</a>
     </li></ul></dd>
     
 
@@ -2233,7 +2233,212 @@ collation).
 
     
 
-    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(scope, varName, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(outputTargetSelector, templateSelector, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Creates a link to the DOM between the collection data and the elements
+in the passed output selector. When new elements are needed or changes
+occur the passed templateSelector is used to get the template that is
+output to the DOM.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>outputTargetSelector</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>templateSelector</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last"></td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Optional extra options.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line56">line 56</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+    <dt class="tag-see">See:</dt>
+    <dd class="tag-see">
+        <ul>
+            <li>unlink</li>
+        </ul>
+    </dd>
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(scope, varName, options<span class="signature-attributes">opt</span>, beforeAngularToForerunner<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
 
     
 
@@ -2360,6 +2565,42 @@ output to the DOM.
             
 
             <td class="description last">Optional extra options.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>beforeAngularToForerunner</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">Provides an optional function
+that allows you to modify data before angularJS updates ForerunnerDB with
+data from a view that has changed (like when a user edits a form element
+value that has been data-bound via ng-model).</td>
         </tr>
 
     
@@ -2605,7 +2846,7 @@ output to the DOM.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Angular.js.html">Angular.js</a>, <a href="Angular.js.html#line127">line 127</a>
+        <a href="Angular.js.html">Angular.js</a>, <a href="Angular.js.html#line144">line 144</a>
     </li></ul></dd>
     
 
@@ -2618,740 +2859,6 @@ output to the DOM.
             <li>unlink</li>
         </ul>
     </dd>
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".link"><span class="type-signature">(static) </span>link<span class="signature">(outputTargetSelector, templateSelector, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Creates a link to the DOM between the collection data and the elements
-in the passed output selector. When new elements are needed or changes
-occur the passed templateSelector is used to get the template that is
-output to the DOM.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>outputTargetSelector</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>templateSelector</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last"></td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">Optional extra options.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="AutoBind.js.html">AutoBind.js</a>, <a href="AutoBind.js.html#line56">line 56</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-    <dt class="tag-see">See:</dt>
-    <dd class="tag-see">
-        <ul>
-            <li>unlink</li>
-        </ul>
-    </dd>
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sets the collection's data to the array / documents passed.  If any
-data already exists in the collection it will be removed before the
-new data is set via the remove() method, and the remove event will
-fire as well.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array</span>
-|
-
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The array of documents or a single document
-that will be set as the collections data.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional callback function.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line375">line 375</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, options, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sets the collection's data to the array / documents passed.  If any
-data already exists in the collection it will be removed before the
-new data is set via the remove() method, and the remove event will
-fire as well.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array</span>
-|
-
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The array of documents or a single document
-that will be set as the collections data.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional options object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional callback function.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line390">line 390</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, options, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sets the collection's data to the array / documents passed.  If any
-data already exists in the collection it will be removed before the
-new data is set via the remove() method, and the remove event will
-fire as well.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>data</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Array</span>
-|
-
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The array of documents or a single document
-that will be set as the collections data.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional options object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional callback function.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line406">line 406</a>
-    </li></ul></dd>
-    
-
-    
-
     
 
     
@@ -3507,7 +3014,7 @@ that will be set as the collections data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line360">line 360</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line364">line 364</a>
     </li></ul></dd>
     
 
@@ -3645,7 +3152,536 @@ that will be set as the collections data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line346">line 346</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line350">line 350</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, options, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sets the collection's data to the array / documents passed.  If any
+data already exists in the collection it will be removed before the
+new data is set via the remove() method, and the remove event will
+fire as well.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array of documents or a single document
+that will be set as the collections data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional options object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line410">line 410</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, options, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sets the collection's data to the array / documents passed.  If any
+data already exists in the collection it will be removed before the
+new data is set via the remove() method, and the remove event will
+fire as well.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array of documents or a single document
+that will be set as the collections data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional options object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line394">line 394</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".setData"><span class="type-signature">(static) </span>setData<span class="signature">(data, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sets the collection's data to the array / documents passed.  If any
+data already exists in the collection it will be removed before the
+new data is set via the remove() method, and the remove event will
+fire as well.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>data</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Array</span>
+|
+
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The array of documents or a single document
+that will be set as the collections data.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional callback function.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line379">line 379</a>
     </li></ul></dd>
     
 
@@ -3829,185 +3865,7 @@ that will be set as the collections data.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line422">line 422</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(query, options, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sync with this collection on the server-side.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>query</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">A query object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">An options object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call once
-the connection to the server has been established.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line495">line 495</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line426">line 426</a>
     </li></ul></dd>
     
 
@@ -4240,6 +4098,184 @@ the connection to the server has been established.</td>
 
     
 
+    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(query, options, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sync with this collection on the server-side.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>query</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A query object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An options object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call once
+the connection to the server has been established.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line495">line 495</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(collectionName, query, callback)</span><span class="type-signature"></span></h4>
 
     
@@ -4388,207 +4424,6 @@ the connection to the server has been established.</td>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line467">line 467</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(collectionName, query, options, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sync with this collection on the server-side.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collectionName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The collection to sync from.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>query</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">A query object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">An options object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The callback method to call once
-the connection to the server has been established.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line508">line 508</a>
     </li></ul></dd>
     
 
@@ -4798,7 +4633,7 @@ the connection to the server has been established.</td>
 
     
 
-    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(query, callback)</span><span class="type-signature"></span></h4>
 
     
 
@@ -4841,13 +4676,13 @@ the connection to the server has been established.</td>
 
         <tr>
             
-                <td class="name"><code>callback</code></td>
+                <td class="name"><code>query</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">function</span>
+<span class="param-type">Object</span>
 
 
             
@@ -4857,139 +4692,7 @@ the connection to the server has been established.</td>
 
             
 
-            <td class="description last">The callback method to call once
-the connection to the server has been established.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line418">line 418</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(collectionName, callback)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Sync with this collection on the server-side.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collectionName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The collection to sync from.</td>
+            <td class="description last">A query object.</td>
         </tr>
 
     
@@ -5054,7 +4757,7 @@ the connection to the server has been established.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line429">line 429</a>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line441">line 441</a>
     </li></ul></dd>
     
 
@@ -5310,7 +5013,7 @@ the connection to the server has been established.</td>
 
     
 
-    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(query, callback)</span><span class="type-signature"></span></h4>
+    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(collectionName, callback)</span><span class="type-signature"></span></h4>
 
     
 
@@ -5353,13 +5056,13 @@ the connection to the server has been established.</td>
 
         <tr>
             
-                <td class="name"><code>query</code></td>
+                <td class="name"><code>collectionName</code></td>
             
 
             <td class="type">
             
                 
-<span class="param-type">Object</span>
+<span class="param-type">String</span>
 
 
             
@@ -5369,7 +5072,7 @@ the connection to the server has been established.</td>
 
             
 
-            <td class="description last">A query object.</td>
+            <td class="description last">The collection to sync from.</td>
         </tr>
 
     
@@ -5434,7 +5137,340 @@ the connection to the server has been established.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line441">line 441</a>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line429">line 429</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(collectionName, query, options, callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sync with this collection on the server-side.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collectionName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The collection to sync from.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>query</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">A query object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An options object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call once
+the connection to the server has been established.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line508">line 508</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".sync"><span class="type-signature">(static) </span>sync<span class="signature">(callback)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Sync with this collection on the server-side.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The callback method to call once
+the connection to the server has been established.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="NodeApiClient.js.html">NodeApiClient.js</a>, <a href="NodeApiClient.js.html#line418">line 418</a>
     </li></ul></dd>
     
 
@@ -5641,7 +5677,7 @@ will stick around and cause memory leaks.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Grid.js.html">Grid.js</a>, <a href="Grid.js.html#line590">line 590</a>
+        <a href="Grid.js.html">Grid.js</a>, <a href="Grid.js.html#line597">line 597</a>
     </li></ul></dd>
     
 
@@ -6015,7 +6051,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1766">line 1766</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1809">line 1809</a>
     </li></ul></dd>
     
 
@@ -6097,7 +6133,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3247">line 3247</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3290">line 3290</a>
     </li></ul></dd>
     
 
@@ -6200,7 +6236,7 @@ may cause unstable index behaviour within the collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line192">line 192</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line196">line 196</a>
     </li></ul></dd>
     
 
@@ -6351,7 +6387,7 @@ data as the one passed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3479">line 3479</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3522">line 3522</a>
     </li></ul></dd>
     
 
@@ -6577,7 +6613,7 @@ returns the results in an array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2089">line 2089</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2132">line 2132</a>
     </li></ul></dd>
     
 
@@ -6739,7 +6775,7 @@ operation has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line202">line 202</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line206">line 206</a>
     </li></ul></dd>
     
 
@@ -7046,7 +7082,7 @@ operation has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3382">line 3382</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3425">line 3425</a>
     </li></ul></dd>
     
 
@@ -7238,7 +7274,7 @@ operation has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2168">line 2168</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2211">line 2211</a>
     </li></ul></dd>
     
 
@@ -7291,7 +7327,7 @@ operation has completed.</td>
 
     
 
-    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(query, func, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+    <h4 class="name" id="filter"><span class="type-signature"></span>filter<span class="signature">(query<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>, func)</span><span class="type-signature"> &rarr; {Array}</span></h4>
 
     
 
@@ -7352,36 +7388,7 @@ array of documents that may have been modified by the method.
             
                 <td class="attributes">
                 
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">The query object.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>func</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
+                    &lt;optional><br>
                 
 
                 
@@ -7392,8 +7399,7 @@ array of documents that may have been modified by the method.
 
             
 
-            <td class="description last">The method that each document is passed to. If this method
-returns false for a particular document it is excluded from the results.</td>
+            <td class="description last">The optional query object.</td>
         </tr>
 
     
@@ -7426,7 +7432,44 @@ returns false for a particular document it is excluded from the results.</td>
 
             
 
-            <td class="description last">Optional options object.</td>
+            <td class="description last">Optional options object. If you specify an options object
+you MUST also specify a query object.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>func</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The method that each document is passed to. If this method
+returns false for a particular document it is excluded from the results. If you
+return a modified object from the one passed to it will be included in the results
+as the modified version but will not affect the data in the collection at all.
+Your function will be called with a single object as the first argument and will
+be called once for every document in your initial query result.</td>
         </tr>
 
     
@@ -7467,7 +7510,7 @@ returns false for a particular document it is excluded from the results.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line685">line 685</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line705">line 705</a>
     </li></ul></dd>
     
 
@@ -7692,7 +7735,7 @@ returns false for a particular document it is excluded from the update.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line698">line 698</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line735">line 735</a>
     </li></ul></dd>
     
 
@@ -7924,7 +7967,7 @@ will be passed back to the callback once completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2204">line 2204</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2247">line 2247</a>
     </li></ul></dd>
     
 
@@ -8121,7 +8164,7 @@ documents that matched the query.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2120">line 2120</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2163">line 2163</a>
     </li></ul></dd>
     
 
@@ -8227,7 +8270,7 @@ the query.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2637">line 2637</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2680">line 2680</a>
     </li></ul></dd>
     
 
@@ -8487,7 +8530,7 @@ when querying for sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3268">line 3268</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3311">line 3311</a>
     </li></ul></dd>
     
 
@@ -8748,7 +8791,7 @@ when querying for sub-documents.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3337">line 3337</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3380">line 3380</a>
     </li></ul></dd>
     
 
@@ -8921,7 +8964,7 @@ of the given group path.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2868">line 2868</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2911">line 2911</a>
     </li></ul></dd>
     
 
@@ -9070,7 +9113,7 @@ of the given group path.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3458">line 3458</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3501">line 3501</a>
     </li></ul></dd>
     
 
@@ -9263,7 +9306,7 @@ the passed query object.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2648">line 2648</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2691">line 2691</a>
     </li></ul></dd>
     
 
@@ -9456,7 +9499,7 @@ or the id to lookup.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2675">line 2675</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2718">line 2718</a>
     </li></ul></dd>
     
 
@@ -9772,7 +9815,7 @@ once the insert is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1730">line 1730</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1773">line 1773</a>
     </li></ul></dd>
     
 
@@ -9904,7 +9947,7 @@ inserted into the collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3348">line 3348</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3391">line 3391</a>
     </li></ul></dd>
     
 
@@ -10010,7 +10053,7 @@ be processed.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1709">line 1709</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1752">line 1752</a>
     </li></ul></dd>
     
 
@@ -10164,7 +10207,7 @@ or false if all queues are clear.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2077">line 2077</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2120">line 2120</a>
     </li></ul></dd>
     
 
@@ -10269,7 +10312,7 @@ the current collection.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3468">line 3468</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3511">line 3511</a>
     </li></ul></dd>
     
 
@@ -10975,7 +11018,7 @@ to anything.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2180">line 2180</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2223">line 2223</a>
     </li></ul></dd>
     
 
@@ -11174,7 +11217,7 @@ string (partial match).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2135">line 2135</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2178">line 2178</a>
     </li></ul></dd>
     
 
@@ -11339,7 +11382,7 @@ string (partial match).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line253">line 253</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line257">line 257</a>
     </li></ul></dd>
     
 
@@ -11562,7 +11605,7 @@ string (partial match).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1653">line 1653</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1696">line 1696</a>
     </li></ul></dd>
     
 
@@ -11773,7 +11816,7 @@ query object is passed, all documents will be removed from the collection.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1535">line 1535</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1578">line 1578</a>
     </li></ul></dd>
     
 
@@ -11926,7 +11969,7 @@ query object is passed, all documents will be removed from the collection.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1641">line 1641</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1684">line 1684</a>
     </li></ul></dd>
     
 
@@ -12081,7 +12124,7 @@ data array.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2708">line 2708</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2751">line 2751</a>
     </li></ul></dd>
     
 
@@ -12248,7 +12291,7 @@ has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line562">line 562</a>
+        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line565">line 565</a>
     </li></ul></dd>
     
 
@@ -12392,7 +12435,7 @@ has completed.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line565">line 565</a>
+        <a href="NodePersist.js.html">NodePersist.js</a>, <a href="NodePersist.js.html#line562">line 562</a>
     </li></ul></dd>
     
 
@@ -12679,7 +12722,7 @@ storage system.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2827">line 2827</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2870">line 2870</a>
     </li></ul></dd>
     
 
@@ -12872,7 +12915,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2050">line 2050</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2093">line 2093</a>
     </li></ul></dd>
     
 
@@ -13021,7 +13064,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2729">line 2729</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2772">line 2772</a>
     </li></ul></dd>
     
 
@@ -13170,7 +13213,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2762">line 2762</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2805">line 2805</a>
     </li></ul></dd>
     
 
@@ -13319,7 +13362,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2794">line 2794</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line2837">line 2837</a>
     </li></ul></dd>
     
 
@@ -13419,7 +13462,7 @@ matching the query parameters.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line551">line 551</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line555">line 555</a>
     </li></ul></dd>
     
 
@@ -13788,7 +13831,7 @@ the update is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line739">line 739</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line776">line 776</a>
     </li></ul></dd>
     
 
@@ -14050,7 +14093,7 @@ the update is complete.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line937">line 937</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line974">line 974</a>
     </li></ul></dd>
     
 
@@ -14263,7 +14306,7 @@ containing documents to upsert.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line600">line 600</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line615">line 615</a>
     </li></ul></dd>
     
 
@@ -14616,7 +14659,7 @@ callback.</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3677">line 3677</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3720">line 3720</a>
     </li></ul></dd>
     
 
@@ -14800,7 +14843,7 @@ blocking the main thread).</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1745">line 1745</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line1788">line 1788</a>
     </li></ul></dd>
     
 
@@ -14846,7 +14889,7 @@ blocking the main thread).</td>
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Sep 09 2016 09:17:23 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Nov 09 2016 15:51:01 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

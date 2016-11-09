@@ -5,7 +5,7 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
-## Version 1.3.891
+## Version 1.4.2
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1364,13 +1364,13 @@ Result is:
 
 Finds other documents whose co-ordinates based on a 2d index are within the specified
 distance from the specified centre point. Co-ordinates must be presented in
-longitude / latitude for $near to work.
+latitude / longitude for $near to work.
 
 ```js
 {
 	field: {
 		$near: {
-			$point: [<longitude number>, <latitude number>],
+			$point: [<latitude number>, <longitude number>],
 			$maxDistance: <number>,
 			$distanceUnits: <units string>
 		}
@@ -1386,22 +1386,22 @@ var fdb = new ForerunnerDB(),
 	coll = db.collection("test");
 
 coll.insert([{
-	lngLat: [51.50722, -0.12750],
+	latLng: [51.50722, -0.12750],
 	name: 'Central London'
 }, {
-	lngLat: [51.525745, -0.167550], // 2.18 miles
+	latLng: [51.525745, -0.167550], // 2.18 miles
 	name: 'Marylebone, London'
 }, {
-	lngLat: [51.576981, -0.335091], // 10.54 miles
+	latLng: [51.576981, -0.335091], // 10.54 miles
 	name: 'Harrow, London'
 }, {
-	lngLat: [51.769451, 0.086509], // 20.33 miles
+	latLng: [51.769451, 0.086509], // 20.33 miles
 	name: 'Harlow, Essex'
 }]);
 
 // Create a 2d index on the lngLat field
 coll.ensureIndex({
-	lngLat: 1
+	latLng: 1
 }, {
 	type: '2d'
 });
@@ -1409,7 +1409,7 @@ coll.ensureIndex({
 // Query index by distance
 // $near queries are sorted by distance from centre point by default
 result = coll.find({
-	lngLat: {
+	latLng: {
 		$near: {
 			$point: [51.50722, -0.12750],
 			$maxDistance: 3,
@@ -2641,6 +2641,55 @@ at the query part of the call to see if a corresponding clause exists for it. In
 above the "arr.$" property in the update part has a corresponding "arr" in the query part
 which determines which sub-documents are to be updated based on if they match or not.
 
+## Upsert Documents
+Upserts are operations that automatically decide if the database should run an insert or an
+update operation based on the data you provide.
+
+Using upsert() is effectively the same as using insert(). You pass an object or array of
+objects to the upsert() method and they are processed.
+
+```js
+// This will execute an insert operation because a document with the _id "1" does not
+// currently exist in the database.
+db.collection("test").upsert({
+	"_id": "1",
+	"test": true
+});
+
+db.collection("test").find(); // [{"_id": "1", "test": true}]
+
+// We now perform an upsert and change "test" to false. This will perform an update operation
+// since a document with the _id "1" now exists.
+db.collection("test").upsert({
+	"_id": "1",
+	"test": false
+});
+
+db.collection("test").find(); // [{"_id": "1", "test": false}]
+```
+
+One of the restrictions of upsert() is that you cannot use any update operators in your
+document because the operation *could* be an insert. For this reason, upserts should only
+contain data and no $ operators like $push, $unset etc.
+
+## Count Documents
+The count() method is useful when you want to get a count of the number of documents in a
+collection or a count of documents that match a specified query.
+
+### Count All Documents
+```js
+// Cound all documents in the "test" collection
+var num = db.collection("test").count();
+```
+
+### Count Documents Based on Query
+```js
+// Get all documents whos myField property has the value of 1
+var num = db.collection("test").count({
+	myField: 1
+});
+```
+
 ## Get Data Item By Reference
 JavaScript objects are passed around as references to the same object. By default when you query ForerunnerDB it will "decouple" the results from the internal objects stored in the collection. If you would prefer to get the reference instead of decoupled object you can specify this in the query options like so:
 
@@ -3154,10 +3203,33 @@ var coll = db.collection("myCollection");
 
 
 coll.on("change", function () {
+	// This will ONLY FIRE ONCE when all three inserts below have completed
 	console.log("Changed");
 });
 
 coll.insert({moo: true});
+coll.insert({foo: true});
+coll.insert({goo: true});
+```
+
+### immediateChange
+Emitted after each CRUD operation has completed. This is different from the "change" event
+in that immediateChange is emitted without any debouncing. The debounced change event will
+only fire 100ms after all changes have finished. The immediateChange event will fire
+on all changes straight away.
+
+```js
+var coll = db.collection("myCollection");
+
+
+coll.on("immediateChange", function () {
+	// This will fire once FOR EACH of the inserts below
+	console.log("Immediate Change");
+});
+
+coll.insert({moo: true});
+coll.insert({foo: true});
+coll.insert({goo: true});
 ```
 
 ### drop
@@ -5292,6 +5364,9 @@ operations in the normal way.
 	<span id="{{obj._id}}">{{obj.title}}</span>
 </div>
 ```
+
+> When using ng-repeat on form elements, please use a tracking clause in the
+ng-repeat 
 
 When changes are made to the "myCollection" collection data, they will be
 automatically reflected in the angular view.
