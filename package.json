@@ -39,7 +39,7 @@
     "cors": "^2.8.1",
     "crypto-js": "^3.1.5",
     "express": "^4.14.0",
-    "localforage": "^1.2.10",
+    "localforage": "^1.4.2",
     "pako": "^1.0.3",
     "pem": "^1.8.3",
     "rest": "^2.0.0"
