@@ -2858,6 +2858,26 @@ QUnit.test("Collection.filter() :: Filter documents in a collection", function (
 	base.dbDown();
 });
 
+QUnit.test("Collection.remove() :: Use $eq to identify a document by _id", function () {
+	base.dbUp();
+	base.dataUp();
+	
+	var before = user.findById("2");
+	
+	strictEqual(!before.friends, false, "Check item exists");
+	strictEqual(before.friends.length, 2, "Check for correct initial array length");
+	
+	var result = user.remove({
+		_id: {$eq: "2"}
+	});
+	
+	var after = user.findById("2");
+	
+	strictEqual(after, undefined, "Check the item no longer exists");
+	
+	base.dbDown();
+});
+
 QUnit.test("Collection.removeById() :: Remove a document by it's ID", function () {
 	base.dbUp();
 	base.dataUp();
