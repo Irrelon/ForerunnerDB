@@ -63,7 +63,7 @@
     "stringify": "^5.1.0",
     "testbear": "^1.0.28",
     "tsd-jsdoc": "^1.0.1",
-    "tslint": "^3.15.1",
+    "tslint": "^4.0.2",
     "typescript": "^2.0.9"
   },
   "engines": {
