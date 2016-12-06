@@ -468,7 +468,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 	});
 	
 	QUnit.asyncTest('Persist.save() :: Handle crypto incorrect password', function () {
-		expect(5);
+		expect(4);
 		base.dbUp();
 		
 		var coll = db.collection('test', {
@@ -476,14 +476,17 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			}),
 			result;
 		
+		console.log('Adding crypto step for save');
 		db.persist.addStep(new db.shared.plugins.FdbCrypto({
 			pass: 'testing'
 		}));
 		
+		console.log('Inserting data');
 		coll.insert({
 			name: 'Test'
 		});
 		
+		console.log('Saving data');
 		coll.save(function (err) {
 			if (err) {
 				console.log(err);
@@ -492,9 +495,11 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				ok(!err, 'Save did not produce an error');
 			}
 			
+			console.log('Dropping db');
 			base.dbDown(false);
 			base.dbUp();
 			
+			console.log('Adding crypto step for load');
 			db.persist.addStep(new db.shared.plugins.FdbCrypto({
 				pass: 'aaa'
 			}));
@@ -502,9 +507,11 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			coll = db.collection('test');
 			
 			// Make sure the item does not currently exist
+			console.log('Checking for no data');
 			result = coll.find();
 			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 			
+			console.log('Loading data');
 			coll.load(function (err, tableStats, metaStats) {
 				if (err) {
 					console.log(err);
@@ -515,11 +522,11 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				
 				result = coll.find();
 				
-				strictEqual(result.length, 1, 'Check that items were loaded correctly');
-				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
+				strictEqual(result.length, 0, 'Check that items were not loaded');
 				
 				base.dbDown(false);
 				
+				console.log('Test complete');
 				start();
 			});
 		});
