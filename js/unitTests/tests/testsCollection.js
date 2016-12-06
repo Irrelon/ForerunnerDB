@@ -2803,9 +2803,7 @@ QUnit.test('Collection.primaryKey() :: Change primary key', function () {
 	base.dbUp();
 	
 	var coll = db.collection('test'),
-		data,
-		result,
-		i;
+		data;
 	
 	data = [{
 		amount: 1
