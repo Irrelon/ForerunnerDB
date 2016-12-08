@@ -15839,12 +15839,23 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 	if (wrapper) {
 		wrapper = this.jParse(wrapper);
 
-		data = CryptoJS[this._algo].decrypt(wrapper.data, this._pass, {
-			format: {
-				stringify: function () { return self.stringify.apply(self, arguments); },
-				parse: function () { return self.parse.apply(self, arguments); }
+		try {
+			data = CryptoJS[this._algo].decrypt(wrapper.data, this._pass, {
+				format: {
+					stringify: function () {
+						return self.stringify.apply(self, arguments);
+					},
+					parse: function () {
+						return self.parse.apply(self, arguments);
+					}
+				}
+			}).toString(CryptoJS.enc.Utf8);
+		} catch (e) {
+			if (finished) {
+				finished('Crypto failed to decrypt data, incorrect password?', data, meta);
 			}
-		}).toString(CryptoJS.enc.Utf8);
+			return;
+		}
 
 		if (finished) {
 			finished(false, data, meta);
