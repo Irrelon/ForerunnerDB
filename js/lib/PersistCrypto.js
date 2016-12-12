@@ -77,7 +77,7 @@ Plugin.prototype.encode = function (val, meta, finished) {
 			parse: function () { return self.parse.apply(self, arguments); }
 		}
 	});
-
+	
 	wrapper.data = encryptedVal.toString();
 	wrapper.enabled = true;
 
