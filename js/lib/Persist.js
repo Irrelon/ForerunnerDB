@@ -52,11 +52,6 @@ Persist.prototype.init = function (db) {
 			this.mode('localforage');
 
 			localforage.config({
-				driver: [
-					localforage.INDEXEDDB,
-					localforage.WEBSQL,
-					localforage.LOCALSTORAGE
-				],
 				name: String(db.core().name()),
 				storeName: 'FDB'
 			});
@@ -402,19 +397,20 @@ Persist.prototype.save = function (key, data, callback) {
 	switch (this.mode()) {
 		case 'localforage':
 			this.encode(data, function (err, data, tableStats) {
-				if (!err) {
-					localforage.setItem(key, data).then(function (data) {
-						if (callback) {
-							callback(false, data, tableStats);
-						}
-					}, function (err) {
-						if (callback) {
-							callback(err);
-						}
-					});
-				} else {
-					callback(err);
+				if (err) {
+					return callback(err);
 				}
+				
+				localforage.setItem(key, data, function (err) {
+					if (callback) {
+						if (err) {
+							callback(err);
+							return;
+						}
+						
+						callback(false, data, tableStats);
+					}
+				});
 			});
 			break;
 
@@ -436,10 +432,14 @@ Persist.prototype.load = function (key, callback) {
 
 	switch (this.mode()) {
 		case 'localforage':
-			localforage.getItem(key).then(function (val) {
+			localforage.getItem(key, function (err, val) {
+				if (err) {
+					if (callback) { callback(err); }
+					
+					return;
+				}
+				
 				self.decode(val, callback);
-			}, function (err) {
-				if (callback) { callback(err); }
 			});
 			break;
 
@@ -457,9 +457,7 @@ Persist.prototype.load = function (key, callback) {
 Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localforage':
-			localforage.removeItem(key).then(function () {
-				if (callback) { callback(false); }
-			}, function (err) {
+			localforage.removeItem(key, function (err) {
 				if (callback) { callback(err); }
 			});
 			break;
@@ -571,27 +569,32 @@ Collection.prototype.save = function (callback) {
 			processSave = function () {
 				// Save the collection data
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
-					if (!err) {
-						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
-							self.deferEmit('save', tableStats, metaStats, {
-								tableData: tableData,
-								metaData: metaData,
-								tableDataName: self._db._name + '-' + self._name,
-								metaDataName: self._db._name + '-' + self._name + '-metaData'
-							});
-							
-							if (callback) {
+					if (err) {
+						if (callback) { callback(err); }
+						return;
+					}
+					
+					self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
+						self.deferEmit('save', tableStats, metaStats, {
+							tableData: tableData,
+							metaData: metaData,
+							tableDataName: self._db._name + '-' + self._name,
+							metaDataName: self._db._name + '-' + self._name + '-metaData'
+						});
+						
+						if (callback) {
+							// Defer till the next VM tick to give the VM some breathing room
+							// around the persistent data getting into storage.
+							setTimeout(function () {
 								callback(err, tableStats, metaStats, {
 									tableData: tableData,
 									metaData: metaData,
 									tableDataName: self._db._name + '-' + self._name,
 									metaDataName: self._db._name + '-' + self._name + '-metaData'
 								});
-							}
-						});
-					} else {
-						if (callback) { callback(err); }
-					}
+							}, 1);
+						}
+					});
 				});
 			};
 
