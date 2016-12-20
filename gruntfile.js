@@ -425,6 +425,23 @@ module.exports = function(grunt) {
 			}
 		}
 	});
+	
+	// Register events to output nice logs for qunit
+	grunt.event.on('qunit.moduleStart', function (name) {
+		grunt.log.ok('START TESTING MODULE: ' + name);
+	});
+	
+	grunt.event.on('qunit.moduleDone', function (name) {
+		grunt.log.ok('STOP TESTING MODULE: ' + name);
+	});
+	
+	grunt.event.on('qunit.testStart', function (name) {
+		grunt.log.ok('START TEST: ' + name);
+	});
+	
+	grunt.event.on('qunit.testDone', function (name) {
+		grunt.log.ok('STOP TEST: ' + name);
+	});
 
 	grunt.registerTask('postfix', 'Fix code for IE.', function () {
 		var fs = require('fs-extra');
