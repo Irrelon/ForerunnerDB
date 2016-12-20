@@ -468,10 +468,10 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 	});
 	
 	QUnit.asyncTest('Persist.save() :: Handle crypto incorrect password', function () {
-		expect(4);
+		expect(3);
 		base.dbUp();
 		
-		var coll = db.collection('test', {
+		var coll = db.collection('testPersistCrypto', {
 				changeTimestamp: true
 			}),
 			result;
@@ -499,36 +499,30 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			base.dbDown(false);
 			base.dbUp();
 			
-			console.log('Adding crypto step for load');
-			db.persist.addStep(new db.shared.plugins.FdbCrypto({
-				pass: 'aaa'
-			}));
-			
-			coll = db.collection('test');
-			
-			// Make sure the item does not currently exist
-			console.log('Checking for no data');
-			result = coll.find();
-			strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
-			
-			console.log('Loading data');
-			coll.load(function (err, tableStats, metaStats) {
-				if (err) {
-					console.log(err);
-					ok(false, err);
-				} else {
-					ok(!err, 'Load did not produce an error');
-				}
+			setTimeout(function () {
+				debugger;
+				console.log('Adding crypto step for load');
+				db.persist.addStep(new db.shared.plugins.FdbCrypto({
+					pass: 'aaa'
+				}));
 				
+				coll = db.collection('testPersistCrypto');
+				
+				// Make sure the item does not currently exist
+				console.log('Checking for no data');
 				result = coll.find();
+				strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
 				
-				strictEqual(result.length, 0, 'Check that items were not loaded');
-				
-				base.dbDown(false);
-				
-				console.log('Test complete');
-				start();
-			});
+				console.log('Loading data');
+				coll.load(function (err, tableStats, metaStats) {
+					ok(err, 'Load produced an error as expected: ' + err);
+					
+					base.dbDown(false);
+					
+					console.log('Test complete');
+					start();
+				});
+			}, 4000);
 		});
 	});
 });

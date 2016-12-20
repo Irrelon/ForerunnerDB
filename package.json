@@ -2,7 +2,7 @@
   "author": "Rob Evans - Irrelon Software Limited",
   "name": "forerunnerdb",
   "description": "A NoSQL document store database for browsers and Node.js.",
-  "version": "1.4.5",
+  "version": "1.4.19",
   "keywords": [
     "irrelon",
     "forerunnerdb",
@@ -39,13 +39,14 @@
     "cors": "^2.8.1",
     "crypto-js": "^3.1.5",
     "express": "^4.14.0",
-    "localforage": "^1.2.10",
+    "localforage": "^1.4.3",
     "pako": "^1.0.3",
     "pem": "^1.8.3",
     "rest": "^2.0.0"
   },
   "devDependencies": {
     "aliasify": "^2.0.0",
+    "babel-plugin-system-import-transformer": "^2.4.0",
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
@@ -67,17 +68,17 @@
     "typescript": "^2.0.9"
   },
   "engines": {
-      "node": ">= 4"
+    "node": ">= 4"
   },
   "scripts": {
-      "start": "forever start server/server.js",
-      "stop": "forever stop server/server.js",
-      "test": "grunt --verbose",
-      "postinstall": "node ./postinstall.js"
+    "start": "forever start server/server.js",
+    "stop": "forever stop server/server.js",
+    "test": "grunt --verbose",
+    "postinstall": "node ./postinstall.js"
   },
   "repository": {
-      "type": "git",
-      "url": "git://github.com/irrelon/ForerunnerDB.git"
+    "type": "git",
+    "url": "git://github.com/irrelon/ForerunnerDB.git"
   },
   "main": "./js/builds/nodecore",
   "browserify": "./js/builds/all",

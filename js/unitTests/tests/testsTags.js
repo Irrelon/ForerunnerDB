@@ -19,7 +19,7 @@ ForerunnerDB.moduleLoaded('Collection', function () {
 		base.dbDown();
 	});
 
-	QUnit.asyncTest('Collection.tagDrop() :: Add a tag to a collection', function () {
+	QUnit.asyncTest('Collection.tagDrop() :: Drop collections by tag', function () {
 		"use strict";
 		expect(6);
 		base.dbUp();
@@ -73,7 +73,7 @@ ForerunnerDB.moduleLoaded('View', function () {
 		base.dbDown();
 	});
 
-	QUnit.asyncTest('View.tagDrop() :: Add a tag to a view', function () {
+	QUnit.asyncTest('View.tagDrop() :: Drop views by tag', function () {
 		"use strict";
 		expect(6);
 		base.dbUp();
