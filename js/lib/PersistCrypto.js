@@ -108,6 +108,16 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 					}
 				}
 			}).toString(CryptoJS.enc.Utf8);
+			
+			if (!data) {
+				// Crypto failed - CryptoJS just returns a blank string most of the time
+				// if an incorrect password is used. Perhaps we should do this:
+				// http://stackoverflow.com/questions/23188593/cryptojs-check-if-aes-passphrase-is-correct
+				if (finished) {
+					finished('Crypto failed to decrypt data, incorrect password?', data, meta);
+				}
+				return;
+			}
 		} catch (e) {
 			if (finished) {
 				finished('Crypto failed to decrypt data, incorrect password?', data, meta);
