@@ -3844,54 +3844,56 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 		var self = this,
 			name = options.name;
 
-		if (name) {
-			if (this._collection[name]) {
-				return this._collection[name];
-			} else {
-				if (options && options.autoCreate === false) {
-					if (options && options.throwError !== false) {
-						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
-					}
-
-					return undefined;
-				}
-
-				if (this.debug()) {
-					console.log(this.logIdentifier() + ' Creating collection ' + name);
-				}
-			}
-
-			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
-			this._collection[name].mongoEmulation(this.mongoEmulation());
-
-			if (options.primaryKey !== undefined) {
-				this._collection[name].primaryKey(options.primaryKey);
-			}
-
-			if (options.capped !== undefined) {
-				// Check we have a size
-				if (options.size !== undefined) {
-					this._collection[name].capped(options.capped);
-					this._collection[name].cappedSize(options.size);
-				} else {
-					throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
-				}
-			}
-
-			// Listen for events on this collection so we can fire global events
-			// on the database in response to it
-			self._collection[name].on('change', function () {
-				self.emit('change', self._collection[name], 'collection', name);
-			});
-
-			self.deferEmit('create', self._collection[name], 'collection', name);
-
-			return this._collection[name];
-		} else {
+		if (!name) {
 			if (!options || (options && options.throwError !== false)) {
 				throw(this.logIdentifier() + ' Cannot get collection with undefined name!');
 			}
+			
+			return;
 		}
+		
+		if (this._collection[name]) {
+			return this._collection[name];
+		}
+		
+		if (options && options.autoCreate === false) {
+			if (options && options.throwError !== false) {
+				throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+			}
+
+			return undefined;
+		}
+
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Creating collection ' + name);
+		}
+
+		this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
+		this._collection[name].mongoEmulation(this.mongoEmulation());
+
+		if (options.primaryKey !== undefined) {
+			this._collection[name].primaryKey(options.primaryKey);
+		}
+
+		if (options.capped !== undefined) {
+			// Check we have a size
+			if (options.size !== undefined) {
+				this._collection[name].capped(options.capped);
+				this._collection[name].cappedSize(options.size);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
+			}
+		}
+
+		// Listen for events on this collection so we can fire global events
+		// on the database in response to it
+		self._collection[name].on('change', function () {
+			self.emit('change', self._collection[name], 'collection', name);
+		});
+
+		self.deferEmit('create', self._collection[name], 'collection', name);
+
+		return this._collection[name];
 	}
 });
 
