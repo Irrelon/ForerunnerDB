@@ -1,6 +1,6 @@
 "use strict";
 
-var ForerunnerDB = require('../builds/nodecore'),
+var ForerunnerDB = require('../../builds/nodecore'),
 	fdb = new ForerunnerDB(),
 	db = fdb.db('testApi');
 
@@ -84,6 +84,11 @@ fdb.api.access('testApi', '*', '*', '*', function checkSession (dbName, objType,
 	if (sid) {
 		session = db.collection('session').findById(sid);
 
+		// Allow specific test session id
+		if (sid === '4061c5730233780') {
+			session = true;
+		}
+		
 		if (session) {
 			// Valid session found, allow access
 			return callback(false, dbName, objType, objName, httpMethod, req);
