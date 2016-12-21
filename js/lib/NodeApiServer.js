@@ -119,11 +119,15 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 
 			if (urlObj.query) {
 				try {
+					// Try to parse the query parameter as URI encoded
 					query = urlObj.query;
 					query = decodeURIComponent(query);
 
 					if (query) {
+						// We got a query param, try to decode as JSON
 						jsonData = JSON.parse(decodeURIComponent(query));
+						
+						// Now copy any fields from jsonData to req.json
 						Shared.mixin(req.json, jsonData);
 					}
 				} catch (e) {
