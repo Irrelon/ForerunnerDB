@@ -500,7 +500,6 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			base.dbUp();
 			
 			setTimeout(function () {
-				debugger;
 				console.log('Adding crypto step for load');
 				db.persist.addStep(new db.shared.plugins.FdbCrypto({
 					pass: 'aaa'
@@ -517,12 +516,106 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				coll.load(function (err, tableStats, metaStats) {
 					ok(err, 'Load produced an error as expected: ' + err);
 					
-					base.dbDown(false);
+					base.dbDown();
 					
 					console.log('Test complete');
 					start();
 				});
-			}, 4000);
+			}, 1);
+		});
+	});
+	
+	QUnit.asyncTest('Persist.save() :: Change password after initial save', function () {
+		expect(12);
+		base.dbUp();
+		
+		var coll = db.collection('testPersistCrypto', {
+				changeTimestamp: true
+			}),
+			result,
+			testObj,
+			crypto;
+		
+		testObj = {
+			name: 'Test'
+		};
+		
+		crypto = new db.shared.plugins.FdbCrypto({
+			pass: 'testing'
+		});
+		
+		console.log('Adding crypto step for save');
+		db.persist.addStep(crypto);
+		
+		console.log('Inserting data');
+		coll.insert(testObj);
+		
+		console.log('Saving data');
+		coll.save(function (err) {
+			if (err) {
+				console.log(err);
+				ok(false, err);
+			} else {
+				ok(!err, 'Save did not produce an error');
+			}
+			
+			console.log('Dropping db');
+			base.dbDown(false);
+			base.dbUp();
+			
+			db.persist.addStep(crypto);
+			
+			coll = db.collection('testPersistCrypto');
+			
+			ok(coll.count() === 0, 'Collection is currently empty after drop');
+			
+			console.log('Loading data');
+			coll.load(function (err, tableStats, metaStats) {
+				ok(!err, 'Loaded data without error');
+				
+				result = coll.find();
+				
+				ok(result, 'Result exists');
+				ok(result[0], 'Result index zero exists');
+				ok(result[0].name === testObj.name, 'Data is the same and loaded correctly');
+				
+				// Now change the password
+				crypto.pass('myNewPassword');
+				
+				coll.save(function (err) {
+					if (err) {
+						console.log(err);
+						ok(false, err);
+					} else {
+						ok(!err, 'Save did not produce an error');
+					}
+					
+					base.dbDown(false);
+					base.dbUp();
+					
+					db.persist.addStep(crypto);
+					
+					coll = db.collection('testPersistCrypto');
+					
+					ok(coll.count() === 0, 'Collection is currently empty after drop');
+					
+					console.log('Loading data');
+					coll.load(function (err, tableStats, metaStats) {
+						ok(!err, 'Loaded data without error');
+						
+						result = coll.find();
+						
+						ok(result, 'Result exists');
+						ok(result[0], 'Result index zero exists');
+						ok(result[0].name === testObj.name, 'Data is the same and loaded correctly');
+						
+						base.dbDown();
+						
+						console.log('Test complete');
+						start();
+					});
+				});
+			});
 		});
 	});
 });
