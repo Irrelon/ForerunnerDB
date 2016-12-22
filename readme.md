@@ -9,6 +9,9 @@ ForerunnerDB receives no funding or third-party backing except from patrons like
 If you love ForerunnerDB and want to support its development, or if you use it in your own
 products please consider becoming a patron: [https://www.patreon.com/user?u=4443427](https://www.patreon.com/user?u=4443427)
 
+Community Support: [https://github.com/Irrelon/ForerunnerDB/issues](https://github.com/Irrelon/ForerunnerDB/issues)
+Commercial Support: [forerunnerdb@irrelon.com](mailto:forerunnerdb@irrelon.com)
+
 ## Version 1.4.23
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
