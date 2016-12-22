@@ -5,6 +5,10 @@ a UK registered company.
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
 ready and battle tested in real-world applications.
 
+ForerunnerDB receives no funding or third-party backing except from patrons like yourself.
+If you love ForerunnerDB and want to support its development, or if you use it in your own
+products please consider becoming a patron: [https://www.patreon.com/user?u=4443427](https://www.patreon.com/user?u=4443427)
+
 ## Version 1.4.22
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
