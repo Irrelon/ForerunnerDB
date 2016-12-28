@@ -5378,6 +5378,9 @@ ng-repeat
 When changes are made to the "myCollection" collection data, they will be
 automatically reflected in the angular view.
 
+ForerunnerDB will automatically un-bind when angular's $destroy event is
+fired on the scope that you pass to .ng().
+
 If you bind a ForerunnerDB-based data variable to an ng-model attribute you
 will have two-way data binding as ForerunnerDB will be automatically updated
 when changes are made on the AngularJS view and the view will be updated
