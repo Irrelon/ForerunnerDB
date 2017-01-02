@@ -3203,7 +3203,9 @@ coll.truncate();
 ```
 
 ### change
-Emitted after all CRUD operations have completed.
+Emitted after *all* CRUD operations have completed. See "immediateChange" if you need to 
+know about every update operation as soon as it completes. For performance it is best to
+use "change" rather than "immediateChange" if you can.
 
 ```js
 var coll = db.collection("myCollection");
@@ -3223,7 +3225,9 @@ coll.insert({goo: true});
 Emitted after each CRUD operation has completed. This is different from the "change" event
 in that immediateChange is emitted without any debouncing. The debounced change event will
 only fire 100ms after all changes have finished. The immediateChange event will fire
-on all changes straight away.
+on all changes straight away so you will be informed of every update call as soon as it
+has happened. For performance, if you only need to run code after any change has occurred,
+use "change" instead of "immediateChange".
 
 ```js
 var coll = db.collection("myCollection");
