@@ -618,4 +618,94 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			});
 		});
 	});
+
+    QUnit.asyncTest('Persist.persistedSize() :: collection: save random amount (< 5MB) of data into a collection and expect exactly that size reported', function () {
+        base.dbUp();
+
+        // insert record with >0 <5MB content
+        var bytes = Math.floor((Math.random() * 4999999) + 1);
+        var char = "a";
+
+        // phantomjs doesn't know String.repeat(x)...
+        var content = "";
+        for (var i = 0; i < bytes; i++) {
+            content += char;
+        }
+
+        // insert random sized content
+        var doc = {string: content};
+        var coll = db.collection("test");
+        coll.insert(doc);
+
+        // also db- and collection-prefixes count toward expected byte size of storage object
+        // for simplicity's sake, UTF8 names are expected here so .length can be used
+        var _dbPrefix = db._name + "-" + coll._name;
+        // also content-prefix of actual stored data count toward expected size of storage object
+        // shady as of now, but localforage's API doesn't provide getting the "raw storage format wrap" at runtime
+        var _contentWrap = "json::fdb::[" + "]";
+
+        // total bytes to expect in persistence
+        var expectedSize = _dbPrefix.length + _contentWrap.length + JSON.stringify(doc).length;
+
+        /**
+         * named helper func as callback to coll.save
+         *
+         * @private
+         */
+        function _size() {
+            var coll = db.collection("test");
+            // make sure collection isn't loaded at runtime
+            // we want to check the persisted object
+            // not the runtime object
+            var result = coll.find();
+            strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
+
+            // center piece
+            coll.persistedSize(function (err, persistedSize) {
+                if (err) {
+                    console.log(err);
+                    ok(false, err);
+                } else {
+                    strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
+                }
+
+                // old QUnit version...
+                start();
+            });
+
+            // clean up
+            base.dbDown();
+
+            // actual centerpiece of test
+            // coll.persistedSize()
+            // .then( function(persistedSize) {
+            // 	strictEqual(persistedSize, bytes, persistedSize + ' bytes were reported correctly');
+            // })
+            // .catch( function(err) {
+            // 	if (err) {
+            //             console.log(err);
+            //             ok(false, err);
+            //         }
+            // });
+        }
+
+        // init the test with persisting content
+        coll.save(function (err) {
+            if (err) {
+                console.log(err);
+                ok(false, err);
+            } else {
+                ok(!err, 'Save did not produce an error');
+            }
+
+            // start from scratch again
+            base.dbDown(false);
+            base.dbUp();
+
+            _size();
+        })
+
+
+    })
+
 });
