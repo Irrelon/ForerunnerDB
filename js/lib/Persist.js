@@ -469,6 +469,14 @@ Persist.prototype.drop = function (key, callback) {
 
 };
 
+/**
+ * determines the byte size of a String,
+ * also taking special chars into account;
+ * inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
+ * @param {string} string String to get bytes size of
+ * @return {number} size in bytes of the input string
+ * @private
+ */
 Persist.prototype._calcSize = function (string) {
     var iCount = 0;
     var i;
@@ -477,55 +485,84 @@ Persist.prototype._calcSize = function (string) {
 
     for (i = 0; i < stringLength; i++) {
         var iPartCount = encodeURI(stringPrep[i])
-            .split("%").length;
+            				.split("%").length;
         iCount += iPartCount == 1 ? 1 : iPartCount - 1;
     }
     return iCount;
 };
 
-Persist.prototype.persistedSize = function (key, objRef, callback) {
+/**
+ * determine byte size of a persisted object,
+ * either entire DB or specific collection
+ * @param {string|object} target either a string (collection name) or an object (DB)
+ * @param {Function} callback method to call when size determination is done - mandatory for getting a result!
+ */
+Persist.prototype.persistedSize = function (target, callback) {
     var self = this;
 
     var size = 0;
-    function _mapSizeCb(value, key, iterationNumber) {
-        // both key and value of the persisted storage obj count toward total DB size
-        size = size + self._calcSize(value) + self._calcSize(key);
+
+    /**
+	 * named helper function to map-reduce the total byte size of a persisted object
+     * @param {String} value
+     * @param {String} key
+     * @private
+     */
+    function _mapSizeCb(value, key) {
+    	var total = self._calcSize(value) + self._calcSize(key);
+        // both key and value of the persisted storage obj count toward total size
+        size += total;
     }
 
     switch (this.mode()) {
         case 'localforage':
             // in general: don't do any decoding (enc, compression),
             // b/c only the "raw" size of the storage object is of interest
-            switch (objRef) {
-                case 'collection':
-                    // determine size of collection only
-                    localforage.getItem(key, function (err, val) {
-                        if (err) {
-                            if (callback) { callback(err); }
-
-                            return;
-                        }
-                        // re-use mapping function for a single call
-                        _mapSizeCb(val, key);
+            switch ((typeof target).toLowerCase()) {
+            	// collection name was provided
+                case 'string':
+                	var collName = target;
+                	var collMetaName = target+"-metaData";
+                	// utilize localforages built-in Promise functionality (includes shim for IE)
+					// get collection + collection meta data for size determination
+                    localforage.getItem(collName).then(function(value) {
+                        _mapSizeCb(value, collName);
+                    }).then( function() {
+                    	return localforage.getItem(collMetaName);
+                    }).then( function(value) {
+                        _mapSizeCb(value, collMetaName);
+                    }).then(function() {
+                        // done - report back
                         callback(null, size);
+                    }).catch(function(err) {
+                        console.error(JSON.stringify(err));
+                        if (callback) { callback(err); }
                     });
+
                     break;
-                case 'db':
+				// DB object was provided
+                case 'object':
                     // determine size of DB
-                    // by iterating over all key/value pairs in the DB
-                    localforage.iterate( _mapSizeCb, function(err) {
-                        if (err) {
-                            if (callback) { callback(err); }
-                            return;
+                    // by iterating over all key/value pairs
+					// filtering for this DB
+                    var dbName = target.name();
+                    localforage.iterate(function(value, key) {
+                        if(key.lastIndexOf(dbName, 0) === 0) {
+                            _mapSizeCb(value, key);
                         }
-                        // report back
+                    }).then(function() {
+                        // done - report back
                         callback(null, size);
+                    }).catch(function(err) {
+                        console.error(JSON.stringify(err));
+                        if (callback) { callback(err); }
                     });
                     break;
-                default:
-                    if (callback) { callback('no target for calcuation specified - must be either "db" or "collection"'); }
-            }
 
+                default:
+                    if (callback) { callback("couldn't determine target for size calculation - " +
+						"must be either a collection name (string) or a db reference (object)"); }
+            }
             break;
 
         default:
@@ -681,12 +718,16 @@ Collection.prototype.save = function (callback) {
 	}
 };
 
+/**
+ * Determines the byte size of a persisted collection
+ * @param {Function} callback The method to call when the size check is complete
+ */
 Collection.prototype.persistedSize = function (callback) {
     var self = this;
 
     if (self._name) {
         if (self._db) {
-        	self._db.persist.persistedSize(self._db._name + '-' + self._name, 'collection', callback);
+        	self._db.persist.persistedSize(self._db._name + '-' + self._name, callback);
         } else {
             if (callback) {
                 callback('Cannot determine persisted size of a collection that is not attached to a database!');
@@ -996,9 +1037,12 @@ Db.prototype.save = new Overload({
 	}
 });
 
+/**
+ * Determines the byte size of a persisted DB
+ * @param {Function} callback The method to call when the size check is complete
+ */
 Db.prototype.persistedSize = function(callback) {
-    var self = this;
-    self.persistedSize('', 'db', callback);
+    this.persist.persistedSize(this, callback);
 };
 
 Shared.finishModule('Persist');

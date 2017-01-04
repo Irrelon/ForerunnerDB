@@ -4,20 +4,20 @@ QUnit.module('Persist');
 ForerunnerDB.moduleLoaded('Persist', function () {
 	/*QUnit.asyncTest('Persist.load() :: Check for saved databases', function () {
 		expect(1);
-		
+
 		base.dbUp();
-		
+
 		db.collection('test1').insert({"test": true});
 		db.collection('test2').insert({"test": true});
 		db.collection('test3').insert({"test": true});
-		
+
 		db.load(function (err, tableStats, metaStats) {
 			equal(Boolean(err), false, 'Didn\'t cause an error');
 			base.dbDown();
 			start();
 		});
 	});*/
-	
+
 	QUnit.asyncTest('Persist.load() :: Load un-saved collection', function () {
 		expect(1);
 
@@ -356,7 +356,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				strictEqual(result.length, 1, 'Check that items were loaded correctly');
 				strictEqual(result[0] && result[0].name, 'Test', 'Check that the data loaded holds correct information');
 
-				base.dbDown(false);
+				base.dbDown();
 
 				start();
 			});
@@ -466,26 +466,26 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			});
 		});
 	});
-	
+
 	QUnit.asyncTest('Persist.save() :: Handle crypto incorrect password', function () {
 		expect(3);
 		base.dbUp();
-		
+
 		var coll = db.collection('testPersistCrypto', {
 				changeTimestamp: true
 			}),
 			result;
-		
+
 		console.log('Adding crypto step for save');
 		db.persist.addStep(new db.shared.plugins.FdbCrypto({
 			pass: 'testing'
 		}));
-		
+
 		console.log('Inserting data');
 		coll.insert({
 			name: 'Test'
 		});
-		
+
 		console.log('Saving data');
 		coll.save(function (err) {
 			if (err) {
@@ -494,62 +494,62 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			} else {
 				ok(!err, 'Save did not produce an error');
 			}
-			
+
 			console.log('Dropping db');
 			base.dbDown(false);
 			base.dbUp();
-			
+
 			setTimeout(function () {
 				console.log('Adding crypto step for load');
 				db.persist.addStep(new db.shared.plugins.FdbCrypto({
 					pass: 'aaa'
 				}));
-				
+
 				coll = db.collection('testPersistCrypto');
-				
+
 				// Make sure the item does not currently exist
 				console.log('Checking for no data');
 				result = coll.find();
 				strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
-				
+
 				console.log('Loading data');
 				coll.load(function (err, tableStats, metaStats) {
 					ok(err, 'Load produced an error as expected: ' + err);
-					
+
 					base.dbDown();
-					
+
 					console.log('Test complete');
 					start();
 				});
 			}, 1);
 		});
 	});
-	
+
 	QUnit.asyncTest('Persist.save() :: Change password after initial save', function () {
 		expect(12);
 		base.dbUp();
-		
+
 		var coll = db.collection('testPersistCrypto', {
 				changeTimestamp: true
 			}),
 			result,
 			testObj,
 			crypto;
-		
+
 		testObj = {
 			name: 'Test'
 		};
-		
+
 		crypto = new db.shared.plugins.FdbCrypto({
 			pass: 'testing'
 		});
-		
+
 		console.log('Adding crypto step for save');
 		db.persist.addStep(crypto);
-		
+
 		console.log('Inserting data');
 		coll.insert(testObj);
-		
+
 		console.log('Saving data');
 		coll.save(function (err) {
 			if (err) {
@@ -558,30 +558,30 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 			} else {
 				ok(!err, 'Save did not produce an error');
 			}
-			
+
 			console.log('Dropping db');
 			base.dbDown(false);
 			base.dbUp();
-			
+
 			db.persist.addStep(crypto);
-			
+
 			coll = db.collection('testPersistCrypto');
-			
+
 			ok(coll.count() === 0, 'Collection is currently empty after drop');
-			
+
 			console.log('Loading data');
 			coll.load(function (err, tableStats, metaStats) {
 				ok(!err, 'Loaded data without error');
-				
+
 				result = coll.find();
-				
+
 				ok(result, 'Result exists');
 				ok(result[0], 'Result index zero exists');
 				ok(result[0].name === testObj.name, 'Data is the same and loaded correctly');
-				
+
 				// Now change the password
 				crypto.pass('myNewPassword');
-				
+
 				coll.save(function (err) {
 					if (err) {
 						console.log(err);
@@ -589,28 +589,28 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 					} else {
 						ok(!err, 'Save did not produce an error');
 					}
-					
+
 					base.dbDown(false);
 					base.dbUp();
-					
+
 					db.persist.addStep(crypto);
-					
+
 					coll = db.collection('testPersistCrypto');
-					
+
 					ok(coll.count() === 0, 'Collection is currently empty after drop');
-					
+
 					console.log('Loading data');
 					coll.load(function (err, tableStats, metaStats) {
 						ok(!err, 'Loaded data without error');
-						
+
 						result = coll.find();
-						
+
 						ok(result, 'Result exists');
 						ok(result[0], 'Result index zero exists');
 						ok(result[0].name === testObj.name, 'Data is the same and loaded correctly');
-						
+
 						base.dbDown();
-						
+
 						console.log('Test complete');
 						start();
 					});
@@ -619,11 +619,92 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		});
 	});
 
-    QUnit.asyncTest('Persist.persistedSize() :: collection: save random amount (< 5MB) of data into a collection and expect exactly that size reported', function () {
-        base.dbUp();
+    // promisify save
+    function asyncSave(oCollection) {
+        return new Promise(function (resolve, reject) {
+            oCollection.save(function (err) {
+                if (!err) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            })
+        })
+    }
+    // promisify insert
+    function asyncInsert(oCollection, oContent) {
+        return new Promise(function (resolve, reject) {
+            oCollection.insert(oContent, function (result) {
+                if (result.failed.length === 0) {
+                    resolve(oCollection);
+                } else {
+                    reject(result.failed);
+                }
+            })
+        })
+    }
+    // promisify drop
+    function asyncDrop(oObject, bDropPersistent) {
+        return new Promise(function (resolve, reject) {
+            oObject.drop(bDropPersistent, function (err) {
+                if (!err) {
+                    resolve();
+                } else {
+                    reject(err);
+                }
+            })
+        })
+    }
 
-        // insert record with >0 <5MB content
-        var bytes = Math.floor((Math.random() * 4999999) + 1);
+    // promisify find
+    function asyncFind(oCollection, query) {
+        return new Promise(function (resolve, reject) {
+            if (query) {
+                resolve(oCollection.find(query));
+            } else {
+                resolve(oCollection.find());
+            }
+
+        })
+    }
+
+    // promisify size check
+    function asyncSizeCheck(oDbColl) {
+        return new Promise(function (resolve, reject) {
+            oDbColl.persistedSize(function (err, persistedSize) {
+                if (!err) {
+                    resolve(persistedSize);
+                } else {
+                    reject(err);
+                }
+            })
+        })
+    }
+
+    // QUnit.asyncTest('Persist.persistedSize() :: clean up :)', function () {
+    //     expect(1);
+    // 	base.dbUp();
+    //
+		// Promise.resolve().then( function() {
+		// 	return asyncDrop(db, true);
+    //     }).then( function() {
+    //     	ok(true, "we cleaned up :)");
+    //         start();
+    //     }).catch(function (err) {
+    //         ok(false, err);
+    //         console.log(JSON.stringify(err));
+    //     });
+    // });
+
+    QUnit.asyncTest('Persist.persistedSize() :: collection: save random amount (< 1MB) of data into a collection and expect exactly that size (+ persistence overhead) reported', function () {
+        // prepare things
+    	var dbName = new Date().toJSON();
+        var db = fdb.db(dbName);
+
+        var expectedSize = 0;
+        var collName = "testCollPersistedSize";
+
+        var bytes = Math.floor((Math.random() * 1000000) + 1);
         var char = "a";
 
         // phantomjs doesn't know String.repeat(x)...
@@ -632,80 +713,180 @@ ForerunnerDB.moduleLoaded('Persist', function () {
             content += char;
         }
 
-        // insert random sized content
-        var doc = {string: content};
-        var coll = db.collection("test");
-        coll.insert(doc);
+        var doc = {_id: content};
+        var coll = db.collection(collName);
 
-        // also db- and collection-prefixes count toward expected byte size of storage object
-        // for simplicity's sake, UTF8 names are expected here so .length can be used
-        var _dbPrefix = db._name + "-" + coll._name;
-        // also content-prefix of actual stored data count toward expected size of storage object
-        // shady as of now, but localforage's API doesn't provide getting the "raw storage format wrap" at runtime
-        var _contentWrap = "json::fdb::[" + "]";
+        Promise.resolve().then(function() {
+        	// calc expected size
+            // also db- and collection-prefixes count toward expected byte size of storage object
+            // for simplicity's sake, UTF8 names are expected here so .length can be used
+            var _dbPrefix = db._name + "-" + coll._name;
+            // also content-prefix of actual stored data count toward expected size of storage object
+            // shady as of now, but localforage's API doesn't provide getting the "raw storage format wrap" at runtime
+            var _contentWrap = "json::fdb::[" + "]";
+            var _metaDataWrap = "json::fdb::{}";
 
-        // total bytes to expect in persistence
-        var expectedSize = _dbPrefix.length + _contentWrap.length + JSON.stringify(doc).length;
+            // total bytes to expect in persistence
+            expectedSize = _dbPrefix.length + _contentWrap.length
+                + (_dbPrefix + "-metaData").length + _metaDataWrap.length
+                + JSON.stringify(doc).length;
 
-        /**
-         * named helper func as callback to coll.save
-         *
-         * @private
-         */
-        function _size() {
-            var coll = db.collection("test");
-            // make sure collection isn't loaded at runtime
-            // we want to check the persisted object
-            // not the runtime object
-            var result = coll.find();
+            // insert content into collection
+            return asyncInsert(coll, doc);
+        }).then( function(coll) {
+        	// persist collection
+            return asyncSave(coll);
+        }).then( function() {
+        	// drop DB from mem, but not from persistence
+            console.log("...dropping db");
+            return asyncDrop(db, false);
+        }).then(function() {
+        	// re-create DB in mem
+            console.log("...recreating db");
+            return fdb.db(dbName);
+        }).then(function(dbNew) {
+        	// re-create collection
+            db = dbNew;
+            coll = db.collection(collName);
+            console.log("...recreating collection");
+            // make sure its empty - the persisted version is of interest, not the runtime version
+            return asyncFind(coll);
+        }).then(function(result) {
+            console.log("...validating empty collection: result: " + result.length);
             strictEqual(result.length, 0, 'Check that there are currently no items in the collection');
+            return true;
+        }).then( function() {
+        	// check size of persisted collection
+            return asyncSizeCheck(coll);
+        }).then( function(persistedSize) {
+        	// assertion
+            console.log("...counted " + persistedSize + " bytes");
+            return strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
+        }).then( function() {
+        	// clean up
+            console.log("...finally dropping db from persistence layer");
+            return asyncDrop(db, true);
+        }).then( function() {
+        	// trigger async QUnit
+            start();
+        }).catch(function (err) {
+            ok(false, err);
+            console.log(JSON.stringify(err));
+        });
 
-            // center piece
-            coll.persistedSize(function (err, persistedSize) {
-                if (err) {
-                    console.log(err);
-                    ok(false, err);
-                } else {
-                    strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
-                }
+    });
 
-                // old QUnit version...
-                start();
-            });
+    QUnit.asyncTest('Persist.persistedSize() :: DB: save random amount (< 1MB) of data into a random number of collections and expect total + persistence overhead reported', function () {
+        // prepare things
+    	var dbName = new Date().toJSON();
+    	var db = fdb.db(dbName);
 
-            // clean up
-            base.dbDown();
+        var expectedSize = 0;
 
-            // actual centerpiece of test
-            // coll.persistedSize()
-            // .then( function(persistedSize) {
-            // 	strictEqual(persistedSize, bytes, persistedSize + ' bytes were reported correctly');
-            // })
-            // .catch( function(err) {
-            // 	if (err) {
-            //             console.log(err);
-            //             ok(false, err);
-            //         }
-            // });
+        var collectionTemplate = "coll-";
+
+        var bytes = Math.floor((Math.random() * 1000000) + 1);
+        // split total bytes up into unequal parts
+        var aCollections = [];
+        while (bytes > 0) {
+            var byteChunk = Math.round(Math.random() * bytes);
+            aCollections.push(byteChunk);
+            bytes -= byteChunk;
         }
+        console.info("Test.persistedSize: chunks: " + aCollections);
 
-        // init the test with persisting content
-        coll.save(function (err) {
-            if (err) {
-                console.log(err);
-                ok(false, err);
-            } else {
-                ok(!err, 'Save did not produce an error');
-            }
+        // this is for easier debugging purposes - content of the collections
+        var aChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789".split("");
 
-            // start from scratch again
-            base.dbDown(false);
-            base.dbUp();
+        Promise.resolve().then(function() {
+        	return Promise.all(aCollections.map( function(byteChunk, index) {
+                // create a collection for each byte chunk
+                var coll = db.collection(collectionTemplate + index);
 
-            _size();
-        })
+                // phantomjs doesn't know String.repeat(x)...
+                var content = "";
+                // insert incremented char from chars array
+                for (var i = 0; i < byteChunk; i++) {
+                    content += aChars[index];
+                }
+                var doc = { _id: index, data: content };
 
 
-    })
+                // count 'em all
+                // db- and collection-prefixes count toward expected byte size of storage object
+                // for simplicity's sake, UTF8 names are expected here so .length can be used
+                var _dbPrefix = db._name + "-" + coll._name;
+                // also content-prefix of actual stored data count toward expected size of storage object
+                // shady as of now, but localforage's API doesn't provide getting the "raw storage format wrap" at runtime
+                var _contentWrap = "json::fdb::[]";
+                var _dbSize = _dbPrefix.length + _contentWrap.length + JSON.stringify(doc).length;
+                console.log("Test.persistedSize: " + _dbPrefix + " length: " + _dbSize);
+
+                var _metaDataPrefix = db._name + "-" + coll._name + "-metaData";
+                var _metaDataWrap = "json::fdb::{}";
+                var _dbMetaSize = _metaDataPrefix.length + _metaDataWrap.length;
+                console.log("Test.persistedSize: " + _metaDataPrefix + " length: " + _dbMetaSize);
+
+
+                expectedSize += _dbSize + _dbMetaSize;
+
+                // content -> collection
+                return asyncInsert(coll, doc);
+			}))
+		}).then(function(aResults) {
+			// persist all created collections
+			return Promise.all(aResults.map( function(coll, index) {
+				console.log("...persisting collection#" + index);
+				return asyncSave(coll);
+			}))
+		}).then(function() {
+            // drop DB from mem, but not from persistence
+            console.log("...dropping db");
+			return asyncDrop(db, false);
+		}).then(function() {
+            // re-create DB in mem
+            console.log("...recreating db");
+        	return fdb.db(dbName);
+    	}).then(function(dbNew) {
+    		// restore all runtime collections
+    		db = dbNew;
+            return Promise.all(aCollections.map( function(byteChunk, index) {
+                // create a collection for each byte chunk
+                var coll = db.collection(collectionTemplate + index);
+                console.log("...recreating " + collectionTemplate + index);
+                // make sure its empty - the persisted version is of interest, not the runtime version
+                return asyncFind(coll, '');
+            }))
+        }).then( function(aResults) {
+        	aResults.map(function(result, index) {
+        	    console.log("...validating empty collection#" + index + ": result: " + result.length);
+                strictEqual(result.length, 0, 'Check that there are currently no items in the collection#' + index);
+			});
+        	return true;
+		}).then( function() {
+			// determine entire DB size
+			return asyncSizeCheck(db);
+        }).then( function(persistedSize) {
+        	// assertion
+            console.log("...counted " + persistedSize + " bytes");
+            return strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
+        }).then( function() {
+        	// clean-up
+            console.log("...finally dropping db from persistence layer");
+            return asyncDrop(db, true);
+        }).then( function() {
+            // trigger async QUnit
+            start();
+        }).catch(function (err) {
+            ok(false, err);
+            console.log(JSON.stringify(err));
+        });
+
+
+
+
+    });
+
+
 
 });
