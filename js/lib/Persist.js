@@ -488,8 +488,10 @@ Persist.prototype.persistedSize = function (key, objRef, callback) {
 
     var size = 0;
     function _mapSizeCb(value, key, iterationNumber) {
-        // both key and value of the persisted storage obj count toward total DB size
-        size = size + self._calcSize(value) + self._calcSize(key);
+    	var total = self._calcSize(value) + self._calcSize(key);
+    	console.log("Run.persistedSize: " + key + " size: " + total);
+        // both key and value of the persisted storage obj count toward total size
+        size += total;
     }
 
     switch (this.mode()) {
@@ -498,7 +500,7 @@ Persist.prototype.persistedSize = function (key, objRef, callback) {
             // b/c only the "raw" size of the storage object is of interest
             switch (objRef) {
                 case 'collection':
-                    // determine size of collection only
+                    // get actual collection
                     localforage.getItem(key, function (err, val) {
                         if (err) {
                             if (callback) { callback(err); }
@@ -507,20 +509,54 @@ Persist.prototype.persistedSize = function (key, objRef, callback) {
                         }
                         // re-use mapping function for a single call
                         _mapSizeCb(val, key);
-                        callback(null, size);
+
+                        // get collection metadata
+                        localforage.getItem(key + "-metaData", function (err, val) {
+                            if (err) {
+                                if (callback) { callback(err); }
+
+                                return;
+                            }
+                            // re-use mapping function for a single call
+                            _mapSizeCb(val, key + "-metaData");
+
+							// done
+                            callback(null, size);
+                        });
                     });
                     break;
                 case 'db':
                     // determine size of DB
                     // by iterating over all key/value pairs in the DB
-                    localforage.iterate( _mapSizeCb, function(err) {
-                        if (err) {
-                            if (callback) { callback(err); }
-                            return;
+                    // var aCollections = key.collections();
+                    // Promise.resolve().then(function() {
+                    // 	return Promise.all(aCollections.map(function(coll) {
+                    //         return localforage.getItem(coll.name);
+                    //     }))
+                    // }).then(function(aValues) {
+                    // 	aValues.map( function(value, index) {
+                    //         _mapSizeCb(value, aCollections[index])
+						// });
+                    //     callback(null, size);
+                    //
+                    // }).catch(function (err) {
+                    //     console.log(err);
+                    //     if (callback) { callback(err); }
+                    // });
+                    var dbName = key.name();
+                    localforage.iterate(function(value, key, iterationNumber) {
+                        if(key.lastIndexOf(dbName, 0) === 0) {
+                            _mapSizeCb(value, key);
                         }
+                    }).then(function() {
                         // report back
                         callback(null, size);
+                    })['catch'](function(err) {
+                        console.error(err);
+                        if (callback) { callback(err); }
                     });
+
+
                     break;
                 default:
                     if (callback) { callback('no target for calcuation specified - must be either "db" or "collection"'); }
@@ -998,7 +1034,7 @@ Db.prototype.save = new Overload({
 
 Db.prototype.persistedSize = function(callback) {
     var self = this;
-    self.persistedSize('', 'db', callback);
+    self.persist.persistedSize(self, 'db', callback);
 };
 
 Shared.finishModule('Persist');
