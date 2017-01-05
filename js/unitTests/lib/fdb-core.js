@@ -8958,7 +8958,7 @@ var Matching = {
 	},
 
 	/**
-	 *
+	 * Performs a join operation and returns the final joined data.
 	 * @param {Array | Object} docArr An array of objects to run the join
 	 * operation against or a single object.
 	 * @param {Array} joinClause The join clause object array (the array in
