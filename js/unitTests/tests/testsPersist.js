@@ -671,30 +671,15 @@ ForerunnerDB.moduleLoaded('Persist', function () {
     // promisify size check
     function asyncSizeCheck(oDbColl) {
         return new Promise(function (resolve, reject) {
-            oDbColl.persistedSize(function (err, persistedSize) {
+            oDbColl.persistedSize(function (err, resultMap) {
                 if (!err) {
-                    resolve(persistedSize);
+                    resolve(resultMap);
                 } else {
                     reject(err);
                 }
             })
         })
     }
-
-    // QUnit.asyncTest('Persist.persistedSize() :: clean up :)', function () {
-    //     expect(1);
-    // 	base.dbUp();
-    //
-		// Promise.resolve().then( function() {
-		// 	return asyncDrop(db, true);
-    //     }).then( function() {
-    //     	ok(true, "we cleaned up :)");
-    //         start();
-    //     }).catch(function (err) {
-    //         ok(false, err);
-    //         console.log(JSON.stringify(err));
-    //     });
-    // });
 
     QUnit.asyncTest('Persist.persistedSize() :: collection: save random amount (< 1MB) of data into a collection and expect exactly that size (+ persistence overhead) reported', function () {
         // prepare things
@@ -758,10 +743,10 @@ ForerunnerDB.moduleLoaded('Persist', function () {
         }).then( function() {
         	// check size of persisted collection
             return asyncSizeCheck(coll);
-        }).then( function(persistedSize) {
+        }).then( function(resultMap) {
         	// assertion
-            console.log("...counted " + persistedSize + " bytes");
-            return strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
+            console.log("...counted " + resultMap.total + " bytes");
+            return strictEqual(resultMap.total, expectedSize, resultMap.total + ' bytes were reported correctly');
         }).then( function() {
         	// clean up
             console.log("...finally dropping db from persistence layer");
@@ -866,10 +851,10 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 		}).then( function() {
 			// determine entire DB size
 			return asyncSizeCheck(db);
-        }).then( function(persistedSize) {
+        }).then( function(resultMap) {
         	// assertion
-            console.log("...counted " + persistedSize + " bytes");
-            return strictEqual(persistedSize, expectedSize, persistedSize + ' bytes were reported correctly');
+            console.log("...counted " + resultMap.total + " bytes");
+            return strictEqual(resultMap.total, expectedSize, resultMap.total + ' bytes were reported correctly');
         }).then( function() {
         	// clean-up
             console.log("...finally dropping db from persistence layer");
@@ -884,6 +869,185 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 
 
 
+
+    });
+
+    QUnit.asyncTest('Persist.persistedSize() :: DB + collection: if no data is persisted, return 0 (and not an error)', function () {
+        // prepare things
+        var dbName = new Date().toJSON();
+        var db = fdb.db(dbName);
+
+        var collName = "testCollNoData";
+
+        var doc = {_id: 4711};
+        var coll = db.collection(collName);
+
+        Promise.resolve().then(function() {
+            return asyncInsert(coll, doc);
+        }).then( function() {
+            // check size of persisted collection
+            return asyncSizeCheck(coll);
+        }).then( function(resultMap) {
+            // assertion
+            console.log("...counted " + resultMap + " bytes");
+            return strictEqual(resultMap.total, 0, 'no collection persisted -> 0 bytes were reported correctly');
+        }).then( function() {
+            // check size of DB
+            return asyncSizeCheck(db);
+        }).then( function(resultMap) {
+            // assertion
+            console.log("...counted " + resultMap + " bytes");
+            return strictEqual(resultMap.total, 0, 'no DB persisted -> 0 bytes were reported correctly');
+        }).then( function() {
+            // clean up
+            console.log("...finally dropping db");
+            return asyncDrop(db, false);
+        }).then( function() {
+            // trigger async QUnit
+            start();
+        }).catch(function (err) {
+            ok(false, err);
+            console.log(JSON.stringify(err));
+        });
+
+    });
+
+    QUnit.asyncTest('Persist.persistedSize() :: DB + collections: even when not re-attached, all persisted collections are reported with their correct size)', function () {
+        // prepare things
+        var dbName = new Date().toJSON();
+        var db = fdb.db(dbName);
+
+        var collNames = ["testColl1", "testColl2", "testColl3"];
+        var colRefs = [];
+        var doc = {_id: 4711};
+
+        // colNames are of same length, so we use the first one for the example calc
+		// also UTF8 only here, so 1 char = 1 byte -> .length property can be used
+        var exampleKey = db._name + "-" + collNames[0];
+        var exampleValue = "json::fdb::[" + JSON.stringify(doc) + "]";
+
+        var exampleMetaKey = db._name + "-" + collNames[0] + "-metaData";
+        var exampleMetaValue = "json::fdb::{}";
+
+        var expectedSize = collNames.length *
+			( (exampleKey + exampleValue).length + (exampleMetaKey + exampleMetaValue).length );
+
+
+        // attach all collections to DB
+        collNames.forEach(function(col) {
+        	colRefs.push(db.collection(col));
+		});
+		
+        Promise.resolve().then(function() {
+        	// insert content for all collections
+        	return Promise.all(colRefs.map( function(colRef) {
+        		return asyncInsert(colRef, doc);
+			}));
+        }).then(function() {
+            // persist all collections
+            return Promise.all(colRefs.map( function(colRef) {
+                return asyncSave(colRef);
+            }));
+        }).then(function() {
+            // drop DB from mem, but not from persistence
+            console.log("...dropping db from memory");
+            return asyncDrop(db, false);
+        }).then(function() {
+            // re-create DB in mem
+            console.log("...recreating db");
+            return fdb.db(dbName);
+        }).then(function(dbNew) {
+            // restore only first collection and
+			// make sure its also empty
+            db = dbNew;
+            var coll1 = db.collection(collNames[0]);
+			return asyncFind(coll1, '');
+        }).then( function(result) {
+			strictEqual(result.length, 0, 'Check that reattached collection is empty');
+            return true;
+        }).then( function() {
+            // check size of DB
+            return asyncSizeCheck(db);
+        }).then( function(resultMap) {
+            // assertion
+            console.log("...counted " + resultMap.totalc + " bytes");
+            return strictEqual(resultMap.total, expectedSize, resultMap.total + ' bytes were reported of all persisted collections, even though only first was attached at runtime');
+        }).then( function() {
+            // clean up
+            console.log("...finally dropping db");
+            return asyncDrop(db, true);
+        }).then( function() {
+            // trigger async QUnit
+            start();
+        }).catch(function (err) {
+            ok(false, err);
+            console.log(JSON.stringify(err));
+        });
+
+    });
+
+    QUnit.asyncTest('Persist.persistedSize() :: collection: compress (well-suited) string when persisting -> persisted size < runtime size', function () {
+        // prepare things
+        var dbName = new Date().toJSON();
+        var db = fdb.db(dbName);
+
+        var collName = "testCollPersistedCompressedSize";
+
+        var bytes = Math.floor((Math.random() * 100000) + 1);
+        var char = "z";
+
+        // phantomjs doesn't know String.repeat(x)...
+		// provide an easy to compress string
+        var content = "";
+        for (var i = 0; i < bytes; i++) {
+            content += char;
+        }
+
+        var doc = {_id: 4711, data: content};
+        var coll = db.collection(collName);
+
+        // add compression step
+        db.persist.addStep(new db.shared.plugins.FdbCompress());
+
+        // calc runtime size
+        // also db- and collection-prefixes count toward expected byte size of storage object
+        // for simplicity's sake, UTF8 names are expected here so .length can be used
+        var _dbPrefix = db._name + "-" + coll._name;
+        // also content-prefix of actual stored data count toward expected size of storage object
+        // shady as of now, but localforage's API doesn't provide getting the "raw storage format wrap" at runtime
+        var _contentWrap = "json::fdb::[]";
+
+        // total bytes to expect in persistence
+        var runtimeSize = _dbPrefix.length + _contentWrap.length
+            + JSON.stringify(doc).length;
+
+        Promise.resolve().then(function() {
+            // insert content into collection
+            return asyncInsert(coll, doc);
+        }).then( function(coll) {
+            // persist collection
+            return asyncSave(coll);
+        }).then( function() {
+            // check size of persisted collection
+            return asyncSizeCheck(coll);
+        }).then( function(resultMap) {
+            // assertion
+            console.log("...counted " + resultMap.total + " bytes");
+            var persistedSize = resultMap.collections[0][1];
+            return notStrictEqual(persistedSize, runtimeSize, persistedSize + ' bytes in persistence vs '
+				+ runtimeSize + ' bytes at runtime. Compression ratio: ' + (1 - Number( (persistedSize/runtimeSize).toFixed(2))) );
+
+        }).then( function() {
+            // clean up
+            console.log("...finally dropping db from persistence layer");
+            return asyncDrop(db, false);
+        }).then( function() {
+            // trigger async QUnit
+            start();
+        }).catch(function (err) {
+            ok(false, err);
+            console.log(JSON.stringify(err));
+        });
 
     });
 

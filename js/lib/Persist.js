@@ -6,6 +6,7 @@ var Shared = require('./Shared'),
 	localforage = require('localforage'),
 	FdbCompress = require('./PersistCompress'),// jshint ignore:line
 	FdbCrypto = require('./PersistCrypto'),// jshint ignore:line
+	Promise = require('lie'),
 	Db,
 	Collection,
 	CollectionDrop,
@@ -490,28 +491,56 @@ Persist.prototype._calcSize = function (string) {
     }
     return iCount;
 };
-
+/**
+ * Argument to the persistedSize callback function
+ * @typedef {Object} persistedSizeCallbackArg
+ * @property {number} total the total size of either the collection or the DB in byte
+ * @property {Array[]} collections per Array item: collection name and size as an Array tupel: collectionName, size
+ */
+/**
+ * Callback for persisted size functions
+ *
+ * @callback persistedSizeCallback
+ * @param {persistedSizeCallbackArg}
+ */
 /**
  * determine byte size of a persisted object,
  * either entire DB or specific collection
  * @param {string|object} target either a string (collection name) or an object (DB)
- * @param {Function} callback method to call when size determination is done - mandatory for getting a result!
+ * @param {persistedSizeCallback} callback method to call when size determination is done - mandatory for obtaining a result!
  */
 Persist.prototype.persistedSize = function (target, callback) {
     var self = this;
 
-    var size = 0;
+    // mapping: {
+	// total: $totalsize
+	// collections: [
+	// 	[collection, bytesize]
+	//   ....
+	//  ]
+	// }
+    var resultMap = {
+        total: 0,
+        collections: []
+    };
 
     /**
 	 * named helper function to map-reduce the total byte size of a persisted object
+	 * and to log each collections individual size
      * @param {String} value
      * @param {String} key
      * @private
      */
     function _mapSizeCb(value, key) {
-    	var total = self._calcSize(value) + self._calcSize(key);
-        // both key and value of the persisted storage obj count toward total size
-        size += total;
+    	// cont only if collection contains content
+    	if (value !== null) {
+            // both key and value of the persisted storage obj count toward total size
+            var atomicTotal = self._calcSize(value) + self._calcSize(key);
+            // make an entry: collection (key) is $total bytes
+            resultMap.collections.push([key, atomicTotal]);
+            // count towards total size only if value != null
+            resultMap.total += atomicTotal;
+        }
     }
 
     switch (this.mode()) {
@@ -526,14 +555,14 @@ Persist.prototype.persistedSize = function (target, callback) {
                 	// utilize localforages built-in Promise functionality (includes shim for IE)
 					// get collection + collection meta data for size determination
                     localforage.getItem(collName).then(function(value) {
-                        _mapSizeCb(value, collName);
+                         _mapSizeCb(value, collName);
                     }).then( function() {
                     	return localforage.getItem(collMetaName);
                     }).then( function(value) {
-                        _mapSizeCb(value, collMetaName);
+                    	_mapSizeCb(value, collMetaName);
                     }).then(function() {
                         // done - report back
-                        callback(null, size);
+                        if (callback) { callback(null, resultMap); }
                     }).catch(function(err) {
                         console.error(JSON.stringify(err));
                         if (callback) { callback(err); }
@@ -541,18 +570,22 @@ Persist.prototype.persistedSize = function (target, callback) {
 
                     break;
 				// DB object was provided
-                case 'object':
+				case 'object':
                     // determine size of DB
                     // by iterating over all key/value pairs
 					// filtering for this DB
+
+					// we want to measure all persisted collections of a DB
+					// independent of whether they're attached to the DB
+					// at runtime via db.collection(name)
                     var dbName = target.name();
                     localforage.iterate(function(value, key) {
-                        if(key.lastIndexOf(dbName, 0) === 0) {
+                        if( (key.lastIndexOf(dbName, 0) === 0) && value !== null) {
                             _mapSizeCb(value, key);
                         }
                     }).then(function() {
                         // done - report back
-                        callback(null, size);
+                        callback(null, resultMap);
                     }).catch(function(err) {
                         console.error(JSON.stringify(err));
                         if (callback) { callback(err); }
@@ -720,7 +753,7 @@ Collection.prototype.save = function (callback) {
 
 /**
  * Determines the byte size of a persisted collection
- * @param {Function} callback The method to call when the size check is complete
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
  */
 Collection.prototype.persistedSize = function (callback) {
     var self = this;
@@ -1039,7 +1072,7 @@ Db.prototype.save = new Overload({
 
 /**
  * Determines the byte size of a persisted DB
- * @param {Function} callback The method to call when the size check is complete
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
  */
 Db.prototype.persistedSize = function(callback) {
     this.persist.persistedSize(this, callback);
