@@ -1040,7 +1040,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
         }).then( function() {
             // clean up
             console.log("...finally dropping db from persistence layer");
-            return asyncDrop(db, false);
+            return asyncDrop(db, true);
         }).then( function() {
             // trigger async QUnit
             start();
