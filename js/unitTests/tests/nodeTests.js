@@ -423,6 +423,54 @@ TB.test('Persist', 'Check persist.auto()', function (finishTest) {
 	});
 });
 
+TB.test('Collection', 'Check aggregation', function (finishTest) {
+	var fdb = new ForerunnerDB(),
+		db = fdb.db('testPersistDb'),
+		coll = db.collection("res");
+	
+	coll.primaryKey("resId");
+	coll.insert({
+		resId: 1,
+		TypeId: "Person",
+		UID: "Bob",
+		Data: {Age: 20, Name:"Bob"}
+	});
+	coll.insert({
+		resId: 2,
+		TypeId: "Person",
+		UID: "Bob",
+		Data: {Age: 25, Name:"Bob"}
+	});
+	coll.insert({
+		resId: 3,
+		TypeId: "Car",
+		UID: "TeslaModelX",
+		Data: {Manufacturer: "Tesla", Owner:"Bob"}
+	});
+	coll.insert({
+		resId: 4,
+		TypeId: "Person",
+		UID: "Bill",
+		Data: {Age: 22, Name:"Bill"}
+	});
+	
+	var tmpObj = {},
+		val;
+	
+	val = coll.sort({resId: -1}, coll.find({
+		"TypeId": "Person"
+	})).filter(function (doc) {
+		return coll._match(doc, {
+			$distinct: {
+				UID: 1
+			}
+		}, {}, 'and', tmpObj);
+	});
+	
+	TB.ok(val.length === 2, 'The return data length is correct');
+	finishTest();
+});
+
 // This works but haven't written any test (strictEquals) stuff for it
 /*TB.test('Joins', 'Join multiple levels', function (callback) {
 	var fdb = new ForerunnerDB(),
