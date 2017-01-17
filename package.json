@@ -33,7 +33,7 @@
     "taffy"
   ],
   "dependencies": {
-    "async": "^2.0.1",
+    "async": "^2.1.2",
     "body-parser": "^1.15.2",
     "colors": "^1.1.2",
     "cors": "^2.8.1",
@@ -50,7 +50,7 @@
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
     "derequire": "^2.0.3",
-    "fs-extra": "^1.0.0",
+    "fs-extra": "^2.0.0",
     "grunt": "^1.0.1",
     "grunt-browserify": "^5.0.0",
     "grunt-cli": "^1.2.0",
@@ -64,7 +64,7 @@
     "stringify": "^5.1.0",
     "testbear": "^1.0.28",
     "tsd-jsdoc": "^1.0.1",
-    "tslint": "^3.15.1",
+    "tslint": "^4.2.0",
     "typescript": "^2.0.9"
   },
   "engines": {
