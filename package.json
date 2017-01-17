@@ -45,7 +45,7 @@
     "rest": "^2.0.0"
   },
   "devDependencies": {
-    "aliasify": "^2.0.0",
+    "aliasify": "^2.1.0",
     "babel-plugin-system-import-transformer": "^2.4.0",
     "browserify-derequire": "^0.9.4",
     "colors": "^1.1.2",
