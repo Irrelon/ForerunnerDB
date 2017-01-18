@@ -471,30 +471,31 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 /**
- * determines the byte size of a String,
- * also taking special chars into account;
- * inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
- * @param {string} string String to get bytes size of
- * @return {number} size in bytes of the input string
+ * Determines the byte size of a String, also taking special chars into account.
+ * Inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
+ * @param {String} string String to get bytes size of
+ * @return {Number} Size in bytes of the input string
  * @private
  */
 Persist.prototype._calcSize = function (string) {
-    var iCount = 0;
-    var i;
-    var stringPrep = String(string || "");
-    var stringLength = stringPrep.length;
-
-    for (i = 0; i < stringLength; i++) {
-        var iPartCount = encodeURI(stringPrep[i])
-            				.split("%").length;
-        iCount += iPartCount == 1 ? 1 : iPartCount - 1;
-    }
-    return iCount;
+	var iCount = 0,
+		stringPrep = String(string || ""),
+		stringLength = stringPrep.length,
+		iPartCount,
+		i;
+	
+	for (i = 0; i < stringLength; i++) {
+		iPartCount = encodeURI(stringPrep[i]).split("%").length;
+		iCount += iPartCount === 1 ? 1 : iPartCount - 1;
+	}
+	
+	return iCount;
 };
+
 /**
  * Argument to the persistedSize callback function
  * @typedef {Object} persistedSizeCallbackArg
- * @property {number} total the total size of either the collection or the DB in byte
+ * @property {number} total The total size of either the collection or the DB in byte
  * @property {Array[]} collections per Array item: collection name and size as an Array tupel: collectionName, size
  */
 /**
@@ -510,98 +511,109 @@ Persist.prototype._calcSize = function (string) {
  * @param {persistedSizeCallback} callback method to call when size determination is done - mandatory for obtaining a result!
  */
 Persist.prototype.persistedSize = function (target, callback) {
-    var self = this;
-
-    // mapping: {
+	var self = this,
+		resultMap;
+	
+	// mapping: {
 	// total: $totalsize
 	// collections: [
 	// 	[collection, bytesize]
 	//   ....
 	//  ]
 	// }
-    var resultMap = {
-        total: 0,
-        collections: []
-    };
-
-    /**
+	resultMap = {
+		total: 0,
+		collections: []
+	};
+	
+	/**
 	 * named helper function to map-reduce the total byte size of a persisted object
 	 * and to log each collections individual size
-     * @param {String} value
-     * @param {String} key
-     * @private
-     */
-    function _mapSizeCb(value, key) {
-    	// cont only if collection contains content
-    	if (value !== null) {
-            // both key and value of the persisted storage obj count toward total size
-            var atomicTotal = self._calcSize(value) + self._calcSize(key);
-            // make an entry: collection (key) is $total bytes
-            resultMap.collections.push([key, atomicTotal]);
-            // count towards total size only if value != null
-            resultMap.total += atomicTotal;
-        }
-    }
-
-    switch (this.mode()) {
-        case 'localforage':
-            // in general: don't do any decoding (enc, compression),
-            // b/c only the "raw" size of the storage object is of interest
-            switch ((typeof target).toLowerCase()) {
-            	// collection name was provided
-                case 'string':
-                	var collName = target;
-                	var collMetaName = target+"-metaData";
-                	// utilize localforages built-in Promise functionality (includes shim for IE)
-					// get collection + collection meta data for size determination
-                    localforage.getItem(collName).then(function(value) {
-                         _mapSizeCb(value, collName);
-                    }).then( function() {
-                    	return localforage.getItem(collMetaName);
-                    }).then( function(value) {
-                    	_mapSizeCb(value, collMetaName);
-                    }).then(function() {
-                        // done - report back
-                        if (callback) { callback(null, resultMap); }
-                    }).catch(function(err) {
-                        console.error(JSON.stringify(err));
-                        if (callback) { callback(err); }
-                    });
-
-                    break;
-				// DB object was provided
+	 * @param {String} value
+	 * @param {String} key
+	 * @private
+	 */
+	function _mapSizeCb (value, key) {
+		// cont only if collection contains content
+		if (value !== null) {
+			// Both key and value of the persisted storage obj count toward total size
+			var atomicTotal = self._calcSize(value) + self._calcSize(key);
+			
+			// Make an entry: collection (key) is $total bytes
+			resultMap.collections.push([key, atomicTotal]);
+			
+			// Count towards total size only if value != null
+			resultMap.total += atomicTotal;
+		}
+	}
+	
+	switch (this.mode()) {
+		case 'localforage':
+			// In general: don't do any decoding (enc, compression),
+			// b/c only the "raw" size of the storage object is of interest
+			switch ((typeof target).toLowerCase()) {
+				case 'string':
+					// Collection name was provided
+					// Utilize localforages built-in Promise functionality (includes
+					// shim for IE) get collection + collection meta data for size
+					// determination
+					localforage.getItem(target).then(function (value) {
+						_mapSizeCb(value, target);
+					}).then(function () {
+						return localforage.getItem(target + "-metaData");
+					}).then(function (value) {
+						_mapSizeCb(value, target + "-metaData");
+					}).then(function () {
+						// done - report back
+						if (callback) {
+							callback(null, resultMap);
+						}
+					}).catch(function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					
+					break;
+				
 				case 'object':
-                    // determine size of DB
-                    // by iterating over all key/value pairs
+					// DB object was provided
+					// determine size of DB
+					// by iterating over all key/value pairs
 					// filtering for this DB
-
+					
 					// we want to measure all persisted collections of a DB
 					// independent of whether they're attached to the DB
 					// at runtime via db.collection(name)
-                    var dbName = target.name();
-                    localforage.iterate(function(value, key) {
-                        if( (key.lastIndexOf(dbName, 0) === 0) && value !== null) {
-                            _mapSizeCb(value, key);
-                        }
-                    }).then(function() {
-                        // done - report back
-                        callback(null, resultMap);
-                    }).catch(function(err) {
-                        console.error(JSON.stringify(err));
-                        if (callback) { callback(err); }
-                    });
-                    break;
-
-                default:
-                    if (callback) { callback("couldn't determine target for size calculation - " +
-						"must be either a collection name (string) or a db reference (object)"); }
-            }
-            break;
-
-        default:
-            if (callback) { callback('No data handler or unrecognised data type.');	}
-            break;
-    }
+					localforage.iterate(function (value, key) {
+						if ((key.lastIndexOf(target.name(), 0) === 0) && value !== null) {
+							_mapSizeCb(value, key);
+						}
+					}).then(function () {
+						// done - report back
+						callback(null, resultMap);
+					}).catch(function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					break;
+				
+				default:
+					if (callback) {
+						callback("Couldn't determine target for size calculation - must be either a collection name (string) or a db reference (object)");
+					}
+			}
+			break;
+		
+		default:
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
+			}
+			break;
+	}
 };
 
 // Extend the Collection prototype with persist methods
