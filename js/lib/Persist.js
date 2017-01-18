@@ -6,6 +6,7 @@ var Shared = require('./Shared'),
 	localforage = require('localforage'),
 	FdbCompress = require('./PersistCompress'),// jshint ignore:line
 	FdbCrypto = require('./PersistCrypto'),// jshint ignore:line
+	Promise = require('lie'),
 	Db,
 	Collection,
 	CollectionDrop,
@@ -229,7 +230,7 @@ Persist.prototype.addStep = new Overload({
 	'object': function (obj) {
 		return this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
 	},
-	
+
 	/**
 	 * Adds an encode/decode step to the persistent storage system so
 	 * that you can add custom functionality.
@@ -247,7 +248,7 @@ Persist.prototype.addStep = new Overload({
 	'function, function': function (encode, decode) {
 		return this.$main.call(this, encode, decode, 0);
 	},
-	
+
 	/**
 	 * Adds an encode/decode step to the persistent storage system so
 	 * that you can add custom functionality.
@@ -400,14 +401,14 @@ Persist.prototype.save = function (key, data, callback) {
 				if (err) {
 					return callback(err);
 				}
-				
+
 				localforage.setItem(key, data, function (err) {
 					if (callback) {
 						if (err) {
 							callback(err);
 							return;
 						}
-						
+
 						callback(false, data, tableStats);
 					}
 				});
@@ -435,10 +436,10 @@ Persist.prototype.load = function (key, callback) {
 			localforage.getItem(key, function (err, val) {
 				if (err) {
 					if (callback) { callback(err); }
-					
+
 					return;
 				}
-				
+
 				self.decode(val, callback);
 			});
 			break;
@@ -467,6 +468,140 @@ Persist.prototype.drop = function (key, callback) {
 			break;
 	}
 
+};
+
+/**
+ * determines the byte size of a String,
+ * also taking special chars into account;
+ * inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
+ * @param {string} string String to get bytes size of
+ * @return {number} size in bytes of the input string
+ * @private
+ */
+Persist.prototype._calcSize = function (string) {
+    var iCount = 0;
+    var i;
+    var stringPrep = String(string || "");
+    var stringLength = stringPrep.length;
+
+    for (i = 0; i < stringLength; i++) {
+        var iPartCount = encodeURI(stringPrep[i])
+            				.split("%").length;
+        iCount += iPartCount == 1 ? 1 : iPartCount - 1;
+    }
+    return iCount;
+};
+/**
+ * Argument to the persistedSize callback function
+ * @typedef {Object} persistedSizeCallbackArg
+ * @property {number} total the total size of either the collection or the DB in byte
+ * @property {Array[]} collections per Array item: collection name and size as an Array tupel: collectionName, size
+ */
+/**
+ * Callback for persisted size functions
+ *
+ * @callback persistedSizeCallback
+ * @param {persistedSizeCallbackArg}
+ */
+/**
+ * determine byte size of a persisted object,
+ * either entire DB or specific collection
+ * @param {string|object} target either a string (collection name) or an object (DB)
+ * @param {persistedSizeCallback} callback method to call when size determination is done - mandatory for obtaining a result!
+ */
+Persist.prototype.persistedSize = function (target, callback) {
+    var self = this;
+
+    // mapping: {
+	// total: $totalsize
+	// collections: [
+	// 	[collection, bytesize]
+	//   ....
+	//  ]
+	// }
+    var resultMap = {
+        total: 0,
+        collections: []
+    };
+
+    /**
+	 * named helper function to map-reduce the total byte size of a persisted object
+	 * and to log each collections individual size
+     * @param {String} value
+     * @param {String} key
+     * @private
+     */
+    function _mapSizeCb(value, key) {
+    	// cont only if collection contains content
+    	if (value !== null) {
+            // both key and value of the persisted storage obj count toward total size
+            var atomicTotal = self._calcSize(value) + self._calcSize(key);
+            // make an entry: collection (key) is $total bytes
+            resultMap.collections.push([key, atomicTotal]);
+            // count towards total size only if value != null
+            resultMap.total += atomicTotal;
+        }
+    }
+
+    switch (this.mode()) {
+        case 'localforage':
+            // in general: don't do any decoding (enc, compression),
+            // b/c only the "raw" size of the storage object is of interest
+            switch ((typeof target).toLowerCase()) {
+            	// collection name was provided
+                case 'string':
+                	var collName = target;
+                	var collMetaName = target+"-metaData";
+                	// utilize localforages built-in Promise functionality (includes shim for IE)
+					// get collection + collection meta data for size determination
+                    localforage.getItem(collName).then(function(value) {
+                         _mapSizeCb(value, collName);
+                    }).then( function() {
+                    	return localforage.getItem(collMetaName);
+                    }).then( function(value) {
+                    	_mapSizeCb(value, collMetaName);
+                    }).then(function() {
+                        // done - report back
+                        if (callback) { callback(null, resultMap); }
+                    }).catch(function(err) {
+                        console.error(JSON.stringify(err));
+                        if (callback) { callback(err); }
+                    });
+
+                    break;
+				// DB object was provided
+				case 'object':
+                    // determine size of DB
+                    // by iterating over all key/value pairs
+					// filtering for this DB
+
+					// we want to measure all persisted collections of a DB
+					// independent of whether they're attached to the DB
+					// at runtime via db.collection(name)
+                    var dbName = target.name();
+                    localforage.iterate(function(value, key) {
+                        if( (key.lastIndexOf(dbName, 0) === 0) && value !== null) {
+                            _mapSizeCb(value, key);
+                        }
+                    }).then(function() {
+                        // done - report back
+                        callback(null, resultMap);
+                    }).catch(function(err) {
+                        console.error(JSON.stringify(err));
+                        if (callback) { callback(err); }
+                    });
+                    break;
+
+                default:
+                    if (callback) { callback("couldn't determine target for size calculation - " +
+						"must be either a collection name (string) or a db reference (object)"); }
+            }
+            break;
+
+        default:
+            if (callback) { callback('No data handler or unrecognised data type.');	}
+            break;
+    }
 };
 
 // Extend the Collection prototype with persist methods
@@ -573,7 +708,7 @@ Collection.prototype.save = function (callback) {
 						if (callback) { callback(err); }
 						return;
 					}
-					
+
 					self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
 						self.deferEmit('save', tableStats, metaStats, {
 							tableData: tableData,
@@ -581,7 +716,7 @@ Collection.prototype.save = function (callback) {
 							tableDataName: self._db._name + '-' + self._name,
 							metaDataName: self._db._name + '-' + self._name + '-metaData'
 						});
-						
+
 						if (callback) {
 							// Defer till the next VM tick to give the VM some breathing room
 							// around the persistent data getting into storage.
@@ -617,6 +752,27 @@ Collection.prototype.save = function (callback) {
 };
 
 /**
+ * Determines the byte size of a persisted collection
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
+ */
+Collection.prototype.persistedSize = function (callback) {
+    var self = this;
+
+    if (self._name) {
+        if (self._db) {
+        	self._db.persist.persistedSize(self._db._name + '-' + self._name, callback);
+        } else {
+            if (callback) {
+                callback('Cannot determine persisted size of a collection that is not attached to a database!');
+            }
+        }
+    } else {
+        if (callback) { callback('Cannot determine persisted size of a collection with no assigned name!'); }
+    }
+
+};
+
+/**
  * Loads an entire collection's data from persistent storage.
  * @param {Function=} callback The method to call when the load function
  * has completed.
@@ -641,7 +797,7 @@ Collection.prototype.load = function (callback) {
 										self.metaData(data);
 									}
 								}
-								
+
 								self.deferEmit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
@@ -690,7 +846,7 @@ Collection.prototype.saveCustom = function (callback) {
 									store: data,
 									tableStats: tableStats
 								};
-								
+
 								callback(false, myData);
 							} else {
 								callback(err);
@@ -787,7 +943,7 @@ Db.prototype.load = new Overload({
 	'function': function (callback) {
 		this.$main.call(this, undefined, callback);
 	},
-	
+
 	/**
 	 * Loads an entire database's data from persistent storage.
 	 * @name load
@@ -808,11 +964,11 @@ Db.prototype.load = new Overload({
 			keyCount,
 			loadCallback,
 			index;
-		
+
 		obj = this._collection;
 		keys = Object.keys(obj);
 		keyCount = keys.length;
-		
+
 		if (keyCount <= 0) {
 			return callback(false);
 		}
@@ -854,7 +1010,7 @@ Db.prototype.save = new Overload({
 	'function': function (callback) {
 		this.$main.call(this, {}, callback);
 	},
-	
+
 	/**
 	 * Saves an entire database's data to persistent storage.
 	 * @name save
@@ -875,7 +1031,7 @@ Db.prototype.save = new Overload({
 			keyCount,
 			saveCallback,
 			index;
-		
+
 		obj = this._collection;
 		keys = Object.keys(obj);
 		keyCount = keys.length;
@@ -883,11 +1039,11 @@ Db.prototype.save = new Overload({
 		if (keyCount <= 0) {
 			return callback(false);
 		}
-		
+
 		saveCallback = function (err) {
 			if (!err) {
 				keyCount--;
-				
+
 				if (keyCount <= 0) {
 					self.deferEmit('save');
 					if (callback) {
@@ -900,7 +1056,7 @@ Db.prototype.save = new Overload({
 				}
 			}
 		};
-		
+
 		for (index in obj) {
 			if (obj.hasOwnProperty(index)) {
 				// Call the collection save method
@@ -913,6 +1069,14 @@ Db.prototype.save = new Overload({
 		}
 	}
 });
+
+/**
+ * Determines the byte size of a persisted DB
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
+ */
+Db.prototype.persistedSize = function(callback) {
+    this.persist.persistedSize(this, callback);
+};
 
 Shared.finishModule('Persist');
 module.exports = Persist;
