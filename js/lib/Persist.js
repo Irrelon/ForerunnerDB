@@ -6,7 +6,6 @@ var Shared = require('./Shared'),
 	localforage = require('localforage'),
 	FdbCompress = require('./PersistCompress'),// jshint ignore:line
 	FdbCrypto = require('./PersistCrypto'),// jshint ignore:line
-	Promise = require('lie'),
 	Db,
 	Collection,
 	CollectionDrop,
