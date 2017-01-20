@@ -14753,7 +14753,6 @@ var Shared = _dereq_('./Shared'),
 	localforage = _dereq_('localforage'),
 	FdbCompress = _dereq_('./PersistCompress'),// jshint ignore:line
 	FdbCrypto = _dereq_('./PersistCrypto'),// jshint ignore:line
-	Promise = _dereq_('lie'),
 	Db,
 	Collection,
 	CollectionDrop,
@@ -15218,30 +15217,31 @@ Persist.prototype.drop = function (key, callback) {
 };
 
 /**
- * determines the byte size of a String,
- * also taking special chars into account;
- * inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
- * @param {string} string String to get bytes size of
- * @return {number} size in bytes of the input string
+ * Determines the byte size of a String, also taking special chars into account.
+ * Inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
+ * @param {String} string String to get bytes size of
+ * @return {Number} Size in bytes of the input string
  * @private
  */
 Persist.prototype._calcSize = function (string) {
-    var iCount = 0;
-    var i;
-    var stringPrep = String(string || "");
-    var stringLength = stringPrep.length;
-
-    for (i = 0; i < stringLength; i++) {
-        var iPartCount = encodeURI(stringPrep[i])
-            				.split("%").length;
-        iCount += iPartCount == 1 ? 1 : iPartCount - 1;
-    }
-    return iCount;
+	var iCount = 0,
+		stringPrep = String(string || ""),
+		stringLength = stringPrep.length,
+		iPartCount,
+		i;
+	
+	for (i = 0; i < stringLength; i++) {
+		iPartCount = encodeURI(stringPrep[i]).split("%").length;
+		iCount += iPartCount === 1 ? 1 : iPartCount - 1;
+	}
+	
+	return iCount;
 };
+
 /**
  * Argument to the persistedSize callback function
  * @typedef {Object} persistedSizeCallbackArg
- * @property {number} total the total size of either the collection or the DB in byte
+ * @property {number} total The total size of either the collection or the DB in byte
  * @property {Array[]} collections per Array item: collection name and size as an Array tupel: collectionName, size
  */
 /**
@@ -15257,98 +15257,109 @@ Persist.prototype._calcSize = function (string) {
  * @param {persistedSizeCallback} callback method to call when size determination is done - mandatory for obtaining a result!
  */
 Persist.prototype.persistedSize = function (target, callback) {
-    var self = this;
-
-    // mapping: {
+	var self = this,
+		resultMap;
+	
+	// mapping: {
 	// total: $totalsize
 	// collections: [
 	// 	[collection, bytesize]
 	//   ....
 	//  ]
 	// }
-    var resultMap = {
-        total: 0,
-        collections: []
-    };
-
-    /**
+	resultMap = {
+		total: 0,
+		collections: []
+	};
+	
+	/**
 	 * named helper function to map-reduce the total byte size of a persisted object
 	 * and to log each collections individual size
-     * @param {String} value
-     * @param {String} key
-     * @private
-     */
-    function _mapSizeCb(value, key) {
-    	// cont only if collection contains content
-    	if (value !== null) {
-            // both key and value of the persisted storage obj count toward total size
-            var atomicTotal = self._calcSize(value) + self._calcSize(key);
-            // make an entry: collection (key) is $total bytes
-            resultMap.collections.push([key, atomicTotal]);
-            // count towards total size only if value != null
-            resultMap.total += atomicTotal;
-        }
-    }
-
-    switch (this.mode()) {
-        case 'localforage':
-            // in general: don't do any decoding (enc, compression),
-            // b/c only the "raw" size of the storage object is of interest
-            switch ((typeof target).toLowerCase()) {
-            	// collection name was provided
-                case 'string':
-                	var collName = target;
-                	var collMetaName = target+"-metaData";
-                	// utilize localforages built-in Promise functionality (includes shim for IE)
-					// get collection + collection meta data for size determination
-                    localforage.getItem(collName).then(function(value) {
-                         _mapSizeCb(value, collName);
-                    }).then( function() {
-                    	return localforage.getItem(collMetaName);
-                    }).then( function(value) {
-                    	_mapSizeCb(value, collMetaName);
-                    }).then(function() {
-                        // done - report back
-                        if (callback) { callback(null, resultMap); }
-                    })['catch'](function(err) {
-                        console.error(JSON.stringify(err));
-                        if (callback) { callback(err); }
-                    });
-
-                    break;
-				// DB object was provided
+	 * @param {String} value
+	 * @param {String} key
+	 * @private
+	 */
+	function _mapSizeCb (value, key) {
+		// cont only if collection contains content
+		if (value !== null) {
+			// Both key and value of the persisted storage obj count toward total size
+			var atomicTotal = self._calcSize(value) + self._calcSize(key);
+			
+			// Make an entry: collection (key) is $total bytes
+			resultMap.collections.push([key, atomicTotal]);
+			
+			// Count towards total size only if value != null
+			resultMap.total += atomicTotal;
+		}
+	}
+	
+	switch (this.mode()) {
+		case 'localforage':
+			// In general: don't do any decoding (enc, compression),
+			// b/c only the "raw" size of the storage object is of interest
+			switch ((typeof target).toLowerCase()) {
+				case 'string':
+					// Collection name was provided
+					// Utilize localforages built-in Promise functionality (includes
+					// shim for IE) get collection + collection meta data for size
+					// determination
+					localforage.getItem(target).then(function (value) {
+						_mapSizeCb(value, target);
+					}).then(function () {
+						return localforage.getItem(target + "-metaData");
+					}).then(function (value) {
+						_mapSizeCb(value, target + "-metaData");
+					}).then(function () {
+						// done - report back
+						if (callback) {
+							callback(null, resultMap);
+						}
+					})['catch'](function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					
+					break;
+				
 				case 'object':
-                    // determine size of DB
-                    // by iterating over all key/value pairs
+					// DB object was provided
+					// determine size of DB
+					// by iterating over all key/value pairs
 					// filtering for this DB
-
+					
 					// we want to measure all persisted collections of a DB
 					// independent of whether they're attached to the DB
 					// at runtime via db.collection(name)
-                    var dbName = target.name();
-                    localforage.iterate(function(value, key) {
-                        if( (key.lastIndexOf(dbName, 0) === 0) && value !== null) {
-                            _mapSizeCb(value, key);
-                        }
-                    }).then(function() {
-                        // done - report back
-                        callback(null, resultMap);
-                    })['catch'](function(err) {
-                        console.error(JSON.stringify(err));
-                        if (callback) { callback(err); }
-                    });
-                    break;
-
-                default:
-                    if (callback) { callback("couldn't determine target for size calculation - " +
-						"must be either a collection name (string) or a db reference (object)"); }
-            }
-            break;
-
-        default:
-            if (callback) { callback('No data handler or unrecognised data type.');	}
-            break;
-    }
+					localforage.iterate(function (value, key) {
+						if ((key.lastIndexOf(target.name(), 0) === 0) && value !== null) {
+							_mapSizeCb(value, key);
+						}
+					}).then(function () {
+						// done - report back
+						callback(null, resultMap);
+					})['catch'](function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					break;
+				
+				default:
+					if (callback) {
+						callback("Couldn't determine target for size calculation - must be either a collection name (string) or a db reference (object)");
+					}
+			}
+			break;
+		
+		default:
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
+			}
+			break;
+	}
 };
 
 // Extend the Collection prototype with persist methods
@@ -15827,7 +15838,7 @@ Db.prototype.persistedSize = function(callback) {
 
 Shared.finishModule('Persist');
 module.exports = Persist;
-},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":43,"lie":79,"localforage":80}],36:[function(_dereq_,module,exports){
+},{"./Collection":6,"./CollectionGroup":7,"./PersistCompress":36,"./PersistCrypto":37,"./Shared":40,"async":43,"localforage":79}],36:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -15908,7 +15919,7 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 Shared.plugins.FdbCompress = Plugin;
 
 module.exports = Plugin;
-},{"./Shared":40,"pako":81}],37:[function(_dereq_,module,exports){
+},{"./Shared":40,"pako":80}],37:[function(_dereq_,module,exports){
 "use strict";
 
 var Shared = _dereq_('./Shared'),
@@ -18167,6 +18178,26 @@ module.exports = View;
 }(this, (function (exports) { 'use strict';
 
 /**
+ * This method returns the first argument it receives.
+ *
+ * @static
+ * @since 0.1.0
+ * @memberOf _
+ * @category Util
+ * @param {*} value Any value.
+ * @returns {*} Returns `value`.
+ * @example
+ *
+ * var object = { 'a': 1 };
+ *
+ * console.log(_.identity(object) === object);
+ * // => true
+ */
+function identity(value) {
+  return value;
+}
+
+/**
  * A faster alternative to `Function#apply`, this function invokes `func`
  * with the `this` binding of `thisArg` and the arguments of `args`.
  *
@@ -18198,7 +18229,7 @@ var nativeMax = Math.max;
  * @param {Function} transform The rest array transform.
  * @returns {Function} Returns the new function.
  */
-function overRest$1(func, start, transform) {
+function overRest(func, start, transform) {
   start = nativeMax(start === undefined ? (func.length - 1) : start, 0);
   return function() {
     var args = arguments,
@@ -18220,152 +18251,28 @@ function overRest$1(func, start, transform) {
 }
 
 /**
- * This method returns the first argument it receives.
+ * Creates a function that returns `value`.
  *
  * @static
- * @since 0.1.0
  * @memberOf _
+ * @since 2.4.0
  * @category Util
- * @param {*} value Any value.
- * @returns {*} Returns `value`.
+ * @param {*} value The value to return from the new function.
+ * @returns {Function} Returns the new constant function.
  * @example
  *
- * var object = { 'a': 1 };
+ * var objects = _.times(2, _.constant({ 'a': 1 }));
  *
- * console.log(_.identity(object) === object);
+ * console.log(objects);
+ * // => [{ 'a': 1 }, { 'a': 1 }]
+ *
+ * console.log(objects[0] === objects[1]);
  * // => true
  */
-function identity(value) {
-  return value;
-}
-
-// Lodash rest function without function.toString()
-// remappings
-function rest(func, start) {
-    return overRest$1(func, start, identity);
-}
-
-var initialParams = function (fn) {
-    return rest(function (args /*..., callback*/) {
-        var callback = args.pop();
-        fn.call(this, args, callback);
-    });
-};
-
-function applyEach$1(eachfn) {
-    return rest(function (fns, args) {
-        var go = initialParams(function (args, callback) {
-            var that = this;
-            return eachfn(fns, function (fn, cb) {
-                fn.apply(that, args.concat([cb]));
-            }, callback);
-        });
-        if (args.length) {
-            return go.apply(this, args);
-        } else {
-            return go;
-        }
-    });
-}
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-
-/** Used as a reference to the global object. */
-var root = freeGlobal || freeSelf || Function('return this')();
-
-/** Built-in value references. */
-var Symbol$1 = root.Symbol;
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-
-/** Used to check objects for own properties. */
-var hasOwnProperty = objectProto.hasOwnProperty;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString = objectProto.toString;
-
-/** Built-in value references. */
-var symToStringTag$1 = Symbol$1 ? Symbol$1.toStringTag : undefined;
-
-/**
- * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the raw `toStringTag`.
- */
-function getRawTag(value) {
-  var isOwn = hasOwnProperty.call(value, symToStringTag$1),
-      tag = value[symToStringTag$1];
-
-  try {
-    value[symToStringTag$1] = undefined;
-    var unmasked = true;
-  } catch (e) {}
-
-  var result = nativeObjectToString.call(value);
-  if (unmasked) {
-    if (isOwn) {
-      value[symToStringTag$1] = tag;
-    } else {
-      delete value[symToStringTag$1];
-    }
-  }
-  return result;
-}
-
-/** Used for built-in method references. */
-var objectProto$1 = Object.prototype;
-
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-var nativeObjectToString$1 = objectProto$1.toString;
-
-/**
- * Converts `value` to a string using `Object.prototype.toString`.
- *
- * @private
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- */
-function objectToString(value) {
-  return nativeObjectToString$1.call(value);
-}
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]';
-var undefinedTag = '[object Undefined]';
-
-/** Built-in value references. */
-var symToStringTag = Symbol$1 ? Symbol$1.toStringTag : undefined;
-
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the `toStringTag`.
- */
-function baseGetTag(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-  value = Object(value);
-  return (symToStringTag && symToStringTag in value)
-    ? getRawTag(value)
-    : objectToString(value);
+function constant(value) {
+  return function() {
+    return value;
+  };
 }
 
 /**
@@ -18399,10 +18306,19 @@ function isObject(value) {
 }
 
 /** `Object#toString` result references. */
-var asyncTag = '[object AsyncFunction]';
 var funcTag = '[object Function]';
 var genTag = '[object GeneratorFunction]';
 var proxyTag = '[object Proxy]';
+
+/** Used for built-in method references. */
+var objectProto$1 = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString = objectProto$1.toString;
 
 /**
  * Checks if `value` is classified as a `Function` object.
@@ -18422,13 +18338,236 @@ var proxyTag = '[object Proxy]';
  * // => false
  */
 function isFunction(value) {
-  if (!isObject(value)) {
+  // The use of `Object#toString` avoids issues with the `typeof` operator
+  // in Safari 9 which returns 'object' for typed array and other constructors.
+  var tag = isObject(value) ? objectToString.call(value) : '';
+  return tag == funcTag || tag == genTag || tag == proxyTag;
+}
+
+/** Detect free variable `global` from Node.js. */
+var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
+
+/** Detect free variable `self`. */
+var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
+
+/** Used as a reference to the global object. */
+var root = freeGlobal || freeSelf || Function('return this')();
+
+/** Used to detect overreaching core-js shims. */
+var coreJsData = root['__core-js_shared__'];
+
+/** Used to detect methods masquerading as native. */
+var maskSrcKey = (function() {
+  var uid = /[^.]+$/.exec(coreJsData && coreJsData.keys && coreJsData.keys.IE_PROTO || '');
+  return uid ? ('Symbol(src)_1.' + uid) : '';
+}());
+
+/**
+ * Checks if `func` has its source masked.
+ *
+ * @private
+ * @param {Function} func The function to check.
+ * @returns {boolean} Returns `true` if `func` is masked, else `false`.
+ */
+function isMasked(func) {
+  return !!maskSrcKey && (maskSrcKey in func);
+}
+
+/** Used for built-in method references. */
+var funcProto$1 = Function.prototype;
+
+/** Used to resolve the decompiled source of functions. */
+var funcToString$1 = funcProto$1.toString;
+
+/**
+ * Converts `func` to its source code.
+ *
+ * @private
+ * @param {Function} func The function to process.
+ * @returns {string} Returns the source code.
+ */
+function toSource(func) {
+  if (func != null) {
+    try {
+      return funcToString$1.call(func);
+    } catch (e) {}
+    try {
+      return (func + '');
+    } catch (e) {}
+  }
+  return '';
+}
+
+/**
+ * Used to match `RegExp`
+ * [syntax characters](http://ecma-international.org/ecma-262/7.0/#sec-patterns).
+ */
+var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+
+/** Used to detect host constructors (Safari). */
+var reIsHostCtor = /^\[object .+?Constructor\]$/;
+
+/** Used for built-in method references. */
+var funcProto = Function.prototype;
+var objectProto = Object.prototype;
+
+/** Used to resolve the decompiled source of functions. */
+var funcToString = funcProto.toString;
+
+/** Used to check objects for own properties. */
+var hasOwnProperty = objectProto.hasOwnProperty;
+
+/** Used to detect if a method is native. */
+var reIsNative = RegExp('^' +
+  funcToString.call(hasOwnProperty).replace(reRegExpChar, '\\$&')
+  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+);
+
+/**
+ * The base implementation of `_.isNative` without bad shim checks.
+ *
+ * @private
+ * @param {*} value The value to check.
+ * @returns {boolean} Returns `true` if `value` is a native function,
+ *  else `false`.
+ */
+function baseIsNative(value) {
+  if (!isObject(value) || isMasked(value)) {
     return false;
   }
-  // The use of `Object#toString` avoids issues with the `typeof` operator
-  // in Safari 9 which returns 'object' for typed arrays and other constructors.
-  var tag = baseGetTag(value);
-  return tag == funcTag || tag == genTag || tag == asyncTag || tag == proxyTag;
+  var pattern = isFunction(value) ? reIsNative : reIsHostCtor;
+  return pattern.test(toSource(value));
+}
+
+/**
+ * Gets the value at `key` of `object`.
+ *
+ * @private
+ * @param {Object} [object] The object to query.
+ * @param {string} key The key of the property to get.
+ * @returns {*} Returns the property value.
+ */
+function getValue(object, key) {
+  return object == null ? undefined : object[key];
+}
+
+/**
+ * Gets the native function at `key` of `object`.
+ *
+ * @private
+ * @param {Object} object The object to query.
+ * @param {string} key The key of the method to get.
+ * @returns {*} Returns the function if it's native, else `undefined`.
+ */
+function getNative(object, key) {
+  var value = getValue(object, key);
+  return baseIsNative(value) ? value : undefined;
+}
+
+var defineProperty = (function() {
+  try {
+    var func = getNative(Object, 'defineProperty');
+    func({}, '', {});
+    return func;
+  } catch (e) {}
+}());
+
+/**
+ * The base implementation of `setToString` without support for hot loop shorting.
+ *
+ * @private
+ * @param {Function} func The function to modify.
+ * @param {Function} string The `toString` result.
+ * @returns {Function} Returns `func`.
+ */
+var baseSetToString = !defineProperty ? identity : function(func, string) {
+  return defineProperty(func, 'toString', {
+    'configurable': true,
+    'enumerable': false,
+    'value': constant(string),
+    'writable': true
+  });
+};
+
+/** Used to detect hot functions by number of calls within a span of milliseconds. */
+var HOT_COUNT = 500;
+var HOT_SPAN = 16;
+
+/* Built-in method references for those with the same name as other `lodash` methods. */
+var nativeNow = Date.now;
+
+/**
+ * Creates a function that'll short out and invoke `identity` instead
+ * of `func` when it's called `HOT_COUNT` or more times in `HOT_SPAN`
+ * milliseconds.
+ *
+ * @private
+ * @param {Function} func The function to restrict.
+ * @returns {Function} Returns the new shortable function.
+ */
+function shortOut(func) {
+  var count = 0,
+      lastCalled = 0;
+
+  return function() {
+    var stamp = nativeNow(),
+        remaining = HOT_SPAN - (stamp - lastCalled);
+
+    lastCalled = stamp;
+    if (remaining > 0) {
+      if (++count >= HOT_COUNT) {
+        return arguments[0];
+      }
+    } else {
+      count = 0;
+    }
+    return func.apply(undefined, arguments);
+  };
+}
+
+/**
+ * Sets the `toString` method of `func` to return `string`.
+ *
+ * @private
+ * @param {Function} func The function to modify.
+ * @param {Function} string The `toString` result.
+ * @returns {Function} Returns `func`.
+ */
+var setToString = shortOut(baseSetToString);
+
+/**
+ * The base implementation of `_.rest` which doesn't validate or coerce arguments.
+ *
+ * @private
+ * @param {Function} func The function to apply a rest parameter to.
+ * @param {number} [start=func.length-1] The start position of the rest parameter.
+ * @returns {Function} Returns the new function.
+ */
+function baseRest$1(func, start) {
+  return setToString(overRest(func, start, identity), func + '');
+}
+
+var initialParams = function (fn) {
+    return baseRest$1(function (args /*..., callback*/) {
+        var callback = args.pop();
+        fn.call(this, args, callback);
+    });
+};
+
+function applyEach$1(eachfn) {
+    return baseRest$1(function (fns, args) {
+        var go = initialParams(function (args, callback) {
+            var that = this;
+            return eachfn(fns, function (fn, cb) {
+                fn.apply(that, args.concat([cb]));
+            }, callback);
+        });
+        if (args.length) {
+            return go.apply(this, args);
+        } else {
+            return go;
+        }
+    });
 }
 
 /** Used as references for various `Number` constants. */
@@ -18575,6 +18714,16 @@ function isObjectLike(value) {
 /** `Object#toString` result references. */
 var argsTag = '[object Arguments]';
 
+/** Used for built-in method references. */
+var objectProto$4 = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString$1 = objectProto$4.toString;
+
 /**
  * The base implementation of `_.isArguments`.
  *
@@ -18583,7 +18732,7 @@ var argsTag = '[object Arguments]';
  * @returns {boolean} Returns `true` if `value` is an `arguments` object,
  */
 function baseIsArguments(value) {
-  return isObjectLike(value) && baseGetTag(value) == argsTag;
+  return isObjectLike(value) && objectToString$1.call(value) == argsTag;
 }
 
 /** Used for built-in method references. */
@@ -18758,6 +18907,16 @@ typedArrayTags[objectTag] = typedArrayTags[regexpTag] =
 typedArrayTags[setTag] = typedArrayTags[stringTag] =
 typedArrayTags[weakMapTag] = false;
 
+/** Used for built-in method references. */
+var objectProto$5 = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString$2 = objectProto$5.toString;
+
 /**
  * The base implementation of `_.isTypedArray` without Node.js optimizations.
  *
@@ -18767,7 +18926,7 @@ typedArrayTags[weakMapTag] = false;
  */
 function baseIsTypedArray(value) {
   return isObjectLike(value) &&
-    isLength(value.length) && !!typedArrayTags[baseGetTag(value)];
+    isLength(value.length) && !!typedArrayTags[objectToString$2.call(value)];
 }
 
 /**
@@ -18866,7 +19025,7 @@ function arrayLikeKeys(value, inherited) {
 }
 
 /** Used for built-in method references. */
-var objectProto$5 = Object.prototype;
+var objectProto$7 = Object.prototype;
 
 /**
  * Checks if `value` is likely a prototype object.
@@ -18877,7 +19036,7 @@ var objectProto$5 = Object.prototype;
  */
 function isPrototype(value) {
   var Ctor = value && value.constructor,
-      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto$5;
+      proto = (typeof Ctor == 'function' && Ctor.prototype) || objectProto$7;
 
   return value === proto;
 }
@@ -18900,10 +19059,10 @@ function overArg(func, transform) {
 var nativeKeys = overArg(Object.keys, Object);
 
 /** Used for built-in method references. */
-var objectProto$4 = Object.prototype;
+var objectProto$6 = Object.prototype;
 
 /** Used to check objects for own properties. */
-var hasOwnProperty$3 = objectProto$4.hasOwnProperty;
+var hasOwnProperty$3 = objectProto$6.hasOwnProperty;
 
 /**
  * The base implementation of `_.keys` which doesn't treat sparse arrays as dense.
@@ -19160,7 +19319,7 @@ function doParallel(fn) {
 }
 
 function _asyncMap(eachfn, arr, iteratee, callback) {
-    callback = callback || noop;
+    callback = once(callback || noop);
     arr = arr || [];
     var results = [];
     var counter = 0;
@@ -19361,8 +19520,8 @@ var applyEachSeries = applyEach$1(mapSeries);
  * two
  * three
  */
-var apply$2 = rest(function (fn, args) {
-    return rest(function (callArgs) {
+var apply$2 = baseRest$1(function (fn, args) {
+    return baseRest$1(function (callArgs) {
         return fn.apply(null, args.concat(callArgs));
     });
 });
@@ -19454,7 +19613,7 @@ function asyncify(func) {
  */
 function arrayEach(array, iteratee) {
   var index = -1,
-      length = array == null ? 0 : array.length;
+      length = array ? array.length : 0;
 
   while (++index < length) {
     if (iteratee(array[index], index, array) === false) {
@@ -19761,7 +19920,7 @@ var auto = function (tasks, concurrency, callback) {
     function runTask(key, task) {
         if (hasError) return;
 
-        var taskCallback = onlyOnce(rest(function (err, args) {
+        var taskCallback = onlyOnce(baseRest$1(function (err, args) {
             runningTasks--;
             if (args.length <= 1) {
                 args = args[0];
@@ -19834,7 +19993,7 @@ var auto = function (tasks, concurrency, callback) {
  */
 function arrayMap(array, iteratee) {
   var index = -1,
-      length = array == null ? 0 : array.length,
+      length = array ? array.length : 0,
       result = Array(length);
 
   while (++index < length) {
@@ -19843,8 +20002,40 @@ function arrayMap(array, iteratee) {
   return result;
 }
 
+/**
+ * Copies the values of `source` to `array`.
+ *
+ * @private
+ * @param {Array} source The array to copy values from.
+ * @param {Array} [array=[]] The array to copy values to.
+ * @returns {Array} Returns `array`.
+ */
+function copyArray(source, array) {
+  var index = -1,
+      length = source.length;
+
+  array || (array = Array(length));
+  while (++index < length) {
+    array[index] = source[index];
+  }
+  return array;
+}
+
+/** Built-in value references. */
+var Symbol$1 = root.Symbol;
+
 /** `Object#toString` result references. */
 var symbolTag = '[object Symbol]';
+
+/** Used for built-in method references. */
+var objectProto$8 = Object.prototype;
+
+/**
+ * Used to resolve the
+ * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+ * of values.
+ */
+var objectToString$3 = objectProto$8.toString;
 
 /**
  * Checks if `value` is classified as a `Symbol` primitive or object.
@@ -19865,7 +20056,7 @@ var symbolTag = '[object Symbol]';
  */
 function isSymbol(value) {
   return typeof value == 'symbol' ||
-    (isObjectLike(value) && baseGetTag(value) == symbolTag);
+    (isObjectLike(value) && objectToString$3.call(value) == symbolTag);
 }
 
 /** Used as references for various `Number` constants. */
@@ -20231,8 +20422,8 @@ function autoInject(tasks, callback) {
         var params;
 
         if (isArray(taskFn)) {
-            params = taskFn.slice(0, -1);
-            taskFn = taskFn[taskFn.length - 1];
+            params = copyArray(taskFn);
+            taskFn = params.pop();
 
             newTasks[key] = params.concat(params.length > 0 ? newTask : taskFn);
         } else if (taskFn.length === 1) {
@@ -20269,7 +20460,7 @@ function fallback(fn) {
 }
 
 function wrap(defer) {
-    return rest(function (fn, args) {
+    return baseRest$1(function (fn, args) {
         defer(function () {
             fn.apply(null, args);
         });
@@ -20383,7 +20574,7 @@ function queue(worker, concurrency, payload) {
     }
 
     function _next(tasks) {
-        return rest(function (args) {
+        return baseRest$1(function (args) {
             workers -= 1;
 
             for (var i = 0, l = tasks.length; i < l; i++) {
@@ -20685,8 +20876,8 @@ function reduce(coll, memo, iteratee, callback) {
  *     });
  * });
  */
-var seq$1 = rest(function seq(functions) {
-    return rest(function (args) {
+var seq$1 = baseRest$1(function seq(functions) {
+    return baseRest$1(function (args) {
         var that = this;
 
         var cb = args[args.length - 1];
@@ -20697,7 +20888,7 @@ var seq$1 = rest(function seq(functions) {
         }
 
         reduce(functions, args, function (newargs, fn, cb) {
-            fn.apply(that, newargs.concat([rest(function (err, nextargs) {
+            fn.apply(that, newargs.concat([baseRest$1(function (err, nextargs) {
                 cb(err, nextargs);
             })]));
         }, function (err, results) {
@@ -20741,7 +20932,7 @@ var seq$1 = rest(function seq(functions) {
  *     // result now equals 15
  * });
  */
-var compose = rest(function (args) {
+var compose = baseRest$1(function (args) {
   return seq$1.apply(null, args.reverse());
 });
 
@@ -20855,7 +21046,7 @@ var concatSeries = doSeries(concat$1);
  *     //...
  * }, callback);
  */
-var constant = rest(function (values) {
+var constant$2 = baseRest$1(function (values) {
     var args = [null].concat(values);
     return initialParams(function (ignoredArgs, callback) {
         return callback.apply(this, args);
@@ -20983,8 +21174,8 @@ var detectLimit = _createTester(eachOfLimit, identity, _findGetResult);
 var detectSeries = _createTester(eachOfSeries, identity, _findGetResult);
 
 function consoleFunc(name) {
-    return rest(function (fn, args) {
-        fn.apply(null, args.concat([rest(function (err, args) {
+    return baseRest$1(function (fn, args) {
+        fn.apply(null, args.concat([baseRest$1(function (err, args) {
             if (typeof console === 'object') {
                 if (err) {
                     if (console.error) {
@@ -21054,7 +21245,7 @@ var dir = consoleFunc('dir');
 function doDuring(fn, test, callback) {
     callback = onlyOnce(callback || noop);
 
-    var next = rest(function (err, args) {
+    var next = baseRest$1(function (err, args) {
         if (err) return callback(err);
         args.push(check);
         test.apply(this, args);
@@ -21094,7 +21285,7 @@ function doDuring(fn, test, callback) {
  */
 function doWhilst(iteratee, test, callback) {
     callback = onlyOnce(callback || noop);
-    var next = rest(function (err, args) {
+    var next = baseRest$1(function (err, args) {
         if (err) return callback(err);
         if (test.apply(this, args)) return iteratee(next);
         callback.apply(null, [null].concat(args));
@@ -21440,26 +21631,10 @@ function baseProperty(key) {
   };
 }
 
-function filterArray(eachfn, arr, iteratee, callback) {
-    var truthValues = new Array(arr.length);
-    eachfn(arr, function (x, index, callback) {
-        iteratee(x, function (err, v) {
-            truthValues[index] = !!v;
-            callback(err);
-        });
-    }, function (err) {
-        if (err) return callback(err);
-        var results = [];
-        for (var i = 0; i < arr.length; i++) {
-            if (truthValues[i]) results.push(arr[i]);
-        }
-        callback(null, results);
-    });
-}
-
-function filterGeneric(eachfn, coll, iteratee, callback) {
+function _filter(eachfn, arr, iteratee, callback) {
+    callback = once(callback || noop);
     var results = [];
-    eachfn(coll, function (x, index, callback) {
+    eachfn(arr, function (x, index, callback) {
         iteratee(x, function (err, v) {
             if (err) {
                 callback(err);
@@ -21479,11 +21654,6 @@ function filterGeneric(eachfn, coll, iteratee, callback) {
             }), baseProperty('value')));
         }
     });
-}
-
-function _filter(eachfn, coll, iteratee, callback) {
-    var filter = isArrayLike(coll) ? filterArray : filterGeneric;
-    filter(eachfn, coll, iteratee, callback || noop);
 }
 
 /**
@@ -21782,7 +21952,7 @@ function memoize(fn, hasher) {
             queues[key].push(callback);
         } else {
             queues[key] = [callback];
-            fn.apply(null, args.concat([rest(function (args) {
+            fn.apply(null, args.concat([baseRest$1(function (args) {
                 memo[key] = args;
                 var q = queues[key];
                 delete queues[key];
@@ -21845,7 +22015,7 @@ function _parallel(eachfn, tasks, callback) {
     var results = isArrayLike(tasks) ? [] : {};
 
     eachfn(tasks, function (task, key, callback) {
-        task(rest(function (err, args) {
+        task(baseRest$1(function (err, args) {
             if (args.length <= 1) {
                 args = args[0];
             }
@@ -22246,7 +22416,7 @@ function reduceRight(array, memo, iteratee, callback) {
  */
 function reflect(fn) {
     return initialParams(function reflectOn(args, reflectCallback) {
-        args.push(rest(function callback(err, cbArgs) {
+        args.push(baseRest$1(function callback(err, cbArgs) {
             if (err) {
                 reflectCallback(null, {
                     error: err
@@ -22271,7 +22441,11 @@ function reflect(fn) {
 function reject$1(eachfn, arr, iteratee, callback) {
     _filter(eachfn, arr, function (value, cb) {
         iteratee(value, function (err, v) {
-            cb(err, !v);
+            if (err) {
+                cb(err);
+            } else {
+                cb(null, !v);
+            }
         });
     }, callback);
 }
@@ -22422,31 +22596,6 @@ var rejectLimit = doParallelLimit(reject$1);
 var rejectSeries = doLimit(rejectLimit, 1);
 
 /**
- * Creates a function that returns `value`.
- *
- * @static
- * @memberOf _
- * @since 2.4.0
- * @category Util
- * @param {*} value The value to return from the new function.
- * @returns {Function} Returns the new constant function.
- * @example
- *
- * var objects = _.times(2, _.constant({ 'a': 1 }));
- *
- * console.log(objects);
- * // => [{ 'a': 1 }, { 'a': 1 }]
- *
- * console.log(objects[0] === objects[1]);
- * // => true
- */
-function constant$1(value) {
-  return function() {
-    return value;
-  };
-}
-
-/**
  * Attempts to get a successful response from `task` no more than `times` times
  * before returning an error. If the task is successful, the `callback` will be
  * passed the result of the successful task. If all attempts fail, the callback
@@ -22538,14 +22687,14 @@ function retry(opts, task, callback) {
 
     var options = {
         times: DEFAULT_TIMES,
-        intervalFunc: constant$1(DEFAULT_INTERVAL)
+        intervalFunc: constant(DEFAULT_INTERVAL)
     };
 
     function parseTimes(acc, t) {
         if (typeof t === 'object') {
             acc.times = +t.times || DEFAULT_TIMES;
 
-            acc.intervalFunc = typeof t.interval === 'function' ? t.interval : constant$1(+t.interval || DEFAULT_INTERVAL);
+            acc.intervalFunc = typeof t.interval === 'function' ? t.interval : constant(+t.interval || DEFAULT_INTERVAL);
 
             acc.errorFilter = t.errorFilter;
         } else if (typeof t === 'number' || typeof t === 'string') {
@@ -23114,7 +23263,7 @@ function unmemoize(fn) {
 function whilst(test, iteratee, callback) {
     callback = onlyOnce(callback || noop);
     if (!test()) return callback(null);
-    var next = rest(function (err, args) {
+    var next = baseRest$1(function (err, args) {
         if (err) return callback(err);
         if (test()) return iteratee(next);
         callback.apply(null, [null].concat(args));
@@ -23219,7 +23368,7 @@ var waterfall = function (tasks, callback) {
             return callback.apply(null, [null].concat(args));
         }
 
-        var taskCallback = onlyOnce(rest(function (err, args) {
+        var taskCallback = onlyOnce(baseRest$1(function (err, args) {
             if (err) {
                 return callback.apply(null, [err].concat(args));
             }
@@ -23269,7 +23418,7 @@ var index = {
   compose: compose,
   concat: concat,
   concatSeries: concatSeries,
-  constant: constant,
+  constant: constant$2,
   detect: detect,
   detectLimit: detectLimit,
   detectSeries: detectSeries,
@@ -23361,7 +23510,7 @@ exports.cargo = cargo;
 exports.compose = compose;
 exports.concat = concat;
 exports.concatSeries = concatSeries;
-exports.constant = constant;
+exports.constant = constant$2;
 exports.detect = detect;
 exports.detectLimit = detectLimit;
 exports.detectSeries = detectSeries;
@@ -23451,7 +23600,7 @@ Object.defineProperty(exports, '__esModule', { value: true });
 })));
 
 }).call(this,_dereq_('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"_process":97}],44:[function(_dereq_,module,exports){
+},{"_process":78}],44:[function(_dereq_,module,exports){
 ;(function (root, factory, undef) {
 	if (typeof exports === "object") {
 		// CommonJS
@@ -30059,334 +30208,188 @@ Object.defineProperty(exports, '__esModule', { value: true });
 
 }));
 },{"./core":46}],78:[function(_dereq_,module,exports){
-(function (global){
-'use strict';
-var Mutation = global.MutationObserver || global.WebKitMutationObserver;
+// shim for using process in browser
+var process = module.exports = {};
 
-var scheduleDrain;
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
 
-{
-  if (Mutation) {
-    var called = 0;
-    var observer = new Mutation(nextTick);
-    var element = global.document.createTextNode('');
-    observer.observe(element, {
-      characterData: true
-    });
-    scheduleDrain = function () {
-      element.data = (called = ++called % 2);
-    };
-  } else if (!global.setImmediate && typeof global.MessageChannel !== 'undefined') {
-    var channel = new global.MessageChannel();
-    channel.port1.onmessage = nextTick;
-    scheduleDrain = function () {
-      channel.port2.postMessage(0);
-    };
-  } else if ('document' in global && 'onreadystatechange' in global.document.createElement('script')) {
-    scheduleDrain = function () {
+var cachedSetTimeout;
+var cachedClearTimeout;
 
-      // Create a <script> element; its readystatechange event will be fired asynchronously once it is inserted
-      // into the document. Do so, thus queuing up the task. Remember to clean up once it's been called.
-      var scriptEl = global.document.createElement('script');
-      scriptEl.onreadystatechange = function () {
-        nextTick();
-
-        scriptEl.onreadystatechange = null;
-        scriptEl.parentNode.removeChild(scriptEl);
-        scriptEl = null;
-      };
-      global.document.documentElement.appendChild(scriptEl);
-    };
-  } else {
-    scheduleDrain = function () {
-      setTimeout(nextTick, 0);
-    };
-  }
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
 }
-
-var draining;
-var queue = [];
-//named nextTick for less confusing stack traces
-function nextTick() {
-  draining = true;
-  var i, oldQueue;
-  var len = queue.length;
-  while (len) {
-    oldQueue = queue;
-    queue = [];
-    i = -1;
-    while (++i < len) {
-      oldQueue[i]();
-    }
-    len = queue.length;
-  }
-  draining = false;
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
 }
-
-module.exports = immediate;
-function immediate(task) {
-  if (queue.push(task) === 1 && !draining) {
-    scheduleDrain();
-  }
-}
-
-}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],79:[function(_dereq_,module,exports){
-'use strict';
-var immediate = _dereq_('immediate');
-
-/* istanbul ignore next */
-function INTERNAL() {}
-
-var handlers = {};
-
-var REJECTED = ['REJECTED'];
-var FULFILLED = ['FULFILLED'];
-var PENDING = ['PENDING'];
-
-module.exports = Promise;
-
-function Promise(resolver) {
-  if (typeof resolver !== 'function') {
-    throw new TypeError('resolver must be a function');
-  }
-  this.state = PENDING;
-  this.queue = [];
-  this.outcome = void 0;
-  if (resolver !== INTERNAL) {
-    safelyResolveThenable(this, resolver);
-  }
-}
-
-Promise.prototype["catch"] = function (onRejected) {
-  return this.then(null, onRejected);
-};
-Promise.prototype.then = function (onFulfilled, onRejected) {
-  if (typeof onFulfilled !== 'function' && this.state === FULFILLED ||
-    typeof onRejected !== 'function' && this.state === REJECTED) {
-    return this;
-  }
-  var promise = new this.constructor(INTERNAL);
-  if (this.state !== PENDING) {
-    var resolver = this.state === FULFILLED ? onFulfilled : onRejected;
-    unwrap(promise, resolver, this.outcome);
-  } else {
-    this.queue.push(new QueueItem(promise, onFulfilled, onRejected));
-  }
-
-  return promise;
-};
-function QueueItem(promise, onFulfilled, onRejected) {
-  this.promise = promise;
-  if (typeof onFulfilled === 'function') {
-    this.onFulfilled = onFulfilled;
-    this.callFulfilled = this.otherCallFulfilled;
-  }
-  if (typeof onRejected === 'function') {
-    this.onRejected = onRejected;
-    this.callRejected = this.otherCallRejected;
-  }
-}
-QueueItem.prototype.callFulfilled = function (value) {
-  handlers.resolve(this.promise, value);
-};
-QueueItem.prototype.otherCallFulfilled = function (value) {
-  unwrap(this.promise, this.onFulfilled, value);
-};
-QueueItem.prototype.callRejected = function (value) {
-  handlers.reject(this.promise, value);
-};
-QueueItem.prototype.otherCallRejected = function (value) {
-  unwrap(this.promise, this.onRejected, value);
-};
-
-function unwrap(promise, func, value) {
-  immediate(function () {
-    var returnValue;
+(function () {
     try {
-      returnValue = func(value);
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
     } catch (e) {
-      return handlers.reject(promise, e);
+        cachedSetTimeout = defaultSetTimout;
     }
-    if (returnValue === promise) {
-      handlers.reject(promise, new TypeError('Cannot resolve promise with itself'));
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
     } else {
-      handlers.resolve(promise, returnValue);
+        queueIndex = -1;
     }
-  });
+    if (queue.length) {
+        drainQueue();
+    }
 }
 
-handlers.resolve = function (self, value) {
-  var result = tryCatch(getThen, value);
-  if (result.status === 'error') {
-    return handlers.reject(self, result.value);
-  }
-  var thenable = result.value;
-
-  if (thenable) {
-    safelyResolveThenable(self, thenable);
-  } else {
-    self.state = FULFILLED;
-    self.outcome = value;
-    var i = -1;
-    var len = self.queue.length;
-    while (++i < len) {
-      self.queue[i].callFulfilled(value);
+function drainQueue() {
+    if (draining) {
+        return;
     }
-  }
-  return self;
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
 };
-handlers.reject = function (self, error) {
-  self.state = REJECTED;
-  self.outcome = error;
-  var i = -1;
-  var len = self.queue.length;
-  while (++i < len) {
-    self.queue[i].callRejected(error);
-  }
-  return self;
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
 };
 
-function getThen(obj) {
-  // Make sure we only access the accessor once as required by the spec
-  var then = obj && obj.then;
-  if (obj && typeof obj === 'object' && typeof then === 'function') {
-    return function appyThen() {
-      then.apply(obj, arguments);
-    };
-  }
-}
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
 
-function safelyResolveThenable(self, thenable) {
-  // Either fulfill, reject or reject with error
-  var called = false;
-  function onError(value) {
-    if (called) {
-      return;
-    }
-    called = true;
-    handlers.reject(self, value);
-  }
-
-  function onSuccess(value) {
-    if (called) {
-      return;
-    }
-    called = true;
-    handlers.resolve(self, value);
-  }
-
-  function tryToUnwrap() {
-    thenable(onSuccess, onError);
-  }
-
-  var result = tryCatch(tryToUnwrap);
-  if (result.status === 'error') {
-    onError(result.value);
-  }
-}
-
-function tryCatch(func, value) {
-  var out = {};
-  try {
-    out.value = func(value);
-    out.status = 'success';
-  } catch (e) {
-    out.status = 'error';
-    out.value = e;
-  }
-  return out;
-}
-
-Promise.resolve = resolve;
-function resolve(value) {
-  if (value instanceof this) {
-    return value;
-  }
-  return handlers.resolve(new this(INTERNAL), value);
-}
-
-Promise.reject = reject;
-function reject(reason) {
-  var promise = new this(INTERNAL);
-  return handlers.reject(promise, reason);
-}
-
-Promise.all = all;
-function all(iterable) {
-  var self = this;
-  if (Object.prototype.toString.call(iterable) !== '[object Array]') {
-    return this.reject(new TypeError('must be an array'));
-  }
-
-  var len = iterable.length;
-  var called = false;
-  if (!len) {
-    return this.resolve([]);
-  }
-
-  var values = new Array(len);
-  var resolved = 0;
-  var i = -1;
-  var promise = new this(INTERNAL);
-
-  while (++i < len) {
-    allResolver(iterable[i], i);
-  }
-  return promise;
-  function allResolver(value, i) {
-    self.resolve(value).then(resolveFromAll, function (error) {
-      if (!called) {
-        called = true;
-        handlers.reject(promise, error);
-      }
-    });
-    function resolveFromAll(outValue) {
-      values[i] = outValue;
-      if (++resolved === len && !called) {
-        called = true;
-        handlers.resolve(promise, values);
-      }
-    }
-  }
-}
-
-Promise.race = race;
-function race(iterable) {
-  var self = this;
-  if (Object.prototype.toString.call(iterable) !== '[object Array]') {
-    return this.reject(new TypeError('must be an array'));
-  }
-
-  var len = iterable.length;
-  var called = false;
-  if (!len) {
-    return this.resolve([]);
-  }
-
-  var i = -1;
-  var promise = new this(INTERNAL);
-
-  while (++i < len) {
-    resolver(iterable[i]);
-  }
-  return promise;
-  function resolver(value) {
-    self.resolve(value).then(function (response) {
-      if (!called) {
-        called = true;
-        handlers.resolve(promise, response);
-      }
-    }, function (error) {
-      if (!called) {
-        called = true;
-        handlers.reject(promise, error);
-      }
-    });
-  }
-}
-
-},{"immediate":78}],80:[function(_dereq_,module,exports){
+},{}],79:[function(_dereq_,module,exports){
 (function (global){
 /*!
     localForage -- Offline Storage, Improved
@@ -32690,7 +32693,7 @@ module.exports = localforage_js;
 },{"3":3}]},{},[4])(4)
 });
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],81:[function(_dereq_,module,exports){
+},{}],80:[function(_dereq_,module,exports){
 // Top level file is just a mixin of submodules & constants
 'use strict';
 
@@ -32706,7 +32709,7 @@ assign(pako, deflate, inflate, constants);
 
 module.exports = pako;
 
-},{"./lib/deflate":82,"./lib/inflate":83,"./lib/utils/common":84,"./lib/zlib/constants":87}],82:[function(_dereq_,module,exports){
+},{"./lib/deflate":81,"./lib/inflate":82,"./lib/utils/common":83,"./lib/zlib/constants":86}],81:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33108,7 +33111,7 @@ exports.deflate = deflate;
 exports.deflateRaw = deflateRaw;
 exports.gzip = gzip;
 
-},{"./utils/common":84,"./utils/strings":85,"./zlib/deflate":89,"./zlib/messages":94,"./zlib/zstream":96}],83:[function(_dereq_,module,exports){
+},{"./utils/common":83,"./utils/strings":84,"./zlib/deflate":88,"./zlib/messages":93,"./zlib/zstream":95}],82:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33528,7 +33531,7 @@ exports.inflate = inflate;
 exports.inflateRaw = inflateRaw;
 exports.ungzip  = inflate;
 
-},{"./utils/common":84,"./utils/strings":85,"./zlib/constants":87,"./zlib/gzheader":90,"./zlib/inflate":92,"./zlib/messages":94,"./zlib/zstream":96}],84:[function(_dereq_,module,exports){
+},{"./utils/common":83,"./utils/strings":84,"./zlib/constants":86,"./zlib/gzheader":89,"./zlib/inflate":91,"./zlib/messages":93,"./zlib/zstream":95}],83:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33632,7 +33635,7 @@ exports.setTyped = function (on) {
 
 exports.setTyped(TYPED_OK);
 
-},{}],85:[function(_dereq_,module,exports){
+},{}],84:[function(_dereq_,module,exports){
 // String encode/decode helpers
 'use strict';
 
@@ -33819,7 +33822,7 @@ exports.utf8border = function (buf, max) {
   return (pos + _utf8len[buf[pos]] > max) ? pos : max;
 };
 
-},{"./common":84}],86:[function(_dereq_,module,exports){
+},{"./common":83}],85:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: adler32 takes 12% for level 0 and 2% for level 6.
@@ -33853,7 +33856,7 @@ function adler32(adler, buf, len, pos) {
 
 module.exports = adler32;
 
-},{}],87:[function(_dereq_,module,exports){
+},{}],86:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -33905,7 +33908,7 @@ module.exports = {
   //Z_NULL:                 null // Use -1 or null inline, depending on var type
 };
 
-},{}],88:[function(_dereq_,module,exports){
+},{}],87:[function(_dereq_,module,exports){
 'use strict';
 
 // Note: we can't get significant speed boost here.
@@ -33948,7 +33951,7 @@ function crc32(crc, buf, len, pos) {
 
 module.exports = crc32;
 
-},{}],89:[function(_dereq_,module,exports){
+},{}],88:[function(_dereq_,module,exports){
 'use strict';
 
 var utils   = _dereq_('../utils/common');
@@ -35805,7 +35808,7 @@ exports.deflatePrime = deflatePrime;
 exports.deflateTune = deflateTune;
 */
 
-},{"../utils/common":84,"./adler32":86,"./crc32":88,"./messages":94,"./trees":95}],90:[function(_dereq_,module,exports){
+},{"../utils/common":83,"./adler32":85,"./crc32":87,"./messages":93,"./trees":94}],89:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -35847,7 +35850,7 @@ function GZheader() {
 
 module.exports = GZheader;
 
-},{}],91:[function(_dereq_,module,exports){
+},{}],90:[function(_dereq_,module,exports){
 'use strict';
 
 // See state defs from inflate.js
@@ -36175,7 +36178,7 @@ module.exports = function inflate_fast(strm, start) {
   return;
 };
 
-},{}],92:[function(_dereq_,module,exports){
+},{}],91:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -37715,7 +37718,7 @@ exports.inflateSyncPoint = inflateSyncPoint;
 exports.inflateUndermine = inflateUndermine;
 */
 
-},{"../utils/common":84,"./adler32":86,"./crc32":88,"./inffast":91,"./inftrees":93}],93:[function(_dereq_,module,exports){
+},{"../utils/common":83,"./adler32":85,"./crc32":87,"./inffast":90,"./inftrees":92}],92:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -38044,7 +38047,7 @@ module.exports = function inflate_table(type, lens, lens_index, codes, table, ta
   return 0;
 };
 
-},{"../utils/common":84}],94:[function(_dereq_,module,exports){
+},{"../utils/common":83}],93:[function(_dereq_,module,exports){
 'use strict';
 
 module.exports = {
@@ -38059,7 +38062,7 @@ module.exports = {
   '-6':   'incompatible version' /* Z_VERSION_ERROR (-6) */
 };
 
-},{}],95:[function(_dereq_,module,exports){
+},{}],94:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -39263,7 +39266,7 @@ exports._tr_flush_block  = _tr_flush_block;
 exports._tr_tally = _tr_tally;
 exports._tr_align = _tr_align;
 
-},{"../utils/common":84}],96:[function(_dereq_,module,exports){
+},{"../utils/common":83}],95:[function(_dereq_,module,exports){
 'use strict';
 
 
@@ -39293,187 +39296,5 @@ function ZStream() {
 }
 
 module.exports = ZStream;
-
-},{}],97:[function(_dereq_,module,exports){
-// shim for using process in browser
-var process = module.exports = {};
-
-// cached from whatever global is present so that test runners that stub it
-// don't break things.  But we need to wrap it in a try catch in case it is
-// wrapped in strict mode code which doesn't define any globals.  It's inside a
-// function because try/catches deoptimize in certain engines.
-
-var cachedSetTimeout;
-var cachedClearTimeout;
-
-function defaultSetTimout() {
-    throw new Error('setTimeout has not been defined');
-}
-function defaultClearTimeout () {
-    throw new Error('clearTimeout has not been defined');
-}
-(function () {
-    try {
-        if (typeof setTimeout === 'function') {
-            cachedSetTimeout = setTimeout;
-        } else {
-            cachedSetTimeout = defaultSetTimout;
-        }
-    } catch (e) {
-        cachedSetTimeout = defaultSetTimout;
-    }
-    try {
-        if (typeof clearTimeout === 'function') {
-            cachedClearTimeout = clearTimeout;
-        } else {
-            cachedClearTimeout = defaultClearTimeout;
-        }
-    } catch (e) {
-        cachedClearTimeout = defaultClearTimeout;
-    }
-} ())
-function runTimeout(fun) {
-    if (cachedSetTimeout === setTimeout) {
-        //normal enviroments in sane situations
-        return setTimeout(fun, 0);
-    }
-    // if setTimeout wasn't available but was latter defined
-    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
-        cachedSetTimeout = setTimeout;
-        return setTimeout(fun, 0);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedSetTimeout(fun, 0);
-    } catch(e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
-            return cachedSetTimeout.call(null, fun, 0);
-        } catch(e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
-            return cachedSetTimeout.call(this, fun, 0);
-        }
-    }
-
-
-}
-function runClearTimeout(marker) {
-    if (cachedClearTimeout === clearTimeout) {
-        //normal enviroments in sane situations
-        return clearTimeout(marker);
-    }
-    // if clearTimeout wasn't available but was latter defined
-    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
-        cachedClearTimeout = clearTimeout;
-        return clearTimeout(marker);
-    }
-    try {
-        // when when somebody has screwed with setTimeout but no I.E. maddness
-        return cachedClearTimeout(marker);
-    } catch (e){
-        try {
-            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
-            return cachedClearTimeout.call(null, marker);
-        } catch (e){
-            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
-            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
-            return cachedClearTimeout.call(this, marker);
-        }
-    }
-
-
-
-}
-var queue = [];
-var draining = false;
-var currentQueue;
-var queueIndex = -1;
-
-function cleanUpNextTick() {
-    if (!draining || !currentQueue) {
-        return;
-    }
-    draining = false;
-    if (currentQueue.length) {
-        queue = currentQueue.concat(queue);
-    } else {
-        queueIndex = -1;
-    }
-    if (queue.length) {
-        drainQueue();
-    }
-}
-
-function drainQueue() {
-    if (draining) {
-        return;
-    }
-    var timeout = runTimeout(cleanUpNextTick);
-    draining = true;
-
-    var len = queue.length;
-    while(len) {
-        currentQueue = queue;
-        queue = [];
-        while (++queueIndex < len) {
-            if (currentQueue) {
-                currentQueue[queueIndex].run();
-            }
-        }
-        queueIndex = -1;
-        len = queue.length;
-    }
-    currentQueue = null;
-    draining = false;
-    runClearTimeout(timeout);
-}
-
-process.nextTick = function (fun) {
-    var args = new Array(arguments.length - 1);
-    if (arguments.length > 1) {
-        for (var i = 1; i < arguments.length; i++) {
-            args[i - 1] = arguments[i];
-        }
-    }
-    queue.push(new Item(fun, args));
-    if (queue.length === 1 && !draining) {
-        runTimeout(drainQueue);
-    }
-};
-
-// v8 likes predictible objects
-function Item(fun, array) {
-    this.fun = fun;
-    this.array = array;
-}
-Item.prototype.run = function () {
-    this.fun.apply(null, this.array);
-};
-process.title = 'browser';
-process.browser = true;
-process.env = {};
-process.argv = [];
-process.version = ''; // empty string to avoid regexp issues
-process.versions = {};
-
-function noop() {}
-
-process.on = noop;
-process.addListener = noop;
-process.once = noop;
-process.off = noop;
-process.removeListener = noop;
-process.removeAllListeners = noop;
-process.emit = noop;
-
-process.binding = function (name) {
-    throw new Error('process.binding is not supported');
-};
-
-process.cwd = function () { return '/' };
-process.chdir = function (dir) {
-    throw new Error('process.chdir is not supported');
-};
-process.umask = function() { return 0; };
 
 },{}]},{},[1]);
