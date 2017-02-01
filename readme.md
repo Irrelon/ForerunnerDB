@@ -12,7 +12,7 @@ products please consider becoming a patron: [https://www.patreon.com/user?u=4443
 Community Support: [https://github.com/Irrelon/ForerunnerDB/issues](https://github.com/Irrelon/ForerunnerDB/issues)
 Commercial Support: [forerunnerdb@irrelon.com](mailto:forerunnerdb@irrelon.com)
 
-## Version 1.4.37
+## Version 1.4.39
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
