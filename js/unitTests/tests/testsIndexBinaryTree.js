@@ -460,7 +460,7 @@ QUnit.test("Index.remove() :: Test index unique constraint violation denies inse
 	base.dbDown();
 });
 
-ForerunnerDB.version('1.4', function () {
+ForerunnerDB.version('1.6', function () {
 	QUnit.test("Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
 		base.dbUp();
 
@@ -500,7 +500,7 @@ ForerunnerDB.version('1.4', function () {
 	});
 });
 
-ForerunnerDB.version('1.4', function () {
+ForerunnerDB.version('1.6', function () {
 	QUnit.test("Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 		base.dbUp();
 
