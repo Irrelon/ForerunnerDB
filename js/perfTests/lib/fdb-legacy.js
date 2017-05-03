@@ -6387,6 +6387,7 @@ module.exports = Db;
 // TODO: methods like we already do with collection
 var Shared,
 	Collection,
+	Overload,
 	Db,
 	Path;
 
@@ -6420,6 +6421,7 @@ Shared.mixin(FdbDocument.prototype, 'Mixin.Matching');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Updating');
 Shared.mixin(FdbDocument.prototype, 'Mixin.Tags');
 
+Overload = _dereq_('./Overload');
 Collection = _dereq_('./Collection');
 Db = Shared.modules.Db;
 Path = _dereq_('./Path');
@@ -6858,42 +6860,123 @@ FdbDocument.prototype.drop = function (callback) {
 	return false;
 };
 
-/**
- * Creates a new document instance or returns an existing
- * instance if one already exists with the passed name.
- * @func document
- * @memberOf Db
- * @param {String} name The name of the instance.
- * @returns {*}
- */
-Db.prototype.document = function (name) {
-	var self = this;
-
-	if (name) {
+Db.prototype.document = new Overload('Db.prototype.document', {
+	/**
+	 * Get a document with no name (generates a random name). If the
+	 * document does not already exist then one is created for that
+	 * name automatically.
+	 * @name document
+	 * @method Db.document
+	 * @func document
+	 * @memberof Db
+	 * @returns {Document}
+	 */
+	'': function () {
+		return this.$main.call(this, {
+			name: this.objectId()
+		});
+	},
+	
+	/**
+	 * Get a document by name. If the document does not already exist
+	 * then one is created for that name automatically.
+	 * @name document
+	 * @method Db.document
+	 * @func document
+	 * @memberof Db
+	 * @param {Object} data An options object or a document instance.
+	 * @returns {Document}
+	 */
+	'object': function (data) {
 		// Handle being passed an instance
-		if (name instanceof FdbDocument) {
-			if (name.state() !== 'droppped') {
-				return name;
+		if (data instanceof FdbDocument) {
+			if (data.state() !== 'droppped') {
+				return data;
 			} else {
-				name = name.name();
+				return this.$main.call(this, {
+					name: data.name()
+				});
 			}
 		}
-
+		
+		return this.$main.call(this, data);
+	},
+	
+	/**
+	 * Get a document by name. If the document does not already exist
+	 * then one is created for that name automatically.
+	 * @name document
+	 * @method Db.document
+	 * @func document
+	 * @memberof Db
+	 * @param {String} documentName The name of the document.
+	 * @returns {Document}
+	 */
+	'string': function (documentName) {
+		return this.$main.call(this, {
+			name: documentName
+		});
+	},
+	
+	/**
+	 * Get a document by name. If the document does not already exist
+	 * then one is created for that name automatically.
+	 * @name document
+	 * @method Db.document
+	 * @func document
+	 * @memberof Db
+	 * @param {String} documentName The name of the document.
+	 * @param {Object} options An options object.
+	 * @returns {Document}
+	 */
+	'string, object': function (documentName, options) {
+		options.name = documentName;
+		
+		return this.$main.call(this, options);
+	},
+	
+	'$main': function (options) {
+		var self = this,
+			name = options.name;
+		
+		if (!name) {
+			if (!options || (options && options.throwError !== false)) {
+				throw(this.logIdentifier() + ' Cannot get document with undefined name!');
+			}
+			
+			return;
+		}
+		
 		if (this._document && this._document[name]) {
 			return this._document[name];
 		}
-
+		
+		if (options && options.autoCreate === false) {
+			if (options && options.throwError !== false) {
+				throw(this.logIdentifier() + ' Cannot get document ' + name + ' because it does not exist and auto-create has been disabled!');
+			}
+			
+			return undefined;
+		}
+		
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Creating document ' + name);
+		}
+		
 		this._document = this._document || {};
-		this._document[name] = new FdbDocument(name).db(this);
-
+		this._document[name] = this._document[name] || new FdbDocument(name, options).db(this);
+		
+		// Listen for events on this document so we can fire global events
+		// on the database in response to it
+		self._document[name].on('change', function () {
+			self.emit('change', self._document[name], 'document', name);
+		});
+		
 		self.deferEmit('create', self._document[name], 'document', name);
-
+		
 		return this._document[name];
-	} else {
-		// Return an object of document data
-		return this._document;
 	}
-};
+});
 
 /**
  * Returns an array of documents the DB currently has.
@@ -6923,7 +7006,7 @@ Db.prototype.documents = function () {
 
 Shared.finishModule('Document');
 module.exports = FdbDocument;
-},{"./Collection":4,"./Path":33,"./Shared":39}],10:[function(_dereq_,module,exports){
+},{"./Collection":4,"./Overload":31,"./Path":33,"./Shared":39}],10:[function(_dereq_,module,exports){
 // geohash.js
 // Geohash library for Javascript
 // (c) 2008 David Troy
@@ -16649,7 +16732,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.40',
+	version: '1.4.44',
 	modules: {},
 	plugins: {},
 	index: {},
