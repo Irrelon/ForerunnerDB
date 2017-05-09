@@ -2160,6 +2160,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Date) {
 								// The doc key is a date object, assign the new date
 								this._updateProperty(doc, i, update[i]);
+								updated = true;
 							} else {
 								// The doc key is an object so traverse the
 								// update further
@@ -13179,7 +13180,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.44',
+	version: '1.4.48',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -13980,6 +13981,10 @@ View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
 	return this._data.findSub(match, path, subDocQuery, subDocOptions);
 };
 
+View.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
+	return this._data._findSub(docArr, path, subDocQuery, subDocOptions);
+};
+
 /**
  * Queries the view data in a sub-array and returns first match.
  * @see Collection::findSubOne()
@@ -13987,6 +13992,10 @@ View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
  */
 View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
 	return this._data.findSubOne(match, path, subDocQuery, subDocOptions);
+};
+
+View.prototype._findSubOne = function (docArr, path, subDocQuery, subDocOptions) {
+	return this._data._findSubOne(docArr, path, subDocQuery, subDocOptions);
 };
 
 /**
