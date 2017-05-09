@@ -1190,6 +1190,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Date) {
 								// The doc key is a date object, assign the new date
 								this._updateProperty(doc, i, update[i]);
+								updated = true;
 							} else {
 								// The doc key is an object so traverse the
 								// update further
