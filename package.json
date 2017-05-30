@@ -65,7 +65,7 @@
     "testbear": "^1.0.28",
     "tsd-jsdoc": "^1.0.1",
     "tslint": "^4.2.0",
-    "typescript": "^2.0.9",
+    "typescript": "^2.3.4",
     "lie": "^3.1.0"
   },
   "engines": {
