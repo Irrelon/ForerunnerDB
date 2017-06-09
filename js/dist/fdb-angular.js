@@ -127,6 +127,8 @@ Angular.extendCollection = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -207,6 +209,8 @@ Angular.extendView = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -277,6 +281,8 @@ Angular.extendDocument = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -296,8 +302,10 @@ Angular.extendDocument = function (Module) {
  */
 Angular.extendOverview = function (Module) {
 	Module.prototype.ng = function (scope, varName, options) {
-		this._data.ng.apply(this._data, arguments);
+		var result = this._data.ng.apply(this._data, arguments);
 		this._refresh();
+		
+		return result;
 	};
 };
 
