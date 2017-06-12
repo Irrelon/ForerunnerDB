@@ -246,8 +246,8 @@ FdbDocument.prototype.update = function (query, update, options) {
  * @param {Object} update The object with key/value pairs to update the document with.
  * @param {Object} query The query object that we need to match to perform an update.
  * @param {Object} options An options object.
- * @param {String} path The current recursive path.
- * @param {String} opType The type of update operation to perform, if none is specified
+ * @param {String=} path The current recursive path.
+ * @param {String=} opType The type of update operation to perform, if none is specified
  * default is to set new data against matching fields.
  * @returns {Boolean} True if the document was updated with new / changed data or
  * false if it was not updated because the data was the same.
