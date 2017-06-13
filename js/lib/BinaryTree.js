@@ -122,9 +122,9 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 		indexData = this._keys[i];
 
 		if (indexData.value === 1) {
-			result = this.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path), {handleUndefined: false});
+			result = this.sortAscIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		} else if (indexData.value === -1) {
-			result = this.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path, {handleUndefined: false}));
+			result = this.sortDescIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		}
 
 		if (this.debug()) {
@@ -489,7 +489,7 @@ BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
 	resultArr._visitedNodes = resultArr._visitedNodes || [];
 	resultArr._visitedNodes.push(thisDataPathVal);
 
-	result = this.sortAsc(thisDataPathValSubStr, val, {handleUndefined: false});
+	result = this.sortAscIgnoreUndefined(thisDataPathValSubStr, val);
 	reTest = thisDataPathValSubStr === val;
 
 	if (result === 0) {
@@ -573,8 +573,8 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 
 	// Check if this node's data is greater or less than the from value
 	var pathVal = pathResolver.value(this._data),
-		fromResult = this.sortAsc(pathVal, from, {handleUndefined: false}),
-		toResult = this.sortAsc(pathVal, to, {handleUndefined: false});
+		fromResult = this.sortAscIgnoreUndefined(pathVal, from),
+		toResult = this.sortAscIgnoreUndefined(pathVal, to);
 
 	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
 		// This data node is greater than or equal to the from value,
