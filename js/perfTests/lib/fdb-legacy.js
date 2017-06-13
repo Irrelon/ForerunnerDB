@@ -397,9 +397,9 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 		indexData = this._keys[i];
 
 		if (indexData.value === 1) {
-			result = this.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+			result = this.sortAscIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		} else if (indexData.value === -1) {
-			result = this.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+			result = this.sortDescIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		}
 
 		if (this.debug()) {
@@ -764,7 +764,7 @@ BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
 	resultArr._visitedNodes = resultArr._visitedNodes || [];
 	resultArr._visitedNodes.push(thisDataPathVal);
 
-	result = this.sortAsc(thisDataPathValSubStr, val);
+	result = this.sortAscIgnoreUndefined(thisDataPathValSubStr, val);
 	reTest = thisDataPathValSubStr === val;
 
 	if (result === 0) {
@@ -848,8 +848,8 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 
 	// Check if this node's data is greater or less than the from value
 	var pathVal = pathResolver.value(this._data),
-		fromResult = this.sortAsc(pathVal, from),
-		toResult = this.sortAsc(pathVal, to);
+		fromResult = this.sortAscIgnoreUndefined(pathVal, from),
+		toResult = this.sortAscIgnoreUndefined(pathVal, to);
 
 	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
 		// This data node is greater than or equal to the from value,
@@ -6630,8 +6630,8 @@ FdbDocument.prototype.update = function (query, update, options) {
  * @param {Object} update The object with key/value pairs to update the document with.
  * @param {Object} query The query object that we need to match to perform an update.
  * @param {Object} options An options object.
- * @param {String} path The current recursive path.
- * @param {String} opType The type of update operation to perform, if none is specified
+ * @param {String=} path The current recursive path.
+ * @param {String=} opType The type of update operation to perform, if none is specified
  * default is to set new data against matching fields.
  * @returns {Boolean} True if the document was updated with new / changed data or
  * false if it was not updated because the data was the same.
@@ -11911,6 +11911,14 @@ var Sorting = {
 				return -1;
 			}
 		}
+		
+		if (a === undefined && b !== undefined) {
+			return -1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return 1;
+		}
 
 		return 0;
 	},
@@ -11931,7 +11939,59 @@ var Sorting = {
 				return 1;
 			}
 		}
+		
+		if (a === undefined && b !== undefined) {
+			return 1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return -1;
+		}
 
+		return 0;
+	},
+	
+	/**
+	 * Sorts the passed value a against the passed value b ascending. This variant
+	 * of the sortAsc method will not consider undefined values as lower than any
+	 * other value.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortAscIgnoreUndefined: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return a.localeCompare(b);
+		} else {
+			if (a > b) {
+				return 1;
+			} else if (a < b) {
+				return -1;
+			}
+		}
+		
+		return 0;
+	},
+	
+	/**
+	 * Sorts the passed value a against the passed value b descending. This variant
+	 * of the sortDesc method will not consider undefined values as lower than any
+	 * other value.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortDescIgnoreUndefined: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return b.localeCompare(a);
+		} else {
+			if (a > b) {
+				return -1;
+			} else if (a < b) {
+				return 1;
+			}
+		}
+		
 		return 0;
 	}
 };
@@ -16733,7 +16793,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.52',
+	version: '1.4.58',
 	modules: {},
 	plugins: {},
 	index: {},

@@ -140,15 +140,16 @@
 
     
 
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
 
     
 
 
 
 <div class="description">
-    Get a collection by name. If the collection does not already exist
-then one is created for that name automatically.
+    Get a collection with no name (generates a random name). If the
+collection does not already exist then one is created for that
+name automatically.
 </div>
 
 
@@ -157,79 +158,6 @@ then one is created for that name automatically.
 
 
 
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collectionName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the collection.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>primaryKey</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional primary key to specify the
-primary key field on the collection objects. Defaults to "_id".</td>
-        </tr>
-
-    
-    </tbody>
-</table>
 
 
 
@@ -265,7 +193,7 @@ primary key field on the collection objects. Defaults to "_id".</td>
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3788">line 3788</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3731">line 3731</a>
     </li></ul></dd>
     
 
@@ -416,203 +344,6 @@ then one is created for that name automatically.
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3772">line 3772</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Collection.html">Collection</a></span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey, options)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Get a collection by name. If the collection does not already exist
-then one is created for that name automatically.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>collectionName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the collection.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>primaryKey</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">Optional primary key to specify the
-primary key field on the collection objects. Defaults to "_id".</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>options</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">Object</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">An options object.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3824">line 3824</a>
     </li></ul></dd>
     
 
@@ -984,16 +715,15 @@ then one is created for that name automatically.
 
     
 
-    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey, options)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
 
     
 
 
 
 <div class="description">
-    Get a collection with no name (generates a random name). If the
-collection does not already exist then one is created for that
-name automatically.
+    Get a collection by name. If the collection does not already exist
+then one is created for that name automatically.
 </div>
 
 
@@ -1002,6 +732,102 @@ name automatically.
 
 
 
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collectionName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the collection.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>primaryKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional primary key to specify the
+primary key field on the collection objects. Defaults to "_id".</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>options</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An options object.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
 
 
 
@@ -1037,7 +863,181 @@ name automatically.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3731">line 3731</a>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3824">line 3824</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Collection.html">Collection</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".collection"><span class="type-signature">(static) </span>collection<span class="signature">(collectionName, primaryKey)</span><span class="type-signature"> &rarr; {<a href="Collection.html">Collection</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get a collection by name. If the collection does not already exist
+then one is created for that name automatically.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>collectionName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the collection.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>primaryKey</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">Optional primary key to specify the
+primary key field on the collection objects. Defaults to "_id".</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Collection.js.html">Collection.js</a>, <a href="Collection.js.html#line3788">line 3788</a>
     </li></ul></dd>
     
 
@@ -1222,108 +1222,6 @@ instance if one already exists with the passed name.
     <dd>
         
 <span class="param-type">*</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".document"><span class="type-signature">(static) </span>document<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Document.html">Document</a>}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Get a document with no name (generates a random name). If the
-document does not already exist then one is created for that
-name automatically.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Document.js.html">Document.js</a>, <a href="Document.js.html#line481">line 481</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type"><a href="Document.html">Document</a></span>
 
 
     </dd>
@@ -1661,6 +1559,108 @@ then one is created for that name automatically.
 
     
 
+    <h4 class="name" id=".document"><span class="type-signature">(static) </span>document<span class="signature">()</span><span class="type-signature"> &rarr; {<a href="Document.html">Document</a>}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Get a document with no name (generates a random name). If the
+document does not already exist then one is created for that
+name automatically.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Document.js.html">Document.js</a>, <a href="Document.js.html#line481">line 481</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type"><a href="Document.html">Document</a></span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".document"><span class="type-signature">(static) </span>document<span class="signature">(documentName)</span><span class="type-signature"> &rarr; {<a href="Document.html">Document</a>}</span></h4>
 
     
@@ -1908,6 +1908,88 @@ the database is currently managing.
 </dl>
 
     
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">()</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Drops the database.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line376">line 376</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -2304,88 +2386,6 @@ storage is dropped by default if no preference is provided.
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line403">line 403</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".drop"><span class="type-signature">(static) </span>drop<span class="signature">()</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Drops the database.
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line376">line 376</a>
     </li></ul></dd>
     
 
@@ -2893,150 +2893,6 @@ the database is currently managing.
 
     
 
-    <h4 class="name" id=".load"><span class="type-signature">(static) </span>load<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Loads an entire database's data from persistent storage.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-        <th>Attributes</th>
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>callback</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-                <td class="attributes">
-                
-                    &lt;optional><br>
-                
-
-                
-
-                
-                </td>
-            
-
-            
-
-            <td class="description last">The method to call when the load function
-has completed.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line947">line 947</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id=".load"><span class="type-signature">(static) </span>load<span class="signature">(myData, callback)</span><span class="type-signature"></span></h4>
 
     
@@ -3162,6 +3018,150 @@ has completed.</td>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line958">line 958</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id=".load"><span class="type-signature">(static) </span>load<span class="signature">(callback<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Loads an entire database's data from persistent storage.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+        <th>Attributes</th>
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>callback</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+                <td class="attributes">
+                
+                    &lt;optional><br>
+                
+
+                
+
+                
+                </td>
+            
+
+            
+
+            <td class="description last">The method to call when the load function
+has completed.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Persist.js.html">Persist.js</a>, <a href="Persist.js.html#line947">line 947</a>
     </li></ul></dd>
     
 
@@ -3370,6 +3370,159 @@ success method, otherwise calls the failure method.
 
     
 
+    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Checks if a module has been loaded into the database.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>moduleName</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the module to check for.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line31">line 31</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    True if the module is loaded, false if not.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName, callback)</span><span class="type-signature"></span></h4>
 
     
@@ -3517,159 +3670,6 @@ callback method.
 
 
 
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id=".moduleLoaded"><span class="type-signature">(static) </span>moduleLoaded<span class="signature">(moduleName)</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Checks if a module has been loaded into the database.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>moduleName</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the module to check for.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line31">line 31</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    True if the module is loaded, false if not.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Boolean</span>
-
-
-    </dd>
-</dl>
-
-    
 
 
 
@@ -4766,6 +4766,106 @@ collection the database is currently managing.
 
     
 
+    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Returns true if ForerunnerDB is running on a client browser.
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line190">line 190</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">boolean</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
     <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
@@ -4871,14 +4971,15 @@ a server (node.js).
 
     
 
-    <h4 class="name" id="isClient"><span class="type-signature"></span>isClient<span class="signature">()</span><span class="type-signature"> &rarr; {boolean}</span></h4>
+    <h4 class="name" id="isServer"><span class="type-signature"></span>isServer<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
 
     
 
 
 
 <div class="description">
-    Returns true if ForerunnerDB is running on a client browser.
+    Checks if the database is running on a client (browser) or
+a server (node.js).
 </div>
 
 
@@ -4922,7 +5023,7 @@ a server (node.js).
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line190">line 190</a>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line216">line 216</a>
     </li></ul></dd>
     
 
@@ -4948,6 +5049,10 @@ a server (node.js).
 <h5>Returns:</h5>
 
         
+<div class="param-desc">
+    Returns true if running on a server.
+</div>
+
 
 
 <dl>
@@ -4956,7 +5061,7 @@ a server (node.js).
     </dt>
     <dd>
         
-<span class="param-type">boolean</span>
+<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -5057,111 +5162,6 @@ a server (node.js).
     <dd>
         
 <span class="param-type">boolean</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
-    <h4 class="name" id="isServer"><span class="type-signature"></span>isServer<span class="signature">()</span><span class="type-signature"> &rarr; {Boolean}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Checks if the database is running on a client (browser) or
-a server (node.js).
-</div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line216">line 216</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-<div class="param-desc">
-    Returns true if running on a server.
-</div>
-
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Boolean</span>
 
 
     </dd>
@@ -5977,151 +5977,6 @@ the database is currently managing.
 
     
 
-    <h4 class="name" id="peek"><span class="type-signature"></span>peek<span class="signature">(search)</span><span class="type-signature"> &rarr; {Array}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Find all documents across all collections in the database that match the passed
-string or search object.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>search</code></td>
-            
-
-            <td class="type">
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">String or search object.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line315">line 315</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">Array</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-        
-            
-
-    
-
     <h4 class="name" id="peek"><span class="type-signature"></span>peek<span class="signature">(event, data<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {*}</span></h4>
 
     
@@ -6300,6 +6155,151 @@ string or search object.
     <dd>
         
 <span class="param-type">*</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+        
+            
+
+    
+
+    <h4 class="name" id="peek"><span class="type-signature"></span>peek<span class="signature">(search)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Find all documents across all collections in the database that match the passed
+string or search object.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>search</code></td>
+            
+
+            <td class="type">
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">String or search object.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Db.js.html">Db.js</a>, <a href="Db.js.html#line315">line 315</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
 
 
     </dd>
@@ -7688,7 +7688,7 @@ the database is currently managing.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Fri Jun 09 2017 14:27:39 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Jun 13 2017 17:17:35 GMT+0100 (BST)
 </footer>
 
 <script> prettyPrint(); </script>
