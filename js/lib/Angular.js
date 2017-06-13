@@ -247,7 +247,6 @@ Angular.extendDocument = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							//TODO: Implement immediateChange in Document class and hook that instead of change event
 							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
