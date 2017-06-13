@@ -21,6 +21,14 @@ var Sorting = {
 				return -1;
 			}
 		}
+		
+		if (a === undefined && b !== undefined) {
+			return -1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return 1;
+		}
 
 		return 0;
 	},
@@ -40,6 +48,14 @@ var Sorting = {
 			} else if (a < b) {
 				return 1;
 			}
+		}
+		
+		if (a === undefined && b !== undefined) {
+			return 1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return -1;
 		}
 
 		return 0;
