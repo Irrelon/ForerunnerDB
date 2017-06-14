@@ -242,22 +242,33 @@ ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
 		arr = this._keyArr,
 		count = arr.length,
+		val,
 		index,
 		sortType;
-
+	
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
-
+		
 		if (key) {
 			key += '.:.';
 		}
-
-		key += sharedPathSolver.get(obj, sortType.path);
+		
+		val = sharedPathSolver.get(obj, sortType.path);
+		
+		if (val !== undefined) {
+			// The value of the sort path in the object is not undefined
+			key += val;
+		} else {
+			// The value of the sort path in the object is undefined. This
+			// will cause sorting issues. undefined is therefore recorded
+			// as string zero which will sort to low value.
+			key += "0";
+		}
 	}
-
+	
 	// Add the unique identifier on the end of the key
 	key += '.:.' + obj[this._primaryKey];
-
+	
 	return key;
 };
 
@@ -11901,7 +11912,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortAsc: function (a, b) {
+	sortAsc: function mixinSortingSortAsc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return a.localeCompare(b);
 		} else {
@@ -11929,7 +11940,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortDesc: function (a, b) {
+	sortDesc: function mixinSortingSortDesc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return b.localeCompare(a);
 		} else {
@@ -16793,7 +16804,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.61',
+	version: '1.4.62',
 	modules: {},
 	plugins: {},
 	index: {},
