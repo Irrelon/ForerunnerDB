@@ -168,9 +168,9 @@ ActiveBucket.prototype.insert = function (obj) {
 /**
  * Removes a document from the active bucket.
  * @param {Object} obj The document to remove.
- * @returns {boolean} True if the document was removed
- * successfully or false if it wasn't found in the active
- * bucket.
+ * @returns {Number} The index of the document if the document
+ * was removed successfully or -1 if it wasn't found in the
+ * active bucket.
  */
 ActiveBucket.prototype.remove = function (obj) {
 	var key,
@@ -186,13 +186,13 @@ ActiveBucket.prototype.remove = function (obj) {
 			delete this._objLookup[obj[this._primaryKey]];
 
 			this._count--;
-			return true;
+			return keyIndex;
 		} else {
-			return false;
+			return keyIndex;
 		}
 	}
 
-	return false;
+	return -1;
 };
 
 /**

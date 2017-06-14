@@ -700,10 +700,10 @@ View.prototype._chainHandler = function (chainPacket) {
 					item = updates[index];
 
 					// Remove the item from the active bucket (via it's id)
-					this._activeBucket.remove(item);
+					currentIndex = this._activeBucket.remove(item);
 
 					// Get the current location of the item
-					currentIndex = this._data._data.indexOf(item);
+					//currentIndex = this._data._data.indexOf(item);
 
 					// Add the item back in to the active bucket
 					insertIndex = this._activeBucket.insert(item);
