@@ -11,7 +11,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortAsc: function (a, b) {
+	sortAsc: function mixinSortingSortAsc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return a.localeCompare(b);
 		} else {
@@ -39,7 +39,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortDesc: function (a, b) {
+	sortDesc: function mixinSortingSortDesc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return b.localeCompare(a);
 		} else {
