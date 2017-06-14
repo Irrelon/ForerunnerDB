@@ -186,9 +186,9 @@ ActiveBucket.prototype.insert = function (obj) {
 /**
  * Removes a document from the active bucket.
  * @param {Object} obj The document to remove.
- * @returns {boolean} True if the document was removed
- * successfully or false if it wasn't found in the active
- * bucket.
+ * @returns {Number} The index of the document if the document
+ * was removed successfully or -1 if it wasn't found in the
+ * active bucket.
  */
 ActiveBucket.prototype.remove = function (obj) {
 	var key,
@@ -204,13 +204,13 @@ ActiveBucket.prototype.remove = function (obj) {
 			delete this._objLookup[obj[this._primaryKey]];
 
 			this._count--;
-			return true;
+			return keyIndex;
 		} else {
-			return false;
+			return keyIndex;
 		}
 	}
 
-	return false;
+	return -1;
 };
 
 /**
@@ -13240,7 +13240,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.59',
+	version: '1.4.61',
 	modules: {},
 	plugins: {},
 	index: {},
@@ -14251,10 +14251,10 @@ View.prototype._chainHandler = function (chainPacket) {
 					item = updates[index];
 
 					// Remove the item from the active bucket (via it's id)
-					this._activeBucket.remove(item);
+					currentIndex = this._activeBucket.remove(item);
 
 					// Get the current location of the item
-					currentIndex = this._data._data.indexOf(item);
+					//currentIndex = this._data._data.indexOf(item);
 
 					// Add the item back in to the active bucket
 					insertIndex = this._activeBucket.insert(item);
