@@ -225,22 +225,33 @@ ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
 		arr = this._keyArr,
 		count = arr.length,
+		val,
 		index,
 		sortType;
-
+	
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
-
+		
 		if (key) {
 			key += '.:.';
 		}
-
-		key += sharedPathSolver.get(obj, sortType.path);
+		
+		val = sharedPathSolver.get(obj, sortType.path);
+		
+		if (val !== undefined) {
+			// The value of the sort path in the object is not undefined
+			key += val;
+		} else {
+			// The value of the sort path in the object is undefined. This
+			// will cause sorting issues. undefined is therefore recorded
+			// as string zero which will sort to low value.
+			key += "0";
+		}
 	}
-
+	
 	// Add the unique identifier on the end of the key
 	key += '.:.' + obj[this._primaryKey];
-
+	
 	return key;
 };
 
