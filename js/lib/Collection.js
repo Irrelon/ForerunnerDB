@@ -643,7 +643,7 @@ Collection.prototype.upsert = function (obj, callback) {
 					returnData.push(this.upsert(obj[i]));
 				}
 
-				if (callback) { callback.call(this); }
+				if (callback) { callback.call(this, returnData); }
 
 				return returnData;
 			}
@@ -682,7 +682,7 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		return returnData;
 	} else {
-		if (callback) { callback.call(this); }
+		if (callback) { callback.call(this, {op: 'none'}); }
 	}
 
 	return {};
