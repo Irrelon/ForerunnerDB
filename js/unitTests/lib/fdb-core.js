@@ -1346,7 +1346,7 @@ Collection.prototype.upsert = function (obj, callback) {
 					returnData.push(this.upsert(obj[i]));
 				}
 
-				if (callback) { callback.call(this); }
+				if (callback) { callback.call(this, returnData); }
 
 				return returnData;
 			}
@@ -1385,7 +1385,7 @@ Collection.prototype.upsert = function (obj, callback) {
 
 		return returnData;
 	} else {
-		if (callback) { callback.call(this); }
+		if (callback) { callback.call(this, {op: 'none'}); }
 	}
 
 	return {};
@@ -11313,7 +11313,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.67',
+	version: '1.4.68',
 	modules: {},
 	plugins: {},
 	index: {},
