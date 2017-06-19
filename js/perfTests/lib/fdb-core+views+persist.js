@@ -9487,19 +9487,36 @@ var Matching = {
 				break;
 
 			case '$distinct':
+				var lookupPath,
+					value,
+					finalDistinctProp;
+				
 				// Ensure options holds a distinct lookup
 				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
-
+				
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
+						if (typeof test[distinctProp] === 'object') {
+							// Get the path string from the object
+							lookupPath = this.sharedPathSolver.parse(test)[0].path;
+							
+							// Use the path string to find the lookup value from the source data
+							value = this.sharedPathSolver.get(source, lookupPath);
+							finalDistinctProp = lookupPath;
+						} else {
+							value = source[distinctProp];
+							finalDistinctProp = distinctProp;
+						}
+						
+						options.$rootData['//distinctLookup'][finalDistinctProp] = options.$rootData['//distinctLookup'][finalDistinctProp] || {};
+						
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][finalDistinctProp][value]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][finalDistinctProp][value] = true;
 
 							// Allow the item in the results
 							return true;
@@ -13251,7 +13268,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.63',
+	version: '1.4.64',
 	modules: {},
 	plugins: {},
 	index: {},

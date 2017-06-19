@@ -2268,6 +2268,72 @@ QUnit.test("Collection.find() :: $distinct clause", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $distinct sub-documents clause", function () {
+	base.dbUp();
+	
+	var coll = db.collection('test').truncate(),
+		result;
+	
+	coll.setData([{
+		'_id': 1,
+		'test': 1,
+		'arr': [{
+			'foo': 1,
+			'name': 'Foo1'
+		}, {
+			'foo': 2,
+			'name': 'Foo2'
+		}, {
+			'foo': 1,
+			'name': 'Foo3'
+		}]
+	}, {
+		'_id': 2,
+		'test': 1,
+		'arr': [{
+			'foo': 3,
+			'name': 'Foo3'
+		}, {
+			'foo': 4,
+			'name': 'Foo4'
+		}, {
+			'foo': 5,
+			'name': 'Foo5'
+		}]
+	}, {
+		'_id': 3,
+		'test': 2,
+		'arr': [{
+			'foo': 1,
+			'name': 'Foo1'
+		}, {
+			'foo': 2,
+			'name': 'Foo2'
+		}, {
+			'foo': 1,
+			'name': 'Foo3'
+		}]
+	}]);
+	
+	strictEqual(coll.find().length, 3, 'Check data inserted correctly');
+	strictEqual(coll.findOne({_id: 1}).arr.length, 3, 'Check sub-data inserted correctly');
+	
+	// Run distinct query
+	result = coll.find({
+		$distinct: {
+			arr: {
+				foo: 1
+			}
+		}
+	});
+	
+	strictEqual(result.length, 2, 'Check correct $distinct query result number');
+	strictEqual(result[0]._id, 1, 'Check correct result 1');
+	strictEqual(result[1]._id, 2, 'Check correct result 2');
+	
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: $distinct clause strings", function () {
 	base.dbUp();
 	
