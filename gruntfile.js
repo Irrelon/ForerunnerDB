@@ -36,7 +36,8 @@ module.exports = function(grunt) {
 			all : {
 				src: ['./js/lib/*.js'],
 				options: {
-					destination: './doc'
+					destination: './doc',
+					template: './jsdoc-template'
 				}
 			}
 		},
