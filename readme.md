@@ -12,7 +12,7 @@ products please consider becoming a patron: [https://www.patreon.com/user?u=4443
 Community Support: [https://github.com/Irrelon/ForerunnerDB/issues](https://github.com/Irrelon/ForerunnerDB/issues)
 Commercial Support: [forerunnerdb@irrelon.com](mailto:forerunnerdb@irrelon.com)
 
-## Version 1.4.68
+## Version 2.0.0
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -4967,12 +4967,10 @@ ForerunnerDB's project road-map:
 * $isolated
 * $ array positional in sub arrays of objects inside arrays e.g. arr.$.idArr
 
-#### Scheduled Features - Version 1.3
+#### Scheduled Features
 * COMPLETE - Data-bound grid (table) output of collection / view data
 * COMPLETE - $elemMatch (projection)
 * COMPLETE - Return limited fields on query
-
-#### Scheduled Features - Version 1.4
 * COMPLETE - Fix package.json to allow dev dependencies and production ones, also fix versions etc (https://github.com/irrelon/ForerunnerDB/issues/6)
 * COMPLETE - Data persistence added to documentation
 * COMPLETE - Remove iOS from this repo, add to its own
@@ -4982,15 +4980,11 @@ ForerunnerDB's project road-map:
 * COMPLETE - Collection / query paging-- e.g. select next 10, select previous 10
 * Highcharts support from views instead of only collections
 * Fix bug in relation to index usage with range queries as per (https://github.com/irrelon/ForerunnerDB/issues/20)
-
-#### Scheduled Features - Version 1.5
 * COMPLETE - Support client sync with server-sent events
 * Add further build files to handle different combinations of modules (https://github.com/irrelon/ForerunnerDB/issues/7)
-
-#### Scheduled Features - Version 1.6
 * PARTIALLY COMPLETE - Support Angular.js by registering as a module if ajs exists (https://github.com/irrelon/ForerunnerDB/issues/4)
 
-#### Version 2.0
+#### Next Version
 * Re-write with ES6 using Babel
 * Add caching system so requests to a collection with the same query multiple times should generate once and serve the cached results next time round. Cache invalidation can be done on any CRUD op to make subsequent query re-build cache.
 * Server-side operation in line with other production databases (e.g. command line argument support, persist to disk with binary indexed searchable data etc)
@@ -4999,6 +4993,12 @@ ForerunnerDB's project road-map:
 Please check below for details of any changes that break previous operation or
 behaviour of ForerunnerDB. Changes that break functionality are not taken lightly
 and we do not allow them to be merged in to the master branch without good cause!
+
+## Since Version 2.0.0
+Upserting documents now returns (and calls back) an array even for a single
+upserted document. This breaks compatibility with code that expects to receive an
+object when upserting a single document. It is easy to fix code that uses it. This
+is the only breaking change in version 2.0.0.
 
 ## Since Version 1.3.669
 To provide a massive performance boost (5 times the performance) the data
