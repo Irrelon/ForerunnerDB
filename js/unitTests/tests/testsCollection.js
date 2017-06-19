@@ -2004,7 +2004,7 @@ QUnit.test("Collection.upsert() :: Insert on upsert call", function () {
 	
 	var result = user.upsert(singleUserObject);
 	
-	strictEqual(result.op, 'insert', "Complete");
+	strictEqual(result[0].op, 'insert', "Complete");
 	
 	var after = user.findById("1");
 	
@@ -2027,7 +2027,7 @@ QUnit.test("Collection.upsert() :: Update on upsert call", function () {
 	
 	var result = user.upsert(copy);
 	
-	strictEqual(result && result.op, 'update', "Complete");
+	strictEqual(result && result[0] && result[0].op, 'update', "Complete");
 	
 	var after = user.findById("1");
 	
