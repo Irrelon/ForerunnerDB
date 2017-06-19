@@ -2679,6 +2679,10 @@ One of the restrictions of upsert() is that you cannot use any update operators 
 document because the operation *could* be an insert. For this reason, upserts should only
 contain data and no $ operators like $push, $unset etc.
 
+An upsert operation both returns an array of results and accepts a callback that will
+receive the same array data on what operations were done for each document passed, as
+well as the result of that operation. See the [http://forerunnerdb.com/source/doc/Collection.html#upsert](upsert documentation) for more details.
+
 ## Count Documents
 The count() method is useful when you want to get a count of the number of documents in a
 collection or a count of documents that match a specified query.
