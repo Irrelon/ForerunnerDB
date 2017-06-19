@@ -1588,10 +1588,11 @@ Collection.prototype.truncate = function () {
  * @param {Object} obj The document object to upsert or an array
  * containing documents to upsert.
  * @param {Function=} callback Optional callback method.
- * @returns {Object} An object containing two keys, "op" contains
- * either "insert" or "update" depending on the type of operation
- * that was performed and "result" contains the return data from
- * the operation used.
+ * @returns {Array} An array containing an object for each operation
+ * performed. Each object contains two keys, "op" contains either "none",
+ * "insert" or "update" depending on the type of operation that was
+ * performed and "result" contains the return data from the operation
+ * used.
  */
 Collection.prototype.upsert = function (obj, callback) {
 	if (this.isDropped()) {
@@ -1621,7 +1622,7 @@ Collection.prototype.upsert = function (obj, callback) {
 				returnData = [];
 
 				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+					returnData.push(this.upsert(obj[i])[0]);
 				}
 
 				if (callback) { callback.call(this, returnData); }
@@ -1660,8 +1661,10 @@ Collection.prototype.upsert = function (obj, callback) {
 			default:
 				break;
 		}
+		
+		if (callback) { callback.call(this, [returnData]); }
 
-		return returnData;
+		return [returnData];
 	} else {
 		if (callback) { callback.call(this, {op: 'none'}); }
 	}
@@ -13268,7 +13271,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.4.68',
+	version: '2.0.2',
 	modules: {},
 	plugins: {},
 	index: {},

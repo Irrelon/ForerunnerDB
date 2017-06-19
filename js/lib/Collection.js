@@ -641,7 +641,7 @@ Collection.prototype.upsert = function (obj, callback) {
 				returnData = [];
 
 				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+					returnData.push(this.upsert(obj[i])[0]);
 				}
 
 				if (callback) { callback.call(this, returnData); }
