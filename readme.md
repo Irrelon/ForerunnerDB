@@ -5395,6 +5395,10 @@ when changes are made on the AngularJS view and the view will be updated
 when you make changes to ForerunnerDB. To control data binding see
 [Switching Off Two-Way Data Binding](#switching-off-two-way-data-binding)
 
+> TWO-WAY BINDING CAVEAT - PLEASE NOTE: Two way data binding will not work
+from a ForerunnerDB view. If you need data in ForerunnerDB to update when
+changes are made using ng-model you must not use a db.view()
+
 ## Binding From a Collection to a Single Scope Object
 If you wish to only bind a single document inside a collection or view to
 a single object in AngularJS you can do so by passing the $single option:
@@ -5423,7 +5427,7 @@ first do selectively decide which document to bind the scope variable to.
 ## Updating Data in ForerunnerDB from an AngularJS View
 ForerunnerDB hooks changes from AngularJS and automatically updates the bound
 collection on updates to data that is on an AngularJS view using the ng-model
-attribute.
+attribute. This does not work from ForerunnerDB views using db.view().
 
 ## Switching Off Two-Way Data Binding
 
@@ -5439,7 +5443,6 @@ $fdb
 		$noBind: true // Changes to ForerunnerDB's collection will not propagate to AngularJS
 	});
 ```
-
 
 ## Automatic Clean Up / Memory Management
 ForerunnerDB automatically hooks the $destroy event of a scope so that when
