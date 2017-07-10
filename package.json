@@ -64,7 +64,7 @@
     "stringify": "^5.1.0",
     "testbear": "^1.0.28",
     "tsd-jsdoc": "^1.0.1",
-    "tslint": "^4.2.0",
+    "tslint": "^5.3.0",
     "typescript": "^2.0.9",
     "lie": "^3.1.0"
   },
