@@ -2358,6 +2358,101 @@ QUnit.test("Collection.find() :: $distinct clause strings", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.distinct() :: Simple paths check", function () {
+	base.dbUp();
+	
+	var coll = db.collection('test').truncate(),
+		result;
+	
+	coll.setData([{'test': "Hello"}, {'test': "hello"}, {'test': "Hello"}]);
+	
+	strictEqual(coll.find().length, 3, 'Check data inserted correctly');
+	
+	// Run distinct query
+	result = coll.distinct('test');
+	
+	strictEqual(result.length, 2, 'Check correct distinct result number');
+	strictEqual(result[0], "Hello", 'Check correct result 1');
+	strictEqual(result[1], "hello", 'Check correct result 2');
+	
+	base.dbDown();
+});
+
+QUnit.test("Collection.distinct() :: Complex paths check", function () {
+	base.dbUp();
+	
+	var coll = db.collection('test').truncate(),
+		result;
+	
+	coll.setData([{
+		rangeName: "Cars",
+		products: [{
+			_id: 1,
+			attributes: [{
+				name: 'Brand',
+				value: 'Ford'
+			}, {
+				name: 'Make',
+				value: 'Mustang'
+			}, {
+				name: 'Fuel',
+				value: 'Petrol'
+			}]
+		}, {
+			_id: 2,
+			attributes: [{
+				name: 'Brand',
+				value: 'Tesla'
+			}, {
+				name: 'Make',
+				value: 'Model S'
+			}, {
+				name: 'Fuel',
+				value: 'Electricity'
+			}]
+		}]
+	}, {
+		rangeName: "Vans",
+		products: [{
+			_id: 1,
+			attributes: [{
+				name: 'Brand',
+				value: 'Ford'
+			}, {
+				name: 'Make',
+				value: 'Pickup'
+			}, {
+				name: 'Fuel',
+				value: 'Diesel'
+			}]
+		}, {
+			_id: 2,
+			attributes: [{
+				name: 'Brand',
+				value: 'Tesla'
+			}, {
+				name: 'Make',
+				value: 'Semi'
+			}, {
+				name: 'Fuel',
+				value: 'Electricity'
+			}]
+		}]
+	}]);
+	
+	strictEqual(coll.find().length, 2, 'Check data inserted correctly');
+	
+	// Run distinct query
+	result = coll.distinct('products.attributes.name');
+	
+	strictEqual(result.length, 3, 'Check correct distinct result number');
+	strictEqual(result[0], "Brand", 'Check correct result 1');
+	strictEqual(result[1], "Make", 'Check correct result 2');
+	strictEqual(result[2], "Fuel", 'Check correct result 2');
+	
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: // Comment properties", function () {
 	base.dbUp();
 	

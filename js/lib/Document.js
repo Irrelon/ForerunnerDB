@@ -184,7 +184,7 @@ FdbDocument.prototype._findSub = function (docArr, path, subDocQuery, subDocOpti
 		if (subDocArr) {
 			subDocCollection.setData(subDocArr);
 			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
-			if (subDocOptions.returnFirst && subDocResults.length) {
+			if (subDocOptions.$returnFirst && subDocResults.length) {
 				return subDocResults[0];
 			}
 			

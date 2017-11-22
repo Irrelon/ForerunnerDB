@@ -278,6 +278,49 @@ Path.prototype.set = function (obj, path, val) {
 };
 
 /**
+ * Retrieves all the values inside an object based on the passed
+ * path string. Will automatically traverse any arrays it encounters
+ * and assumes array indexes are not part of the specifed path.
+ * @param {Object|Array} obj An object or array of objects to
+ * scan paths for.
+ * @param {String} path The path string delimited by a period.
+ * @return {Array} An array of values found at the end of each path
+ * termination.
+ */
+Path.prototype.aggregate = function (obj, path) {
+	var pathParts,
+		part,
+		values = [],
+		i;
+	
+	// First, check if the object we are given
+	// is an array. If so, loop it and work on
+	// the objects inside
+	if (obj instanceof Array) {
+		// Loop array and get path data from each sub object
+		for (i = 0; i < obj.length; i++) {
+			values = values.concat(this.aggregate(obj[i], path));
+		}
+		
+		return values;
+	}
+	
+	if (path.indexOf('.') === -1) {
+		// No further parts to navigate
+		// Return an array so the value can be concatenated on return via array.concat()
+		return [obj[path]];
+	}
+	
+	pathParts = path.split('.');
+	
+	// Grab the next part of our path
+	part = pathParts.shift();
+	values = values.concat(this.aggregate(obj[part], pathParts.join('.')));
+	
+	return values;
+};
+
+/**
  * Gets a single value from the passed object and given path.
  * @param {Object} obj The object to inspect.
  * @param {String} path The path to retrieve data from.
@@ -306,7 +349,13 @@ Path.prototype.value = function (obj, path, options) {
 
 	// Detect early exit
 	if (path && path.indexOf('.') === -1) {
-		return [obj[path]];
+		if (options && options.skipArrCheck) {
+			return [obj[path]];
+		}
+		
+		if (!(obj instanceof Array)) {
+			return [obj[path]];
+		}
 	}
 
 	if (obj !== undefined && typeof obj === 'object') {

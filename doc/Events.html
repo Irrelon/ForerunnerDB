@@ -101,7 +101,7 @@
     
             <h3 class="subsection-title">Methods</h3>
 
-            <ul><li><a href="#deferEmit"><span class="type-signature">(static) </span>deferEmit<span class="signature">(eventName, data<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li><li><a href="#emit"><span class="type-signature">(static) </span>emit<span class="signature">(event, data)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id, listener)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li></ul>
+            <ul><li><a href="#deferEmit"><span class="type-signature">(static) </span>deferEmit<span class="signature">(eventName, data<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li><li><a href="#emit"><span class="type-signature">(static) </span>emit<span class="signature">(event, data)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id, listener)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li></ul>
 
             
                 
@@ -450,6 +450,160 @@ de-bounced event will be emitted.
 </dl>
 
     
+
+
+
+            
+                
+
+    
+
+    <h4 class="name" id=".off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Cancels all listeners for an event based on the passed event name and id.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The event name to cancel listeners for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The ID to cancel all listeners for.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line189">line 189</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -809,160 +963,6 @@ or once() call to cancel.</td>
 
     
 
-    <h4 class="name" id=".off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Cancels all listeners for an event based on the passed event name and id.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>event</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event name to cancel listeners for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The ID to cancel all listeners for.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line189">line 189</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-                
-
-    
-
     <h4 class="name" id=".off"><span class="type-signature">(static) </span>off<span class="signature">(event)</span><span class="type-signature"> &rarr; {*}</span></h4>
 
     
@@ -1064,178 +1064,6 @@ or once() call to cancel.</td>
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
         <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line97">line 97</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<h5>Returns:</h5>
-
-        
-
-
-<dl>
-    <dt>
-        Type
-    </dt>
-    <dd>
-        
-<span class="param-type">*</span>
-
-
-    </dd>
-</dl>
-
-    
-
-
-
-            
-                
-
-    
-
-    <h4 class="name" id=".on"><span class="type-signature">(static) </span>on<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></h4>
-
-    
-
-
-
-<div class="description">
-    Attach an event listener to the passed event.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>event</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The name of the event to listen for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>listener</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">function</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The method to call when the event is fired.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -1480,14 +1308,14 @@ id matches the document id for the event being fired.
 
     
 
-    <h4 class="name" id=".once"><span class="type-signature">(static) </span>once<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></h4>
+    <h4 class="name" id=".on"><span class="type-signature">(static) </span>on<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></h4>
 
     
 
 
 
 <div class="description">
-    Attach an event listener to the passed event that will be called only once.
+    Attach an event listener to the passed event.
 </div>
 
 
@@ -1603,7 +1431,7 @@ id matches the document id for the event being fired.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line50">line 50</a>
+        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line12">line 12</a>
     </li></ul></dd>
     
 
@@ -1843,6 +1671,178 @@ id matches the document id for the event being fired.
 
 
             
+                
+
+    
+
+    <h4 class="name" id=".once"><span class="type-signature">(static) </span>once<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Attach an event listener to the passed event that will be called only once.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The name of the event to listen for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>listener</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">function</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The method to call when the event is fired.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line50">line 50</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">*</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+            
         
 
     
@@ -1867,7 +1867,7 @@ id matches the document id for the event being fired.
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Tue Jul 04 2017 14:48:02 GMT+0100 (BST)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Nov 22 2017 17:18:08 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

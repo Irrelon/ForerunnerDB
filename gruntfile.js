@@ -6,7 +6,6 @@ var util = require('util'),
 	derequire = require('derequire');
 
 module.exports = function(grunt) {
-	//grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks("grunt-browserify");

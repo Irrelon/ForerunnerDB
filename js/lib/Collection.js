@@ -2127,28 +2127,32 @@ Collection.prototype.isSubsetOf = function (collection) {
 
 /**
  * Find the distinct values for a specified field across a single collection and
- * returns the results in an array.
- * @param {String} key The field path to return distinct values for e.g. "person.name".
+ * returns the values as a results array.
+ * @param {String} path The field path to return distinct values for e.g. "person.name".
  * @param {Object=} query The query to use to filter the documents used to return values from.
  * @param {Object=} options The query options to use when running the query.
  * @returns {Array}
  */
-Collection.prototype.distinct = function (key, query, options) {
+Collection.prototype.distinct = function (path, query, options) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	var data = this.find(query, options),
-		pathSolver = new Path(key),
+		pathSolver = new Path(),
 		valueUsed = {},
 		distinctValues = [],
+		aggregatedValues,
 		value,
 		i;
-
+	
+	// Get path values as an array
+	aggregatedValues = pathSolver.aggregate(data, path);
+	
 	// Loop the data and build array of distinct values
-	for (i = 0; i < data.length; i++) {
-		value = pathSolver.value(data[i])[0];
-
+	for (i = 0; i < aggregatedValues.length; i++) {
+		value = aggregatedValues[i];
+		
 		if (value && !valueUsed[value]) {
 			valueUsed[value] = true;
 			distinctValues.push(value);
@@ -3338,7 +3342,8 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		if (subDocArr) {
 			subDocCollection.setData(subDocArr);
 			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
-			if (subDocOptions.returnFirst && subDocResults.length) {
+			
+			if (subDocOptions.$returnFirst && subDocResults.length) {
 				return subDocResults[0];
 			}
 
