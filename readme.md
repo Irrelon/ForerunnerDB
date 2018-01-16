@@ -12,7 +12,7 @@ products please consider becoming a patron: [https://www.patreon.com/user?u=4443
 Community Support: [https://github.com/Irrelon/ForerunnerDB/issues](https://github.com/Irrelon/ForerunnerDB/issues)
 Commercial Support: [forerunnerdb@irrelon.com](mailto:forerunnerdb@irrelon.com)
 
-## Version 2.0.13
+## Version 2.0.14
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1838,122 +1838,126 @@ This will update the document with the _id field of 1 to a new price of 180.
 
 ### Update Operators
 
-* [$replace](#replace)
-* [$overwrite](#overwrite)
+* [$addToSet](#addtoset)
+* [$cast](#cast)
 * [$each](#each)
 * [$inc](#inc)
+* [$move](#move)
+* [$mul](#mul)
+* [$overwrite](#overwrite)
 * [$push](#push)
+* [$pull](#pull)
+* [$pullAll](#pullall)
+* [$pop](#pop)
+* [$rename](#rename)
+* [$replace](#replace)
 * [$splicePush](#splicepush)
 * [$splicePull](#splicepull)
-* [$addToSet](#addtoset)
-* [$pull](#pull)
-* [$pop](#pop)
-* [$move](#move)
-* [$cast](#cast)
+* [$toggle](#toggle)
 * [$unset](#unset)
 * [Array Positional in Updates (.$)](#array-positional-in-updates)
 
-#### $replace
-> PLEASE NOTE: $replace can only be used on the top-level. Nested $replace operators
- are not currently supported and may cause unexpected behaviour.
+#### $addToSet
+Adds an item into an array only if the item does not already exist in the array.
 
-The $replace operator will take the passed object and overwrite the target document
-with the object's keys and values. If a key exists in the existing document but
-not in the passed object, ForerunnerDB will remove the key from the document.
+ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation.
+Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check
+uniqueness against by using the $key property.
 
-The $replace operator is equivalent to calling MongoDB's update without using a 
-MongoDB $set operator.
-
-When using $replace the primary key field will *NEVER* be replaced even if it is
-specified. If you wish to change a record's primary key id, remove the document
-and insert a new one with your desired id.
+In the following example $addToSet is used to check uniqueness against the whole document
+being added:
 
 ```js
-db.collection("test").update({
-	<query>
-}, {
-	$replace: {
-		<field>: <value>,
-		<field>: <value>,
-		<field>: <value>
-	}
-});
-```
-
-In the following example the existing document is outright replaced by a new one:
-
-```js
+// Create a collection document
 db.collection("test").insert({
-	_id: "445324",
-	name: "Jill",
-	age: 15
+	_id: "1",
+	arr: []
 });
 
+// Update the document by adding an object to the "arr" array
 db.collection("test").update({
-	_id: "445324"
+	_id: "1"
 }, {
-	$replace: {
-		job: "Frog Catcher"
-	}
-});
-
-JSON.stringify(db.collection("test").find());
-```
-
-Result:
-
-```js
-[{
-	"_id": "445324",
-	"job": "Frog Catcher"
-}]
-```
-
-#### $overwrite
-The $overwrite operator replaces a key's value with the one passed, overwriting it
-completely. This operates the same way that MongoDB's default update behaviour works
-without using the $set operator.
-
-If you wish to fully replace a document with another one you can do so using the
-$replace operator instead.
-
-The $overwrite operator is most useful when updating an array field to a new type
-such as an object. By default ForerunnerDB will detect an array and step into the
-array objects one at a time and apply the update to each object. When you use
-$overwrite you can replace the array instead of stepping into it.
-
-```js
-db.collection("test").update({
-	<query>
-}, {
-	$overwrite: {
-		<field>: <value>,
-		<field>: <value>,
-		<field>: <value>
-	}
-});
-```
-
-In the following example the "arr" field (initially an array) is replaced by an object:
-
-```js
-db.collection("test").insert({
-	_id: "445324",
-	arr: [{
-		foo: 1
-	}]
-});
-
-db.collection("test").update({
-	_id: "445324"
-}, {
-	$overwrite: {
+	$addToSet: {
 		arr: {
-			moo: 1
+			name: "Fufu",
+			test: "1"
 		}
 	}
 });
 
+// Try and do it again... this will fail because a
+// matching item already exists in the array
+db.collection("test").update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			name: "Fufu",
+			test: "1"
+		}
+	}
+});
+```
+
+Now in the example below we specify which key to test uniqueness against:
+
+```js
+// Create a collection document
+db.collection("test").insert({
+	_id: "1",
+	arr: []
+});
+
+// Update the document by adding an object to the "arr" array
+db.collection("test").update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			name: "Fufu",
+			test: "1"
+		}
+	}
+});
+
+// Try and do it again... this will work because the
+// key "test" is different for the existing and new objects
+db.collection("test").update({
+	_id: "1"
+}, {
+	$addToSet: {
+		arr: {
+			$key: "test",
+			name: "Fufu",
+			test: "2"
+		}
+	}
+});
+```
+
+You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
+
+#### $cast
+> Version >= 1.3.34
+
+The $cast operator allows you to change a property's type within a document. If used to 
+cast a property to an array or object the property is set to a new blank array or
+object respectively.
+
+This example changes the type of the "val" property from a string to a number:
+
+```js
+db.collection("test").insert({
+	val: "1.2"
+});
+
+db.collection("test").update({}, {
+	$cast: {
+		val: "number"
+	}
+});
+
 JSON.stringify(db.collection("test").find());
 ```
 
@@ -1961,10 +1965,75 @@ Result:
 
 ```js
 [{
-	"_id": "445324",
-	"arr": {
-		"moo": 1
+	"_id": "1d6fbf16e080de0",
+	"val": 1.2
+}]
+```
+
+You can also use cast to ensure that an array or object exists on a property without
+overwriting that property if one already exists:
+
+```js
+db.collection("test").insert({
+	_id: "moo",
+	arr: [{
+		test: true
+	}]
+});
+
+db.collection("test").update({
+	_id: "moo"
+}, {
+	$cast: {
+		arr: "array"
 	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	"_id": "moo",
+	"arr": [{
+		"test": true
+	}]
+}]
+```
+
+Should you wish to initialise an array or object with specific data if the property is
+not currently of that type rather than initialising as a blank array / object, you can 
+specify the data to use by including a $data property in your $cast operator object:
+
+```js
+db.collection("test").insert({
+	_id: "moo"
+});
+
+db.collection("test").update({
+	_id: "moo"
+}, {
+	$cast: {
+		orders: "array",
+		$data: [{
+			initial: true
+		}]
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	"_id": "moo",
+	"orders":[{
+		"initial": true
+	}]
 }]
 ```
 
@@ -2124,6 +2193,136 @@ Result:
 
 Using a positive number will increment, using a negative number will decrement.
 
+#### $move
+The $move operator moves an item that exists inside a document's array from one index to another.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$move: {
+		<arrayField>: <value|query>,
+		$index: <index>
+	}
+});
+```
+
+The following example moves "Milk" in the "shoppingList" array to index 1 in the
+document with the id "23231":
+
+```js
+db.users.update({
+	_id: "23231"
+}, {
+	$move: {
+		shoppingList: "Milk"
+		$index: 1
+	}
+});
+```
+
+#### $mul
+The $mul operator multiplies a field value by the given number and sets the result
+as the field's new value.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$mul: {
+		<field>: <value>
+	}
+});
+```
+
+In the following example, the "value" field is multiplied by 2 in the document that
+matches the id "445324":
+
+```js
+db.collection("test").insert({
+	_id: "445324",
+	value: 5
+});
+
+db.collection("test").update({
+	_id: "445324"
+}, {
+	$mul: {
+		value: 2
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+    
+Result:
+
+```js
+[{
+	"_id": "445324",
+	"value": 10
+}]
+```
+
+#### $overwrite
+The $overwrite operator replaces a key's value with the one passed, overwriting it
+completely. This operates the same way that MongoDB's default update behaviour works
+without using the $set operator.
+
+If you wish to fully replace a document with another one you can do so using the
+$replace operator instead.
+
+The $overwrite operator is most useful when updating an array field to a new type
+such as an object. By default ForerunnerDB will detect an array and step into the
+array objects one at a time and apply the update to each object. When you use
+$overwrite you can replace the array instead of stepping into it.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$overwrite: {
+		<field>: <value>,
+		<field>: <value>,
+		<field>: <value>
+	}
+});
+```
+
+In the following example the "arr" field (initially an array) is replaced by an object:
+
+```js
+db.collection("test").insert({
+	_id: "445324",
+	arr: [{
+		foo: 1
+	}]
+});
+
+db.collection("test").update({
+	_id: "445324"
+}, {
+	$overwrite: {
+		arr: {
+			moo: 1
+		}
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	"_id": "445324",
+	"arr": {
+		"moo": 1
+	}
+}]
+```
+
 #### $push
 The $push operator appends a specified value to an array.
 
@@ -2164,6 +2363,216 @@ Result:
 	"shoppingList": [
 		"Milk"
 	]
+}]
+```
+
+#### $pull
+The $pull operator removes a specified value or values that match an input query.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$pull: {
+		<arrayField>: <value|query>
+	}
+});
+```
+
+The following example removes the "Milk" entry from the "shoppingList" array:
+
+```js
+db.users.update({
+	_id: "23231"
+}, {
+	$pull: {
+		shoppingList: "Milk"
+	}
+});
+```
+
+If an array element is an embedded document (JavaScript object), the $pull operator applies its specified query to the element as though it were a top-level object.
+
+#### $pullAll
+The $pullAll operator removes all values / array entries that match an input
+query from the target array field.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$pullAll: {
+		<arrayField>: <value|query>
+	}
+});
+```
+
+The following example removes all instances of "Milk" and "Toast from the "items" array:
+
+```js
+db.users.update({
+	_id: "23231"
+}, {
+	$pullAll: {
+		items: ["Milk", "Toast"]
+	}
+});
+```
+
+If an array element is an embedded document (JavaScript object), the $pullAll operator applies its specified query to the element as though it were a top-level object.
+
+#### $pop
+The $pop operator removes an element from an array at the beginning or end. If you wish to remove
+an element from the end of the array pass 1 in your value. If you wish to remove an element from
+the beginning of an array pass -1 in your value.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$pop: {
+		<field>: <value>
+	}
+});
+```
+
+The following example pops the item from the beginning of the "shoppingList" array:
+
+```js
+db.collection("test").insert({
+	_id: "23231",
+	shoppingList: [{
+		_id: 1,
+		name: "One"
+	}, {
+		_id: 2,
+		name: "Two"
+	}, {
+		_id: 3,
+		name: "Three"
+	}]
+});
+
+db.collection("test").update({
+	_id: "23231"
+}, {
+	$pop: {
+		shoppingList: -1 // -1 pops from the beginning, 1 pops from the end
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	_id: "23231",
+	shoppingList: [{
+		_id: 2,
+		name: "Two"
+	}, {
+		_id: 3,
+		name: "Three"
+	}]
+}]
+```
+
+#### $rename
+Renames a field in any documents that match the query with a new name.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$rename: {
+		<field>: <newName>
+	}
+});
+```
+
+The following example renames the "action" field to "jelly":
+
+```js
+db.collection("test").insert({
+	_id: "23231",
+	action: "Foo"
+});
+
+db.collection("test").update({
+	_id: "23231"
+}, {
+	$rename: {
+		action: "jelly"
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+ 	_id: "23231",
+ 	jelly: "Foo"
+ }]
+```
+
+#### $replace
+> PLEASE NOTE: $replace can only be used on the top-level. Nested $replace operators
+ are not currently supported and may cause unexpected behaviour.
+
+The $replace operator will take the passed object and overwrite the target document
+with the object's keys and values. If a key exists in the existing document but
+not in the passed object, ForerunnerDB will remove the key from the document.
+
+The $replace operator is equivalent to calling MongoDB's update without using a 
+MongoDB $set operator.
+
+When using $replace the primary key field will *NEVER* be replaced even if it is
+specified. If you wish to change a record's primary key id, remove the document
+and insert a new one with your desired id.
+
+```js
+db.collection("test").update({
+	<query>
+}, {
+	$replace: {
+		<field>: <value>,
+		<field>: <value>,
+		<field>: <value>
+	}
+});
+```
+
+In the following example the existing document is outright replaced by a new one:
+
+```js
+db.collection("test").insert({
+	_id: "445324",
+	name: "Jill",
+	age: 15
+});
+
+db.collection("test").update({
+	_id: "445324"
+}, {
+	$replace: {
+		job: "Frog Catcher"
+	}
+});
+
+JSON.stringify(db.collection("test").find());
+```
+
+Result:
+
+```js
+[{
+	"_id": "445324",
+	"job": "Frog Catcher"
 }]
 ```
 
@@ -2280,296 +2689,45 @@ Result:
 ]
 ```
 
-#### $addToSet
-Adds an item into an array only if the item does not already exist in the array.
-
-ForerunnerDB supports the $addToSet operator as detailed in the MongoDB documentation.
-Unlike MongoDB, ForerunnerDB also allows you to specify a matching field / path to check
-uniqueness against by using the $key property.
-
-In the following example $addToSet is used to check uniqueness against the whole document
-being added:
-
-```js
-// Create a collection document
-db.collection("test").insert({
-	_id: "1",
-	arr: []
-});
-
-// Update the document by adding an object to the "arr" array
-db.collection("test").update({
-	_id: "1"
-}, {
-	$addToSet: {
-		arr: {
-			name: "Fufu",
-			test: "1"
-		}
-	}
-});
-
-// Try and do it again... this will fail because a
-// matching item already exists in the array
-db.collection("test").update({
-	_id: "1"
-}, {
-	$addToSet: {
-		arr: {
-			name: "Fufu",
-			test: "1"
-		}
-	}
-});
-```
-
-Now in the example below we specify which key to test uniqueness against:
-
-```js
-// Create a collection document
-db.collection("test").insert({
-	_id: "1",
-	arr: []
-});
-
-// Update the document by adding an object to the "arr" array
-db.collection("test").update({
-	_id: "1"
-}, {
-	$addToSet: {
-		arr: {
-			name: "Fufu",
-			test: "1"
-		}
-	}
-});
-
-// Try and do it again... this will work because the
-// key "test" is different for the existing and new objects
-db.collection("test").update({
-	_id: "1"
-}, {
-	$addToSet: {
-		arr: {
-			$key: "test",
-			name: "Fufu",
-			test: "2"
-		}
-	}
-});
-```
-
-You can also specify the key to check uniqueness against as an object path such as 'moo.foo'.
-
-#### $pull
-The $pull operator removes a specified value or values that match an input query.
+#### $toggle
+The $toggle operator inverts the value of a field with a boolean. If the value
+is true before toggling, after toggling it will be false and vice versa.
 
 ```js
 db.collection("test").update({
 	<query>
 }, {
-	$pull: {
-		<arrayField>: <value|query>
+	$toggle: {
+		<field>: 1
 	}
 });
 ```
 
-The following example removes the "Milk" entry from the "shoppingList" array:
-
-```js
-db.users.update({
-	_id: "23231"
-}, {
-	$pull: {
-		shoppingList: "Milk"
-	}
-});
-```
-
-If an array element is an embedded document (JavaScript object), the $pull operator applies its specified query to the element as though it were a top-level object.
-
-#### $pop
-The $pop operator removes an element from an array at the beginning or end. If you wish to remove
-an element from the end of the array pass 1 in your value. If you wish to remove an element from
-the beginning of an array pass -1 in your value.
-
-```js
-db.collection("test").update({
-	<query>
-}, {
-	$pop: {
-		<field>: <value>
-	}
-});
-```
-
-The following example pops the item from the beginning of the "shoppingList" array:
+In the following example, the "running" field is toggled from true to false:
 
 ```js
 db.collection("test").insert({
-	_id: "23231",
-	shoppingList: [{
-		_id: 1,
-		name: "One"
-	}, {
-		_id: 2,
-		name: "Two"
-	}, {
-		_id: 3,
-		name: "Three"
-	}]
+	_id: "445324",
+	running: true
 });
 
 db.collection("test").update({
-	_id: "23231"
+	_id: "445324"
 }, {
-	$pop: {
-		shoppingList: -1 // -1 pops from the beginning, 1 pops from the end
+	$toggle: {
+		running: 1
 	}
 });
 
 JSON.stringify(db.collection("test").find());
 ```
-
+    
 Result:
 
 ```js
 [{
-	_id: "23231",
-	shoppingList: [{
-		_id: 2,
-		name: "Two"
-	}, {
-		_id: 3,
-		name: "Three"
-	}]
-}]
-```
-
-#### $move
-The $move operator moves an item that exists inside a document's array from one index to another.
-
-```js
-db.collection("test").update({
-	<query>
-}, {
-	$move: {
-		<arrayField>: <value|query>,
-		$index: <index>
-	}
-});
-```
-
-The following example moves "Milk" in the "shoppingList" array to index 1 in the
-document with the id "23231":
-
-```js
-db.users.update({
-	_id: "23231"
-}, {
-	$move: {
-		shoppingList: "Milk"
-		$index: 1
-	}
-});
-```
-
-#### $cast
-> Version >= 1.3.34
-
-The $cast operator allows you to change a property's type within a document. If used to 
-cast a property to an array or object the property is set to a new blank array or
-object respectively.
-
-This example changes the type of the "val" property from a string to a number:
-
-```js
-db.collection("test").insert({
-	val: "1.2"
-});
-
-db.collection("test").update({}, {
-	$cast: {
-		val: "number"
-	}
-});
-
-JSON.stringify(db.collection("test").find());
-```
-
-Result:
-
-```js
-[{
-	"_id": "1d6fbf16e080de0",
-	"val": 1.2
-}]
-```
-
-You can also use cast to ensure that an array or object exists on a property without
-overwriting that property if one already exists:
-
-```js
-db.collection("test").insert({
-	_id: "moo",
-	arr: [{
-		test: true
-	}]
-});
-
-db.collection("test").update({
-	_id: "moo"
-}, {
-	$cast: {
-		arr: "array"
-	}
-});
-
-JSON.stringify(db.collection("test").find());
-```
-
-Result:
-
-```js
-[{
-	"_id": "moo",
-	"arr": [{
-		"test": true
-	}]
-}]
-```
-
-Should you wish to initialise an array or object with specific data if the property is
-not currently of that type rather than initialising as a blank array / object, you can 
-specify the data to use by including a $data property in your $cast operator object:
-
-```js
-db.collection("test").insert({
-	_id: "moo"
-});
-
-db.collection("test").update({
-	_id: "moo"
-}, {
-	$cast: {
-		orders: "array",
-		$data: [{
-			initial: true
-		}]
-	}
-});
-
-JSON.stringify(db.collection("test").find());
-```
-
-Result:
-
-```js
-[{
-	"_id": "moo",
-	"orders":[{
-		"initial": true
-	}]
+	"_id": "445324",
+	"running": false
 }]
 ```
 
