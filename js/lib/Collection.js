@@ -2681,8 +2681,8 @@ Collection.prototype._find = function (query, options) {
 	if (options.$aggregate) {
 		op.data('flag.aggregate', true);
 		op.time('aggregate');
-		pathSolver = new Path(options.$aggregate);
-		resultArr = pathSolver.value(resultArr);
+		pathSolver = new Path();
+		resultArr = pathSolver.aggregate(resultArr, options.$aggregate);
 		op.time('aggregate');
 	}
 
