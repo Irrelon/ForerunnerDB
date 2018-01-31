@@ -82,6 +82,7 @@
     "url": "git://github.com/irrelon/ForerunnerDB.git"
   },
   "main": "./js/builds/nodecore",
+	"browser": "./js/builds/all",
   "browserify": "./js/builds/all",
   "bugs": {
     "url": "http://github.com/irrelon/ForerunnerDB/issues"
