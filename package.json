@@ -2,7 +2,7 @@
   "author": "Rob Evans - Irrelon Software Limited",
   "name": "forerunnerdb-core",
   "description": "ForerunnerDB's core module exported - see ForerunnerDB proper for more information.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "keywords": [
     "irrelon",
     "forerunnerdb",

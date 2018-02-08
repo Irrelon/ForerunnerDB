@@ -1,2 +1,2 @@
-var ForerunnerDB = require('forerunnerdb/builds/core');
+var ForerunnerDB = require('forerunnerdb/js/builds/core');
 module.exports = ForerunnerDB;
