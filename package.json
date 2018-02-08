@@ -1,0 +1,54 @@
+{
+  "author": "Rob Evans - Irrelon Software Limited",
+  "name": "forerunnerdb-core",
+  "description": "ForerunnerDB's core module exported - see ForerunnerDB proper for more information.",
+  "version": "1.0.0",
+  "keywords": [
+    "irrelon",
+    "forerunnerdb",
+    "forerunner",
+    "database",
+    "nosql",
+    "mongodb",
+    "javascript",
+    "document",
+    "store",
+    "browser",
+    "node",
+    "data",
+    "binding",
+    "index",
+    "client-side",
+    "server-side",
+    "lokijs",
+    "loki",
+    "db",
+    "memory",
+    "in-memory",
+    "indexeddb",
+    "localstorage",
+    "storage",
+    "websql",
+    "taffydb",
+    "taffy"
+  ],
+  "dependencies": {
+    "forerunnerdb": "^2.0.20"
+  },
+  "devDependencies": {},
+  "engines": {
+    "node": ">= 4"
+  },
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/irrelon/ForerunnerDB-core.git"
+  },
+  "main": "./index",
+  "browser": "./index",
+  "browserify": "./index",
+  "bugs": {
+    "url": "http://github.com/irrelon/ForerunnerDB-core/issues"
+  },
+  "license": "MIT"
+}
