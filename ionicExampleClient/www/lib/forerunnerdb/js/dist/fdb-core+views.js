@@ -9439,6 +9439,9 @@ var Matching = {
 
 			case '$nee': // Not equals equals
 				return source !== test;
+				
+			case '$not': // Not operator
+				return !this._match(source, test, queryOptions, 'and', options);
 
 			case '$or':
 				// Match true on ANY check to pass
@@ -12028,7 +12031,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '2.0.20',
+	version: '2.0.21',
 	modules: {},
 	plugins: {},
 	index: {},
