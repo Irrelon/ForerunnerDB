@@ -98,7 +98,7 @@ Shared.synthesize(Persist.prototype, 'auto', function (val) {
 			this._db.off('change', this._autoSave);
 
 			if (this._db.debug()) {
-				console.log(this._db.logIdentifier() + ' Automatic load/save disbled');
+				console.log(this._db.logIdentifier() + ' Automatic load/save disabled');
 			}
 		}
 	}
