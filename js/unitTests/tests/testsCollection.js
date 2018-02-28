@@ -248,6 +248,60 @@ QUnit.test("Collection.find() :: $gte $lte clause combined", function () {
 	base.dbDown();
 });
 
+QUnit.test("Collection.find() :: $not operator wrapping whole query", function () {
+	base.dbUp();
+	base.dataUp();
+	
+	var result = user.find({
+		$not: {
+			age: 12
+		}
+	});
+	
+	strictEqual(result.length, 3, "Complete");
+	
+	base.dbDown();
+});
+
+QUnit.test("Collection.find() :: $not operator on nested data", function () {
+	base.dbUp();
+	
+	var coll = db.collection('test');
+	
+	coll.insert({
+		_id: 1,
+		name: 'John Doe',
+		group: [{
+			name: 'groupOne'
+		}, {
+			name: 'groupTwo'
+		}]
+	});
+	
+	coll.insert({
+		_id: 2,
+		name: 'Jane Doe',
+		group: [{
+			name: 'groupTwo'}
+		]
+	});
+
+	// find members who are not a part of 'groupOne'
+	// result should be 'Jane Doe' as she's only a part of 'groupTwo'
+	var result = coll.find({
+		$not: {
+			group: {
+				name: 'groupOne'
+			}
+		}
+	});
+	
+	strictEqual(result.length, 1, "Results have correct count");
+	strictEqual(result[0]._id, 2, "Result item has correct id");
+	
+	base.dbDown();
+});
+
 QUnit.test("Collection.find() :: $ne clause basic string", function () {
 	base.dbUp();
 	base.dataUp();

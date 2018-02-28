@@ -405,6 +405,7 @@ that are not available in MongoDB but which can help in browser-centric applicat
 * [$eeq](#eeq) Strict Equal To (===)
 * [$ne](#ne) Not Equal To (!=)
 * [$nee](#nee) Strict Not Equal To (!==)
+* [$not](#not) Apply boolean not to query
 * [$in](#in) Match Any Value In An Array Of Values
 * [$fastIn](#fastIn) Match Any String or Number In An Array Of String or Numbers
 * [$nin](#nin)  Match Any Value Not In An Array Of Values
@@ -770,6 +771,60 @@ Result is:
 }, {
 	_id: 3,
 	val: 3
+}]
+```
+
+#### $not
+Selects the documents where the result of the query inside the $not operator
+do not match the query object.
+
+```js
+{$not: query}
+```
+
+##### Usage
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db("test"),
+	coll = db.collection("test");
+
+coll.insert({
+	_id: 1,
+	name: 'John Doe',
+	group: [{
+		name: 'groupOne'
+	}, {
+		name: 'groupTwo'
+	}]
+});
+
+coll.insert({
+	_id: 2,
+	name: 'Jane Doe',
+	group: [{
+		name: 'groupTwo'}
+	]
+});
+
+result = coll.find({
+	$not: {
+		group: {
+			name: 'groupOne'
+		}
+	}
+});
+```
+
+Result is:
+
+```js
+[{
+ 	_id: 2,
+ 	name: 'Jane Doe',
+ 	group: [{
+ 		name: 'groupTwo'}
+ 	]
 }]
 ```
 
