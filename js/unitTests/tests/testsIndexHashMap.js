@@ -314,12 +314,12 @@ QUnit.test("Index.remove() :: Test index is being kept up to date with CRUD", fu
 	base.dbDown();
 });
 
-ForerunnerDB.version('1.4', function () {
+ForerunnerDB.version('1.6', function () {
 	QUnit.test("Collection.find() :: Test index based on range search ($gt, $lt etc)", function () {
 		base.dbUp();
 
 		var names = ['Jim', 'Bob', 'Bill', 'Max', 'Jane', 'Kim', 'Sally', 'Sam'],
-			collection = db.collection('test').truncate(),
+			collection = db.collection().truncate(),
 			tempName,
 			tempAge,
 			i;
@@ -352,7 +352,7 @@ ForerunnerDB.version('1.4', function () {
 	});
 });
 
-ForerunnerDB.version('1.4', function () {
+ForerunnerDB.version('1.6', function () {
 	QUnit.test("Collection.ensureIndex() :: Test index against a key in a sub-array of documents", function () {
 		base.dbUp();
 

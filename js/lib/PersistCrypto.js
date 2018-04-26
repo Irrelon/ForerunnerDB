@@ -77,7 +77,7 @@ Plugin.prototype.encode = function (val, meta, finished) {
 			parse: function () { return self.parse.apply(self, arguments); }
 		}
 	});
-
+	
 	wrapper.data = encryptedVal.toString();
 	wrapper.enabled = true;
 
@@ -97,12 +97,33 @@ Plugin.prototype.decode = function (wrapper, meta, finished) {
 	if (wrapper) {
 		wrapper = this.jParse(wrapper);
 
-		data = CryptoJS[this._algo].decrypt(wrapper.data, this._pass, {
-			format: {
-				stringify: function () { return self.stringify.apply(self, arguments); },
-				parse: function () { return self.parse.apply(self, arguments); }
+		try {
+			data = CryptoJS[this._algo].decrypt(wrapper.data, this._pass, {
+				format: {
+					stringify: function () {
+						return self.stringify.apply(self, arguments);
+					},
+					parse: function () {
+						return self.parse.apply(self, arguments);
+					}
+				}
+			}).toString(CryptoJS.enc.Utf8);
+			
+			if (!data) {
+				// Crypto failed - CryptoJS just returns a blank string most of the time
+				// if an incorrect password is used. Perhaps we should do this:
+				// http://stackoverflow.com/questions/23188593/cryptojs-check-if-aes-passphrase-is-correct
+				if (finished) {
+					finished('Crypto failed to decrypt data, incorrect password?', data, meta);
+				}
+				return;
 			}
-		}).toString(CryptoJS.enc.Utf8);
+		} catch (e) {
+			if (finished) {
+				finished('Crypto failed to decrypt data, incorrect password?', data, meta);
+			}
+			return;
+		}
 
 		if (finished) {
 			finished(false, data, meta);

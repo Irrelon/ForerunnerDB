@@ -490,6 +490,10 @@ View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
 	return this._data.findSub(match, path, subDocQuery, subDocOptions);
 };
 
+View.prototype._findSub = function (docArr, path, subDocQuery, subDocOptions) {
+	return this._data._findSub(docArr, path, subDocQuery, subDocOptions);
+};
+
 /**
  * Queries the view data in a sub-array and returns first match.
  * @see Collection::findSubOne()
@@ -497,6 +501,10 @@ View.prototype.findSub = function (match, path, subDocQuery, subDocOptions) {
  */
 View.prototype.findSubOne = function (match, path, subDocQuery, subDocOptions) {
 	return this._data.findSubOne(match, path, subDocQuery, subDocOptions);
+};
+
+View.prototype._findSubOne = function (docArr, path, subDocQuery, subDocOptions) {
+	return this._data._findSubOne(docArr, path, subDocQuery, subDocOptions);
 };
 
 /**
@@ -692,10 +700,10 @@ View.prototype._chainHandler = function (chainPacket) {
 					item = updates[index];
 
 					// Remove the item from the active bucket (via it's id)
-					this._activeBucket.remove(item);
+					currentIndex = this._activeBucket.remove(item);
 
 					// Get the current location of the item
-					currentIndex = this._data._data.indexOf(item);
+					//currentIndex = this._data._data.indexOf(item);
 
 					// Add the item back in to the active bucket
 					insertIndex = this._activeBucket.insert(item);

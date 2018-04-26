@@ -52,11 +52,6 @@ Persist.prototype.init = function (db) {
 			this.mode('localforage');
 
 			localforage.config({
-				driver: [
-					localforage.INDEXEDDB,
-					localforage.WEBSQL,
-					localforage.LOCALSTORAGE
-				],
 				name: String(db.core().name()),
 				storeName: 'FDB'
 			});
@@ -103,7 +98,7 @@ Shared.synthesize(Persist.prototype, 'auto', function (val) {
 			this._db.off('change', this._autoSave);
 
 			if (this._db.debug()) {
-				console.log(this._db.logIdentifier() + ' Automatic load/save disbled');
+				console.log(this._db.logIdentifier() + ' Automatic load/save disabled');
 			}
 		}
 	}
@@ -234,7 +229,7 @@ Persist.prototype.addStep = new Overload({
 	'object': function (obj) {
 		return this.$main.call(this, function objEncode () { obj.encode.apply(obj, arguments); }, function objDecode () { obj.decode.apply(obj, arguments); }, 0);
 	},
-	
+
 	/**
 	 * Adds an encode/decode step to the persistent storage system so
 	 * that you can add custom functionality.
@@ -252,7 +247,7 @@ Persist.prototype.addStep = new Overload({
 	'function, function': function (encode, decode) {
 		return this.$main.call(this, encode, decode, 0);
 	},
-	
+
 	/**
 	 * Adds an encode/decode step to the persistent storage system so
 	 * that you can add custom functionality.
@@ -402,19 +397,20 @@ Persist.prototype.save = function (key, data, callback) {
 	switch (this.mode()) {
 		case 'localforage':
 			this.encode(data, function (err, data, tableStats) {
-				if (!err) {
-					localforage.setItem(key, data).then(function (data) {
-						if (callback) {
-							callback(false, data, tableStats);
-						}
-					}, function (err) {
-						if (callback) {
-							callback(err);
-						}
-					});
-				} else {
-					callback(err);
+				if (err) {
+					return callback(err);
 				}
+
+				localforage.setItem(key, data, function (err) {
+					if (callback) {
+						if (err) {
+							callback(err);
+							return;
+						}
+
+						callback(false, data, tableStats);
+					}
+				});
 			});
 			break;
 
@@ -436,10 +432,14 @@ Persist.prototype.load = function (key, callback) {
 
 	switch (this.mode()) {
 		case 'localforage':
-			localforage.getItem(key).then(function (val) {
+			localforage.getItem(key, function (err, val) {
+				if (err) {
+					if (callback) { callback(err); }
+
+					return;
+				}
+
 				self.decode(val, callback);
-			}, function (err) {
-				if (callback) { callback(err); }
 			});
 			break;
 
@@ -457,9 +457,7 @@ Persist.prototype.load = function (key, callback) {
 Persist.prototype.drop = function (key, callback) {
 	switch (this.mode()) {
 		case 'localforage':
-			localforage.removeItem(key).then(function () {
-				if (callback) { callback(false); }
-			}, function (err) {
+			localforage.removeItem(key, function (err) {
 				if (callback) { callback(err); }
 			});
 			break;
@@ -469,6 +467,152 @@ Persist.prototype.drop = function (key, callback) {
 			break;
 	}
 
+};
+
+/**
+ * Determines the byte size of a String, also taking special chars into account.
+ * Inspired by http://codereview.stackexchange.com/questions/37512/count-byte-length-of-string
+ * @param {String} string String to get bytes size of
+ * @return {Number} Size in bytes of the input string
+ * @private
+ */
+Persist.prototype._calcSize = function (string) {
+	var iCount = 0,
+		stringPrep = String(string || ""),
+		stringLength = stringPrep.length,
+		iPartCount,
+		i;
+	
+	for (i = 0; i < stringLength; i++) {
+		iPartCount = encodeURI(stringPrep[i]).split("%").length;
+		iCount += iPartCount === 1 ? 1 : iPartCount - 1;
+	}
+	
+	return iCount;
+};
+
+/**
+ * Argument to the persistedSize callback function
+ * @typedef {Object} persistedSizeCallbackArg
+ * @property {number} total The total size of either the collection or the DB in byte
+ * @property {Array[]} collections per Array item: collection name and size as an Array tupel: collectionName, size
+ */
+/**
+ * Callback for persisted size functions
+ *
+ * @callback persistedSizeCallback
+ * @param {persistedSizeCallbackArg}
+ */
+/**
+ * determine byte size of a persisted object,
+ * either entire DB or specific collection
+ * @param {string|object} target either a string (collection name) or an object (DB)
+ * @param {persistedSizeCallback} callback method to call when size determination is done - mandatory for obtaining a result!
+ */
+Persist.prototype.persistedSize = function (target, callback) {
+	var self = this,
+		resultMap;
+	
+	// mapping: {
+	// total: $totalsize
+	// collections: [
+	// 	[collection, bytesize]
+	//   ....
+	//  ]
+	// }
+	resultMap = {
+		total: 0,
+		collections: []
+	};
+	
+	/**
+	 * named helper function to map-reduce the total byte size of a persisted object
+	 * and to log each collections individual size
+	 * @param {String} value
+	 * @param {String} key
+	 * @private
+	 */
+	function _mapSizeCb (value, key) {
+		// cont only if collection contains content
+		if (value !== null) {
+			// Both key and value of the persisted storage obj count toward total size
+			var atomicTotal = self._calcSize(value) + self._calcSize(key);
+			
+			// Make an entry: collection (key) is $total bytes
+			resultMap.collections.push([key, atomicTotal]);
+			
+			// Count towards total size only if value != null
+			resultMap.total += atomicTotal;
+		}
+	}
+	
+	switch (this.mode()) {
+		case 'localforage':
+			// In general: don't do any decoding (enc, compression),
+			// b/c only the "raw" size of the storage object is of interest
+			switch ((typeof target).toLowerCase()) {
+				case 'string':
+					// Collection name was provided
+					// Utilize localforages built-in Promise functionality (includes
+					// shim for IE) get collection + collection meta data for size
+					// determination
+					localforage.getItem(target).then(function (value) {
+						_mapSizeCb(value, target);
+					}).then(function () {
+						return localforage.getItem(target + "-metaData");
+					}).then(function (value) {
+						_mapSizeCb(value, target + "-metaData");
+					}).then(function () {
+						// done - report back
+						if (callback) {
+							callback(null, resultMap);
+						}
+					}).catch(function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					
+					break;
+				
+				case 'object':
+					// DB object was provided
+					// determine size of DB
+					// by iterating over all key/value pairs
+					// filtering for this DB
+					
+					// we want to measure all persisted collections of a DB
+					// independent of whether they're attached to the DB
+					// at runtime via db.collection(name)
+					localforage.iterate(function (value, key) {
+						if ((key.lastIndexOf(target.name(), 0) === 0) && value !== null) {
+							_mapSizeCb(value, key);
+						}
+					}).then(function () {
+						// done - report back
+						callback(null, resultMap);
+					}).catch(function (err) {
+						console.error(JSON.stringify(err));
+						if (callback) {
+							callback(err);
+						}
+					});
+					break;
+				
+				default:
+					if (callback) {
+						callback("Couldn't determine target for size calculation - must be either a collection name (string) or a db reference (object)");
+					}
+			}
+			break;
+		
+		default:
+			if (callback) {
+				callback('No data handler or unrecognised data type.');
+			}
+			break;
+	}
 };
 
 // Extend the Collection prototype with persist methods
@@ -571,27 +715,32 @@ Collection.prototype.save = function (callback) {
 			processSave = function () {
 				// Save the collection data
 				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
-					if (!err) {
-						self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
-							self.deferEmit('save', tableStats, metaStats, {
-								tableData: tableData,
-								metaData: metaData,
-								tableDataName: self._db._name + '-' + self._name,
-								metaDataName: self._db._name + '-' + self._name + '-metaData'
-							});
-							
-							if (callback) {
+					if (err) {
+						if (callback) { callback(err); }
+						return;
+					}
+
+					self._db.persist.save(self._db._name + '-' + self._name + '-metaData', self.metaData(), function (err, metaData, metaStats) {
+						self.deferEmit('save', tableStats, metaStats, {
+							tableData: tableData,
+							metaData: metaData,
+							tableDataName: self._db._name + '-' + self._name,
+							metaDataName: self._db._name + '-' + self._name + '-metaData'
+						});
+
+						if (callback) {
+							// Defer till the next VM tick to give the VM some breathing room
+							// around the persistent data getting into storage.
+							setTimeout(function () {
 								callback(err, tableStats, metaStats, {
 									tableData: tableData,
 									metaData: metaData,
 									tableDataName: self._db._name + '-' + self._name,
 									metaDataName: self._db._name + '-' + self._name + '-metaData'
 								});
-							}
-						});
-					} else {
-						if (callback) { callback(err); }
-					}
+							}, 1);
+						}
+					});
 				});
 			};
 
@@ -611,6 +760,27 @@ Collection.prototype.save = function (callback) {
 	} else {
 		if (callback) { callback('Cannot save a collection with no assigned name!'); }
 	}
+};
+
+/**
+ * Determines the byte size of a persisted collection
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
+ */
+Collection.prototype.persistedSize = function (callback) {
+    var self = this;
+
+    if (self._name) {
+        if (self._db) {
+        	self._db.persist.persistedSize(self._db._name + '-' + self._name, callback);
+        } else {
+            if (callback) {
+                callback('Cannot determine persisted size of a collection that is not attached to a database!');
+            }
+        }
+    } else {
+        if (callback) { callback('Cannot determine persisted size of a collection with no assigned name!'); }
+    }
+
 };
 
 /**
@@ -638,7 +808,7 @@ Collection.prototype.load = function (callback) {
 										self.metaData(data);
 									}
 								}
-								
+
 								self.deferEmit('load', tableStats, metaStats);
 								if (callback) { callback(err, tableStats, metaStats); }
 							});
@@ -687,7 +857,7 @@ Collection.prototype.saveCustom = function (callback) {
 									store: data,
 									tableStats: tableStats
 								};
-								
+
 								callback(false, myData);
 							} else {
 								callback(err);
@@ -784,7 +954,7 @@ Db.prototype.load = new Overload({
 	'function': function (callback) {
 		this.$main.call(this, undefined, callback);
 	},
-	
+
 	/**
 	 * Loads an entire database's data from persistent storage.
 	 * @name load
@@ -805,11 +975,11 @@ Db.prototype.load = new Overload({
 			keyCount,
 			loadCallback,
 			index;
-		
+
 		obj = this._collection;
 		keys = Object.keys(obj);
 		keyCount = keys.length;
-		
+
 		if (keyCount <= 0) {
 			return callback(false);
 		}
@@ -851,7 +1021,7 @@ Db.prototype.save = new Overload({
 	'function': function (callback) {
 		this.$main.call(this, {}, callback);
 	},
-	
+
 	/**
 	 * Saves an entire database's data to persistent storage.
 	 * @name save
@@ -872,7 +1042,7 @@ Db.prototype.save = new Overload({
 			keyCount,
 			saveCallback,
 			index;
-		
+
 		obj = this._collection;
 		keys = Object.keys(obj);
 		keyCount = keys.length;
@@ -880,11 +1050,11 @@ Db.prototype.save = new Overload({
 		if (keyCount <= 0) {
 			return callback(false);
 		}
-		
+
 		saveCallback = function (err) {
 			if (!err) {
 				keyCount--;
-				
+
 				if (keyCount <= 0) {
 					self.deferEmit('save');
 					if (callback) {
@@ -897,7 +1067,7 @@ Db.prototype.save = new Overload({
 				}
 			}
 		};
-		
+
 		for (index in obj) {
 			if (obj.hasOwnProperty(index)) {
 				// Call the collection save method
@@ -910,6 +1080,14 @@ Db.prototype.save = new Overload({
 		}
 	}
 });
+
+/**
+ * Determines the byte size of a persisted DB
+ * @param {persistedSizeCallback} callback The method to call when the size check is complete
+ */
+Db.prototype.persistedSize = function(callback) {
+    this.persist.persistedSize(this, callback);
+};
 
 Shared.finishModule('Persist');
 module.exports = Persist;

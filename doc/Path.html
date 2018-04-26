@@ -193,12 +193,195 @@ objects by using paths.
     
 
     
+            <h3 class="subsection-title">Methods</h3>
+
+            <ul><li><a href="#aggregate"><span class="type-signature"></span>aggregate<span class="signature">(obj, path)</span><span class="type-signature"> &rarr; {Array}</span></a></li><li><a href="#clean"><span class="type-signature"></span>clean<span class="signature">(str)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#countKeys"><span class="type-signature"></span>countKeys<span class="signature">(testObj)</span><span class="type-signature"> &rarr; {Number}</span></a></li><li><a href="#countObjectPaths"><span class="type-signature"></span>countObjectPaths<span class="signature">(testKeys, testObj)</span><span class="type-signature"> &rarr; {Object}</span></a></li><li><a href="#get"><span class="type-signature"></span>get<span class="signature">(obj, path)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#hasObjectPaths"><span class="type-signature"></span>hasObjectPaths<span class="signature">(testKeys, testObj)</span><span class="type-signature"> &rarr; {Boolean}</span></a></li><li><a href="#keyValue"><span class="type-signature"></span>keyValue<span class="signature">(obj, path<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></a></li><li><a href="#parse"><span class="type-signature"></span>parse<span class="signature">(obj, withValue<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Object}</span></a></li><li><a href="#parseArr"><span class="type-signature"></span>parseArr<span class="signature">()</span><span class="type-signature"> &rarr; {Array}</span></a></li><li><a href="#path"><span class="type-signature"></span>path<span class="signature">(path<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li><li><a href="#push"><span class="type-signature"></span>push<span class="signature">(obj, path, val)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#set"><span class="type-signature"></span>set<span class="signature">(obj, path, val)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#set"><span class="type-signature"></span>set<span class="signature">(obj, path, val)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#value"><span class="type-signature"></span>value<span class="signature">(obj, path<span class="signature-attributes">opt</span>, options<span class="signature-attributes">opt</span>)</span><span class="type-signature"> &rarr; {Array}</span></a></li></ul>
+
+            
+                
 
     
-        <h3 class="subsection-title">Methods</h3>
+
+    <h4 class="name" id="aggregate"><span class="type-signature"></span>aggregate<span class="signature">(obj, path)</span><span class="type-signature"> &rarr; {Array}</span></h4>
+
+    
+
+
+
+<div class="description">
+    Retrieves all the values inside an object based on the passed
+path string. Will automatically traverse any arrays it encounters
+and assumes array indexes are not part of the specifed path.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
 
         
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
             
+                <td class="name"><code>obj</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">Object</span>
+|
+
+<span class="param-type">Array</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">An object or array of objects to
+scan paths for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>path</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The path string delimited by a period.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line290">line 290</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h5>Returns:</h5>
+
+        
+<div class="param-desc">
+    An array of values found at the end of each path
+termination.
+</div>
+
+
+
+<dl>
+    <dt>
+        Type
+    </dt>
+    <dd>
+        
+<span class="param-type">Array</span>
+
+
+    </dd>
+</dl>
+
+    
+
+
+
+            
+                
 
     
 
@@ -302,7 +485,7 @@ objects by using paths.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line478">line 478</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line527">line 527</a>
     </li></ul></dd>
     
 
@@ -346,8 +529,8 @@ objects by using paths.
 
 
 
-        
             
+                
 
     
 
@@ -499,8 +682,8 @@ objects by using paths.
 
 
 
-        
             
+                
 
     
 
@@ -676,8 +859,8 @@ a value exists in those paths and if so returns the number matched.
 
 
 
-        
             
+                
 
     
 
@@ -804,7 +987,7 @@ a value exists in those paths and if so returns the number matched.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line286">line 286</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line329">line 329</a>
     </li></ul></dd>
     
 
@@ -848,8 +1031,8 @@ a value exists in those paths and if so returns the number matched.
 
 
 
-        
             
+                
 
     
 
@@ -1025,8 +1208,8 @@ a value exists in those paths.
 
 
 
-        
             
+                
 
     
 
@@ -1174,7 +1357,7 @@ with their associated keys.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line409">line 409</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line458">line 458</a>
     </li></ul></dd>
     
 
@@ -1222,8 +1405,8 @@ with their associated keys.
 
 
 
-        
             
+                
 
     
 
@@ -1416,8 +1599,8 @@ object that represents the value the object path points to.</td>
 
 
 
-        
             
+                
 
     
 
@@ -1526,8 +1709,8 @@ they endpoints themselves.
 
 
 
-        
             
+                
 
     
 
@@ -1669,8 +1852,8 @@ they endpoints themselves.
 
 
 
-        
             
+                
 
     
 
@@ -1820,7 +2003,7 @@ they endpoints themselves.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line371">line 371</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line420">line 420</a>
     </li></ul></dd>
     
 
@@ -1864,8 +2047,8 @@ they endpoints themselves.
 
 
 
-        
             
+                
 
     
 
@@ -2059,8 +2242,8 @@ they endpoints themselves.
 
 
 
-        
             
+                
 
     
 
@@ -2210,7 +2393,7 @@ they endpoints themselves.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line448">line 448</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line497">line 497</a>
     </li></ul></dd>
     
 
@@ -2254,8 +2437,8 @@ they endpoints themselves.
 
 
 
-        
             
+                
 
     
 
@@ -2435,7 +2618,7 @@ they endpoints themselves.
     
     <dt class="tag-source">Source:</dt>
     <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line297">line 297</a>
+        <a href="Path.js.html">Path.js</a>, <a href="Path.js.html#line340">line 340</a>
     </li></ul></dd>
     
 
@@ -2483,8 +2666,11 @@ they endpoints themselves.
 
 
 
+            
         
+
     
+
 
     
 
@@ -2499,13 +2685,13 @@ they endpoints themselves.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Nov 09 2016 15:51:02 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Mar 01 2018 11:34:23 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

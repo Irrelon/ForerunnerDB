@@ -168,9 +168,9 @@ ActiveBucket.prototype.insert = function (obj) {
 /**
  * Removes a document from the active bucket.
  * @param {Object} obj The document to remove.
- * @returns {boolean} True if the document was removed
- * successfully or false if it wasn't found in the active
- * bucket.
+ * @returns {Number} The index of the document if the document
+ * was removed successfully or -1 if it wasn't found in the
+ * active bucket.
  */
 ActiveBucket.prototype.remove = function (obj) {
 	var key,
@@ -186,13 +186,13 @@ ActiveBucket.prototype.remove = function (obj) {
 			delete this._objLookup[obj[this._primaryKey]];
 
 			this._count--;
-			return true;
+			return keyIndex;
 		} else {
-			return false;
+			return keyIndex;
 		}
 	}
 
-	return false;
+	return -1;
 };
 
 /**
@@ -225,22 +225,33 @@ ActiveBucket.prototype.documentKey = function (obj) {
 	var key = '',
 		arr = this._keyArr,
 		count = arr.length,
+		val,
 		index,
 		sortType;
-
+	
 	for (index = 0; index < count; index++) {
 		sortType = arr[index];
-
+		
 		if (key) {
 			key += '.:.';
 		}
-
-		key += sharedPathSolver.get(obj, sortType.path);
+		
+		val = sharedPathSolver.get(obj, sortType.path);
+		
+		if (val !== undefined) {
+			// The value of the sort path in the object is not undefined
+			key += val;
+		} else {
+			// The value of the sort path in the object is undefined. This
+			// will cause sorting issues. undefined is therefore recorded
+			// as string zero which will sort to low value.
+			key += "0";
+		}
 	}
-
+	
 	// Add the unique identifier on the end of the key
 	key += '.:.' + obj[this._primaryKey];
-
+	
 	return key;
 };
 

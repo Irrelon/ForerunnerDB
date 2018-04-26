@@ -6,7 +6,6 @@ var util = require('util'),
 	derequire = require('derequire');
 
 module.exports = function(grunt) {
-	//grunt.loadNpmTasks('grunt-contrib-qunit');
 	grunt.loadNpmTasks('grunt-contrib-jshint');
 	grunt.loadNpmTasks('grunt-contrib-uglify');
 	grunt.loadNpmTasks("grunt-browserify");
@@ -36,7 +35,8 @@ module.exports = function(grunt) {
 			all : {
 				src: ['./js/lib/*.js'],
 				options: {
-					destination: './doc'
+					destination: './doc',
+					template: './jsdoc-template'
 				}
 			}
 		},
@@ -424,6 +424,23 @@ module.exports = function(grunt) {
 				}
 			}
 		}
+	});
+	
+	// Register events to output nice logs for qunit
+	grunt.event.on('qunit.moduleStart', function (name) {
+		grunt.log.ok('START TESTING MODULE: ' + name);
+	});
+	
+	grunt.event.on('qunit.moduleDone', function (name) {
+		grunt.log.ok('STOP TESTING MODULE: ' + name);
+	});
+	
+	grunt.event.on('qunit.testStart', function (name) {
+		grunt.log.ok('START TEST: ' + name);
+	});
+	
+	grunt.event.on('qunit.testDone', function (name) {
+		grunt.log.ok('STOP TEST: ' + name);
 	});
 
 	grunt.registerTask('postfix', 'Fix code for IE.', function () {

@@ -127,6 +127,8 @@ Angular.extendCollection = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -207,6 +209,8 @@ Angular.extendView = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -249,7 +253,6 @@ Angular.extendDocument = function (Module) {
 				if (self._ngLinks && self._ngLinks.length) {
 					for (i = self._ngLinks.length - 1; i >= 0; i--) {
 						if (self._ngLinks[i].scope === scope) {
-							//TODO: Implement immediateChange in Document class and hook that instead of change event
 							self.off('immediateChange', link.callback);
 							self._ngLinks.splice(i, 1);
 						}
@@ -277,6 +280,8 @@ Angular.extendDocument = function (Module) {
 		} else {
 			throw(this.logIdentifier() + ' Cannot link to angular $scope if no scope or variable name is passed!');
 		}
+		
+		return this;
 	};
 
 	Module.prototype.drop = function () {
@@ -296,8 +301,10 @@ Angular.extendDocument = function (Module) {
  */
 Angular.extendOverview = function (Module) {
 	Module.prototype.ng = function (scope, varName, options) {
-		this._data.ng.apply(this._data, arguments);
+		var result = this._data.ng.apply(this._data, arguments);
 		this._refresh();
+		
+		return result;
 	};
 };
 

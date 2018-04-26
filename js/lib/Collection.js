@@ -607,10 +607,11 @@ Collection.prototype.truncate = function () {
  * @param {Object} obj The document object to upsert or an array
  * containing documents to upsert.
  * @param {Function=} callback Optional callback method.
- * @returns {Object} An object containing two keys, "op" contains
- * either "insert" or "update" depending on the type of operation
- * that was performed and "result" contains the return data from
- * the operation used.
+ * @returns {Array} An array containing an object for each operation
+ * performed. Each object contains two keys, "op" contains either "none",
+ * "insert" or "update" depending on the type of operation that was
+ * performed and "result" contains the return data from the operation
+ * used.
  */
 Collection.prototype.upsert = function (obj, callback) {
 	if (this.isDropped()) {
@@ -640,10 +641,10 @@ Collection.prototype.upsert = function (obj, callback) {
 				returnData = [];
 
 				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+					returnData.push(this.upsert(obj[i])[0]);
 				}
 
-				if (callback) { callback.call(this); }
+				if (callback) { callback.call(this, returnData); }
 
 				return returnData;
 			}
@@ -679,10 +680,12 @@ Collection.prototype.upsert = function (obj, callback) {
 			default:
 				break;
 		}
+		
+		if (callback) { callback.call(this, [returnData]); }
 
-		return returnData;
+		return [returnData];
 	} else {
-		if (callback) { callback.call(this); }
+		if (callback) { callback.call(this, {op: 'none'}); }
 	}
 
 	return {};
@@ -1121,12 +1124,33 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 						}
 						break;
 
-					default:
+					case '$overwrite':
+					case '$inc':
+					case '$push':
+					case '$splicePush':
+					case '$splicePull':
+					case '$addToSet':
+					case '$pull':
+					case '$pop':
+					case '$move':
+					case '$cast':
+					case '$unset':
+					case '$pullAll':
+					case '$mul':
+					case '$rename':
+					case '$toggle':
 						operation = true;
 
 						// Now run the operation
 						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
 						updated = updated || recurseUpdated;
+						break;
+
+					default:
+						// This is an unknown operator or just
+						// a normal field with a dollar starting
+						// character so ignore it
+						operation = false;
 						break;
 				}
 			}
@@ -1190,6 +1214,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Date) {
 								// The doc key is a date object, assign the new date
 								this._updateProperty(doc, i, update[i]);
+								updated = true;
 							} else {
 								// The doc key is an object so traverse the
 								// update further
@@ -2123,28 +2148,32 @@ Collection.prototype.isSubsetOf = function (collection) {
 
 /**
  * Find the distinct values for a specified field across a single collection and
- * returns the results in an array.
- * @param {String} key The field path to return distinct values for e.g. "person.name".
+ * returns the values as a results array.
+ * @param {String} path The field path to return distinct values for e.g. "person.name".
  * @param {Object=} query The query to use to filter the documents used to return values from.
  * @param {Object=} options The query options to use when running the query.
  * @returns {Array}
  */
-Collection.prototype.distinct = function (key, query, options) {
+Collection.prototype.distinct = function (path, query, options) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	var data = this.find(query, options),
-		pathSolver = new Path(key),
+		pathSolver = new Path(),
 		valueUsed = {},
 		distinctValues = [],
+		aggregatedValues,
 		value,
 		i;
-
+	
+	// Get path values as an array
+	aggregatedValues = pathSolver.aggregate(data, path);
+	
 	// Loop the data and build array of distinct values
-	for (i = 0; i < data.length; i++) {
-		value = pathSolver.value(data[i])[0];
-
+	for (i = 0; i < aggregatedValues.length; i++) {
+		value = aggregatedValues[i];
+		
 		if (value && !valueUsed[value]) {
 			valueUsed[value] = true;
 			distinctValues.push(value);
@@ -2652,8 +2681,8 @@ Collection.prototype._find = function (query, options) {
 	if (options.$aggregate) {
 		op.data('flag.aggregate', true);
 		op.time('aggregate');
-		pathSolver = new Path(options.$aggregate);
-		resultArr = pathSolver.value(resultArr);
+		pathSolver = new Path();
+		resultArr = pathSolver.aggregate(resultArr, options.$aggregate);
 		op.time('aggregate');
 	}
 
@@ -3334,7 +3363,8 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		if (subDocArr) {
 			subDocCollection.setData(subDocArr);
 			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
-			if (subDocOptions.returnFirst && subDocResults.length) {
+			
+			if (subDocOptions.$returnFirst && subDocResults.length) {
 				return subDocResults[0];
 			}
 
@@ -3844,54 +3874,56 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 		var self = this,
 			name = options.name;
 
-		if (name) {
-			if (this._collection[name]) {
-				return this._collection[name];
-			} else {
-				if (options && options.autoCreate === false) {
-					if (options && options.throwError !== false) {
-						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
-					}
-
-					return undefined;
-				}
-
-				if (this.debug()) {
-					console.log(this.logIdentifier() + ' Creating collection ' + name);
-				}
-			}
-
-			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
-			this._collection[name].mongoEmulation(this.mongoEmulation());
-
-			if (options.primaryKey !== undefined) {
-				this._collection[name].primaryKey(options.primaryKey);
-			}
-
-			if (options.capped !== undefined) {
-				// Check we have a size
-				if (options.size !== undefined) {
-					this._collection[name].capped(options.capped);
-					this._collection[name].cappedSize(options.size);
-				} else {
-					throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
-				}
-			}
-
-			// Listen for events on this collection so we can fire global events
-			// on the database in response to it
-			self._collection[name].on('change', function () {
-				self.emit('change', self._collection[name], 'collection', name);
-			});
-
-			self.deferEmit('create', self._collection[name], 'collection', name);
-
-			return this._collection[name];
-		} else {
+		if (!name) {
 			if (!options || (options && options.throwError !== false)) {
 				throw(this.logIdentifier() + ' Cannot get collection with undefined name!');
 			}
+			
+			return;
 		}
+		
+		if (this._collection[name]) {
+			return this._collection[name];
+		}
+		
+		if (options && options.autoCreate === false) {
+			if (options && options.throwError !== false) {
+				throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+			}
+
+			return undefined;
+		}
+
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Creating collection ' + name);
+		}
+
+		this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
+		this._collection[name].mongoEmulation(this.mongoEmulation());
+
+		if (options.primaryKey !== undefined) {
+			this._collection[name].primaryKey(options.primaryKey);
+		}
+
+		if (options.capped !== undefined) {
+			// Check we have a size
+			if (options.size !== undefined) {
+				this._collection[name].capped(options.capped);
+				this._collection[name].cappedSize(options.size);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
+			}
+		}
+
+		// Listen for events on this collection so we can fire global events
+		// on the database in response to it
+		self._collection[name].on('change', function () {
+			self.emit('change', self._collection[name], 'collection', name);
+		});
+
+		self.deferEmit('create', self._collection[name], 'collection', name);
+
+		return this._collection[name];
 	}
 });
 

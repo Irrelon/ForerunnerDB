@@ -99,12 +99,12 @@
     
 
     
+            <h3 class="subsection-title">Methods</h3>
 
-    
-        <h3 class="subsection-title">Methods</h3>
+            <ul><li><a href="#deferEmit"><span class="type-signature">(static) </span>deferEmit<span class="signature">(eventName, data<span class="signature-attributes">opt</span>)</span><span class="type-signature"></span></a></li><li><a href="#emit"><span class="type-signature">(static) </span>emit<span class="signature">(event, data)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, id, listener)</span><span class="type-signature"></span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#off"><span class="type-signature">(static) </span>off<span class="signature">(event)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#on"><span class="type-signature">(static) </span>on<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, id, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li><li><a href="#once"><span class="type-signature">(static) </span>once<span class="signature">(event, listener)</span><span class="type-signature"> &rarr; {*}</span></a></li></ul>
 
-        
             
+                
 
     
 
@@ -281,8 +281,8 @@ de-bounced event will be emitted.
 
 
 
-        
             
+                
 
     
 
@@ -453,8 +453,162 @@ de-bounced event will be emitted.
 
 
 
-        
             
+                
+
+    
+
+    <h4 class="name" id=".off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></h4>
+
+    
+
+
+
+<div class="description">
+    Cancels all listeners for an event based on the passed event name and id.
+</div>
+
+
+
+
+
+
+
+
+
+    <h5>Parameters:</h5>
+    
+
+<table class="params">
+    <thead>
+    <tr>
+        
+        <th>Name</th>
+        
+
+        <th>Type</th>
+
+        
+
+        
+
+        <th class="last">Description</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    
+
+        <tr>
+            
+                <td class="name"><code>event</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">String</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The event name to cancel listeners for.</td>
+        </tr>
+
+    
+
+        <tr>
+            
+                <td class="name"><code>id</code></td>
+            
+
+            <td class="type">
+            
+                
+<span class="param-type">*</span>
+
+
+            
+            </td>
+
+            
+
+            
+
+            <td class="description last">The ID to cancel all listeners for.</td>
+        </tr>
+
+    
+    </tbody>
+</table>
+
+
+
+
+
+
+<dl class="details">
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    <dt class="tag-source">Source:</dt>
+    <dd class="tag-source"><ul class="dummy"><li>
+        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line189">line 189</a>
+    </li></ul></dd>
+    
+
+    
+
+    
+
+    
+</dl>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+                
 
     
 
@@ -631,8 +785,8 @@ or once() call to cancel.</td>
 
 
 
-        
             
+                
 
     
 
@@ -804,8 +958,8 @@ or once() call to cancel.</td>
 
 
 
-        
             
+                
 
     
 
@@ -953,162 +1107,8 @@ or once() call to cancel.</td>
 
 
 
-        
-            
-
-    
-
-    <h4 class="name" id=".off"><span class="type-signature">(static) </span>off<span class="signature">(event, id)</span><span class="type-signature"></span></h4>
-
-    
-
-
-
-<div class="description">
-    Cancels all listeners for an event based on the passed event name and id.
-</div>
-
-
-
-
-
-
-
-
-
-    <h5>Parameters:</h5>
-    
-
-<table class="params">
-    <thead>
-    <tr>
-        
-        <th>Name</th>
-        
-
-        <th>Type</th>
-
-        
-
-        
-
-        <th class="last">Description</th>
-    </tr>
-    </thead>
-
-    <tbody>
-    
-
-        <tr>
-            
-                <td class="name"><code>event</code></td>
-            
-
-            <td class="type">
             
                 
-<span class="param-type">String</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The event name to cancel listeners for.</td>
-        </tr>
-
-    
-
-        <tr>
-            
-                <td class="name"><code>id</code></td>
-            
-
-            <td class="type">
-            
-                
-<span class="param-type">*</span>
-
-
-            
-            </td>
-
-            
-
-            
-
-            <td class="description last">The ID to cancel all listeners for.</td>
-        </tr>
-
-    
-    </tbody>
-</table>
-
-
-
-
-
-
-<dl class="details">
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-    <dt class="tag-source">Source:</dt>
-    <dd class="tag-source"><ul class="dummy"><li>
-        <a href="Mixin.Events.js.html">Mixin.Events.js</a>, <a href="Mixin.Events.js.html#line189">line 189</a>
-    </li></ul></dd>
-    
-
-    
-
-    
-
-    
-</dl>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-            
 
     
 
@@ -1303,8 +1303,8 @@ id matches the document id for the event being fired.
 
 
 
-        
             
+                
 
     
 
@@ -1475,8 +1475,8 @@ id matches the document id for the event being fired.
 
 
 
-        
             
+                
 
     
 
@@ -1670,8 +1670,8 @@ id matches the document id for the event being fired.
 
 
 
-        
             
+                
 
     
 
@@ -1842,8 +1842,11 @@ id matches the document id for the event being fired.
 
 
 
+            
         
+
     
+
 
     
 
@@ -1858,13 +1861,13 @@ id matches the document id for the event being fired.
 </div>
 
 <nav>
-    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="ActiveBucket.html">ActiveBucket</a></li><li><a href="Angular.html">Angular</a></li><li><a href="AutoBind.html">AutoBind</a></li><li><a href="Collection.html">Collection</a></li><li><a href="CollectionGroup.html">CollectionGroup</a></li><li><a href="Condition.html">Condition</a></li><li><a href="Core.html">Core</a></li><li><a href="Db.html">Db</a></li><li><a href="Document.html">Document</a></li><li><a href="Grid.html">Grid</a></li><li><a href="Highchart.html">Highchart</a></li><li><a href="Index2d.html">Index2d</a></li><li><a href="IndexBinaryTree.html">IndexBinaryTree</a></li><li><a href="IndexHashMap.html">IndexHashMap</a></li><li><a href="Infinilist.html">Infinilist</a></li><li><a href="KeyValueStore.html">KeyValueStore</a></li><li><a href="Metrics.html">Metrics</a></li><li><a href="MyModule.html">MyModule</a></li><li><a href="NodeApiClient.html">NodeApiClient</a></li><li><a href="NodeApiServer.html">NodeApiServer</a></li><li><a href="NodeRAS.html">NodeRAS</a></li><li><a href="Odm.html">Odm</a></li><li><a href="OldView.html">OldView</a></li><li><a href="Operation.html">Operation</a></li><li><a href="Overload.html">Overload</a></li><li><a href="Overview.html">Overview</a></li><li><a href="Overview_init.html">init</a></li><li><a href="Path.html">Path</a></li><li><a href="Persist.html">Persist</a></li><li><a href="Procedure.html">Procedure</a></li><li><a href="ReactorIO.html">ReactorIO</a></li><li><a href="Section.html">Section</a></li><li><a href="Serialiser.html">Serialiser</a></li><li><a href="Shared.overload.html">overload</a></li><li><a href="View.html">View</a></li></ul><h3>Mixins</h3><ul><li><a href="ChainReactor.html">ChainReactor</a></li><li><a href="Common.html">Common</a></li><li><a href="Constants.html">Constants</a></li><li><a href="Events.html">Events</a></li><li><a href="Matching.html">Matching</a></li><li><a href="Shared.html">Shared</a></li><li><a href="Sorting.html">Sorting</a></li><li><a href="Tags.html">Tags</a></li><li><a href="Triggers.html">Triggers</a></li><li><a href="Updating.html">Updating</a></li></ul><h3><a href="global.html">Global</a></h3>
 </nav>
 
 <br class="clear">
 
 <footer>
-    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Wed Nov 09 2016 15:51:01 GMT+0000 (GMT)
+    Documentation generated by <a href="https://github.com/jsdoc3/jsdoc">JSDoc 3.4.0</a> on Thu Mar 01 2018 11:34:23 GMT+0000 (GMT)
 </footer>
 
 <script> prettyPrint(); </script>

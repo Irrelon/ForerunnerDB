@@ -322,6 +322,9 @@ var Matching = {
 
 			case '$nee': // Not equals equals
 				return source !== test;
+				
+			case '$not': // Not operator
+				return !this._match(source, test, queryOptions, 'and', options);
 
 			case '$or':
 				// Match true on ANY check to pass
@@ -398,19 +401,36 @@ var Matching = {
 				break;
 
 			case '$distinct':
+				var lookupPath,
+					value,
+					finalDistinctProp;
+				
 				// Ensure options holds a distinct lookup
 				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
-
+				
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
+						if (typeof test[distinctProp] === 'object') {
+							// Get the path string from the object
+							lookupPath = this.sharedPathSolver.parse(test)[0].path;
+							
+							// Use the path string to find the lookup value from the source data
+							value = this.sharedPathSolver.get(source, lookupPath);
+							finalDistinctProp = lookupPath;
+						} else {
+							value = source[distinctProp];
+							finalDistinctProp = distinctProp;
+						}
+						
+						options.$rootData['//distinctLookup'][finalDistinctProp] = options.$rootData['//distinctLookup'][finalDistinctProp] || {};
+						
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][finalDistinctProp][value]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][finalDistinctProp][value] = true;
 
 							// Allow the item in the results
 							return true;
@@ -508,7 +528,7 @@ var Matching = {
 	},
 
 	/**
-	 *
+	 * Performs a join operation and returns the final joined data.
 	 * @param {Array | Object} docArr An array of objects to run the join
 	 * operation against or a single object.
 	 * @param {Array} joinClause The join clause object array (the array in

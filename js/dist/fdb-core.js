@@ -131,9 +131,9 @@ BinaryTree.prototype._compareFunc = function (a, b) {
 		indexData = this._keys[i];
 
 		if (indexData.value === 1) {
-			result = this.sortAsc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+			result = this.sortAscIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		} else if (indexData.value === -1) {
-			result = this.sortDesc(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
+			result = this.sortDescIgnoreUndefined(sharedPathSolver.get(a, indexData.path), sharedPathSolver.get(b, indexData.path));
 		}
 
 		if (this.debug()) {
@@ -498,7 +498,7 @@ BinaryTree.prototype.startsWith = function (path, val, regex, resultArr) {
 	resultArr._visitedNodes = resultArr._visitedNodes || [];
 	resultArr._visitedNodes.push(thisDataPathVal);
 
-	result = this.sortAsc(thisDataPathValSubStr, val);
+	result = this.sortAscIgnoreUndefined(thisDataPathValSubStr, val);
 	reTest = thisDataPathValSubStr === val;
 
 	if (result === 0) {
@@ -582,8 +582,8 @@ BinaryTree.prototype.findRange = function (type, key, from, to, resultArr, pathR
 
 	// Check if this node's data is greater or less than the from value
 	var pathVal = pathResolver.value(this._data),
-		fromResult = this.sortAsc(pathVal, from),
-		toResult = this.sortAsc(pathVal, to);
+		fromResult = this.sortAscIgnoreUndefined(pathVal, from),
+		toResult = this.sortAscIgnoreUndefined(pathVal, to);
 
 	if ((fromResult === 0 || fromResult === 1) && (toResult === 0 || toResult === -1)) {
 		// This data node is greater than or equal to the from value,
@@ -1310,10 +1310,11 @@ Collection.prototype.truncate = function () {
  * @param {Object} obj The document object to upsert or an array
  * containing documents to upsert.
  * @param {Function=} callback Optional callback method.
- * @returns {Object} An object containing two keys, "op" contains
- * either "insert" or "update" depending on the type of operation
- * that was performed and "result" contains the return data from
- * the operation used.
+ * @returns {Array} An array containing an object for each operation
+ * performed. Each object contains two keys, "op" contains either "none",
+ * "insert" or "update" depending on the type of operation that was
+ * performed and "result" contains the return data from the operation
+ * used.
  */
 Collection.prototype.upsert = function (obj, callback) {
 	if (this.isDropped()) {
@@ -1343,10 +1344,10 @@ Collection.prototype.upsert = function (obj, callback) {
 				returnData = [];
 
 				for (i = 0; i < obj.length; i++) {
-					returnData.push(this.upsert(obj[i]));
+					returnData.push(this.upsert(obj[i])[0]);
 				}
 
-				if (callback) { callback.call(this); }
+				if (callback) { callback.call(this, returnData); }
 
 				return returnData;
 			}
@@ -1382,10 +1383,12 @@ Collection.prototype.upsert = function (obj, callback) {
 			default:
 				break;
 		}
+		
+		if (callback) { callback.call(this, [returnData]); }
 
-		return returnData;
+		return [returnData];
 	} else {
-		if (callback) { callback.call(this); }
+		if (callback) { callback.call(this, {op: 'none'}); }
 	}
 
 	return {};
@@ -1824,12 +1827,33 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 						}
 						break;
 
-					default:
+					case '$overwrite':
+					case '$inc':
+					case '$push':
+					case '$splicePush':
+					case '$splicePull':
+					case '$addToSet':
+					case '$pull':
+					case '$pop':
+					case '$move':
+					case '$cast':
+					case '$unset':
+					case '$pullAll':
+					case '$mul':
+					case '$rename':
+					case '$toggle':
 						operation = true;
 
 						// Now run the operation
 						recurseUpdated = this.updateObject(doc, update[i], query, options, path, i);
 						updated = updated || recurseUpdated;
+						break;
+
+					default:
+						// This is an unknown operator or just
+						// a normal field with a dollar starting
+						// character so ignore it
+						operation = false;
 						break;
 				}
 			}
@@ -1893,6 +1917,7 @@ Collection.prototype.updateObject = function (doc, update, query, options, path,
 							if (doc[i] instanceof Date) {
 								// The doc key is a date object, assign the new date
 								this._updateProperty(doc, i, update[i]);
+								updated = true;
 							} else {
 								// The doc key is an object so traverse the
 								// update further
@@ -2826,28 +2851,32 @@ Collection.prototype.isSubsetOf = function (collection) {
 
 /**
  * Find the distinct values for a specified field across a single collection and
- * returns the results in an array.
- * @param {String} key The field path to return distinct values for e.g. "person.name".
+ * returns the values as a results array.
+ * @param {String} path The field path to return distinct values for e.g. "person.name".
  * @param {Object=} query The query to use to filter the documents used to return values from.
  * @param {Object=} options The query options to use when running the query.
  * @returns {Array}
  */
-Collection.prototype.distinct = function (key, query, options) {
+Collection.prototype.distinct = function (path, query, options) {
 	if (this.isDropped()) {
 		throw(this.logIdentifier() + ' Cannot operate in a dropped state!');
 	}
 
 	var data = this.find(query, options),
-		pathSolver = new Path(key),
+		pathSolver = new Path(),
 		valueUsed = {},
 		distinctValues = [],
+		aggregatedValues,
 		value,
 		i;
-
+	
+	// Get path values as an array
+	aggregatedValues = pathSolver.aggregate(data, path);
+	
 	// Loop the data and build array of distinct values
-	for (i = 0; i < data.length; i++) {
-		value = pathSolver.value(data[i])[0];
-
+	for (i = 0; i < aggregatedValues.length; i++) {
+		value = aggregatedValues[i];
+		
 		if (value && !valueUsed[value]) {
 			valueUsed[value] = true;
 			distinctValues.push(value);
@@ -3355,8 +3384,8 @@ Collection.prototype._find = function (query, options) {
 	if (options.$aggregate) {
 		op.data('flag.aggregate', true);
 		op.time('aggregate');
-		pathSolver = new Path(options.$aggregate);
-		resultArr = pathSolver.value(resultArr);
+		pathSolver = new Path();
+		resultArr = pathSolver.aggregate(resultArr, options.$aggregate);
 		op.time('aggregate');
 	}
 
@@ -4037,7 +4066,8 @@ Collection.prototype._findSub = function (docArr, path, subDocQuery, subDocOptio
 		if (subDocArr) {
 			subDocCollection.setData(subDocArr);
 			subDocResults = subDocCollection.find(subDocQuery, subDocOptions);
-			if (subDocOptions.returnFirst && subDocResults.length) {
+			
+			if (subDocOptions.$returnFirst && subDocResults.length) {
 				return subDocResults[0];
 			}
 
@@ -4547,54 +4577,56 @@ Db.prototype.collection = new Overload('Db.prototype.collection', {
 		var self = this,
 			name = options.name;
 
-		if (name) {
-			if (this._collection[name]) {
-				return this._collection[name];
-			} else {
-				if (options && options.autoCreate === false) {
-					if (options && options.throwError !== false) {
-						throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
-					}
-
-					return undefined;
-				}
-
-				if (this.debug()) {
-					console.log(this.logIdentifier() + ' Creating collection ' + name);
-				}
-			}
-
-			this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
-			this._collection[name].mongoEmulation(this.mongoEmulation());
-
-			if (options.primaryKey !== undefined) {
-				this._collection[name].primaryKey(options.primaryKey);
-			}
-
-			if (options.capped !== undefined) {
-				// Check we have a size
-				if (options.size !== undefined) {
-					this._collection[name].capped(options.capped);
-					this._collection[name].cappedSize(options.size);
-				} else {
-					throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
-				}
-			}
-
-			// Listen for events on this collection so we can fire global events
-			// on the database in response to it
-			self._collection[name].on('change', function () {
-				self.emit('change', self._collection[name], 'collection', name);
-			});
-
-			self.deferEmit('create', self._collection[name], 'collection', name);
-
-			return this._collection[name];
-		} else {
+		if (!name) {
 			if (!options || (options && options.throwError !== false)) {
 				throw(this.logIdentifier() + ' Cannot get collection with undefined name!');
 			}
+			
+			return;
 		}
+		
+		if (this._collection[name]) {
+			return this._collection[name];
+		}
+		
+		if (options && options.autoCreate === false) {
+			if (options && options.throwError !== false) {
+				throw(this.logIdentifier() + ' Cannot get collection ' + name + ' because it does not exist and auto-create has been disabled!');
+			}
+
+			return undefined;
+		}
+
+		if (this.debug()) {
+			console.log(this.logIdentifier() + ' Creating collection ' + name);
+		}
+
+		this._collection[name] = this._collection[name] || new Collection(name, options).db(this);
+		this._collection[name].mongoEmulation(this.mongoEmulation());
+
+		if (options.primaryKey !== undefined) {
+			this._collection[name].primaryKey(options.primaryKey);
+		}
+
+		if (options.capped !== undefined) {
+			// Check we have a size
+			if (options.size !== undefined) {
+				this._collection[name].capped(options.capped);
+				this._collection[name].cappedSize(options.size);
+			} else {
+				throw(this.logIdentifier() + ' Cannot create a capped collection without specifying a size!');
+			}
+		}
+
+		// Listen for events on this collection so we can fire global events
+		// on the database in response to it
+		self._collection[name].on('change', function () {
+			self.emit('change', self._collection[name], 'collection', name);
+		});
+
+		self.deferEmit('create', self._collection[name], 'collection', name);
+
+		return this._collection[name];
 	}
 });
 
@@ -8770,6 +8802,9 @@ var Matching = {
 
 			case '$nee': // Not equals equals
 				return source !== test;
+				
+			case '$not': // Not operator
+				return !this._match(source, test, queryOptions, 'and', options);
 
 			case '$or':
 				// Match true on ANY check to pass
@@ -8846,19 +8881,36 @@ var Matching = {
 				break;
 
 			case '$distinct':
+				var lookupPath,
+					value,
+					finalDistinctProp;
+				
 				// Ensure options holds a distinct lookup
 				options.$rootData['//distinctLookup'] = options.$rootData['//distinctLookup'] || {};
-
+				
 				for (var distinctProp in test) {
 					if (test.hasOwnProperty(distinctProp)) {
-						options.$rootData['//distinctLookup'][distinctProp] = options.$rootData['//distinctLookup'][distinctProp] || {};
+						if (typeof test[distinctProp] === 'object') {
+							// Get the path string from the object
+							lookupPath = this.sharedPathSolver.parse(test)[0].path;
+							
+							// Use the path string to find the lookup value from the source data
+							value = this.sharedPathSolver.get(source, lookupPath);
+							finalDistinctProp = lookupPath;
+						} else {
+							value = source[distinctProp];
+							finalDistinctProp = distinctProp;
+						}
+						
+						options.$rootData['//distinctLookup'][finalDistinctProp] = options.$rootData['//distinctLookup'][finalDistinctProp] || {};
+						
 						// Check if the options distinct lookup has this field's value
-						if (options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]]) {
+						if (options.$rootData['//distinctLookup'][finalDistinctProp][value]) {
 							// Value is already in use
 							return false;
 						} else {
 							// Set the value in the lookup
-							options.$rootData['//distinctLookup'][distinctProp][source[distinctProp]] = true;
+							options.$rootData['//distinctLookup'][finalDistinctProp][value] = true;
 
 							// Allow the item in the results
 							return true;
@@ -8956,7 +9008,7 @@ var Matching = {
 	},
 
 	/**
-	 *
+	 * Performs a join operation and returns the final joined data.
 	 * @param {Array | Object} docArr An array of objects to run the join
 	 * operation against or a single object.
 	 * @param {Array} joinClause The join clause object array (the array in
@@ -9216,7 +9268,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortAsc: function (a, b) {
+	sortAsc: function mixinSortingSortAsc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return a.localeCompare(b);
 		} else {
@@ -9225,6 +9277,14 @@ var Sorting = {
 			} else if (a < b) {
 				return -1;
 			}
+		}
+		
+		if (a === undefined && b !== undefined) {
+			return -1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return 1;
 		}
 
 		return 0;
@@ -9236,7 +9296,7 @@ var Sorting = {
 	 * @param {*} b The second value to compare.
 	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
 	 */
-	sortDesc: function (a, b) {
+	sortDesc: function mixinSortingSortDesc (a, b) {
 		if (typeof(a) === 'string' && typeof(b) === 'string') {
 			return b.localeCompare(a);
 		} else {
@@ -9246,7 +9306,59 @@ var Sorting = {
 				return 1;
 			}
 		}
+		
+		if (a === undefined && b !== undefined) {
+			return 1;
+		}
+		
+		if (b === undefined && a !== undefined) {
+			return -1;
+		}
 
+		return 0;
+	},
+	
+	/**
+	 * Sorts the passed value a against the passed value b ascending. This variant
+	 * of the sortAsc method will not consider undefined values as lower than any
+	 * other value.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortAscIgnoreUndefined: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return a.localeCompare(b);
+		} else {
+			if (a > b) {
+				return 1;
+			} else if (a < b) {
+				return -1;
+			}
+		}
+		
+		return 0;
+	},
+	
+	/**
+	 * Sorts the passed value a against the passed value b descending. This variant
+	 * of the sortDesc method will not consider undefined values as lower than any
+	 * other value.
+	 * @param {*} a The first value to compare.
+	 * @param {*} b The second value to compare.
+	 * @returns {*} 1 if a is sorted after b, -1 if a is sorted before b.
+	 */
+	sortDescIgnoreUndefined: function (a, b) {
+		if (typeof(a) === 'string' && typeof(b) === 'string') {
+			return b.localeCompare(a);
+		} else {
+			if (a > b) {
+				return -1;
+			} else if (a < b) {
+				return 1;
+			}
+		}
+		
 		return 0;
 	}
 };
@@ -10802,6 +10914,49 @@ Path.prototype.set = function (obj, path, val) {
 };
 
 /**
+ * Retrieves all the values inside an object based on the passed
+ * path string. Will automatically traverse any arrays it encounters
+ * and assumes array indexes are not part of the specifed path.
+ * @param {Object|Array} obj An object or array of objects to
+ * scan paths for.
+ * @param {String} path The path string delimited by a period.
+ * @return {Array} An array of values found at the end of each path
+ * termination.
+ */
+Path.prototype.aggregate = function (obj, path) {
+	var pathParts,
+		part,
+		values = [],
+		i;
+	
+	// First, check if the object we are given
+	// is an array. If so, loop it and work on
+	// the objects inside
+	if (obj instanceof Array) {
+		// Loop array and get path data from each sub object
+		for (i = 0; i < obj.length; i++) {
+			values = values.concat(this.aggregate(obj[i], path));
+		}
+		
+		return values;
+	}
+	
+	if (path.indexOf('.') === -1) {
+		// No further parts to navigate
+		// Return an array so the value can be concatenated on return via array.concat()
+		return [obj[path]];
+	}
+	
+	pathParts = path.split('.');
+	
+	// Grab the next part of our path
+	part = pathParts.shift();
+	values = values.concat(this.aggregate(obj[part], pathParts.join('.')));
+	
+	return values;
+};
+
+/**
  * Gets a single value from the passed object and given path.
  * @param {Object} obj The object to inspect.
  * @param {String} path The path to retrieve data from.
@@ -10830,7 +10985,13 @@ Path.prototype.value = function (obj, path, options) {
 
 	// Detect early exit
 	if (path && path.indexOf('.') === -1) {
-		return [obj[path]];
+		if (options && options.skipArrCheck) {
+			return [obj[path]];
+		}
+		
+		if (!(obj instanceof Array)) {
+			return [obj[path]];
+		}
 	}
 
 	if (obj !== undefined && typeof obj === 'object') {
@@ -11233,7 +11394,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '1.3.935',
+	version: '2.0.22',
 	modules: {},
 	plugins: {},
 	index: {},
