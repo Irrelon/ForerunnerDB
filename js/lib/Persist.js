@@ -11,11 +11,17 @@ var Shared = require('./Shared'),
 	CollectionDrop,
 	CollectionGroup,
 	CollectionInit,
+	Collection_insertIntoIndexes,
+	Collection_removeFromIndexes,
 	DbInit,
 	DbDrop,
 	Persist,
-	Overload;//,
+	Overload;
+	//,
 	//DataVersion = '2.0';
+
+var ENUM_SAVE_UPDATE_DOCUMENT = 1,
+	ENUM_REMOVE_DOCUMENT = 2;
 
 /**
  * The persistent storage class handles loading and saving data to browser
@@ -68,6 +74,8 @@ Collection = require('./Collection');
 CollectionDrop = Collection.prototype.drop;
 CollectionGroup = require('./CollectionGroup');
 CollectionInit = Collection.prototype.init;
+Collection_insertIntoIndexes = Collection.prototype._insertIntoIndexes;
+Collection_removeFromIndexes = Collection.prototype._removeFromIndexes;
 DbInit = Db.prototype.init;
 DbDrop = Db.prototype.drop;
 Overload = Shared.overload;
@@ -432,7 +440,34 @@ Persist.prototype.load = function (key, callback) {
 
 	switch (this.mode()) {
 		case 'localforage':
-			localforage.getItem(key, function (err, val) {
+			// Ask storage to load all the items
+			var finalData = [],
+				asyncQueue = [],
+				genDecode;
+
+			genDecode = function (val) {
+				return function (finished) {
+					self.decode(val, function (err, val) {
+						finalData.push(val);
+						finished(err);
+					});
+				};
+			};
+
+			localforage.iterate(function (value, docKey) {
+				if (docKey.indexOf(key) === 0) {
+					// Found a key that belongs to this collection
+					asyncQueue.push(genDecode(value));
+				}
+			}, function () {
+				async.series(asyncQueue, function (err) {
+					if (callback) {
+						callback(err, finalData);
+					}
+				});
+			});
+
+			/*localforage.getItem(key, function (err, val) {
 				if (err) {
 					if (callback) { callback(err); }
 
@@ -440,7 +475,7 @@ Persist.prototype.load = function (key, callback) {
 				}
 
 				self.decode(val, callback);
-			});
+			});*/
 			break;
 
 		default:
@@ -459,6 +494,45 @@ Persist.prototype.drop = function (key, callback) {
 		case 'localforage':
 			localforage.removeItem(key, function (err) {
 				if (callback) { callback(err); }
+			});
+			break;
+
+		default:
+			if (callback) { callback('No data handler or unrecognised data type.'); }
+			break;
+	}
+
+};
+
+/**
+ * Deletes all data in persistent storage starting with the passed key.
+ * @param {String} key The key to drop data for in the storage.
+ * @param {Function=} callback The method to call when the data is dropped.
+ */
+Persist.prototype.dropAll = function (key, callback) {
+	switch (this.mode()) {
+		case 'localforage':
+			var asyncQueue = [],
+				genRemove;
+
+			genRemove = function (key) {
+				return function (finished) {
+					localforage.removeItem(key, function (err) {
+						finished(err);
+					});
+				};
+			};
+
+			localforage.iterate(function (value, docKey) {
+				if (docKey.indexOf(key) === 0) {
+					// Match, remove this key
+					asyncQueue.push(genRemove(docKey));
+				}
+			}, function () {
+				// Finished iteration
+				async.series(asyncQueue, function (err) {
+					if (callback) { callback(err); }
+				});
 			});
 			break;
 
@@ -559,9 +633,9 @@ Persist.prototype.persistedSize = function (target, callback) {
 					localforage.getItem(target).then(function (value) {
 						_mapSizeCb(value, target);
 					}).then(function () {
-						return localforage.getItem(target + "-metaData");
+						return localforage.getItem(target + "+metaData");
 					}).then(function (value) {
-						_mapSizeCb(value, target + "-metaData");
+						_mapSizeCb(value, target + "+metaData");
 					}).then(function () {
 						// done - report back
 						if (callback) {
@@ -615,6 +689,34 @@ Persist.prototype.persistedSize = function (target, callback) {
 	}
 };
 
+Collection.prototype.init = function () {
+	this._persistState = {};
+	return CollectionInit.apply(this, arguments);
+};
+
+Collection.prototype._insertIntoIndexes = function (doc) {
+	var retVal = Collection_insertIntoIndexes.apply(this, arguments);
+
+	// Early exit if the index insert above did not work
+	if (!retVal) {
+		return false;
+	}
+
+	// Now record that this record is "dirty" and needs re-persisting
+	this._persistState[doc[this.primaryKey()]] = ENUM_SAVE_UPDATE_DOCUMENT;
+};
+
+Collection.prototype._removeFromIndexes = function (doc) {
+	Collection_removeFromIndexes.apply(this, arguments);
+
+	// Now record that this record is "dirty" and needs removing from persistence
+	this._persistState[doc[this.primaryKey()]] = ENUM_REMOVE_DOCUMENT;
+};
+
+Collection.prototype.persistState = function () {
+	return this._persistState;
+};
+
 // Extend the Collection prototype with persist methods
 Collection.prototype.drop = new Overload({
 	/**
@@ -653,8 +755,8 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Drop the collection data from storage
-						this._db.persist.drop(this._db._name + '-' + this._name);
-						this._db.persist.drop(this._db._name + '-' + this._name + '-metaData');
+						this._db.persist.dropAll(this._db._name + '-' + this._name + '-');
+						this._db.persist.dropAll(this._db._name + '-' + this._name + '+metaData');
 					}
 				} else {
 					throw('ForerunnerDB.Persist: Cannot drop a collection\'s persistent storage when no name assigned to collection!');
@@ -682,8 +784,8 @@ Collection.prototype.drop = new Overload({
 				if (this._name) {
 					if (this._db) {
 						// Drop the collection data from storage
-						this._db.persist.drop(this._db._name + '-' + this._name, function () {
-							self._db.persist.drop(self._db._name + '-' + self._name + '-metaData', callback);
+						this._db.persist.dropAll(this._db._name + '-' + this._name, function () {
+							self._db.persist.dropAll(self._db._name + '-' + self._name + '+metaData', callback);
 						});
 
 						return CollectionDrop.call(this);
@@ -713,8 +815,65 @@ Collection.prototype.save = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			processSave = function () {
+				// Loop the dirty data queue and process each entry,
+				// persisting or removing it as required
+				var queue = self.persistState(),
+					asyncQueue = [],
+					genSave,
+					genRemove,
+					i;
+
+				genSave = function (key, val) {
+					return function (finished) {
+						// Save the new / updated document data
+						self._db.persist.save(key, val, function (err) {
+							finished(err);
+						});
+					};
+				};
+
+				genRemove = function (key) {
+					return function (finished) {
+						// Remove the document data under the passed key
+						self._db.persist.drop(key, function (err) {
+							finished(err);
+						});
+					};
+				};
+
+				for (i in queue) {
+					if (queue.hasOwnProperty(i)) {
+						if (queue[i] === ENUM_SAVE_UPDATE_DOCUMENT) {
+							asyncQueue.push(genSave(self._db._name + '-' + self._name + '-' + i, self._primaryIndex.get(i)));
+						} else if (queue[i] === ENUM_REMOVE_DOCUMENT) {
+							asyncQueue.push(genRemove(self._db._name + '-' + self._name + '-' + i));
+						}
+					}
+				}
+
+				// Run the async queue
+				async.series(asyncQueue, function (err) {
+					self._db.persist.save(self._db._name + '-' + self._name + '+metaData', self.metaData(), function (err, metaData, metaStats) {
+						// TODO: Fill this data back in somehow?
+						self.deferEmit('save', {}, {}, {
+							tableData: {},
+							metaData: {},
+							tableDataName: self._db._name + '-' + self._name,
+							metaDataName: self._db._name + '-' + self._name + '+metaData'
+						});
+
+						if (callback) {
+							// Defer till the next VM tick to give the VM some breathing room
+							// around the persistent data getting into storage
+							setTimeout(function () {
+								callback(err);
+							}, 1);
+						}
+					});
+				});
+
 				// Save the collection data
-				self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
+				/*self._db.persist.save(self._db._name + '-' + self._name, self._data, function (err, tableData, tableStats) {
 					if (err) {
 						if (callback) { callback(err); }
 						return;
@@ -741,7 +900,7 @@ Collection.prototype.save = function (callback) {
 							}, 1);
 						}
 					});
-				});
+				});*/
 			};
 
 			// Check for processing queues
@@ -794,7 +953,7 @@ Collection.prototype.load = function (callback) {
 	if (self._name) {
 		if (self._db) {
 			// Load the collection data
-			self._db.persist.load(self._db._name + '-' + self._name, function (err, data, tableStats) {
+			self._db.persist.load(self._db._name + '-' + self._name + '-', function (err, data, tableStats) {
 				if (!err) {
 					// Remove all previous data
 					self.remove({}, function () {
@@ -802,10 +961,10 @@ Collection.prototype.load = function (callback) {
 						data = data || [];
 						self.insert(data, function () {
 							// Now load the collection's metadata
-							self._db.persist.load(self._db._name + '-' + self._name + '-metaData', function (err, data, metaStats) {
+							self._db.persist.load(self._db._name + '-' + self._name + '+metaData', function (err, data, metaStats) {
 								if (!err) {
-									if (data) {
-										self.metaData(data);
+									if (data && data[0]) {
+										self.metaData(data[0]);
 									}
 								}
 
@@ -853,7 +1012,7 @@ Collection.prototype.saveCustom = function (callback) {
 						self.encode(self._data, function (err, data, tableStats) {
 							if (!err) {
 								myData.metaData = {
-									name: self._db._name + '-' + self._name + '-metaData',
+									name: self._db._name + '-' + self._name + '+metaData',
 									store: data,
 									tableStats: tableStats
 								};

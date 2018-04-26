@@ -2739,12 +2739,18 @@ Collection.prototype._dataReplace = function (data) {
 Collection.prototype._insertIntoIndexes = function (doc) {
 	var arr = this._indexByName,
 		arrIndex,
-		violated,
+		primaryKeySuccess,
 		hash = this.hash(doc),
 		pk = this._primaryKey;
 
 	// Insert to primary key index
-	violated = this._primaryIndex.uniqueSet(doc[pk], doc);
+	primaryKeySuccess = this._primaryIndex.uniqueSet(doc[pk], doc);
+
+	// Early exit if primary key was violated
+	if (!primaryKeySuccess) {
+		return false;
+	}
+
 	this._primaryCrc.uniqueSet(doc[pk], hash);
 	this._crcLookup.uniqueSet(hash, doc);
 
@@ -2755,7 +2761,7 @@ Collection.prototype._insertIntoIndexes = function (doc) {
 		}
 	}
 
-	return violated;
+	return true;
 };
 
 /**

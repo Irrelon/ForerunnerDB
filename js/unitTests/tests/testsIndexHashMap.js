@@ -450,7 +450,7 @@ ForerunnerDB.moduleLoaded('Persist', function () {
 				result;
 
 		coll.insert({name: 'Jim'});
-
+debugger;
 		coll.save(function () {
 			// Data saved, now clear the collection
 			db.collection('test27').drop(false);
