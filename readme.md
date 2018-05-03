@@ -1,4 +1,4 @@
-Interested in API Securty? Read the new article on Securing APIs at Infinite Scale on Medium, and don't forget to add a clap! https://medium.com/@coolbloke1324/securing-apis-at-infinite-scale-f85dfb90eea2
+Interested in API Securty? Read the new article on Securing APIs at Infinite Scale on Medium, and don't forget to add a clap! https://medium.com/@irrelon/securing-apis-at-infinite-scale-c67f0f28bc3
 
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed with ❤ love by [Irrelon Software Limited](http://www.irrelon.com/),
