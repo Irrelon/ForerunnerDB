@@ -15,7 +15,7 @@
     "gulp-header": "^1.0.2",
     "gulp-uglify": "^0.3.1",
     "jbone": "1.0.16",
-    "lodash": "2.4.1",
+    "lodash": "4.17.15",
     "node-underscorify": "0.0.9",
     "vinyl-source-stream": "^0.1.1"
   },
