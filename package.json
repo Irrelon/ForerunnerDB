@@ -1,54 +1,80 @@
 {
-  "author": "Rob Evans - Irrelon Software Limited",
-  "name": "forerunnerdb-core",
-  "description": "ForerunnerDB's core module exported - see ForerunnerDB proper for more information.",
-  "version": "1.0.1",
-  "keywords": [
-    "irrelon",
-    "forerunnerdb",
-    "forerunner",
-    "database",
-    "nosql",
-    "mongodb",
-    "javascript",
-    "document",
-    "store",
-    "browser",
-    "node",
-    "data",
-    "binding",
-    "index",
-    "client-side",
-    "server-side",
-    "lokijs",
-    "loki",
-    "db",
-    "memory",
-    "in-memory",
-    "indexeddb",
-    "localstorage",
-    "storage",
-    "websql",
-    "taffydb",
-    "taffy"
-  ],
-  "dependencies": {
-    "forerunnerdb": "^2.0.20"
-  },
-  "devDependencies": {},
-  "engines": {
-    "node": ">= 4"
-  },
-  "scripts": {},
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/irrelon/ForerunnerDB-core.git"
-  },
-  "main": "./index",
-  "browser": "./index",
-  "browserify": "./index",
-  "bugs": {
-    "url": "http://github.com/irrelon/ForerunnerDB-core/issues"
-  },
-  "license": "MIT"
+	"author": "Rob Evans - Irrelon Software Limited",
+	"name": "fdb-core",
+	"description": "ForerunnerDB core utilities for operating on JSON data.",
+	"version": "2.0.0",
+	"keywords": [
+		"irrelon",
+		"forerunnerdb",
+		"forerunner",
+		"database",
+		"nosql",
+		"mongodb",
+		"javascript",
+		"document",
+		"store",
+		"browser",
+		"node",
+		"data",
+		"binding",
+		"index",
+		"client-side",
+		"server-side",
+		"lokijs",
+		"loki",
+		"db",
+		"memory",
+		"in-memory",
+		"indexeddb",
+		"localstorage",
+		"storage",
+		"websql",
+		"taffydb",
+		"taffy"
+	],
+	"engines": {
+		"node": ">= 10"
+	},
+	"scripts": {
+		"build": "babel src --out-dir dist",
+		"test": "NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill **/*.test.js"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/irrelon/fdb-core.git"
+	},
+	"main": "./index",
+	"bugs": {
+		"url": "http://github.com/irrelon/fdb-core/issues"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"@babel/runtime": "^7.9.2",
+		"@irrelon/emitter": "^3.0.0",
+		"@irrelon/path": "^4.4.2",
+		"irrelon-log": "^2.0.3"
+	},
+	"devDependencies": {
+		"@babel/cli": "^7.4.4",
+		"@babel/core": "^7.4.4",
+		"@babel/plugin-proposal-class-properties": "^7.4.4",
+		"@babel/plugin-transform-runtime": "^7.9.0",
+		"@babel/polyfill": "^7.8.7",
+		"@babel/preset-env": "^7.4.4",
+		"@babel/preset-react": "^7.0.0",
+		"@babel/register": "^7.4.4",
+		"babel-loader": "^8.0.5",
+		"enzyme": "^3.9.0",
+		"enzyme-adapter-react-16": "^1.12.1",
+		"express": "^4.16.4",
+		"jsdom": "^15.0.0",
+		"mocha": "^6.1.4",
+		"mocha-parallel-tests": "^2.1.0",
+		"react": "^16.8.6",
+		"react-dom": "^16.8.6",
+		"react-test-renderer": "^16.8.6",
+		"request": "latest",
+		"webpack": "^4.30.0",
+		"webpack-cli": "^3.3.1"
+	}
 }
