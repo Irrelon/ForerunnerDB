@@ -1,7 +1,5 @@
 import CoreClass from "../core/CoreClass";
 import {get as pathGet} from "@irrelon/path";
-import ViolationCheckResult from "../ViolationCheckResult";
-import WriteError from "../WriteError";
 
 class IndexHashMap extends CoreClass {
 	constructor (keys = {}, options = {}) {
@@ -21,7 +19,7 @@ class IndexHashMap extends CoreClass {
 		this._keyArr = Object.keys(keys);
 	}
 	
-	documentHash (doc) {
+	hash (doc) {
 		let hash = "";
 		
 		for (let i = 0; i < this._keyArr.length; i++) {
@@ -37,7 +35,7 @@ class IndexHashMap extends CoreClass {
 	}
 	
 	willViolate (doc) {
-		const hash = this.documentHash(doc);
+		const hash = this.hash(doc);
 		return this.willViolateByHash(hash);
 	}
 	
@@ -46,21 +44,26 @@ class IndexHashMap extends CoreClass {
 	}
 	
 	insert (doc) {
-		const hash = this.documentHash(doc);
+		const hash = this.hash(doc);
 		const violationCheckResult = this.willViolateByHash(hash);
-		if (violationCheckResult.error) {
+		
+		if (violationCheckResult) {
 			// This is a violation / collision
-			return violationCheckResult;
+			return false;
 		}
 		
 		this._data[hash] = this._data[hash] || [];
 		this._data[hash].push(doc);
 		
-		return violationCheckResult;
+		return true;
+	}
+	
+	find (query) {
+	
 	}
 	
 	remove (doc) {
-		const hash = this.documentHash(doc);
+		const hash = this.hash(doc);
 		if (!this._data[hash]) return;
 		
 		const index = this._data[hash].indexOf(doc);

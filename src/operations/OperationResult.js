@@ -1,20 +1,20 @@
 import CoreClass from "../core/CoreClass";
-import OperationError from "./OperationError";
+import OperationFailure from "./OperationFailure";
 import OperationSuccess from "./OperationSuccess";
 
 class OperationResult extends CoreClass {
 	constructor (data = {}) {
 		super();
 		
-		this.error = [];
+		this.failure = [];
 		this.success = [];
 		
-		if (data.error) {
-			this.addError(data.error);
+		if (data.failure) {
+			this.addFailure(data.failure);
 		}
 		
 		if (data.success) {
-			this.addError(data.success);
+			this.addSuccess(data.success);
 		}
 	}
 	
@@ -27,31 +27,31 @@ class OperationResult extends CoreClass {
 			return;
 		}
 		
-		if (op instanceof OperationError) {
-			return this.addError(op);
+		if (op instanceof OperationFailure) {
+			return this.addFailure(op);
 		}
 		
 		if (op instanceof OperationSuccess) {
 			return this.addSuccess(op);
 		}
 		
-		throw new Error("Operation being added is not an instance of OperationSuccess or OperationError!");
+		throw new Error("Operation being added is not an instance of OperationSuccess or OperationFailure!");
 	}
 	
 	/**
-	 * Add an error to the operation result.
-	 * @param {OperationError|Array<OperationError>} error The error or array of errors.
+	 * Add an failure to the operation result.
+	 * @param {OperationFailure|Array<OperationFailure>} failure The failure or array of failures.
 	 */
-	addError (error) {
-		if (Array.isArray(error)) {
-			error.forEach((item) => {
-				this.addError(item);
+	addFailure (failure) {
+		if (Array.isArray(failure)) {
+			failure.forEach((item) => {
+				this.addFailure(item);
 			});
 			
 			return;
 		}
 		
-		this.error.push(error);
+		this.failure.push(failure);
 	}
 	
 	/**

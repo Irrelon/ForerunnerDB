@@ -1,11 +1,9 @@
 import {setImmutable} from "@irrelon/path";
 import CoreClass from "./CoreClass";
-import WriteResult from "../WriteResult";
-import ViolationCheckResult from "../ViolationCheckResult";
 import objectId from "../utils/objectId";
 import IndexHashMap from "../indexes/IndexHashMap";
 import OperationResult from "../operations/OperationResult";
-import OperationError from "../operations/OperationError";
+import OperationFailure from "../operations/OperationFailure";
 import OperationSuccess from "../operations/OperationSuccess";
 
 class Collection extends CoreClass {
@@ -80,60 +78,21 @@ class Collection extends CoreClass {
 	};
 	
 	_indexInsert (data) {
-		console.log("_indexInsert", data._id);
-		Object.entries(this._index).forEach(([indexName, index]) => {
-			index.insert(data);
+		this._index.forEach((indexObj) => {
+			indexObj.index.insert(data);
 		});
-	}
-	
-	async insert (data, options = {}) {
-		const isArray = Array.isArray(data);
-		
-		if (isArray) {
-			if (options.ordered === false) {
-				return this._insertUnordered(data, options);
-			} else {
-				return this._insertOrdered(data, options);
-			}
-		}
-		
-		const doc = this.ensurePrimaryKey(data);
-		console.log("Start insert", data._id)
-		const preInsertResult = this._preInsert(doc, options);
-		const writeResult = new WriteResult({});
-		
-		if (preInsertResult.violationCheckResult.error) {
-			console.log("preInsertResult", preInsertResult.violationCheckResult.error)
-			writeResult.addError(preInsertResult.violationCheckResult.error);
-			return writeResult;
-		}
-		
-		this._indexInsert(preInsertResult.data);
-		this._data.push(preInsertResult.data);
-		
-		// Check capped collection status and remove first record
-		// if we are over the threshold
-		if (this._cap && this._data.length > this._cap) {
-			// Remove the first item in the data array
-			this.removeById(this._data[0][this._primaryKey]);
-		}
-		
-		writeResult.nInserted++;
-		writeResult._data = preInsertResult.data;
-		
-		return writeResult;
 	}
 	
 	indexViolationCheck = (doc) => {
 		// Loop each index and ask it to check if this
 		// document violates any index constraints
 		return this._index.map((indexObj) => {
-			const hash = indexObj.index.documentHash(doc);
+			const hash = indexObj.index.hash(doc);
 			const wouldBeViolated = indexObj.index.willViolateByHash(hash);
 			
 			if (wouldBeViolated) {
-				return new OperationError({
-					type: OperationError.constants.INDEX_PREFLIGHT_VIOLATION,
+				return new OperationFailure({
+					type: OperationFailure.constants.INDEX_PREFLIGHT_VIOLATION,
 					meta: {
 						indexName: indexObj.name,
 						hash,
@@ -153,6 +112,13 @@ class Collection extends CoreClass {
 		});
 	};
 	
+	/**
+	 * Run a single operation on a single or multiple data items.
+	 * @param {object|Array<object>} docOrArr An array of data items or
+	 * a single data item object.
+	 * @param {function} func The operation to run on each data item.
+	 * @returns {OperationResult} The result of the operation(s).
+	 */
 	operation (docOrArr, func) {
 		const opResult = new OperationResult();
 		const isArray = Array.isArray(docOrArr);
@@ -163,47 +129,67 @@ class Collection extends CoreClass {
 			data = [docOrArr];
 		}
 		
-		data.forEach((doc) => {
+		data.forEach((doc, currentIndex) => {
 			const result = func(doc);
+			
+			result.atIndex = currentIndex;
 			opResult.addResult(result);
 		});
 		
 		return opResult;
 	}
 	
-	insert2 (data, options = {}) {
-		// 1 Check index violations on all data
+	insert (data, options = {atomic: false, ordered: false}) {
+		// 1 Check index violations against existing data
 		const isArray = Array.isArray(data);
 		const isAtomic = options.atomic === true;
 		const isOrdered = options.ordered === true;
 		
-		// 2 We also need to check that the data won't violate itself,
-		// not just the existing records - we need a virtual operation
-		// of some sort like index.transaction().insert() then if any operation
-		// violates as it progresses the whole transaction is dumped. If no
-		// errors occur the transaction can be committed.
+		const insertResult = {
+			"operation": {
+				isArray,
+				isAtomic,
+				isOrdered,
+				data
+			},
+			"stage": {
+				"preflight": null,
+				"postflight": null,
+				"execute": null
+			},
+			"nInserted": 0,
+			"nFailed": 0
+		};
 		
-		// Need to think about a generic transaction system, rather than
-		// only for indexes. As we go, we should build up an array of
-		// transactions that if one fails, we roll back the entire array
-		// or something like that. Or maybe one transaction that has a
-		// bunch of pending operations that can be cancelled?
-		const opResult = this.operation(data, this.indexViolationCheck);
+		insertResult.stage.preflight = this.operation(data, this.indexViolationCheck);
+		
+		// 2 Check for index violations against itself when inserted
+		// TODO
 		
 		if (isArray) {
-			if (isAtomic && result.error.length > 0) {
+			// 3 If anything will fail, check if we are running atomic and if so, exit with error
+			if (isAtomic && insertResult.stage.preflight.failure.length > 0) {
 				// Atomic operation and we failed at least one op, fail the whole op
-				return new OperationResult({
-					"error": result.error
-				});
+				insertResult.nFailed = insertResult.stage.preflight.failure.length;
+				return insertResult;
 			}
+			
+			
 		}
 		
-		// 2 If anything will fail, check if we are running atomic and if so, exit with error
+		// 4 If not atomic, run through only allowed operations and complete them
+		const result = this._indexInsert(data);
+		this._data.push(data);
 		
-		// 3 If not atomic, run through only allowed operations and complete them
+		// Check capped collection status and remove first record
+		// if we are over the threshold
+		if (this._cap && this._data.length > this._cap) {
+			// Remove the first item in the data array
+			this.removeById(this._data[0][this._primaryKey]);
+		}
 		
-		// 4 Return result
+		// 5 Return result
+		return insertResult;
 	}
 	
 	removeById (id) {

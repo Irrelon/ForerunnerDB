@@ -37,7 +37,7 @@
 	},
 	"scripts": {
 		"build": "babel src --out-dir dist",
-		"test": "NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill **/*.test.js"
+		"test": "NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill src/**/*.test.js src/**/**/*.test.js"
 	},
 	"repository": {
 		"type": "git",
