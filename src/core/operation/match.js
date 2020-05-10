@@ -77,7 +77,7 @@ export const queryToGatedOperations = (query, parentPath) => {
 	return response;
 };
 
-export const findByGatedQuery = (query, queryGates, dataArr) => {
+export const matchGatedQuery = (query, queryGates, dataArr) => {
 	return Object.entries(queryGates).reduce((finalDataArr, [gateKey, opArr]) => {
 		if (gateKey.indexOf("$") !==0) return finalDataArr;
 		return finalDataArr.concat(

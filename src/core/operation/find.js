@@ -1,5 +1,5 @@
 import {extendedType} from "../utils";
-import {queryToGatedOperations, findByGatedQuery} from "./match";
+import {queryToGatedOperations, matchGatedQuery} from "./match";
 
 const find = (data, query) => {
 	const dataType = extendedType(data);
@@ -21,7 +21,9 @@ const find = (data, query) => {
 	}*/
 	
 	// Loop through each gate and resolve the result to an item array
-	return findByGatedQuery(query, queryGates, dataArr)
+	return matchGatedQuery(query, queryGates, dataArr)
 };
+
+// TODO support calling explain that returns a query plan
 
 export default find;
