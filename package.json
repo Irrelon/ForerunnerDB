@@ -37,7 +37,8 @@
 	},
 	"scripts": {
 		"build": "babel src --out-dir dist",
-		"test": "NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill src/**/*.test.js src/**/**/*.test.js"
+		"test": "NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill src/**/*.test.js src/**/**/*.test.js",
+		"testMon": "nodemon --watch src --exec \"NODE_ENV=test BABEL_DISABLE_CACHE=1 mocha --require @babel/register --require @babel/core --require @babel/polyfill src/**/*.test.js src/**/**/*.test.js\""
 	},
 	"repository": {
 		"type": "git",
@@ -52,7 +53,8 @@
 		"@babel/runtime": "^7.9.2",
 		"@irrelon/emitter": "^3.0.0",
 		"@irrelon/path": "^4.5.6",
-		"irrelon-log": "^2.0.3"
+		"irrelon-log": "^2.0.3",
+		"nodemon": "^2.0.3"
 	},
 	"devDependencies": {
 		"@babel/cli": "^7.4.4",

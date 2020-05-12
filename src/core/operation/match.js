@@ -1,7 +1,7 @@
-import {extendedType} from "../utils";
+import {extendedType} from "../../utils/type";
 import {get as pathGet} from "@irrelon/path";
 
-const gates = ["$and", "$or", "$not", "$nor"];
+export const gates = ["$and", "$or", "$not", "$nor"];
 
 /*const ensureGate = (query) => {
 	const hasGate = gates.some((gate) => {
@@ -203,16 +203,14 @@ export const $in = (data, query) => { // In
 			inArrIndex;
 		
 		for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-			if ($and(data, inArr[inArrIndex])) {
+			if ($eeq(data, inArr[inArrIndex])) {
 				return true;
 			}
 		}
 		
 		return false;
-	} else if (typeof query === "object") {
-		return $and(data, query);
 	} else {
-		console.log(this.logIdentifier() + " Cannot use an $in operator on a non-array key: " + key, options.$rootQuery);
+		console.log(`Cannot use an $in operator on non-array data in query ${JSON.stringify(query)}`);
 		return false;
 	}
 };

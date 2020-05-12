@@ -187,6 +187,20 @@ describe("Collection", () => {
 				assert.strictEqual(result.length, 1, "Number of results is correct");
 				assert.strictEqual(result[0]._id, 5, "ID is correct");
 			});
+			
+			it("$in", () => {
+				const query = {
+					"bar.name": {
+						"$in": ["Amelia", "Andy"]
+					}
+				};
+				
+				const result = find(data, query);
+				
+				assert.strictEqual(result.length, 2, "Number of results is correct");
+				assert.strictEqual(result[0]._id, 1, "ID is correct");
+				assert.strictEqual(result[1]._id, 5, "ID is correct");
+			});
 		});
 		
 		describe("Boolean", () => {

@@ -1,9 +1,23 @@
 /**
+ * @typedef {"undefined"|"object"|"boolean"|"number"|"string"|"function"|"symbol"|"null"|"array"|"unknown"|"bigint"} TypeString
+ */
+
+/**
+ * @typedef ExtendedTypeObject {Object}
+ * @property isFlat {boolean} Is true if the type is non-recursive. Instances
+ * such as Date or RegExp are considered flat as they do not contain sub-object
+ * data that is usefully recursive.
+ * @property {TypeString} type The name of the type
+ * @property {string} [instance] If the type is an object, this will be the name
+ * of the constructor as reported by obj.constructor.name.
+ */
+
+/**
  * Returns the type from the item passed. Similar to JavaScript's
  * built-in typeof except it will distinguish between arrays, nulls
  * and objects as well.
  * @param {*} item The item to get the type of.
- * @returns {string|"undefined"|"object"|"boolean"|"number"|"string"|"function"|"symbol"|"null"|"array"}
+ * @returns {TypeString}
  */
 export const type = (item) => {
 	if (item === null) {
@@ -21,12 +35,13 @@ export const type = (item) => {
  * Similar to JavaScript's built-in typeof except it will distinguish
  * between arrays, nulls and objects as well.
  * @param {*} item The item to get the type of.
- * @returns {object} The extended type information object.
+ * @returns {ExtendedTypeObject} The extended type information object.
  */
 export const extendedType = (item) => {
 	const typeData = {
 		isFlat: false,
-		instance: ""
+		instance: "",
+		type: "foo"
 	};
 	
 	if (item === null) {

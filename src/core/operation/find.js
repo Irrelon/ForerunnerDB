@@ -1,4 +1,4 @@
-import {extendedType} from "../utils";
+import {extendedType} from "../../utils/type";
 import {queryToGatedOperations, matchGatedQuery} from "./match";
 
 const find = (data, query) => {
