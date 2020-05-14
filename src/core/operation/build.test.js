@@ -1,5 +1,5 @@
 import assert from "assert";
-import {$and, $eeq, $eq, $in, queryToPipeline, objectToArray} from "./build";
+import {$eeq, $eq, $in, queryToPipeline} from "./build";
 import {extendedType} from "../../utils/type";
 
 describe("build", () => {
@@ -68,101 +68,6 @@ describe("build", () => {
 		
 		assert.deepStrictEqual(result, expected, "Correct");
 	});
-	
-	describe("$and", () => {
-		it("Explicit, Non-Recursive", () => {
-			const query = {
-				"$and": [{
-					"bar.name": "Foo",
-					"bar.age": 22
-				}]
-			};
-			
-			const expected = {
-				"op": "$and",
-				"path": "",
-				"value": [{
-					"op": "$eeq",
-					"path": "bar.name",
-					"value": "Foo",
-					"type": "string",
-					"instance": ""
-				}, {
-					"op": "$eeq",
-					"path": "bar.age",
-					"value": 22,
-					"type": "number",
-					"instance": ""
-				}],
-				"type": "array",
-				"instance": ""
-			};
-			
-			const result = $and("", objectToArray(query));
-			
-			assert.deepStrictEqual(result, expected, "Correct");
-		});
-		
-	// 	it("Implicit, Non-Recursive", () => {
-	// 		const query = {
-	// 			"bar.foo": true,
-	// 			"bar.dt": {
-	// 				"$gt": new Date("2020-02-01T00:00:00Z"),
-	// 				"$lte": new Date("2020-04-01T00:00:00Z")
-	// 			}
-	// 		};
-			
-	// 		const data = {
-	// 			op: "$and",
-	// 			path: "",
-	// 			value: [{
-	// 				"bar.foo": true
-	// 			}, {
-	// 				"bar.dt": {
-	// 					"$gt": new Date("2020-02-01T00:00:00Z"),
-	// 					"$lte": new Date("2020-04-01T00:00:00Z")
-	// 				}
-	// 			}]
-	// 		};
-			
-	// 		data.typeData = extendedType(data.value);
-			
-	// 		const expected = {
-	// 			"op": "$and",
-	// 			"path": "",
-	// 			"value": [{
-	// 				"op": "$eeq",
-	// 				"path": "bar.foo",
-	// 				"value": true,
-	// 				"type": "boolean",
-	// 				"instance": ""
-	// 			}, {
-	// 				"op": "$and",
-	// 				"path": "",
-	// 				"value": [{
-	// 					"op": "$gt",
-	// 					"value": new Date("2020-02-01T00:00:00Z"),
-	// 					"path": "bar.dt",
-	// 					"type": "object",
-	// 					"instance": "Date"
-	// 				}, {
-	// 					"op": "$lte",
-	// 					"value": new Date("2020-04-01T00:00:00Z"),
-	// 					"path": "bar.dt",
-	// 					"type": "object",
-	// 					"instance": "Date"
-	// 				}],
-	// 				"type": "array"
-	// 			}],
-	// 			"type": data.typeData.type,
-	// 			"instance": data.typeData.instance
-	// 		};
-			
-	// 		const result = $and(data.path, data.value, data.typeData);
-			
-	// 		assert.deepStrictEqual(result, expected, "Correct");
-	// 	});
-	});
 });
 
 describe("queryToPipeline()", () => {
@@ -190,7 +95,7 @@ describe("queryToPipeline()", () => {
 		assert.deepStrictEqual(result, expected, "Correct");
 	});
 
-	it("Implicit $and nested", () => {
+	it("Explicit $or nested", () => {
 		const query = {
 			"$or": [{
 				"bar.name": "Foo",
@@ -236,6 +141,214 @@ describe("queryToPipeline()", () => {
 
 		const result = queryToPipeline(query);
 
+		assert.deepStrictEqual(result, expected, "Correct");
+	});
+	
+	it("Explicit $and single tier", () => {
+		const query = {
+			"$and": [{
+				"bar.name": "Foo",
+				"bar.age": 22
+			}]
+		};
+		
+		const expected = {
+			"op": "$and",
+			"path": "",
+			"type": "array",
+			"instance": "",
+			"value": [{
+				"op": "$eeq",
+				"path": "bar.name",
+				"value": "Foo",
+				"type": "string",
+				"instance": ""
+			}, {
+				"op": "$eeq",
+				"path": "bar.age",
+				"value": 22,
+				"type": "number",
+				"instance": ""
+			}]
+		};
+		
+		const result = queryToPipeline(query);
+		
+		assert.deepStrictEqual(result, expected, "Correct");
+	});
+	
+	it("Implicit $and single tier, multi-sub-operations", () => {
+		const query = {
+			"bar.foo": true,
+			"bar.dt": {
+				"$gt": new Date("2020-02-01T00:00:00Z"),
+				"$lte": new Date("2020-04-01T00:00:00Z")
+			}
+		};
+		
+		const expected = {
+			"op": "$and",
+			"path": "",
+			"type": "array",
+			"instance": "",
+			"value": [{
+				"op": "$eeq",
+				"path": "bar.foo",
+				"value": true,
+				"type": "boolean",
+				"instance": ""
+			}, {
+				"op": "$gt",
+				"value": new Date("2020-02-01T00:00:00Z"),
+				"path": "bar.dt",
+				"type": "object",
+				"instance": "Date"
+			}, {
+				"op": "$lte",
+				"value": new Date("2020-04-01T00:00:00Z"),
+				"path": "bar.dt",
+				"type": "object",
+				"instance": "Date"
+			}]
+		};
+		
+		const result = queryToPipeline(query);
+		
+		assert.deepStrictEqual(result, expected, "Correct");
+	});
+	
+	it("Explicit $and single tier, multi-sub-operations", () => {
+		const query = {
+			$and: [{
+				"bar.foo": true
+			}, {
+				"bar.dt": {
+					"$gt": new Date("2020-02-01T00:00:00Z"),
+					"$lte": new Date("2020-04-01T00:00:00Z")
+				}
+			}]
+		};
+		
+		const expected = {
+			op: "$and",
+			path: "",
+			type: "array",
+			instance: "",
+			value: [{
+				path: "bar.foo",
+				value: true,
+				type: "boolean",
+				instance: "",
+				op: "$eeq"
+			}, {
+				path: "bar.dt",
+				value: new Date("2020-02-01T00:00:00Z"),
+				type: "object",
+				instance: "Date",
+				op: "$gt"
+			}, {
+				path: "bar.dt",
+				value: new Date("2020-04-01T00:00:00Z"),
+				type: "object",
+				instance: "Date",
+				op: "$lte"
+			}]
+		}
+		
+		const result = queryToPipeline(query);
+		
+		assert.deepStrictEqual(result, expected, "Correct data");
+	});
+	
+	it("Implicit $and single tier, single-sub-operation", () => {
+		const query = {
+			"bar.name": {
+				"$in": ["Amelia", "Andy"]
+			}
+		};
+		
+		const expected = {
+			op: "$and",
+			path: "",
+			type: "array",
+			instance: "",
+			value: [{
+				path: "bar.name",
+				value: ["Amelia", "Andy"],
+				type: "array",
+				instance: "",
+				op: "$in"
+			}]
+		}
+		
+		const result = queryToPipeline(query);
+		
+		assert.deepStrictEqual(result, expected, "Correct data");
+	});
+	
+	it("Implicit $and single tier, multi-sub-operations with array value", () => {
+		const query = {
+			"bar.dt": new Date("2020-03-01T00:00:00Z"),
+			"bar.name": {
+				"$in": ["Amelia", "Andy"],
+				"$ne": "Andy"
+			}
+		};
+		
+		const expected = {
+			op: "$and",
+			instance: "",
+			path: "",
+			type: "array",
+			value: [{
+				op: "$eeq",
+				path: "bar.dt",
+				value: new Date("2020-03-01T00:00:00Z"),
+				type: "object",
+				instance: "Date"
+			}, {
+				path: "bar.name",
+				value: ["Amelia", "Andy"],
+				type: "array",
+				instance: "",
+				op: "$in"
+			}, {
+				path: "bar.name",
+				value: "Andy",
+				type: "string",
+				instance: "",
+				op: "$ne"
+			}]
+		}
+		
+		const result = queryToPipeline(query);
+		
+		assert.deepStrictEqual(result, expected, "Correct data");
+	});
+	
+	it("Implicit $and single tier, single-sub-operation with array value", () => {
+		const query = {
+			"bar.name": {
+				"$in": ["Foo", "Bar"]
+			}
+		};
+		
+		const expected = {
+			"op": "$and",
+			"path": "",
+			"type": "array",
+			"instance": "",
+			"value": [{
+				"op": "$in",
+				"path": "bar.name",
+				"type": "array",
+				"instance": "",
+				"value": ["Foo", "Bar"]
+			}]
+		};
+		
+		const result = queryToPipeline(query);
+		
 		assert.deepStrictEqual(result, expected, "Correct");
 	});
 });

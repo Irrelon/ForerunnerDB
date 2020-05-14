@@ -1,27 +1,20 @@
-import {extendedType} from "../../utils/type";
-import {queryToGatedOperations, matchGatedQuery} from "./match";
+import {matchPipeline} from "./match";
+import {queryToPipeline} from "./build";
 
 const find = (data, query) => {
-	const dataType = extendedType(data);
-	const queryType = extendedType(query);
-	
-	let matchedAll = true;
-	
 	// Break query into operations
-	const queryGates = queryToGatedOperations(query);
-	
-	let dataArr = data;
+	const pipeline = queryToPipeline(query);
 	
 	// TODO: Loop each operation and check if an index (or multiple indexes) matches the path
-	// and then order indexes that do match by how much they match. Take the most-matching
-	// index and pull the data lookup from it rather than using the whole data array to do
-	// effectively a table scan
+	//  and then order indexes that do match by how much they match. Take the most-matching
+	//  index and pull the data lookup from it rather than using the whole data array to do
+	//  effectively a table scan
 	/*if (false) {
-		dataArr = index.find();
+		data = index.find();
 	}*/
 	
 	// Loop through each gate and resolve the result to an item array
-	return matchGatedQuery(query, queryGates, dataArr)
+	return matchPipeline(pipeline, data);
 };
 
 // TODO support calling explain that returns a query plan

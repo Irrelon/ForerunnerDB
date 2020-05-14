@@ -3,99 +3,39 @@ import {get as pathGet} from "@irrelon/path";
 
 export const gates = ["$and", "$or", "$not", "$nor"];
 
-/*const ensureGate = (query) => {
-	const hasGate = gates.some((gate) => {
-		return query[gate];
+export const matchPipeline = (pipeline, data) => {
+	const opFunc = operationLookup[pipeline.op];
+	
+	if (!opFunc) {
+		throw new Error(`Unknown operation "${pipeline.op}"`);
+	}
+	
+	return opFunc(data, pipeline.value);
+};
+
+export const $and = (dataItem, opArr) => {
+	// Match true on ALL operations to pass, if any are
+	// returned then we have found a NON MATCHING entity
+	return opArr.every((opData) => {
+		let dataValue;
+		let opValue;
+		let opFunc;
+		
+		if (gates.indexOf(opData.op) > -1) {
+			// The operation is a gate
+			return operationLookup[opData.op](dataItem, opData.value);
+		}
+		
+		dataValue = pathGet(dataItem, opData.path);
+		opFunc = operationLookup[opData.op];
+		opValue = opData.value;
+		
+		if (!opFunc) {
+			throw new Error(`Unknown operation "${opData.op}"`);
+		}
+		
+		return opFunc(dataValue, opValue);
 	});
-	
-	if (!hasGate) {
-		return {
-			$and: [query]
-		};
-	}
-	
-	return query;
-};
-
-const queryToOperations = (query, parentPath, gate) => {
-	return Object.entries(ensureGate(query)).reduce((opObj, [gateKey, gateQueryArray]) => {
-		opObj[gateKey] = queryToOperationArray(gateQueryArray);
-		
-		return opObj;
-	}, {});
-};*/
-
-const queryToOperationArray = (query, parentPath, gate) =>  {
-	return Object.entries(query).reduce((opArr, [key, value]) => {
-		const path = parentPath || key;
-		const {type, isFlat, instance} = extendedType(value);
-		let op = "$eeq";
-		
-		if (key.indexOf("$") === 0) {
-			op = key;
-		}
-		
-		// Determine operation type
-		if (isFlat) {
-			opArr.push({
-				path,
-				value,
-				type,
-				instance,
-				op
-			});
-			
-			return opArr;
-		}
-		
-		// The value data is not flat, scan it
-		return opArr.concat(queryToGatedOperations(value, path));
-	}, []);
-}
-
-export const queryToGatedOperations = (query, parentPath) => {
-	let foundLogicalOperator = false;
-	
-	const response = gates.reduce((result, gate) => {
-		if (query[gate]) {
-			result[gate] = query[gate].reduce((gateOpArr, queryItem) => {
-				return gateOpArr.concat(queryToOperationArray(queryItem, parentPath, gate));
-			}, []);
-			
-			foundLogicalOperator = true;
-		}
-		
-		return result;
-	}, {});
-	
-	// Find the logical operators
-	if (!foundLogicalOperator) {
-		// The query has no base logical gate, assume $and
-		response.$and = queryToOperationArray(query, parentPath, "$and");
-	}
-	
-	return response;
-};
-
-export const matchGatedQuery = (query, queryGates, dataArr) => {
-	return Object.entries(queryGates).reduce((finalDataArr, [gateKey, opArr]) => {
-		if (gateKey.indexOf("$") !==0) return finalDataArr;
-		return finalDataArr.concat(
-			dataArr.filter((dataItem) => {
-				// Find any operation result that fails to match the dataItem
-				// if no operation fails, this will return true, using the power
-				// of confusing nested not gates
-				const gateOpFunc = operationLookup[gateKey];
-				
-				if (!gateOpFunc) {
-					throw new Error(`No known gate operation "${gateKey}" in ${JSON.stringify(query)}`);
-				}
-				
-				const gateOpResult = gateOpFunc(dataItem, opArr, query);
-				return gateOpResult;
-			})
-		);
-	}, []);
 };
 
 export const $not = (data, query) => { // Not operator
@@ -128,74 +68,56 @@ export const $or = (dataItem, opArr, query) => {
 	});
 };
 
-export const $and = (dataItem, opArr, query) => {
-	// Match true on ALL operations to pass, if any are
-	// returned then we have found a NON MATCHING entity
-	return opArr.every((opData) => {
-		let dataValue;
-		let opValue;
-		let opFunc;
-		
-		if (gates.some((gate) => opData[gate])) {
-			dataValue = dataItem;
-			opValue = opData.$and;
-			opFunc = operationLookup["$and"];
-		} else {
-			dataValue = pathGet(dataItem, opData.path);
-			opFunc = operationLookup[opData.op];
-			opValue = opData.value;
-		}
-		
-		if (!opFunc) {
-			throw new Error(`No known operation "${opData.op}" in ${JSON.stringify(query)}`);
-		}
-		
-		return opFunc(dataValue, opValue, query);
-	});
-};
+const normalise = (data) => {
+	if (data instanceof Date) {
+		return data.toISOString();
+	}
+	
+	return data;
+}
 
 export const $gt = (data, query) => {
 	// Greater than
-	return data > query;
+	return normalise(data) > normalise(query);
 };
 
 export const $gte = (data, query) => {
 	// Greater than or equal
-	return data >= query;
+	return normalise(data) >= normalise(query);
 };
 
 export const $lt = (data, query) => {
 	// Less than
-	return data < query;
+	return normalise(data) < normalise(query);
 };
 
 export const $lte = (data, query) => {
 	// Less than or equal
-	return data <= query;
+	return normalise(data) <= normalise(query);
 };
 
 export const $exists = (data, query) => {
 	// Property exists
-	return (data === undefined) !== query;
+	return (data === undefined) !== normalise(query);
 };
 
 export const $eq = (data, query) => { // Equals
-	return data == query; // jshint ignore:line
+	return normalise(data) == normalise(query); // jshint ignore:line
 };
 
 export const $eeq = (data, query) => { // Equals equals
-	return data === query;
+	return normalise(data) === normalise(query);
 };
 
 export const $ne = (data, query) => { // Not equals
-	return data != query; // jshint ignore:line
+	return normalise(data) != normalise(query); // eslint ignore:line
+};
+// Not equals equals
+export const $nee = (data, query) => {
+	return normalise(data) !== normalise(query);
 };
 
-export const $nee = (data, query) => { // Not equals equals
-	return data !== query;
-};
-
-export const $in = (data, query) => { // In
+export const $in = (data, query) => {
 	// Check that the in query is an array
 	if (Array.isArray(query)) {
 		let inArr = query,
@@ -214,8 +136,8 @@ export const $in = (data, query) => { // In
 		return false;
 	}
 };
-
-export const $nin = (data, query) => { // Not in
+// Not in
+export const $nin = (data, query) => {
 	// Check that the not-in query is an array
 	if (query instanceof Array) {
 		let notInArr = query,
@@ -315,14 +237,14 @@ export const $count = (data, query) => {
 };
 
 export const operationLookup = {
-	"$eq": $eq,
-	"$eeq": $eeq,
-	"$ne": $ne,
-	"$nee": $nee,
-	"$gt": $gt,
-	"$gte": $gte,
-	"$lt": $lt,
-	"$lte": $lte,
-	"$and": $and,
-	"$or": $or
-}
+	$eq,
+	$eeq,
+	$ne,
+	$nee,
+	$gt,
+	$gte,
+	$lt,
+	$lte,
+	$and,
+	$or
+};

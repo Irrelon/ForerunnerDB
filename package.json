@@ -53,10 +53,12 @@
 		"@babel/runtime": "^7.9.2",
 		"@irrelon/emitter": "^3.0.0",
 		"@irrelon/path": "^4.5.6",
-		"irrelon-log": "^2.0.3",
-		"nodemon": "^2.0.3"
+		"irrelon-log": "^2.0.3"
 	},
 	"devDependencies": {
+		"nodemon": "^2.0.3",
+		"@types/assert": "^1.4.6",
+		"@types/mocha": "^7.0.2",
 		"@babel/cli": "^7.4.4",
 		"@babel/core": "^7.4.4",
 		"@babel/plugin-proposal-class-properties": "^7.4.4",

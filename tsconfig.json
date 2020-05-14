@@ -2,11 +2,26 @@
 	"compilerOptions": {
 		"module": "commonjs",
 		"target": "es5",
-		"sourceMap": true,
+		"sourceMap": false,
 		"allowJs": true,
 		"checkJs": true,
-		"noEmit": true
+		"noEmit": true,
+		"typeAcquisition": {
+			"include": [
+				"mocha",
+				"assert"
+			]
+		},
+		"allowSyntheticDefaultImports": true,
+		"esModuleInterop": true,
+		"strictBindCallApply": true,
+		"strictNullChecks": true,
+		"strictPropertyInitialization": true,
+		"noImplicitReturns": true,
+		"noUnusedLocals": true,
+		"allowUnreachableCode": false
 	},
+
 	"exclude": [
 		"node_modules"
 	]
