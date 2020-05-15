@@ -895,10 +895,10 @@
     "@babel/runtime" "^7.3.1"
     irrelon-overload "^1.0.3"
 
-"@irrelon/path@^4.5.6":
-  version "4.5.6"
-  resolved "https://registry.yarnpkg.com/@irrelon/path/-/path-4.5.6.tgz#2fb169ac596e3679d40c045e2236e95787ac4126"
-  integrity sha512-VkUsG5/+OEc8v5LJziKYIKiPIRqnQEClDnqDpJNlhrYc+rf7ntFdIPQ+OOo1qPx1WuR0vJ06OTrZepcfVqzrfA==
+"@irrelon/path@4.6.2":
+  version "4.6.2"
+  resolved "https://registry.yarnpkg.com/@irrelon/path/-/path-4.6.2.tgz#a40596a19d5399c30cf3a7012e4231e6f715b268"
+  integrity sha512-2fvhI/dmp6v3GnMhPYn5l6XX3priPAhYNA2BTU/wJahBtdyl9JzP8YrlvYxL9/j14Iukj9OWEitKRXlkk/dVsg==
 
 "@sindresorhus/is@^0.14.0":
   version "0.14.0"

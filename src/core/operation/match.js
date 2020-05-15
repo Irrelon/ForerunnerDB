@@ -1,19 +1,18 @@
-import {extendedType} from "../../utils/type";
 import {get as pathGet} from "@irrelon/path";
 
 export const gates = ["$and", "$or", "$not", "$nor"];
 
-export const matchPipeline = (pipeline, data) => {
+export const matchPipeline = (pipeline, data, extraInfo = {originalQuery: {}}) => {
 	const opFunc = operationLookup[pipeline.op];
 	
 	if (!opFunc) {
 		throw new Error(`Unknown operation "${pipeline.op}"`);
 	}
 	
-	return opFunc(data, pipeline.value);
+	return opFunc(data, pipeline.value, {originalQuery: extraInfo.originalQuery, operation: pipeline});
 };
 
-export const $and = (dataItem, opArr) => {
+export const $and = (dataItem, opArr, extraInfo = {originalQuery: {}}) => {
 	// Match true on ALL operations to pass, if any are
 	// returned then we have found a NON MATCHING entity
 	return opArr.every((opData) => {
@@ -23,7 +22,36 @@ export const $and = (dataItem, opArr) => {
 		
 		if (gates.indexOf(opData.op) > -1) {
 			// The operation is a gate
-			return operationLookup[opData.op](dataItem, opData.value);
+			return operationLookup[opData.op](dataItem, opData.value, extraInfo);
+		}
+		
+		dataValue = pathGet(dataItem, opData.path);
+		opFunc = operationLookup[opData.op];
+		opValue = opData.value;
+		
+		if (!opFunc) {
+			throw new Error(`Unknown operation "${opData.op}" in operation ${JSON.stringify(opData)}`);
+		}
+		
+		return opFunc(dataValue, opValue, {originalQuery: extraInfo.originalQuery, operation: opData});
+	});
+};
+
+export const $not = (data, query, extraInfo = {originalQuery: {}}) => { // Not operator
+	return !$and(data, query, extraInfo);
+};
+
+export const $or = (dataItem, opArr, extraInfo = {originalQuery: {}}) => {
+	// Match true on ANY operations to pass, if any are
+	// returned then we have found a NON MATCHING entity
+	return opArr.some((opData) => {
+		let dataValue;
+		let opValue;
+		let opFunc;
+		
+		if (gates.indexOf(opData.op) > -1) {
+			// The operation is a gate
+			return operationLookup[opData.op](dataItem, opData.value, extraInfo);
 		}
 		
 		dataValue = pathGet(dataItem, opData.path);
@@ -34,37 +62,7 @@ export const $and = (dataItem, opArr) => {
 			throw new Error(`Unknown operation "${opData.op}"`);
 		}
 		
-		return opFunc(dataValue, opValue);
-	});
-};
-
-export const $not = (data, query) => { // Not operator
-	return !$and(data, query);
-};
-
-export const $or = (dataItem, opArr, query) => {
-	// Match true on ANY operations to pass, if any are
-	// returned then we have found a NON MATCHING entity
-	return opArr.some((opData) => {
-		let dataValue;
-		let opValue;
-		let opFunc;
-		
-		if (gates.some((gate) => opData[gate])) {
-			dataValue = dataItem;
-			opValue = opData.$and;
-			opFunc = operationLookup["$and"];
-		} else {
-			dataValue = pathGet(dataItem, opData.path);
-			opFunc = operationLookup[opData.op];
-			opValue = opData.value;
-		}
-		
-		if (!opFunc) {
-			throw new Error(`No known operation "${opData.op}" in ${JSON.stringify(query)}`);
-		}
-		
-		return opFunc(dataValue, opValue, query);
+		return opFunc(dataValue, opValue, {originalQuery: extraInfo.originalQuery, operation: opData});
 	});
 };
 
@@ -76,48 +74,48 @@ const normalise = (data) => {
 	return data;
 }
 
-export const $gt = (data, query) => {
+export const $gt = (data, query, extraInfo = {}) => {
 	// Greater than
 	return normalise(data) > normalise(query);
 };
 
-export const $gte = (data, query) => {
+export const $gte = (data, query, extraInfo = {}) => {
 	// Greater than or equal
 	return normalise(data) >= normalise(query);
 };
 
-export const $lt = (data, query) => {
+export const $lt = (data, query, extraInfo = {}) => {
 	// Less than
 	return normalise(data) < normalise(query);
 };
 
-export const $lte = (data, query) => {
+export const $lte = (data, query, extraInfo = {}) => {
 	// Less than or equal
 	return normalise(data) <= normalise(query);
 };
 
-export const $exists = (data, query) => {
+export const $exists = (data, query, extraInfo = {}) => {
 	// Property exists
 	return (data === undefined) !== normalise(query);
 };
 
-export const $eq = (data, query) => { // Equals
+export const $eq = (data, query, extraInfo = {}) => { // Equals
 	return normalise(data) == normalise(query); // jshint ignore:line
 };
 
-export const $eeq = (data, query) => { // Equals equals
+export const $eeq = (data, query, extraInfo = {}) => { // Equals equals
 	return normalise(data) === normalise(query);
 };
 
-export const $ne = (data, query) => { // Not equals
+export const $ne = (data, query, extraInfo = {}) => { // Not equals
 	return normalise(data) != normalise(query); // eslint ignore:line
 };
 // Not equals equals
-export const $nee = (data, query) => {
+export const $nee = (data, query, extraInfo = {}) => {
 	return normalise(data) !== normalise(query);
 };
 
-export const $in = (data, query) => {
+export const $in = (data, query, {originalQuery, operation} = {originalQuery: undefined, operation: undefined}) => {
 	// Check that the in query is an array
 	if (Array.isArray(query)) {
 		let inArr = query,
@@ -125,46 +123,44 @@ export const $in = (data, query) => {
 			inArrIndex;
 		
 		for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
-			if ($eeq(data, inArr[inArrIndex])) {
+			if ($eeq(data, inArr[inArrIndex], {originalQuery, operation})) {
 				return true;
 			}
 		}
 		
 		return false;
 	} else {
-		console.log(`Cannot use an $in operator on non-array data in query ${JSON.stringify(query)}`);
+		console.log(`Cannot use an $in operator on non-array data in query ${JSON.stringify(originalQuery)}`);
 		return false;
 	}
 };
 // Not in
-export const $nin = (data, query) => {
-	// Check that the not-in query is an array
-	if (query instanceof Array) {
-		let notInArr = query,
-			notInArrCount = notInArr.length,
-			notInArrIndex;
+export const $nin = (data, query, {originalQuery, operation}) => {
+	// Check that the in query is an array
+	if (Array.isArray(query)) {
+		let inArr = query,
+			inArrCount = inArr.length,
+			inArrIndex;
 		
-		for (notInArrIndex = 0; notInArrIndex < notInArrCount; notInArrIndex++) {
-			if (this._match(data, notInArr[notInArrIndex], queryOptions, 'and', options)) {
+		for (inArrIndex = 0; inArrIndex < inArrCount; inArrIndex++) {
+			if ($eeq(data, inArr[inArrIndex], {originalQuery, operation})) {
 				return false;
 			}
 		}
 		
 		return true;
-	} else if (typeof query === 'object') {
-		return this._match(data, query, queryOptions, 'and', options);
 	} else {
-		console.log(this.logIdentifier() + ' Cannot use a $nin operator on a non-array key: ' + key, options.$rootQuery);
+		console.log(`Cannot use an $in operator on non-array data in query ${JSON.stringify(originalQuery)}`);
 		return false;
 	}
 };
 
-export const $fastIn = (data, query) => {
+export const $fastIn = (data, query, {originalQuery, operation}) => {
 	if (query instanceof Array) {
 		// Data is a string or number, use indexOf to identify match in array
 		return query.indexOf(data) !== -1;
 	} else {
-		console.log(this.logIdentifier() + ' Cannot use an $fastIn operator on a non-array key: ' + key, options.$rootQuery);
+		console.log('Cannot use a $fastIn operator on a non-array key: ' + operation.path, originalQuery);
 		return false;
 	}
 };
@@ -246,5 +242,7 @@ export const operationLookup = {
 	$lt,
 	$lte,
 	$and,
-	$or
+	$or,
+	$in,
+	$fastIn
 };

@@ -1,5 +1,13 @@
 import { extendedType } from "../../utils/type";
 import { gates } from "./match";
+import {flattenValues} from "@irrelon/path";
+
+export const queryFromObject = (obj) => {
+	return flattenValues(obj, undefined, "", {
+		transformKey: (key, info) => info.isArrayIndex ? "$" : key,
+		leavesOnly: true
+	});
+}
 
 const genericOperation = (op = "") => (path, value, typeData) => {
 	return {
@@ -48,7 +56,7 @@ const gateOperation = (op) => (path, value) => {
 				// so split the object into an array of objects, each
 				// object containing one of the key/val pairs of the
 				// original `value` object
-				return itemArr.concat(objectToArray(item).map((item) => queryToPipeline(item, op, path)));
+				return itemArr.concat(reduceArray(objectToArray(item).map((item) => queryToPipeline(item, op, path))));
 			}
 			
 			return itemArr.concat(reduceArray(queryToPipeline(item, op, path)));

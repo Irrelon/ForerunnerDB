@@ -13,8 +13,8 @@ const find = (data, query) => {
 		data = index.find();
 	}*/
 	
-	// Loop through each gate and resolve the result to an item array
-	return matchPipeline(pipeline, data);
+	// Loop through each item of data and return a final filtered array
+	return data.filter((item) => matchPipeline(pipeline, item, {originalQuery: query}));
 };
 
 // TODO support calling explain that returns a query plan
