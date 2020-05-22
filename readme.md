@@ -4012,6 +4012,55 @@ var fdb = new ForerunnerDB(),
 db.persist.driver("LocalStorage");
 ```
 
+##### Custom Driver
+
+To manage the different storages, ForerunnerDB uses [localforage](https://github.com/localForage/localForage), which
+further allows to integrate drivers of other storage possibilities. You might want to set up such a driver manually and
+use it in ForerunnerDB directly.
+
+```js
+var fdb = new ForerunnerDB(),
+	db = fdb.db("test"),
+    myCustomDriver = {
+        _driver: 'customDriverUniqueName',
+        _initStorage: function(options) {
+            // Custom implementation here...
+        },
+        clear: function(callback) {
+            // Custom implementation here...
+        },
+        getItem: function(key, callback) {
+            // Custom implementation here...
+        },
+        iterate: function(iteratorCallback, successCallback) {
+            // Custom implementation here...
+        },    
+        key: function(n, callback) {
+            // Custom implementation here...
+        },
+        keys: function(callback) {
+            // Custom implementation here...
+        },
+        length: function(callback) {
+            // Custom implementation here...
+        },
+        removeItem: function(key, callback) {
+            // Custom implementation here...
+        },
+        setItem: function(key, value, callback) {
+            // Custom implementation here...
+        }
+    };
+
+db.persist.customdriver(myCustomDriver, function(err) {
+    if (!err) {
+        // Setting up a custom driver was successful
+    }
+});
+```
+
+In the upper example `myCustomDriver` represents an object, which applies to the [localforage#defineDriver-API](https://localforage.github.io/localForage/#driver-api-definedriver).
+
 ### Data Persistence In Node.js
 
 > Version >= 1.3.300
