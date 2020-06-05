@@ -1,5 +1,13 @@
-### Interested in API Securty?
-Read the new article on Securing APIs at Infinite Scale on Medium, and don't forget to add a clap! https://medium.com/@irrelon/securing-apis-at-infinite-scale-c67f0f28bc3
+### Version 3.0 is Coming!
+Many of you use ForerunnerDB in your work and have given lots of feedback to me about getting
+some new features / functionality into the next version. You can see the active work on this
+endeavour over at https://github.com/Irrelon/forerunnerdb-core
+
+ForerunnerDB 3.0 is being built in a completely modular fashion with extensibility at heart.
+Things like better persistent storage, exotic index support, different query language support
+etc are all going to be much simpler. It's nowhere near ready for prime time right now but
+if you feel like checking out the core functionality, head over to that repo above and check
+out what's there. With ❤ from Rob.
 
 # ForerunnerDB - A NoSQL JSON Document DB
 ForerunnerDB is developed with ❤ love by [Irrelon Software Limited](http://www.irrelon.com/),
@@ -5770,3 +5778,6 @@ Click the Test Connection button to check that the connection is working.
 Now you can click the menu icon top left and select "Items". Clicking the "Add"
 button top right will allow you to add more items. If you open more browser windows
 you can see them all synchronise as changes are made to the data on the server!
+
+### Interested in API Security?
+Read the new article on Securing APIs at Infinite Scale on Medium, and don't forget to add a clap! https://medium.com/@irrelon/securing-apis-at-infinite-scale-c67f0f28bc3
