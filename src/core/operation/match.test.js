@@ -207,5 +207,40 @@ describe("match", () => {
 				assert.strictEqual(result, true);
 			});
 		});
+		
+		describe("Negative", () => {
+			it("String", () => {
+				const query = {
+					"str": "30489yj341"
+				};
+				
+				const pipeline = queryToPipeline(query);
+				const result = matchPipeline(pipeline, data[0]);
+				
+				assert.strictEqual(result, false);
+			});
+			
+			it("Number", () => {
+				const query = {
+					"_id": 93847
+				};
+				
+				const pipeline = queryToPipeline(query);
+				const result = matchPipeline(pipeline, data[0]);
+				
+				assert.strictEqual(result, false);
+			});
+			
+			it("Date", () => {
+				const query = {
+					"bar.dt": new Date("2020-12-01T00:00:00Z")
+				};
+				
+				const pipeline = queryToPipeline(query);
+				const result = matchPipeline(pipeline, data[0]);
+				
+				assert.strictEqual(result, false);
+			});
+		});
 	});
 });
