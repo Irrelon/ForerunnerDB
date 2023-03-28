@@ -10,7 +10,7 @@ if you feel like checking out the core functionality, head over to that repo abo
 out what's there. With ❤ from Rob.
 
 # ForerunnerDB - A NoSQL JSON Document DB
-ForerunnerDB is developed with ❤ love by [Irrelon Software Limited](http://www.irrelon.com/),
+ForerunnerDB is developed with ❤ love by [Irrelon Software Limited](https://www.irrelon.com/),
 a UK registered company.
 
 > ForerunnerDB is used in live projects that serve millions of users a day, is production
@@ -23,7 +23,7 @@ products please consider becoming a patron: [https://www.patreon.com/user?u=4443
 Community Support: [https://github.com/Irrelon/ForerunnerDB/issues](https://github.com/Irrelon/ForerunnerDB/issues)
 Commercial Support: [forerunnerdb@irrelon.com](mailto:forerunnerdb@irrelon.com)
 
-## Version 2.0.22
+## Version 2.0.23
 
 [![npm version](https://badge.fury.io/js/forerunnerdb.svg)](https://www.npmjs.com/package/forerunnerdb)
 [![Security Scan](https://snyk.io/test/npm/forerunnerdb/badge.svg)](https://snyk.io/test/npm/forerunnerdb)
@@ -1279,7 +1279,7 @@ The $elemMatch operator limits the contents of an *array* field from the query r
 The $elemMatch operator is specified in the *options* object of the find call rather than
  the query object.
  
-[MongoDB $elemMatch Documentation](http://docs.mongodb.org/manual/reference/operator/projection/elemMatch/)
+[MongoDB $elemMatch Documentation](https://docs.mongodb.org/manual/reference/operator/projection/elemMatch/)
  
 ##### Usage
 
@@ -1584,7 +1584,7 @@ the options object. This returns a partial document for each matching document i
 
 This follows the same rules specified by MongoDB here: 
 
-[MongoDB Documentation](http://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/)
+[MongoDB Documentation](https://docs.mongodb.org/manual/tutorial/project-fields-from-query-results/)
 
 > Please note that the primary key field will always be returned unless explicitly excluded
 from the results via "_id: 0".
@@ -1688,7 +1688,7 @@ result = coll.find({}, {
 > Version >= 1.3.55
 
 You can skip records at the beginning of a query result by providing the $skip query
-option. This operates in a similar fashion to the MongoDB [skip()](http://docs.mongodb.org/manual/reference/method/cursor.skip/) method.
+option. This operates in a similar fashion to the MongoDB [skip()](https://docs.mongodb.org/manual/reference/method/cursor.skip/) method.
 
 #### Usage
 
@@ -2905,7 +2905,7 @@ contain data and no $ operators like $push, $unset etc.
 
 An upsert operation both returns an array of results and accepts a callback that will
 receive the same array data on what operations were done for each document passed, as
-well as the result of that operation. See the [http://forerunnerdb.com/source/doc/Collection.html#upsert](upsert documentation) for more details.
+well as the result of that operation. See the [https://forerunnerdb.com/source/doc/Collection.html#upsert](upsert documentation) for more details.
 
 ## Count Documents
 The count() method is useful when you want to get a count of the number of documents in a
@@ -4778,7 +4778,7 @@ and automatically keep the charts in sync with changes to the collection.
 
 ### Prerequisites
 The Highcharts JavaScript library is required to use the ForerunnerDB Highcharts module. You can
-get Highcharts from (http://www.highcharts.com)
+get Highcharts from (https://www.highcharts.com)
 
 ### Usage
 To use the chart module you call one of the chart methods on a collection object. Charts are an optional
@@ -4969,7 +4969,7 @@ $replace operator described in the *Update Operators* section. $replace is the e
 of calling a MongoDB update without the MongoDB $set operator.
 
 # License
-Please see licensing page for latest information: [http://www.forerunnerdb.com/licensing.html](http://www.forerunnerdb.com/licensing.html)
+Please see licensing page for latest information: [https://www.forerunnerdb.com/licensing.html](https://www.forerunnerdb.com/licensing.html)
 
 # Browser Compatibility
 ForerunnerDB works in all modern browsers (IE8+) and mobile hybrid frameworks
@@ -5391,7 +5391,7 @@ Execute the file under node.js via:
 node <yourFileName>.js
 ```
 
-You can now access your REST API via: http://0.0.0.0:9010
+You can now access your REST API via: https://0.0.0.0:9010
 
 ### Using the REST API
 The REST API follows standard REST conventions for using HTTP verbs to describe
@@ -5399,14 +5399,14 @@ an action.
 
 ##### Accessing all collection's documents:
 
-	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
+	GET https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -5416,14 +5416,14 @@ $.ajax({
 
 ##### Accessing an individual document in a collection by id:
 
-	GET http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
+	GET https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "get",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"success": function (data) {
 		console.log(data);
@@ -5436,7 +5436,7 @@ $.ajax({
 insert multiple documents by iterating through the array you send. This allows you
 to insert multiple records with a single API call.
 
-	POST http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
+	POST https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>
 	BODY <document contents>
 
 Example in jQuery:
@@ -5444,7 +5444,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "post",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/collection/myCollection",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -5458,7 +5458,7 @@ $.ajax({
 
 ##### Replacing a document by id:
 
-	PUT http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
+	PUT https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -5466,7 +5466,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "put",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -5480,7 +5480,7 @@ $.ajax({
 
 ##### Updating a document by id:
 
-	PATCH http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
+	PATCH https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 	BODY <document contents>
 
 Example in jQuery:
@@ -5488,7 +5488,7 @@ Example in jQuery:
 ```js
 $.ajax({
 	"method": "patch",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/collection/myCollection/myDocId",
 	"dataType": "json",
 	"data": JSON.stringify({
 		"name": "test"
@@ -5502,14 +5502,14 @@ $.ajax({
 
 ##### Deleting a document by id:
 
-	DELETE http://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
+	DELETE https://0.0.0.0:9010/fdb/<database name>/collection/<collection name>/<document id>
 
 Example in jQuery:
 
 ```js
 $.ajax({
 	"method": "delete",
-	"url": "http://0.0.0.0:9010/fdb/myDatabase/myCollection/myDocId",
+	"url": "https://0.0.0.0:9010/fdb/myDatabase/myCollection/myDocId",
 	"dataType": "json",
 	"contentType": "application/json; charset=utf-8",
 	"success": function (data) {
@@ -5769,7 +5769,7 @@ The app will auto-navigate to the settings screen if no settings are found in th
 browser's persistent storage. Enter these details:
 
 ```
-Server: http://0.0.0.0
+Server: https://0.0.0.0
 Port: 9010
 ```
 
