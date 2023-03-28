@@ -72,11 +72,13 @@
 		"node": ">= 4"
 	},
 	"scripts": {
+		"version": "grunt version",
 		"build": "grunt \"1: Build Source File\"",
 		"start": "forever start server/server.js",
 		"stop": "forever stop server/server.js",
 		"test": "grunt --verbose",
-		"postinstall": "node ./postinstall.js"
+		"postinstall": "node ./postinstall.js",
+		"rest-test": "node ./rest-test.js"
 	},
 	"repository": {
 		"type": "git",
@@ -86,7 +88,7 @@
 	"browser": "./js/builds/all",
 	"browserify": "./js/builds/all",
 	"bugs": {
-		"url": "http://github.com/irrelon/ForerunnerDB/issues"
+		"url": "https://github.com/irrelon/ForerunnerDB/issues"
 	},
 	"tonicExampleFilename": "./js/tonic/example.js",
 	"license": "MIT"
