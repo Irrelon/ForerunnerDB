@@ -11859,14 +11859,12 @@ Persist.prototype.init = function (db) {
 
 	// Check environment
 	if (db.isClient()) {
-		if (window.Storage !== undefined) {
-			this.mode('localforage');
+		this.mode('localforage');
 
-			localforage.config({
-				name: String(db.core().name()),
-				storeName: 'FDB'
-			});
-		}
+		localforage.config({
+			name: String(db.core().name()),
+			storeName: 'FDB'
+		});
 	}
 };
 
@@ -11971,6 +11969,31 @@ Persist.prototype.mode = function (type) {
 	}
 
 	return this._mode;
+};
+
+/**
+ * Sets - if Persist is load in "localforage" mode - a custom driver which applies to the rules
+ * 	given by localforage, given here: https://localforage.github.io/localForage/#driver-api-definedriver
+ * @param driver A local forage driver definition
+ * @param callback A possible callback, which is executed after the customdriver was initialized
+ */
+Persist.prototype.customdriver = function(driver, callback) {
+	if (this.mode() !== 'localforage') {
+		throw 'No interface ready to set custom driver!';
+	}
+
+	var driverName = driver._driver; // copying the drivername to avoid possible variable modification errors
+	localforage.defineDriver(driver).then(function() {
+		return localforage.setDriver(driverName);
+	})
+	.then(function() {
+		if (callback) {
+			callback(null);
+		}
+	})
+	['catch'](function(err) {
+		callback(err);
+	});
 };
 
 /**
@@ -13349,7 +13372,7 @@ var Overload = _dereq_('./Overload');
  * @mixin
  */
 var Shared = {
-	version: '2.0.23',
+	version: '2.0.24',
 	modules: {},
 	plugins: {},
 	index: {},
