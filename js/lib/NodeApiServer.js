@@ -126,7 +126,7 @@ NodeApiServer.prototype.start = function (host, port, options, callback) {
 					if (query) {
 						// We got a query param, try to decode as JSON
 						jsonData = JSON.parse(decodeURIComponent(query));
-						
+
 						// Now copy any fields from jsonData to req.json
 						Shared.mixin(req.json, jsonData);
 					}
@@ -532,7 +532,7 @@ NodeApiServer.prototype._handleResponse = function (req, res, dbName, objType, o
 
 		if (responseData instanceof Array) {
 			// Set the id field to default
-			pathIdField = '_id';
+			//pathIdField = '_id';
 
 			// Check if the patch section has a colon in it, denoting a search field and value
 			if (pathSection.indexOf(':') > -1) {
